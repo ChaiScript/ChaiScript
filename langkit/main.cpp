@@ -10,7 +10,7 @@
 //#include "eval.hpp"
 
 class TokenType { public: enum Type { Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close,
-    Square_Open, Square_Close, Curly_Open, Curly_Close }; };
+    Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String }; };
 
 void debug_print(std::vector<Token> &tokens) {
     for (unsigned int i = 0; i < tokens.size(); ++i) {
@@ -33,7 +33,10 @@ int main(int argc, char *argv[]) {
     lexer << Pattern("\\]", TokenType::Square_Close);
     lexer << Pattern("\\{", TokenType::Curly_Open);
     lexer << Pattern("\\}", TokenType::Curly_Close);
+    lexer << Pattern(",", TokenType::Comma);
     lexer << Pattern("[!@#$%^&*\\-+=/<>]+", TokenType::Operator);
+    lexer << Pattern("\"(?:[^\"\\\\]|\\\\.)*\"", TokenType::Quoted_String);
+    lexer << Pattern("'(?:[^'\\\\]|\\\\.)*'", TokenType::Single_Quoted_String);
 
     std::cout << "Expression> ";
     std::getline(std::cin, input);
