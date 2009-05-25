@@ -10,6 +10,6 @@ find_package( Boost 1.36.0 COMPONENTS regex)
 if(Boost_FOUND)
    include_directories(${Boost_INCLUDE_DIRS})
    
-   add_executable(langkit langkit/lexer.cpp langkit/main.cpp langkit/langkit_lexer.cpp)
-   target_link_libraries(langkit ${Boost_LIBRARIES})
+   add_executable(langkit_test langkit/main.cpp langkit/langkit_lexer.cpp)
+   target_link_libraries(langkit_test ${Boost_LIBRARIES})
 endif()
