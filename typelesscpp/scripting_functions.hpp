@@ -3,13 +3,35 @@
 
 
 #include "scripting_object.hpp"
-
+#include "scripting_type_info.hpp"
 #include <string>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <stdexcept>
 #include <vector>
 
+template<typename Ret>
+std::vector<Type_Info> build_param_type_list(const boost::function<Ret ()> &f)
+{
+  return std::vector<Type_Info>();
+}
+
+template<typename Ret, typename Param1>
+std::vector<Type_Info> build_param_type_list(const boost::function<Ret (Param1)> &f)
+{
+  std::vector<Type_Info> ti;
+  ti.push_back(Get_Type_Info<Param1>()());
+  return ti;
+}
+
+template<typename Ret, typename Param1, typename Param2>
+std::vector<Type_Info> build_param_type_list(const boost::function<Ret (Param1, Param2)> &f)
+{
+  std::vector<Type_Info> ti;
+  ti.push_back(Get_Type_Info<Param1>()());
+  ti.push_back(Get_Type_Info<Param2>()());
+  return ti;
+}
 
 // handle_return implementations
 template<typename Ret>
@@ -83,6 +105,8 @@ class Function_Handler
 {
   public:
     virtual Scripting_Object operator()(const std::vector<Scripting_Object> &params) = 0;
+    virtual std::vector<Type_Info> get_param_types() = 0;
+
 };
 
 template<typename Func>
@@ -97,6 +121,11 @@ class Function_Handler_Impl : public Function_Handler
     virtual Scripting_Object operator()(const std::vector<Scripting_Object> &params)
     {
       return call_func(m_f, params);
+    }
+
+    virtual std::vector<Type_Info> get_param_types()
+    {
+      return build_param_type_list(m_f);
     }
 
   private:
@@ -124,8 +153,6 @@ std::vector<Scripting_Object> build_param_list(const Scripting_Object &so1,  con
   sos.push_back(so3);
   return sos;
 }
-
-
 
 #endif
 
