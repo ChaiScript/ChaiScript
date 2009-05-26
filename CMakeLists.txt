@@ -12,4 +12,6 @@ if(Boost_FOUND)
    
    add_executable(langkit_test langkit/main.cpp langkit/langkit_lexer.cpp)
    target_link_libraries(langkit_test ${Boost_LIBRARIES})
+
+	 add_executable(typelesscpp_test typelesscpp/test.cpp)
 endif()
