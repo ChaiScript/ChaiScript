@@ -8,14 +8,14 @@
 #include <boost/regex.hpp>
 
 struct File_Position {
-    int row;
+    int line;
     int column;
     char *filename;
 
-    File_Position(int file_row, int file_column, char *fname)
-        : row(file_row), column(file_column), filename(fname) { }
+    File_Position(int file_line, int file_column, char *fname)
+        : line(file_line), column(file_column), filename(fname) { }
 
-    File_Position() : row(0), column(0), filename(NULL) { }
+    File_Position() : line(0), column(0), filename(NULL) { }
 };
 
 struct Pattern {
@@ -36,11 +36,15 @@ struct Token {
 struct Lexer {
     std::vector<Pattern> lex_patterns;
     std::vector<Pattern> skip_patterns;
+    std::vector<Pattern> command_sep_patterns;
+    std::vector<Pattern> line_sep_patterns;
 
     Lexer operator<<(const Pattern &p);
     std::vector<Token> lex(const std::string &input);
 
     void set_skip(const Pattern &p);
+    void set_line_sep(const Pattern &p);
+    void set_command_sep(const Pattern &p);
 };
 
 
