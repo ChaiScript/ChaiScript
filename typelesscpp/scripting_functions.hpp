@@ -1,6 +1,12 @@
-#ifndef __scripting_function_hpp__
-#define __scripting_function_hpp__
+#include <boost/preprocessor.hpp>
 
+#define gettypeinfo(z,n,text)  ti.push_back(Get_Type_Info<Param ## n>()());
+#define casthelper(z,n,text) ,Cast_Helper<Param ## n>()(params[n]) 
+
+
+#ifndef  BOOST_PP_IS_ITERATING
+#ifndef __scripting_functions_hpp__
+#define __scripting_functions_hpp__
 
 #include "scripting_object.hpp"
 #include "scripting_type_info.hpp"
@@ -9,29 +15,6 @@
 #include <boost/bind.hpp>
 #include <stdexcept>
 #include <vector>
-
-template<typename Ret>
-std::vector<Type_Info> build_param_type_list(const boost::function<Ret ()> &f)
-{
-  return std::vector<Type_Info>();
-}
-
-template<typename Ret, typename Param1>
-std::vector<Type_Info> build_param_type_list(const boost::function<Ret (Param1)> &f)
-{
-  std::vector<Type_Info> ti;
-  ti.push_back(Get_Type_Info<Param1>()());
-  return ti;
-}
-
-template<typename Ret, typename Param1, typename Param2>
-std::vector<Type_Info> build_param_type_list(const boost::function<Ret (Param1, Param2)> &f)
-{
-  std::vector<Type_Info> ti;
-  ti.push_back(Get_Type_Info<Param1>()());
-  ti.push_back(Get_Type_Info<Param2>()());
-  return ti;
-}
 
 // handle_return implementations
 template<typename Ret>
@@ -63,31 +46,16 @@ struct Handle_Return<void>
 };
 
 
-
-// call_func implementations todo: handle reference return types
-// to be made variadic
-template<typename Ret, typename Param1, typename Param2>
-Scripting_Object call_func(const boost::function<Ret (Param1, Param2)> &f, const std::vector<Scripting_Object> &params)
+// Build param type list (variadic)
+template<typename Ret>
+std::vector<Type_Info> build_param_type_list(const boost::function<Ret ()> &f)
 {
-  if (params.size() != 2)
-  {
-    throw std::range_error("Incorrect number of parameters");
-  } else {
-    return Handle_Return<Ret>()(boost::bind(f, Cast_Helper<Param1>()(params[0]), Cast_Helper<Param2>()(params[1])));
-  }
+  std::vector<Type_Info> ti;
+  ti.push_back(Get_Type_Info<Ret>()());
+  return ti;
 }
 
-template<typename Ret, typename Param1>
-Scripting_Object call_func(const boost::function<Ret (Param1)> &f, const std::vector<Scripting_Object> &params)
-{
-  if (params.size() != 1)
-  {
-    throw std::range_error("Incorrect number of parameters");
-  } else {
-    return Handle_Return<Ret>()(boost::bind(f, Cast_Helper<Param1>()(params[0])));
-  }
-}
-
+// call_func implementations (variadic)
 template<typename Ret>
 Scripting_Object call_func(const boost::function<Ret ()> &f, const std::vector<Scripting_Object> &params)
 {
@@ -100,6 +68,34 @@ Scripting_Object call_func(const boost::function<Ret ()> &f, const std::vector<S
 }
 
 
+struct Param_List_Builder
+{
+  Param_List_Builder &operator<<(const Scripting_Object &so)
+  {
+    objects.push_back(so);
+    return *this;
+  }
+
+  template<typename T>
+    Param_List_Builder &operator<<(T t)
+    {
+      objects.push_back(Scripting_Object(t));
+      return *this;
+    }
+
+  operator const std::vector<Scripting_Object> &() const
+  {
+    return objects;
+  }
+
+  std::vector<Scripting_Object> objects;
+  
+};
+
+
+#define BOOST_PP_ITERATION_LIMITS ( 1, 10 )
+#define BOOST_PP_FILENAME_1 "scripting_functions.hpp"
+#include BOOST_PP_ITERATE()
 
 class Function_Handler
 {
@@ -132,26 +128,33 @@ class Function_Handler_Impl : public Function_Handler
     Func m_f;
 };
 
-std::vector<Scripting_Object> build_param_list(const Scripting_Object &so)
+
+
+# endif
+#else
+# define n BOOST_PP_ITERATION()
+ 
+template<typename Ret, BOOST_PP_ENUM_PARAMS(n, typename Param) >
+std::vector<Type_Info> build_param_type_list(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f)
 {
-  std::vector<Scripting_Object> sos;
-  sos.push_back(so);
-  return sos;
+  std::vector<Type_Info> ti;
+  ti.push_back(Get_Type_Info<Ret>()());
+
+  BOOST_PP_REPEAT(n, gettypeinfo, ~)
+
+  return ti;
 }
-std::vector<Scripting_Object> build_param_list(const Scripting_Object &so1, const Scripting_Object &so2)
+
+template<typename Ret, BOOST_PP_ENUM_PARAMS(n, typename Param)>
+Scripting_Object call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f, 
+    const std::vector<Scripting_Object> &params)
 {
-  std::vector<Scripting_Object> sos;
-  sos.push_back(so1);
-  sos.push_back(so2);
-  return sos;
-}
-std::vector<Scripting_Object> build_param_list(const Scripting_Object &so1,  const Scripting_Object &so2, const Scripting_Object &so3)
-{
-  std::vector<Scripting_Object> sos;
-  sos.push_back(so1);
-  sos.push_back(so2);
-  sos.push_back(so3);
-  return sos;
+  if (params.size() != n)
+  {
+    throw std::range_error("Incorrect number of parameters");
+  } else {
+    return Handle_Return<Ret>()(boost::bind(f BOOST_PP_REPEAT(n, casthelper, ~)));
+  }
 }
 
 #endif

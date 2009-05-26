@@ -78,10 +78,10 @@ int main()
   (*method1)(sos);
   Scripting_Object o = (*method1)(sos);
   
-  (*ss.get_function("print"))(build_param_list(ss.get_object("str")));
+  (*ss.get_function("print"))(Param_List_Builder() << ss.get_object("str"));
 
   //Add new dynamically created object from registered "Test" constructor
-  ss.add_object("testobj2", (*ss.get_function("Test"))(build_param_list(Scripting_Object(std::string("Yo")))));
+  ss.add_object("testobj2", (*ss.get_function("Test"))(Param_List_Builder() << std::string("Yo")));
 
   std::cout << Cast_Helper<int>()(o) << std::endl;
 
