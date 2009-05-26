@@ -31,8 +31,6 @@ std::string load_file(const char *filename) {
     std::streampos size = infile.tellg();
     infile.seekg(0, std::ios::beg);
 
-    std::cout << "Allocating: " << size << " bytes" << std::endl;
-
     std::vector<char> v(size);
     infile.read(&v[0], size);
 
