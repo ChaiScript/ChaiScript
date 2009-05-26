@@ -30,6 +30,8 @@ struct Token {
     int identifier;
     File_Position start, end;
 
+    std::vector<Token> children;
+
     Token(const std::string &token_text, int id) : text(token_text), identifier(id) { }
 };
 

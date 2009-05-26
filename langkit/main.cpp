@@ -1,22 +1,25 @@
 // This file is distributed under the BSD License.
 // See LICENSE.TXT for details.
 
+#include <boost/bind.hpp>
+
 #include <iostream>
 #include <map>
 #include <fstream>
 
 #include "langkit_lexer.hpp"
-//#include "lexer.hpp"
-//#include "parser.hpp"
-//#include "eval.hpp"
+#include "langkit_parser.hpp"
 
 class TokenType { public: enum Type { Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close,
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon }; };
 
+void debug_print(Token &token) {
+    std::cout << "Token: " << token.text << "(" << token.identifier << ") @ (" << token.start.column
+        << ", " << token.start.line << ") to (" << token.end.column << ", " << token.end.line << ") " << std::endl;
+}
 void debug_print(std::vector<Token> &tokens) {
     for (unsigned int i = 0; i < tokens.size(); ++i) {
-        std::cout << "Token: " << tokens[i].text << "(" << tokens[i].identifier << ") @ (" << tokens[i].start.column
-            << ", " << tokens[i].start.line << ") to (" << tokens[i].end.column << ", " << tokens[i].end.line << ") " << std::endl;
+        debug_print(tokens[i]);
     }
 }
 
@@ -38,6 +41,23 @@ std::string load_file(const char *filename) {
 
     return ret_val;
 }
+
+void parse(std::vector<Token> &tokens) {
+    Rule rule;
+    rule.rule = boost::bind(String_Rule, _1, _2, "def");
+
+    Token_Iterator iter = tokens.begin(), end = tokens.end();
+
+
+    std::pair<Token_Iterator, Token> results = rule(iter, end);
+
+    if (results.first != iter) {
+        std::cout << "Parse successful: " << std::endl;
+        debug_print(results.second);
+    }
+
+}
+
 
 int main(int argc, char *argv[]) {
     std::string input;
@@ -66,6 +86,8 @@ int main(int argc, char *argv[]) {
         while (input != "quit") {
             std::vector<Token> tokens = lexer.lex(input);
             debug_print(tokens);
+            parse(tokens);
+
             std::cout << "Expression> ";
             std::getline(std::cin, input);
         }
