@@ -1,6 +1,7 @@
 // This file is distributed under the BSD License.
 // See LICENSE.TXT for details.
 
+#include <iostream>
 #include <utility>
 
 #include "langkit_lexer.hpp"
@@ -32,37 +33,50 @@ std::pair<Token_Iterator, bool> Type_Rule(Token_Iterator iter, Token_Iterator en
     return std::pair<Token_Iterator, bool>(iter, false);
 }
 
-std::pair<Token_Iterator, bool> Or_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, const Rule &lhs, const Rule &rhs, bool keep, int new_id) {
+std::pair<Token_Iterator, bool> Or_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, const RulePtr lhs, const RulePtr rhs, bool keep) {
     Token_Iterator new_iter;
+    unsigned int prev_size = parent->children.size();
 
     if (*iter != *end) {
-        new_iter = lhs.rule(iter, end, parent).first;
+        std::pair<Token_Iterator, bool> result = lhs->rule(iter, end, parent);
 
-        if (new_iter != iter) {
-            return std::pair<Token_Iterator, bool>(new_iter, true);
+        if (result.second) {
+            return std::pair<Token_Iterator, bool>(result.first, true);
         }
         else {
-            new_iter = rhs.rule(iter, end, parent).first;
-            if (new_iter != iter) {
-                return std::pair<Token_Iterator, bool>(new_iter, true);
+            result = rhs->rule(iter, end, parent);
+            if (result.second) {
+                return std::pair<Token_Iterator, bool>(result.first, true);
             }
         }
     }
+
+    if (parent->children.size() != prev_size) {
+        //Clear out the partial matches
+        parent->children.erase(parent->children.begin() + prev_size, parent->children.end());
+    }
+
     return std::pair<Token_Iterator, bool>(iter, false);
 }
 
-std::pair<Token_Iterator, bool> And_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, const Rule &lhs, const Rule &rhs, bool keep, int new_id) {
+std::pair<Token_Iterator, bool> And_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, const RulePtr lhs, const RulePtr rhs, bool keep) {
     Token_Iterator lhs_iter, rhs_iter;
+    unsigned int prev_size = parent->children.size();
 
     if (*iter != *end) {
-        lhs_iter = lhs.rule(iter, end, parent).first;
+        std::pair<Token_Iterator, bool> result = lhs->rule(iter, end, parent);
 
-        if (lhs_iter != iter) {
-            rhs_iter = rhs.rule(iter, end, parent).first;
-            if (rhs_iter != iter) {
-                return std::pair<Token_Iterator, bool>(rhs_iter, true);
+        if (result.second) {
+            result = rhs->rule(result.first, end, parent);
+            if (result.second) {
+                return std::pair<Token_Iterator, bool>(result.first, true);
             }
         }
+    }
+
+    if (parent->children.size() != prev_size) {
+        //Clear out the partial matches
+        parent->children.erase(parent->children.begin() + prev_size, parent->children.end());
     }
 
     return std::pair<Token_Iterator, bool>(iter, false);
