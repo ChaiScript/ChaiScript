@@ -122,12 +122,37 @@ void dump_system(const BoxedCPP_System &s)
   std::cout << std::endl;
 }
 
+template<typename Ret, typename P1, typename P2>
+Ret add(const P1 &p1, const P2 &p2)
+{
+  return p1 + p2;
+}
+
+template<typename Ret, typename P1, typename P2>
+Ret multiply(const P1 &p1, const P2 &p2)
+{
+  return p1 * p2;
+}
+
+
 void bootstrap(BoxedCPP_System &s)
 {
   s.register_type<void>("void");
   s.register_type<double>("double");
   s.register_type<int>("int");
   s.register_type<std::string>("string");
+
+  s.register_function(boost::function<std::string (std::string, std::string)>(&add<std::string, std::string, std::string>), "+");
+
+  s.register_function(boost::function<int (int, int)>(&add<int, int, int>), "+");
+  s.register_function(boost::function<double (int, double)>(&add<double, int, double>), "+");
+  s.register_function(boost::function<double (double, int)>(&add<double, double, int>), "+");
+  s.register_function(boost::function<double (double, double)>(&add<double, double, double>), "+");
+
+  s.register_function(boost::function<int (int, int)>(&multiply<int, int, int>), "*");
+  s.register_function(boost::function<double (int, double)>(&multiply<double, int, double>), "*");
+  s.register_function(boost::function<double (double, int)>(&multiply<double, double, int>), "*");
+  s.register_function(boost::function<double (double, double)>(&multiply<double, double, double>), "*");
 }
 
 #endif 
