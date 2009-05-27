@@ -49,24 +49,14 @@ std::string load_file(const char *filename) {
 
 void parse(std::vector<TokenPtr> &tokens) {
     /*
-    Rule rule;
-    rule.rule = boost::bind(String_Rule, _1, _2, _3, "def", true);
-
-    Token_Iterator iter = tokens.begin(), end = tokens.end();
-    TokenPtr parent(new Token("Root", 0, "test"));
-
-    std::pair<Token_Iterator, bool> results = rule(iter, end, parent);
-
-    if (results.second) {
-        std::cout << "Parse successful: " << std::endl;
-        debug_print(parent, "");
-    }
-    */
     Rule lhs;
     Rule rhs;
-    Rule rule = lhs & rhs; //(boost::bind(And_Rule, _1, _2, _3, lhs, rhs));
+    Rule rule = lhs & rhs;
     lhs = Str("def", true);
-    rhs = Str("int", true);
+    rhs = Id(TokenType::Identifier, true);
+    */
+
+    Rule rule = Str("def") & Id(TokenType::Identifier, true);
 
     Token_Iterator iter = tokens.begin(), end = tokens.end();
     TokenPtr parent(new Token("Root", 0, "test"));

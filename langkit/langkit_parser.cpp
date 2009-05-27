@@ -94,3 +94,12 @@ Rule Str(const std::string &text, bool keep) {
 Rule Id(int id, bool keep) {
     return Rule(boost::bind(Type_Rule, _1, _2, _3, id, keep));
 }
+
+Rule Str(const std::string &text) {
+    return Rule(boost::bind(String_Rule, _1, _2, _3, text, false));
+}
+
+Rule Id(int id) {
+    return Rule(boost::bind(Type_Rule, _1, _2, _3, id, false));
+}
+

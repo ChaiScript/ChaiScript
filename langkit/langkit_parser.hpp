@@ -69,5 +69,7 @@ private:
 Rule Str(const std::string &text, bool keep);
 Rule Id(int id, bool keep);
 
+Rule Str(const std::string &text);
+Rule Id(int id);
 
 #endif /* LANGKIT_PARSER_HPP_ */
