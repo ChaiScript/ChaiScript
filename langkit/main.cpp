@@ -48,15 +48,15 @@ std::string load_file(const char *filename) {
 }
 
 void parse(std::vector<TokenPtr> &tokens) {
-    /*
+
     Rule lhs;
     Rule rhs;
-    Rule rule = lhs & rhs;
+    Rule rule = lhs << rhs;
     lhs = Str("def", true);
     rhs = Id(TokenType::Identifier, true);
-    */
 
-    Rule rule = Str("def") & Id(TokenType::Identifier, true);
+
+    //Rule rule = Str("def", false) << Id(TokenType::Identifier, true);
 
     Token_Iterator iter = tokens.begin(), end = tokens.end();
     TokenPtr parent(new Token("Root", 0, "test"));

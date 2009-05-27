@@ -9,7 +9,7 @@
 #include "langkit_lexer.hpp"
 #include "langkit_parser.hpp"
 
-std::pair<Token_Iterator, bool> String_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, const std::string &val, bool keep) {
+std::pair<Token_Iterator, bool> String_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, const std::string &val) {
     if (*iter != *end) {
         if ((*iter)->text == val) {
             if (keep) {
@@ -22,7 +22,7 @@ std::pair<Token_Iterator, bool> String_Rule(Token_Iterator iter, Token_Iterator 
     return std::pair<Token_Iterator, bool>(iter, false);
 }
 
-std::pair<Token_Iterator, bool> Type_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, const int val, bool keep) {
+std::pair<Token_Iterator, bool> Type_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, const int val) {
     if (*iter != *end) {
         if ((*iter)->identifier == val) {
             if (keep) {
@@ -35,7 +35,7 @@ std::pair<Token_Iterator, bool> Type_Rule(Token_Iterator iter, Token_Iterator en
     return std::pair<Token_Iterator, bool>(iter, false);
 }
 
-std::pair<Token_Iterator, bool> Or_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, Rule lhs, Rule rhs) {
+std::pair<Token_Iterator, bool> Or_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, Rule lhs, Rule rhs) {
     Token_Iterator new_iter;
     unsigned int prev_size = parent->children.size();
 
@@ -61,7 +61,7 @@ std::pair<Token_Iterator, bool> Or_Rule(Token_Iterator iter, Token_Iterator end,
     return std::pair<Token_Iterator, bool>(iter, false);
 }
 
-std::pair<Token_Iterator, bool> And_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, Rule lhs, Rule rhs) {
+std::pair<Token_Iterator, bool> And_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, Rule lhs, Rule rhs) {
     Token_Iterator lhs_iter, rhs_iter;
     unsigned int prev_size = parent->children.size();
 
@@ -84,22 +84,23 @@ std::pair<Token_Iterator, bool> And_Rule(Token_Iterator iter, Token_Iterator end
     return std::pair<Token_Iterator, bool>(iter, false);
 }
 
-std::pair<Token_Iterator, bool> Rule::operator()(Token_Iterator iter, Token_Iterator end, TokenPtr parent) {
-    return impl->rule(iter, end, parent);
-}
-
 Rule Str(const std::string &text, bool keep) {
-    return Rule(boost::bind(String_Rule, _1, _2, _3, text, keep));
+    return Rule(boost::bind(String_Rule, _1, _2, _3, _4, _5, text), keep);
 }
 Rule Id(int id, bool keep) {
-    return Rule(boost::bind(Type_Rule, _1, _2, _3, id, keep));
+    return Rule(boost::bind(Type_Rule, _1, _2, _3, _4, _5, id), keep);
 }
 
 Rule Str(const std::string &text) {
-    return Rule(boost::bind(String_Rule, _1, _2, _3, text, false));
+    return Rule(boost::bind(String_Rule, _1, _2, _3, _4, _5, text));
 }
 
 Rule Id(int id) {
-    return Rule(boost::bind(Type_Rule, _1, _2, _3, id, false));
+    return Rule(boost::bind(Type_Rule, _1, _2, _3, _4, _5, id));
 }
 
+Rule Ign(Rule rule) {
+    rule.impl->keep = false;
+
+    return rule;
+}
