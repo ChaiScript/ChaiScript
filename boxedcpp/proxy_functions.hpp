@@ -98,6 +98,7 @@ struct Param_List_Builder
 class Proxy_Function
 {
   public:
+    virtual ~Proxy_Function() {}
     virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) = 0;
     virtual std::vector<Type_Info> get_param_types() = 0;
 
@@ -110,6 +111,8 @@ class Dynamic_Proxy_Function : public Proxy_Function
       : m_f(t_f)
     {
     }
+
+    virtual ~Dynamic_Proxy_Function() {}
 
     virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
     {
@@ -133,6 +136,9 @@ class Proxy_Function_Impl : public Proxy_Function
       : m_f(f)
     {
     }
+
+    virtual ~Proxy_Function_Impl() {}
+
 
     virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
     {
