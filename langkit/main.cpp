@@ -14,7 +14,7 @@ class TokenType { public: enum Type { Whitespace, Identifier, Number, Operator, 
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon }; };
 
 void debug_print(Token &token) {
-    std::cout << "Token: " << token.text << "(" << token.identifier << ") @ (" << token.start.column
+    std::cout << "Token: " << token.text << "(" << token.identifier << ") @ " << token.filename << ": ("  << token.start.column
         << ", " << token.start.line << ") to (" << token.end.column << ", " << token.end.line << ") " << std::endl;
 }
 void debug_print(std::vector<Token> &tokens) {
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
         std::cout << "Expression> ";
         std::getline(std::cin, input);
         while (input != "quit") {
-            std::vector<Token> tokens = lexer.lex(input);
+            std::vector<Token> tokens = lexer.lex(input, "INPUT");
             debug_print(tokens);
             parse(tokens);
 
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
         }
     }
     else {
-        std::vector<Token> tokens = lexer.lex(load_file(argv[1]));
+        std::vector<Token> tokens = lexer.lex(load_file(argv[1]), argv[1]);
         debug_print(tokens);
     }
 }

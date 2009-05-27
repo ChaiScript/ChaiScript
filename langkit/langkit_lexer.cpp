@@ -9,7 +9,7 @@ Lexer Lexer::operator<<(const Pattern &p) {
     return *this;
 }
 
-std::vector<Token> Lexer::lex(const std::string &input) {
+std::vector<Token> Lexer::lex(const std::string &input, const char *filename) {
     std::vector<Pattern>::iterator iter, end;
     std::vector<Token> retval;
     bool found;
@@ -23,7 +23,7 @@ std::vector<Token> Lexer::lex(const std::string &input) {
         for (iter = lex_patterns.begin(), end = lex_patterns.end(); iter != end; ++iter) {
             boost::match_results<std::string::const_iterator> what;
             if (regex_search(input_iter, input.end(), what, iter->regex, boost::match_continuous)) {
-                Token t(what[0], iter->identifier);
+                Token t(what[0], iter->identifier, filename);
                 t.start.column = current_col;
                 t.start.line = current_line;
                 current_col += t.text.size();

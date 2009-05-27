@@ -10,12 +10,11 @@
 struct File_Position {
     int line;
     int column;
-    char *filename;
 
-    File_Position(int file_line, int file_column, char *fname)
-        : line(file_line), column(file_column), filename(fname) { }
+    File_Position(int file_line, int file_column)
+        : line(file_line), column(file_column) { }
 
-    File_Position() : line(0), column(0), filename(NULL) { }
+    File_Position() : line(0), column(0) { }
 };
 
 struct Pattern {
@@ -28,11 +27,12 @@ struct Pattern {
 struct Token {
     std::string text;
     int identifier;
+    const char *filename;
     File_Position start, end;
 
     std::vector<Token> children;
 
-    Token(const std::string &token_text, int id) : text(token_text), identifier(id) { }
+    Token(const std::string &token_text, int id, const char *fname) : text(token_text), identifier(id), filename(fname) { }
 };
 
 struct Lexer {
@@ -42,7 +42,7 @@ struct Lexer {
     std::vector<Pattern> line_sep_patterns;
 
     Lexer operator<<(const Pattern &p);
-    std::vector<Token> lex(const std::string &input);
+    std::vector<Token> lex(const std::string &input, const char *fname);
 
     void set_skip(const Pattern &p);
     void set_line_sep(const Pattern &p);
