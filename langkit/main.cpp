@@ -56,13 +56,16 @@ void parse(std::vector<TokenPtr> &tokens) {
     Rule rule = lhs << rhs;
     lhs = Str("def", true);
     rhs = Id(TokenType::Identifier, true);
-    */
 
     //Rule rule(TokenType::Function_Def);
     //rule = Str("def") | Str("int");
 
     //Rule rule = Str("def", false) << Id(TokenType::Identifier);
+    */
 
+
+    //Example: "def add(x,y)"
+    //To do the params for real we need kleene star and other looping parsers
     Rule params;
     Rule rule(TokenType::Function_Def);
     rule = Ign(Str("def")) << Id(TokenType::Identifier) << Ign(Str("(")) << params << Ign(Str(")"));
