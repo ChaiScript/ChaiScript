@@ -23,7 +23,7 @@ struct Rule {
 std::pair<Token_Iterator, TokenPtr> String_Rule(Token_Iterator iter, Token_Iterator end, const std::string &val);
 std::pair<Token_Iterator, TokenPtr> Type_Rule(Token_Iterator iter, Token_Iterator end, const int val);
 std::pair<Token_Iterator, TokenPtr> Or_Rule(Token_Iterator iter, Token_Iterator end, const Rule &lhs, const Rule &rhs);
-
+std::pair<Token_Iterator, TokenPtr> And_Rule(Token_Iterator iter, Token_Iterator end, const Rule &lhs, const Rule &rhs);
 
 
 #endif /* LANGKIT_PARSER_HPP_ */

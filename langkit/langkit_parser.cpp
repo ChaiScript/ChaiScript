@@ -45,24 +45,22 @@ std::pair<Token_Iterator, TokenPtr> Or_Rule(Token_Iterator iter, Token_Iterator 
     return std::pair<Token_Iterator, TokenPtr>(iter, *iter);
 }
 
-/*
-std::pair<Token_Iterator, Token> And_Rule(Token_Iterator iter, Token_Iterator end, const Rule &lhs, const Rule &rhs) {
+std::pair<Token_Iterator, TokenPtr> And_Rule(Token_Iterator iter, Token_Iterator end, const Rule &lhs, const Rule &rhs) {
     Token_Iterator lhs_iter, rhs_iter;
 
     if (iter != end) {
-        lhs_iter = lhs.rule(iter, end);
+        lhs_iter = lhs.rule(iter, end).first;
 
         if (lhs_iter != iter) {
-            rhs_iter = rhs.rule(iter, end);
+            rhs_iter = rhs.rule(iter, end).first;
             if (rhs_iter != iter) {
-                return std::pair<Token_Iterator, Token>(rhs_iter, *iter);
+                return std::pair<Token_Iterator, TokenPtr>(rhs_iter, *iter);
             }
         }
     }
 
-    return std::pair<Token_Iterator, Token>(iter, *iter);
+    return std::pair<Token_Iterator, TokenPtr>(iter, *iter);
 }
-*/
 
 std::pair<Token_Iterator, TokenPtr> Rule::operator()(Token_Iterator iter, Token_Iterator end) {
     return this->rule(iter, end);
