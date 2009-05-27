@@ -6,43 +6,43 @@
 #include "langkit_lexer.hpp"
 #include "langkit_parser.hpp"
 
-std::pair<Token_Iterator, Token> String_Rule(Token_Iterator iter, Token_Iterator end, const std::string &val) {
+std::pair<Token_Iterator, TokenPtr> String_Rule(Token_Iterator iter, Token_Iterator end, const std::string &val) {
     if (iter != end) {
-        if (iter->text == val) {
-            return std::pair<Token_Iterator, Token>(++iter, *iter);
+        if ((*iter)->text == val) {
+            return std::pair<Token_Iterator, TokenPtr>(++iter, *iter);
         }
     }
 
-    return std::pair<Token_Iterator, Token>(iter, *iter);
+    return std::pair<Token_Iterator, TokenPtr>(iter, *iter);
 }
 
-std::pair<Token_Iterator, Token> Type_Rule(Token_Iterator iter, Token_Iterator end, const int val) {
+std::pair<Token_Iterator, TokenPtr> Type_Rule(Token_Iterator iter, Token_Iterator end, const int val) {
     if (iter != end) {
-        if (iter->identifier == val) {
-            return std::pair<Token_Iterator, Token>(++iter, *iter);
+        if ((*iter)->identifier == val) {
+            return std::pair<Token_Iterator, TokenPtr>(++iter, *iter);
         }
     }
 
-    return std::pair<Token_Iterator, Token>(iter, *iter);
+    return std::pair<Token_Iterator, TokenPtr>(iter, *iter);
 }
 
-std::pair<Token_Iterator, Token> Or_Rule(Token_Iterator iter, Token_Iterator end, const Rule &lhs, const Rule &rhs) {
+std::pair<Token_Iterator, TokenPtr> Or_Rule(Token_Iterator iter, Token_Iterator end, const Rule &lhs, const Rule &rhs) {
     Token_Iterator new_iter;
 
     if (iter != end) {
         new_iter = lhs.rule(iter, end).first;
 
         if (new_iter != iter) {
-            return std::pair<Token_Iterator, Token>(new_iter, *iter);
+            return std::pair<Token_Iterator, TokenPtr>(new_iter, *iter);
         }
         else {
             new_iter = rhs.rule(iter, end).first;
             if (new_iter != iter) {
-                return std::pair<Token_Iterator, Token>(new_iter, *iter);
+                return std::pair<Token_Iterator, TokenPtr>(new_iter, *iter);
             }
         }
     }
-    return std::pair<Token_Iterator, Token>(iter, *iter);
+    return std::pair<Token_Iterator, TokenPtr>(iter, *iter);
 }
 
 /*
@@ -64,6 +64,6 @@ std::pair<Token_Iterator, Token> And_Rule(Token_Iterator iter, Token_Iterator en
 }
 */
 
-std::pair<Token_Iterator, Token> Rule::operator()(Token_Iterator iter, Token_Iterator end) {
+std::pair<Token_Iterator, TokenPtr> Rule::operator()(Token_Iterator iter, Token_Iterator end) {
     return this->rule(iter, end);
 }

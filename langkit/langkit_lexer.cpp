@@ -9,9 +9,9 @@ Lexer Lexer::operator<<(const Pattern &p) {
     return *this;
 }
 
-std::vector<Token> Lexer::lex(const std::string &input, const char *filename) {
+std::vector<TokenPtr> Lexer::lex(const std::string &input, const char *filename) {
     std::vector<Pattern>::iterator iter, end;
-    std::vector<Token> retval;
+    std::vector<TokenPtr> retval;
     bool found;
     std::string::const_iterator input_iter = input.begin();
 
@@ -23,14 +23,14 @@ std::vector<Token> Lexer::lex(const std::string &input, const char *filename) {
         for (iter = lex_patterns.begin(), end = lex_patterns.end(); iter != end; ++iter) {
             boost::match_results<std::string::const_iterator> what;
             if (regex_search(input_iter, input.end(), what, iter->regex, boost::match_continuous)) {
-                Token t(what[0], iter->identifier, filename);
-                t.start.column = current_col;
-                t.start.line = current_line;
-                current_col += t.text.size();
-                t.end.column = current_col;
-                t.end.line = current_line;
+                TokenPtr t(new Token(what[0], iter->identifier, filename));
+                t->start.column = current_col;
+                t->start.line = current_line;
+                current_col += t->text.size();
+                t->end.column = current_col;
+                t->end.line = current_line;
                 retval.push_back(t);
-                input_iter += t.text.size();
+                input_iter += t->text.size();
                 found = true;
                 break;
             }

@@ -4,8 +4,9 @@
 #ifndef LANGKIT_LEXER_HPP_
 #define LANGKIT_LEXER_HPP_
 
-#include <string>
 #include <boost/regex.hpp>
+#include <tr1/memory>
+#include <string>
 
 struct File_Position {
     int line;
@@ -24,13 +25,15 @@ struct Pattern {
     Pattern(const std::string &regexp, int id) : regex(regexp), identifier(id) { }
 };
 
+typedef std::tr1::shared_ptr<struct Token> TokenPtr;
+
 struct Token {
     std::string text;
     int identifier;
     const char *filename;
     File_Position start, end;
 
-    std::vector<Token> children;
+    std::vector<TokenPtr> children;
 
     Token(const std::string &token_text, int id, const char *fname) : text(token_text), identifier(id), filename(fname) { }
 };
@@ -42,7 +45,7 @@ struct Lexer {
     std::vector<Pattern> line_sep_patterns;
 
     Lexer operator<<(const Pattern &p);
-    std::vector<Token> lex(const std::string &input, const char *fname);
+    std::vector<TokenPtr> lex(const std::string &input, const char *fname);
 
     void set_skip(const Pattern &p);
     void set_line_sep(const Pattern &p);
