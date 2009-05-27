@@ -62,19 +62,23 @@ void parse(std::vector<TokenPtr> &tokens) {
         debug_print(parent, "");
     }
     */
-    RulePtr lhs (new Rule());
-    RulePtr rhs (new Rule());
-    RulePtr rule (new Rule(boost::bind(Or_Rule, _1, _2, _3, lhs, rhs, true)));
-    lhs->rule = boost::bind(String_Rule, _1, _2, _3, "def", true);
-    rhs->rule = boost::bind(String_Rule, _1, _2, _3, "int", true);
+    Rule lhs;
+    Rule rhs;
+    Rule rule = lhs & rhs; //(boost::bind(And_Rule, _1, _2, _3, lhs, rhs));
+    lhs = Str("def", true);
+    rhs = Str("int", true);
 
     Token_Iterator iter = tokens.begin(), end = tokens.end();
     TokenPtr parent(new Token("Root", 0, "test"));
 
-    std::pair<Token_Iterator, bool> results = (*rule)(iter, end, parent);
+    std::pair<Token_Iterator, bool> results = rule(iter, end, parent);
 
     if (results.second) {
         std::cout << "Parse successful: " << std::endl;
+        debug_print(parent, "");
+    }
+    else {
+        std::cout << "Parse failed: " << std::endl;
         debug_print(parent, "");
     }
 
@@ -107,7 +111,7 @@ int main(int argc, char *argv[]) {
         std::getline(std::cin, input);
         while (input != "quit") {
             std::vector<TokenPtr> tokens = lexer.lex(input, "INPUT");
-            debug_print(tokens);
+            //debug_print(tokens);
             parse(tokens);
 
             std::cout << "Expression> ";

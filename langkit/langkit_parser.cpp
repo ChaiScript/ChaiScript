@@ -1,6 +1,8 @@
 // This file is distributed under the BSD License.
 // See LICENSE.TXT for details.
 
+#include <boost/bind.hpp>
+
 #include <iostream>
 #include <utility>
 
@@ -33,18 +35,18 @@ std::pair<Token_Iterator, bool> Type_Rule(Token_Iterator iter, Token_Iterator en
     return std::pair<Token_Iterator, bool>(iter, false);
 }
 
-std::pair<Token_Iterator, bool> Or_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, const RulePtr lhs, const RulePtr rhs, bool keep) {
+std::pair<Token_Iterator, bool> Or_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, Rule lhs, Rule rhs) {
     Token_Iterator new_iter;
     unsigned int prev_size = parent->children.size();
 
     if (*iter != *end) {
-        std::pair<Token_Iterator, bool> result = lhs->rule(iter, end, parent);
+        std::pair<Token_Iterator, bool> result = lhs(iter, end, parent);
 
         if (result.second) {
             return std::pair<Token_Iterator, bool>(result.first, true);
         }
         else {
-            result = rhs->rule(iter, end, parent);
+            result = rhs(iter, end, parent);
             if (result.second) {
                 return std::pair<Token_Iterator, bool>(result.first, true);
             }
@@ -59,15 +61,15 @@ std::pair<Token_Iterator, bool> Or_Rule(Token_Iterator iter, Token_Iterator end,
     return std::pair<Token_Iterator, bool>(iter, false);
 }
 
-std::pair<Token_Iterator, bool> And_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, const RulePtr lhs, const RulePtr rhs, bool keep) {
+std::pair<Token_Iterator, bool> And_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, Rule lhs, Rule rhs) {
     Token_Iterator lhs_iter, rhs_iter;
     unsigned int prev_size = parent->children.size();
 
     if (*iter != *end) {
-        std::pair<Token_Iterator, bool> result = lhs->rule(iter, end, parent);
+        std::pair<Token_Iterator, bool> result = lhs(iter, end, parent);
 
         if (result.second) {
-            result = rhs->rule(result.first, end, parent);
+            result = rhs(result.first, end, parent);
             if (result.second) {
                 return std::pair<Token_Iterator, bool>(result.first, true);
             }
@@ -83,5 +85,12 @@ std::pair<Token_Iterator, bool> And_Rule(Token_Iterator iter, Token_Iterator end
 }
 
 std::pair<Token_Iterator, bool> Rule::operator()(Token_Iterator iter, Token_Iterator end, TokenPtr parent) {
-    return this->rule(iter, end, parent);
+    return impl->rule(iter, end, parent);
+}
+
+Rule Str(const std::string &text, bool keep) {
+    return Rule(boost::bind(String_Rule, _1, _2, _3, text, keep));
+}
+Rule Id(int id, bool keep) {
+    return Rule(boost::bind(Type_Rule, _1, _2, _3, id, keep));
 }
