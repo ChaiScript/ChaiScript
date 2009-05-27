@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 #include <boost/shared_ptr.hpp>
+#include <boost/lexical_cast.hpp>
 #include <stdexcept>
 #include <vector>
 
@@ -24,6 +25,11 @@ class BoxedCPP_System
       {
         m_functions.insert(std::make_pair(name, boost::shared_ptr<Proxy_Function>(new Proxy_Function_Impl<Function>(func))));
       }
+
+    void register_function(const boost::shared_ptr<Proxy_Function> &f, const std::string &name)
+    {
+      m_functions.insert(std::make_pair(name, f));
+    }
 
     template<typename Class>
       void add_object(const std::string &name, const Class &obj)
@@ -134,12 +140,18 @@ Ret multiply(const P1 &p1, const P2 &p2)
   return p1 * p2;
 }
 
+template<typename Input>
+std::string to_string(const Input &i)
+{
+  return boost::lexical_cast<std::string>(i);
+}
 
 void bootstrap(BoxedCPP_System &s)
 {
   s.register_type<void>("void");
   s.register_type<double>("double");
   s.register_type<int>("int");
+  s.register_type<char>("char");
   s.register_type<std::string>("string");
 
   s.register_function(boost::function<std::string (std::string, std::string)>(&add<std::string, std::string, std::string>), "+");
@@ -153,6 +165,13 @@ void bootstrap(BoxedCPP_System &s)
   s.register_function(boost::function<double (int, double)>(&multiply<double, int, double>), "*");
   s.register_function(boost::function<double (double, int)>(&multiply<double, double, int>), "*");
   s.register_function(boost::function<double (double, double)>(&multiply<double, double, double>), "*");
+
+  s.register_function(boost::function<std::string (int)>(&to_string<int>), "to_string");
+  s.register_function(boost::function<std::string (const std::string &)>(&to_string<const std::string &>), "to_string");
+  s.register_function(boost::function<std::string (char)>(&to_string<char>), "to_string");
+  s.register_function(boost::function<std::string (double)>(&to_string<double>), "to_string");
+
+
 }
 
 #endif 

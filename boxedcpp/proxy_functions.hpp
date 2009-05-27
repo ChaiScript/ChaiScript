@@ -103,6 +103,28 @@ class Proxy_Function
 
 };
 
+class Dynamic_Proxy_Function : public Proxy_Function
+{
+  public:
+    Dynamic_Proxy_Function(const boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> &t_f)
+      : m_f(t_f)
+    {
+    }
+
+    virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
+    {
+      return m_f(params);
+    }
+
+    virtual std::vector<Type_Info> get_param_types()
+    {
+      return build_param_type_list(m_f);
+    }
+
+  private:
+    boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
+};
+
 template<typename Func>
 class Proxy_Function_Impl : public Proxy_Function
 {

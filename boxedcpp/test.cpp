@@ -40,15 +40,9 @@ struct Test
   double md;
 };
 
-std::string testprint(const std::string &p)
+void print(const std::string &s)
 {
-  std::cout << p << std::endl;
-  return p;
-}
-
-void print()
-{
-  std::cout << "Test void function succeeded" << std::endl;
+  std::cout << "Printed: " << s << std::endl;
 }
 
 
@@ -57,7 +51,35 @@ int main()
 {
   BoxedCPP_System ss;
   bootstrap(ss);
+  dump_system(ss);
+ 
+  //Calling a function by name and allowing the built in dispatch mechanism to
+  //choose the most appropriate version of the function
+  Boxed_Value addresult = dispatch(ss.get_function("+"), Param_List_Builder() << double(5.1) << double(10.3)); 
 
+  //Using the Cast_Helper to unbox the resultant value and output it
+  std::cout << Cast_Helper<double>()(addresult) << std::endl;
+
+  //Using the Boxed_Value as input to another function, again with automatic dispatch.
+  //This time we will not bother saving the result and will instead send it straight out
+  std::cout << Cast_Helper<double>()(
+      dispatch(ss.get_function("*"), Param_List_Builder() << 2 << addresult)
+      ) << std::endl; 
+
+  //Register a new function, this one with typing for us, so we don't have to ubox anything
+  //right here
+  ss.register_function(boost::function<void (const std::string &)>(&print), "print");
+
+  //Now we have a print method, let's try to print out the earlier example:
+  //so, we dispatch the to_string and pass its result as a param to "print"
+  //In this example we don't bother with temporaries and we don't have to know
+  //anything about types
+  dispatch(ss.get_function("print"), 
+      Param_List_Builder() << dispatch(ss.get_function("to_string"), Param_List_Builder() << addresult));
+
+  //
+  //
+  /* Older tests
   ss.register_type<Test>("Test");
   ss.register_function(boost::function<int (Test*, double)>(&Test::method), "method");
   ss.register_function(boost::function<std::string (const std::string &)>(&testprint), "print");
@@ -71,8 +93,6 @@ int main()
   ss.add_object("d", boost::shared_ptr<double>(new double(10.2)));
   ss.add_object("str", std::string("Hello World"));
 
-
-  dump_system(ss);
 
 
   std::vector<Boxed_Value> sos;
@@ -103,5 +123,6 @@ int main()
   sr = "Bob Updated The message";
   
   dispatch(ss.get_function("show_message"), sos3);
+  */
 }
   
