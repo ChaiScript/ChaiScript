@@ -12,17 +12,24 @@ typedef std::vector<TokenPtr>::iterator Token_Iterator;
 
 struct Rule {
     int identifier;
-    boost::function<std::pair<Token_Iterator, TokenPtr>(Token_Iterator iter, Token_Iterator end)> rule;
-    std::pair<Token_Iterator, TokenPtr> operator()(Token_Iterator iter, Token_Iterator end);
+    boost::function<std::pair<Token_Iterator, bool>(Token_Iterator iter, Token_Iterator end, TokenPtr parent)> rule;
+    std::pair<Token_Iterator, bool> operator()(Token_Iterator iter, Token_Iterator end, TokenPtr parent);
 
     Rule() : identifier(-1) {}
     Rule(int id) : identifier(id) {}
 };
 
-std::pair<Token_Iterator, TokenPtr> String_Rule(Token_Iterator iter, Token_Iterator end, const std::string &val);
-std::pair<Token_Iterator, TokenPtr> Type_Rule(Token_Iterator iter, Token_Iterator end, const int val);
-std::pair<Token_Iterator, TokenPtr> Or_Rule(Token_Iterator iter, Token_Iterator end, const Rule &lhs, const Rule &rhs);
-std::pair<Token_Iterator, TokenPtr> And_Rule(Token_Iterator iter, Token_Iterator end, const Rule &lhs, const Rule &rhs);
+std::pair<Token_Iterator, bool> String_Rule
+    (Token_Iterator iter, Token_Iterator end, TokenPtr parent, const std::string &val, bool keep);
+
+std::pair<Token_Iterator, bool> Type_Rule
+    (Token_Iterator iter, Token_Iterator end, TokenPtr parent, const int val, bool keep);
+
+std::pair<Token_Iterator, bool> Or_Rule
+    (Token_Iterator iter, Token_Iterator end, TokenPtr parent, const Rule &lhs, const Rule &rhs, bool keep, int new_id);
+
+std::pair<Token_Iterator, bool> And_Rule
+    (Token_Iterator iter, Token_Iterator end, TokenPtr parent, const Rule &lhs, const Rule &rhs, bool keep, int new_id);
 
 
 #endif /* LANGKIT_PARSER_HPP_ */

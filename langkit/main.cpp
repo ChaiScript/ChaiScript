@@ -13,13 +13,18 @@
 class TokenType { public: enum Type { Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close,
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon }; };
 
-void debug_print(TokenPtr token) {
-    std::cout << "Token: " << token->text << "(" << token->identifier << ") @ " << token->filename << ": ("  << token->start.column
+void debug_print(TokenPtr token, std::string prepend) {
+    std::cout << prepend << "Token: " << token->text << "(" << token->identifier << ") @ " << token->filename << ": ("  << token->start.column
         << ", " << token->start.line << ") to (" << token->end.column << ", " << token->end.line << ") " << std::endl;
+
+    for (unsigned int i = 0; i < token->children.size(); ++i) {
+        debug_print(token->children[i], prepend + "  ");
+    }
 }
+
 void debug_print(std::vector<TokenPtr> &tokens) {
     for (unsigned int i = 0; i < tokens.size(); ++i) {
-        debug_print(tokens[i]);
+        debug_print(tokens[i], "");
     }
 }
 
@@ -44,15 +49,16 @@ std::string load_file(const char *filename) {
 
 void parse(std::vector<TokenPtr> &tokens) {
     Rule rule;
-    rule.rule = boost::bind(String_Rule, _1, _2, "def");
+    rule.rule = boost::bind(String_Rule, _1, _2, _3, "def", true);
 
     Token_Iterator iter = tokens.begin(), end = tokens.end();
+    TokenPtr parent(new Token("Root", 0, "test"));
 
-    std::pair<Token_Iterator, TokenPtr> results = rule(iter, end);
+    std::pair<Token_Iterator, bool> results = rule(iter, end, parent);
 
-    if (results.first != iter) {
+    if (results.second) {
         std::cout << "Parse successful: " << std::endl;
-        debug_print(results.second);
+        debug_print(parent, "");
     }
 
 }

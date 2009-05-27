@@ -27,14 +27,14 @@ boost::function<boost::shared_ptr<Class> ()> build_constructor()
 # endif
 #else
 # define n BOOST_PP_ITERATION()
- 
+
 
 template<typename Class, BOOST_PP_ENUM_PARAMS(n, typename Param) >
 boost::shared_ptr<Class> constructor( BOOST_PP_ENUM_BINARY_PARAMS(n, Param, p) )
 {
   return boost::shared_ptr<Class>(new Class( BOOST_PP_ENUM_PARAMS(n, p) ));
 }
-  
+
 template<typename Class, BOOST_PP_ENUM_PARAMS(n, typename Param) >
 boost::function<boost::shared_ptr<Class> (BOOST_PP_ENUM_PARAMS(n, Param))> build_constructor()
 {
