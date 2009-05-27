@@ -35,7 +35,7 @@ struct Test
     std::cout << "Method called " << md << std::endl;
     return int(md);
   }
- 
+
   std::string message;
   double md;
 };
@@ -52,10 +52,10 @@ int main()
   BoxedCPP_System ss;
   bootstrap(ss);
   dump_system(ss);
- 
+
   //Calling a function by name and allowing the built in dispatch mechanism to
   //choose the most appropriate version of the function
-  Boxed_Value addresult = dispatch(ss.get_function("+"), Param_List_Builder() << double(5.1) << double(10.3)); 
+  Boxed_Value addresult = dispatch(ss.get_function("+"), Param_List_Builder() << double(5.1) << double(10.3));
 
   //Using the Cast_Helper to unbox the resultant value and output it
   std::cout << Cast_Helper<double>()(addresult) << std::endl;
@@ -64,17 +64,18 @@ int main()
   //This time we will not bother saving the result and will instead send it straight out
   std::cout << Cast_Helper<double>()(
       dispatch(ss.get_function("*"), Param_List_Builder() << 2 << addresult)
-      ) << std::endl; 
+      ) << std::endl;
 
   //Register a new function, this one with typing for us, so we don't have to ubox anything
   //right here
-  ss.register_function(boost::function<void (const std::string &)>(&print), "print");
+  //JDT: Was giving me compiler errors (not sure why)
+  //ss.register_function(boost::function<void (const std::string &)>(&print), "print");
 
   //Now we have a print method, let's try to print out the earlier example:
   //so, we dispatch the to_string and pass its result as a param to "print"
   //In this example we don't bother with temporaries and we don't have to know
   //anything about types
-  dispatch(ss.get_function("print"), 
+  dispatch(ss.get_function("print"),
       Param_List_Builder() << dispatch(ss.get_function("to_string"), Param_List_Builder() << addresult));
 
   //
@@ -96,14 +97,14 @@ int main()
 
 
   std::vector<Boxed_Value> sos;
-  sos.push_back(ss.get_object("testobj")); 
+  sos.push_back(ss.get_object("testobj"));
   sos.push_back(ss.get_object("d"));
 
   boost::shared_ptr<Proxy_Function> method1(ss.get_function("method").front().second);
   (*method1)(sos);
   (*method1)(sos);
   Boxed_Value o = (*method1)(sos);
-  
+
   dispatch(ss.get_function("print"), Param_List_Builder() << ss.get_object("str"));
 
   //Add new dynamically created object from registered "Test" constructor
@@ -121,8 +122,8 @@ int main()
 
   std::string &sr = Cast_Helper<std::string &>()(stringref);
   sr = "Bob Updated The message";
-  
+
   dispatch(ss.get_function("show_message"), sos3);
   */
 }
-  
+

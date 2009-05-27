@@ -8,7 +8,6 @@
 
 #include "langkit_lexer.hpp"
 
-
 typedef std::vector<TokenPtr>::iterator Token_Iterator;
 
 struct Rule {

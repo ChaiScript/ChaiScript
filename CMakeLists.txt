@@ -14,5 +14,5 @@ if(Boost_FOUND)
    add_executable(langkit_test langkit/main.cpp langkit/langkit_lexer.cpp langkit/langkit_parser.cpp)
    target_link_libraries(langkit_test ${Boost_LIBRARIES})
 
-	 #add_executable(boxedcpp_test boxedcpp/test.cpp)
+	 add_executable(boxedcpp_test boxedcpp/test.cpp)
 endif()

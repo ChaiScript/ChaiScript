@@ -87,7 +87,7 @@ void dump_type(const Type_Info &type)
 void dump_function(const BoxedCPP_System::Function_Map::value_type &f)
 {
   std::vector<Type_Info> params = f.second->get_param_types();
-  
+
   dump_type(params.front());
   std::cout << " " << f.first << "(";
 
@@ -97,7 +97,7 @@ void dump_function(const BoxedCPP_System::Function_Map::value_type &f)
   {
     dump_type(*itr);
     std::cout << ", ";
-  } 
+  }
 
   std::cout << ")" << std::endl;
 }
@@ -113,7 +113,7 @@ void dump_system(const BoxedCPP_System &s)
     std::cout << itr->first << ": ";
     dump_type(itr->second);
     std::cout << std::endl;
-  } 
+  }
 
 
   std::cout << std::endl;  std::vector<BoxedCPP_System::Function_Map::value_type> funcs = s.get_functions();
@@ -124,7 +124,7 @@ void dump_system(const BoxedCPP_System &s)
        ++itr)
   {
     dump_function(*itr);
-  } 
+  }
   std::cout << std::endl;
 }
 
@@ -167,11 +167,12 @@ void bootstrap(BoxedCPP_System &s)
   s.register_function(boost::function<double (double, double)>(&multiply<double, double, double>), "*");
 
   s.register_function(boost::function<std::string (int)>(&to_string<int>), "to_string");
-  s.register_function(boost::function<std::string (const std::string &)>(&to_string<const std::string &>), "to_string");
+  //JDT: Was giving me compiler errors (not sure why)
+  //s.register_function(boost::function<std::string (const std::string &)>(&to_string<const std::string &>), "to_string");
   s.register_function(boost::function<std::string (char)>(&to_string<char>), "to_string");
   s.register_function(boost::function<std::string (double)>(&to_string<double>), "to_string");
 
 
 }
 
-#endif 
+#endif
