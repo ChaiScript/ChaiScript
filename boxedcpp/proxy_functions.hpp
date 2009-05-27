@@ -67,7 +67,6 @@ Boxed_Value call_func(const boost::function<Ret ()> &f, const std::vector<Boxed_
   }
 }
 
-
 struct Param_List_Builder
 {
   Param_List_Builder &operator<<(const Boxed_Value &so)
@@ -89,7 +88,6 @@ struct Param_List_Builder
   }
 
   std::vector<Boxed_Value> objects;
-  
 };
 
 
@@ -128,7 +126,22 @@ class Proxy_Function_Impl : public Proxy_Function
     Func m_f;
 };
 
+Boxed_Value dispatch(const std::vector<std::pair<const std::string, boost::shared_ptr<Proxy_Function> > > &funcs,
+  const std::vector<Boxed_Value> &plist)
+{
+  for (std::vector<std::pair<const std::string, boost::shared_ptr<Proxy_Function> > >::const_iterator itr = funcs.begin();
+       itr != funcs.end();
+       ++itr)
+  {
+    try {
+      return (*itr->second)(plist);
+    } catch (const std::bad_cast &) {
+      //try again
+    }
+  }
 
+  throw std::runtime_error("No mathcing function to dispatch to");
+}
 
 # endif
 #else

@@ -55,7 +55,9 @@ void print()
 //Test main
 int main()
 {
-  Scripting_System ss;
+  BoxedCPP_System ss;
+  bootstrap(ss);
+
   ss.register_type<Test>("Test");
   ss.register_function(boost::function<int (Test*, double)>(&Test::method), "method");
   ss.register_function(boost::function<std::string (const std::string &)>(&testprint), "print");
@@ -69,33 +71,37 @@ int main()
   ss.add_object("d", boost::shared_ptr<double>(new double(10.2)));
   ss.add_object("str", std::string("Hello World"));
 
+
+  dump_system(ss);
+
+
   std::vector<Boxed_Value> sos;
   sos.push_back(ss.get_object("testobj")); 
   sos.push_back(ss.get_object("d"));
 
-  boost::shared_ptr<Proxy_Function> method1(ss.get_function("method"));
+  boost::shared_ptr<Proxy_Function> method1(ss.get_function("method").front().second);
   (*method1)(sos);
   (*method1)(sos);
   Boxed_Value o = (*method1)(sos);
   
-  (*ss.get_function("print"))(Param_List_Builder() << ss.get_object("str"));
+  dispatch(ss.get_function("print"), Param_List_Builder() << ss.get_object("str"));
 
   //Add new dynamically created object from registered "Test" constructor
-  ss.add_object("testobj2", (*ss.get_function("Test"))(Param_List_Builder() << std::string("Yo")));
+  ss.add_object("testobj2", dispatch(ss.get_function("Test"), Param_List_Builder() << std::string("Yo")));
 
   std::cout << Cast_Helper<int>()(o) << std::endl;
 
-  (*ss.get_function("voidfunc"))(std::vector<Boxed_Value>());
+  dispatch(ss.get_function("voidfunc"), Param_List_Builder());
 
   std::vector<Boxed_Value> sos3;
   sos3.push_back(ss.get_object("testobj2"));
-  (*ss.get_function("show_message"))(sos3);
+  dispatch(ss.get_function("show_message"), sos3);
 
-  Boxed_Value stringref = (*ss.get_function("get_message"))(sos3);
+  Boxed_Value stringref = dispatch(ss.get_function("get_message"), sos3);
 
   std::string &sr = Cast_Helper<std::string &>()(stringref);
   sr = "Bob Updated The message";
   
-  (*ss.get_function("show_message"))(sos3);
+  dispatch(ss.get_function("show_message"), sos3);
 }
   
