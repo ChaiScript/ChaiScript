@@ -40,7 +40,7 @@ struct Test
   double md;
 };
 
-void print(const std::string &s)
+void print_out(const std::string &s)
 {
   std::cout << "Printed: " << s << std::endl;
 }
@@ -69,7 +69,7 @@ int main()
   //Register a new function, this one with typing for us, so we don't have to ubox anything
   //right here
   //JDT: Was giving me compiler errors (not sure why)
-  //ss.register_function(boost::function<void (const std::string &)>(&print), "print");
+  ss.register_function(boost::function<void (const std::string &)>(&print_out), "print");
 
   //Now we have a print method, let's try to print out the earlier example:
   //so, we dispatch the to_string and pass its result as a param to "print"
