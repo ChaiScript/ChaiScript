@@ -4,7 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 
-#include "scripting_system.hpp"
+#include "boxedcpp.hpp"
 
 struct Test
 {
@@ -69,14 +69,14 @@ int main()
   ss.add_object("d", boost::shared_ptr<double>(new double(10.2)));
   ss.add_object("str", std::string("Hello World"));
 
-  std::vector<Scripting_Object> sos;
+  std::vector<Boxed_Value> sos;
   sos.push_back(ss.get_object("testobj")); 
   sos.push_back(ss.get_object("d"));
 
-  boost::shared_ptr<Function_Handler> method1(ss.get_function("method"));
+  boost::shared_ptr<Proxy_Function> method1(ss.get_function("method"));
   (*method1)(sos);
   (*method1)(sos);
-  Scripting_Object o = (*method1)(sos);
+  Boxed_Value o = (*method1)(sos);
   
   (*ss.get_function("print"))(Param_List_Builder() << ss.get_object("str"));
 
@@ -85,13 +85,13 @@ int main()
 
   std::cout << Cast_Helper<int>()(o) << std::endl;
 
-  (*ss.get_function("voidfunc"))(std::vector<Scripting_Object>());
+  (*ss.get_function("voidfunc"))(std::vector<Boxed_Value>());
 
-  std::vector<Scripting_Object> sos3;
+  std::vector<Boxed_Value> sos3;
   sos3.push_back(ss.get_object("testobj2"));
   (*ss.get_function("show_message"))(sos3);
 
-  Scripting_Object stringref = (*ss.get_function("get_message"))(sos3);
+  Boxed_Value stringref = (*ss.get_function("get_message"))(sos3);
 
   std::string &sr = Cast_Helper<std::string &>()(stringref);
   sr = "Bob Updated The message";

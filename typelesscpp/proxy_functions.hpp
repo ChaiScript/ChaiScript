@@ -5,11 +5,11 @@
 
 
 #ifndef  BOOST_PP_IS_ITERATING
-#ifndef __scripting_functions_hpp__
-#define __scripting_functions_hpp__
+#ifndef __proxy_functions_hpp__
+#define __proxy_functions_hpp__
 
-#include "scripting_object.hpp"
-#include "scripting_type_info.hpp"
+#include "boxed_value.hpp"
+#include "type_info.hpp"
 #include <string>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
@@ -20,28 +20,28 @@
 template<typename Ret>
 struct Handle_Return
 {
-  Scripting_Object operator()(const boost::function<Ret ()> &f)
+  Boxed_Value operator()(const boost::function<Ret ()> &f)
   {
-    return Scripting_Object(f());
+    return Boxed_Value(f());
   }
 };
 
 template<typename Ret>
 struct Handle_Return<Ret &>
 {
-  Scripting_Object operator()(const boost::function<Ret &()> &f)
+  Boxed_Value operator()(const boost::function<Ret &()> &f)
   {
-    return Scripting_Object(boost::ref(f()));
+    return Boxed_Value(boost::ref(f()));
   }
 };
 
 template<>
 struct Handle_Return<void>
 {
-  Scripting_Object operator()(const boost::function<void ()> &f)
+  Boxed_Value operator()(const boost::function<void ()> &f)
   {
     f();
-    return Scripting_Object();
+    return Boxed_Value();
   }
 };
 
@@ -57,7 +57,7 @@ std::vector<Type_Info> build_param_type_list(const boost::function<Ret ()> &f)
 
 // call_func implementations (variadic)
 template<typename Ret>
-Scripting_Object call_func(const boost::function<Ret ()> &f, const std::vector<Scripting_Object> &params)
+Boxed_Value call_func(const boost::function<Ret ()> &f, const std::vector<Boxed_Value> &params)
 {
   if (params.size() != 0)
   {
@@ -70,7 +70,7 @@ Scripting_Object call_func(const boost::function<Ret ()> &f, const std::vector<S
 
 struct Param_List_Builder
 {
-  Param_List_Builder &operator<<(const Scripting_Object &so)
+  Param_List_Builder &operator<<(const Boxed_Value &so)
   {
     objects.push_back(so);
     return *this;
@@ -79,42 +79,42 @@ struct Param_List_Builder
   template<typename T>
     Param_List_Builder &operator<<(T t)
     {
-      objects.push_back(Scripting_Object(t));
+      objects.push_back(Boxed_Value(t));
       return *this;
     }
 
-  operator const std::vector<Scripting_Object> &() const
+  operator const std::vector<Boxed_Value> &() const
   {
     return objects;
   }
 
-  std::vector<Scripting_Object> objects;
+  std::vector<Boxed_Value> objects;
   
 };
 
 
 #define BOOST_PP_ITERATION_LIMITS ( 1, 10 )
-#define BOOST_PP_FILENAME_1 "scripting_functions.hpp"
+#define BOOST_PP_FILENAME_1 "proxy_functions.hpp"
 #include BOOST_PP_ITERATE()
 
-class Function_Handler
+class Proxy_Function
 {
   public:
-    virtual Scripting_Object operator()(const std::vector<Scripting_Object> &params) = 0;
+    virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) = 0;
     virtual std::vector<Type_Info> get_param_types() = 0;
 
 };
 
 template<typename Func>
-class Function_Handler_Impl : public Function_Handler
+class Proxy_Function_Impl : public Proxy_Function
 {
   public:
-    Function_Handler_Impl(const Func &f)
+    Proxy_Function_Impl(const Func &f)
       : m_f(f)
     {
     }
 
-    virtual Scripting_Object operator()(const std::vector<Scripting_Object> &params)
+    virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
     {
       return call_func(m_f, params);
     }
@@ -146,8 +146,8 @@ std::vector<Type_Info> build_param_type_list(const boost::function<Ret (BOOST_PP
 }
 
 template<typename Ret, BOOST_PP_ENUM_PARAMS(n, typename Param)>
-Scripting_Object call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f, 
-    const std::vector<Scripting_Object> &params)
+Boxed_Value call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f, 
+    const std::vector<Boxed_Value> &params)
 {
   if (params.size() != n)
   {

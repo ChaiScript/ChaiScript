@@ -1,5 +1,5 @@
-#ifndef __scripting_type_info_hpp__
-#define __scripting_type_info_hpp__
+#ifndef __type_info_hpp__
+#define __type_info_hpp__
 
 #include <boost/type_traits.hpp>
 

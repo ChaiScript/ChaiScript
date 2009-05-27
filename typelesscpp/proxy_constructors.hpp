@@ -1,8 +1,8 @@
 #include <boost/preprocessor.hpp>
 
 #ifndef  BOOST_PP_IS_ITERATING
-#ifndef __scripting_constructors_hpp__
-#define __scripting_constructors_hpp__
+#ifndef __proxy_constructors_hpp__
+#define __proxy_constructors_hpp__
 
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>
@@ -22,7 +22,7 @@ boost::function<boost::shared_ptr<Class> ()> build_constructor()
 }
 
 #define BOOST_PP_ITERATION_LIMITS ( 1, 10 )
-#define BOOST_PP_FILENAME_1 "scripting_constructors.hpp"
+#define BOOST_PP_FILENAME_1 "proxy_constructors.hpp"
 #include BOOST_PP_ITERATE()
 # endif
 #else

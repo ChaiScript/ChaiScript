@@ -1,39 +1,39 @@
-#ifndef __scripting_object_hpp__
-#define __scripting_object_hpp__
+#ifndef __boxed_value_hpp__
+#define __boxed_value_hpp__
 
-#include "scripting_type_info.hpp"
+#include "type_info.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/any.hpp>
 
 #include <boost/ref.hpp>
 
-class Scripting_Object
+class Boxed_Value
 {
   public:
     template<typename T>
-      explicit Scripting_Object(boost::shared_ptr<T> obj)
+      explicit Boxed_Value(boost::shared_ptr<T> obj)
        : m_type_info(Get_Type_Info<T>()()), m_obj(obj), m_is_ref(false)
       {
       }
 
     template<typename T>
-      explicit Scripting_Object(boost::reference_wrapper<T> obj)
+      explicit Boxed_Value(boost::reference_wrapper<T> obj)
        : m_type_info(Get_Type_Info<T>()()), m_obj(obj), m_is_ref(true)
       {
       }
 
     template<typename T>
-      explicit Scripting_Object(const T& t)
+      explicit Boxed_Value(const T& t)
        : m_type_info(Get_Type_Info<T>()()), m_obj(boost::shared_ptr<T>(new T(t))), m_is_ref(false)
       {
       }
 
-    Scripting_Object(const Scripting_Object &t_so)
+    Boxed_Value(const Boxed_Value &t_so)
       : m_type_info(t_so.m_type_info), m_obj(t_so.m_obj), m_is_ref(t_so.m_is_ref)
     {
     }
 
-    Scripting_Object()
+    Boxed_Value()
       : m_type_info(Get_Type_Info<void>()()), m_is_ref(false)
     {
     }
@@ -64,7 +64,7 @@ class Scripting_Object
 template<typename Result>
 struct Cast_Helper
 {
-  typename boost::reference_wrapper<typename boost::add_const<Result>::type > operator()(Scripting_Object ob)
+  typename boost::reference_wrapper<typename boost::add_const<Result>::type > operator()(Boxed_Value ob)
   {
     if (ob.is_ref())
     {
@@ -78,7 +78,7 @@ struct Cast_Helper
 template<typename Result>
 struct Cast_Helper<const Result &>
 {
-  typename boost::reference_wrapper<typename boost::add_const<Result>::type > operator()(Scripting_Object ob)
+  typename boost::reference_wrapper<typename boost::add_const<Result>::type > operator()(Boxed_Value ob)
   {
     if (ob.is_ref())
     {
@@ -92,7 +92,7 @@ struct Cast_Helper<const Result &>
 template<typename Result>
 struct Cast_Helper<Result *>
 {
-  Result *operator()(Scripting_Object ob)
+  Result *operator()(Boxed_Value ob)
   {
     if (ob.is_ref())
     {
@@ -106,7 +106,7 @@ struct Cast_Helper<Result *>
 template<typename Result>
 struct Cast_Helper<Result &>
 {
-  typename boost::reference_wrapper<Result> operator()(Scripting_Object ob)
+  typename boost::reference_wrapper<Result> operator()(Boxed_Value ob)
   {
     if (ob.is_ref())
     {
