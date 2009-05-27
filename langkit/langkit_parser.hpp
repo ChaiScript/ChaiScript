@@ -49,7 +49,9 @@ struct Rule {
     }
 
     Rule &operator=(const Rule &rule) {
-        *impl = *(rule.impl);
+        //*impl = *(rule.impl);
+        impl->rule = rule.impl->rule;
+        impl->keep = rule.impl->keep;
 
         return *this;
     }

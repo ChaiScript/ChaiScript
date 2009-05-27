@@ -38,16 +38,27 @@ std::pair<Token_Iterator, bool> Type_Rule(Token_Iterator iter, Token_Iterator en
 std::pair<Token_Iterator, bool> Or_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, Rule lhs, Rule rhs) {
     Token_Iterator new_iter;
     unsigned int prev_size = parent->children.size();
+    TokenPtr prev_parent = parent;
+
+    if (new_id != -1) {
+        parent = TokenPtr(new Token("", new_id, parent->filename));
+    }
 
     if (*iter != *end) {
         std::pair<Token_Iterator, bool> result = lhs(iter, end, parent);
 
         if (result.second) {
+            if (new_id != -1) {
+                prev_parent->children.push_back(parent);
+            }
             return std::pair<Token_Iterator, bool>(result.first, true);
         }
         else {
             result = rhs(iter, end, parent);
             if (result.second) {
+                if (new_id != -1) {
+                    prev_parent->children.push_back(parent);
+                }
                 return std::pair<Token_Iterator, bool>(result.first, true);
             }
         }
@@ -63,7 +74,14 @@ std::pair<Token_Iterator, bool> Or_Rule(Token_Iterator iter, Token_Iterator end,
 
 std::pair<Token_Iterator, bool> And_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, Rule lhs, Rule rhs) {
     Token_Iterator lhs_iter, rhs_iter;
-    unsigned int prev_size = parent->children.size();
+    unsigned int prev_size;
+    TokenPtr prev_parent = parent;
+
+    if (new_id != -1) {
+        parent = TokenPtr(new Token("", new_id, parent->filename));
+    }
+
+    prev_size = parent->children.size();
 
     if (*iter != *end) {
         std::pair<Token_Iterator, bool> result = lhs(iter, end, parent);
@@ -71,6 +89,9 @@ std::pair<Token_Iterator, bool> And_Rule(Token_Iterator iter, Token_Iterator end
         if (result.second) {
             result = rhs(result.first, end, parent);
             if (result.second) {
+                if (new_id != -1) {
+                    prev_parent->children.push_back(parent);
+                }
                 return std::pair<Token_Iterator, bool>(result.first, true);
             }
         }

@@ -11,7 +11,8 @@
 #include "langkit_parser.hpp"
 
 class TokenType { public: enum Type { Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close,
-    Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon }; };
+    Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
+    Function_Def}; };
 
 void debug_print(TokenPtr token, std::string prepend) {
     std::cout << prepend << "Token: " << token->text << "(" << token->identifier << ") @ " << token->filename << ": ("  << token->start.column
@@ -49,14 +50,23 @@ std::string load_file(const char *filename) {
 
 void parse(std::vector<TokenPtr> &tokens) {
 
+    /*
     Rule lhs;
     Rule rhs;
     Rule rule = lhs << rhs;
     lhs = Str("def", true);
     rhs = Id(TokenType::Identifier, true);
+    */
 
+    //Rule rule(TokenType::Function_Def);
+    //rule = Str("def") | Str("int");
 
-    //Rule rule = Str("def", false) << Id(TokenType::Identifier, true);
+    //Rule rule = Str("def", false) << Id(TokenType::Identifier);
+
+    Rule params;
+    Rule rule(TokenType::Function_Def);
+    rule = Ign(Str("def")) << Id(TokenType::Identifier) << Ign(Str("(")) << params << Ign(Str(")"));
+    params = Id(TokenType::Identifier) << Ign(Str(",")) << Id(TokenType::Identifier);
 
     Token_Iterator iter = tokens.begin(), end = tokens.end();
     TokenPtr parent(new Token("Root", 0, "test"));
