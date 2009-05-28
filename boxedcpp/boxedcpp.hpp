@@ -20,16 +20,17 @@ class BoxedCPP_System
     typedef std::multimap<std::string, boost::shared_ptr<Proxy_Function> > Function_Map;
     typedef std::map<std::string, Type_Info> Type_Name_Map;
 
+    void register_function(const boost::shared_ptr<Proxy_Function> &f, const std::string &name)
+    {
+      m_functions.insert(std::make_pair(name, f));
+    }
+
+
     template<typename Function>
       void register_function(const Function &func, const std::string &name)
       {
         m_functions.insert(std::make_pair(name, boost::shared_ptr<Proxy_Function>(new Proxy_Function_Impl<Function>(func))));
       }
-
-    void register_function(const boost::shared_ptr<Proxy_Function> &f, const std::string &name)
-    {
-      m_functions.insert(std::make_pair(name, f));
-    }
 
     template<typename Class>
       void add_object(const std::string &name, const Class &obj)
@@ -129,19 +130,19 @@ void dump_system(const BoxedCPP_System &s)
 }
 
 template<typename Ret, typename P1, typename P2>
-Ret add(const P1 &p1, const P2 &p2)
+Ret add(P1 p1, P2 p2)
 {
   return p1 + p2;
 }
 
 template<typename Ret, typename P1, typename P2>
-Ret multiply(const P1 &p1, const P2 &p2)
+Ret multiply(P1 p1, P2 p2)
 {
   return p1 * p2;
 }
 
 template<typename Input>
-std::string to_string(const Input &i)
+std::string to_string(Input i)
 {
   return boost::lexical_cast<std::string>(i);
 }
@@ -154,8 +155,7 @@ void bootstrap(BoxedCPP_System &s)
   s.register_type<char>("char");
   s.register_type<std::string>("string");
 
-  s.register_function(boost::function<std::string (std::string, std::string)>(&add<std::string, std::string, std::string>), "+");
-
+  s.register_function(boost::function<std::string (const std::string &, const std::string&)>(&add<std::string, const std::string &, const std::string &>), "+");
   s.register_function(boost::function<int (int, int)>(&add<int, int, int>), "+");
   s.register_function(boost::function<double (int, double)>(&add<double, int, double>), "+");
   s.register_function(boost::function<double (double, int)>(&add<double, double, int>), "+");
@@ -167,8 +167,7 @@ void bootstrap(BoxedCPP_System &s)
   s.register_function(boost::function<double (double, double)>(&multiply<double, double, double>), "*");
 
   s.register_function(boost::function<std::string (int)>(&to_string<int>), "to_string");
-  //JDT: Was giving me compiler errors (not sure why)
-  //s.register_function(boost::function<std::string (const std::string &)>(&to_string<const std::string &>), "to_string");
+  s.register_function(boost::function<std::string (const std::string &)>(&to_string<const std::string &>), "to_string");
   s.register_function(boost::function<std::string (char)>(&to_string<char>), "to_string");
   s.register_function(boost::function<std::string (double)>(&to_string<double>), "to_string");
 

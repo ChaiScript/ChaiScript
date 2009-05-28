@@ -45,6 +45,35 @@ void print(const std::string &s)
   std::cout << "Printed: " << s << std::endl;
 }
 
+Boxed_Value dynamic_function(BoxedCPP_System &ss, const std::string &name, 
+    const std::vector<Boxed_Value> &params)
+{
+  
+  if (name == "concat_string")
+  {
+    Boxed_Value result;
+
+    if (params.size() == 0)
+    {
+      return result;
+    } else {
+      result = 
+        dispatch(ss.get_function("to_string"), Param_List_Builder() << params[0]);
+    }
+
+    for (size_t i = 1; i < params.size(); ++i)
+    {
+      result = 
+        dispatch(ss.get_function("+"), Param_List_Builder() << result << 
+            dispatch(ss.get_function("to_string"), Param_List_Builder() << params[i]));
+    }
+
+    return result;
+  } else {
+    throw std::runtime_error("Unknown function call");
+  }
+  
+}
 
 //Test main
 int main()
@@ -77,6 +106,20 @@ int main()
   dispatch(ss.get_function("print"),
       Param_List_Builder() << dispatch(ss.get_function("to_string"), Param_List_Builder() << addresult));
 
+  // Now we are going to register a new dynamic function,
+  // when this function is called the objects are not unboxed, but passed
+  // in in their boxed state
+  ss.register_function(boost::shared_ptr<Proxy_Function>(new Dynamic_Proxy_Function(boost::bind(&dynamic_function, boost::ref(ss), "concat_string", _1))), "concat_string");
+
+
+  // Call our newly defined dynamic function
+  dispatch(ss.get_function("print"),
+      Param_List_Builder() << dispatch(ss.get_function("concat_string"),
+        Param_List_Builder() << std::string("\n\t") << std::string("The Value Was: ") 
+                             << double(42.5) << std::string(".")
+                             << '\n'
+                             << '\t' << std::string("The old value was: ")
+                             << addresult << '.' << '\n' ));
   //
   //
   /* Older tests
