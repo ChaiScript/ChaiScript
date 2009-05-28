@@ -34,6 +34,16 @@ void print(const std::string &s)
   std::cout << "Printed: " << s << std::endl;
 }
 
+Boxed_Value named_func_call(BoxedCPP_System &ss,
+    const std::string &nametocall, const std::vector<Boxed_Value> &params)
+{
+  if (params.size() == 2)
+  {
+    return dispatch(ss.get_function(nametocall), params);
+  } else {
+    throw std::runtime_error("Invalid num params");
+  }
+}
 
 // A function that takes a dynamic list of params
 // and calls a bunch of conversion functions on them and 
@@ -152,5 +162,21 @@ int main()
   //Now, prove that the reference was successfully acquired
   //and we are able to peek into the boxed types
   dispatch(ss.get_function("show_message"), sos);
+
+
+
+
+  // Finally, we are going to register some named function aliases, for 
+  // the fun of it
+  ss.register_function(boost::shared_ptr<Proxy_Function>(
+        new Dynamic_Proxy_Function(boost::bind(&named_func_call, boost::ref(ss), "+", _1))), "add");
+
+  //Call our newly named "add" function (which in turn dispatches +)
+  
+  std::cout << "Result of add function: " << 
+    Cast_Helper<int>()(dispatch(ss.get_function("add"), Param_List_Builder() << 5 << 2))
+    << std::endl; 
+ 
+
 }
 
