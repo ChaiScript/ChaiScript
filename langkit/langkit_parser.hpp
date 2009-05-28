@@ -36,6 +36,15 @@ std::pair<Token_Iterator, bool> Or_Rule
 std::pair<Token_Iterator, bool> And_Rule
     (Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, struct Rule lhs, struct Rule rhs);
 
+std::pair<Token_Iterator, bool> Kleene_Rule
+    (Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, struct Rule rule);
+
+std::pair<Token_Iterator, bool> Plus_Rule
+    (Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, struct Rule rule);
+
+std::pair<Token_Iterator, bool> Optional_Rule
+    (Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, struct Rule rule);
+
 struct Rule {
     RuleImplPtr impl;
 
@@ -62,6 +71,18 @@ struct Rule {
 
     Rule operator<<(const Rule &rhs) {
         return Rule(boost::bind(And_Rule, _1, _2, _3, _4, _5, *this, rhs));
+    }
+
+    Rule operator*() {
+        return Rule(boost::bind(Kleene_Rule, _1, _2, _3, _4, _5, *this));
+    }
+
+    Rule operator+() {
+        return Rule(boost::bind(Plus_Rule, _1, _2, _3, _4, _5, *this));
+    }
+
+    Rule operator~() {
+        return Rule(boost::bind(Optional_Rule, _1, _2, _3, _4, _5, *this));
     }
 
     //const RuleImplPtr get_impl() const { return impl; }

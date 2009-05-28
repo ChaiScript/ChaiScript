@@ -65,11 +65,11 @@ void parse(std::vector<TokenPtr> &tokens) {
 
 
     //Example: "def add(x,y)"
-    //To do the params for real we need kleene star and other looping parsers
+
     Rule params;
     Rule rule(TokenType::Function_Def);
-    rule = Ign(Str("def")) << Id(TokenType::Identifier) << Ign(Str("(")) << params << Ign(Str(")"));
-    params = Id(TokenType::Identifier) << Ign(Str(",")) << Id(TokenType::Identifier);
+    rule = Ign(Str("def")) << Id(TokenType::Identifier) << ~(Ign(Str("(")) << ~params << Ign(Str(")")));
+    params = Id(TokenType::Identifier) << *(Ign(Str(",")) << Id(TokenType::Identifier));
 
     Token_Iterator iter = tokens.begin(), end = tokens.end();
     TokenPtr parent(new Token("Root", 0, "test"));
