@@ -8,6 +8,7 @@
 #include <boost/lexical_cast.hpp>
 #include <stdexcept>
 #include <vector>
+#include <iostream>
 
 #include "boxed_value.hpp"
 #include "type_info.hpp"

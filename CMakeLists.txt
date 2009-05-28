@@ -6,5 +6,5 @@ SET (CMAKE_BUILD_TYPE gdb)
 SET (CMAKE_C_FLAGS_GDB " -Wall -ggdb")
 SET (CMAKE_CXX_FLAGS_GDB " -Wall -ggdb")
 
-add_subdirectory(langkit bin)
-add_subdirectory(boxedcpp bin)
+add_subdirectory(langkit bin/langkit)
+add_subdirectory(boxedcpp bin/boxedcpp)

@@ -2,7 +2,7 @@
 #define __type_info_hpp__
 
 #include <boost/type_traits.hpp>
-
+#include <boost/ref.hpp>
 struct Type_Info
 {
   Type_Info(bool t_is_const, bool t_is_reference, bool t_is_pointer, bool t_is_void, 
