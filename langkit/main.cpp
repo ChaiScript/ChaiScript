@@ -12,7 +12,7 @@
 
 class TokenType { public: enum Type { Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close,
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
-    Function_Def}; };
+    Function_Def, Scoped_Block, Statement, Equation, Return}; };
 
 void debug_print(TokenPtr token, std::string prepend) {
     std::cout << prepend << "Token: " << token->text << "(" << token->identifier << ") @ " << token->filename << ": ("  << token->start.column
@@ -67,9 +67,31 @@ void parse(std::vector<TokenPtr> &tokens) {
     //Example: "def add(x,y)"
 
     Rule params;
+    Rule block(TokenType::Scoped_Block);
     Rule rule(TokenType::Function_Def);
-    rule = Ign(Str("def")) << Id(TokenType::Identifier) << ~(Ign(Str("(")) << ~params << Ign(Str(")")));
+    Rule statement(TokenType::Statement);
+    Rule return_statement(TokenType::Return);
+
+    rule = Ign(Str("def")) << Id(TokenType::Identifier) << ~(Ign(Str("(")) << ~params << Ign(Str(")"))) << block;
     params = Id(TokenType::Identifier) << *(Ign(Str(",")) << Id(TokenType::Identifier));
+    block = Ign(Str("{")) << ~return_statement << Ign(Str("}"));
+    return_statement = Ign(Str("return")) << Id(TokenType::Identifier) << Str("+") << Id(TokenType::Identifier);
+
+
+    /*
+    Rule rule(3);
+    rule = Ign(Str("Bob")) << Str("Fred");
+    */
+
+    /*
+    statement = equation;
+    equation = Id(TokenType::Identifier) << Str("+") << Id(TokenType::Identifier);
+    */
+
+    /*
+    Rule rule(TokenType::Function_Def);
+    rule = +Str("Bob");
+    */
 
     Token_Iterator iter = tokens.begin(), end = tokens.end();
     TokenPtr parent(new Token("Root", 0, "test"));
