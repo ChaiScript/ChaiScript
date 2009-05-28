@@ -8,13 +8,8 @@
 
 struct Test
 {
-  Test()
-    : md(0)
-  {
-  }
-
   Test(const std::string &s)
-    : message(s), md(0)
+    : message(s)
   {
     std::cout << "Test class constructed with value: " << s << std::endl;
   }
@@ -29,38 +24,41 @@ struct Test
     return message;
   }
 
-  int method(double d)
-  {
-    md += d;
-    std::cout << "Method called " << md << std::endl;
-    return int(md);
-  }
-
   std::string message;
-  double md;
 };
 
+
+//A function that prints any string passed to it
 void print(const std::string &s)
 {
   std::cout << "Printed: " << s << std::endl;
 }
 
+
+// A function that takes a dynamic list of params
+// and calls a bunch of conversion functions on them and 
+// returns the result as a boxed_value
 Boxed_Value dynamic_function(BoxedCPP_System &ss, const std::string &name, 
     const std::vector<Boxed_Value> &params)
 {
-  
   if (name == "concat_string")
   {
     Boxed_Value result;
 
+    //Return a void if there is nothing in the array
     if (params.size() == 0)
     {
       return result;
     } else {
+      //else, prepopulate the result with a string conversion of the first
+      //param
       result = 
         dispatch(ss.get_function("to_string"), Param_List_Builder() << params[0]);
     }
 
+    //Then, loop over all remaining params, converting them to strings and adding
+    //them to the result. This example maybe bette served with a string += operator
+    //implementation, but it works.
     for (size_t i = 1; i < params.size(); ++i)
     {
       result = 
@@ -72,8 +70,8 @@ Boxed_Value dynamic_function(BoxedCPP_System &ss, const std::string &name,
   } else {
     throw std::runtime_error("Unknown function call");
   }
-  
 }
+
 
 //Test main
 int main()
@@ -112,7 +110,8 @@ int main()
   ss.register_function(boost::shared_ptr<Proxy_Function>(new Dynamic_Proxy_Function(boost::bind(&dynamic_function, boost::ref(ss), "concat_string", _1))), "concat_string");
 
 
-  // Call our newly defined dynamic function
+  // Call our newly defined dynamic function with 10 parameters, then send
+  // its output to the "print" function
   dispatch(ss.get_function("print"),
       Param_List_Builder() << dispatch(ss.get_function("concat_string"),
         Param_List_Builder() << std::string("\n\t") << std::string("The Value Was: ") 
@@ -120,52 +119,38 @@ int main()
                              << '\n'
                              << '\t' << std::string("The old value was: ")
                              << addresult << '.' << '\n' ));
-  //
-  //
-  /* Older tests
-  ss.register_type<Test>("Test");
-  ss.register_function(boost::function<int (Test*, double)>(&Test::method), "method");
-  ss.register_function(boost::function<std::string (const std::string &)>(&testprint), "print");
-  ss.register_function(boost::function<void ()>(&print), "voidfunc");
+
+
+
+
+  //Register some local methods of the "Test" class
   ss.register_function(build_constructor<Test, const std::string &>(), "Test");
-  ss.register_function(boost::function<void (Test*)>(&Test::show_message), "show_message");
-  ss.register_function(boost::function<std::string &(Test*)>(&Test::get_message), "get_message");
+  ss.register_function(boost::function<std::string &(Test *)>(&Test::get_message), "get_message");
+  ss.register_function(boost::function<void (Test *)>(&Test::show_message), "show_message");
 
+  //Create a new object using the "Test" constructor, passing the param "Yo".
+  //Then, add the new object to the system with the name "testobj2"
+  ss.add_object("testobj2", 
+      dispatch(ss.get_function("Test"), Param_List_Builder() << std::string("Yo")));
 
-  ss.add_object("testobj", boost::shared_ptr<Test>(new Test()));
-  ss.add_object("d", boost::shared_ptr<double>(new double(10.2)));
-  ss.add_object("str", std::string("Hello World"));
-
-
-
+  // Look up and store a reference to our new object
   std::vector<Boxed_Value> sos;
-  sos.push_back(ss.get_object("testobj"));
-  sos.push_back(ss.get_object("d"));
+  sos.push_back(ss.get_object("testobj2"));
 
-  boost::shared_ptr<Proxy_Function> method1(ss.get_function("method").front().second);
-  (*method1)(sos);
-  (*method1)(sos);
-  Boxed_Value o = (*method1)(sos);
+  //Print the message the object was created with
+  dispatch(ss.get_function("show_message"), sos);
 
-  dispatch(ss.get_function("print"), Param_List_Builder() << ss.get_object("str"));
+  //Now, get a reference to the object's stored message
+  Boxed_Value stringref = dispatch(ss.get_function("get_message"), sos);
 
-  //Add new dynamically created object from registered "Test" constructor
-  ss.add_object("testobj2", dispatch(ss.get_function("Test"), Param_List_Builder() << std::string("Yo")));
-
-  std::cout << Cast_Helper<int>()(o) << std::endl;
-
-  dispatch(ss.get_function("voidfunc"), Param_List_Builder());
-
-  std::vector<Boxed_Value> sos3;
-  sos3.push_back(ss.get_object("testobj2"));
-  dispatch(ss.get_function("show_message"), sos3);
-
-  Boxed_Value stringref = dispatch(ss.get_function("get_message"), sos3);
-
+  //Unbox it using Cast_Helper
   std::string &sr = Cast_Helper<std::string &>()(stringref);
+
+  //Update the value of the reference
   sr = "Bob Updated The message";
 
-  dispatch(ss.get_function("show_message"), sos3);
-  */
+  //Now, prove that the reference was successfully acquired
+  //and we are able to peek into the boxed types
+  dispatch(ss.get_function("show_message"), sos);
 }
 
