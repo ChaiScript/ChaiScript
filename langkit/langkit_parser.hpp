@@ -19,7 +19,10 @@ struct RuleImpl {
     bool keep;
     int new_id;
 
-    RuleImpl() : keep(true), new_id(-1) { }
+    RuleImpl() : keep(true), new_id(-1) {}
+    RuleImpl(int id) : keep(true), new_id(id) {}
+    RuleImpl(RuleFun fun) : rule(fun), keep(true), new_id(-1) {}
+    RuleImpl(RuleFun fun, bool keep_match) : rule(fun), keep(keep_match), new_id(-1) {}
 
     std::pair<Token_Iterator, bool> operator()(Token_Iterator iter, Token_Iterator end, TokenPtr parent) {
         return rule(iter, end, parent, keep, new_id);
@@ -53,10 +56,10 @@ std::pair<Token_Iterator, bool> Nop_Rule
 struct Rule {
     RuleImplPtr impl;
 
-    Rule() : impl(new RuleImpl()) { }
-    Rule(int id) : impl(new RuleImpl()) { impl->new_id = id; }
-    Rule(RuleFun fun) : impl(new RuleImpl()) { impl->rule = fun; }
-    Rule(RuleFun fun, bool keep) : impl(new RuleImpl()) { impl->rule = fun; impl->keep = keep; }
+    Rule() : impl(new RuleImpl()) {}
+    Rule(int id) : impl(new RuleImpl(id)) {}
+    Rule(RuleFun fun) : impl(new RuleImpl(fun)) {}
+    Rule(RuleFun fun, bool keep) : impl(new RuleImpl(fun, keep)) {}
 
     std::pair<Token_Iterator, bool> operator()(Token_Iterator iter, Token_Iterator end, TokenPtr parent) {
         return (*impl)(iter, end, parent);
