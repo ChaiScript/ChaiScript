@@ -8,9 +8,11 @@
 
 #include "langkit_lexer.hpp"
 
+struct RuleImpl;
+
 typedef std::vector<TokenPtr>::iterator Token_Iterator;
 typedef boost::function<std::pair<Token_Iterator, bool>(Token_Iterator, Token_Iterator, TokenPtr, bool, int)> RuleFun;
-typedef std::tr1::shared_ptr<struct RuleImpl> RuleImplPtr;
+typedef std::tr1::shared_ptr<RuleImpl> RuleImplPtr;
 
 struct RuleImpl {
     RuleFun rule;
@@ -45,6 +47,9 @@ std::pair<Token_Iterator, bool> Plus_Rule
 std::pair<Token_Iterator, bool> Optional_Rule
     (Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, struct Rule rule);
 
+std::pair<Token_Iterator, bool> Nop_Rule
+    (Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, struct Rule rule);
+
 struct Rule {
     RuleImplPtr impl;
 
@@ -58,9 +63,9 @@ struct Rule {
     }
 
     Rule &operator=(const Rule &rule) {
-        //*impl = *(rule.impl);
-        impl->rule = rule.impl->rule;
-        impl->keep = rule.impl->keep;
+        int prev_id = impl->new_id;
+        *impl = *(rule.impl);
+        impl->new_id = prev_id;
 
         return *this;
     }
@@ -100,5 +105,6 @@ Rule Str(const std::string &text);
 Rule Id(int id);
 
 Rule Ign(Rule rule);
+Rule Nop(Rule rule);
 
 #endif /* LANGKIT_PARSER_HPP_ */
