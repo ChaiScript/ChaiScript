@@ -229,6 +229,7 @@ std::pair<Token_Iterator, bool> Optional_Rule
 Rule Str(const std::string &text, bool keep) {
     return Rule(boost::bind(String_Rule, _1, _2, _3, _4, _5, text), keep);
 }
+
 Rule Id(int id, bool keep) {
     return Rule(boost::bind(Type_Rule, _1, _2, _3, _4, _5, id), keep);
 }

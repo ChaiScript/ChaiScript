@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 
+enable_testing()
+
 project(jaytea)
 
 SET (CMAKE_BUILD_TYPE gdb)

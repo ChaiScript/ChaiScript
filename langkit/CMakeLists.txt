@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 enable_testing()
 
-
 project(langkit)
 
 SET (CMAKE_BUILD_TYPE gdb)
@@ -20,4 +19,4 @@ if(Boost_FOUND)
    target_link_libraries(langkit_unittest ${Boost_LIBRARIES})
 endif()
 
-add_test(langkit_unittest langkit_unittest)
+add_test(langkit_unittest ${EXECUTABLE_OUTPUT_PATH}/langkit_unittest)
