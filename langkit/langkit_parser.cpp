@@ -95,7 +95,7 @@ std::pair<Token_Iterator, bool> And_Rule(Token_Iterator iter, Token_Iterator end
     if (iter != end) {
         std::pair<Token_Iterator, bool> result = lhs(iter, end, parent);
 
-        if (result.second) {
+        if ((result.second) && (result.first != end)) {
             result = rhs(result.first, end, parent);
             if (result.second) {
                 if (new_id != -1) {
@@ -133,7 +133,7 @@ std::pair<Token_Iterator, bool> Kleene_Rule
 
     result.second = true;
     while ((new_iter != end) && (result.second == true)) {
-        result = rule(iter, end, parent);
+        result = rule(new_iter, end, parent);
         new_iter = result.first;
     }
 
@@ -142,7 +142,6 @@ std::pair<Token_Iterator, bool> Kleene_Rule
         parent->filename = (*iter)->filename;
         parent->start = (*iter)->start;
         parent->end = (*(result.first - 1))->end;
-
 
         prev_parent->children.push_back(parent);
     }
@@ -169,7 +168,7 @@ std::pair<Token_Iterator, bool> Plus_Rule
         if (result.second == true) {
             loop_iter = result.first;
             result.second = true;
-            while ((iter != end) && (result.second == true)) {
+            while ((loop_iter != end) && (result.second == true)) {
                 result = rule(loop_iter, end, parent);
                 loop_iter = result.first;
             }
@@ -209,7 +208,7 @@ std::pair<Token_Iterator, bool> Optional_Rule
     std::pair<Token_Iterator, bool> result;
     result.second = true;
     if ((new_iter != end) && (result.second == true)) {
-        result = rule(iter, end, parent);
+        result = rule(new_iter, end, parent);
         new_iter = result.first;
     }
 

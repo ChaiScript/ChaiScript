@@ -66,6 +66,7 @@ void parse(std::vector<TokenPtr> &tokens) {
 
     //Example: "def add(x,y)"
 
+
     Rule params;
     Rule block(TokenType::Scoped_Block);
     Rule rule(TokenType::Function_Def);
@@ -78,6 +79,11 @@ void parse(std::vector<TokenPtr> &tokens) {
     return_statement = Ign(Str("return")) << Id(TokenType::Identifier) << Str("+") << Id(TokenType::Identifier);
 
 
+    /*
+    Rule rule, rule2;
+    rule = rule2;
+    rule2 = Str("Bob");
+    */
     /*
     Rule rule(3);
     rule = Ign(Str("Bob")) << Str("Fred");
