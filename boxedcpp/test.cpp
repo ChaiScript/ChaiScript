@@ -5,6 +5,7 @@
 #include <boost/function.hpp>
 
 #include "boxedcpp.hpp"
+#include "bootstrap.hpp"
 
 struct Test
 {

@@ -1,4 +1,5 @@
 #include "boxedcpp.hpp"
+#include "bootstrap.hpp"
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE boxedcpp_unittests
