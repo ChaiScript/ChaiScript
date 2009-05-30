@@ -19,9 +19,22 @@ void bootstrap_random_access_container(BoxedCPP_System &system)
       boost::function<typename ContainerType::reference (ContainerType *, int)>(indexoper(&ContainerType::operator[])), "[]");
 }
 
+template<typename Assignable>
+void bootstrap_assignable(BoxedCPP_System &system)
+{
+  system.register_function(
+      boost::function<Assignable &(Assignable*, Assignable&)>(&Assignable::operator=), "=");
+}
+
 template<typename ContainerType>
 void bootstrap_container(BoxedCPP_System &system)
 {
+  bootstrap_assignable<ContainerType>(system);
+
+  system.register_function(
+      boost::function<size_t (ContainerType *)>(&ContainerType::size), "size");
+  system.register_function(
+      boost::function<size_t (ContainerType *)>(&ContainerType::size), "maxsize");
 }
 
 template<typename ContainerType>
