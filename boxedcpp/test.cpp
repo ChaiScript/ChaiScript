@@ -6,6 +6,7 @@
 
 #include "boxedcpp.hpp"
 #include "bootstrap.hpp"
+#include "bootstrap_stl.hpp"
 
 struct Test
 {
@@ -89,6 +90,7 @@ int main()
 {
   BoxedCPP_System ss;
   bootstrap(ss);
+  bootstrap_vector<std::vector<int> >(ss);
   dump_system(ss);
 
   //Calling a function by name and allowing the built in dispatch mechanism to
