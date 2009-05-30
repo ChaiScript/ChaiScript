@@ -92,12 +92,6 @@ struct Rule {
     Rule operator~() {
         return Rule(boost::bind(Optional_Rule, _1, _2, _3, _4, _5, *this));
     }
-
-    //const RuleImplPtr get_impl() const { return impl; }
-
-//private:
-    //RuleImplPtr impl;
-
 };
 
 

@@ -65,7 +65,7 @@ void parse(std::vector<TokenPtr> &tokens) {
 
 
     //Example: "def add(x,y)"
-
+    /*
     Rule params;
     Rule block(TokenType::Scoped_Block);
     Rule rule(TokenType::Function_Def);
@@ -76,6 +76,9 @@ void parse(std::vector<TokenPtr> &tokens) {
     params = Id(TokenType::Identifier) << *(Ign(Str(",")) << Id(TokenType::Identifier));
     block = Ign(Str("{")) << ~return_statement << Ign(Str("}"));
     return_statement = Ign(Str("return")) << Id(TokenType::Identifier) << Str("+") << Id(TokenType::Identifier);
+    */
+
+    Rule rule = Str("x") << Id(TokenType::Semicolon);
 
     /*
     Rule rule;
@@ -112,7 +115,6 @@ void parse(std::vector<TokenPtr> &tokens) {
         std::cout << "Parse failed: " << std::endl;
         debug_print(parent, "");
     }
-
 }
 
 
@@ -142,7 +144,7 @@ int main(int argc, char *argv[]) {
         std::getline(std::cin, input);
         while (input != "quit") {
             std::vector<TokenPtr> tokens = lexer.lex(input, "INPUT");
-            //debug_print(tokens);
+            debug_print(tokens);
             parse(tokens);
 
             std::cout << "Expression> ";
@@ -151,6 +153,7 @@ int main(int argc, char *argv[]) {
     }
     else {
         std::vector<TokenPtr> tokens = lexer.lex(load_file(argv[1]), argv[1]);
-        debug_print(tokens);
+        parse(tokens);
+        //debug_print(tokens);
     }
 }
