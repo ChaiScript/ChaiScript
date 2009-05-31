@@ -20,9 +20,10 @@ struct File_Position {
 
 struct Pattern {
     boost::regex regex;
+    std::string regex_string;
     int identifier;
 
-    Pattern(const std::string &regexp, int id) : regex(regexp), identifier(id) { }
+    Pattern(const std::string &regexp, int id) : regex(regexp), regex_string(regexp), identifier(id) { }
 };
 
 typedef std::tr1::shared_ptr<struct Token> TokenPtr;

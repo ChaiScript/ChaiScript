@@ -18,8 +18,23 @@ std::vector<TokenPtr> Lexer::lex(const std::string &input, const char *filename)
     int current_col = 0;
     int current_line = 0;
 
+    std::string master_lex_pattern;
+
+    unsigned int i = 0;
+    for (iter = lex_patterns.begin(), end = lex_patterns.end(); iter != end; ++iter) {
+        if (i > 0) {
+            master_lex_pattern += "|";
+        }
+        master_lex_pattern += "(" + iter->regex_string + ")";
+        ++i;
+    }
+
+    boost::regex lex_regex(master_lex_pattern);
+
     while (input_iter != input.end()) {
         found = false;
+
+        /*
         for (iter = lex_patterns.begin(), end = lex_patterns.end(); iter != end; ++iter) {
             boost::match_results<std::string::const_iterator> what;
             if (regex_search(input_iter, input.end(), what, iter->regex, boost::match_continuous)) {
@@ -35,6 +50,27 @@ std::vector<TokenPtr> Lexer::lex(const std::string &input, const char *filename)
                 break;
             }
         }
+        */
+
+        boost::match_results<std::string::const_iterator> what;
+        if (regex_search(input_iter, input.end(), what, lex_regex, boost::match_continuous)) {
+            for (i = 0; i < lex_patterns.size(); ++i) {
+                if (!(std::string(what[i+1])).empty()) {
+                    TokenPtr t(new Token(what[i+1], lex_patterns[i].identifier, filename));
+                    t->start.column = current_col;
+                    t->start.line = current_line;
+                    current_col += t->text.size();
+                    t->end.column = current_col;
+                    t->end.line = current_line;
+                    retval.push_back(t);
+                    input_iter += t->text.size();
+                    found = true;
+                    break;
+                }
+            }
+        }
+
+
         if (!found) {
             for (iter = skip_patterns.begin(), end = skip_patterns.end(); iter != end; ++iter) {
                 boost::match_results<std::string::const_iterator> what;

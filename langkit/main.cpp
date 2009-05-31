@@ -12,7 +12,7 @@
 
 class TokenType { public: enum Type { Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close,
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
-    Function_Def, Scoped_Block, Statement, Equation, Return}; };
+    Function_Def, Scoped_Block, Statement, Equation, Return, Add}; };
 
 void debug_print(TokenPtr token, std::string prepend) {
     std::cout << prepend << "Token: " << token->text << "(" << token->identifier << ") @ " << token->filename << ": ("  << token->start.column
@@ -64,21 +64,25 @@ void parse(std::vector<TokenPtr> &tokens) {
     */
 
 
-    //Example: "def add(x,y)"
-    /*
+    //Example: "def add(x,y) { return x+y }"
+
     Rule params;
     Rule block(TokenType::Scoped_Block);
     Rule rule(TokenType::Function_Def);
     Rule statement(TokenType::Statement);
     Rule return_statement(TokenType::Return);
+    Rule add(TokenType::Add);
 
     rule = Ign(Str("def")) << Id(TokenType::Identifier) << ~(Ign(Str("(")) << ~params << Ign(Str(")"))) << block;
     params = Id(TokenType::Identifier) << *(Ign(Str(",")) << Id(TokenType::Identifier));
     block = Ign(Str("{")) << ~return_statement << Ign(Str("}"));
-    return_statement = Ign(Str("return")) << Id(TokenType::Identifier) << Str("+") << Id(TokenType::Identifier);
-    */
+    return_statement = Ign(Str("return")) << add;
+    add = Id(TokenType::Identifier) << Ign(Str("+")) << Id(TokenType::Identifier);
 
+
+    /*
     Rule rule = Str("x") << Id(TokenType::Semicolon);
+    */
 
     /*
     Rule rule;
@@ -107,6 +111,13 @@ void parse(std::vector<TokenPtr> &tokens) {
 
     std::pair<Token_Iterator, bool> results = rule(iter, end, parent);
 
+    /*
+    while (results.second) {
+        results = rule(results.first + 1, end, parent);
+        //debug_print(parent, "");
+    }
+    */
+
     if (results.second) {
         std::cout << "Parse successful: " << std::endl;
         debug_print(parent, "");
@@ -115,6 +126,7 @@ void parse(std::vector<TokenPtr> &tokens) {
         std::cout << "Parse failed: " << std::endl;
         debug_print(parent, "");
     }
+
 }
 
 
@@ -144,7 +156,7 @@ int main(int argc, char *argv[]) {
         std::getline(std::cin, input);
         while (input != "quit") {
             std::vector<TokenPtr> tokens = lexer.lex(input, "INPUT");
-            debug_print(tokens);
+            //debug_print(tokens);
             parse(tokens);
 
             std::cout << "Expression> ";
