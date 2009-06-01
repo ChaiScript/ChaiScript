@@ -67,7 +67,7 @@ std::vector<TokenPtr> Lexer::lex(const std::string &input, const char *filename)
                 }
                 if ((!found_eoc) && (input_iter != input_end)) {
                     ++input_iter;
-                    current_col += 1;
+                    ++current_col;
                 }
             }
 

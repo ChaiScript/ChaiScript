@@ -77,7 +77,7 @@ struct Rule {
         return Rule(boost::bind(Or_Rule, _1, _2, _3, _4, _5, *this, rhs));
     }
 
-    Rule operator<<(const Rule &rhs) {
+    Rule operator>>(const Rule &rhs) {
         return Rule(boost::bind(And_Rule, _1, _2, _3, _4, _5, *this, rhs));
     }
 

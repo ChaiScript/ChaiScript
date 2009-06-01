@@ -53,14 +53,14 @@ void parse(std::vector<TokenPtr> &tokens, const char *filename) {
     /*
     Rule lhs;
     Rule rhs;
-    Rule rule = lhs << rhs;
+    Rule rule = lhs >> rhs;
     lhs = Str("def", true);
     rhs = Id(TokenType::Identifier, true);
 
     //Rule rule(TokenType::Function_Def);
     //rule = Str("def") | Str("int");
 
-    //Rule rule = Str("def", false) << Id(TokenType::Identifier);
+    //Rule rule = Str("def", false) >> Id(TokenType::Identifier);
     */
 
 
@@ -73,11 +73,11 @@ void parse(std::vector<TokenPtr> &tokens, const char *filename) {
     Rule return_statement(TokenType::Return);
     Rule add(TokenType::Add);
 
-    rule = Ign(Str("def")) << Id(TokenType::Identifier) << ~(Ign(Str("(")) << ~params << Ign(Str(")"))) << block;
-    params = Id(TokenType::Identifier) << *(Ign(Str(",")) << Id(TokenType::Identifier));
-    block = Ign(Str("{")) << ~return_statement << Ign(Str("}"));
-    return_statement = Ign(Str("return")) << add;
-    add = Id(TokenType::Identifier) << Ign(Str("+")) << Id(TokenType::Identifier);
+    rule = Ign(Str("def")) >> Id(TokenType::Identifier) >> ~(Ign(Str("(")) >> ~params >> Ign(Str(")"))) >> block;
+    params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
+    block = Ign(Str("{")) >> ~return_statement >> Ign(Str("}"));
+    return_statement = Ign(Str("return")) >> add;
+    add = Id(TokenType::Identifier) >> Ign(Str("+")) >> Id(TokenType::Identifier);
 
 
     /*
@@ -93,12 +93,12 @@ void parse(std::vector<TokenPtr> &tokens, const char *filename) {
 
     /*
     Rule rule(3);
-    rule = Ign(Str("Bob")) << Str("Fred");
+    rule = Ign(Str("Bob")) >> Str("Fred");
     */
 
     /*
     statement = equation;
-    equation = Id(TokenType::Identifier) << Str("+") << Id(TokenType::Identifier);
+    equation = Id(TokenType::Identifier) >> Str("+") >> Id(TokenType::Identifier);
     */
 
     /*
