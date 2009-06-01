@@ -56,7 +56,6 @@ std::vector<TokenPtr> Lexer::lex(const std::string &input, const char *filename)
                     input_iter += comment_end.size();
                     ++current_line;
                     current_col = 0;
-                    break;
                 }
                 boost::match_results<std::string::const_iterator> eoc_delim;
                 if (regex_search(input_iter, input_end, eoc_delim, multiline_comment_end_pattern.regex, boost::match_continuous)) {
@@ -68,6 +67,7 @@ std::vector<TokenPtr> Lexer::lex(const std::string &input, const char *filename)
                 }
                 if ((!found_eoc) && (input_iter != input_end)) {
                     ++input_iter;
+                    current_col += 1;
                 }
             }
 

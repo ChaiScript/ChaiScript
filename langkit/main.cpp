@@ -118,7 +118,6 @@ void parse(std::vector<TokenPtr> &tokens, const char *filename) {
     }
     */
 
-
     if (results.second) {
         std::cout << "Parse successful: " << std::endl;
         debug_print(parent, "");
@@ -127,7 +126,6 @@ void parse(std::vector<TokenPtr> &tokens, const char *filename) {
         std::cout << "Parse failed: " << std::endl;
         debug_print(parent, "");
     }
-
 }
 
 
@@ -168,7 +166,7 @@ int main(int argc, char *argv[]) {
     }
     else {
         std::vector<TokenPtr> tokens = lexer.lex(load_file(argv[1]), argv[1]);
+        debug_print(tokens);
         parse(tokens, argv[1]);
-        //debug_print(tokens);
     }
 }
