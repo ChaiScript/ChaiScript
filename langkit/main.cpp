@@ -111,14 +111,14 @@ void parse(std::vector<TokenPtr> &tokens) {
 
     std::pair<Token_Iterator, bool> results = rule(iter, end, parent);
 
-
+    /*
     while (results.second) {
         results = rule(results.first + 1, end, parent);
         //debug_print(parent, "");
     }
+    */
 
 
-    /*
     if (results.second) {
         std::cout << "Parse successful: " << std::endl;
         debug_print(parent, "");
@@ -127,7 +127,7 @@ void parse(std::vector<TokenPtr> &tokens) {
         std::cout << "Parse failed: " << std::endl;
         debug_print(parent, "");
     }
-    */
+
 }
 
 
@@ -143,7 +143,7 @@ int main(int argc, char *argv[]) {
 
     lexer << Pattern("[A-Za-z]+", TokenType::Identifier);
     lexer << Pattern("[0-9]+(\\.[0-9]+)?", TokenType::Number);
-    lexer << Pattern("[!@#$%^&*\\-+=<>/]+", TokenType::Operator);
+    lexer << Pattern("[!@#$%^&*\\-+=<>]+|/[!@#$%^&\\-+=<>]*", TokenType::Operator);
     lexer << Pattern("\\(", TokenType::Parens_Open);
     lexer << Pattern("\\)", TokenType::Parens_Close);
     lexer << Pattern("\\[", TokenType::Square_Open);
@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
         std::getline(std::cin, input);
         while (input != "quit") {
             std::vector<TokenPtr> tokens = lexer.lex(input, "INPUT");
-            //debug_print(tokens);
+            debug_print(tokens);
             parse(tokens);
 
             std::cout << "Expression> ";
