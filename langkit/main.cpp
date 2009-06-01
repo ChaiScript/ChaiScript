@@ -12,11 +12,11 @@
 
 class TokenType { public: enum Type { Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close,
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
-    Function_Def, Scoped_Block, Statement, Equation, Return, Add}; };
+    Function_Def, Scoped_Block, Statement, Equation, Return, Add, Comment}; };
 
 void debug_print(TokenPtr token, std::string prepend) {
-    std::cout << prepend << "Token: " << token->text << "(" << token->identifier << ") @ " << token->filename << ": ("  << token->start.column
-        << ", " << token->start.line << ") to (" << token->end.column << ", " << token->end.line << ") " << std::endl;
+    std::cout << prepend << "Token: " << token->text << "(" << token->identifier << ") @ " << token->filename << ": ("  << token->start.line
+        << ", " << token->start.column << ") to (" << token->end.line << ", " << token->end.column << ") " << std::endl;
 
     for (unsigned int i = 0; i < token->children.size(); ++i) {
         debug_print(token->children[i], prepend + "  ");
@@ -111,13 +111,14 @@ void parse(std::vector<TokenPtr> &tokens) {
 
     std::pair<Token_Iterator, bool> results = rule(iter, end, parent);
 
-    /*
+
     while (results.second) {
         results = rule(results.first + 1, end, parent);
         //debug_print(parent, "");
     }
-    */
 
+
+    /*
     if (results.second) {
         std::cout << "Parse successful: " << std::endl;
         debug_print(parent, "");
@@ -126,7 +127,7 @@ void parse(std::vector<TokenPtr> &tokens) {
         std::cout << "Parse failed: " << std::endl;
         debug_print(parent, "");
     }
-
+    */
 }
 
 
@@ -137,10 +138,12 @@ int main(int argc, char *argv[]) {
     lexer.set_skip(Pattern("[ \\t]+", TokenType::Whitespace));
     lexer.set_line_sep(Pattern("\\n|\\r\\n", TokenType::Carriage_Return));
     lexer.set_command_sep(Pattern(";|\\r\\n|\\n", TokenType::Semicolon));
+    lexer.set_multiline_comment(Pattern("/\\*", TokenType::Comment), Pattern("\\*/", TokenType::Comment));
+    lexer.set_singleline_comment(Pattern("//", TokenType::Comment));
 
     lexer << Pattern("[A-Za-z]+", TokenType::Identifier);
     lexer << Pattern("[0-9]+(\\.[0-9]+)?", TokenType::Number);
-    lexer << Pattern("[!@#$%^&*\\-+=/<>]+", TokenType::Operator);
+    lexer << Pattern("[!@#$%^&*\\-+=<>/]+", TokenType::Operator);
     lexer << Pattern("\\(", TokenType::Parens_Open);
     lexer << Pattern("\\)", TokenType::Parens_Close);
     lexer << Pattern("\\[", TokenType::Square_Open);

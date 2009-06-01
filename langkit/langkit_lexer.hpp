@@ -20,10 +20,10 @@ struct File_Position {
 
 struct Pattern {
     boost::regex regex;
-    std::string regex_string;
     int identifier;
 
-    Pattern(const std::string &regexp, int id) : regex(regexp), regex_string(regexp), identifier(id) { }
+    Pattern() { }
+    Pattern(const std::string &regexp, int id) : regex(regexp), identifier(id) { }
 };
 
 typedef std::tr1::shared_ptr<struct Token> TokenPtr;
@@ -41,16 +41,32 @@ struct Token {
 
 struct Lexer {
     std::vector<Pattern> lex_patterns;
-    std::vector<Pattern> skip_patterns;
-    std::vector<Pattern> command_sep_patterns;
-    std::vector<Pattern> line_sep_patterns;
+    Pattern skip_pattern;
+    Pattern command_sep_pattern;
+    Pattern line_sep_pattern;
+    Pattern multiline_comment_start_pattern;
+    Pattern multiline_comment_end_pattern;
+    Pattern singleline_comment_pattern;
 
     Lexer operator<<(const Pattern &p);
     std::vector<TokenPtr> lex(const std::string &input, const char *fname);
 
-    void set_skip(const Pattern &p);
-    void set_line_sep(const Pattern &p);
-    void set_command_sep(const Pattern &p);
+    void set_skip(const Pattern &p) {
+        skip_pattern = p;
+    }
+    void set_line_sep(const Pattern &p) {
+        line_sep_pattern = p;
+    }
+    void set_command_sep(const Pattern &p) {
+        command_sep_pattern = p;
+    }
+    void set_multiline_comment(const Pattern &start, const Pattern &end) {
+        multiline_comment_start_pattern = start;
+        multiline_comment_end_pattern = end;
+    }
+    void set_singleline_comment(const Pattern &p) {
+        singleline_comment_pattern = p;
+    }
 };
 
 
