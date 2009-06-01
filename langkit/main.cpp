@@ -10,7 +10,7 @@
 #include "langkit_lexer.hpp"
 #include "langkit_parser.hpp"
 
-class TokenType { public: enum Type { Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close,
+class TokenType { public: enum Type { File, Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close,
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
     Function_Def, Scoped_Block, Statement, Equation, Return, Add, Comment}; };
 
@@ -48,7 +48,7 @@ std::string load_file(const char *filename) {
     return ret_val;
 }
 
-void parse(std::vector<TokenPtr> &tokens) {
+void parse(std::vector<TokenPtr> &tokens, const char *filename) {
 
     /*
     Rule lhs;
@@ -107,7 +107,7 @@ void parse(std::vector<TokenPtr> &tokens) {
     */
 
     Token_Iterator iter = tokens.begin(), end = tokens.end();
-    TokenPtr parent(new Token("Root", 0, "test"));
+    TokenPtr parent(new Token("Root", TokenType::File, filename));
 
     std::pair<Token_Iterator, bool> results = rule(iter, end, parent);
 
@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
         while (input != "quit") {
             std::vector<TokenPtr> tokens = lexer.lex(input, "INPUT");
             debug_print(tokens);
-            parse(tokens);
+            parse(tokens, "INPUT");
 
             std::cout << "Expression> ";
             std::getline(std::cin, input);
@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
     }
     else {
         std::vector<TokenPtr> tokens = lexer.lex(load_file(argv[1]), argv[1]);
-        parse(tokens);
+        parse(tokens, argv[1]);
         //debug_print(tokens);
     }
 }
