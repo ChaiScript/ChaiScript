@@ -37,26 +37,34 @@ std::pair<Token_Iterator, bool> Type_Rule(Token_Iterator iter, Token_Iterator en
 
 std::pair<Token_Iterator, bool> Or_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, Rule lhs, Rule rhs) {
     Token_Iterator new_iter;
-    unsigned int prev_size = parent->children.size();
+    unsigned int prev_size;
     TokenPtr prev_parent = parent;
 
     if (new_id != -1) {
         parent = TokenPtr(new Token("", new_id, parent->filename));
     }
 
+    prev_size = parent->children.size();
+
     if (iter != end) {
         std::pair<Token_Iterator, bool> result = lhs(iter, end, parent);
 
         if (result.second) {
+            if (new_id != -1) {
+                parent->filename = (*iter)->filename;
+                parent->start = (*iter)->start;
+                parent->end = (*(result.first - 1))->end;
 
-            parent->filename = (*iter)->filename;
-            parent->start = (*iter)->start;
-            parent->end = (*(result.first - 1))->end;
-
-
+                prev_parent->children.push_back(parent);
+            }
             return std::pair<Token_Iterator, bool>(result.first, true);
         }
         else {
+            if (parent->children.size() != prev_size) {
+                //Clear out the partial matches
+                parent->children.erase(parent->children.begin() + prev_size, parent->children.end());
+            }
+
             result = rhs(iter, end, parent);
             if (result.second) {
                 if (new_id != -1) {
@@ -95,7 +103,7 @@ std::pair<Token_Iterator, bool> And_Rule(Token_Iterator iter, Token_Iterator end
     if (iter != end) {
         std::pair<Token_Iterator, bool> result = lhs(iter, end, parent);
 
-        if ((result.second) && (result.first != end)) {
+        if (result.second) {
             result = rhs(result.first, end, parent);
             if (result.second) {
                 if (new_id != -1) {
@@ -127,25 +135,30 @@ std::pair<Token_Iterator, bool> Kleene_Rule
     std::pair<Token_Iterator, bool> result;
     Token_Iterator new_iter = iter;
 
-    if (new_id != -1) {
-        parent = TokenPtr(new Token("", new_id, parent->filename));
+    if (iter != end) {
+        if (new_id != -1) {
+            parent = TokenPtr(new Token("", new_id, parent->filename));
+        }
+
+        result.second = true;
+        while (result.second == true) {
+            result = rule(new_iter, end, parent);
+            new_iter = result.first;
+        }
+
+        if (new_id != -1) {
+
+            parent->filename = (*iter)->filename;
+            parent->start = (*iter)->start;
+            parent->end = (*(result.first - 1))->end;
+
+            prev_parent->children.push_back(parent);
+        }
+        return std::pair<Token_Iterator, bool>(result.first, true);
     }
-
-    result.second = true;
-    while ((new_iter != end) && (result.second == true)) {
-        result = rule(new_iter, end, parent);
-        new_iter = result.first;
+    else {
+        return std::pair<Token_Iterator, bool>(iter, true);
     }
-
-    if (new_id != -1) {
-
-        parent->filename = (*iter)->filename;
-        parent->start = (*iter)->start;
-        parent->end = (*(result.first - 1))->end;
-
-        prev_parent->children.push_back(parent);
-    }
-    return std::pair<Token_Iterator, bool>(result.first, true);
 }
 
 std::pair<Token_Iterator, bool> Plus_Rule
@@ -201,27 +214,32 @@ std::pair<Token_Iterator, bool> Optional_Rule
     TokenPtr prev_parent = parent;
     Token_Iterator new_iter = iter;
 
-    if (new_id != -1) {
-        parent = TokenPtr(new Token("", new_id, parent->filename));
+    if (iter != end) {
+        if (new_id != -1) {
+            parent = TokenPtr(new Token("", new_id, parent->filename));
+        }
+
+        std::pair<Token_Iterator, bool> result;
+        result.second = true;
+        if ((new_iter != end) && (result.second == true)) {
+            result = rule(new_iter, end, parent);
+            new_iter = result.first;
+        }
+
+        if (new_id != -1) {
+
+            parent->filename = (*iter)->filename;
+            parent->start = (*iter)->start;
+            parent->end = (*(result.first - 1))->end;
+
+
+            prev_parent->children.push_back(parent);
+        }
+        return std::pair<Token_Iterator, bool>(result.first, true);
     }
-
-    std::pair<Token_Iterator, bool> result;
-    result.second = true;
-    if ((new_iter != end) && (result.second == true)) {
-        result = rule(new_iter, end, parent);
-        new_iter = result.first;
+    else {
+        return std::pair<Token_Iterator, bool>(iter, true);
     }
-
-    if (new_id != -1) {
-
-        parent->filename = (*iter)->filename;
-        parent->start = (*iter)->start;
-        parent->end = (*(result.first - 1))->end;
-
-
-        prev_parent->children.push_back(parent);
-    }
-    return std::pair<Token_Iterator, bool>(result.first, true);
 }
 
 std::pair<Token_Iterator, bool> Nop_Rule

@@ -10,13 +10,24 @@
 #include "langkit_lexer.hpp"
 #include "langkit_parser.hpp"
 
-class TokenType { public: enum Type { File, Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close,
-    Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
-    Function_Def, Scoped_Block, Statement, Equation, Return, Add, Comment}; };
+class TokenType { public: enum Type { File, Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close, //6
+    Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon, //15
+    Function_Def, Scoped_Block, Statement, Equation, Return, Expression, Term, Factor, Add, Subtract, Multiply, Divide, Negate, Comment, //29
+    Value, Fun_Call }; };
+
+char *tokentype_to_string(int tokentype) {
+    char *token_types[] = {"File", "Whitespace", "Identifier", "Number", "Operator", "Parens_Open", "Parens_Close", //6
+        "Square_Open", "Square_Close", "Curly_Open", "Curly_Close", "Comma", "Quoted_String", "Single_Quoted_String", "Carriage_Return", "Semicolon", //15
+        "Function_Def", "Scoped_Block", "Statement", "Equation", "Return", "Expression", "Term", "Factor", "Add", "Subtract", "Multiply", "Divide", "Negate", "Comment", //29
+        "Value", "Fun_Call" };
+
+    return token_types[tokentype];
+}
 
 void debug_print(TokenPtr token, std::string prepend) {
-    std::cout << prepend << "Token: " << token->text << "(" << token->identifier << ") @ " << token->filename << ": ("  << token->start.line
-        << ", " << token->start.column << ") to (" << token->end.line << ", " << token->end.column << ") " << std::endl;
+    std::cout << prepend << "Token: " << token->text << "(" << tokentype_to_string(token->identifier) << ") @ " << token->filename
+        << ": ("  << token->start.line << ", " << token->start.column << ") to ("
+        << token->end.line << ", " << token->end.column << ") " << std::endl;
 
     for (unsigned int i = 0; i < token->children.size(); ++i) {
         debug_print(token->children[i], prepend + "  ");
@@ -68,17 +79,30 @@ void parse(std::vector<TokenPtr> &tokens, const char *filename) {
 
     Rule params;
     Rule block(TokenType::Scoped_Block);
-    Rule rule(TokenType::Function_Def);
+    //Rule rule(TokenType::Function_Def);
     Rule statement(TokenType::Statement);
     Rule return_statement(TokenType::Return);
-    Rule add(TokenType::Add);
+    Rule expression(TokenType::Expression);
+    Rule term(TokenType::Term);
+    Rule factor(TokenType::Factor);
+    Rule negate(TokenType::Negate);
+    Rule funcall(TokenType::Fun_Call);
+    Rule value;
 
-    rule = Ign(Str("def")) >> Id(TokenType::Identifier) >> ~(Ign(Str("(")) >> ~params >> Ign(Str(")"))) >> block;
+    /*
+    Rule rule = Ign(Str("def")) >> Id(TokenType::Identifier) >> ~(Ign(Str("(")) >> ~params >> Ign(Str(")"))) >> block;
     params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
     block = Ign(Str("{")) >> ~return_statement >> Ign(Str("}"));
-    return_statement = Ign(Str("return")) >> add;
-    add = Id(TokenType::Identifier) >> Ign(Str("+")) >> Id(TokenType::Identifier);
+    return_statement = Ign(Str("return")) >> expression;
+    */
+    Rule rule = *(expression >> *Ign(Id(TokenType::Semicolon)));
+    expression = term >> *((Str("+") >> term) | (Str("-") >> term));
+    term = factor >> *((Str("*") >> factor) | (Str("/") >> factor));
+    factor = value | negate | (Ign(Str("+")) >> value);
+    funcall = Id(TokenType::Identifier) >> Ign(Id(TokenType::Parens_Open)) >> ~(expression >> *(Ign(Str("," )) >> expression)) >> Ign(Id(TokenType::Parens_Close));
+    negate = Ign(Str("-")) >> factor;
 
+    value = funcall | Id(TokenType::Identifier) | Id(TokenType::Number) | Id(TokenType::Quoted_String) | Id(TokenType::Single_Quoted_String);
 
     /*
     Rule rule = Str("x") << Id(TokenType::Semicolon);
@@ -139,7 +163,7 @@ int main(int argc, char *argv[]) {
     lexer.set_multiline_comment(Pattern("/\\*", TokenType::Comment), Pattern("\\*/", TokenType::Comment));
     lexer.set_singleline_comment(Pattern("//", TokenType::Comment));
 
-    lexer << Pattern("[A-Za-z]+", TokenType::Identifier);
+    lexer << Pattern("[A-Za-z_]+", TokenType::Identifier);
     lexer << Pattern("[0-9]+(\\.[0-9]+)?", TokenType::Number);
     lexer << Pattern("[!@#$%^&*\\-+=<>]+|/[!@#$%^&\\-+=<>]*", TokenType::Operator);
     lexer << Pattern("\\(", TokenType::Parens_Open);

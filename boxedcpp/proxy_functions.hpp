@@ -1,7 +1,7 @@
 #include <boost/preprocessor.hpp>
 
 #define gettypeinfo(z,n,text)  ti.push_back(Get_Type_Info<Param ## n>()());
-#define casthelper(z,n,text) ,Cast_Helper<Param ## n>()(params[n]) 
+#define casthelper(z,n,text) ,Cast_Helper<Param ## n>()(params[n])
 
 
 #ifndef  BOOST_PP_IS_ITERATING
@@ -168,13 +168,13 @@ Boxed_Value dispatch(const std::vector<std::pair<const std::string, boost::share
     }
   }
 
-  throw std::runtime_error("No mathcing function to dispatch to");
+  throw std::runtime_error("No matching function to dispatch to");
 }
 
 # endif
 #else
 # define n BOOST_PP_ITERATION()
- 
+
 template<typename Ret, BOOST_PP_ENUM_PARAMS(n, typename Param) >
 std::vector<Type_Info> build_param_type_list(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f)
 {
@@ -187,7 +187,7 @@ std::vector<Type_Info> build_param_type_list(const boost::function<Ret (BOOST_PP
 }
 
 template<typename Ret, BOOST_PP_ENUM_PARAMS(n, typename Param)>
-Boxed_Value call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f, 
+Boxed_Value call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f,
     const std::vector<Boxed_Value> &params)
 {
   if (params.size() != n)

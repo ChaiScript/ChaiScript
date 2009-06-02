@@ -14,6 +14,8 @@ if(Boost_FOUND)
    add_executable(langkit_test main.cpp langkit_lexer.cpp langkit_parser.cpp)
    target_link_libraries(langkit_test ${Boost_LIBRARIES})
 
+   add_library(langkit SHARED langkit_lexer.cpp langkit_parser.cpp)
+   target_link_libraries(langkit ${Boost_LIBRARIES})
 
    add_executable(langkit_unittest unittest.cpp)
    target_link_libraries(langkit_unittest ${Boost_LIBRARIES})
