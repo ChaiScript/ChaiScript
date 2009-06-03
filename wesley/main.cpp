@@ -361,7 +361,9 @@ int main(int argc, char *argv[]) {
         }
     }
     else {
-        Boxed_Value val = evaluate_string(lexer, parser, ss, load_file(argv[1]), argv[1]);
+        for (int i = 1; i < argc; ++i) {
+            Boxed_Value val = evaluate_string(lexer, parser, ss, load_file(argv[i]), argv[i]);
+        }
     }
 }
 
