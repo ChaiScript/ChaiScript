@@ -16,13 +16,13 @@
 class TokenType { public: enum Type { File, Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close,
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
     Function_Def, Scoped_Block, Statement, Equation, Return, Expression, Term, Factor, Negate, Comment,
-    Value, Fun_Call, Method_Call }; };
+    Value, Fun_Call, Method_Call, Poetry_Call }; };
 
 char *tokentype_to_string(int tokentype) {
     char *token_types[] = {"File", "Whitespace", "Identifier", "Number", "Operator", "Parens_Open", "Parens_Close",
         "Square_Open", "Square_Close", "Curly_Open", "Curly_Close", "Comma", "Quoted_String", "Single_Quoted_String", "Carriage_Return", "Semicolon",
         "Function_Def", "Scoped_Block", "Statement", "Equation", "Return", "Expression", "Term", "Factor", "Negate", "Comment",
-        "Value", "Fun_Call", "Method_Call" };
+        "Value", "Fun_Call", "Method_Call", "Poetry_Call" };
 
     return token_types[tokentype];
 }
@@ -62,6 +62,10 @@ void print(const T &t)
   std::cout << t << std::endl;
 }
 
+std::string concat_string(const std::string &s1, const std::string &s2) {
+    return s1+s2;
+}
+
 std::string load_file(const char *filename) {
     std::ifstream infile (filename, std::ios::in | std::ios::ate);
 
@@ -83,13 +87,13 @@ std::string load_file(const char *filename) {
 
 Boxed_Value eval_token(BoxedCPP_System ss, TokenPtr node) {
     Boxed_Value retval;
-    unsigned int i;
+    unsigned int i, j;
 
     switch (node->identifier) {
         case (TokenType::Value) :
         case (TokenType::File) :
             for (i = 0; i < node->children.size(); ++i) {
-                eval_token(ss, node->children[i]);
+                retval = eval_token(ss, node->children[i]);
             }
         break;
         case (TokenType::Identifier) :
@@ -152,6 +156,26 @@ Boxed_Value eval_token(BoxedCPP_System ss, TokenPtr node) {
         }
         break;
         case (TokenType::Method_Call) : {
+
+            retval = eval_token(ss, node->children[0]);
+            if (node->children.size() > 1) {
+                for (i = 1; i < node->children.size(); ++i) {
+                    Param_List_Builder plb;
+                    plb << retval;
+
+                    for (j = 1; j < node->children[i]->children.size(); ++j) {
+                        plb << eval_token(ss, node->children[i]->children[j]);
+                    }
+
+                    try {
+                        retval = dispatch(ss.get_function(node->children[i]->children[0]->text), plb);
+                    }
+                    catch(std::exception &e){
+                        throw EvalError("Can not find appropriate '" + node->children[i]->children[0]->text + "'");
+                    }
+                }
+            }
+            /*
             Param_List_Builder plb;
 
             plb << eval_token(ss, node->children[0]);
@@ -163,7 +187,24 @@ Boxed_Value eval_token(BoxedCPP_System ss, TokenPtr node) {
                 retval = dispatch(ss.get_function(node->children[1]->children[0]->text), plb);
             }
             catch(std::exception &e){
-                throw EvalError("Can not find appropriate '" + node->children[0]->text + "'");
+                throw EvalError("Can not find appropriate '" + node->children[1]->children[0]->text + "'");
+            }
+            */
+        }
+        break;
+        case (TokenType::Poetry_Call) : {
+            Param_List_Builder plb;
+
+            plb << eval_token(ss, node->children[0]);
+
+            for (i = 2; i < node->children.size(); ++i) {
+                plb << eval_token(ss, node->children[i]);
+            }
+            try {
+                retval = dispatch(ss.get_function(node->children[1]->text), plb);
+            }
+            catch(std::exception &e){
+                throw EvalError("Can not find appropriate '" + node->children[1]->text + "'");
             }
         }
         break;
@@ -201,14 +242,16 @@ Rule build_parser_rules() {
     Rule negate(TokenType::Negate);
     Rule funcall(TokenType::Fun_Call);
     Rule methodcall(TokenType::Method_Call);
+    Rule poetrycall(TokenType::Poetry_Call);
     Rule value;
 
     Rule rule = *(expression >> *Ign(Id(TokenType::Semicolon)));
     expression = term >> *((Str("+") >> term) | (Str("-") >> term));
     term = factor >> *((Str("*") >> factor) | (Str("/") >> factor));
-    factor = methodcall | value | negate | (Ign(Str("+")) >> value);
+    factor = methodcall | poetrycall | value | negate | (Ign(Str("+")) >> value);
     funcall = Id(TokenType::Identifier) >> Ign(Id(TokenType::Parens_Open)) >> ~(expression >> *(Ign(Str("," )) >> expression)) >> Ign(Id(TokenType::Parens_Close));
-    methodcall = value >> Ign(Str(".")) >> funcall;
+    methodcall = value >> +(Ign(Str(".")) >> funcall);
+    poetrycall = value >> +(value);
     negate = Ign(Str("-")) >> factor;
 
     value = (Ign(Id(TokenType::Parens_Open)) >> expression >> Ign(Id(TokenType::Parens_Close))) |
@@ -251,6 +294,7 @@ BoxedCPP_System build_eval_system() {
     //right here
     ss.register_function(boost::function<void (const std::string &)>(&print<std::string>), "print");
     ss.register_function(boost::function<void (const double &)>(&print<double>), "print");
+    ss.register_function(boost::function<std::string (const std::string &, const std::string &)>(concat_string), "concat_string");
 
     return ss;
 }
@@ -263,6 +307,7 @@ TokenPtr parse(Rule &rule, std::vector<TokenPtr> &tokens, const char *filename) 
     std::pair<Token_Iterator, bool> results = rule(iter, end, parent);
 
     if (results.second) {
+        //debug_print(parent, "");
         return parent;
     }
     else {
@@ -307,6 +352,10 @@ int main(int argc, char *argv[]) {
         std::getline(std::cin, input);
         while (input != "quit") {
             Boxed_Value val = evaluate_string(lexer, parser, ss, input, "INPUT");
+            if (*(val.get_type_info().m_bare_type_info) != typeid(void)) {
+                std::cout << "result: ";
+                dispatch(ss.get_function("print"), Param_List_Builder() << val);
+            }
             std::cout << "eval> ";
             std::getline(std::cin, input);
         }
