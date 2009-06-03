@@ -16,13 +16,13 @@
 class TokenType { public: enum Type { File, Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close,
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
     Function_Def, Scoped_Block, Statement, Equation, Return, Expression, Term, Factor, Negate, Comment,
-    Value, Fun_Call }; };
+    Value, Fun_Call, Method_Call }; };
 
 char *tokentype_to_string(int tokentype) {
     char *token_types[] = {"File", "Whitespace", "Identifier", "Number", "Operator", "Parens_Open", "Parens_Close",
         "Square_Open", "Square_Close", "Curly_Open", "Curly_Close", "Comma", "Quoted_String", "Single_Quoted_String", "Carriage_Return", "Semicolon",
         "Function_Def", "Scoped_Block", "Statement", "Equation", "Return", "Expression", "Term", "Factor", "Negate", "Comment",
-        "Value", "Fun_Call" };
+        "Value", "Fun_Call", "Method_Call" };
 
     return token_types[tokentype];
 }
@@ -151,6 +151,22 @@ Boxed_Value eval_token(BoxedCPP_System ss, TokenPtr node) {
             }
         }
         break;
+        case (TokenType::Method_Call) : {
+            Param_List_Builder plb;
+
+            plb << eval_token(ss, node->children[0]);
+
+            for (i = 1; i < node->children[1]->children.size(); ++i) {
+                plb << eval_token(ss, node->children[1]->children[i]);
+            }
+            try {
+                retval = dispatch(ss.get_function(node->children[1]->children[0]->text), plb);
+            }
+            catch(std::exception &e){
+                throw EvalError("Can not find appropriate '" + node->children[0]->text + "'");
+            }
+        }
+        break;
         case (TokenType::Scoped_Block) :
         case (TokenType::Statement) :
         case (TokenType::Return) :
@@ -184,13 +200,15 @@ Rule build_parser_rules() {
     Rule factor(TokenType::Factor);
     Rule negate(TokenType::Negate);
     Rule funcall(TokenType::Fun_Call);
+    Rule methodcall(TokenType::Method_Call);
     Rule value;
 
     Rule rule = *(expression >> *Ign(Id(TokenType::Semicolon)));
     expression = term >> *((Str("+") >> term) | (Str("-") >> term));
     term = factor >> *((Str("*") >> factor) | (Str("/") >> factor));
-    factor = value | negate | (Ign(Str("+")) >> value);
+    factor = methodcall | value | negate | (Ign(Str("+")) >> value);
     funcall = Id(TokenType::Identifier) >> Ign(Id(TokenType::Parens_Open)) >> ~(expression >> *(Ign(Str("," )) >> expression)) >> Ign(Id(TokenType::Parens_Close));
+    methodcall = value >> Ign(Str(".")) >> funcall;
     negate = Ign(Str("-")) >> factor;
 
     value = (Ign(Id(TokenType::Parens_Open)) >> expression >> Ign(Id(TokenType::Parens_Close))) |
@@ -209,7 +227,7 @@ Lexer build_lexer() {
 
     lexer << Pattern("[A-Za-z_]+", TokenType::Identifier);
     lexer << Pattern("[0-9]+(\\.[0-9]+)?", TokenType::Number);
-    lexer << Pattern("[!@#$%^&*\\-+=<>]+|/[!@#$%^&\\-+=<>]*", TokenType::Operator);
+    lexer << Pattern("[!@#$%^&*\\-+=<>.]+|/[!@#$%^&\\-+=<>]*", TokenType::Operator);
     lexer << Pattern("\\(", TokenType::Parens_Open);
     lexer << Pattern("\\)", TokenType::Parens_Close);
     lexer << Pattern("\\[", TokenType::Square_Open);
