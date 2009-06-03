@@ -27,6 +27,18 @@ char *tokentype_to_string(int tokentype) {
     return token_types[tokentype];
 }
 
+struct ParserError {
+    std::string reason;
+
+    ParserError(const std::string &why) : reason(why) { }
+};
+
+struct EvalError {
+    std::string reason;
+
+    EvalError(const std::string &why) : reason(why) { }
+};
+
 void debug_print(TokenPtr token, std::string prepend) {
     std::cout << prepend << "Token: " << token->text << "(" << tokentype_to_string(token->identifier) << ") @ " << token->filename
         << ": ("  << token->start.line << ", " << token->start.column << ") to ("
@@ -44,14 +56,10 @@ void debug_print(std::vector<TokenPtr> &tokens) {
 }
 
 //A function that prints any string passed to it
-void print_string(const std::string &s)
+template <typename T>
+void print(const T &t)
 {
-  std::cout << s << std::endl;
-}
-
-void print_double(const double &d)
-{
-  std::cout << d << std::endl;
+  std::cout << t << std::endl;
 }
 
 std::string load_file(const char *filename) {
@@ -73,7 +81,7 @@ std::string load_file(const char *filename) {
     return ret_val;
 }
 
-Boxed_Value eval_token(TokenPtr node, BoxedCPP_System ss) {
+Boxed_Value eval_token(BoxedCPP_System ss, TokenPtr node) {
     Boxed_Value retval;
     unsigned int i;
 
@@ -81,7 +89,7 @@ Boxed_Value eval_token(TokenPtr node, BoxedCPP_System ss) {
         case (TokenType::Value) :
         case (TokenType::File) :
             for (i = 0; i < node->children.size(); ++i) {
-                eval_token(node->children[i], ss);
+                eval_token(ss, node->children[i]);
             }
         break;
         case (TokenType::Identifier) :
@@ -98,29 +106,53 @@ Boxed_Value eval_token(TokenPtr node, BoxedCPP_System ss) {
         case (TokenType::Factor) :
         case (TokenType::Expression) :
         case (TokenType::Term) : {
-            retval = eval_token(node->children[0], ss);
+            retval = eval_token(ss, node->children[0]);
             if (node->children.size() > 1) {
                 for (i = 1; i < node->children.size(); i += 2) {
                     Param_List_Builder plb;
                     plb << retval;
-                    plb << eval_token(node->children[i + 1], ss);
+                    plb << eval_token(ss, node->children[i + 1]);
 
-                    retval = dispatch(ss.get_function(node->children[i]->text), plb);
+                    try {
+                        retval = dispatch(ss.get_function(node->children[i]->text), plb);
+                    }
+                    catch(std::exception &e){
+                        throw EvalError("Can not find appropriate '" + node->children[i]->text + "'");
+                    }
                 }
             }
         }
         break;
+        case (TokenType::Negate) : {
+            retval = eval_token(ss, node->children[0]);
+            Param_List_Builder plb;
+            plb << retval;
+            plb << Boxed_Value(-1);
+
+            try {
+                retval = dispatch(ss.get_function("*"), plb);
+            }
+            catch(std::exception &e){
+                throw EvalError("Can not find appropriate negation");
+            }
+        }
+        break;
+
         case (TokenType::Fun_Call) : {
             Param_List_Builder plb;
             for (i = 1; i < node->children.size(); ++i) {
-                plb << eval_token(node->children[i], ss);
+                plb << eval_token(ss, node->children[i]);
             }
-            retval = dispatch(ss.get_function(node->children[0]->text), plb);
+            try {
+                retval = dispatch(ss.get_function(node->children[0]->text), plb);
+            }
+            catch(std::exception &e){
+                throw EvalError("Can not find appropriate '" + node->children[0]->text + "'");
+            }
         }
         break;
         case (TokenType::Scoped_Block) :
         case (TokenType::Statement) :
-        case (TokenType::Negate) :
         case (TokenType::Return) :
         case (TokenType::Carriage_Return) :
         case (TokenType::Semicolon) :
@@ -142,33 +174,7 @@ Boxed_Value eval_token(TokenPtr node, BoxedCPP_System ss) {
     return retval;
 }
 
-void eval(TokenPtr parent) {
-    BoxedCPP_System ss;
-    bootstrap(ss);
-    bootstrap_vector<std::vector<int> >(ss);
-    //dump_system(ss);
-
-    //Register a new function, this one with typing for us, so we don't have to ubox anything
-    //right here
-    ss.register_function(boost::function<void (const std::string &)>(&print_string), "print");
-    ss.register_function(boost::function<void (const double &)>(&print_double), "print");
-
-    /*
-    Param_List_Builder plb;
-    plb << Boxed_Value(double(2.5));
-    Boxed_Value val = dispatch(ss.get_function("to_string"), plb);
-
-    Param_List_Builder plb2;
-    plb2 << val;
-    dispatch(ss.get_function("print"), plb2);
-    */
-
-    Boxed_Value value = eval_token(parent, ss);
-}
-
-void parse(std::vector<TokenPtr> &tokens, const char *filename) {
-
-
+Rule build_parser_rules() {
     Rule params;
     Rule block(TokenType::Scoped_Block);
     Rule statement(TokenType::Statement);
@@ -187,28 +193,13 @@ void parse(std::vector<TokenPtr> &tokens, const char *filename) {
     funcall = Id(TokenType::Identifier) >> Ign(Id(TokenType::Parens_Open)) >> ~(expression >> *(Ign(Str("," )) >> expression)) >> Ign(Id(TokenType::Parens_Close));
     negate = Ign(Str("-")) >> factor;
 
-    value = funcall | Id(TokenType::Identifier) | Id(TokenType::Number) | Id(TokenType::Quoted_String) | Id(TokenType::Single_Quoted_String);
+    value = (Ign(Id(TokenType::Parens_Open)) >> expression >> Ign(Id(TokenType::Parens_Close))) |
+        funcall | Id(TokenType::Identifier) | Id(TokenType::Number) | Id(TokenType::Quoted_String) | Id(TokenType::Single_Quoted_String) ;
 
-    Token_Iterator iter = tokens.begin(), end = tokens.end();
-    TokenPtr parent(new Token("Root", TokenType::File, filename));
-
-    std::pair<Token_Iterator, bool> results = rule(iter, end, parent);
-
-    if (results.second) {
-        //std::cout << "Parse successful: " << std::endl;
-        //debug_print(parent, "");
-        eval(parent);
-    }
-    else {
-        std::cout << "Parse failed: " << std::endl;
-        debug_print(parent, "");
-    }
+    return rule;
 }
 
-
-int main(int argc, char *argv[]) {
-    std::string input;
-
+Lexer build_lexer() {
     Lexer lexer;
     lexer.set_skip(Pattern("[ \\t]+", TokenType::Whitespace));
     lexer.set_line_sep(Pattern("\\n|\\r\\n", TokenType::Carriage_Return));
@@ -229,29 +220,81 @@ int main(int argc, char *argv[]) {
     lexer << Pattern("\"(?:[^\"\\\\]|\\\\.)*\"", TokenType::Quoted_String);
     lexer << Pattern("'(?:[^'\\\\]|\\\\.)*'", TokenType::Single_Quoted_String);
 
+    return lexer;
+}
+
+BoxedCPP_System build_eval_system() {
+    BoxedCPP_System ss;
+    bootstrap(ss);
+    bootstrap_vector<std::vector<int> >(ss);
+    //dump_system(ss);
+
+    //Register a new function, this one with typing for us, so we don't have to ubox anything
+    //right here
+    ss.register_function(boost::function<void (const std::string &)>(&print<std::string>), "print");
+    ss.register_function(boost::function<void (const double &)>(&print<double>), "print");
+
+    return ss;
+}
+
+TokenPtr parse(Rule &rule, std::vector<TokenPtr> &tokens, const char *filename) {
+
+    Token_Iterator iter = tokens.begin(), end = tokens.end();
+    TokenPtr parent(new Token("Root", TokenType::File, filename));
+
+    std::pair<Token_Iterator, bool> results = rule(iter, end, parent);
+
+    if (results.second) {
+        return parent;
+    }
+    else {
+        throw ParserError("Parse failed");
+    }
+}
+
+Boxed_Value evaluate_string(Lexer &lexer, Rule &parser, BoxedCPP_System &ss, const std::string &input, const char *filename) {
+    std::vector<TokenPtr> tokens = lexer.lex(input, filename);
+    Boxed_Value value;
+
+    for (unsigned int i = 0; i < tokens.size(); ++i) {
+        if ((tokens[i]->identifier == TokenType::Quoted_String) || (tokens[i]->identifier == TokenType::Single_Quoted_String)) {
+            tokens[i]->text = tokens[i]->text.substr(1, tokens[i]->text.size()-2);
+        }
+    }
+
+    //debug_print(tokens);
+    try {
+        TokenPtr parent = parse(parser, tokens, "INPUT");
+        value = eval_token(ss, parent);
+    }
+    catch (ParserError &pe) {
+        std::cout << "Parsing error: " << pe.reason << std::endl;
+    }
+    catch (EvalError &ee) {
+        std::cout << "Eval error: " << ee.reason << std::endl;
+    }
+
+    return value;
+}
+
+int main(int argc, char *argv[]) {
+    std::string input;
+
+    Lexer lexer = build_lexer();
+    Rule parser = build_parser_rules();
+    BoxedCPP_System ss = build_eval_system();
+
     if (argc < 2) {
         std::cout << "eval> ";
         std::getline(std::cin, input);
         while (input != "quit") {
-            std::vector<TokenPtr> tokens = lexer.lex(input, "INPUT");
-
-            for (unsigned int i = 0; i < tokens.size(); ++i) {
-                if ((tokens[i]->identifier == TokenType::Quoted_String) || (tokens[i]->identifier == TokenType::Single_Quoted_String)) {
-                    tokens[i]->text = tokens[i]->text.substr(1, tokens[i]->text.size()-2);
-                }
-            }
-
-            //debug_print(tokens);
-            parse(tokens, "INPUT");
-
+            Boxed_Value val = evaluate_string(lexer, parser, ss, input, "INPUT");
             std::cout << "eval> ";
             std::getline(std::cin, input);
         }
     }
     else {
-        std::vector<TokenPtr> tokens = lexer.lex(load_file(argv[1]), argv[1]);
-        debug_print(tokens);
-        parse(tokens, argv[1]);
+        Boxed_Value val = evaluate_string(lexer, parser, ss, load_file(argv[1]), argv[1]);
     }
 }
 
