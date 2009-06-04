@@ -85,7 +85,7 @@ std::string load_file(const char *filename) {
     return ret_val;
 }
 
-Boxed_Value eval_token(BoxedCPP_System ss, TokenPtr node) {
+Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
     Boxed_Value retval;
     unsigned int i, j;
 
@@ -97,6 +97,7 @@ Boxed_Value eval_token(BoxedCPP_System ss, TokenPtr node) {
             }
         break;
         case (TokenType::Identifier) :
+            retval = ss.get_object(node->text);
         break;
         case (TokenType::Number) :
             retval = Boxed_Value(double(atof(node->text.c_str())));
@@ -106,6 +107,14 @@ Boxed_Value eval_token(BoxedCPP_System ss, TokenPtr node) {
         break;
         case (TokenType::Single_Quoted_String) :
             retval = Boxed_Value(node->text);
+        break;
+        case (TokenType::Equation) :
+            retval = eval_token(ss, node->children.back());
+            if (node->children.size() > 1) {
+                for (i = node->children.size()-2; ((int)i) >= 0; --i) {
+                    ss.add_object(node->children[i]->text, retval);
+                }
+            }
         break;
         case (TokenType::Factor) :
         case (TokenType::Expression) :
@@ -213,7 +222,6 @@ Boxed_Value eval_token(BoxedCPP_System ss, TokenPtr node) {
         case (TokenType::Return) :
         case (TokenType::Carriage_Return) :
         case (TokenType::Semicolon) :
-        case (TokenType::Equation) :
         case (TokenType::Function_Def) :
         case (TokenType::Comment) :
         case (TokenType::Operator) :
@@ -236,6 +244,7 @@ Rule build_parser_rules() {
     Rule block(TokenType::Scoped_Block);
     Rule statement(TokenType::Statement);
     Rule return_statement(TokenType::Return);
+    Rule equation(TokenType::Equation);
     Rule expression(TokenType::Expression);
     Rule term(TokenType::Term);
     Rule factor(TokenType::Factor);
@@ -245,7 +254,8 @@ Rule build_parser_rules() {
     Rule poetrycall(TokenType::Poetry_Call);
     Rule value;
 
-    Rule rule = *(expression >> *Ign(Id(TokenType::Semicolon)));
+    Rule rule = ~(equation >> *(Ign(Id(TokenType::Semicolon)) >> equation) >> *(Ign(Id(TokenType::Semicolon))));
+    equation = *(Id(TokenType::Identifier) >> Ign(Str("="))) >> expression;
     expression = term >> *((Str("+") >> term) | (Str("-") >> term));
     term = factor >> *((Str("*") >> factor) | (Str("/") >> factor));
     factor = methodcall | poetrycall | value | negate | (Ign(Str("+")) >> value);
@@ -335,6 +345,9 @@ Boxed_Value evaluate_string(Lexer &lexer, Rule &parser, BoxedCPP_System &ss, con
     }
     catch (EvalError &ee) {
         std::cout << "Eval error: " << ee.reason << std::endl;
+    }
+    catch (std::exception &e) {
+        std::cout << "Exception: " << e.what() << std::endl;
     }
 
     return value;
