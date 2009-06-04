@@ -39,6 +39,8 @@ struct EvalError {
     EvalError(const std::string &why) : reason(why) { }
 };
 
+Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node);
+
 void debug_print(TokenPtr token, std::string prepend) {
     std::cout << prepend << "Token: " << token->text << "(" << tokentype_to_string(token->identifier) << ") @ " << token->filename
         << ": ("  << token->start.line << ", " << token->start.column << ") to ("
@@ -66,6 +68,10 @@ std::string concat_string(const std::string &s1, const std::string &s2) {
     return s1+s2;
 }
 
+Boxed_Value add_two(Boxed_Value val1, Boxed_Value val2) {
+    return Boxed_Value(1);
+}
+
 std::string load_file(const char *filename) {
     std::ifstream infile (filename, std::ios::in | std::ios::ate);
 
@@ -83,6 +89,32 @@ std::string load_file(const char *filename) {
     std::string ret_val (v.empty() ? std::string() : std::string (v.begin(), v.end()).c_str());
 
     return ret_val;
+}
+
+Boxed_Value eval_function0(BoxedCPP_System &ss, TokenPtr node, std::vector<std::string> &param_names) {
+    return eval_token(ss, node);
+}
+Boxed_Value eval_function1(BoxedCPP_System &ss, TokenPtr node, std::vector<std::string> &param_names, const Boxed_Value &arg0) {
+    ss.add_object(param_names[0], arg0);
+
+    return eval_token(ss, node);
+}
+Boxed_Value eval_function2(BoxedCPP_System &ss, TokenPtr node, std::vector<std::string> &param_names, const Boxed_Value &arg0,
+        const Boxed_Value &arg1) {
+
+    ss.add_object(param_names[0], arg0);
+    ss.add_object(param_names[1], arg1);
+
+    return eval_token(ss, node);
+}
+Boxed_Value eval_function3(BoxedCPP_System &ss, TokenPtr node, std::vector<std::string> &param_names, const Boxed_Value &arg0,
+        const Boxed_Value &arg1, const Boxed_Value &arg2) {
+
+    ss.add_object(param_names[0], arg0);
+    ss.add_object(param_names[1], arg1);
+    ss.add_object(param_names[2], arg2);
+
+    return eval_token(ss, node);
 }
 
 Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
@@ -184,21 +216,6 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                     }
                 }
             }
-            /*
-            Param_List_Builder plb;
-
-            plb << eval_token(ss, node->children[0]);
-
-            for (i = 1; i < node->children[1]->children.size(); ++i) {
-                plb << eval_token(ss, node->children[1]->children[i]);
-            }
-            try {
-                retval = dispatch(ss.get_function(node->children[1]->children[0]->text), plb);
-            }
-            catch(std::exception &e){
-                throw EvalError("Can not find appropriate '" + node->children[1]->children[0]->text + "'");
-            }
-            */
         }
         break;
         case (TokenType::Poetry_Call) : {
@@ -217,12 +234,49 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             }
         }
         break;
+        case (TokenType::Function_Def) : {
+            unsigned int num_args = node->children.size() - 2;
+            std::vector<std::string> param_names;
+            for (i = 0; i < num_args; ++i) {
+                param_names.push_back(node->children[i+1]->text);
+            }
+            switch (num_args) {
+                case (0) : {
+                    std::cout << "Registered a 0 function" << std::endl;
+                    ss.register_function(boost::function<Boxed_Value (void)>
+                        (boost::bind(&eval_function0, boost::ref(ss), node->children.back(), param_names)), node->children[0]->text);
+                    std::cout << "Reg: " << node->children[0]->text << std::endl;
+                }
+                break;
+                case (1) : {
+                    std::cout << "Registered a 1 (" << node->children[1]->text << ") function" << std::endl;
+                    ss.register_function(boost::function<Boxed_Value (const Boxed_Value &)>
+                        (boost::bind(&eval_function1, boost::ref(ss), node->children.back(), param_names, _1)), node->children[0]->text);
+                    std::cout << "Reg: " << node->children[0]->text << std::endl;
+                }
+                break;
+                case (2) : {
+                    std::cout << "Registered a 2 (" << node->children[1]->text << "," << node->children[2]->text << ") function" << std::endl;
+                    ss.register_function(boost::function<Boxed_Value (const Boxed_Value &, const Boxed_Value &)>
+                        (boost::bind(&eval_function2, boost::ref(ss), node->children.back(), param_names, _1, _2)), node->children[0]->text);
+                    std::cout << "Reg: " << node->children[0]->text << std::endl;
+                }
+                break;
+                case (3) : {
+                    std::cout << "Registered a 3 (" << node->children[1]->text << "," << node->children[2]->text << "," << node->children[3]->text << ") function" << std::endl;
+                    ss.register_function(boost::function<Boxed_Value (const Boxed_Value &, const Boxed_Value &, const Boxed_Value &)>
+                        (boost::bind(&eval_function3, boost::ref(ss), node->children.back(), param_names, _1, _2, _3)), node->children[0]->text);
+                    std::cout << "Reg: " << node->children[0]->text << std::endl;
+                }
+                break;
+            }
+        }
+        break;
         case (TokenType::Scoped_Block) :
         case (TokenType::Statement) :
         case (TokenType::Return) :
         case (TokenType::Carriage_Return) :
         case (TokenType::Semicolon) :
-        case (TokenType::Function_Def) :
         case (TokenType::Comment) :
         case (TokenType::Operator) :
         case (TokenType::Whitespace) :
@@ -242,6 +296,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
 Rule build_parser_rules() {
     Rule params;
     Rule block(TokenType::Scoped_Block);
+    Rule fundef(TokenType::Function_Def);
     Rule statement(TokenType::Statement);
     Rule return_statement(TokenType::Return);
     Rule equation(TokenType::Equation);
@@ -253,8 +308,13 @@ Rule build_parser_rules() {
     Rule methodcall(TokenType::Method_Call);
     Rule poetrycall(TokenType::Poetry_Call);
     Rule value;
+    Rule statements;
 
-    Rule rule = ~(equation >> *(Ign(Id(TokenType::Semicolon)) >> equation) >> *(Ign(Id(TokenType::Semicolon))));
+    Rule rule = *(fundef | statements);
+    statements = (equation >> *(Ign(Id(TokenType::Semicolon)) >> equation) >> *(Ign(Id(TokenType::Semicolon))));
+    fundef = Ign(Str("def")) >> Id(TokenType::Identifier) >> ~(Ign(Str("(")) >> ~params >> Ign(Str(")"))) >> block;
+    params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
+    block = Ign(Str("{")) >> ~statements >> Ign(Str("}"));
     equation = *(Id(TokenType::Identifier) >> Ign(Str("="))) >> expression;
     expression = term >> *((Str("+") >> term) | (Str("-") >> term));
     term = factor >> *((Str("*") >> factor) | (Str("/") >> factor));
@@ -263,8 +323,9 @@ Rule build_parser_rules() {
     methodcall = value >> +(Ign(Str(".")) >> funcall);
     poetrycall = value >> +(value);
     negate = Ign(Str("-")) >> factor;
+    return_statement = Ign(Str("return")) >> expression;
 
-    value = (Ign(Id(TokenType::Parens_Open)) >> expression >> Ign(Id(TokenType::Parens_Close))) |
+    value = (Ign(Id(TokenType::Parens_Open)) >> expression >> Ign(Id(TokenType::Parens_Close))) | return_statement |
         funcall | Id(TokenType::Identifier) | Id(TokenType::Number) | Id(TokenType::Quoted_String) | Id(TokenType::Single_Quoted_String) ;
 
     return rule;
@@ -305,6 +366,7 @@ BoxedCPP_System build_eval_system() {
     ss.register_function(boost::function<void (const std::string &)>(&print<std::string>), "print");
     ss.register_function(boost::function<void (const double &)>(&print<double>), "print");
     ss.register_function(boost::function<std::string (const std::string &, const std::string &)>(concat_string), "concat_string");
+    ss.register_function(boost::function<Boxed_Value (Boxed_Value, Boxed_Value)>(add_two), "add");
 
     return ss;
 }
