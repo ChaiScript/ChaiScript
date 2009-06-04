@@ -36,7 +36,8 @@ class BoxedCPP_System
     template<typename Class>
       void add_object(const std::string &name, const Class &obj)
       {
-        m_objects.insert(std::make_pair(name, Boxed_Value(obj)));
+        //m_objects.insert(std::make_pair(name, Boxed_Value(obj)));
+        m_objects[name] = Boxed_Value(obj);
       }
 
     Boxed_Value get_object(const std::string &name) const

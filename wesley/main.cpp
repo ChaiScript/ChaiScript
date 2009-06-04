@@ -16,13 +16,13 @@
 class TokenType { public: enum Type { File, Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close,
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
     Function_Def, Scoped_Block, Statement, Equation, Return, Expression, Term, Factor, Negate, Comment,
-    Value, Fun_Call, Method_Call, Poetry_Call }; };
+    Value, Fun_Call, Method_Call, Poetry_Call, Comparison }; };
 
 char *tokentype_to_string(int tokentype) {
     char *token_types[] = {"File", "Whitespace", "Identifier", "Number", "Operator", "Parens_Open", "Parens_Close",
         "Square_Open", "Square_Close", "Curly_Open", "Curly_Close", "Comma", "Quoted_String", "Single_Quoted_String", "Carriage_Return", "Semicolon",
         "Function_Def", "Scoped_Block", "Statement", "Equation", "Return", "Expression", "Term", "Factor", "Negate", "Comment",
-        "Value", "Fun_Call", "Method_Call", "Poetry_Call" };
+        "Value", "Fun_Call", "Method_Call", "Poetry_Call", "Comparison" };
 
     return token_types[tokentype];
 }
@@ -58,17 +58,28 @@ void debug_print(std::vector<TokenPtr> &tokens) {
 }
 
 //A function that prints any string passed to it
+
 template <typename T>
 void print(const T &t)
 {
-  std::cout << t << std::endl;
+    std::cout << t << std::endl;
+}
+
+template<> void print<bool>(const bool &t)
+{
+    if (t) {
+        std::cout << "true" << std::endl;
+    }
+    else {
+        std::cout << "false" << std::endl;
+    }
 }
 
 std::string concat_string(const std::string &s1, const std::string &s2) {
     return s1+s2;
 }
 
-Boxed_Value add_two(Boxed_Value val1, Boxed_Value val2) {
+const Boxed_Value add_two(const Boxed_Value &val1, const Boxed_Value &val2) {
     return Boxed_Value(1);
 }
 
@@ -129,7 +140,15 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             }
         break;
         case (TokenType::Identifier) :
-            retval = ss.get_object(node->text);
+            if (node->text == "true") {
+                retval = Boxed_Value(true);
+            }
+            else if (node->text == "false") {
+                retval = Boxed_Value(false);
+            }
+            else {
+                retval = ss.get_object(node->text);
+            }
         break;
         case (TokenType::Number) :
             retval = Boxed_Value(double(atof(node->text.c_str())));
@@ -150,7 +169,8 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
         break;
         case (TokenType::Factor) :
         case (TokenType::Expression) :
-        case (TokenType::Term) : {
+        case (TokenType::Term) :
+        case (TokenType::Comparison) : {
             retval = eval_token(ss, node->children[0]);
             if (node->children.size() > 1) {
                 for (i = 1; i < node->children.size(); i += 2) {
@@ -300,6 +320,7 @@ Rule build_parser_rules() {
     Rule statement(TokenType::Statement);
     Rule return_statement(TokenType::Return);
     Rule equation(TokenType::Equation);
+    Rule comparison(TokenType::Comparison);
     Rule expression(TokenType::Expression);
     Rule term(TokenType::Term);
     Rule factor(TokenType::Factor);
@@ -315,7 +336,9 @@ Rule build_parser_rules() {
     fundef = Ign(Str("def")) >> Id(TokenType::Identifier) >> ~(Ign(Str("(")) >> ~params >> Ign(Str(")"))) >> block;
     params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
     block = Ign(Str("{")) >> ~statements >> Ign(Str("}"));
-    equation = *(Id(TokenType::Identifier) >> Ign(Str("="))) >> expression;
+    equation = *(Id(TokenType::Identifier) >> Ign(Str("="))) >> comparison;
+    comparison = expression >> *((Str("==") >> expression) | (Str("!=") >> expression) | (Str("<") >> expression) |
+            (Str("<=") >> expression) |(Str(">") >> expression) | (Str(">=") >> expression));
     expression = term >> *((Str("+") >> term) | (Str("-") >> term));
     term = factor >> *((Str("*") >> factor) | (Str("/") >> factor));
     factor = methodcall | poetrycall | value | negate | (Ign(Str("+")) >> value);
@@ -363,10 +386,11 @@ BoxedCPP_System build_eval_system() {
 
     //Register a new function, this one with typing for us, so we don't have to ubox anything
     //right here
+    ss.register_function(boost::function<void (const bool &)>(&print<bool>), "print");
     ss.register_function(boost::function<void (const std::string &)>(&print<std::string>), "print");
     ss.register_function(boost::function<void (const double &)>(&print<double>), "print");
     ss.register_function(boost::function<std::string (const std::string &, const std::string &)>(concat_string), "concat_string");
-    ss.register_function(boost::function<Boxed_Value (Boxed_Value, Boxed_Value)>(add_two), "add");
+    ss.register_function(boost::function<Boxed_Value (Boxed_Value, Boxed_Value)>(add_two), "add_two");
 
     return ss;
 }
