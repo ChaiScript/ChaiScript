@@ -107,8 +107,8 @@ class Proxy_Function
 class Dynamic_Proxy_Function : public Proxy_Function
 {
   public:
-    Dynamic_Proxy_Function(const boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> &t_f)
-      : m_f(t_f)
+    Dynamic_Proxy_Function(const boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> &t_f, int arity=-1)
+      : m_f(t_f), m_arity(arity)
     {
     }
 
@@ -116,7 +116,12 @@ class Dynamic_Proxy_Function : public Proxy_Function
 
     virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
     {
-      return m_f(params);
+      if (m_arity < 0 || params.size() == size_t(m_arity))
+      {
+        return m_f(params);
+      } else {
+        throw std::range_error("Incorrect number of parameters");
+      } 
     }
 
     virtual std::vector<Type_Info> get_param_types()
@@ -126,6 +131,7 @@ class Dynamic_Proxy_Function : public Proxy_Function
 
   private:
     boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
+    int m_arity;
 };
 
 template<typename Func>
@@ -165,6 +171,8 @@ Boxed_Value dispatch(const std::vector<std::pair<const std::string, boost::share
       return (*itr->second)(plist);
     } catch (const std::bad_cast &) {
       //try again
+    } catch (const std::range_error &) {
+      //invalid num params, try again
     }
   }
 
