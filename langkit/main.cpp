@@ -15,8 +15,8 @@ class TokenType { public: enum Type { File, Whitespace, Identifier, Number, Oper
     Function_Def, Scoped_Block, Statement, Equation, Return, Expression, Term, Factor, Add, Subtract, Multiply, Divide, Negate, Comment, //29
     Value, Fun_Call }; };
 
-char *tokentype_to_string(int tokentype) {
-    char *token_types[] = {"File", "Whitespace", "Identifier", "Number", "Operator", "Parens_Open", "Parens_Close", //6
+const char *tokentype_to_string(int tokentype) {
+    const char *token_types[] = {"File", "Whitespace", "Identifier", "Number", "Operator", "Parens_Open", "Parens_Close", //6
         "Square_Open", "Square_Close", "Curly_Open", "Curly_Close", "Comma", "Quoted_String", "Single_Quoted_String", "Carriage_Return", "Semicolon", //15
         "Function_Def", "Scoped_Block", "Statement", "Equation", "Return", "Expression", "Term", "Factor", "Add", "Subtract", "Multiply", "Divide", "Negate", "Comment", //29
         "Value", "Fun_Call" };
