@@ -391,7 +391,7 @@ Rule build_parser_rules() {
     fundef = Ign(Str("def")) >> Id(TokenType::Identifier) >> ~(Ign(Id(TokenType::Parens_Open)) >> ~params >> Ign(Id(TokenType::Parens_Close))) >>
         block >> ~Ign(Id(TokenType::Semicolon));
     params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
-    block = Ign(Id(TokenType::Curly_Open)) >> ~statements >> Ign(Id(TokenType::Curly_Close));
+    block = *(Ign(Id(TokenType::Semicolon))) >> Ign(Id(TokenType::Curly_Open)) >> *(Ign(Id(TokenType::Semicolon))) >> ~statements >> Ign(Id(TokenType::Curly_Close));
     equation = *(Id(TokenType::Identifier) >> Ign(Str("="))) >> boolean;
     boolean = comparison >> *((Str("&&") >> comparison) | (Str("||") >> comparison));
     comparison = expression >> *((Str("==") >> expression) | (Str("!=") >> expression) | (Str("<") >> expression) |
