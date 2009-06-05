@@ -263,7 +263,6 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                     }
                 }
             }
-            retval = Boxed_Value();
         }
         break;
         case(TokenType::While_Block) : {
@@ -399,7 +398,7 @@ Lexer build_lexer() {
 
     lexer << Pattern("[A-Za-z_]+", TokenType::Identifier);
     lexer << Pattern("[0-9]+(\\.[0-9]+)?", TokenType::Number);
-    lexer << Pattern("[!@#$%^&*\\-+=<>.]+|/[!@#$%^&\\-+=<>]*", TokenType::Operator);
+    lexer << Pattern("[!@#$%^&*|\\-+=<>.]+|/[!@#$%^&|\\-+=<>]*", TokenType::Operator);
     lexer << Pattern("\\(", TokenType::Parens_Open);
     lexer << Pattern("\\)", TokenType::Parens_Close);
     lexer << Pattern("\\[", TokenType::Square_Open);
