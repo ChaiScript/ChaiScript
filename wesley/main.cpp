@@ -293,9 +293,11 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
         }
         break;
         case (TokenType::Scoped_Block) : {
+            ss.new_scope();
             for (i = 0; i < node->children.size(); ++i) {
                 retval = eval_token(ss, node->children[i]);
             }
+            ss.pop_scope();
         }
         break;
         case (TokenType::Statement) :
@@ -360,7 +362,7 @@ Rule build_parser_rules() {
     negate = Ign(Str("-")) >> boolean;
     return_statement = Ign(Str("return")) >> boolean;
 
-    value = (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
+    value = block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
         funcall | Id(TokenType::Identifier) | Id(TokenType::Number) | Id(TokenType::Quoted_String) | Id(TokenType::Single_Quoted_String) ;
 
     return rule;

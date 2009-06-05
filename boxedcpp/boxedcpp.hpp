@@ -54,7 +54,7 @@ class BoxedCPP_System
 
     void pop_scope()
     {
-      if (m_scopes.size() == 1)
+      if (m_scopes.size() > 1)
       {
         m_scopes.pop_back();
       } else {
@@ -70,7 +70,7 @@ class BoxedCPP_System
         if (itr != m_scopes[i].end())
         {
           return itr->second;
-        }      
+        }
       }
 
       throw std::range_error("Object not known: " + name);
