@@ -16,13 +16,13 @@
 class TokenType { public: enum Type { File, Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close,
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
     Function_Def, Scoped_Block, Statement, Equation, Return, Expression, Term, Factor, Negate, Comment,
-    Value, Fun_Call, Method_Call, Poetry_Call, Comparison }; };
+    Value, Fun_Call, Method_Call, Comparison }; };
 
 const char *tokentype_to_string(int tokentype) {
     const char *token_types[] = {"File", "Whitespace", "Identifier", "Number", "Operator", "Parens_Open", "Parens_Close",
         "Square_Open", "Square_Close", "Curly_Open", "Curly_Close", "Comma", "Quoted_String", "Single_Quoted_String", "Carriage_Return", "Semicolon",
         "Function_Def", "Scoped_Block", "Statement", "Equation", "Return", "Expression", "Term", "Factor", "Negate", "Comment",
-        "Value", "Fun_Call", "Method_Call", "Poetry_Call", "Comparison" };
+        "Value", "Fun_Call", "Method_Call", "Comparison" };
 
     return token_types[tokentype];
 }
@@ -238,22 +238,6 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             }
         }
         break;
-        case (TokenType::Poetry_Call) : {
-            Param_List_Builder plb;
-
-            plb << eval_token(ss, node->children[0]);
-
-            for (i = 2; i < node->children.size(); ++i) {
-                plb << eval_token(ss, node->children[i]);
-            }
-            try {
-                retval = dispatch(ss.get_function(node->children[1]->text), plb);
-            }
-            catch(std::exception &e){
-                throw EvalError("Can not find appropriate '" + node->children[1]->text + "'");
-            }
-        }
-        break;
         case (TokenType::Function_Def) : {
             unsigned int num_args = node->children.size() - 2;
             std::vector<std::string> param_names;
@@ -327,13 +311,13 @@ Rule build_parser_rules() {
     Rule negate(TokenType::Negate);
     Rule funcall(TokenType::Fun_Call);
     Rule methodcall(TokenType::Method_Call);
-    Rule poetrycall(TokenType::Poetry_Call);
     Rule value;
     Rule statements;
 
     Rule rule = *(fundef | statements);
     statements = (equation >> *(Ign(Id(TokenType::Semicolon)) >> equation) >> *(Ign(Id(TokenType::Semicolon))));
-    fundef = Ign(Str("def")) >> Id(TokenType::Identifier) >> ~(Ign(Str("(")) >> ~params >> Ign(Str(")"))) >> block;
+    fundef = Ign(Str("def")) >> Id(TokenType::Identifier) >> ~(Ign(Id(TokenType::Parens_Open)) >> ~params >> Ign(Id(TokenType::Parens_Close))) >>
+        block >> ~Ign(Id(TokenType::Semicolon));
     params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
     block = Ign(Str("{")) >> ~statements >> Ign(Str("}"));
     equation = *(Id(TokenType::Identifier) >> Ign(Str("="))) >> comparison;
@@ -341,10 +325,9 @@ Rule build_parser_rules() {
             (Str("<=") >> expression) |(Str(">") >> expression) | (Str(">=") >> expression));
     expression = term >> *((Str("+") >> term) | (Str("-") >> term));
     term = factor >> *((Str("*") >> factor) | (Str("/") >> factor));
-    factor = methodcall | poetrycall | value | negate | (Ign(Str("+")) >> value);
+    factor = methodcall | value | negate | (Ign(Str("+")) >> value);
     funcall = Id(TokenType::Identifier) >> Ign(Id(TokenType::Parens_Open)) >> ~(expression >> *(Ign(Str("," )) >> expression)) >> Ign(Id(TokenType::Parens_Close));
     methodcall = value >> +(Ign(Str(".")) >> funcall);
-    poetrycall = value >> +(value);
     negate = Ign(Str("-")) >> factor;
     return_statement = Ign(Str("return")) >> expression;
 

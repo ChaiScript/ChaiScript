@@ -10,6 +10,7 @@
 #include "langkit_parser.hpp"
 
 std::pair<Token_Iterator, bool> String_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, const std::string &val) {
+    //std::cout << "S";
     if (iter != end) {
         if ((*iter)->text == val) {
             if (keep) {
@@ -23,6 +24,7 @@ std::pair<Token_Iterator, bool> String_Rule(Token_Iterator iter, Token_Iterator 
 }
 
 std::pair<Token_Iterator, bool> Type_Rule(Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, const int val) {
+    //std::cout << "I";
     if (iter != end) {
         if ((*iter)->identifier == val) {
             if (keep) {
