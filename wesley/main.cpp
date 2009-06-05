@@ -79,8 +79,18 @@ std::string concat_string(const std::string &s1, const std::string &s2) {
     return s1+s2;
 }
 
-const Boxed_Value add_two(const Boxed_Value &val1, const Boxed_Value &val2) {
-    return Boxed_Value(1);
+const Boxed_Value add_two(BoxedCPP_System &ss, const std::vector<Boxed_Value> &vals) {
+  //We can check the arity if we want, or in this case just allow the dispatch
+  //to do it for us:
+  if (vals.size() != 2)
+  {
+    //I very much need to do a cleanup and provide a custom set of 
+    //bad_cast and wrong_arity exceptions so they can be caught more 
+    //cleanly
+    throw std::runtime_error("Wrong number of args");
+  }
+
+  return dispatch(ss.get_function("+"), vals);
 }
 
 std::string load_file(const char *filename) {
@@ -446,7 +456,10 @@ BoxedCPP_System build_eval_system() {
     ss.register_function(boost::function<void (const std::string &)>(&print<std::string>), "print");
     ss.register_function(boost::function<void (const double &)>(&print<double>), "print");
     ss.register_function(boost::function<std::string (const std::string &, const std::string &)>(concat_string), "concat_string");
-    ss.register_function(boost::function<Boxed_Value (Boxed_Value, Boxed_Value)>(add_two), "add_two");
+
+  ss.register_function(boost::shared_ptr<Proxy_Function>(
+        new Dynamic_Proxy_Function(boost::bind(&add_two, boost::ref(ss), _1))), "add_two");
+
 
     return ss;
 }
