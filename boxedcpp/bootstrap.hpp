@@ -117,11 +117,13 @@ void bootstrap(BoxedCPP_System &s)
   s.register_function(boost::function<bool (bool, bool)>(&bool_and<bool, bool>), "&&");
   s.register_function(boost::function<bool (bool, bool)>(&bool_or<bool, bool>), "||");
 
+  s.register_function(boost::function<bool (const std::string &, const std::string &)>(&equals<const std::string &, const std::string &>), "==");
   s.register_function(boost::function<bool (int, int)>(&equals<int, int>), "==");
   s.register_function(boost::function<bool (int, double)>(&equals<int, double>), "==");
   s.register_function(boost::function<bool (double, int)>(&equals<double, int>), "==");
   s.register_function(boost::function<bool (double, double)>(&equals<double, double>), "==");
 
+  s.register_function(boost::function<bool (const std::string &, const std::string &)>(&not_equals<const std::string &, const std::string &>), "!=");
   s.register_function(boost::function<bool (int, int)>(&not_equals<int, int>), "!=");
   s.register_function(boost::function<bool (int, double)>(&not_equals<int, double>), "!=");
   s.register_function(boost::function<bool (double, int)>(&not_equals<double, int>), "!=");
