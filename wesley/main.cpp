@@ -240,7 +240,13 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
         break;
         case(TokenType::If_Block) : {
             retval = eval_token(ss, node->children[0]);
-            bool cond = Cast_Helper<bool &>()(retval);
+            bool cond;
+            try {
+                cond = Cast_Helper<bool &>()(retval);
+            }
+            catch (std::exception) {
+                throw EvalError("If condition not boolean");
+            }
             if (cond) {
                 retval = eval_token(ss, node->children[1]);
             }
@@ -254,7 +260,12 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                         }
                         else if (node->children[i]->text == "elseif") {
                             retval = eval_token(ss, node->children[i+1]);
-                            cond = Cast_Helper<bool &>()(retval);
+                            try {
+                                cond = Cast_Helper<bool &>()(retval);
+                            }
+                            catch (std::exception) {
+                                throw EvalError("Elseif condition not boolean");
+                            }
                             if (cond) {
                                 retval = eval_token(ss, node->children[i+2]);
                             }
@@ -267,11 +278,22 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
         break;
         case(TokenType::While_Block) : {
             retval = eval_token(ss, node->children[0]);
-            bool cond = Cast_Helper<bool &>()(retval);
+            bool cond;
+            try {
+                cond = Cast_Helper<bool &>()(retval);
+            }
+            catch (std::exception) {
+                throw EvalError("While condition not boolean");
+            }
             while (cond) {
                 eval_token(ss, node->children[1]);
                 retval = eval_token(ss, node->children[0]);
-                cond = Cast_Helper<bool &>()(retval);
+                try {
+                    cond = Cast_Helper<bool &>()(retval);
+                }
+                catch (std::exception) {
+                    throw EvalError("While condition not boolean");
+                }
             }
             retval = Boxed_Value();
         }
