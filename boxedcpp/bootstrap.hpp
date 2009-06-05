@@ -28,8 +28,8 @@ Ret multiply(P1 p1, P2 p2)
   return p1 * p2;
 }
 
-template<typename Ret, typename P1, typename P2>
-Ret equals(P1 p1, P2 p2)
+template<typename P1, typename P2>
+bool equals(P1 p1, P2 p2)
 {
   return p1 == p2;
 }
@@ -72,10 +72,10 @@ void bootstrap(BoxedCPP_System &s)
   s.register_function(boost::function<double (double, int)>(&divide<double, double, int>), "/");
   s.register_function(boost::function<double (double, double)>(&divide<double, double, double>), "/");
 
-  s.register_function(boost::function<int (int, int)>(&equals<bool, int, int>), "==");
-  s.register_function(boost::function<double (int, double)>(&equals<bool, int, double>), "==");
-  s.register_function(boost::function<double (double, int)>(&equals<bool, double, int>), "==");
-  s.register_function(boost::function<double (double, double)>(&equals<bool, double, double>), "==");
+  s.register_function(boost::function<bool (int, int)>(&equals<int, int>), "==");
+  s.register_function(boost::function<bool (int, double)>(&equals<int, double>), "==");
+  s.register_function(boost::function<bool (double, int)>(&equals<double, int>), "==");
+  s.register_function(boost::function<bool (double, double)>(&equals<double, double>), "==");
 
   s.register_function(boost::function<int (int, int)>(&multiply<int, int, int>), "*");
   s.register_function(boost::function<double (int, double)>(&multiply<double, int, double>), "*");
