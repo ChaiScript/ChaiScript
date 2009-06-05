@@ -84,8 +84,8 @@ const Boxed_Value add_two(BoxedCPP_System &ss, const std::vector<Boxed_Value> &v
   //to do it for us:
   if (vals.size() != 2)
   {
-    //I very much need to do a cleanup and provide a custom set of 
-    //bad_cast and wrong_arity exceptions so they can be caught more 
+    //I very much need to do a cleanup and provide a custom set of
+    //bad_cast and wrong_arity exceptions so they can be caught more
     //cleanly
     throw std::runtime_error("Wrong number of args");
   }
@@ -112,29 +112,10 @@ std::string load_file(const char *filename) {
     return ret_val;
 }
 
-Boxed_Value eval_function0(BoxedCPP_System &ss, TokenPtr node, std::vector<std::string> &param_names) {
-    return eval_token(ss, node);
-}
-Boxed_Value eval_function1(BoxedCPP_System &ss, TokenPtr node, std::vector<std::string> &param_names, const Boxed_Value &arg0) {
-    ss.add_object(param_names[0], arg0);
-
-    return eval_token(ss, node);
-}
-Boxed_Value eval_function2(BoxedCPP_System &ss, TokenPtr node, std::vector<std::string> &param_names, const Boxed_Value &arg0,
-        const Boxed_Value &arg1) {
-
-    ss.add_object(param_names[0], arg0);
-    ss.add_object(param_names[1], arg1);
-
-    return eval_token(ss, node);
-}
-Boxed_Value eval_function3(BoxedCPP_System &ss, TokenPtr node, std::vector<std::string> &param_names, const Boxed_Value &arg0,
-        const Boxed_Value &arg1, const Boxed_Value &arg2) {
-
-    ss.add_object(param_names[0], arg0);
-    ss.add_object(param_names[1], arg1);
-    ss.add_object(param_names[2], arg2);
-
+const Boxed_Value eval_function (BoxedCPP_System &ss, TokenPtr node, const std::vector<std::string> &param_names, const std::vector<Boxed_Value> &vals) {
+    for (unsigned int i = 0; i < param_names.size(); ++i) {
+        ss.add_object(param_names[i], vals[i]);
+    }
     return eval_token(ss, node);
 }
 
@@ -314,36 +295,9 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             for (i = 0; i < num_args; ++i) {
                 param_names.push_back(node->children[i+1]->text);
             }
-            switch (num_args) {
-                case (0) : {
-                    std::cout << "Registered a 0 function" << std::endl;
-                    ss.register_function(boost::function<Boxed_Value (void)>
-                        (boost::bind(&eval_function0, boost::ref(ss), node->children.back(), param_names)), node->children[0]->text);
-                    std::cout << "Reg: " << node->children[0]->text << std::endl;
-                }
-                break;
-                case (1) : {
-                    std::cout << "Registered a 1 (" << node->children[1]->text << ") function" << std::endl;
-                    ss.register_function(boost::function<Boxed_Value (const Boxed_Value &)>
-                        (boost::bind(&eval_function1, boost::ref(ss), node->children.back(), param_names, _1)), node->children[0]->text);
-                    std::cout << "Reg: " << node->children[0]->text << std::endl;
-                }
-                break;
-                case (2) : {
-                    std::cout << "Registered a 2 (" << node->children[1]->text << "," << node->children[2]->text << ") function" << std::endl;
-                    ss.register_function(boost::function<Boxed_Value (const Boxed_Value &, const Boxed_Value &)>
-                        (boost::bind(&eval_function2, boost::ref(ss), node->children.back(), param_names, _1, _2)), node->children[0]->text);
-                    std::cout << "Reg: " << node->children[0]->text << std::endl;
-                }
-                break;
-                case (3) : {
-                    std::cout << "Registered a 3 (" << node->children[1]->text << "," << node->children[2]->text << "," << node->children[3]->text << ") function" << std::endl;
-                    ss.register_function(boost::function<Boxed_Value (const Boxed_Value &, const Boxed_Value &, const Boxed_Value &)>
-                        (boost::bind(&eval_function3, boost::ref(ss), node->children.back(), param_names, _1, _2, _3)), node->children[0]->text);
-                    std::cout << "Reg: " << node->children[0]->text << std::endl;
-                }
-                break;
-            }
+
+            ss.register_function(boost::shared_ptr<Proxy_Function>(
+                  new Dynamic_Proxy_Function(boost::bind(&eval_function, boost::ref(ss), node->children.back(), param_names, _1))), node->children[0]->text);
         }
         break;
         case (TokenType::Scoped_Block) : {
@@ -393,7 +347,7 @@ Rule build_parser_rules() {
     Rule value;
     Rule statements;
 
-    Rule rule = *(fundef | statements);
+    Rule rule = *((fundef | statements) >> *(Ign(Id(TokenType::Semicolon))));
     statements = (statement >> *(Ign(Id(TokenType::Semicolon)) >> statement) >> *(Ign(Id(TokenType::Semicolon))));
     statement = if_block | while_block | equation;
     if_block = Ign(Str("if")) >> boolean >> block >> *(Str("elseif") >> boolean >> block) >> ~(Str("else") >> block);
