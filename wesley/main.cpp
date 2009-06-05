@@ -29,14 +29,16 @@ const char *tokentype_to_string(int tokentype) {
 
 struct ParserError {
     std::string reason;
+    TokenPtr location;
 
-    ParserError(const std::string &why) : reason(why) { }
+    ParserError(const std::string &why, const TokenPtr where) : reason(why), location(where){ }
 };
 
 struct EvalError {
     std::string reason;
+    TokenPtr location;
 
-    EvalError(const std::string &why) : reason(why) { }
+    EvalError(const std::string &why, const TokenPtr where) : reason(why), location(where) { }
 };
 
 Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node);
@@ -174,7 +176,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                         retval = dispatch(ss.get_function(node->children[i]->text), plb);
                     }
                     catch(std::exception &e){
-                        throw EvalError("Can not find appropriate '" + node->children[i]->text + "'");
+                        throw EvalError("Can not find appropriate '" + node->children[i]->text + "'", node->children[i]);
                     }
                 }
             }
@@ -190,7 +192,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                 retval = dispatch(ss.get_function("*"), plb);
             }
             catch(std::exception &e){
-                throw EvalError("Can not find appropriate negation");
+                throw EvalError("Can not find appropriate negation", node->children[0]);
             }
         }
         break;
@@ -204,7 +206,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                 retval = dispatch(ss.get_function(node->children[0]->text), plb);
             }
             catch(std::exception &e){
-                throw EvalError("Can not find appropriate '" + node->children[0]->text + "'");
+                throw EvalError("Can not find appropriate '" + node->children[0]->text + "'", node->children[0]);
             }
         }
         break;
@@ -223,7 +225,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                         retval = dispatch(ss.get_function(node->children[i]->children[0]->text), plb);
                     }
                     catch(std::exception &e){
-                        throw EvalError("Can not find appropriate '" + node->children[i]->children[0]->text + "'");
+                        throw EvalError("Can not find appropriate '" + node->children[i]->children[0]->text + "'", node->children[0]);
                     }
                 }
             }
@@ -236,7 +238,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                 cond = Cast_Helper<bool &>()(retval);
             }
             catch (std::exception) {
-                throw EvalError("If condition not boolean");
+                throw EvalError("If condition not boolean", node->children[0]);
             }
             if (cond) {
                 retval = eval_token(ss, node->children[1]);
@@ -255,7 +257,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                                 cond = Cast_Helper<bool &>()(retval);
                             }
                             catch (std::exception) {
-                                throw EvalError("Elseif condition not boolean");
+                                throw EvalError("Elseif condition not boolean", node->children[i+1]);
                             }
                             if (cond) {
                                 retval = eval_token(ss, node->children[i+2]);
@@ -274,7 +276,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                 cond = Cast_Helper<bool &>()(retval);
             }
             catch (std::exception) {
-                throw EvalError("While condition not boolean");
+                throw EvalError("While condition not boolean", node->children[0]);
             }
             while (cond) {
                 eval_token(ss, node->children[1]);
@@ -283,7 +285,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                     cond = Cast_Helper<bool &>()(retval);
                 }
                 catch (std::exception) {
-                    throw EvalError("While condition not boolean");
+                    throw EvalError("While condition not boolean", node->children[0]);
                 }
             }
             retval = Boxed_Value();
@@ -430,7 +432,7 @@ TokenPtr parse(Rule &rule, std::vector<TokenPtr> &tokens, const char *filename) 
         return parent;
     }
     else {
-        throw ParserError("Parse failed");
+        throw ParserError("Parse failed", *(results.first));
     }
 }
 
@@ -446,14 +448,24 @@ Boxed_Value evaluate_string(Lexer &lexer, Rule &parser, BoxedCPP_System &ss, con
 
     //debug_print(tokens);
     try {
-        TokenPtr parent = parse(parser, tokens, "INPUT");
+        TokenPtr parent = parse(parser, tokens, filename);
         value = eval_token(ss, parent);
     }
     catch (ParserError &pe) {
-        std::cout << "Parsing error: " << pe.reason << std::endl;
+        if (filename != "__EVAL__") {
+            std::cout << "Parsing error: \"" << pe.reason << "\" in '" << pe.location->filename << "' line: " << pe.location->start.line << std::endl;
+        }
+        else {
+            std::cout << "Parsing error: \"" << pe.reason << "\"" << std::endl;
+        }
     }
     catch (EvalError &ee) {
-        std::cout << "Eval error: " << ee.reason << std::endl;
+        if (filename != "__EVAL__") {
+            std::cout << "Eval error: \"" << ee.reason << "\" in '" << ee.location->filename << "' line: " << ee.location->start.line << std::endl;
+        }
+        else {
+            std::cout << "Eval error: \"" << ee.reason << "\"" << std::endl;
+        }
     }
     catch (std::exception &e) {
         std::cout << "Exception: " << e.what() << std::endl;
@@ -473,7 +485,7 @@ int main(int argc, char *argv[]) {
         std::cout << "eval> ";
         std::getline(std::cin, input);
         while (input != "quit") {
-            Boxed_Value val = evaluate_string(lexer, parser, ss, input, "INPUT");
+            Boxed_Value val = evaluate_string(lexer, parser, ss, input, "__EVAL__");
             if (*(val.get_type_info().m_bare_type_info) != typeid(void)) {
                 std::cout << "result: ";
                 dispatch(ss.get_function("print"), Param_List_Builder() << val);
