@@ -18,7 +18,7 @@ Ret subtract(P1 p1, P2 p2)
 template<typename Ret, typename P1, typename P2>
 Ret divide(P1 p1, P2 p2)
 {
-  return p1 - p2;
+  return p1 / p2;
 }
 
 
