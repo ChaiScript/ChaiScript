@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <vector>
 #include <iostream>
+#include <deque>
 
 #include "boxed_value.hpp"
 #include "type_info.hpp"
@@ -20,6 +21,13 @@ class BoxedCPP_System
   public:
     typedef std::multimap<std::string, boost::shared_ptr<Proxy_Function> > Function_Map;
     typedef std::map<std::string, Type_Info> Type_Name_Map;
+    typedef std::map<std::string, Boxed_Value> Scope;
+
+
+    BoxedCPP_System()
+    {
+      m_scopes.push_back(Scope());
+    }
 
     void register_function(const boost::shared_ptr<Proxy_Function> &f, const std::string &name)
     {
@@ -36,19 +44,36 @@ class BoxedCPP_System
     template<typename Class>
       void add_object(const std::string &name, const Class &obj)
       {
-        //m_objects.insert(std::make_pair(name, Boxed_Value(obj)));
-        m_objects[name] = Boxed_Value(obj);
+        m_scopes.back()[name] = Boxed_Value(obj);
       }
+
+    void new_scope()
+    {
+      m_scopes.push_back(Scope());
+    }
+
+    void pop_scope()
+    {
+      if (m_scopes.size() == 1)
+      {
+        m_scopes.pop_back();
+      } else {
+        throw std::range_error("Unable to pop global stack");
+      }
+    }
 
     Boxed_Value get_object(const std::string &name) const
     {
-      std::map<std::string, Boxed_Value>::const_iterator itr = m_objects.find(name);
-      if (itr != m_objects.end())
+      for (size_t i = m_scopes.size()-1; i >= 0; --i)
       {
-        return itr->second;
-      } else {
-        throw std::range_error("Object not known: " + name);
+        std::map<std::string, Boxed_Value>::const_iterator itr = m_scopes[i].find(name);
+        if (itr != m_scopes[i].end())
+        {
+          return itr->second;
+        }      
       }
+
+      throw std::range_error("Object not known: " + name);
     }
 
     template<typename Type>
@@ -76,7 +101,7 @@ class BoxedCPP_System
     }
 
   private:
-    std::map<std::string, Boxed_Value > m_objects;
+    std::deque<Scope> m_scopes;
 
     Function_Map m_functions;
     Type_Name_Map m_types;
