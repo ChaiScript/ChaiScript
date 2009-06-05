@@ -442,7 +442,7 @@ Boxed_Value evaluate_string(Lexer &lexer, Rule &parser, BoxedCPP_System &ss, con
         value = eval_token(ss, parent);
     }
     catch (ParserError &pe) {
-        if (filename != "__EVAL__") {
+        if (filename != std::string("__EVAL__")) {
             std::cout << "Parsing error: \"" << pe.reason << "\" in '" << pe.location->filename << "' line: " << pe.location->start.line << std::endl;
         }
         else {
@@ -450,7 +450,7 @@ Boxed_Value evaluate_string(Lexer &lexer, Rule &parser, BoxedCPP_System &ss, con
         }
     }
     catch (EvalError &ee) {
-        if (filename != "__EVAL__") {
+        if (filename != std::string("__EVAL__")) {
             std::cout << "Eval error: \"" << ee.reason << "\" in '" << ee.location->filename << "' line: " << ee.location->start.line << std::endl;
         }
         else {
