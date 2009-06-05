@@ -263,6 +263,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                     }
                 }
             }
+            retval = Boxed_Value();
         }
         break;
         case(TokenType::While_Block) : {
@@ -273,6 +274,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                 retval = eval_token(ss, node->children[0]);
                 cond = Cast_Helper<bool &>()(retval);
             }
+            retval = Boxed_Value();
         }
         break;
         case (TokenType::Function_Def) : {
@@ -369,7 +371,7 @@ Rule build_parser_rules() {
         block >> ~Ign(Id(TokenType::Semicolon));
     params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
     block = Ign(Id(TokenType::Curly_Open)) >> ~statements >> Ign(Id(TokenType::Curly_Close));
-    equation = *(Id(TokenType::Identifier) >> Ign(Str("="))) >> comparison;
+    equation = *(Id(TokenType::Identifier) >> Ign(Str("="))) >> boolean;
     boolean = comparison >> *((Str("&&") >> comparison) | (Str("||") >> comparison));
     comparison = expression >> *((Str("==") >> expression) | (Str("!=") >> expression) | (Str("<") >> expression) |
             (Str("<=") >> expression) |(Str(">") >> expression) | (Str(">=") >> expression));
@@ -378,7 +380,7 @@ Rule build_parser_rules() {
     factor = methodcall | value | negate | (Ign(Str("+")) >> value);
     funcall = Id(TokenType::Identifier) >> Ign(Id(TokenType::Parens_Open)) >> ~(boolean >> *(Ign(Str("," )) >> boolean)) >> Ign(Id(TokenType::Parens_Close));
     methodcall = value >> +(Ign(Str(".")) >> funcall);
-    negate = Ign(Str("-")) >> factor;
+    negate = Ign(Str("-")) >> boolean;
     return_statement = Ign(Str("return")) >> boolean;
 
     value = (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
