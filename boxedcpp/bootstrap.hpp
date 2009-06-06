@@ -78,9 +78,27 @@ bool greater_than_equals(P1 p1, P2 p2)
 }
 
 template<typename P1, typename P2>
-P1 &timesequal(P1 &p1, P2 p2)
+P1 &timesequal(P1 &p1, const P2 &p2)
 {
   return (p1 *= p2);
+}
+
+template<typename P1, typename P2>
+P1 &dividesequal(P1 &p1, const P2 &p2)
+{
+  return (p1 /= p2);
+}
+
+template<typename P1, typename P2>
+P1 &addsequal(P1 &p1, const P2 &p2)
+{
+  return (p1 += p2);
+}
+
+template<typename P1, typename P2>
+P1 &subtractsequal(P1 &p1, const P2 &p2)
+{
+  return (p1 -= p2);
 }
 
 //Add canonical forms of operators
@@ -170,6 +188,9 @@ void add_opers_arithmetic_overload(BoxedCPP_System &s)
   register_function(s, &divide<Ret, T, R>, "/");
   register_function(s, &multiply<Ret, T, R>, "*");
   register_function(s, &timesequal<T, R>, "*=");
+  register_function(s, &dividesequal<T, R>, "/=");
+  register_function(s, &subtractsequal<T, R>, "-=");
+  register_function(s, &addsequal<T, R>, "+=");
 }
 
 template<typename T>
