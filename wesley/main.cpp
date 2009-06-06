@@ -154,15 +154,14 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                     }
                     else {
                         Param_List_Builder plb;
-                        plb << retval;
                         plb << eval_token(ss, node->children[i]);
+                        plb << retval;
                         try {
                             retval = dispatch(ss.get_function(node->children[i+1]->text), plb);
                         }
                         catch(std::exception &e){
                             throw EvalError("Can not find appropriate '" + node->children[i+1]->text + "'", node->children[i+1]);
                         }
-                        ss.add_object(node->children[i]->text, retval);
                     }
                 }
             }
@@ -441,7 +440,7 @@ TokenPtr parse(Rule &rule, std::vector<TokenPtr> &tokens, const char *filename) 
     std::pair<Token_Iterator, bool> results = rule(iter, end, parent);
 
     if (results.second) {
-        debug_print(parent, "");
+        //debug_print(parent, "");
         return parent;
     }
     else {
