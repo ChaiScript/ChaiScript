@@ -1,0 +1,14 @@
+//functions of zero params don't need them:
+def meet {
+	print("Hello")
+}
+
+def greet(x) {
+	print("Hello, " + x.to_string())
+}
+
+//but you need parens for invocation:
+meet()
+
+//multiple commands per line:
+greet(1); greet("bob")

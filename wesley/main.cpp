@@ -365,7 +365,7 @@ Rule build_parser_rules() {
     fundef = Ign(Str("def")) >> Id(TokenType::Identifier) >> ~(Ign(Id(TokenType::Parens_Open)) >> ~params >> Ign(Id(TokenType::Parens_Close))) >>
         block >> ~Ign(Id(TokenType::Semicolon));
     params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
-    block = *(Ign(Id(TokenType::Semicolon))) >> Ign(Id(TokenType::Curly_Open)) >> *(Ign(Id(TokenType::Semicolon))) >> ~statements >> Ign(Id(TokenType::Curly_Close));
+    block = *(Ign(Id(TokenType::Semicolon))) >> Ign(Id(TokenType::Curly_Open)) >> *(Ign(Id(TokenType::Semicolon))) >> ~statements >> Ign(Id(TokenType::Curly_Close)) >> *(Ign(Id(TokenType::Semicolon)));
     equation = *((Id(TokenType::Identifier) >> Str("=")) | (Id(TokenType::Identifier) >> Str("+=")) | (Id(TokenType::Identifier) >> Str("-=")) |
             (Id(TokenType::Identifier) >> Str("*=")) | (Id(TokenType::Identifier) >> Str("/="))) >> boolean;
     boolean = comparison >> *((Str("&&") >> comparison) | (Str("||") >> comparison));
@@ -465,7 +465,7 @@ Boxed_Value evaluate_string(Lexer &lexer, Rule &parser, BoxedCPP_System &ss, con
     }
     catch (ParserError &pe) {
         if (filename != std::string("__EVAL__")) {
-            std::cout << "Parsing error: \"" << pe.reason << "\" in '" << pe.location->filename << "' line: " << pe.location->start.line << std::endl;
+            std::cout << "Parsing error: \"" << pe.reason << "\" in '" << pe.location->filename << "' line: " << pe.location->start.line+1 << std::endl;
         }
         else {
             std::cout << "Parsing error: \"" << pe.reason << "\"" << std::endl;
@@ -473,7 +473,7 @@ Boxed_Value evaluate_string(Lexer &lexer, Rule &parser, BoxedCPP_System &ss, con
     }
     catch (EvalError &ee) {
         if (filename != std::string("__EVAL__")) {
-            std::cout << "Eval error: \"" << ee.reason << "\" in '" << ee.location->filename << "' line: " << ee.location->start.line << std::endl;
+            std::cout << "Eval error: \"" << ee.reason << "\" in '" << ee.location->filename << "' line: " << ee.location->start.line+1 << std::endl;
         }
         else {
             std::cout << "Eval error: \"" << ee.reason << "\"" << std::endl;

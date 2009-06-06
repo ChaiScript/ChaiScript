@@ -1,0 +1,10 @@
+i = 0
+if (i == 0) {
+	print("i is 0")
+}
+elseif (i == 1) {
+	print("i is 1")
+}
+else {
+	print("i is not 0 or 1")
+}
