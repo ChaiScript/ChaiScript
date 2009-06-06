@@ -16,13 +16,13 @@
 class TokenType { public: enum Type { File, Whitespace, Identifier, Integer, Operator, Parens_Open, Parens_Close,
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
     Function_Def, Scoped_Block, Statement, Equation, Return, Expression, Term, Factor, Negate, Comment,
-    Value, Fun_Call, Method_Call, Comparison, If_Block, While_Block, Boolean, Real_Number }; };
+    Value, Fun_Call, Method_Call, Comparison, If_Block, While_Block, Boolean, Real_Number, Array_Call }; };
 
 const char *tokentype_to_string(int tokentype) {
     const char *token_types[] = {"File", "Whitespace", "Identifier", "Integer", "Operator", "Parens_Open", "Parens_Close",
         "Square_Open", "Square_Close", "Curly_Open", "Curly_Close", "Comma", "Quoted_String", "Single_Quoted_String", "Carriage_Return", "Semicolon",
         "Function_Def", "Scoped_Block", "Statement", "Equation", "Return", "Expression", "Term", "Factor", "Negate", "Comment",
-        "Value", "Fun_Call", "Method_Call", "Comparison", "If_Block", "While_Block", "Boolean", "Real Number" };
+        "Value", "Fun_Call", "Method_Call", "Comparison", "If_Block", "While_Block", "Boolean", "Real Number", "Array_Call" };
 
     return token_types[tokentype];
 }
@@ -185,6 +185,20 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                         throw EvalError("Can not find appropriate '" + node->children[i]->text + "'", node->children[i]);
                     }
                 }
+            }
+        }
+        break;
+        case (TokenType::Array_Call) : {
+            retval = eval_token(ss, node->children[0]);
+            Param_List_Builder plb;
+            plb << retval;
+            plb << eval_token(ss, node->children[1]);
+
+            try {
+                retval = dispatch(ss.get_function("[]"), plb);
+            }
+            catch(std::exception &e){
+                throw EvalError("Can not find appropriate array lookup '[]'", node->children[0]);
             }
         }
         break;
@@ -353,6 +367,7 @@ Rule build_parser_rules() {
     Rule methodcall(TokenType::Method_Call);
     Rule if_block(TokenType::If_Block);
     Rule while_block(TokenType::While_Block);
+    Rule array_call(TokenType::Array_Call);
 
     Rule value;
     Rule statements;
@@ -378,8 +393,8 @@ Rule build_parser_rules() {
     methodcall = value >> +(Ign(Str(".")) >> funcall);
     negate = Ign(Str("-")) >> boolean;
     return_statement = Ign(Str("return")) >> boolean;
-
-    value = block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
+    array_call = Id(TokenType::Identifier) >> (Ign(Id(TokenType::Square_Open)) >> boolean >> Ign(Id(TokenType::Square_Close)));
+    value =  array_call | block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
         funcall | Id(TokenType::Identifier) | Id(TokenType::Real_Number) | Id(TokenType::Integer) | Id(TokenType::Quoted_String) |
         Id(TokenType::Single_Quoted_String) ;
 
