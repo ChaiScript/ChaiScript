@@ -41,6 +41,17 @@ class BoxedCPP_System
         m_functions.insert(std::make_pair(name, boost::shared_ptr<Proxy_Function>(new Proxy_Function_Impl<Function>(func))));
       }
 
+
+    template<typename Class>
+      void set_object(const std::string &name, const Class &obj)
+      {
+        try {
+          get_object(name) = Boxed_Value(obj);
+        } catch (const std::range_error &) {
+          add_object(name, obj);
+        }
+      }
+
     template<typename Class>
       void add_object(const std::string &name, const Class &obj)
       {
