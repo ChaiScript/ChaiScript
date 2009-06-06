@@ -13,16 +13,16 @@
 #include "langkit_lexer.hpp"
 #include "langkit_parser.hpp"
 
-class TokenType { public: enum Type { File, Whitespace, Identifier, Number, Operator, Parens_Open, Parens_Close,
+class TokenType { public: enum Type { File, Whitespace, Identifier, Integer, Operator, Parens_Open, Parens_Close,
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
     Function_Def, Scoped_Block, Statement, Equation, Return, Expression, Term, Factor, Negate, Comment,
-    Value, Fun_Call, Method_Call, Comparison, If_Block, While_Block, Boolean }; };
+    Value, Fun_Call, Method_Call, Comparison, If_Block, While_Block, Boolean, Real_Number }; };
 
 const char *tokentype_to_string(int tokentype) {
-    const char *token_types[] = {"File", "Whitespace", "Identifier", "Number", "Operator", "Parens_Open", "Parens_Close",
+    const char *token_types[] = {"File", "Whitespace", "Identifier", "Integer", "Operator", "Parens_Open", "Parens_Close",
         "Square_Open", "Square_Close", "Curly_Open", "Curly_Close", "Comma", "Quoted_String", "Single_Quoted_String", "Carriage_Return", "Semicolon",
         "Function_Def", "Scoped_Block", "Statement", "Equation", "Return", "Expression", "Term", "Factor", "Negate", "Comment",
-        "Value", "Fun_Call", "Method_Call", "Comparison", "If_Block", "While_Block", "Boolean" };
+        "Value", "Fun_Call", "Method_Call", "Comparison", "If_Block", "While_Block", "Boolean", "Real Number" };
 
     return token_types[tokentype];
 }
@@ -133,8 +133,11 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                 retval = ss.get_object(node->text);
             }
         break;
-        case (TokenType::Number) :
+        case (TokenType::Real_Number) :
             retval = Boxed_Value(double(atof(node->text.c_str())));
+        break;
+        case (TokenType::Integer) :
+            retval = Boxed_Value(atoi(node->text.c_str()));
         break;
         case (TokenType::Quoted_String) :
             retval = Boxed_Value(node->text);
@@ -363,7 +366,8 @@ Rule build_parser_rules() {
     return_statement = Ign(Str("return")) >> boolean;
 
     value = block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
-        funcall | Id(TokenType::Identifier) | Id(TokenType::Number) | Id(TokenType::Quoted_String) | Id(TokenType::Single_Quoted_String) ;
+        funcall | Id(TokenType::Identifier) | Id(TokenType::Real_Number) | Id(TokenType::Integer) | Id(TokenType::Quoted_String) |
+        Id(TokenType::Single_Quoted_String) ;
 
     return rule;
 }
@@ -377,7 +381,8 @@ Lexer build_lexer() {
     lexer.set_singleline_comment(Pattern("//", TokenType::Comment));
 
     lexer << Pattern("[A-Za-z_]+", TokenType::Identifier);
-    lexer << Pattern("[0-9]+(\\.[0-9]+)?", TokenType::Number);
+    lexer << Pattern("[0-9]+\\.[0-9]+", TokenType::Real_Number);
+    lexer << Pattern("[0-9]+", TokenType::Integer);
     lexer << Pattern("[!@#$%^&*|\\-+=<>.]+|/[!@#$%^&|\\-+=<>]*", TokenType::Operator);
     lexer << Pattern("\\(", TokenType::Parens_Open);
     lexer << Pattern("\\)", TokenType::Parens_Close);
@@ -403,9 +408,10 @@ BoxedCPP_System build_eval_system() {
     ss.register_function(boost::function<void (const bool &)>(&print<bool>), "print");
     ss.register_function(boost::function<void (const std::string &)>(&print<std::string>), "print");
     ss.register_function(boost::function<void (const double &)>(&print<double>), "print");
+    ss.register_function(boost::function<void (const int &)>(&print<int>), "print");
     ss.register_function(boost::function<std::string (const std::string &, const std::string &)>(concat_string), "concat_string");
 
-  ss.register_function(boost::shared_ptr<Proxy_Function>(
+    ss.register_function(boost::shared_ptr<Proxy_Function>(
         new Dynamic_Proxy_Function(boost::bind(&add_two, boost::ref(ss), _1), 2)), "add_two");
 
 
