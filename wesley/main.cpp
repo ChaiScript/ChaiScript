@@ -148,8 +148,22 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
         case (TokenType::Equation) :
             retval = eval_token(ss, node->children.back());
             if (node->children.size() > 1) {
-                for (i = node->children.size()-2; ((int)i) >= 0; --i) {
-                    ss.add_object(node->children[i]->text, retval);
+                for (i = node->children.size()-3; ((int)i) >= 0; i -= 2) {
+                    if (node->children[i+1]->text == "=") {
+                        ss.add_object(node->children[i]->text, retval);
+                    }
+                    else {
+                        Param_List_Builder plb;
+                        plb << retval;
+                        plb << eval_token(ss, node->children[i]);
+                        try {
+                            retval = dispatch(ss.get_function(node->children[i+1]->text), plb);
+                        }
+                        catch(std::exception &e){
+                            throw EvalError("Can not find appropriate '" + node->children[i+1]->text + "'", node->children[i+1]);
+                        }
+                        ss.add_object(node->children[i]->text, retval);
+                    }
                 }
             }
         break;
@@ -353,7 +367,8 @@ Rule build_parser_rules() {
         block >> ~Ign(Id(TokenType::Semicolon));
     params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
     block = *(Ign(Id(TokenType::Semicolon))) >> Ign(Id(TokenType::Curly_Open)) >> *(Ign(Id(TokenType::Semicolon))) >> ~statements >> Ign(Id(TokenType::Curly_Close));
-    equation = *(Id(TokenType::Identifier) >> Ign(Str("="))) >> boolean;
+    equation = *((Id(TokenType::Identifier) >> Str("=")) | (Id(TokenType::Identifier) >> Str("+=")) | (Id(TokenType::Identifier) >> Str("-=")) |
+            (Id(TokenType::Identifier) >> Str("*=")) | (Id(TokenType::Identifier) >> Str("/="))) >> boolean;
     boolean = comparison >> *((Str("&&") >> comparison) | (Str("||") >> comparison));
     comparison = expression >> *((Str("==") >> expression) | (Str("!=") >> expression) | (Str("<") >> expression) |
             (Str("<=") >> expression) |(Str(">") >> expression) | (Str(">=") >> expression));
@@ -426,7 +441,7 @@ TokenPtr parse(Rule &rule, std::vector<TokenPtr> &tokens, const char *filename) 
     std::pair<Token_Iterator, bool> results = rule(iter, end, parent);
 
     if (results.second) {
-        //debug_print(parent, "");
+        debug_print(parent, "");
         return parent;
     }
     else {
