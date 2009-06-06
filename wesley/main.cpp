@@ -190,15 +190,16 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
         break;
         case (TokenType::Array_Call) : {
             retval = eval_token(ss, node->children[0]);
-            Param_List_Builder plb;
-            plb << retval;
-            plb << eval_token(ss, node->children[1]);
-
-            try {
-                retval = dispatch(ss.get_function("[]"), plb);
-            }
-            catch(std::exception &e){
-                throw EvalError("Can not find appropriate array lookup '[]'", node->children[0]);
+            for (i = 1; i < node->children.size(); ++i) {
+                Param_List_Builder plb;
+                plb << retval;
+                plb << eval_token(ss, node->children[i]);
+                try {
+                    retval = dispatch(ss.get_function("[]"), plb);
+                }
+                catch(std::exception &e){
+                    throw EvalError("Can not find appropriate array lookup '[]'", node->children[i]);
+                }
             }
         }
         break;
@@ -367,7 +368,7 @@ Rule build_parser_rules() {
     Rule methodcall(TokenType::Method_Call);
     Rule if_block(TokenType::If_Block);
     Rule while_block(TokenType::While_Block);
-    Rule array_call(TokenType::Array_Call);
+    Rule arraycall(TokenType::Array_Call);
 
     Rule value;
     Rule statements;
@@ -388,13 +389,13 @@ Rule build_parser_rules() {
             (Str("<=") >> expression) |(Str(">") >> expression) | (Str(">=") >> expression));
     expression = term >> *((Str("+") >> term) | (Str("-") >> term));
     term = factor >> *((Str("*") >> factor) | (Str("/") >> factor));
-    factor = methodcall | value | negate | (Ign(Str("+")) >> value);
+    factor = methodcall | arraycall | value | negate | (Ign(Str("+")) >> value);
     funcall = Id(TokenType::Identifier) >> Ign(Id(TokenType::Parens_Open)) >> ~(boolean >> *(Ign(Str("," )) >> boolean)) >> Ign(Id(TokenType::Parens_Close));
     methodcall = value >> +(Ign(Str(".")) >> funcall);
     negate = Ign(Str("-")) >> boolean;
     return_statement = Ign(Str("return")) >> boolean;
-    array_call = Id(TokenType::Identifier) >> (Ign(Id(TokenType::Square_Open)) >> boolean >> Ign(Id(TokenType::Square_Close)));
-    value =  array_call | block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
+    arraycall = value >> +((Ign(Id(TokenType::Square_Open)) >> boolean >> Ign(Id(TokenType::Square_Close))));
+    value =  block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
         funcall | Id(TokenType::Identifier) | Id(TokenType::Real_Number) | Id(TokenType::Integer) | Id(TokenType::Quoted_String) |
         Id(TokenType::Single_Quoted_String) ;
 
