@@ -2,6 +2,7 @@
 #define __bootstrap_hpp__
 
 #include "boxedcpp.hpp"
+#include "register_function.hpp"
 
 template<typename Ret, typename P1, typename P2>
 Ret add(P1 p1, P2 p2)
@@ -82,6 +83,102 @@ P1 &timesequal(P1 &p1, P2 p2)
   return (p1 *= p2);
 }
 
+//Add canonical forms of operators
+template<typename T>
+void add_oper_equals(BoxedCPP_System &s)
+{
+  register_function(s, &equals<const T&, const T&>, "=");
+}
+
+template<typename T>
+void add_oper_add(BoxedCPP_System &s)
+{
+  register_function(s, &add<T, const T&, const T&>, "+");
+}
+
+template<typename T>
+void add_oper_subtract(BoxedCPP_System &s)
+{
+  register_function(s, &subtract<T, const T&, const T&>, "-");
+}
+
+template<typename T>
+void add_oper_divide(BoxedCPP_System &s)
+{
+  register_function(s, &divide<T, const T&, const T&>, "-");
+}
+
+template<typename T>
+void add_oper_multiply(BoxedCPP_System &s)
+{
+  register_function(s, &multiply<T, const T&, const T&>, "*");
+}
+
+template<typename T>
+void add_oper_not_equals(BoxedCPP_System &s)
+{
+  register_function(s, &not_equals<const T&, const T&>, "!=");
+}
+
+template<typename T>
+void add_oper_less_than(BoxedCPP_System &s)
+{
+  register_function(s, &less_than<const T&, const T&>, "<");
+}
+
+template<typename T>
+void add_oper_greater_than(BoxedCPP_System &s)
+{
+  register_function(s, &greater_than<const T&, const T&>, ">");
+}
+
+template<typename T>
+void add_oper_less_than_equals(BoxedCPP_System &s)
+{
+  register_function(s, &less_than_equals<const T&, const T&>, "<=");
+}
+
+template<typename T>
+void add_oper_greater_than_equals(BoxedCPP_System &s)
+{
+  register_function(s, &greater_than_equals<const T&, const T&>, ">=");
+}
+
+
+template<typename T, typename R>
+void add_opers_comparison_overload(BoxedCPP_System &s)
+{
+  register_function(s, &equals<const T&, const R&>, "==");
+  register_function(s, &not_equals<const T&, const R&>, "!=");
+  register_function(s, &less_than<const T&, const R&>, "<");
+  register_function(s, &greater_than<const T&, const R&>, ">");
+  register_function(s, &less_than_equals<const T&, const R&>, "<=");
+  register_function(s, &greater_than_equals<const T&, const R&>, ">=");
+}
+
+template<typename T>
+void add_opers_comparison(BoxedCPP_System &s)
+{
+  add_opers_comparison_overload<T, T>(s);
+}
+
+template<typename Ret, typename T, typename R>
+void add_opers_arithmetic_overload(BoxedCPP_System &s)
+{
+  register_function(s, &add<Ret, T, R>, "+");
+  register_function(s, &subtract<Ret, T, R>, "-");
+  register_function(s, &divide<Ret, T, R>, "/");
+  register_function(s, &multiply<Ret, T, R>, "*");
+  register_function(s, &timesequal<T, R>, "*=");
+}
+
+template<typename T>
+void add_opers_arithmetic(BoxedCPP_System &s)
+{
+  add_opers_arithmetic_overload<T, T, T>(s);
+}
+
+//Built in to_string operator
 template<typename Input>
 std::string to_string(Input i)
 {
@@ -97,73 +194,29 @@ void bootstrap(BoxedCPP_System &s)
   s.register_type<bool>("bool");
   s.register_type<std::string>("string");
 
-  s.register_function(boost::function<std::string (const std::string &, const std::string&)>(&add<std::string, const std::string &, const std::string &>), "+");
+  add_opers_comparison<int>(s);
+  add_opers_comparison<double>(s);
+  add_opers_comparison<char>(s);
+  add_opers_comparison<std::string>(s);
 
-  s.register_function(boost::function<int (int, int)>(&add<int, int, int>), "+");
-  s.register_function(boost::function<double (int, double)>(&add<double, int, double>), "+");
-  s.register_function(boost::function<double (double, int)>(&add<double, double, int>), "+");
-  s.register_function(boost::function<double (double, double)>(&add<double, double, double>), "+");
+  add_opers_comparison_overload<int, double>(s);
+  add_opers_comparison_overload<double, int>(s);
 
-  s.register_function(boost::function<int (int, int)>(&subtract<int, int, int>), "-");
-  s.register_function(boost::function<double (int, double)>(&subtract<double, int, double>), "-");
-  s.register_function(boost::function<double (double, int)>(&subtract<double, double, int>), "-");
-  s.register_function(boost::function<double (double, double)>(&subtract<double, double, double>), "-");
+  add_opers_arithmetic<int>(s);
+  add_opers_arithmetic<double>(s);
 
-  s.register_function(boost::function<int (int, int)>(&divide<int, int, int>), "/");
-  s.register_function(boost::function<double (int, double)>(&divide<double, int, double>), "/");
-  s.register_function(boost::function<double (double, int)>(&divide<double, double, int>), "/");
-  s.register_function(boost::function<double (double, double)>(&divide<double, double, double>), "/");
+  add_opers_arithmetic_overload<double, int, double>(s);
+  add_opers_arithmetic_overload<double, double, int>(s);
 
-  s.register_function(boost::function<bool (bool, bool)>(&bool_and<bool, bool>), "&&");
-  s.register_function(boost::function<bool (bool, bool)>(&bool_or<bool, bool>), "||");
+  add_oper_add<std::string>(s);
 
-  s.register_function(boost::function<bool (const std::string &, const std::string &)>(&equals<const std::string &, const std::string &>), "==");
-  s.register_function(boost::function<bool (int, int)>(&equals<int, int>), "==");
-  s.register_function(boost::function<bool (int, double)>(&equals<int, double>), "==");
-  s.register_function(boost::function<bool (double, int)>(&equals<double, int>), "==");
-  s.register_function(boost::function<bool (double, double)>(&equals<double, double>), "==");
+  register_function(s, &bool_and<bool, bool>, "&&");
+  register_function(s, &bool_or<bool, bool>, "||");
 
-  s.register_function(boost::function<bool (const std::string &, const std::string &)>(&not_equals<const std::string &, const std::string &>), "!=");
-  s.register_function(boost::function<bool (int, int)>(&not_equals<int, int>), "!=");
-  s.register_function(boost::function<bool (int, double)>(&not_equals<int, double>), "!=");
-  s.register_function(boost::function<bool (double, int)>(&not_equals<double, int>), "!=");
-  s.register_function(boost::function<bool (double, double)>(&not_equals<double, double>), "!=");
-
-  s.register_function(boost::function<bool (int, int)>(&less_than<int, int>), "<");
-  s.register_function(boost::function<bool (int, double)>(&less_than<int, double>), "<");
-  s.register_function(boost::function<bool (double, int)>(&less_than<double, int>), "<");
-  s.register_function(boost::function<bool (double, double)>(&less_than<double, double>), "<");
-
-  s.register_function(boost::function<bool (int, int)>(&greater_than<int, int>), ">");
-  s.register_function(boost::function<bool (int, double)>(&greater_than<int, double>), ">");
-  s.register_function(boost::function<bool (double, int)>(&greater_than<double, int>), ">");
-  s.register_function(boost::function<bool (double, double)>(&greater_than<double, double>), ">");
-
-  s.register_function(boost::function<bool (int, int)>(&less_than_equals<int, int>), "<=");
-  s.register_function(boost::function<bool (int, double)>(&less_than_equals<int, double>), "<=");
-  s.register_function(boost::function<bool (double, int)>(&less_than_equals<double, int>), "<=");
-  s.register_function(boost::function<bool (double, double)>(&less_than_equals<double, double>), "<=");
-
-  s.register_function(boost::function<bool (int, int)>(&greater_than_equals<int, int>), ">=");
-  s.register_function(boost::function<bool (int, double)>(&greater_than_equals<int, double>), ">=");
-  s.register_function(boost::function<bool (double, int)>(&greater_than_equals<double, int>), ">=");
-  s.register_function(boost::function<bool (double, double)>(&greater_than_equals<double, double>), ">=");
-
-  s.register_function(boost::function<int (int, int)>(&multiply<int, int, int>), "*");
-  s.register_function(boost::function<double (int, double)>(&multiply<double, int, double>), "*");
-  s.register_function(boost::function<double (double, int)>(&multiply<double, double, int>), "*");
-  s.register_function(boost::function<double (double, double)>(&multiply<double, double, double>), "*");
-
-  s.register_function(boost::function<std::string (int)>(&to_string<int>), "to_string");
-  s.register_function(boost::function<std::string (const std::string &)>(&to_string<const std::string &>), "to_string");
-  s.register_function(boost::function<std::string (char)>(&to_string<char>), "to_string");
-  s.register_function(boost::function<std::string (double)>(&to_string<double>), "to_string");
-
-  s.register_function(boost::function<int &(int&, int)>(&timesequal<int, int>), "*=");
-  s.register_function(boost::function<double &(double&, int)>(&timesequal<double, int>), "*=");
-  s.register_function(boost::function<double &(double&, double)>(&timesequal<double, double>), "*=");
-  s.register_function(boost::function<int &(int&, double)>(&timesequal<int, double>), "*=");
-
+  register_function(s, &to_string<int>, "to_string");
+  register_function(s, &to_string<const std::string &>, "to_string");
+  register_function(s, &to_string<char>, "to_string");
+  register_function(s, &to_string<double>, "to_string");
 }
 
 #endif

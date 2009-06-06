@@ -108,7 +108,7 @@ int main()
 
   //Register a new function, this one with typing for us, so we don't have to ubox anything
   //right here
-  ss.register_function(boost::function<void (const std::string &)>(&print), "print");
+  register_function(ss, &print, "print");
 
   //Now we have a print method, let's try to print out the earlier example:
   //so, we dispatch the to_string and pass its result as a param to "print"
@@ -138,8 +138,10 @@ int main()
 
   //Register some local methods of the "Test" class
   ss.register_function(build_constructor<Test, const std::string &>(), "Test");
-  ss.register_function(boost::function<std::string &(Test *)>(&Test::get_message), "get_message");
-  ss.register_function(boost::function<void (Test *)>(&Test::show_message), "show_message");
+
+  register_function(ss, &Test::get_message, "get_message");
+  register_function(ss, &Test::show_message, "show_message");
+
 
   //Create a new object using the "Test" constructor, passing the param "Yo".
   //Then, add the new object to the system with the name "testobj2"
@@ -165,8 +167,6 @@ int main()
   //Now, prove that the reference was successfully acquired
   //and we are able to peek into the boxed types
   dispatch(ss.get_function("show_message"), sos);
-
-
 
 
   // Finally, we are going to register some named function aliases, for 

@@ -405,14 +405,14 @@ BoxedCPP_System build_eval_system() {
 
     //Register a new function, this one with typing for us, so we don't have to ubox anything
     //right here
-    ss.register_function(boost::function<void (const bool &)>(&print<bool>), "print");
-    ss.register_function(boost::function<void (const std::string &)>(&print<std::string>), "print");
-    ss.register_function(boost::function<void (const double &)>(&print<double>), "print");
-    ss.register_function(boost::function<void (const int &)>(&print<int>), "print");
-    ss.register_function(boost::function<std::string (const std::string &, const std::string &)>(concat_string), "concat_string");
+    register_function(ss, &print<bool>, "print");
+    register_function(ss, &print<std::string>, "print");
+    register_function(ss, &print<double>, "print");
+    register_function(ss, &concat_string, "concat_string");
+    register_function(ss, &print<int>, "print");
 
     ss.register_function(boost::shared_ptr<Proxy_Function>(
-        new Dynamic_Proxy_Function(boost::bind(&add_two, boost::ref(ss), _1), 2)), "add_two");
+          new Dynamic_Proxy_Function(boost::bind(&add_two, boost::ref(ss), _1), 2)), "add_two");
 
 
     return ss;
