@@ -45,11 +45,17 @@ class BoxedCPP_System
     template<typename Class>
       void set_object(const std::string &name, const Class &obj)
       {
-        try {
-          get_object(name) = Boxed_Value(obj);
-        } catch (const std::range_error &) {
-          add_object(name, obj);
+        for (int i = m_scopes.size()-1; i >= 0; --i)
+        {
+          std::map<std::string, Boxed_Value>::const_iterator itr = m_scopes[i].find(name);
+          if (itr != m_scopes[i].end())
+          {
+            m_scopes[i][name] = Boxed_Value(obj);
+            return;
+          }
         }
+
+        add_object(name, obj);
       }
 
     template<typename Class>
@@ -75,7 +81,7 @@ class BoxedCPP_System
 
     Boxed_Value get_object(const std::string &name) const
     {
-      for (size_t i = m_scopes.size()-1; i >= 0; --i)
+      for (int i = m_scopes.size()-1; i >= 0; --i)
       {
         std::map<std::string, Boxed_Value>::const_iterator itr = m_scopes[i].find(name);
         if (itr != m_scopes[i].end())

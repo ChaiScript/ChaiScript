@@ -150,7 +150,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             if (node->children.size() > 1) {
                 for (i = node->children.size()-3; ((int)i) >= 0; i -= 2) {
                     if (node->children[i+1]->text == "=") {
-                        ss.add_object(node->children[i]->text, retval);
+                        ss.set_object(node->children[i]->text, retval);
                     }
                     else {
                         Param_List_Builder plb;
