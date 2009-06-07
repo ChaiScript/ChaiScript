@@ -4,32 +4,36 @@
 #include "boxedcpp.hpp"
 
 template<typename ContainerType>
-void bootstrap_reversible_container(BoxedCPP_System &system)
+void bootstrap_reversible_container(BoxedCPP_System &system, const std::string &type)
 {
 }
 
 template<typename ContainerType>
-void bootstrap_random_access_container(BoxedCPP_System &system)
+void bootstrap_random_access_container(BoxedCPP_System &system, const std::string &type)
 {
-  bootstrap_reversible_container<ContainerType>(system);
+  bootstrap_reversible_container<ContainerType>(system, type);
 
   typedef typename ContainerType::reference(ContainerType::*indexoper)(size_t);
 
   system.register_function(
       boost::function<typename ContainerType::reference (ContainerType *, int)>(indexoper(&ContainerType::operator[])), "[]");
+  system.register_function(
+      boost::function<typename ContainerType::reference (ContainerType *, int)>(indexoper(&ContainerType::at)), "at");
 }
 
 template<typename Assignable>
-void bootstrap_assignable(BoxedCPP_System &system)
+void bootstrap_assignable(BoxedCPP_System &system, const std::string &type)
 {
+  /*
   system.register_function(
       boost::function<Assignable &(Assignable*, Assignable&)>(&Assignable::operator=), "=");
+      */
 }
 
 template<typename ContainerType>
-void bootstrap_container(BoxedCPP_System &system)
+void bootstrap_container(BoxedCPP_System &system, const std::string &type)
 {
-  bootstrap_assignable<ContainerType>(system);
+  bootstrap_assignable<ContainerType>(system, type);
 
   system.register_function(
       boost::function<size_t (ContainerType *)>(&ContainerType::size), "size");
@@ -38,27 +42,28 @@ void bootstrap_container(BoxedCPP_System &system)
 }
 
 template<typename ContainerType>
-void bootstrap_forward_container(BoxedCPP_System &system)
+void bootstrap_forward_container(BoxedCPP_System &system, const std::string &type)
 {
-  bootstrap_container<ContainerType>(system);
+  bootstrap_container<ContainerType>(system, type);
 }
 
 template<typename Type>
-void bootstrap_default_constructible(BoxedCPP_System &system)
+void bootstrap_default_constructible(BoxedCPP_System &system, const std::string &type)
 {
+  system.register_function(build_constructor<Type>(), type);
 }
 
 template<typename SequenceType>
-void bootstrap_sequence(BoxedCPP_System &system)
+void bootstrap_sequence(BoxedCPP_System &system, const std::string &type)
 {
-  bootstrap_forward_container<SequenceType>(system);
-  bootstrap_default_constructible<SequenceType>(system);
+  bootstrap_forward_container<SequenceType>(system, type);
+  bootstrap_default_constructible<SequenceType>(system, type);
 }
 
 template<typename SequenceType>
-void bootstrap_back_insertion_sequence(BoxedCPP_System &system)
+void bootstrap_back_insertion_sequence(BoxedCPP_System &system, const std::string &type)
 {
-  bootstrap_sequence<SequenceType>(system);
+  bootstrap_sequence<SequenceType>(system, type);
 
 
   typedef typename SequenceType::reference (SequenceType::*backptr)();
@@ -69,10 +74,11 @@ void bootstrap_back_insertion_sequence(BoxedCPP_System &system)
 }
 
 template<typename VectorType>
-void bootstrap_vector(BoxedCPP_System &system)
+void bootstrap_vector(BoxedCPP_System &system, const std::string &type)
 {
-  bootstrap_random_access_container<VectorType>(system);
-  bootstrap_back_insertion_sequence<VectorType>(system);
+  system.register_type<VectorType>(type);
+  bootstrap_random_access_container<VectorType>(system, type);
+  bootstrap_back_insertion_sequence<VectorType>(system, type);
 }
 
 #endif

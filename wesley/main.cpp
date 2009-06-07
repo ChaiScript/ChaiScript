@@ -430,14 +430,15 @@ Lexer build_lexer() {
 BoxedCPP_System build_eval_system() {
     BoxedCPP_System ss;
     bootstrap(ss);
-    bootstrap_vector<std::vector<int> >(ss);
-    //dump_system(ss);
+    bootstrap_vector<std::vector<int> >(ss, "VectorInt");
+//    dump_system(ss);
 
     //Register a new function, this one with typing for us, so we don't have to ubox anything
     //right here
     register_function(ss, &print<bool>, "print");
     register_function(ss, &print<std::string>, "print");
     register_function(ss, &print<double>, "print");
+    register_function(ss, &print<size_t>, "print");
     register_function(ss, &concat_string, "concat_string");
     register_function(ss, &print<int>, "print");
 
@@ -516,7 +517,11 @@ int main(int argc, char *argv[]) {
             Boxed_Value val = evaluate_string(lexer, parser, ss, input, "__EVAL__");
             if (*(val.get_type_info().m_bare_type_info) != typeid(void)) {
                 std::cout << "result: ";
-                dispatch(ss.get_function("print"), Param_List_Builder() << val);
+                try {
+                    dispatch(ss.get_function("print"), Param_List_Builder() << val);
+                } catch (const std::runtime_error &e) {
+                    std::cout << "unhandled type: " << val.get_type_info().m_type_info->name() << std::endl;
+                }
             }
             std::cout << "eval> ";
             std::getline(std::cin, input);

@@ -90,6 +90,20 @@ struct Cast_Helper<const Result &>
 };
 
 template<typename Result>
+struct Cast_Helper<const Result *>
+{
+  const Result *operator()(Boxed_Value ob)
+  {
+    if (ob.is_ref())
+    {
+      return (boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get_pointer();
+    } else {
+      return (boost::any_cast<boost::shared_ptr<Result> >(ob.get())).get();
+    }
+  }
+};
+
+template<typename Result>
 struct Cast_Helper<Result *>
 {
   Result *operator()(Boxed_Value ob)
