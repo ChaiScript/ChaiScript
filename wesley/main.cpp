@@ -441,6 +441,8 @@ BoxedCPP_System build_eval_system() {
     register_function(ss, &print<size_t>, "print");
     register_function(ss, &concat_string, "concat_string");
     register_function(ss, &print<int>, "print");
+    
+    ss.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(ss))), "dump_system");
 
     ss.register_function(boost::shared_ptr<Proxy_Function>(
           new Dynamic_Proxy_Function(boost::bind(&add_two, boost::ref(ss), _1), 2)), "add_two");

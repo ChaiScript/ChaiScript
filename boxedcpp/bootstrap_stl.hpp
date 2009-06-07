@@ -24,10 +24,8 @@ void bootstrap_random_access_container(BoxedCPP_System &system, const std::strin
 template<typename Assignable>
 void bootstrap_assignable(BoxedCPP_System &system, const std::string &type)
 {
-  /*
   system.register_function(
-      boost::function<Assignable &(Assignable*, Assignable&)>(&Assignable::operator=), "=");
-      */
+      boost::function<Assignable &(Assignable*, const Assignable&)>(&Assignable::operator=), "=");
 }
 
 template<typename ContainerType>

@@ -42,6 +42,12 @@ bool bool_or(P1 p1, P2 p2)
 }
 
 template<typename P1, typename P2>
+P1 &assign(P1 &p1, const P2 &p2)
+{
+  return (p1 = p2);
+}
+
+template<typename P1, typename P2>
 bool equals(P1 p1, P2 p2)
 {
   return p1 == p2;
@@ -139,6 +145,12 @@ void add_oper_not_equals(BoxedCPP_System &s)
 }
 
 template<typename T>
+void add_oper_assign(BoxedCPP_System &s)
+{
+  register_function(s, &assign<T,T>, "=");
+}
+
+template<typename T>
 void add_oper_less_than(BoxedCPP_System &s)
 {
   register_function(s, &less_than<const T&, const T&>, "<");
@@ -219,6 +231,11 @@ void bootstrap(BoxedCPP_System &s)
   add_opers_comparison<double>(s);
   add_opers_comparison<char>(s);
   add_opers_comparison<std::string>(s);
+
+  add_oper_assign<int>(s);
+  add_oper_assign<double>(s);
+  add_oper_assign<char>(s);
+  add_oper_assign<std::string>(s);
 
   add_opers_comparison_overload<int, double>(s);
   add_opers_comparison_overload<double, int>(s);
