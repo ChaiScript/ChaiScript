@@ -388,11 +388,11 @@ Rule build_parser_rules() {
         block >> ~Ign(Id(TokenType::Semicolon));
     params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
     block = *(Ign(Id(TokenType::Semicolon))) >> Ign(Id(TokenType::Curly_Open)) >> *(Ign(Id(TokenType::Semicolon))) >> ~statements >> Ign(Id(TokenType::Curly_Close)) >> *(Ign(Id(TokenType::Semicolon)));
-    equation = *(((vardecl | Id(TokenType::Identifier)) >> Str("=")) |
-            ((vardecl | Id(TokenType::Identifier)) >> Str("+=")) |
-            ((vardecl | Id(TokenType::Identifier)) >> Str("-=")) |
-            ((vardecl | Id(TokenType::Identifier)) >> Str("*=")) |
-            ((vardecl | Id(TokenType::Identifier)) >> Str("/="))) >> boolean;
+    equation = *(((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("=")) |
+            ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("+=")) |
+            ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("-=")) |
+            ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("*=")) |
+            ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("/="))) >> boolean;
     boolean = comparison >> *((Str("&&") >> comparison) | (Str("||") >> comparison));
     comparison = expression >> *((Str("==") >> expression) | (Str("!=") >> expression) | (Str("<") >> expression) |
             (Str("<=") >> expression) |(Str(">") >> expression) | (Str(">=") >> expression));
