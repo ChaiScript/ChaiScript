@@ -16,13 +16,13 @@
 class TokenType { public: enum Type { File, Whitespace, Identifier, Integer, Operator, Parens_Open, Parens_Close,
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
     Function_Def, Scoped_Block, Statement, Equation, Return, Expression, Term, Factor, Negate, Comment,
-    Value, Fun_Call, Method_Call, Comparison, If_Block, While_Block, Boolean, Real_Number, Array_Call }; };
+    Value, Fun_Call, Method_Call, Comparison, If_Block, While_Block, Boolean, Real_Number, Array_Call, Variable_Decl }; };
 
 const char *tokentype_to_string(int tokentype) {
     const char *token_types[] = {"File", "Whitespace", "Identifier", "Integer", "Operator", "Parens_Open", "Parens_Close",
         "Square_Open", "Square_Close", "Curly_Open", "Curly_Close", "Comma", "Quoted_String", "Single_Quoted_String", "Carriage_Return", "Semicolon",
         "Function_Def", "Scoped_Block", "Statement", "Equation", "Return", "Expression", "Term", "Factor", "Negate", "Comment",
-        "Value", "Fun_Call", "Method_Call", "Comparison", "If_Block", "While_Block", "Boolean", "Real Number", "Array_Call" };
+        "Value", "Fun_Call", "Method_Call", "Comparison", "If_Block", "While_Block", "Boolean", "Real Number", "Array_Call", "Variable_Decl" };
 
     return token_types[tokentype];
 }
@@ -149,8 +149,9 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             retval = eval_token(ss, node->children.back());
             if (node->children.size() > 1) {
                 for (i = node->children.size()-3; ((int)i) >= 0; i -= 2) {
-                    if (node->children[i+1]->text == "=") {
-                        ss.set_object(node->children[i]->text, retval);
+                    if ((node->children[i+1]->text == "=") && (node->children[i]->identifier == TokenType::Variable_Decl)) {
+                        std::cout << "Setting: " << node->children[i]->text << std::endl;
+                        ss.set_object(node->children[i]->children[0]->text, retval);
                     }
                     else {
                         Param_List_Builder plb;
@@ -165,6 +166,10 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                     }
                 }
             }
+        break;
+        case (TokenType::Variable_Decl): {
+            ss.set_object(node->children[0]->text, Boxed_Value());
+        }
         break;
         case (TokenType::Factor) :
         case (TokenType::Expression) :
@@ -369,6 +374,7 @@ Rule build_parser_rules() {
     Rule if_block(TokenType::If_Block);
     Rule while_block(TokenType::While_Block);
     Rule arraycall(TokenType::Array_Call);
+    Rule vardecl(TokenType::Variable_Decl);
 
     Rule value;
     Rule statements;
@@ -382,8 +388,11 @@ Rule build_parser_rules() {
         block >> ~Ign(Id(TokenType::Semicolon));
     params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
     block = *(Ign(Id(TokenType::Semicolon))) >> Ign(Id(TokenType::Curly_Open)) >> *(Ign(Id(TokenType::Semicolon))) >> ~statements >> Ign(Id(TokenType::Curly_Close)) >> *(Ign(Id(TokenType::Semicolon)));
-    equation = *((Id(TokenType::Identifier) >> Str("=")) | (Id(TokenType::Identifier) >> Str("+=")) | (Id(TokenType::Identifier) >> Str("-=")) |
-            (Id(TokenType::Identifier) >> Str("*=")) | (Id(TokenType::Identifier) >> Str("/="))) >> boolean;
+    equation = *(((vardecl | Id(TokenType::Identifier)) >> Str("=")) |
+            ((vardecl | Id(TokenType::Identifier)) >> Str("+=")) |
+            ((vardecl | Id(TokenType::Identifier)) >> Str("-=")) |
+            ((vardecl | Id(TokenType::Identifier)) >> Str("*=")) |
+            ((vardecl | Id(TokenType::Identifier)) >> Str("/="))) >> boolean;
     boolean = comparison >> *((Str("&&") >> comparison) | (Str("||") >> comparison));
     comparison = expression >> *((Str("==") >> expression) | (Str("!=") >> expression) | (Str("<") >> expression) |
             (Str("<=") >> expression) |(Str(">") >> expression) | (Str(">=") >> expression));
@@ -395,9 +404,10 @@ Rule build_parser_rules() {
     negate = Ign(Str("-")) >> boolean;
     return_statement = Ign(Str("return")) >> boolean;
     arraycall = value >> +((Ign(Id(TokenType::Square_Open)) >> boolean >> Ign(Id(TokenType::Square_Close))));
-    value =  block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
+    value =  vardecl | block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
         funcall | Id(TokenType::Identifier) | Id(TokenType::Real_Number) | Id(TokenType::Integer) | Id(TokenType::Quoted_String) |
         Id(TokenType::Single_Quoted_String) ;
+    vardecl = Ign(Str("var")) >> Id(TokenType::Identifier);
 
     return rule;
 }
@@ -441,7 +451,7 @@ BoxedCPP_System build_eval_system() {
     register_function(ss, &print<size_t>, "print");
     register_function(ss, &concat_string, "concat_string");
     register_function(ss, &print<int>, "print");
-    
+
     ss.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(ss))), "dump_system");
 
     ss.register_function(boost::shared_ptr<Proxy_Function>(
@@ -518,11 +528,12 @@ int main(int argc, char *argv[]) {
         while (input != "quit") {
             Boxed_Value val = evaluate_string(lexer, parser, ss, input, "__EVAL__");
             if (*(val.get_type_info().m_bare_type_info) != typeid(void)) {
-                std::cout << "result: ";
                 try {
-                    dispatch(ss.get_function("print"), Param_List_Builder() << val);
+                    Boxed_Value printeval = dispatch(ss.get_function("to_string"), Param_List_Builder() << val);
+                    std::cout << "result: ";
+                    dispatch(ss.get_function("print"), Param_List_Builder() << printeval);
                 } catch (const std::runtime_error &e) {
-                    std::cout << "unhandled type: " << val.get_type_info().m_type_info->name() << std::endl;
+                    //std::cout << "unhandled type: " << val.get_type_info().m_type_info->name() << std::endl;
                 }
             }
             std::cout << "eval> ";
