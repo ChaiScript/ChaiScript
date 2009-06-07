@@ -150,7 +150,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             if (node->children.size() > 1) {
                 for (i = node->children.size()-3; ((int)i) >= 0; i -= 2) {
                     if ((node->children[i+1]->text == "=") && (node->children[i]->identifier == TokenType::Variable_Decl)) {
-                        std::cout << "Setting: " << node->children[i]->text << std::endl;
+                        //std::cout << "Setting: " << node->children[i]->text << std::endl;
                         ss.set_object(node->children[i]->children[0]->text, retval);
                     }
                     else {

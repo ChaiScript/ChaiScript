@@ -1,4 +1,4 @@
-i = 0
+var i = 0
 while (i < 10) {
 	print("i: " + i.to_string())
 	i = i + 1

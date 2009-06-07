@@ -1,4 +1,4 @@
-x = -(1 + 2 - 3 * 4 / 2)
+var x = -(1 + 2 - 3 * 4 / 2)
 print("Answer: " + x.to_string())
 
 if (x >= 2 && x <= 4) {
