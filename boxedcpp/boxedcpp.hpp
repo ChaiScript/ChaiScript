@@ -124,6 +124,11 @@ class BoxedCPP_System
     Type_Name_Map m_types;
 };
 
+void dump_object(Boxed_Value o)
+{
+  std::cout << o.get_type_info().m_type_info->name() << std::endl;
+}
+
 void dump_type(const Type_Info &type)
 {
   std::cout << type.m_bare_type_info->name();

@@ -240,6 +240,7 @@ void bootstrap(BoxedCPP_System &s)
   add_basic_constructors<bool>(s, "bool");
   add_basic_constructors<std::string>(s, "string");
 
+  s.register_function(build_constructor<int, unsigned int>(), "int");
 
 
 

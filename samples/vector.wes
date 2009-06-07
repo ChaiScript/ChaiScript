@@ -1,0 +1,16 @@
+var vec = Vector()
+
+vec.push_back(5)
+vec.push_back("Hello World")
+vec.push_back(25.3)
+
+
+var i = int(0)
+var size = int(vec.size())
+
+print("Vector Size: " + size.to_string());
+
+while (i < size) {
+	print(i.to_string() + ": " + to_string(vec[i]))
+	i = i + 1
+}

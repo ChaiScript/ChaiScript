@@ -59,7 +59,6 @@ class Boxed_Value
     bool m_is_ref;
 };
 
-
 //cast_help specializations
 template<typename Result>
 struct Cast_Helper
@@ -130,6 +129,17 @@ struct Cast_Helper<Result &>
     }
   }
 };
+
+template<>
+struct Cast_Helper<Boxed_Value>
+{
+  Boxed_Value operator()(Boxed_Value ob)
+  {
+    return ob;    
+  }
+};
+
+
 
 #endif
 

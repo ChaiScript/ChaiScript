@@ -36,6 +36,24 @@ struct Handle_Return<Ret &>
 };
 
 template<>
+struct Handle_Return<Boxed_Value>
+{
+  Boxed_Value operator()(const boost::function<Boxed_Value ()> &f)
+  {
+    return f();
+  }
+};
+
+template<>
+struct Handle_Return<Boxed_Value &>
+{
+  Boxed_Value operator()(const boost::function<Boxed_Value &()> &f)
+  {
+    return f();
+  }
+};
+
+template<>
 struct Handle_Return<void>
 {
   Boxed_Value operator()(const boost::function<void ()> &f)

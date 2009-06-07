@@ -441,6 +441,7 @@ BoxedCPP_System build_eval_system() {
     BoxedCPP_System ss;
     bootstrap(ss);
     bootstrap_vector<std::vector<int> >(ss, "VectorInt");
+    bootstrap_vector<std::vector<Boxed_Value> >(ss, "Vector");
 //    dump_system(ss);
 
     //Register a new function, this one with typing for us, so we don't have to ubox anything
@@ -453,6 +454,8 @@ BoxedCPP_System build_eval_system() {
     register_function(ss, &print<int>, "print");
 
     ss.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(ss))), "dump_system");
+    ss.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1)), "dump_object");
+
 
     ss.register_function(boost::shared_ptr<Proxy_Function>(
           new Dynamic_Proxy_Function(boost::bind(&add_two, boost::ref(ss), _1), 2)), "add_two");
