@@ -206,6 +206,13 @@ void add_opers_arithmetic_overload(BoxedCPP_System &s)
 }
 
 template<typename T>
+void add_basic_constructors(BoxedCPP_System &s, const std::string &type)
+{
+  s.register_function(build_constructor<T>(), type);
+  s.register_function(build_constructor<T, const T &>(), type);
+}
+
+template<typename T>
 void add_opers_arithmetic(BoxedCPP_System &s)
 {
   add_opers_arithmetic_overload<T, T, T>(s);
@@ -226,6 +233,15 @@ void bootstrap(BoxedCPP_System &s)
   s.register_type<char>("char");
   s.register_type<bool>("bool");
   s.register_type<std::string>("string");
+ 
+  add_basic_constructors<double>(s, "double");
+  add_basic_constructors<int>(s, "int");
+  add_basic_constructors<char>(s, "char");
+  add_basic_constructors<bool>(s, "bool");
+  add_basic_constructors<std::string>(s, "string");
+
+
+
 
   add_opers_comparison<int>(s);
   add_opers_comparison<double>(s);
