@@ -16,14 +16,15 @@
 class TokenType { public: enum Type { File, Whitespace, Identifier, Integer, Operator, Parens_Open, Parens_Close,
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
     Function_Def, Scoped_Block, Statement, Equation, Return, Expression, Term, Factor, Negate, Comment,
-    Value, Fun_Call, Method_Call, Comparison, If_Block, While_Block, Boolean, Real_Number, Array_Call, Variable_Decl, Array_Init }; };
+    Value, Fun_Call, Method_Call, Comparison, If_Block, While_Block, Boolean, Real_Number, Array_Call, Variable_Decl, Array_Init,
+    For_Block }; };
 
 const char *tokentype_to_string(int tokentype) {
     const char *token_types[] = {"File", "Whitespace", "Identifier", "Integer", "Operator", "Parens_Open", "Parens_Close",
         "Square_Open", "Square_Close", "Curly_Open", "Curly_Close", "Comma", "Quoted_String", "Single_Quoted_String", "Carriage_Return", "Semicolon",
         "Function_Def", "Scoped_Block", "Statement", "Equation", "Return", "Expression", "Term", "Factor", "Negate", "Comment",
         "Value", "Fun_Call", "Method_Call", "Comparison", "If_Block", "While_Block", "Boolean", "Real Number", "Array_Call", "Variable_Decl", "Array_Init"
-        };
+        "For_Block" };
 
     return token_types[tokentype];
 }
@@ -335,6 +336,31 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             retval = Boxed_Value();
         }
         break;
+        case(TokenType::For_Block) : {
+            Boxed_Value condition;
+            bool cond;
+            try {
+                eval_token(ss, node->children[0]);
+                condition = eval_token(ss, node->children[1]);
+                cond = Cast_Helper<bool &>()(condition);
+            }
+            catch (std::exception) {
+                throw EvalError("For condition not boolean", node->children[0]);
+            }
+            while (cond) {
+                eval_token(ss, node->children[3]);
+                try {
+                    eval_token(ss, node->children[2]);
+                    condition = eval_token(ss, node->children[1]);
+                    cond = Cast_Helper<bool &>()(condition);
+                }
+                catch (std::exception) {
+                    throw EvalError("For condition not boolean", node->children[0]);
+                }
+            }
+            retval = Boxed_Value();
+        }
+        break;
         case (TokenType::Function_Def) : {
             unsigned int num_args = node->children.size() - 2;
             std::vector<std::string> param_names;
@@ -391,18 +417,24 @@ Rule build_parser_rules() {
     Rule methodcall(TokenType::Method_Call);
     Rule if_block(TokenType::If_Block);
     Rule while_block(TokenType::While_Block);
+    Rule for_block(TokenType::For_Block);
     Rule arraycall(TokenType::Array_Call);
     Rule vardecl(TokenType::Variable_Decl);
     Rule arrayinit(TokenType::Array_Init);
 
     Rule value;
     Rule statements;
+    Rule for_conditions;
 
     Rule rule = *((fundef | statements) >> *(Ign(Id(TokenType::Semicolon))));
     statements = (statement >> *(Ign(Id(TokenType::Semicolon)) >> statement) >> *(Ign(Id(TokenType::Semicolon))));
-    statement = if_block | while_block | equation;
+    statement = if_block | while_block | for_block | equation;
+
     if_block = Ign(Str("if")) >> boolean >> block >> *(Str("elseif") >> boolean >> block) >> ~(Str("else") >> block);
     while_block = Ign(Str("while")) >> boolean >> block;
+    for_block = Ign(Str("for")) >> for_conditions >> block;
+    for_conditions = Ign(Id(TokenType::Parens_Open)) >> equation >> Ign(Str(";")) >> boolean >> Ign(Str(";")) >> equation >> Ign(Id(TokenType::Parens_Close));
+
     fundef = Ign(Str("def")) >> Id(TokenType::Identifier) >> ~(Ign(Id(TokenType::Parens_Open)) >> ~params >> Ign(Id(TokenType::Parens_Close))) >>
         block >> ~Ign(Id(TokenType::Semicolon));
     params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
