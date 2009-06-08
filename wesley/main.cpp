@@ -85,7 +85,22 @@ std::string concat_string(const std::string &s1, const std::string &s2) {
 }
 
 const Boxed_Value add_two(BoxedCPP_System &ss, const std::vector<Boxed_Value> &vals) {
-  return dispatch(ss.get_function("+"), vals);
+    return dispatch(ss.get_function("+"), vals);
+}
+
+const Boxed_Value eval(Lexer &lexer, Rule &parser, BoxedCPP_System &ss, const std::vector<Boxed_Value> &vals) {
+    std::string val;
+
+    try {
+        val = Cast_Helper<std::string &>()(vals[0]);
+    }
+    catch (std::exception &e) {
+        throw EvalError("Can not evaluate string: " + val, TokenPtr());
+    }
+    catch (EvalError &ee) {
+        throw EvalError("Can not evaluate string: " + val + " reason: " + ee.reason, TokenPtr());
+    }
+    return evaluate_string(lexer, parser, ss, val, "__EVAL__");
 }
 
 std::string load_file(const char *filename) {
@@ -206,7 +221,7 @@ Lexer build_lexer() {
     return lexer;
 }
 
-BoxedCPP_System build_eval_system() {
+BoxedCPP_System build_eval_system(Lexer &lexer, Rule &parser) {
     BoxedCPP_System ss;
     bootstrap(ss);
     bootstrap_vector<std::vector<int> >(ss, "VectorInt");
@@ -228,6 +243,10 @@ BoxedCPP_System build_eval_system() {
 
     ss.register_function(boost::shared_ptr<Proxy_Function>(
           new Dynamic_Proxy_Function(boost::bind(&add_two, boost::ref(ss), _1), 2)), "add_two");
+
+    ss.register_function(boost::shared_ptr<Proxy_Function>(
+          new Dynamic_Proxy_Function(boost::bind(&eval, boost::ref(lexer), boost::ref(parser),
+                  boost::ref(ss), _1), 1)), "eval");
 
 
     return ss;
@@ -376,26 +395,18 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
         }
         break;
         case (TokenType::Fun_Call) : {
-            if (node->children[0]->text == "eval") {
-                Lexer new_lexer = build_lexer();
-                Rule new_parser = build_parser_rules();
-
-                Boxed_Value arg = eval_token(ss, node->children[1]);
-                std::string arg_string = Cast_Helper<std::string &>()(arg);
-
-                retval = evaluate_string(new_lexer, new_parser, ss, arg_string, "__EVAL__");
+            Param_List_Builder plb;
+            for (i = 1; i < node->children.size(); ++i) {
+                plb << eval_token(ss, node->children[i]);
             }
-            else {
-                Param_List_Builder plb;
-                for (i = 1; i < node->children.size(); ++i) {
-                    plb << eval_token(ss, node->children[i]);
-                }
-                try {
-                    retval = dispatch(ss.get_function(node->children[0]->text), plb);
-                }
-                catch(std::exception &e){
-                    throw EvalError("Can not find appropriate '" + node->children[0]->text + "'", node->children[0]);
-                }
+            try {
+                retval = dispatch(ss.get_function(node->children[0]->text), plb);
+            }
+            catch(EvalError &ee) {
+                throw EvalError(ee.reason, node->children[0]);
+            }
+            catch(std::exception &e){
+                throw EvalError("Can not find appropriate '" + node->children[0]->text + "'", node->children[0]);
             }
         }
         break;
@@ -618,7 +629,7 @@ int main(int argc, char *argv[]) {
 
     Lexer lexer = build_lexer();
     Rule parser = build_parser_rules();
-    BoxedCPP_System ss = build_eval_system();
+    BoxedCPP_System ss = build_eval_system(lexer, parser);
 
     if (argc < 2) {
         std::cout << "eval> ";
