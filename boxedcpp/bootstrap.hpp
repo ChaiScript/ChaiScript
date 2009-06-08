@@ -144,6 +144,13 @@ void add_oper_not_equals(BoxedCPP_System &s)
   register_function(s, &not_equals<const T&, const T&>, "!=");
 }
 
+template<typename T, typename U>
+void add_oper_assign_overload(BoxedCPP_System &s)
+{
+  register_function(s, &assign<T,U>, "=");
+}
+
+
 template<typename T>
 void add_oper_assign(BoxedCPP_System &s)
 {
@@ -212,6 +219,12 @@ void add_basic_constructors(BoxedCPP_System &s, const std::string &type)
   s.register_function(build_constructor<T, const T &>(), type);
 }
 
+template<typename T, typename U>
+void add_constructor_overload(BoxedCPP_System &s, const std::string &type)
+{
+  s.register_function(build_constructor<T, const U &>(), type);
+}
+
 template<typename T>
 void add_opers_arithmetic(BoxedCPP_System &s)
 {
@@ -225,53 +238,68 @@ std::string to_string(Input i)
   return boost::lexical_cast<std::string>(i);
 }
 
+std::string to_string(bool b)
+{
+  if (b)
+  {
+    return "true";
+  } else {
+    return "false";
+  }
+}
+
+template<typename T, typename P1, typename P2, typename P3>
+void bootstrap_pod_type(BoxedCPP_System &s, const std::string &name)
+{
+  s.register_type<T>(name);
+  add_basic_constructors<T>(s, name);
+  add_oper_assign<T>(s);
+  add_opers_arithmetic<T>(s);
+  add_opers_comparison<T>(s);
+  register_function(s, &to_string<T>, "to_string");
+
+  add_constructor_overload<T, P1>(s, name);
+  add_constructor_overload<T, P2>(s, name);
+  add_constructor_overload<T, P3>(s, name);
+
+  /*
+  add_opers_comparison_overload<T, P1>(s);
+  add_opers_comparison_overload<T, P2>(s);
+  add_opers_comparison_overload<T, P3>(s);
+  */
+}
+
 void bootstrap(BoxedCPP_System &s)
 {
   s.register_type<void>("void");
-  s.register_type<double>("double");
-  s.register_type<int>("int");
-  s.register_type<char>("char");
-  s.register_type<bool>("bool");
+
   s.register_type<std::string>("string");
- 
-  add_basic_constructors<double>(s, "double");
-  add_basic_constructors<int>(s, "int");
-  add_basic_constructors<char>(s, "char");
-  add_basic_constructors<bool>(s, "bool");
   add_basic_constructors<std::string>(s, "string");
-
-  s.register_function(build_constructor<int, unsigned int>(), "int");
-
-
-
-  add_opers_comparison<int>(s);
-  add_opers_comparison<double>(s);
-  add_opers_comparison<char>(s);
-  add_opers_comparison<std::string>(s);
-
-  add_oper_assign<int>(s);
-  add_oper_assign<double>(s);
-  add_oper_assign<char>(s);
   add_oper_assign<std::string>(s);
+  register_function(s, &to_string<const std::string &>, "to_string");
+
+ 
+  bootstrap_pod_type<double, int, size_t, char>(s, "double");
+  bootstrap_pod_type<int, double, size_t, char>(s, "int");
+  bootstrap_pod_type<size_t, int, double, char>(s, "size_t");
+  bootstrap_pod_type<char, int, double, size_t>(s, "char");
+
+
+  add_opers_arithmetic_overload<double, int, double>(s);
+  add_opers_arithmetic_overload<double, double, int>(s);
+
+  add_opers_arithmetic_overload<double, size_t, double>(s);
+  add_opers_arithmetic_overload<double, double, size_t>(s);
 
   add_opers_comparison_overload<int, double>(s);
   add_opers_comparison_overload<double, int>(s);
 
-  add_opers_arithmetic<int>(s);
-  add_opers_arithmetic<double>(s);
-
-  add_opers_arithmetic_overload<double, int, double>(s);
-  add_opers_arithmetic_overload<double, double, int>(s);
 
   add_oper_add<std::string>(s);
 
   register_function(s, &bool_and<bool, bool>, "&&");
   register_function(s, &bool_or<bool, bool>, "||");
 
-  register_function(s, &to_string<int>, "to_string");
-  register_function(s, &to_string<const std::string &>, "to_string");
-  register_function(s, &to_string<char>, "to_string");
-  register_function(s, &to_string<double>, "to_string");
 }
 
 #endif
