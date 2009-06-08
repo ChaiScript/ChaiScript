@@ -16,13 +16,14 @@
 class TokenType { public: enum Type { File, Whitespace, Identifier, Integer, Operator, Parens_Open, Parens_Close,
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
     Function_Def, Scoped_Block, Statement, Equation, Return, Expression, Term, Factor, Negate, Comment,
-    Value, Fun_Call, Method_Call, Comparison, If_Block, While_Block, Boolean, Real_Number, Array_Call, Variable_Decl }; };
+    Value, Fun_Call, Method_Call, Comparison, If_Block, While_Block, Boolean, Real_Number, Array_Call, Variable_Decl, Array_Init }; };
 
 const char *tokentype_to_string(int tokentype) {
     const char *token_types[] = {"File", "Whitespace", "Identifier", "Integer", "Operator", "Parens_Open", "Parens_Close",
         "Square_Open", "Square_Close", "Curly_Open", "Curly_Close", "Comma", "Quoted_String", "Single_Quoted_String", "Carriage_Return", "Semicolon",
         "Function_Def", "Scoped_Block", "Statement", "Equation", "Return", "Expression", "Term", "Factor", "Negate", "Comment",
-        "Value", "Fun_Call", "Method_Call", "Comparison", "If_Block", "While_Block", "Boolean", "Real Number", "Array_Call", "Variable_Decl" };
+        "Value", "Fun_Call", "Method_Call", "Comparison", "If_Block", "While_Block", "Boolean", "Real Number", "Array_Call", "Variable_Decl", "Array_Init"
+        };
 
     return token_types[tokentype];
 }
@@ -222,7 +223,24 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             }
         }
         break;
-
+        case (TokenType::Array_Init) : {
+            try {
+                retval = dispatch(ss.get_function("Vector"), Param_List_Builder());
+                for (i = 0; i < node->children.size(); ++i) {
+                    try {
+                        Boxed_Value tmp = eval_token(ss, node->children[i]);
+                        dispatch(ss.get_function("push_back"), Param_List_Builder() << retval << tmp);
+                    }
+                    catch (std::exception inner_e) {
+                        throw EvalError("Can not find appropriate 'push_back'", node->children[i]);
+                    }
+                }
+            }
+            catch (std::exception e) {
+                throw EvalError("Can not find appropriate 'Vector()'", node);
+            }
+        }
+        break;
         case (TokenType::Fun_Call) : {
             Param_List_Builder plb;
             for (i = 1; i < node->children.size(); ++i) {
@@ -375,6 +393,7 @@ Rule build_parser_rules() {
     Rule while_block(TokenType::While_Block);
     Rule arraycall(TokenType::Array_Call);
     Rule vardecl(TokenType::Variable_Decl);
+    Rule arrayinit(TokenType::Array_Init);
 
     Rule value;
     Rule statements;
@@ -404,9 +423,10 @@ Rule build_parser_rules() {
     negate = Ign(Str("-")) >> boolean;
     return_statement = Ign(Str("return")) >> boolean;
     arraycall = value >> +((Ign(Id(TokenType::Square_Open)) >> boolean >> Ign(Id(TokenType::Square_Close))));
-    value =  vardecl | block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
+    value =  vardecl | arrayinit | block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
         funcall | Id(TokenType::Identifier) | Id(TokenType::Real_Number) | Id(TokenType::Integer) | Id(TokenType::Quoted_String) |
         Id(TokenType::Single_Quoted_String) ;
+    arrayinit = Ign(Id(TokenType::Square_Open)) >> ~(boolean >> *(Ign(Str(",")) >> boolean))  >> Ign(Id(TokenType::Square_Close));
     vardecl = Ign(Str("var")) >> Id(TokenType::Identifier);
 
     return rule;

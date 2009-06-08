@@ -274,11 +274,16 @@ void bootstrap(BoxedCPP_System &s)
   s.register_type<void>("void");
 
   s.register_type<std::string>("string");
+
+  add_basic_constructors<double>(s, "double");
+  add_basic_constructors<int>(s, "int");
+  add_basic_constructors<char>(s, "char");
+  add_basic_constructors<bool>(s, "bool");
   add_basic_constructors<std::string>(s, "string");
   add_oper_assign<std::string>(s);
   register_function(s, &to_string<const std::string &>, "to_string");
 
- 
+
   bootstrap_pod_type<double, int, size_t, char>(s, "double");
   bootstrap_pod_type<int, double, size_t, char>(s, "int");
   bootstrap_pod_type<size_t, int, double, char>(s, "size_t");
