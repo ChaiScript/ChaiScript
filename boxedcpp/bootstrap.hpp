@@ -107,6 +107,18 @@ P1 &subtractsequal(P1 &p1, const P2 &p2)
   return (p1 -= p2);
 }
 
+template<typename P1>
+P1 &prefixincrement(P1 &p1)
+{
+  return (++p1);
+}
+
+template<typename P1>
+P1 &prefixdecrement(P1 &p1)
+{
+  return (--p1);
+}
+
 //Add canonical forms of operators
 template<typename T>
 void add_oper_equals(BoxedCPP_System &s)
@@ -210,6 +222,8 @@ void add_opers_arithmetic_overload(BoxedCPP_System &s)
   register_function(s, &dividesequal<T, R>, "/=");
   register_function(s, &subtractsequal<T, R>, "-=");
   register_function(s, &addsequal<T, R>, "+=");
+  register_function(s, &prefixincrement<T>, "++");
+  register_function(s, &prefixdecrement<T>, "--");
 }
 
 template<typename T>

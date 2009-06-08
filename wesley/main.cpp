@@ -554,7 +554,7 @@ TokenPtr parse(Rule &rule, std::vector<TokenPtr> &tokens, const char *filename) 
     std::pair<Token_Iterator, bool> results = rule(iter, end, parent);
 
     if (results.second) {
-        debug_print(parent, "");
+        //debug_print(parent, "");
         return parent;
     }
     else {
