@@ -339,23 +339,37 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
         case(TokenType::For_Block) : {
             Boxed_Value condition;
             bool cond;
+
             try {
-                eval_token(ss, node->children[0]);
-                condition = eval_token(ss, node->children[1]);
+                if (node->children.size() == 4) {
+                    eval_token(ss, node->children[0]);
+                    condition = eval_token(ss, node->children[1]);
+                }
+                else if (node->children.size() == 3){
+                    condition = eval_token(ss, node->children[0]);
+                }
                 cond = Cast_Helper<bool &>()(condition);
             }
             catch (std::exception) {
-                throw EvalError("For condition not boolean", node->children[0]);
+                throw EvalError("For condition not boolean", node);
             }
             while (cond) {
-                eval_token(ss, node->children[3]);
                 try {
-                    eval_token(ss, node->children[2]);
-                    condition = eval_token(ss, node->children[1]);
+                    if (node->children.size() == 4) {
+                        eval_token(ss, node->children[3]);
+                        eval_token(ss, node->children[2]);
+                        condition = eval_token(ss, node->children[1]);
+                    }
+                    else if (node->children.size() == 3) {
+                        eval_token(ss, node->children[2]);
+                        eval_token(ss, node->children[1]);
+                        condition = eval_token(ss, node->children[0]);
+                    }
                     cond = Cast_Helper<bool &>()(condition);
+
                 }
                 catch (std::exception) {
-                    throw EvalError("For condition not boolean", node->children[0]);
+                    throw EvalError("For condition not boolean", node);
                 }
             }
             retval = Boxed_Value();
@@ -433,7 +447,7 @@ Rule build_parser_rules() {
     if_block = Ign(Str("if")) >> boolean >> block >> *(Str("elseif") >> boolean >> block) >> ~(Str("else") >> block);
     while_block = Ign(Str("while")) >> boolean >> block;
     for_block = Ign(Str("for")) >> for_conditions >> block;
-    for_conditions = Ign(Id(TokenType::Parens_Open)) >> equation >> Ign(Str(";")) >> boolean >> Ign(Str(";")) >> equation >> Ign(Id(TokenType::Parens_Close));
+    for_conditions = Ign(Id(TokenType::Parens_Open)) >> ~equation >> Ign(Str(";")) >> boolean >> Ign(Str(";")) >> equation >> Ign(Id(TokenType::Parens_Close));
 
     fundef = Ign(Str("def")) >> Id(TokenType::Identifier) >> ~(Ign(Id(TokenType::Parens_Open)) >> ~params >> Ign(Id(TokenType::Parens_Close))) >>
         block >> ~Ign(Id(TokenType::Semicolon));
