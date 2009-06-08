@@ -17,14 +17,14 @@ class TokenType { public: enum Type { File, Whitespace, Identifier, Integer, Ope
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
     Function_Def, Scoped_Block, Statement, Equation, Return, Expression, Term, Factor, Negate, Comment,
     Value, Fun_Call, Method_Call, Comparison, If_Block, While_Block, Boolean, Real_Number, Array_Call, Variable_Decl, Array_Init,
-    For_Block }; };
+    For_Block, Prefix }; };
 
 const char *tokentype_to_string(int tokentype) {
     const char *token_types[] = {"File", "Whitespace", "Identifier", "Integer", "Operator", "Parens_Open", "Parens_Close",
         "Square_Open", "Square_Close", "Curly_Open", "Curly_Close", "Comma", "Quoted_String", "Single_Quoted_String", "Carriage_Return", "Semicolon",
         "Function_Def", "Scoped_Block", "Statement", "Equation", "Return", "Expression", "Term", "Factor", "Negate", "Comment",
         "Value", "Fun_Call", "Method_Call", "Comparison", "If_Block", "While_Block", "Boolean", "Real Number", "Array_Call", "Variable_Decl", "Array_Init"
-        "For_Block" };
+        "For_Block", "Prefix" };
 
     return token_types[tokentype];
 }
@@ -214,13 +214,26 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             retval = eval_token(ss, node->children[0]);
             Param_List_Builder plb;
             plb << retval;
-            plb << Boxed_Value(-1);
+            //plb << Boxed_Value(-1);
 
             try {
-                retval = dispatch(ss.get_function("*"), plb);
+                retval = dispatch(ss.get_function("-"), plb);
             }
             catch(std::exception &e){
                 throw EvalError("Can not find appropriate negation", node->children[0]);
+            }
+        }
+        break;
+        case (TokenType::Prefix) : {
+            retval = eval_token(ss, node->children[1]);
+            Param_List_Builder plb;
+            plb << retval;
+
+            try {
+                retval = dispatch(ss.get_function(node->children[0]->text), plb);
+            }
+            catch(std::exception &e){
+                throw EvalError("Can not find appropriate prefix", node->children[0]);
             }
         }
         break;
@@ -427,6 +440,8 @@ Rule build_parser_rules() {
     Rule term(TokenType::Term);
     Rule factor(TokenType::Factor);
     Rule negate(TokenType::Negate);
+    Rule prefix(TokenType::Prefix);
+
     Rule funcall(TokenType::Fun_Call);
     Rule methodcall(TokenType::Method_Call);
     Rule if_block(TokenType::If_Block);
@@ -463,10 +478,11 @@ Rule build_parser_rules() {
             (Str("<=") >> expression) |(Str(">") >> expression) | (Str(">=") >> expression));
     expression = term >> *((Str("+") >> term) | (Str("-") >> term));
     term = factor >> *((Str("*") >> factor) | (Str("/") >> factor));
-    factor = methodcall | arraycall | value | negate | (Ign(Str("+")) >> value);
+    factor = methodcall | arraycall | value | negate | prefix | (Ign(Str("+")) >> value);
     funcall = Id(TokenType::Identifier) >> Ign(Id(TokenType::Parens_Open)) >> ~(boolean >> *(Ign(Str("," )) >> boolean)) >> Ign(Id(TokenType::Parens_Close));
     methodcall = value >> +(Ign(Str(".")) >> funcall);
     negate = Ign(Str("-")) >> boolean;
+    prefix = (Str("++") >> (boolean | arraycall)) | (Str("--") >> (boolean | arraycall));
     return_statement = Ign(Str("return")) >> boolean;
     arraycall = value >> +((Ign(Id(TokenType::Square_Open)) >> boolean >> Ign(Id(TokenType::Square_Close))));
     value =  vardecl | arrayinit | block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
@@ -538,7 +554,7 @@ TokenPtr parse(Rule &rule, std::vector<TokenPtr> &tokens, const char *filename) 
     std::pair<Token_Iterator, bool> results = rule(iter, end, parent);
 
     if (results.second) {
-        //debug_print(parent, "");
+        debug_print(parent, "");
         return parent;
     }
     else {
