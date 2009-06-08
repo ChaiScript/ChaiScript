@@ -1,0 +1,3 @@
+var i = 1
+var j = eval("i + 4")
+print(j)
