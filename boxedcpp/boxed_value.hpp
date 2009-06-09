@@ -153,6 +153,11 @@ struct Boxed_POD_Value
     const int double_ = int(&typeid(double));
     const int float_ = int(&typeid(float));
 
+    const int long_ = int(&typeid(long));
+    const int unsigned_long_ = int(&typeid(unsigned long));
+    const int int_ = int(&typeid(int));
+    const int unsigned_int_ = int(&typeid(unsigned int));
+
     const int uint8_t_ = int(&typeid(uint8_t));
     const int uint16_t_ = int(&typeid(uint16_t));
     const int uint32_t_ = int(&typeid(uint32_t));
@@ -174,6 +179,14 @@ struct Boxed_POD_Value
       i = Cast_Helper<bool>()(v);
     } else if (inp_ == char_) {
       i = Cast_Helper<char>()(v);
+    } else if (inp_ == int_) {
+      i = Cast_Helper<int>()(v);
+    } else if (inp_ == unsigned_int_) {
+      i = Cast_Helper<unsigned int>()(v);
+    } else if (inp_ == long_) {
+      i = Cast_Helper<long>()(v);
+    } else if (inp_ == unsigned_long_) {
+      i = Cast_Helper<unsigned long>()(v);
     } else if (inp_ == int8_t_) {
       i = Cast_Helper<int8_t>()(v);
     } else if (inp_ == int16_t_) {
