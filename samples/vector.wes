@@ -6,7 +6,7 @@ vec.push_back(25.3)
 
 
 var i = 0
-var size = int(vec.size())
+var size = vec.size()
 
 print("Vector Size: " + size.to_string());
 

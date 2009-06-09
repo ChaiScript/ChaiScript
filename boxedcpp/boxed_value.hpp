@@ -38,7 +38,7 @@ class Boxed_Value
     {
     }
 
-    const Type_Info &get_type_info()
+    const Type_Info &get_type_info() const
     {
       return m_type_info;
     }
@@ -58,6 +58,7 @@ class Boxed_Value
     boost::any m_obj;
     bool m_is_ref;
 };
+
 
 //cast_help specializations
 template<typename Result>
@@ -138,6 +139,147 @@ struct Cast_Helper<Boxed_Value>
     return ob;    
   }
 };
+
+struct Boxed_POD_Value
+{
+  Boxed_POD_Value(const Boxed_Value &v)
+    : d(0), i(0), m_isfloat(false)
+  {
+    const int inp_ = int(v.get_type_info().m_type_info);
+
+    const int char_ = int(&typeid(char));
+    const int bool_ = int(&typeid(bool));
+
+    const int double_ = int(&typeid(double));
+    const int float_ = int(&typeid(float));
+
+    const int uint8_t_ = int(&typeid(uint8_t));
+    const int uint16_t_ = int(&typeid(uint16_t));
+    const int uint32_t_ = int(&typeid(uint32_t));
+//    const int uint64_t_ = int(&typeid(uint64_t));
+
+    const int int8_t_ = int(&typeid(int8_t));
+    const int int16_t_ = int(&typeid(int16_t));
+    const int int32_t_ = int(&typeid(int32_t));
+    const int int64_t_ = int(&typeid(int64_t));
+
+    if (inp_ == double_)
+    {
+      d = Cast_Helper<double>()(v);
+      m_isfloat = true;
+    } else if (inp_ == float_) {
+      d = Cast_Helper<float>()(v);
+      m_isfloat = true;
+    } else if (inp_ == bool_ ) {
+      i = Cast_Helper<bool>()(v);
+    } else if (inp_ == char_) {
+      i = Cast_Helper<char>()(v);
+    } else if (inp_ == int8_t_) {
+      i = Cast_Helper<int8_t>()(v);
+    } else if (inp_ == int16_t_) {
+      i = Cast_Helper<int16_t>()(v);
+    } else if (inp_ == int32_t_) {
+      i = Cast_Helper<int32_t>()(v);
+    } else if (inp_ == int64_t_) {
+      i = Cast_Helper<int64_t>()(v);
+    } else if (inp_ == uint8_t_) {
+      i = Cast_Helper<uint8_t>()(v);
+    } else if (inp_ == uint16_t_) {
+      i = Cast_Helper<uint16_t>()(v);
+    } else if (inp_ == uint32_t_) {
+      i = Cast_Helper<uint32_t>()(v);
+    } else {
+      throw boost::bad_any_cast();
+    }
+  }
+    
+
+
+  bool operator==(const Boxed_POD_Value &r) const
+  {
+    return ((m_isfloat)?d:i) == ((r.m_isfloat)?r.d:r.i);
+  }
+
+  bool operator<(const Boxed_POD_Value &r) const
+  {
+    return ((m_isfloat)?d:i) < ((r.m_isfloat)?r.d:r.i);
+  }
+
+  bool operator>(const Boxed_POD_Value &r) const
+  {
+    return ((m_isfloat)?d:i) > ((r.m_isfloat)?r.d:r.i);
+  }
+
+  bool operator>=(const Boxed_POD_Value &r) const
+  {
+    return ((m_isfloat)?d:i) >= ((r.m_isfloat)?r.d:r.i);
+  }
+
+  bool operator<=(const Boxed_POD_Value &r) const
+  {
+    return ((m_isfloat)?d:i) <= ((r.m_isfloat)?r.d:r.i);
+  }
+
+  bool operator!=(const Boxed_POD_Value &r) const
+  {
+    return ((m_isfloat)?d:i) != ((r.m_isfloat)?r.d:r.i);
+  }
+
+  Boxed_Value operator+(const Boxed_POD_Value &r) const
+  {
+    if (!m_isfloat && !r.m_isfloat)
+    {
+      return Boxed_Value(i + r.i);
+    }
+
+    return Boxed_Value(((m_isfloat)?d:i) + ((r.m_isfloat)?r.d:r.i));
+  }
+
+  Boxed_Value operator*(const Boxed_POD_Value &r) const
+  {
+    if (!m_isfloat && !r.m_isfloat)
+    {
+      return Boxed_Value(i * r.i);
+    }
+
+    return Boxed_Value(((m_isfloat)?d:i) * ((r.m_isfloat)?r.d:r.i));
+  }
+
+  Boxed_Value operator/(const Boxed_POD_Value &r) const
+  {
+    if (!m_isfloat && !r.m_isfloat)
+    {
+      return Boxed_Value(i / r.i);
+    }
+
+    return Boxed_Value(((m_isfloat)?d:i) / ((r.m_isfloat)?r.d:r.i));
+  }
+
+  Boxed_Value operator-(const Boxed_POD_Value &r) const
+  {
+    if (!m_isfloat && !r.m_isfloat)
+    {
+      return Boxed_Value(i - r.i);
+    }
+
+    return Boxed_Value(((m_isfloat)?d:i) - ((r.m_isfloat)?r.d:r.i));
+  }
+
+  double d;
+  int64_t i;
+
+  bool m_isfloat;
+};
+
+template<>
+struct Cast_Helper<Boxed_POD_Value>
+{
+  Boxed_POD_Value operator()(Boxed_Value ob)
+  {
+    return Boxed_POD_Value(ob);
+  }
+};
+
 
 
 
