@@ -1,0 +1,20 @@
+for (var i = 0; i < 10; ++i) {
+	print("i: " + i.to_string())
+	if (i == 5) {
+		break
+	}
+}
+
+var j = 0
+
+while (true) {
+	while (true) {
+		++j;
+		if (j == 5) {
+			break
+		}
+	}
+	break
+}
+
+print("j: " + j.to_string())

@@ -17,14 +17,14 @@ class TokenType { public: enum Type { File, Whitespace, Identifier, Integer, Ope
     Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
     Function_Def, Scoped_Block, Statement, Equation, Return, Expression, Term, Factor, Negate, Comment,
     Value, Fun_Call, Method_Call, Comparison, If_Block, While_Block, Boolean, Real_Number, Array_Call, Variable_Decl, Array_Init,
-    For_Block, Prefix }; };
+    For_Block, Prefix, Break }; };
 
 const char *tokentype_to_string(int tokentype) {
     const char *token_types[] = {"File", "Whitespace", "Identifier", "Integer", "Operator", "Parens_Open", "Parens_Close",
         "Square_Open", "Square_Close", "Curly_Open", "Curly_Close", "Comma", "Quoted_String", "Single_Quoted_String", "Carriage_Return", "Semicolon",
         "Function_Def", "Scoped_Block", "Statement", "Equation", "Return", "Expression", "Term", "Factor", "Negate", "Comment",
-        "Value", "Fun_Call", "Method_Call", "Comparison", "If_Block", "While_Block", "Boolean", "Real Number", "Array_Call", "Variable_Decl", "Array_Init"
-        "For_Block", "Prefix" };
+        "Value", "Fun_Call", "Method_Call", "Comparison", "If_Block", "While_Block", "Boolean", "Real Number", "Array_Call", "Variable_Decl", "Array_Init",
+        "For_Block", "Prefix", "Break" };
 
     return token_types[tokentype];
 }
@@ -41,6 +41,19 @@ struct EvalError {
     TokenPtr location;
 
     EvalError(const std::string &why, const TokenPtr where) : reason(why), location(where) { }
+};
+
+struct ReturnValue {
+    Boxed_Value retval;
+    TokenPtr location;
+
+    ReturnValue(const Boxed_Value &return_value, const TokenPtr where) : retval(return_value), location(where) { }
+};
+
+struct BreakLoop {
+    TokenPtr location;
+
+    BreakLoop(const TokenPtr where) : location(where) { }
 };
 
 Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node);
@@ -129,73 +142,6 @@ const Boxed_Value eval_function (BoxedCPP_System &ss, TokenPtr node, const std::
     return eval_token(ss, node);
 }
 
-Rule build_parser_rules() {
-    Rule params;
-    Rule block(TokenType::Scoped_Block);
-    Rule fundef(TokenType::Function_Def);
-    Rule statement;
-    Rule return_statement(TokenType::Return);
-    Rule equation(TokenType::Equation);
-    Rule boolean(TokenType::Boolean);
-    Rule comparison(TokenType::Comparison);
-    Rule expression(TokenType::Expression);
-    Rule term(TokenType::Term);
-    Rule factor(TokenType::Factor);
-    Rule negate(TokenType::Negate);
-    Rule prefix(TokenType::Prefix);
-
-    Rule funcall(TokenType::Fun_Call);
-    Rule methodcall(TokenType::Method_Call);
-    Rule if_block(TokenType::If_Block);
-    Rule while_block(TokenType::While_Block);
-    Rule for_block(TokenType::For_Block);
-    Rule arraycall(TokenType::Array_Call);
-    Rule vardecl(TokenType::Variable_Decl);
-    Rule arrayinit(TokenType::Array_Init);
-
-    Rule value;
-    Rule statements;
-    Rule for_conditions;
-
-    Rule rule = *((fundef | statements) >> *(Ign(Id(TokenType::Semicolon))));
-    statements = (statement >> *(Ign(Id(TokenType::Semicolon)) >> statement) >> *(Ign(Id(TokenType::Semicolon))));
-    statement = if_block | while_block | for_block | equation;
-
-    if_block = Ign(Str("if")) >> boolean >> block >> *(Str("elseif") >> boolean >> block) >> ~(Str("else") >> block);
-    while_block = Ign(Str("while")) >> boolean >> block;
-    for_block = Ign(Str("for")) >> for_conditions >> block;
-    for_conditions = Ign(Id(TokenType::Parens_Open)) >> ~equation >> Ign(Str(";")) >> boolean >> Ign(Str(";")) >> equation >> Ign(Id(TokenType::Parens_Close));
-
-    fundef = Ign(Str("def")) >> Id(TokenType::Identifier) >> ~(Ign(Id(TokenType::Parens_Open)) >> ~params >> Ign(Id(TokenType::Parens_Close))) >>
-        block >> ~Ign(Id(TokenType::Semicolon));
-    params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
-    block = *(Ign(Id(TokenType::Semicolon))) >> Ign(Id(TokenType::Curly_Open)) >> *(Ign(Id(TokenType::Semicolon))) >> ~statements >> Ign(Id(TokenType::Curly_Close)) >> *(Ign(Id(TokenType::Semicolon)));
-    equation = *(((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("=")) |
-            ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("+=")) |
-            ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("-=")) |
-            ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("*=")) |
-            ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("/="))) >> boolean;
-    boolean = comparison >> *((Str("&&") >> comparison) | (Str("||") >> comparison));
-    comparison = expression >> *((Str("==") >> expression) | (Str("!=") >> expression) | (Str("<") >> expression) |
-            (Str("<=") >> expression) |(Str(">") >> expression) | (Str(">=") >> expression));
-    expression = term >> *((Str("+") >> term) | (Str("-") >> term));
-    term = factor >> *((Str("*") >> factor) | (Str("/") >> factor));
-    factor = methodcall | arraycall | value | negate | prefix | (Ign(Str("+")) >> value);
-    funcall = Id(TokenType::Identifier) >> Ign(Id(TokenType::Parens_Open)) >> ~(boolean >> *(Ign(Str("," )) >> boolean)) >> Ign(Id(TokenType::Parens_Close));
-    methodcall = value >> +(Ign(Str(".")) >> funcall);
-    negate = Ign(Str("-")) >> boolean;
-    prefix = (Str("++") >> (boolean | arraycall)) | (Str("--") >> (boolean | arraycall));
-    return_statement = Ign(Str("return")) >> boolean;
-    arraycall = value >> +((Ign(Id(TokenType::Square_Open)) >> boolean >> Ign(Id(TokenType::Square_Close))));
-    value =  vardecl | arrayinit | block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
-        funcall | Id(TokenType::Identifier) | Id(TokenType::Real_Number) | Id(TokenType::Integer) | Id(TokenType::Quoted_String) |
-        Id(TokenType::Single_Quoted_String) ;
-    arrayinit = Ign(Id(TokenType::Square_Open)) >> ~(boolean >> *(Ign(Str(",")) >> boolean))  >> Ign(Id(TokenType::Square_Close));
-    vardecl = Ign(Str("var")) >> Id(TokenType::Identifier);
-
-    return rule;
-}
-
 Lexer build_lexer() {
     Lexer lexer;
     lexer.set_skip(Pattern("[ \\t]+", TokenType::Whitespace));
@@ -220,6 +166,77 @@ Lexer build_lexer() {
 
     return lexer;
 }
+
+Rule build_parser_rules() {
+    Rule params;
+    Rule block(TokenType::Scoped_Block);
+    Rule fundef(TokenType::Function_Def);
+    Rule statement;
+    Rule equation(TokenType::Equation);
+    Rule boolean(TokenType::Boolean);
+    Rule comparison(TokenType::Comparison);
+    Rule expression(TokenType::Expression);
+    Rule term(TokenType::Term);
+    Rule factor(TokenType::Factor);
+    Rule negate(TokenType::Negate);
+    Rule prefix(TokenType::Prefix);
+
+    Rule funcall(TokenType::Fun_Call);
+    Rule methodcall(TokenType::Method_Call);
+    Rule if_block(TokenType::If_Block);
+    Rule while_block(TokenType::While_Block);
+    Rule for_block(TokenType::For_Block);
+    Rule arraycall(TokenType::Array_Call);
+    Rule vardecl(TokenType::Variable_Decl);
+    Rule arrayinit(TokenType::Array_Init);
+
+    Rule return_statement(TokenType::Return);
+    Rule break_statement(TokenType::Break);
+
+    Rule value;
+    Rule statements;
+    Rule for_conditions;
+
+    Rule rule = *((fundef | statements) >> *(Ign(Id(TokenType::Semicolon))));
+    statements = *(statement >> *(Ign(Id(TokenType::Semicolon))));
+    statement = if_block | while_block | for_block | equation;
+
+    if_block = Ign(Str("if")) >> boolean >> block >> *(*Ign(Id(TokenType::Semicolon)) >> Str("elseif") >> boolean >> block) >> ~(*Ign(Id(TokenType::Semicolon)) >> Str("else") >> block);
+    while_block = Ign(Str("while")) >> boolean >> block;
+    for_block = Ign(Str("for")) >> for_conditions >> block;
+    for_conditions = Ign(Id(TokenType::Parens_Open)) >> ~equation >> Ign(Str(";")) >> boolean >> Ign(Str(";")) >> equation >> Ign(Id(TokenType::Parens_Close));
+
+    fundef = Ign(Str("def")) >> Id(TokenType::Identifier) >> ~(Ign(Id(TokenType::Parens_Open)) >> ~params >> Ign(Id(TokenType::Parens_Close))) >>
+        block >> ~Ign(Id(TokenType::Semicolon));
+    params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
+    block = *(Ign(Id(TokenType::Semicolon))) >> Ign(Id(TokenType::Curly_Open)) >> *(Ign(Id(TokenType::Semicolon))) >> ~statements >> Ign(Id(TokenType::Curly_Close));
+    equation = *(((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("=")) |
+            ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("+=")) |
+            ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("-=")) |
+            ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("*=")) |
+            ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("/="))) >> boolean;
+    boolean = comparison >> *((Str("&&") >> comparison) | (Str("||") >> comparison));
+    comparison = expression >> *((Str("==") >> expression) | (Str("!=") >> expression) | (Str("<") >> expression) |
+            (Str("<=") >> expression) |(Str(">") >> expression) | (Str(">=") >> expression));
+    expression = term >> *((Str("+") >> term) | (Str("-") >> term));
+    term = factor >> *((Str("*") >> factor) | (Str("/") >> factor));
+    factor = methodcall | arraycall | value | negate | prefix | (Ign(Str("+")) >> value);
+    funcall = Id(TokenType::Identifier) >> Ign(Id(TokenType::Parens_Open)) >> ~(boolean >> *(Ign(Str("," )) >> boolean)) >> Ign(Id(TokenType::Parens_Close));
+    methodcall = value >> +(Ign(Str(".")) >> funcall);
+    negate = Ign(Str("-")) >> boolean;
+    prefix = (Str("++") >> (boolean | arraycall)) | (Str("--") >> (boolean | arraycall));
+    arraycall = value >> +((Ign(Id(TokenType::Square_Open)) >> boolean >> Ign(Id(TokenType::Square_Close))));
+    value =  vardecl | arrayinit | block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
+        funcall | Id(TokenType::Identifier) | Id(TokenType::Real_Number) | Id(TokenType::Integer) | Id(TokenType::Quoted_String) |
+        Id(TokenType::Single_Quoted_String) ;
+    arrayinit = Ign(Id(TokenType::Square_Open)) >> ~(boolean >> *(Ign(Str(",")) >> boolean))  >> Ign(Id(TokenType::Square_Close));
+    vardecl = Ign(Str("var")) >> Id(TokenType::Identifier);
+    return_statement = Ign(Str("return")) >> ~boolean;
+    //break_statement = Ign(Str("break")) >> ~Ign(Id(TokenType::Semicolon));
+
+    return rule;
+}
+
 
 BoxedCPP_System build_eval_system(Lexer &lexer, Rule &parser) {
     BoxedCPP_System ss;
@@ -270,8 +287,17 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             else if (node->text == "false") {
                 retval = Boxed_Value(false);
             }
+            else if (node->text == "break") {
+                //todo: this is a WORKAROUND for parser combinator limitations
+                throw BreakLoop(node);
+            }
             else {
-                retval = ss.get_object(node->text);
+                try {
+                    retval = ss.get_object(node->text);
+                }
+                catch (std::exception &e) {
+                    throw EvalError("Can not find object: " + node->text, node);
+                }
             }
         break;
         case (TokenType::Real_Number) :
@@ -408,6 +434,9 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             catch(std::exception &e){
                 throw EvalError("Can not find appropriate '" + node->children[0]->text + "'", node->children[0]);
             }
+            catch(ReturnValue &rv) {
+                retval = rv.retval;
+            }
         }
         break;
         case (TokenType::Method_Call) : {
@@ -424,8 +453,14 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                     try {
                         retval = dispatch(ss.get_function(node->children[i]->children[0]->text), plb);
                     }
+                    catch(EvalError &ee) {
+                        throw EvalError(ee.reason, node->children[0]);
+                    }
                     catch(std::exception &e){
                         throw EvalError("Can not find appropriate '" + node->children[i]->children[0]->text + "'", node->children[0]);
+                    }
+                    catch(ReturnValue &rv) {
+                        retval = rv.retval;
                     }
                 }
             }
@@ -437,7 +472,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             try {
                 cond = Cast_Helper<bool &>()(retval);
             }
-            catch (std::exception) {
+            catch (std::exception &e) {
                 throw EvalError("If condition not boolean", node->children[0]);
             }
             if (cond) {
@@ -456,7 +491,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                             try {
                                 cond = Cast_Helper<bool &>()(retval);
                             }
-                            catch (std::exception) {
+                            catch (std::exception &e) {
                                 throw EvalError("Elseif condition not boolean", node->children[i+1]);
                             }
                             if (cond) {
@@ -479,13 +514,18 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                 throw EvalError("While condition not boolean", node->children[0]);
             }
             while (cond) {
-                eval_token(ss, node->children[1]);
-                retval = eval_token(ss, node->children[0]);
                 try {
-                    cond = Cast_Helper<bool &>()(retval);
+                    eval_token(ss, node->children[1]);
+                    retval = eval_token(ss, node->children[0]);
+                    try {
+                        cond = Cast_Helper<bool &>()(retval);
+                    }
+                    catch (std::exception) {
+                        throw EvalError("While condition not boolean", node->children[0]);
+                    }
                 }
-                catch (std::exception) {
-                    throw EvalError("While condition not boolean", node->children[0]);
+                catch (BreakLoop &bl) {
+                    cond = false;
                 }
             }
             retval = Boxed_Value();
@@ -505,7 +545,7 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                 }
                 cond = Cast_Helper<bool &>()(condition);
             }
-            catch (std::exception) {
+            catch (std::exception &e) {
                 throw EvalError("For condition not boolean", node);
             }
             while (cond) {
@@ -523,8 +563,11 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
                     cond = Cast_Helper<bool &>()(condition);
 
                 }
-                catch (std::exception) {
+                catch (std::exception &e) {
                     throw EvalError("For condition not boolean", node);
+                }
+                catch (BreakLoop &bl) {
+                    cond = false;
                 }
             }
             retval = Boxed_Value();
@@ -549,8 +592,21 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             ss.pop_scope();
         }
         break;
+        case (TokenType::Return) : {
+            if (node->children.size() > 0) {
+                retval = eval_token(ss, node->children[0]);
+            }
+            else {
+                retval = Boxed_Value();
+            }
+            throw ReturnValue(retval, node);
+        }
+        break;
+        case (TokenType::Break) : {
+            throw BreakLoop(node);
+        }
+        break;
         case (TokenType::Statement) :
-        case (TokenType::Return) :
         case (TokenType::Carriage_Return) :
         case (TokenType::Semicolon) :
         case (TokenType::Comment) :
@@ -635,7 +691,13 @@ int main(int argc, char *argv[]) {
         std::cout << "eval> ";
         std::getline(std::cin, input);
         while (input != "quit") {
-            Boxed_Value val = evaluate_string(lexer, parser, ss, input, "__EVAL__");
+            Boxed_Value val;
+            try {
+                val = evaluate_string(lexer, parser, ss, input, "__EVAL__");
+            }
+            catch (const ReturnValue &rv) {
+                val = rv.retval;
+            }
             if (*(val.get_type_info().m_bare_type_info) != typeid(void)) {
                 try {
                     Boxed_Value printeval = dispatch(ss.get_function("to_string"), Param_List_Builder() << val);
