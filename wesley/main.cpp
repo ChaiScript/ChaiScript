@@ -318,26 +318,21 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             retval = eval_token(ss, node->children.back());
             if (node->children.size() > 1) {
                 for (i = node->children.size()-3; ((int)i) >= 0; i -= 2) {
-                    if ((node->children[i+1]->text == "=") && (node->children[i]->identifier == TokenType::Variable_Decl)) {
-                        //std::cout << "Setting: " << node->children[i]->text << std::endl;
-                        ss.set_object(node->children[i]->children[0]->text, retval);
+                    Param_List_Builder plb;
+                    plb << eval_token(ss, node->children[i]);
+                    plb << retval;
+                    try {
+                        retval = dispatch(ss.get_function(node->children[i+1]->text), plb);
                     }
-                    else {
-                        Param_List_Builder plb;
-                        plb << eval_token(ss, node->children[i]);
-                        plb << retval;
-                        try {
-                            retval = dispatch(ss.get_function(node->children[i+1]->text), plb);
-                        }
-                        catch(std::exception &e){
-                            throw EvalError("Can not find appropriate '" + node->children[i+1]->text + "'", node->children[i+1]);
-                        }
+                    catch(std::exception &e){
+                        throw EvalError("Can not find appropriate '" + node->children[i+1]->text + "'", node->children[i+1]);
                     }
                 }
             }
         break;
         case (TokenType::Variable_Decl): {
             ss.set_object(node->children[0]->text, Boxed_Value());
+            retval = ss.get_object(node->children[0]->text);
         }
         break;
         case (TokenType::Factor) :
@@ -641,6 +636,7 @@ TokenPtr parse(Rule &rule, std::vector<TokenPtr> &tokens, const char *filename) 
     }
     else {
         throw ParserError("Parse failed to complete", *(results.first));
+        //throw ParserError("Parse failed to complete at: " + (*(results.first))->text , *(results.first));
     }
 }
 
