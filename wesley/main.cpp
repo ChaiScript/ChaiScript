@@ -232,7 +232,7 @@ Rule build_parser_rules() {
     negate = Ign(Str("-")) >> boolean;
     prefix = (Str("++") >> (boolean | arraycall)) | (Str("--") >> (boolean | arraycall));
     arraycall = value >> +((Ign(Id(TokenType::Square_Open)) >> boolean >> Ign(Id(TokenType::Square_Close))));
-    value =  vardecl | arrayinit | block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement | break_statement |
+    value =  vardecl | arrayinit | block | (Ign(Id(TokenType::Parens_Open)) >> equation >> Ign(Id(TokenType::Parens_Close))) | return_statement | break_statement |
         funcall | Id(TokenType::Identifier) | Id(TokenType::Real_Number) | Id(TokenType::Integer) | Id(TokenType::Quoted_String) |
         Id(TokenType::Single_Quoted_String) ;
     arrayinit = Ign(Id(TokenType::Square_Open)) >> ~(boolean >> *(Ign(Str(",")) >> boolean))  >> Ign(Id(TokenType::Square_Close));
