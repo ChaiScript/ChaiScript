@@ -196,9 +196,15 @@ Rule build_parser_rules() {
     Rule value;
     Rule statements;
     Rule for_conditions;
+    Rule source_elem;
+    Rule source_elems;
+    Rule statement_list;
 
-    Rule rule = *((fundef | statements) >> *(Ign(Id(TokenType::Semicolon))));
-    statements = *(statement >> *(Ign(Id(TokenType::Semicolon))));
+    Rule rule = *(Ign(Id(TokenType::Semicolon))) >> source_elems >> *(Ign(Id(TokenType::Semicolon)));
+
+    source_elems = source_elem >> *(+Ign(Id(TokenType::Semicolon)) >> source_elem);
+    source_elem = fundef | statement;
+    statement_list = statement >> *(+Ign(Id(TokenType::Semicolon)) >> statement);
     statement = if_block | while_block | for_block | equation;
 
     if_block = Ign(Str("if")) >> boolean >> block >> *(*Ign(Id(TokenType::Semicolon)) >> Str("elseif") >> boolean >> block) >> ~(*Ign(Id(TokenType::Semicolon)) >> Str("else") >> block);
@@ -207,9 +213,9 @@ Rule build_parser_rules() {
     for_conditions = Ign(Id(TokenType::Parens_Open)) >> ~equation >> Ign(Str(";")) >> boolean >> Ign(Str(";")) >> equation >> Ign(Id(TokenType::Parens_Close));
 
     fundef = Ign(Str("def")) >> Id(TokenType::Identifier) >> ~(Ign(Id(TokenType::Parens_Open)) >> ~params >> Ign(Id(TokenType::Parens_Close))) >>
-        block >> ~Ign(Id(TokenType::Semicolon));
+        block;
     params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
-    block = *(Ign(Id(TokenType::Semicolon))) >> Ign(Id(TokenType::Curly_Open)) >> *(Ign(Id(TokenType::Semicolon))) >> ~statements >> Ign(Id(TokenType::Curly_Close));
+    block = *(Ign(Id(TokenType::Semicolon))) >> Ign(Id(TokenType::Curly_Open)) >> *(Ign(Id(TokenType::Semicolon))) >> ~statement_list >> *(Ign(Id(TokenType::Semicolon))) >> Ign(Id(TokenType::Curly_Close));
     equation = *(((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("=")) |
             ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("+=")) |
             ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("-=")) |
@@ -629,12 +635,12 @@ TokenPtr parse(Rule &rule, std::vector<TokenPtr> &tokens, const char *filename) 
 
     std::pair<Token_Iterator, bool> results = rule(iter, end, parent);
 
-    if (results.second) {
+    if ((results.second) && (results.first == end)) {
         //debug_print(parent, "");
         return parent;
     }
     else {
-        throw ParserError("Parse failed", *(results.first));
+        throw ParserError("Parse failed to complete", *(results.first));
     }
 }
 
