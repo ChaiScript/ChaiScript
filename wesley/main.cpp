@@ -226,13 +226,13 @@ Rule build_parser_rules() {
     negate = Ign(Str("-")) >> boolean;
     prefix = (Str("++") >> (boolean | arraycall)) | (Str("--") >> (boolean | arraycall));
     arraycall = value >> +((Ign(Id(TokenType::Square_Open)) >> boolean >> Ign(Id(TokenType::Square_Close))));
-    value =  vardecl | arrayinit | block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement |
+    value =  vardecl | arrayinit | block | (Ign(Id(TokenType::Parens_Open)) >> boolean >> Ign(Id(TokenType::Parens_Close))) | return_statement | break_statement |
         funcall | Id(TokenType::Identifier) | Id(TokenType::Real_Number) | Id(TokenType::Integer) | Id(TokenType::Quoted_String) |
         Id(TokenType::Single_Quoted_String) ;
     arrayinit = Ign(Id(TokenType::Square_Open)) >> ~(boolean >> *(Ign(Str(",")) >> boolean))  >> Ign(Id(TokenType::Square_Close));
     vardecl = Ign(Str("var")) >> Id(TokenType::Identifier);
     return_statement = Ign(Str("return")) >> ~boolean;
-    //break_statement = Ign(Str("break")) >> ~Ign(Id(TokenType::Semicolon));
+    break_statement = Wrap(Ign(Str("break")));
 
     return rule;
 }
@@ -286,10 +286,6 @@ Boxed_Value eval_token(BoxedCPP_System &ss, TokenPtr node) {
             }
             else if (node->text == "false") {
                 retval = Boxed_Value(false);
-            }
-            else if (node->text == "break") {
-                //todo: this is a WORKAROUND for parser combinator limitations
-                throw BreakLoop(node);
             }
             else {
                 try {

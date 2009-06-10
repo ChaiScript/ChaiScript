@@ -50,7 +50,10 @@ std::pair<Token_Iterator, bool> Plus_Rule
 std::pair<Token_Iterator, bool> Optional_Rule
     (Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, struct Rule rule);
 
-std::pair<Token_Iterator, bool> Nop_Rule
+std::pair<Token_Iterator, bool> Epsilon_Rule
+    (Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, struct Rule rule);
+
+std::pair<Token_Iterator, bool> Wrap_Rule
     (Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, struct Rule rule);
 
 struct Rule {
@@ -102,6 +105,7 @@ Rule Str(const std::string &text);
 Rule Id(int id);
 
 Rule Ign(Rule rule);
-Rule Nop(Rule rule);
+Rule Epsilon(Rule rule);
+Rule Wrap(Rule rule);
 
 #endif /* LANGKIT_PARSER_HPP_ */

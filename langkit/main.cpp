@@ -96,7 +96,7 @@ void parse(std::vector<TokenPtr> &tokens, const char *filename) {
     return_statement = Ign(Str("return")) >> expression;
     */
     Rule rule(TokenType::Equation);
-    rule = Str("break");
+    rule = Wrap(Str("break"));
 
     std::cout << "Check: " << rule.impl->new_id << std::endl;
 

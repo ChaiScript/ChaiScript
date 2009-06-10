@@ -55,8 +55,12 @@ std::pair<Token_Iterator, bool> Or_Rule(Token_Iterator iter, Token_Iterator end,
             if (new_id != -1) {
                 parent->filename = (*iter)->filename;
                 parent->start = (*iter)->start;
-                parent->end = (*(result.first - 1))->end;
-
+                if (result.first == iter) {
+                    parent->end = (*iter)->start;
+                }
+                else {
+                    parent->end = (*(result.first - 1))->end;
+                }
                 prev_parent->children.push_back(parent);
             }
             return std::pair<Token_Iterator, bool>(result.first, true);
@@ -73,8 +77,12 @@ std::pair<Token_Iterator, bool> Or_Rule(Token_Iterator iter, Token_Iterator end,
 
                     parent->filename = (*iter)->filename;
                     parent->start = (*iter)->start;
-                    parent->end = (*(result.first - 1))->end;
-
+                    if (result.first == iter) {
+                        parent->end = (*iter)->start;
+                    }
+                    else {
+                        parent->end = (*(result.first - 1))->end;
+                    }
 
                     prev_parent->children.push_back(parent);
                 }
@@ -112,8 +120,12 @@ std::pair<Token_Iterator, bool> And_Rule(Token_Iterator iter, Token_Iterator end
 
                     parent->filename = (*iter)->filename;
                     parent->start = (*iter)->start;
-                    parent->end = (*(result.first - 1))->end;
-
+                    if (result.first == iter) {
+                        parent->end = (*iter)->start;
+                    }
+                    else {
+                        parent->end = (*(result.first - 1))->end;
+                    }
 
                     prev_parent->children.push_back(parent);
                 }
@@ -152,7 +164,12 @@ std::pair<Token_Iterator, bool> Kleene_Rule
 
             parent->filename = (*iter)->filename;
             parent->start = (*iter)->start;
-            parent->end = (*(result.first - 1))->end;
+            if (result.first == iter) {
+                parent->end = (*iter)->start;
+            }
+            else {
+                parent->end = (*(result.first - 1))->end;
+            }
 
             prev_parent->children.push_back(parent);
         }
@@ -192,8 +209,12 @@ std::pair<Token_Iterator, bool> Plus_Rule
 
                 parent->filename = (*iter)->filename;
                 parent->start = (*iter)->start;
-                parent->end = (*(result.first - 1))->end;
-
+                if (result.first == iter) {
+                    parent->end = (*iter)->start;
+                }
+                else {
+                    parent->end = (*(result.first - 1))->end;
+                }
 
                 prev_parent->children.push_back(parent);
             }
@@ -232,8 +253,12 @@ std::pair<Token_Iterator, bool> Optional_Rule
 
             parent->filename = (*iter)->filename;
             parent->start = (*iter)->start;
-            parent->end = (*(result.first - 1))->end;
-
+            if (result.first == iter) {
+                parent->end = (*iter)->start;
+            }
+            else {
+                parent->end = (*(result.first - 1))->end;
+            }
 
             prev_parent->children.push_back(parent);
         }
@@ -244,7 +269,7 @@ std::pair<Token_Iterator, bool> Optional_Rule
     }
 }
 
-std::pair<Token_Iterator, bool> Nop_Rule
+std::pair<Token_Iterator, bool> Epsilon_Rule
     (Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, Rule rule) {
 
     TokenPtr prev_parent = parent;
@@ -255,8 +280,7 @@ std::pair<Token_Iterator, bool> Nop_Rule
     }
 
     std::pair<Token_Iterator, bool> result;
-    result.second = true;
-    if ((new_iter != end) && (result.second == true)) {
+    if ((new_iter != end)) {
         result = rule(new_iter, end, parent);
         new_iter = result.first;
     }
@@ -264,12 +288,49 @@ std::pair<Token_Iterator, bool> Nop_Rule
     if (new_id != -1) {
         parent->filename = (*iter)->filename;
         parent->start = (*iter)->start;
-        parent->end = (*(result.first - 1))->end;
+        if (result.first == iter) {
+            parent->end = (*iter)->start;
+        }
+        else {
+            parent->end = (*(result.first - 1))->end;
+        }
 
         prev_parent->children.push_back(parent);
     }
 
-    return std::pair<Token_Iterator, bool>(iter, true);
+    return std::pair<Token_Iterator, bool>(iter, result.second);
+}
+
+std::pair<Token_Iterator, bool> Wrap_Rule
+    (Token_Iterator iter, Token_Iterator end, TokenPtr parent, bool keep, int new_id, Rule rule) {
+
+    TokenPtr prev_parent = parent;
+    Token_Iterator new_iter = iter;
+
+    if (new_id != -1) {
+        parent = TokenPtr(new Token("", new_id, parent->filename));
+    }
+
+    std::pair<Token_Iterator, bool> result;
+    if ((new_iter != end)) {
+        result = rule(new_iter, end, parent);
+        new_iter = result.first;
+    }
+
+    if (new_id != -1) {
+        parent->filename = (*iter)->filename;
+        parent->start = (*iter)->start;
+        if (result.first == iter) {
+            parent->end = (*iter)->start;
+        }
+        else {
+            parent->end = (*(result.first - 1))->end;
+        }
+
+        prev_parent->children.push_back(parent);
+    }
+
+    return std::pair<Token_Iterator, bool>(result.first, result.second);
 }
 
 Rule Str(const std::string &text, bool keep) {
@@ -294,6 +355,10 @@ Rule Ign(Rule rule) {
     return rule;
 }
 
-Rule Nop(Rule rule) {
-    return Rule(boost::bind(Nop_Rule, _1, _2, _3, _4, _5, rule));
+Rule Epsilon(Rule rule) {
+    return Rule(boost::bind(Epsilon_Rule, _1, _2, _3, _4, _5, rule));
+}
+
+Rule Wrap(Rule rule) {
+    return Rule(boost::bind(Wrap_Rule, _1, _2, _3, _4, _5, rule));
 }
