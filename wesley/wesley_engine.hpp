@@ -40,7 +40,7 @@ public:
 
     }
 
-    Eval_Engine &get_engine() {
+    Eval_Engine &get_eval_engine() {
         return engine;
     }
 
