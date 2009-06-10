@@ -8,22 +8,6 @@
 
 //A function that prints any string passed to it
 
-template <typename T>
-void print(const T &t)
-{
-    std::cout << t << std::endl;
-}
-
-template<> void print<bool>(const bool &t)
-{
-    if (t) {
-        std::cout << "true" << std::endl;
-    }
-    else {
-        std::cout << "false" << std::endl;
-    }
-}
-
 template <typename Eval_Engine>
 class Wesley_System {
     Lexer lexer;
@@ -202,17 +186,6 @@ public:
         bootstrap_vector<std::vector<int> >(ss, "VectorInt");
         bootstrap_vector<std::vector<Boxed_Value> >(ss, "Vector");
         //dump_system(ss);
-
-        //Register a new function, this one with typing for us, so we don't have to ubox anything
-        //right here
-        register_function(ss, &print<bool>, "print");
-        register_function(ss, &print<std::string>, "print");
-        register_function(ss, &print<double>, "print");
-        register_function(ss, &print<size_t>, "print");
-        register_function(ss, &print<int>, "print");
-
-        ss.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(ss))), "dump_system");
-        ss.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1)), "dump_object");
 
         ss.register_function(boost::shared_ptr<Proxy_Function>(
               new Dynamic_Proxy_Function(boost::bind(&Wesley_System<Eval_Engine>::eval, boost::ref(*this), _1), 1)), "eval");

@@ -460,6 +460,11 @@ void bootstrap_pod_type(BoxedCPP_System &s, const std::string &name)
   register_function(s, &to_string<T>, "to_string");
 }
 
+void print(const std::string &s)
+{
+  std::cout << s << std::endl;
+}
+
 void bootstrap(BoxedCPP_System &s)
 {
   s.register_type<void>("void");
@@ -487,6 +492,11 @@ void bootstrap(BoxedCPP_System &s)
 
   add_oper_add<std::string>(s);
   add_oper_add_equals <std::string>(s);
+
+  register_function(s, &print, "print");
+
+  s.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(s))), "dump_system");
+  s.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1)), "dump_object");
 
 
   register_function(s, &bool_and<bool, bool>, "&&");

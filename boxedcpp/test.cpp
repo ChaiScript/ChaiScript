@@ -30,11 +30,6 @@ struct Test
 };
 
 
-//A function that prints any string passed to it
-void print(const std::string &s)
-{
-  std::cout << "Printed: " << s << std::endl;
-}
 
 Boxed_Value named_func_call(BoxedCPP_System &ss,
     const std::string &nametocall, const std::vector<Boxed_Value> &params)
@@ -108,7 +103,6 @@ int main()
 
   //Register a new function, this one with typing for us, so we don't have to ubox anything
   //right here
-  register_function(ss, &print, "print");
 
   //Now we have a print method, let's try to print out the earlier example:
   //so, we dispatch the to_string and pass its result as a param to "print"
