@@ -16,9 +16,9 @@ void bootstrap_random_access_container(BoxedCPP_System &system, const std::strin
   typedef typename ContainerType::reference(ContainerType::*indexoper)(size_t);
 
   system.register_function(
-      boost::function<typename ContainerType::reference (ContainerType *, int)>(indexoper(&ContainerType::operator[])), "[]");
+      boost::function<typename ContainerType::reference (ContainerType *, int)>(indexoper(&ContainerType::at)), "[]");
   system.register_function(
-      boost::function<typename ContainerType::reference (ContainerType *, int)>(indexoper(&ContainerType::at)), "at");
+      boost::function<typename ContainerType::reference (ContainerType *, int)>(indexoper(&ContainerType::operator[])), "at");
 }
 
 template<typename Assignable>

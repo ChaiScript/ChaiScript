@@ -131,6 +131,9 @@ Boxed_Value eval_token(Eval_System &ss, TokenPtr node) {
                 try {
                     retval = dispatch(ss.get_function("[]"), plb);
                 }
+                catch(std::out_of_range &oor) {
+                    throw EvalError("Out of bounds exception", node);
+                }
                 catch(std::exception &e){
                     throw EvalError("Can not find appropriate array lookup '[]'", node->children[i]);
                 }
