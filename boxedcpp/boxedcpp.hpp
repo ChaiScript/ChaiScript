@@ -22,7 +22,7 @@ class BoxedCPP_System
     typedef std::multimap<std::string, boost::shared_ptr<Proxy_Function> > Function_Map;
     typedef std::map<std::string, Type_Info> Type_Name_Map;
     typedef std::map<std::string, Boxed_Value> Scope;
-
+    typedef std::deque<Scope> Stack;
 
     BoxedCPP_System()
     {
@@ -78,6 +78,18 @@ class BoxedCPP_System
         throw std::range_error("Unable to pop global stack");
       }
     }
+
+    Stack get_stack()
+    {
+      return m_scopes;
+    }
+
+    Stack set_stack(Stack s)
+    {
+      swap(s, m_scopes);
+      return s;
+    }
+
 
     Boxed_Value get_object(const std::string &name) const
     {
