@@ -199,6 +199,7 @@ Rule build_parser_rules() {
     Rule source_elem;
     Rule source_elems;
     Rule statement_list;
+    Rule paren_block;
 
     Rule rule = *(Ign(Id(TokenType::Semicolon))) >> source_elems >> *(Ign(Id(TokenType::Semicolon)));
 
@@ -216,6 +217,7 @@ Rule build_parser_rules() {
         block;
     params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
     block = *(Ign(Id(TokenType::Semicolon))) >> Ign(Id(TokenType::Curly_Open)) >> *(Ign(Id(TokenType::Semicolon))) >> ~statement_list >> *(Ign(Id(TokenType::Semicolon))) >> Ign(Id(TokenType::Curly_Close));
+
     equation = *(((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("=")) |
             ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("+=")) |
             ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("-=")) |
@@ -227,18 +229,21 @@ Rule build_parser_rules() {
     expression = term >> *((Str("+") >> term) | (Str("-") >> term));
     term = factor >> *((Str("*") >> factor) | (Str("/") >> factor));
     factor = methodcall | arraycall | value | negate | prefix | (Ign(Str("+")) >> value);
+    value =  vardecl | arrayinit | block | paren_block | return_statement | break_statement |
+        funcall | Id(TokenType::Identifier) | Id(TokenType::Real_Number) | Id(TokenType::Integer) | Id(TokenType::Quoted_String) |
+        Id(TokenType::Single_Quoted_String) ;
+
     funcall = Id(TokenType::Identifier) >> Ign(Id(TokenType::Parens_Open)) >> ~(boolean >> *(Ign(Str("," )) >> boolean)) >> Ign(Id(TokenType::Parens_Close));
     methodcall = value >> +(Ign(Str(".")) >> funcall);
     negate = Ign(Str("-")) >> boolean;
     prefix = (Str("++") >> (boolean | arraycall)) | (Str("--") >> (boolean | arraycall));
     arraycall = value >> +((Ign(Id(TokenType::Square_Open)) >> boolean >> Ign(Id(TokenType::Square_Close))));
-    value =  vardecl | arrayinit | block | (Ign(Id(TokenType::Parens_Open)) >> equation >> Ign(Id(TokenType::Parens_Close))) | return_statement | break_statement |
-        funcall | Id(TokenType::Identifier) | Id(TokenType::Real_Number) | Id(TokenType::Integer) | Id(TokenType::Quoted_String) |
-        Id(TokenType::Single_Quoted_String) ;
+
     arrayinit = Ign(Id(TokenType::Square_Open)) >> ~(boolean >> *(Ign(Str(",")) >> boolean))  >> Ign(Id(TokenType::Square_Close));
     vardecl = Ign(Str("var")) >> Id(TokenType::Identifier);
     return_statement = Ign(Str("return")) >> ~boolean;
     break_statement = Wrap(Ign(Str("break")));
+    paren_block = (Ign(Id(TokenType::Parens_Open)) >> equation >> Ign(Id(TokenType::Parens_Close)));
 
     return rule;
 }
