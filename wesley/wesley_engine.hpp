@@ -258,6 +258,9 @@ public:
             TokenPtr parent = parse(parser, tokens, filename);
             value = eval_token<Eval_Engine>(engine, parent);
         }
+        catch (const ReturnValue &rv) {
+            value = rv.retval;
+        }
         catch (ParserError &pe) {
             if (filename != std::string("__EVAL__")) {
                 std::cout << "Parsing error: \"" << pe.reason << "\" in '" << pe.location->filename << "' line: " << pe.location->start.line+1 << std::endl;
