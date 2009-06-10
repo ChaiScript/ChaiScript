@@ -245,6 +245,12 @@ void add_oper_add(BoxedCPP_System &s)
 }
 
 template<typename T>
+void add_oper_add_equals(BoxedCPP_System &s)
+{
+  register_function(s, &addsequal<T, T>, "+=");
+}
+
+template<typename T>
 void add_oper_subtract(BoxedCPP_System &s)
 {
   register_function(s, &subtract<T, const T&, const T&>, "-");
@@ -480,6 +486,8 @@ void bootstrap(BoxedCPP_System &s)
   add_opers_arithmetic_pod(s);
 
   add_oper_add<std::string>(s);
+  add_oper_add_equals <std::string>(s);
+
 
   register_function(s, &bool_and<bool, bool>, "&&");
   register_function(s, &bool_or<bool, bool>, "||");
