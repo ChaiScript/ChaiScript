@@ -48,12 +48,12 @@ struct Lexer {
     Pattern multiline_comment_end_pattern;
     Pattern singleline_comment_pattern;
 
-    Lexer Lexer::operator<<(const Pattern &p) {
+    Lexer operator<<(const Pattern &p) {
         lex_patterns.push_back(p);
         return *this;
     }
 
-    std::vector<TokenPtr> Lexer::lex(const std::string &input, const char *filename) {
+    std::vector<TokenPtr> lex(const std::string &input, const char *filename) {
         std::vector<Pattern>::iterator iter, end, iter2, end2;
         std::vector<TokenPtr> retval;
         bool found;

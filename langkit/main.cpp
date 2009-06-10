@@ -95,11 +95,12 @@ void parse(std::vector<TokenPtr> &tokens, const char *filename) {
     block = Ign(Str("{")) >> ~return_statement >> Ign(Str("}"));
     return_statement = Ign(Str("return")) >> expression;
     */
+    /*
     Rule rule(TokenType::Equation);
     rule = Wrap(Str("break"));
 
     std::cout << "Check: " << rule.impl->new_id << std::endl;
-
+    */
     /*
     Rule rule = *(expression >> *Ign(Id(TokenType::Semicolon)));
     expression = term >> *((Str("+") >> term) | (Str("-") >> term));
@@ -110,9 +111,9 @@ void parse(std::vector<TokenPtr> &tokens, const char *filename) {
 
     value = funcall | Id(TokenType::Identifier) | Id(TokenType::Number) | Id(TokenType::Quoted_String) | Id(TokenType::Single_Quoted_String);
     */
-    /*
-    Rule rule = Str("x") << Id(TokenType::Semicolon);
-    */
+
+    Rule rule = Str("x") >> Id(TokenType::Semicolon);
+
 
     /*
     Rule rule;

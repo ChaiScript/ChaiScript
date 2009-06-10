@@ -14,7 +14,7 @@ if(Boost_FOUND)
    
    add_executable(wesley_test main.cpp)
 
-   target_link_libraries(wesley_test ${Boost_LIBRARIES} langkit)
+   target_link_libraries(wesley_test ${Boost_LIBRARIES})
 
 endif()
 

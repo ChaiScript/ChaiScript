@@ -11,11 +11,8 @@ find_package( Boost 1.36.0 COMPONENTS regex unit_test_framework)
 if(Boost_FOUND)
    include_directories(${Boost_INCLUDE_DIRS})
    
-   add_executable(langkit_test main.cpp langkit_parser.cpp)
+   add_executable(langkit_test main.cpp)
    target_link_libraries(langkit_test ${Boost_LIBRARIES})
-
-   add_library(langkit SHARED langkit_parser.cpp)
-   target_link_libraries(langkit ${Boost_LIBRARIES})
 
    add_executable(langkit_unittest unittest.cpp)
    target_link_libraries(langkit_unittest ${Boost_LIBRARIES})
