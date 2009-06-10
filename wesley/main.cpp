@@ -698,7 +698,7 @@ int main(int argc, char *argv[]) {
             catch (const ReturnValue &rv) {
                 val = rv.retval;
             }
-            if (*(val.get_type_info().m_bare_type_info) != typeid(void)) {
+            if (val.get_type_info().m_bare_type_info && *(val.get_type_info().m_bare_type_info) != typeid(void)) {
                 try {
                     Boxed_Value printeval = dispatch(ss.get_function("to_string"), Param_List_Builder() << val);
                     std::cout << "result: ";

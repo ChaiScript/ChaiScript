@@ -59,7 +59,7 @@ struct Handle_Return<void>
   Boxed_Value operator()(const boost::function<void ()> &f)
   {
     f();
-    return Boxed_Value();
+    return Boxed_Value(Boxed_Value::Void_Type());
   }
 };
 

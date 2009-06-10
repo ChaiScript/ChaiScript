@@ -394,6 +394,37 @@ void add_opers_arithmetic(BoxedCPP_System &s)
 
 }
 
+class bad_boxed_value_cast : public std::bad_cast
+{
+  public:
+    bad_boxed_value_cast(const std::string &val) throw()
+      : m_val(val)
+    {
+    }
+
+    virtual ~bad_boxed_value_cast() throw()
+    {
+    }
+
+    virtual const char * what() const throw()
+    {
+      return m_val.c_str();
+    }
+
+  private:
+    std::string m_val;
+};
+
+Boxed_Value unknown_assign(Boxed_Value lhs, Boxed_Value rhs)
+{
+  if (lhs.is_unknown())
+  {
+    return (lhs.assign(rhs));
+  } else {
+    throw bad_boxed_value_cast("boxed_value has a set type alread");
+  }
+}
+
 //Built in to_string operator
 template<typename Input>
 std::string to_string(Input i)
@@ -435,6 +466,7 @@ void bootstrap(BoxedCPP_System &s)
 
   register_function(s, &to_string<const std::string &>, "to_string");
   register_function(s, &to_string<bool>, "to_string");
+  register_function(s, &unknown_assign, "=");
 
   bootstrap_pod_type<double>(s, "double");
   bootstrap_pod_type<int>(s, "int");

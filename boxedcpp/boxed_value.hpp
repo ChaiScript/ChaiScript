@@ -9,54 +9,129 @@
 
 class Boxed_Value
 {
+  private:
+    struct Data
+    {
+      Data(const Type_Info &ti,
+           const boost::any &to,
+           bool tr)
+        : m_type_info(ti), m_obj(to), m_is_ref(tr)
+      {
+      }
+
+      Data &operator=(const Data &rhs)
+      {
+        m_type_info = rhs.m_type_info;
+        m_obj = rhs.m_obj;
+        m_is_ref = rhs.m_is_ref;
+
+        return *this;
+      }
+
+      Type_Info m_type_info;
+      boost::any m_obj;
+      bool m_is_ref;
+    };
+
   public:
+    struct Void_Type
+    {
+    };
+
     template<typename T>
       explicit Boxed_Value(boost::shared_ptr<T> obj)
-       : m_type_info(Get_Type_Info<T>()()), m_obj(obj), m_is_ref(false)
+       : m_data(new Data(
+           Get_Type_Info<T>()(), 
+           boost::any(obj), 
+           false)
+         )
       {
       }
 
     template<typename T>
       explicit Boxed_Value(boost::reference_wrapper<T> obj)
-       : m_type_info(Get_Type_Info<T>()()), m_obj(obj), m_is_ref(true)
+       : m_data(new Data(
+             Get_Type_Info<T>()(),
+             boost::any(obj), 
+             true)
+           )
       {
       }
 
     template<typename T>
       explicit Boxed_Value(const T& t)
-       : m_type_info(Get_Type_Info<T>()()), m_obj(boost::shared_ptr<T>(new T(t))), m_is_ref(false)
+       : m_data(new Data(
+             Get_Type_Info<T>()(), 
+             boost::any(boost::shared_ptr<T>(new T(t))), 
+             false)
+           )
       {
       }
 
+    Boxed_Value(Boxed_Value::Void_Type)
+      : m_data(new Data(
+            Get_Type_Info<void>()(),
+            boost::any(), 
+            false)
+          )
+    {
+    }
+
     Boxed_Value(const Boxed_Value &t_so)
-      : m_type_info(t_so.m_type_info), m_obj(t_so.m_obj), m_is_ref(t_so.m_is_ref)
+      : m_data(t_so.m_data)
     {
     }
 
     Boxed_Value()
-      : m_type_info(Get_Type_Info<void>()()), m_is_ref(false)
+      : m_data(new Data(
+            Type_Info(),
+            boost::any(),
+            false)
+          )
     {
+    }
+
+    Boxed_Value assign(const Boxed_Value &rhs)
+    {
+      (*m_data) = (*rhs.m_data);
+      return *this;
+    }
+
+    Boxed_Value &operator=(const Boxed_Value &rhs)
+    {
+      m_data = rhs.m_data;
+      /*
+      std::cout << "operator= called" << std::endl;
+      m_data->m_obj = rhs.m_data->m_obj;
+      m_data->m_type_info = rhs.m_data->m_type_info;
+      m_data->m_is_ref = rhs.m_data->m_is_ref;
+      (*m_data) = (*rhs.m_data);
+      */
+      return *this;
     }
 
     const Type_Info &get_type_info() const
     {
-      return m_type_info;
+      return m_data->m_type_info;
+    }
+
+    bool is_unknown() const
+    {
+      return m_data->m_type_info.m_is_unknown;
     }
 
     boost::any get() const
     {
-      return m_obj;
+      return m_data->m_obj;
     }
 
     bool is_ref() const
     {
-      return m_is_ref;
+      return m_data->m_is_ref;
     }
 
   private:
-    Type_Info m_type_info;
-    boost::any m_obj;
-    bool m_is_ref;
+    boost::shared_ptr<Data> m_data;
 };
 
 
@@ -140,6 +215,7 @@ struct Cast_Helper<Boxed_Value>
   }
 };
 
+
 struct Boxed_POD_Value
 {
   Boxed_POD_Value(const Boxed_Value &v)
@@ -205,7 +281,6 @@ struct Boxed_POD_Value
       throw boost::bad_any_cast();
     }
   }
-    
 
 
   bool operator==(const Boxed_POD_Value &r) const

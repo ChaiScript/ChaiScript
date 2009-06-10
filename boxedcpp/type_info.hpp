@@ -8,8 +8,28 @@ struct Type_Info
   Type_Info(bool t_is_const, bool t_is_reference, bool t_is_pointer, bool t_is_void, 
       const std::type_info *t_ti, const std::type_info *t_bareti)
     : m_is_const(t_is_const), m_is_reference(t_is_reference), m_is_pointer(t_is_pointer),
-      m_type_info(t_ti), m_bare_type_info(t_bareti)
+      m_type_info(t_ti), m_bare_type_info(t_bareti),
+      m_is_unknown(false)
   {
+  }
+
+  Type_Info()
+    : m_is_const(false), m_is_reference(false), m_is_pointer(false),
+      m_is_void(false), m_type_info(0), m_bare_type_info(0),
+      m_is_unknown(true)
+  {
+  }
+
+  Type_Info &operator=(const Type_Info &ti)
+  {
+    m_is_const = ti.m_is_const;
+    m_is_reference = ti.m_is_reference;
+    m_is_pointer = ti.m_is_pointer;
+    m_is_void = ti.m_is_void;
+    m_type_info = ti.m_type_info;
+    m_bare_type_info = ti.m_bare_type_info;
+    m_is_unknown = ti.m_is_unknown;
+    return *this;
   }
 
   bool m_is_const;
@@ -18,7 +38,8 @@ struct Type_Info
   bool m_is_void;
   const std::type_info *m_type_info;
   const std::type_info *m_bare_type_info;
-};
+  bool m_is_unknown;
+ };
 
 template<typename T>
 struct Get_Type_Info
