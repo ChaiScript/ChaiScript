@@ -24,11 +24,6 @@ template<> void print<bool>(const bool &t)
     }
 }
 
-template <typename String_Type>
-String_Type concat_string(const String_Type &s1, const String_Type &s2) {
-    return s1+s2;
-}
-
 template <typename Eval_Engine>
 class Wesley_System {
     Lexer lexer;
@@ -206,7 +201,7 @@ public:
         bootstrap(ss);
         bootstrap_vector<std::vector<int> >(ss, "VectorInt");
         bootstrap_vector<std::vector<Boxed_Value> >(ss, "Vector");
-    //    dump_system(ss);
+        //dump_system(ss);
 
         //Register a new function, this one with typing for us, so we don't have to ubox anything
         //right here
@@ -214,7 +209,6 @@ public:
         register_function(ss, &print<std::string>, "print");
         register_function(ss, &print<double>, "print");
         register_function(ss, &print<size_t>, "print");
-        register_function(ss, &concat_string<std::string>, "concat_string");
         register_function(ss, &print<int>, "print");
 
         ss.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(ss))), "dump_system");

@@ -443,44 +443,4 @@ typedef Rule_Builder<Token_Iterator, Rule, &Ignore_Rule<Token_Iterator, Rule> > 
 typedef Rule_Builder<Token_Iterator, int, &Id_Rule<Token_Iterator> > Id;
 typedef Rule_Builder<Token_Iterator, const std::string&, &String_Rule<Token_Iterator> > Str;
 
-/*
-template <typename R>
-R Str(const std::string &text, bool keep) {
-    return Rule(boost::bind(String_Rule, _1, _2, _3, _4, _5, text), keep);
-}
-
-template <typename R>
-R Id(int id, bool keep) {
-    return Rule(boost::bind(Type_Rule, _1, _2, _3, _4, _5, id), keep);
-}
-
-template <typename R>
-R Str(const std::string &text) {
-    return Rule(boost::bind(String_Rule, _1, _2, _3, _4, _5, text));
-}
-
-template <typename R>
-R Id(int id) {
-    return Rule(boost::bind(Type_Rule, _1, _2, _3, _4, _5, id));
-}
-
-template <typename R>
-R Ign(R rule) {
-    rule.impl->keep = false;
-
-    return rule;
-}
-
-template <typename R>
-R Epsilon(R rule) {
-    return Rule(boost::bind(Epsilon_Rule, _1, _2, _3, _4, _5, rule));
-}
-
-template <typename R>
-R Wrap(R rule) {
-    return Rule(boost::bind(Wrap_Rule, _1, _2, _3, _4, _5, rule));
-}
-*/
-
-
 #endif /* LANGKIT_PARSER_HPP_ */
