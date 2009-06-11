@@ -194,6 +194,8 @@ public:
         ss.register_function(boost::shared_ptr<Proxy_Function>(
               new Dynamic_Proxy_Function(boost::bind(&Wesley_System<Eval_Engine>::eval, boost::ref(*this), _1), 1)), "eval");
 
+        evaluate_string("def print(x) { print_string(x.to_string()) } ");
+
         return ss;
     }
 

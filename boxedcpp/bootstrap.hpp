@@ -453,7 +453,7 @@ std::string to_string(Input i)
   return boost::lexical_cast<std::string>(i);
 }
 
-std::string to_string(bool b)
+template<> std::string to_string(bool b)
 {
   if (b)
   {
@@ -475,27 +475,9 @@ void bootstrap_pod_type(BoxedCPP_System &s, const std::string &name)
   register_function(s, &to_string<T>, "to_string");
 }
 
-/*
 void print(const std::string &s)
 {
   std::cout << s << std::endl;
-}
-*/
-
-template <typename T>
-void print(const T &t)
-{
-    std::cout << t << std::endl;
-}
-
-template<> void print<bool>(const bool &t)
-{
-    if (t) {
-        std::cout << "true" << std::endl;
-    }
-    else {
-        std::cout << "false" << std::endl;
-    }
 }
 
 void bootstrap(BoxedCPP_System &s)
@@ -526,11 +508,7 @@ void bootstrap(BoxedCPP_System &s)
   add_oper_add<std::string>(s);
   add_oper_add_equals <std::string>(s);
 
-  register_function(s, &print<const bool>, "print");
-  register_function(s, &print<std::string>, "print");
-  register_function(s, &print<double>, "print");
-  register_function(s, &print<size_t>, "print");
-  register_function(s, &print<int>, "print");
+  register_function(s, &print, "print_string");
 
   s.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(s))), "dump_system");
   s.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1)), "dump_object");
