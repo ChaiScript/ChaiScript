@@ -79,6 +79,10 @@ Boxed_Value dynamic_function(BoxedCPP_System &ss, const std::string &name,
   }
 }
 
+void test(const std::string &p)
+{
+  std::cout << "Test: " << p << std::endl;
+}
 
 //Test main
 int main()
@@ -173,7 +177,11 @@ int main()
   std::cout << "Result of add function: " << 
     Cast_Helper<int>()(dispatch(ss.get_function("add"), Param_List_Builder() << 5 << 2))
     << std::endl; 
- 
+
+
+  ss.set_object("myfunc", boost::shared_ptr<Proxy_Function>(new Proxy_Function_Impl<boost::function<void (const std::string &)> >(&test)));
+
+  dispatch(ss.get_function("myfunc"), Param_List_Builder() << std::string("hello function variable"));
 
 }
 
