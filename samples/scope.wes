@@ -1,0 +1,15 @@
+/*
+ This should print:
+ 1
+ 10
+ 4
+*/
+var x = 4
+def do_it() {
+	var x = 1
+	print(x)
+	var y = function(x) { x + 1 }
+	print(y(9))
+}
+do_it()
+print(x)

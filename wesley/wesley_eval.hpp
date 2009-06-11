@@ -4,6 +4,8 @@
 #ifndef WESLEY_EVAL_HPP_
 #define WESLEY_EVAL_HPP_
 
+#include <map>
+
 struct ParserError {
     std::string reason;
     TokenPtr location;
@@ -33,10 +35,15 @@ struct BreakLoop {
 
 template <typename Eval_System>
 const Boxed_Value eval_function (Eval_System &ss, TokenPtr node, const std::vector<std::string> &param_names, const std::vector<Boxed_Value> &vals) {
+    ss.new_scope();
+
     for (unsigned int i = 0; i < param_names.size(); ++i) {
         ss.add_object(param_names[i], vals[i]);
     }
-    return eval_token(ss, node);
+
+    Boxed_Value retval = eval_token(ss, node);
+    ss.pop_scope();
+    return retval;
 }
 
 template <typename Eval_System>
@@ -96,7 +103,7 @@ Boxed_Value eval_token(Eval_System &ss, TokenPtr node) {
             }
         break;
         case (TokenType::Variable_Decl): {
-            ss.set_object(node->children[0]->text, Boxed_Value());
+            ss.add_object(node->children[0]->text, Boxed_Value());
             retval = ss.get_object(node->children[0]->text);
         }
         break;
@@ -199,31 +206,43 @@ Boxed_Value eval_token(Eval_System &ss, TokenPtr node) {
         break;
         case (TokenType::Fun_Call) : {
 
-            //BoxedCPP_System::Stack prev_stack = ss.set_stack(BoxedCPP_System::Stack());
+            std::vector<std::pair<std::string, BoxedCPP_System::Function_Map::mapped_type> > fn;
+            BoxedCPP_System::Stack prev_stack = ss.get_stack();
+
+            BoxedCPP_System::Stack new_stack;
+            new_stack.push_back(BoxedCPP_System::Scope());
 
             Param_List_Builder plb;
             for (i = 1; i < node->children.size(); ++i) {
                 plb << eval_token(ss, node->children[i]);
             }
             try {
-                retval = dispatch(ss.get_function(node->children[0]->text), plb);
-                //ss.set_stack(prev_stack);
+                fn = ss.get_function(node->children[0]->text);
+                ss.set_stack(new_stack);
+                retval = dispatch(fn, plb);
+                ss.set_stack(prev_stack);
             }
             catch(EvalError &ee) {
-                //ss.set_stack(prev_stack);
+                ss.set_stack(prev_stack);
                 throw EvalError(ee.reason, node->children[0]);
             }
             catch(std::exception &e){
-                //ss.set_stack(prev_stack);
-                throw EvalError("Engine error: " + std::string(e.what()), node->children[0]);
+                ss.set_stack(prev_stack);
+                throw EvalError("Engine error: " + std::string(e.what()) + " on '" + node->children[0]->text + "'", node->children[0]);
             }
             catch(ReturnValue &rv) {
-                //ss.set_stack(prev_stack);
+                ss.set_stack(prev_stack);
                 retval = rv.retval;
             }
         }
         break;
         case (TokenType::Method_Call) : {
+            std::vector<std::pair<std::string, BoxedCPP_System::Function_Map::mapped_type> > fn;
+            BoxedCPP_System::Stack prev_stack = ss.get_stack();
+
+            BoxedCPP_System::Stack new_stack;
+            new_stack.push_back(BoxedCPP_System::Scope());
+
             retval = eval_token(ss, node->children[0]);
             if (node->children.size() > 1) {
                 for (i = 1; i < node->children.size(); ++i) {
@@ -235,15 +254,21 @@ Boxed_Value eval_token(Eval_System &ss, TokenPtr node) {
                     }
 
                     try {
-                        retval = dispatch(ss.get_function(node->children[i]->children[0]->text), plb);
+                        fn = ss.get_function(node->children[i]->children[0]->text);
+                        ss.set_stack(new_stack);
+                        retval = dispatch(fn, plb);
+                        ss.set_stack(prev_stack);
                     }
                     catch(EvalError &ee) {
+                        ss.set_stack(prev_stack);
                         throw EvalError(ee.reason, node->children[0]);
                     }
                     catch(std::exception &e){
+                        ss.set_stack(prev_stack);
                         throw EvalError("Can not find appropriate '" + node->children[i]->children[0]->text + "'", node->children[0]);
                     }
                     catch(ReturnValue &rv) {
+                        ss.set_stack(prev_stack);
                         retval = rv.retval;
                     }
                 }
