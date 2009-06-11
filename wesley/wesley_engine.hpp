@@ -81,7 +81,7 @@ public:
         lexer.set_multiline_comment(Pattern("/\\*", TokenType::Comment), Pattern("\\*/", TokenType::Comment));
         lexer.set_singleline_comment(Pattern("//", TokenType::Comment));
 
-        lexer << Pattern("[A-Za-z_]+", TokenType::Identifier);
+        lexer << Pattern("[A-Za-z_][A-Za-z_0-9]*", TokenType::Identifier);
         lexer << Pattern("[0-9]+\\.[0-9]+", TokenType::Real_Number);
         lexer << Pattern("[0-9]+", TokenType::Integer);
         lexer << Pattern("[!@#$%^&*|\\-+=<>.]+|/[!@#$%^&|\\-+=<>]*", TokenType::Operator);

@@ -1,3 +1,2 @@
-var add_them = function(x, y) { x + y }
-//print(add_them(3, 4))
-print(7)
+var add2 = function(x, y) { x + y }
+print(add2(3, 4))
