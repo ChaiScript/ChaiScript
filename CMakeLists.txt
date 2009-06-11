@@ -11,6 +11,6 @@ SET (CMAKE_CXX_FLAGS_GDB " -Wall -ggdb")
 include_directories(boxedcpp)
 
 add_subdirectory(langkit bin)
-add_subdirectory(boxedcpp bin)
+add_subdirectory(dispatchkit bin)
 add_subdirectory(wesley bin)
  
