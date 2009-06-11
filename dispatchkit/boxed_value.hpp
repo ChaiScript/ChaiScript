@@ -46,6 +46,17 @@ class Boxed_Value
            false)
          )
       {
+        void *ptr = boost::any_cast<boost::shared_ptr<T> >(m_data->m_obj).get();
+
+        std::map<void *, boost::shared_ptr<Data> >::iterator itr
+          = m_ptrs.find(ptr);
+
+        if (itr != m_ptrs.end())
+        {
+          m_data = (itr->second);
+        } else {
+          m_ptrs[ptr] = m_data;
+        }
       }
 
     template<typename T>
@@ -56,6 +67,18 @@ class Boxed_Value
              true)
            )
       {
+        void *ptr = boost::any_cast<boost::reference_wrapper<T> >(m_data->m_obj).get_pointer();
+
+        std::map<void *, boost::shared_ptr<Data> >::iterator itr
+          = m_ptrs.find(ptr);
+
+        if (itr != m_ptrs.end())
+        {
+          std::cout << "Reference wrapper ptr found, using it" << std::endl;
+          m_data = (itr->second);
+        } else {
+          m_ptrs[ptr] = m_data;
+        }
       }
 
     template<typename T>
@@ -66,6 +89,8 @@ class Boxed_Value
              false)
            )
       {
+        m_ptrs[boost::any_cast<boost::shared_ptr<T> >(m_data->m_obj).get()]
+          = m_data;
       }
 
     Boxed_Value(Boxed_Value::Void_Type)
@@ -100,13 +125,6 @@ class Boxed_Value
     Boxed_Value &operator=(const Boxed_Value &rhs)
     {
       m_data = rhs.m_data;
-      /*
-      std::cout << "operator= called" << std::endl;
-      m_data->m_obj = rhs.m_data->m_obj;
-      m_data->m_type_info = rhs.m_data->m_type_info;
-      m_data->m_is_ref = rhs.m_data->m_is_ref;
-      (*m_data) = (*rhs.m_data);
-      */
       return *this;
     }
 
@@ -132,8 +150,10 @@ class Boxed_Value
 
   private:
     boost::shared_ptr<Data> m_data;
+    static std::map<void *, boost::shared_ptr<Data> > m_ptrs;
 };
 
+std::map<void *, boost::shared_ptr<Boxed_Value::Data> > Boxed_Value::m_ptrs;
 
 //cast_help specializations
 template<typename Result>
