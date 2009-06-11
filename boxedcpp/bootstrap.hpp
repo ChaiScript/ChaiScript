@@ -526,11 +526,11 @@ void bootstrap(BoxedCPP_System &s)
   add_oper_add<std::string>(s);
   add_oper_add_equals <std::string>(s);
 
-  register_function(s, &print<int>, "print");
+  register_function(s, &print<const bool>, "print");
   register_function(s, &print<std::string>, "print");
   register_function(s, &print<double>, "print");
-  register_function(s, &print<float>, "print");
-  register_function(s, &print<bool>, "print");
+  register_function(s, &print<size_t>, "print");
+  register_function(s, &print<int>, "print");
 
   s.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(s))), "dump_system");
   s.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1)), "dump_object");
