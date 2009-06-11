@@ -140,20 +140,8 @@ Boxed_Value eval_token(Eval_System &ss, TokenPtr node) {
             }
         }
         break;
-        case (TokenType::Negate) : {
-            retval = eval_token(ss, node->children[0]);
-            Param_List_Builder plb;
-            plb << retval;
-            //plb << Boxed_Value(-1);
-
-            try {
-                retval = dispatch(ss.get_function("-"), plb);
-            }
-            catch(std::exception &e){
-                throw EvalError("Can not find appropriate negation", node->children[0]);
-            }
-        }
-        break;
+        case (TokenType::Negate) :
+        case (TokenType::Not) :
         case (TokenType::Prefix) : {
             retval = eval_token(ss, node->children[1]);
             Param_List_Builder plb;

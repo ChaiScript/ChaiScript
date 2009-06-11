@@ -231,6 +231,19 @@ P1 &prefixdecrement(P1 &p1)
   return (--p1);
 }
 
+template<typename P1>
+P1 &prefixnegate(P1 &p1)
+{
+  return (p1);
+}
+
+template<typename P1>
+P1 &prefixnot(P1 &p1)
+{
+  return (p1);
+}
+
+
 //Add canonical forms of operators
 template<typename T>
 void add_oper_equals(BoxedCPP_System &s)
@@ -368,6 +381,8 @@ void add_opers_arithmetic_overload(BoxedCPP_System &s)
   register_function(s, &addsequal<T, R>, "+=");
   register_function(s, &prefixincrement<T>, "++");
   register_function(s, &prefixdecrement<T>, "--");
+  register_function(s, &prefixnegate<T>, "-");
+  register_function(s, &prefixnot<T>, "!");
 }
 
 template<typename T>

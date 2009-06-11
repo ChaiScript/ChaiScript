@@ -111,6 +111,7 @@ public:
         Rule term(TokenType::Term);
         Rule factor(TokenType::Factor);
         Rule negate(TokenType::Negate);
+        Rule boolean_not(TokenType::Not);
         Rule prefix(TokenType::Prefix);
 
         Rule funcall(TokenType::Fun_Call);
@@ -160,14 +161,15 @@ public:
                 (Str("<=") >> expression) |(Str(">") >> expression) | (Str(">=") >> expression));
         expression = term >> *((Str("+") >> term) | (Str("-") >> term));
         term = factor >> *((Str("*") >> factor) | (Str("/") >> factor));
-        factor = methodcall | arraycall | value | negate | prefix | (Ign(Str("+")) >> value);
+        factor = methodcall | arraycall | value | negate | boolean_not | prefix | (Ign(Str("+")) >> value);
         value =  vardecl | arrayinit | block | paren_block | lambda_def | return_statement | break_statement |
             funcall | Id(TokenType::Identifier) | Id(TokenType::Real_Number) | Id(TokenType::Integer) | Id(TokenType::Quoted_String) |
             Id(TokenType::Single_Quoted_String) ;
 
         funcall = Id(TokenType::Identifier) >> Ign(Id(TokenType::Parens_Open)) >> ~(boolean >> *(Ign(Str("," )) >> boolean)) >> Ign(Id(TokenType::Parens_Close));
         methodcall = value >> +(Ign(Str(".")) >> funcall);
-        negate = Ign(Str("-")) >> boolean;
+        negate = (Str("-") >> (boolean | arraycall));
+        boolean_not = (Str("!") >> (boolean | arraycall));
         prefix = (Str("++") >> (boolean | arraycall)) | (Str("--") >> (boolean | arraycall));
         arraycall = value >> +((Ign(Id(TokenType::Square_Open)) >> boolean >> Ign(Id(TokenType::Square_Close))));
 
