@@ -116,12 +116,26 @@ class BoxedCPP_System
       return std::vector<Type_Name_Map::value_type>(m_types.begin(), m_types.end());
     }
 
-    std::vector<Function_Map::value_type> get_function(const std::string &t_name) const
+    std::vector<std::pair<std::string, Function_Map::mapped_type> > 
+      get_function(const std::string &t_name) const
     {
+      std::vector<std::pair<std::string, Function_Map::mapped_type> > funcs;
+
+      try {
+        funcs.insert(funcs.end(), 
+            Function_Map::value_type(
+              t_name, 
+              Cast_Helper<Function_Map::mapped_type>()(get_object(t_name)))
+            );
+      } catch (const std::bad_cast &) {
+      } catch (const std::range_error &) {
+      }
+
       std::pair<Function_Map::const_iterator, Function_Map::const_iterator> range
         = m_functions.equal_range(t_name);
 
-      return std::vector<Function_Map::value_type>(range.first, range.second);
+      funcs.insert(funcs.end(), range.first, range.second);
+      return funcs;
     }
 
     std::vector<Function_Map::value_type> get_functions() const

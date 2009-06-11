@@ -178,10 +178,10 @@ class Proxy_Function_Impl : public Proxy_Function
     Func m_f;
 };
 
-Boxed_Value dispatch(const std::vector<std::pair<const std::string, boost::shared_ptr<Proxy_Function> > > &funcs,
+Boxed_Value dispatch(const std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > &funcs,
   const std::vector<Boxed_Value> &plist)
 {
-  for (std::vector<std::pair<const std::string, boost::shared_ptr<Proxy_Function> > >::const_iterator itr = funcs.begin();
+  for (std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > >::const_iterator itr = funcs.begin();
        itr != funcs.end();
        ++itr)
   {

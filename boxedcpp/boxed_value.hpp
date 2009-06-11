@@ -206,6 +206,16 @@ struct Cast_Helper<Result &>
   }
 };
 
+template<typename Result>
+struct Cast_Helper<typename boost::shared_ptr<Result> >
+{
+  typename boost::shared_ptr<Result> operator()(Boxed_Value ob)
+  {
+    return boost::any_cast<boost::shared_ptr<Result> >(ob.get());
+  }
+};
+
+
 template<>
 struct Cast_Helper<Boxed_Value>
 {
