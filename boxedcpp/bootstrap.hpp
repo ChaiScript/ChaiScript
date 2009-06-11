@@ -115,7 +115,7 @@ bool pod_less_than(Boxed_POD_Value l, Boxed_POD_Value r)
 {
   return l < r;
 }
-  
+
 template<typename P1, typename P2>
 bool greater_than(P1 p1, P2 p2)
 {
@@ -126,7 +126,7 @@ bool pod_greater_than(Boxed_POD_Value l, Boxed_POD_Value r)
 {
   return l > r;
 }
- 
+
 template<typename P1, typename P2>
 bool less_than_equals(P1 p1, P2 p2)
 {
@@ -163,7 +163,7 @@ P1 &timesequal_pod(P1 &p1, Boxed_POD_Value r)
     return (p1 *= r.d);
   } else {
     return (p1 *= r.i);
-  } 
+  }
 }
 
 
@@ -181,7 +181,7 @@ P1 &dividesequal_pod(P1 &p1, Boxed_POD_Value r)
     return (p1 /= r.d);
   } else {
     return (p1 /= r.i);
-  } 
+  }
 }
 
 
@@ -199,7 +199,7 @@ P1 &addsequal_pod(P1 &p1, Boxed_POD_Value r)
     return (p1 += r.d);
   } else {
     return (p1 += r.i);
-  } 
+  }
 }
 
 template<typename P1, typename P2>
@@ -216,7 +216,7 @@ P1 &subtractsequal_pod(P1 &p1, Boxed_POD_Value r)
     return (p1 -= r.d);
   } else {
     return (p1 -= r.i);
-  } 
+  }
 }
 
 template<typename P1>
@@ -348,7 +348,7 @@ void add_opers_arithmetic_pod(BoxedCPP_System &s)
   register_function(s, &pod_divide, "/");
   register_function(s, &pod_multiply, "*");
 }
-  
+
 template<typename T>
 void add_opers_comparison(BoxedCPP_System &s)
 {
@@ -460,9 +460,27 @@ void bootstrap_pod_type(BoxedCPP_System &s, const std::string &name)
   register_function(s, &to_string<T>, "to_string");
 }
 
+/*
 void print(const std::string &s)
 {
   std::cout << s << std::endl;
+}
+*/
+
+template <typename T>
+void print(const T &t)
+{
+    std::cout << t << std::endl;
+}
+
+template<> void print<bool>(const bool &t)
+{
+    if (t) {
+        std::cout << "true" << std::endl;
+    }
+    else {
+        std::cout << "false" << std::endl;
+    }
 }
 
 void bootstrap(BoxedCPP_System &s)
@@ -493,7 +511,11 @@ void bootstrap(BoxedCPP_System &s)
   add_oper_add<std::string>(s);
   add_oper_add_equals <std::string>(s);
 
-  register_function(s, &print, "print");
+  register_function(s, &print<int>, "print");
+  register_function(s, &print<std::string>, "print");
+  register_function(s, &print<double>, "print");
+  register_function(s, &print<float>, "print");
+  register_function(s, &print<bool>, "print");
 
   s.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(s))), "dump_system");
   s.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1)), "dump_object");

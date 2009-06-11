@@ -102,6 +102,7 @@ public:
         Rule params;
         Rule block(TokenType::Scoped_Block);
         Rule fundef(TokenType::Function_Def);
+        Rule lambda_def(TokenType::Lambda_Def);
         Rule statement;
         Rule equation(TokenType::Equation);
         Rule boolean(TokenType::Boolean);
@@ -160,7 +161,7 @@ public:
         expression = term >> *((Str("+") >> term) | (Str("-") >> term));
         term = factor >> *((Str("*") >> factor) | (Str("/") >> factor));
         factor = methodcall | arraycall | value | negate | prefix | (Ign(Str("+")) >> value);
-        value =  vardecl | arrayinit | block | paren_block | return_statement | break_statement |
+        value =  vardecl | arrayinit | block | paren_block | lambda_def | return_statement | break_statement |
             funcall | Id(TokenType::Identifier) | Id(TokenType::Real_Number) | Id(TokenType::Integer) | Id(TokenType::Quoted_String) |
             Id(TokenType::Single_Quoted_String) ;
 
@@ -175,6 +176,7 @@ public:
         return_statement = Ign(Str("return")) >> ~boolean;
         break_statement = Wrap(Ign(Str("break")));
         paren_block = (Ign(Id(TokenType::Parens_Open)) >> equation >> Ign(Id(TokenType::Parens_Close)));
+        lambda_def = Ign(Str("function")) >> ~(Ign(Id(TokenType::Parens_Open)) >> ~params >> Ign(Id(TokenType::Parens_Close))) >> block;
 
         return rule;
     }

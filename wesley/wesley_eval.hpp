@@ -186,20 +186,27 @@ Boxed_Value eval_token(Eval_System &ss, TokenPtr node) {
         }
         break;
         case (TokenType::Fun_Call) : {
+
+            //BoxedCPP_System::Stack prev_stack = ss.set_stack(BoxedCPP_System::Stack());
+
             Param_List_Builder plb;
             for (i = 1; i < node->children.size(); ++i) {
                 plb << eval_token(ss, node->children[i]);
             }
             try {
                 retval = dispatch(ss.get_function(node->children[0]->text), plb);
+                //ss.set_stack(prev_stack);
             }
             catch(EvalError &ee) {
+                //ss.set_stack(prev_stack);
                 throw EvalError(ee.reason, node->children[0]);
             }
             catch(std::exception &e){
-                throw EvalError("Can not find appropriate '" + node->children[0]->text + "'", node->children[0]);
+                //ss.set_stack(prev_stack);
+                throw EvalError("Engine error: " + std::string(e.what()), node->children[0]);
             }
             catch(ReturnValue &rv) {
+                //ss.set_stack(prev_stack);
                 retval = rv.retval;
             }
         }
@@ -347,6 +354,18 @@ Boxed_Value eval_token(Eval_System &ss, TokenPtr node) {
 
             ss.register_function(boost::shared_ptr<Proxy_Function>(
                   new Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1))), node->children[0]->text);
+        }
+        break;
+        case (TokenType::Lambda_Def) : {
+            unsigned int num_args = node->children.size() - 1;
+            std::vector<std::string> param_names;
+            for (i = 0; i < num_args; ++i) {
+                param_names.push_back(node->children[i]->text);
+            }
+
+            //retval = boost::shared_ptr<Proxy_Function>(new Proxy_Function_Impl<boost::function<void (const std::string &)> >(&test));
+            retval = Boxed_Value(boost::shared_ptr<Proxy_Function>(new Dynamic_Proxy_Function(
+                    boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1))));
         }
         break;
         case (TokenType::Scoped_Block) : {
