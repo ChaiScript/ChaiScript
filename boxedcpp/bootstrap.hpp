@@ -246,95 +246,95 @@ P1 &prefixnot(P1 &p1)
 
 //Add canonical forms of operators
 template<typename T>
-void add_oper_equals(BoxedCPP_System &s)
+void add_oper_equals(Dispatch_Engine &s)
 {
   register_function(s, &equals<const T&, const T&>, "=");
 }
 
 template<typename T>
-void add_oper_add(BoxedCPP_System &s)
+void add_oper_add(Dispatch_Engine &s)
 {
   register_function(s, &add<T, const T&, const T&>, "+");
 }
 
 template<typename T>
-void add_oper_add_equals(BoxedCPP_System &s)
+void add_oper_add_equals(Dispatch_Engine &s)
 {
   register_function(s, &addsequal<T, T>, "+=");
 }
 
 template<typename T>
-void add_oper_subtract(BoxedCPP_System &s)
+void add_oper_subtract(Dispatch_Engine &s)
 {
   register_function(s, &subtract<T, const T&, const T&>, "-");
 }
 
 template<typename T>
-void add_oper_divide(BoxedCPP_System &s)
+void add_oper_divide(Dispatch_Engine &s)
 {
   register_function(s, &divide<T, const T&, const T&>, "-");
 }
 
 template<typename T>
-void add_oper_multiply(BoxedCPP_System &s)
+void add_oper_multiply(Dispatch_Engine &s)
 {
   register_function(s, &multiply<T, const T&, const T&>, "*");
 }
 
 template<typename T>
-void add_oper_not_equals(BoxedCPP_System &s)
+void add_oper_not_equals(Dispatch_Engine &s)
 {
   register_function(s, &not_equals<const T&, const T&>, "!=");
 }
 
 template<typename T, typename U>
-void add_oper_assign_overload(BoxedCPP_System &s)
+void add_oper_assign_overload(Dispatch_Engine &s)
 {
   register_function(s, &assign<T,U>, "=");
 }
 
 
 template<typename T>
-void add_oper_assign(BoxedCPP_System &s)
+void add_oper_assign(Dispatch_Engine &s)
 {
   register_function(s, &assign<T,T>, "=");
 }
 
 
 template<typename T>
-void add_oper_assign_pod(BoxedCPP_System &s)
+void add_oper_assign_pod(Dispatch_Engine &s)
 {
   register_function(s, &assign_pod<T>, "=");
 }
 
 
 template<typename T>
-void add_oper_less_than(BoxedCPP_System &s)
+void add_oper_less_than(Dispatch_Engine &s)
 {
   register_function(s, &less_than<const T&, const T&>, "<");
 }
 
 template<typename T>
-void add_oper_greater_than(BoxedCPP_System &s)
+void add_oper_greater_than(Dispatch_Engine &s)
 {
   register_function(s, &greater_than<const T&, const T&>, ">");
 }
 
 template<typename T>
-void add_oper_less_than_equals(BoxedCPP_System &s)
+void add_oper_less_than_equals(Dispatch_Engine &s)
 {
   register_function(s, &less_than_equals<const T&, const T&>, "<=");
 }
 
 template<typename T>
-void add_oper_greater_than_equals(BoxedCPP_System &s)
+void add_oper_greater_than_equals(Dispatch_Engine &s)
 {
   register_function(s, &greater_than_equals<const T&, const T&>, ">=");
 }
 
 
 template<typename T, typename R>
-void add_opers_comparison_overload(BoxedCPP_System &s)
+void add_opers_comparison_overload(Dispatch_Engine &s)
 {
   register_function(s, &equals<const T&, const R&>, "==");
   register_function(s, &not_equals<const T&, const R&>, "!=");
@@ -344,7 +344,7 @@ void add_opers_comparison_overload(BoxedCPP_System &s)
   register_function(s, &greater_than_equals<const T&, const R&>, ">=");
 }
 
-void add_opers_comparison_pod(BoxedCPP_System &s)
+void add_opers_comparison_pod(Dispatch_Engine &s)
 {
   register_function(s, &pod_equals, "==");
   register_function(s, &pod_not_equals, "!=");
@@ -354,7 +354,7 @@ void add_opers_comparison_pod(BoxedCPP_System &s)
   register_function(s, &pod_greater_than_equals, ">=");
 }
 
-void add_opers_arithmetic_pod(BoxedCPP_System &s)
+void add_opers_arithmetic_pod(Dispatch_Engine &s)
 {
   register_function(s, &pod_add, "+");
   register_function(s, &pod_subtract, "-");
@@ -363,13 +363,13 @@ void add_opers_arithmetic_pod(BoxedCPP_System &s)
 }
 
 template<typename T>
-void add_opers_comparison(BoxedCPP_System &s)
+void add_opers_comparison(Dispatch_Engine &s)
 {
   add_opers_comparison_overload<T, T>(s);
 }
 
 template<typename Ret, typename T, typename R>
-void add_opers_arithmetic_overload(BoxedCPP_System &s)
+void add_opers_arithmetic_overload(Dispatch_Engine &s)
 {
   register_function(s, &add<Ret, T, R>, "+");
   register_function(s, &subtract<Ret, T, R>, "-");
@@ -386,7 +386,7 @@ void add_opers_arithmetic_overload(BoxedCPP_System &s)
 }
 
 template<typename T>
-void add_opers_arithmetic_modify_pod(BoxedCPP_System &s)
+void add_opers_arithmetic_modify_pod(Dispatch_Engine &s)
 {
   register_function(s, &timesequal_pod<T>, "*=");
   register_function(s, &dividesequal_pod<T>, "/=");
@@ -395,7 +395,7 @@ void add_opers_arithmetic_modify_pod(BoxedCPP_System &s)
 }
 
 template<typename T>
-void add_basic_constructors(BoxedCPP_System &s, const std::string &type)
+void add_basic_constructors(Dispatch_Engine &s, const std::string &type)
 {
   s.register_function(build_constructor<T>(), type);
   s.register_function(build_constructor<T, const T &>(), type);
@@ -403,13 +403,13 @@ void add_basic_constructors(BoxedCPP_System &s, const std::string &type)
 }
 
 template<typename T, typename U>
-void add_constructor_overload(BoxedCPP_System &s, const std::string &type)
+void add_constructor_overload(Dispatch_Engine &s, const std::string &type)
 {
   s.register_function(build_constructor<T, const U &>(), type);
 }
 
 template<typename T>
-void add_opers_arithmetic(BoxedCPP_System &s)
+void add_opers_arithmetic(Dispatch_Engine &s)
 {
   add_opers_arithmetic_overload<T, T, T>(s);
 
@@ -464,7 +464,7 @@ template<> std::string to_string(bool b)
 }
 
 template<typename T>
-void bootstrap_pod_type(BoxedCPP_System &s, const std::string &name)
+void bootstrap_pod_type(Dispatch_Engine &s, const std::string &name)
 {
   s.register_type<T>(name);
   add_basic_constructors<T>(s, name);
@@ -480,7 +480,7 @@ void print(const std::string &s)
   std::cout << s << std::endl;
 }
 
-void bootstrap(BoxedCPP_System &s)
+void bootstrap(Dispatch_Engine &s)
 {
   s.register_type<void>("void");
 

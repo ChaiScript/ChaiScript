@@ -4,12 +4,12 @@
 #include "boxedcpp.hpp"
 
 template<typename ContainerType>
-void bootstrap_reversible_container(BoxedCPP_System &system, const std::string &type)
+void bootstrap_reversible_container(Dispatch_Engine &system, const std::string &type)
 {
 }
 
 template<typename ContainerType>
-void bootstrap_random_access_container(BoxedCPP_System &system, const std::string &type)
+void bootstrap_random_access_container(Dispatch_Engine &system, const std::string &type)
 {
   bootstrap_reversible_container<ContainerType>(system, type);
 
@@ -22,14 +22,14 @@ void bootstrap_random_access_container(BoxedCPP_System &system, const std::strin
 }
 
 template<typename Assignable>
-void bootstrap_assignable(BoxedCPP_System &system, const std::string &type)
+void bootstrap_assignable(Dispatch_Engine &system, const std::string &type)
 {
   system.register_function(
       boost::function<Assignable &(Assignable*, const Assignable&)>(&Assignable::operator=), "=");
 }
 
 template<typename ContainerType>
-void bootstrap_container(BoxedCPP_System &system, const std::string &type)
+void bootstrap_container(Dispatch_Engine &system, const std::string &type)
 {
   bootstrap_assignable<ContainerType>(system, type);
 
@@ -40,26 +40,26 @@ void bootstrap_container(BoxedCPP_System &system, const std::string &type)
 }
 
 template<typename ContainerType>
-void bootstrap_forward_container(BoxedCPP_System &system, const std::string &type)
+void bootstrap_forward_container(Dispatch_Engine &system, const std::string &type)
 {
   bootstrap_container<ContainerType>(system, type);
 }
 
 template<typename Type>
-void bootstrap_default_constructible(BoxedCPP_System &system, const std::string &type)
+void bootstrap_default_constructible(Dispatch_Engine &system, const std::string &type)
 {
   system.register_function(build_constructor<Type>(), type);
 }
 
 template<typename SequenceType>
-void bootstrap_sequence(BoxedCPP_System &system, const std::string &type)
+void bootstrap_sequence(Dispatch_Engine &system, const std::string &type)
 {
   bootstrap_forward_container<SequenceType>(system, type);
   bootstrap_default_constructible<SequenceType>(system, type);
 }
 
 template<typename SequenceType>
-void bootstrap_back_insertion_sequence(BoxedCPP_System &system, const std::string &type)
+void bootstrap_back_insertion_sequence(Dispatch_Engine &system, const std::string &type)
 {
   bootstrap_sequence<SequenceType>(system, type);
 
@@ -72,7 +72,7 @@ void bootstrap_back_insertion_sequence(BoxedCPP_System &system, const std::strin
 }
 
 template<typename VectorType>
-void bootstrap_vector(BoxedCPP_System &system, const std::string &type)
+void bootstrap_vector(Dispatch_Engine &system, const std::string &type)
 {
   system.register_type<VectorType>(type);
   bootstrap_random_access_container<VectorType>(system, type);

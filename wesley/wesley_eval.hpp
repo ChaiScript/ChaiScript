@@ -206,11 +206,11 @@ Boxed_Value eval_token(Eval_System &ss, TokenPtr node) {
         break;
         case (TokenType::Fun_Call) : {
 
-            std::vector<std::pair<std::string, BoxedCPP_System::Function_Map::mapped_type> > fn;
-            BoxedCPP_System::Stack prev_stack = ss.get_stack();
+            std::vector<std::pair<std::string, Dispatch_Engine::Function_Map::mapped_type> > fn;
+            Dispatch_Engine::Stack prev_stack = ss.get_stack();
 
-            BoxedCPP_System::Stack new_stack;
-            new_stack.push_back(BoxedCPP_System::Scope());
+            Dispatch_Engine::Stack new_stack;
+            new_stack.push_back(Dispatch_Engine::Scope());
 
             Param_List_Builder plb;
             for (i = 1; i < node->children.size(); ++i) {
@@ -237,11 +237,11 @@ Boxed_Value eval_token(Eval_System &ss, TokenPtr node) {
         }
         break;
         case (TokenType::Method_Call) : {
-            std::vector<std::pair<std::string, BoxedCPP_System::Function_Map::mapped_type> > fn;
-            BoxedCPP_System::Stack prev_stack = ss.get_stack();
+            std::vector<std::pair<std::string, Dispatch_Engine::Function_Map::mapped_type> > fn;
+            Dispatch_Engine::Stack prev_stack = ss.get_stack();
 
-            BoxedCPP_System::Stack new_stack;
-            new_stack.push_back(BoxedCPP_System::Scope());
+            Dispatch_Engine::Stack new_stack;
+            new_stack.push_back(Dispatch_Engine::Scope());
 
             retval = eval_token(ss, node->children[0]);
             if (node->children.size() > 1) {

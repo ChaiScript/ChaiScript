@@ -16,7 +16,7 @@
 #include "proxy_functions.hpp"
 #include "proxy_constructors.hpp"
 
-class BoxedCPP_System
+class Dispatch_Engine
 {
   public:
     typedef std::multimap<std::string, boost::shared_ptr<Proxy_Function> > Function_Map;
@@ -24,7 +24,7 @@ class BoxedCPP_System
     typedef std::map<std::string, Boxed_Value> Scope;
     typedef std::deque<Scope> Stack;
 
-    BoxedCPP_System()
+    Dispatch_Engine()
     {
       m_scopes.push_back(Scope());
     }
@@ -160,7 +160,7 @@ void dump_type(const Type_Info &type)
   std::cout << type.m_bare_type_info->name();
 }
 
-void dump_function(const BoxedCPP_System::Function_Map::value_type &f)
+void dump_function(const Dispatch_Engine::Function_Map::value_type &f)
 {
   std::vector<Type_Info> params = f.second->get_param_types();
 
@@ -178,11 +178,11 @@ void dump_function(const BoxedCPP_System::Function_Map::value_type &f)
   std::cout << ")" << std::endl;
 }
 
-void dump_system(const BoxedCPP_System &s)
+void dump_system(const Dispatch_Engine &s)
 {
   std::cout << "Registered Types: " << std::endl;
-  std::vector<BoxedCPP_System::Type_Name_Map::value_type> types = s.get_types();
-  for (std::vector<BoxedCPP_System::Type_Name_Map::value_type>::const_iterator itr = types.begin();
+  std::vector<Dispatch_Engine::Type_Name_Map::value_type> types = s.get_types();
+  for (std::vector<Dispatch_Engine::Type_Name_Map::value_type>::const_iterator itr = types.begin();
        itr != types.end();
        ++itr)
   {
@@ -192,10 +192,10 @@ void dump_system(const BoxedCPP_System &s)
   }
 
 
-  std::cout << std::endl;  std::vector<BoxedCPP_System::Function_Map::value_type> funcs = s.get_functions();
+  std::cout << std::endl;  std::vector<Dispatch_Engine::Function_Map::value_type> funcs = s.get_functions();
 
   std::cout << "Functions: " << std::endl;
-  for (std::vector<BoxedCPP_System::Function_Map::value_type>::const_iterator itr = funcs.begin();
+  for (std::vector<Dispatch_Engine::Function_Map::value_type>::const_iterator itr = funcs.begin();
        itr != funcs.end();
        ++itr)
   {

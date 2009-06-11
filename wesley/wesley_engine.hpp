@@ -262,7 +262,7 @@ public:
     }
 };
 
-typedef Wesley_System<BoxedCPP_System> Wesley_Engine;
+typedef Wesley_System<Dispatch_Engine> Wesley_Engine;
 
 #endif /* WESLEY_ENGINE_HPP_ */
 

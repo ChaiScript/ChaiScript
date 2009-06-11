@@ -7,7 +7,7 @@
 
 BOOST_AUTO_TEST_CASE( add_operators )
 {
-  BoxedCPP_System ss;
+  Dispatch_Engine ss;
   bootstrap(ss);
   dump_system(ss);
 

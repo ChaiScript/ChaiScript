@@ -19,13 +19,13 @@
 # define n BOOST_PP_ITERATION()
 
 template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-void register_function(BoxedCPP_System &s, Ret (*f)(BOOST_PP_ENUM_PARAMS(n, Param)), const std::string &name)
+void register_function(Dispatch_Engine &s, Ret (*f)(BOOST_PP_ENUM_PARAMS(n, Param)), const std::string &name)
 {
   s.register_function(boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))>(f), name);
 }
 
 template<typename Ret, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-void register_function(BoxedCPP_System &s, Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)), const std::string &name)
+void register_function(Dispatch_Engine &s, Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)), const std::string &name)
 {
   s.register_function(boost::function<Ret (Class* BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param))>(f), name);
 }

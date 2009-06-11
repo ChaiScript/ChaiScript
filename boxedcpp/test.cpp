@@ -31,7 +31,7 @@ struct Test
 
 
 
-Boxed_Value named_func_call(BoxedCPP_System &ss,
+Boxed_Value named_func_call(Dispatch_Engine &ss,
     const std::string &nametocall, const std::vector<Boxed_Value> &params)
 {
   if (params.size() == 2)
@@ -45,7 +45,7 @@ Boxed_Value named_func_call(BoxedCPP_System &ss,
 // A function that takes a dynamic list of params
 // and calls a bunch of conversion functions on them and 
 // returns the result as a boxed_value
-Boxed_Value dynamic_function(BoxedCPP_System &ss, const std::string &name, 
+Boxed_Value dynamic_function(Dispatch_Engine &ss, const std::string &name, 
     const std::vector<Boxed_Value> &params)
 {
   if (name == "concat_string")
@@ -87,7 +87,7 @@ void test(const std::string &p)
 //Test main
 int main()
 {
-  BoxedCPP_System ss;
+  Dispatch_Engine ss;
   bootstrap(ss);
   bootstrap_vector<std::vector<int> >(ss, "VectorInt");
   dump_system(ss);
