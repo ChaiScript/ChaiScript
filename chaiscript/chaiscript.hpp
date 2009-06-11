@@ -1,8 +1,8 @@
 // This file is distributed under the BSD License.
 // See LICENSE.TXT for details.
 
-#ifndef WESLEY_HPP_
-#define WESLEY_HPP_
+#ifndef CHAISCRIPT_HPP_
+#define CHAISCRIPT_HPP_
 
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
@@ -35,7 +35,7 @@ const char *tokentype_to_string(int tokentype) {
 #include "langkit_lexer.hpp"
 #include "langkit_parser.hpp"
 
-#include "wesley_eval.hpp"
-#include "wesley_engine.hpp"
+#include "chaiscript_eval.hpp"
+#include "chaiscript_engine.hpp"
 
-#endif /* WESLEY_HPP_ */
+#endif /* CHAISCRIPT_HPP_ */

@@ -1,21 +1,21 @@
 // This file is distributed under the BSD License.
 // See LICENSE.TXT for details.
 
-#ifndef WESLEY_ENGINE_HPP_
-#define WESLEY_ENGINE_HPP_
+#ifndef CHAISCRIPT_ENGINE_HPP_
+#define CHAISCRIPT_ENGINE_HPP_
 
 #include <exception>
 
 //A function that prints any string passed to it
 
 template <typename Eval_Engine>
-class Wesley_System {
+class ChaiScript_System {
     Lexer lexer;
     Rule parser;
     Eval_Engine engine;
 
 public:
-    Wesley_System() : lexer(build_lexer()), parser(build_parser_rules()), engine(build_eval_system(lexer, parser)) {
+    ChaiScript_System() : lexer(build_lexer()), parser(build_parser_rules()), engine(build_eval_system(lexer, parser)) {
 
     }
 
@@ -192,7 +192,7 @@ public:
         //dump_system(ss);
 
         ss.register_function(boost::shared_ptr<Proxy_Function>(
-              new Dynamic_Proxy_Function(boost::bind(&Wesley_System<Eval_Engine>::eval, boost::ref(*this), _1), 1)), "eval");
+              new Dynamic_Proxy_Function(boost::bind(&ChaiScript_System<Eval_Engine>::eval, boost::ref(*this), _1), 1)), "eval");
 
         evaluate_string("def print(x) { print_string(x.to_string()) } ");
 
@@ -262,7 +262,7 @@ public:
     }
 };
 
-typedef Wesley_System<Dispatch_Engine> Wesley_Engine;
+typedef ChaiScript_System<Dispatch_Engine> ChaiScript_Engine;
 
-#endif /* WESLEY_ENGINE_HPP_ */
+#endif /* CHAISCRIPT_ENGINE_HPP_ */
 

@@ -1,8 +1,8 @@
 // This file is distributed under the BSD License.
 // See LICENSE.TXT for details.
 
-#ifndef WESLEY_EVAL_HPP_
-#define WESLEY_EVAL_HPP_
+#ifndef CHAISCRIPT_EVAL_HPP_
+#define CHAISCRIPT_EVAL_HPP_
 
 #include <map>
 
@@ -446,4 +446,4 @@ Boxed_Value eval_token(Eval_System &ss, TokenPtr node) {
     return retval;
 }
 
-#endif /* WESLEY_EVAL_HPP_ */
+#endif /* CHAISCRIPT_EVAL_HPP_ */

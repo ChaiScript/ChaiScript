@@ -12,12 +12,12 @@ if(Boost_FOUND)
    include_directories(${Boost_INCLUDE_DIRS})
    include_directories(.)
    
-   add_executable(boxedcpp_test test.cpp)
+   add_executable(dispatchkit_test test.cpp)
 
-   add_executable(boxedcpp_unittest unittest.cpp)
+   add_executable(dispatchkit_unittest unittest.cpp)
 
-   target_link_libraries(boxedcpp_unittest ${Boost_LIBRARIES})
+   target_link_libraries(dispatchkit_unittest ${Boost_LIBRARIES})
 
 endif()
 
-add_test(boxedcpp_unittest boxedcpp_unittest)
+add_test(dispatchkit_unittest dispatchkit_unittest)
