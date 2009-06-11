@@ -12,9 +12,8 @@ if(Boost_FOUND)
    include_directories(${Boost_INCLUDE_DIRS})
    include_directories(../langkit ../dispatchkit)
    
-   add_executable(wesley_test main.cpp)
-
-   target_link_libraries(wesley_test ${Boost_LIBRARIES})
+   add_executable(chaiscript_test main.cpp)
+   target_link_libraries(chaiscript_test ${Boost_LIBRARIES})
 
 endif()
 
