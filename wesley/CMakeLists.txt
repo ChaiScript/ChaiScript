@@ -10,7 +10,7 @@ SET (CMAKE_CXX_FLAGS_GDB " -Wall -ggdb")
 find_package(Boost 1.36.0 COMPONENTS regex unit_test_framework)
 if(Boost_FOUND)
    include_directories(${Boost_INCLUDE_DIRS})
-   include_directories(../langkit ../boxedcpp)
+   include_directories(../langkit ../dispatchkit)
    
    add_executable(wesley_test main.cpp)
 
