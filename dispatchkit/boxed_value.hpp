@@ -4,8 +4,9 @@
 #include "type_info.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/any.hpp>
-
+#include <boost/function.hpp>
 #include <boost/ref.hpp>
+#include <boost/bind.hpp>
 
 class Boxed_Value
 {
@@ -14,8 +15,10 @@ class Boxed_Value
     {
       Data(const Type_Info &ti,
            const boost::any &to,
-           bool tr)
-        : m_type_info(ti), m_obj(to), m_is_ref(tr)
+           bool tr,
+           const boost::function<bool ()> &t_unique = &Boxed_Value::Data::get_false)
+        : m_type_info(ti), m_obj(to), 
+          m_is_ref(tr)
       {
       }
 
@@ -26,6 +29,11 @@ class Boxed_Value
         m_is_ref = rhs.m_is_ref;
 
         return *this;
+      }
+
+      static bool get_false()
+      {
+        return false;
       }
 
       Type_Info m_type_info;
@@ -46,16 +54,16 @@ class Boxed_Value
            false)
          )
       {
-        void *ptr = boost::any_cast<boost::shared_ptr<T> >(m_data->m_obj).get();
+        boost::shared_ptr<T> *ptr = boost::any_cast<boost::shared_ptr<T> >(&m_data->m_obj);
 
         std::map<void *, boost::shared_ptr<Data> >::iterator itr
-          = m_ptrs.find(ptr);
+          = m_ptrs.find(ptr->get());
 
         if (itr != m_ptrs.end())
         {
           m_data = (itr->second);
         } else {
-          m_ptrs[ptr] = m_data;
+          m_ptrs[ptr->get()] = m_data;
         }
       }
 
@@ -74,11 +82,9 @@ class Boxed_Value
 
         if (itr != m_ptrs.end())
         {
-          std::cout << "Reference wrapper ptr found, using it" << std::endl;
+//          std::cout << "Reference wrapper ptr found, using it" << std::endl;
           m_data = (itr->second);
-        } else {
-          m_ptrs[ptr] = m_data;
-        }
+        } 
       }
 
     template<typename T>
@@ -89,7 +95,9 @@ class Boxed_Value
              false)
            )
       {
-        m_ptrs[boost::any_cast<boost::shared_ptr<T> >(m_data->m_obj).get()]
+        boost::shared_ptr<T> *ptr = boost::any_cast<boost::shared_ptr<T> >(&m_data->m_obj);
+
+        m_ptrs[ptr->get()]
           = m_data;
       }
 
@@ -114,6 +122,11 @@ class Boxed_Value
             false)
           )
     {
+    }
+
+    ~Boxed_Value()
+    {
+      cleanup_ptrs(m_ptrs);
     }
 
     Boxed_Value assign(const Boxed_Value &rhs)
@@ -151,6 +164,26 @@ class Boxed_Value
   private:
     boost::shared_ptr<Data> m_data;
     static std::map<void *, boost::shared_ptr<Data> > m_ptrs;
+
+    void cleanup_ptrs(std::map<void *, boost::shared_ptr<Data> > &m_ptrs)
+    {
+      std::map<void *, boost::shared_ptr<Data> >::iterator itr = m_ptrs.begin();
+      
+      while (itr != m_ptrs.end())
+      {
+        if (itr->second.unique())
+        {
+          std::map<void *, boost::shared_ptr<Data> >::iterator todel = itr;
+//          std::cout << "Releasing unique ptr " << std::endl;
+          ++itr;
+          m_ptrs.erase(todel);
+        } else {
+          ++itr;
+        }
+      }
+
+//      std::cout << "References held: " << m_ptrs.size() << std::endl;
+    }
 };
 
 std::map<void *, boost::shared_ptr<Boxed_Value::Data> > Boxed_Value::m_ptrs;
