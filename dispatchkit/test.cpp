@@ -4,7 +4,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 
-#include "boxedcpp.hpp"
+#include "dispatchkit.hpp"
 #include "bootstrap.hpp"
 #include "bootstrap_stl.hpp"
 

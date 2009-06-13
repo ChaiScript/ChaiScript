@@ -1,4 +1,4 @@
-#include "boxedcpp.hpp"
+#include "dispatchkit.hpp"
 #include "bootstrap.hpp"
 
 #define BOOST_TEST_DYN_LINK

@@ -4,7 +4,7 @@
 #ifndef __register_function_hpp__
 #define __register_function_hpp__
 
-#include <boxedcpp.hpp>
+#include "dispatchkit.hpp"
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 

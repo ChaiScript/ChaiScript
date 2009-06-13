@@ -28,7 +28,7 @@ const char *tokentype_to_string(int tokentype) {
     return token_types[tokentype];
 }
 
-#include "boxedcpp.hpp"
+#include "dispatchkit.hpp"
 #include "bootstrap.hpp"
 #include "bootstrap_stl.hpp"
 

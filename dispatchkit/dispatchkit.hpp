@@ -1,5 +1,5 @@
-#ifndef __boxedcpp_system_hpp__
-#define __boxedcpp_system_hpp__
+#ifndef __dispatchkit_hpp__
+#define __dispatchkit_hpp__
 
 #include <typeinfo>
 #include <string>

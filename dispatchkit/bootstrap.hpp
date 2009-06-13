@@ -1,7 +1,7 @@
 #ifndef __bootstrap_hpp
 #define __bootstrap_hpp__
 
-#include "boxedcpp.hpp"
+#include "dispatchkit.hpp"
 #include "bootstrap_pod.hpp"
 
 template<typename Ret, typename P1, typename P2>

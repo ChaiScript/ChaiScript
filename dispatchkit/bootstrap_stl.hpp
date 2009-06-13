@@ -1,7 +1,7 @@
 #ifndef __bootstrap_stl_hpp
 #define __bootstrap_stl_hpp__
 
-#include "boxedcpp.hpp"
+#include "dispatchkit.hpp"
 
 template<typename ContainerType>
 void bootstrap_reversible_container(Dispatch_Engine &system, const std::string &type)
