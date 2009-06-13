@@ -24,7 +24,7 @@ const char *tokentype_to_string(int tokentype) {
     return token_types[tokentype];
 }
 
-void debug_print(TokenPtr token, std::string prepend) {
+void debug_print(langkit::TokenPtr token, std::string prepend) {
     std::cout << prepend << "Token: " << token->text << "(" << tokentype_to_string(token->identifier) << ") @ " << token->filename
         << ": ("  << token->start.line << ", " << token->start.column << ") to ("
         << token->end.line << ", " << token->end.column << ") " << std::endl;
@@ -34,7 +34,7 @@ void debug_print(TokenPtr token, std::string prepend) {
     }
 }
 
-void debug_print(std::vector<TokenPtr> &tokens) {
+void debug_print(std::vector<langkit::TokenPtr> &tokens) {
     for (unsigned int i = 0; i < tokens.size(); ++i) {
         debug_print(tokens[i], "");
     }
@@ -59,7 +59,8 @@ std::string load_file(const char *filename) {
     return ret_val;
 }
 
-void parse(std::vector<TokenPtr> &tokens, const char *filename) {
+void parse(std::vector<langkit::TokenPtr> &tokens, const char *filename) {
+    using namespace langkit;
 
     /*
     Rule lhs;
@@ -161,6 +162,7 @@ void parse(std::vector<TokenPtr> &tokens, const char *filename) {
 
 
 int main(int argc, char *argv[]) {
+    using namespace langkit;
     std::string input;
 
     Lexer lexer;

@@ -10,8 +10,8 @@
 
 template <typename Eval_Engine>
 class ChaiScript_System {
-    Lexer lexer;
-    Rule parser;
+    langkit::Lexer lexer;
+    langkit::Rule parser;
     Eval_Engine engine;
 
 public:
@@ -30,10 +30,10 @@ public:
             val = Cast_Helper<std::string &>()(vals[0]);
         }
         catch (std::exception &e) {
-            throw EvalError("Can not evaluate string: " + val, TokenPtr());
+            throw EvalError("Can not evaluate string: " + val, langkit::TokenPtr());
         }
         catch (EvalError &ee) {
-            throw EvalError("Can not evaluate string: " + val + " reason: " + ee.reason, TokenPtr());
+            throw EvalError("Can not evaluate string: " + val + " reason: " + ee.reason, langkit::TokenPtr());
         }
         return evaluate_string(val);
     }
@@ -57,7 +57,8 @@ public:
         return ret_val;
     }
 
-    void debug_print(TokenPtr token, std::string prepend) {
+    void debug_print(langkit::TokenPtr token, std::string prepend) {
+        using namespace langkit;
         std::cout << prepend << "Token: " << token->text << "(" << tokentype_to_string(token->identifier) << ") @ " << token->filename
             << ": ("  << token->start.line << ", " << token->start.column << ") to ("
             << token->end.line << ", " << token->end.column << ") " << std::endl;
@@ -67,13 +68,15 @@ public:
         }
     }
 
-    void debug_print(std::vector<TokenPtr> &tokens) {
+    void debug_print(std::vector<langkit::TokenPtr> &tokens) {
+        using namespace langkit;
         for (unsigned int i = 0; i < tokens.size(); ++i) {
             debug_print(tokens[i], "");
         }
     }
 
-    Lexer build_lexer() {
+    langkit::Lexer build_lexer() {
+        using namespace langkit;
         Lexer lexer;
         lexer.set_skip(Pattern("[ \\t]+", TokenType::Whitespace));
         lexer.set_line_sep(Pattern("\\n|\\r\\n", TokenType::Carriage_Return));
@@ -98,7 +101,8 @@ public:
         return lexer;
     }
 
-    Rule build_parser_rules() {
+    langkit::Rule build_parser_rules() {
+        using namespace langkit;
         Rule params;
         Rule block(TokenType::Scoped_Block);
         Rule fundef(TokenType::Function_Def);
@@ -184,7 +188,8 @@ public:
     }
 
 
-    Eval_Engine build_eval_system(Lexer &lexer, Rule &parser) {
+    Eval_Engine build_eval_system(langkit::Lexer &lexer, langkit::Rule &parser) {
+        using namespace langkit;
         Eval_Engine ss;
         Bootstrap::bootstrap(ss);
         bootstrap_vector<std::vector<Boxed_Value> >(ss, "Vector");
@@ -197,7 +202,8 @@ public:
         return ss;
     }
 
-    TokenPtr parse(Rule &rule, std::vector<TokenPtr> &tokens, const char *filename) {
+    langkit::TokenPtr parse(langkit::Rule &rule, std::vector<langkit::TokenPtr> &tokens, const char *filename) {
+        using namespace langkit;
 
         Token_Iterator iter = tokens.begin(), end = tokens.end();
         TokenPtr parent(new Token("Root", TokenType::File, filename));
@@ -215,6 +221,7 @@ public:
     }
 
     Boxed_Value evaluate_string(const std::string &input, const char *filename = "__EVAL__") {
+        using namespace langkit;
         std::vector<TokenPtr> tokens = lexer.lex(input, filename);
         Boxed_Value value;
 

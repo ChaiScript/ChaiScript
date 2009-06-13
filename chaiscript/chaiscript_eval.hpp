@@ -8,33 +8,33 @@
 
 struct ParserError {
     std::string reason;
-    TokenPtr location;
+    langkit::TokenPtr location;
 
-    ParserError(const std::string &why, const TokenPtr where) : reason(why), location(where){ }
+    ParserError(const std::string &why, const langkit::TokenPtr where) : reason(why), location(where){ }
 };
 
 struct EvalError {
     std::string reason;
-    TokenPtr location;
+    langkit::TokenPtr location;
 
-    EvalError(const std::string &why, const TokenPtr where) : reason(why), location(where) { }
+    EvalError(const std::string &why, const langkit::TokenPtr where) : reason(why), location(where) { }
 };
 
 struct ReturnValue {
     Boxed_Value retval;
-    TokenPtr location;
+    langkit::TokenPtr location;
 
-    ReturnValue(const Boxed_Value &return_value, const TokenPtr where) : retval(return_value), location(where) { }
+    ReturnValue(const Boxed_Value &return_value, const langkit::TokenPtr where) : retval(return_value), location(where) { }
 };
 
 struct BreakLoop {
-    TokenPtr location;
+    langkit::TokenPtr location;
 
-    BreakLoop(const TokenPtr where) : location(where) { }
+    BreakLoop(const langkit::TokenPtr where) : location(where) { }
 };
 
 template <typename Eval_System>
-const Boxed_Value eval_function (Eval_System &ss, TokenPtr node, const std::vector<std::string> &param_names, const std::vector<Boxed_Value> &vals) {
+const Boxed_Value eval_function (Eval_System &ss, langkit::TokenPtr node, const std::vector<std::string> &param_names, const std::vector<Boxed_Value> &vals) {
     ss.new_scope();
 
     for (unsigned int i = 0; i < param_names.size(); ++i) {
@@ -47,7 +47,7 @@ const Boxed_Value eval_function (Eval_System &ss, TokenPtr node, const std::vect
 }
 
 template <typename Eval_System>
-Boxed_Value eval_token(Eval_System &ss, TokenPtr node) {
+Boxed_Value eval_token(Eval_System &ss, langkit::TokenPtr node) {
     Boxed_Value retval;
     unsigned int i, j;
 
