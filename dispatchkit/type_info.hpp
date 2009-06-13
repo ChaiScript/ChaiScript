@@ -44,7 +44,7 @@ struct Type_Info
 template<typename T>
 struct Get_Type_Info
 {
-  Type_Info operator()()
+  static Type_Info get()
   {
     return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
         boost::is_void<T>::value,
@@ -56,7 +56,7 @@ struct Get_Type_Info
 template<typename T>
 struct Get_Type_Info<boost::shared_ptr<T> >
 {
-  Type_Info operator()()
+  static Type_Info get()
   {
     return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
         boost::is_void<T>::value,
@@ -68,7 +68,7 @@ struct Get_Type_Info<boost::shared_ptr<T> >
 template<typename T>
 struct Get_Type_Info<boost::reference_wrapper<T> >
 {
-  Type_Info operator()()
+  static Type_Info get()
   {
     return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
         boost::is_void<T>::value,

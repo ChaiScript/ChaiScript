@@ -108,7 +108,7 @@ class Dispatch_Engine
     template<typename Type>
       void register_type(const std::string &name)
       {
-        m_types.insert(std::make_pair(name, Get_Type_Info<Type>()()));
+        m_types.insert(std::make_pair(name, Get_Type_Info<Type>::get()));
       }
 
     std::vector<Type_Name_Map::value_type> get_types() const

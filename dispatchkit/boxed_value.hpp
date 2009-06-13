@@ -83,7 +83,7 @@ class Boxed_Value
       boost::shared_ptr<Data> get(Boxed_Value::Void_Type)
       {
         return boost::shared_ptr<Data> (new Data(
-              Get_Type_Info<void>()(),
+              Get_Type_Info<void>::get(),
               boost::any(), 
               false)
             );
@@ -93,7 +93,7 @@ class Boxed_Value
         boost::shared_ptr<Data> get(boost::shared_ptr<T> obj)
         {
           boost::shared_ptr<Data> data(new Data(
-              Get_Type_Info<T>()(), 
+              Get_Type_Info<T>::get(), 
               boost::any(obj), 
               false,
               boost::shared_ptr<Data::Shared_Ptr_Proxy>(new Data::Shared_Ptr_Proxy_Impl<T>()))
@@ -116,7 +116,7 @@ class Boxed_Value
         boost::shared_ptr<Data> get(boost::reference_wrapper<T> obj)
       {
         boost::shared_ptr<Data> data(new Data(
-              Get_Type_Info<T>()(),
+              Get_Type_Info<T>::get(),
               boost::any(obj), 
               true)
             );
@@ -137,7 +137,7 @@ class Boxed_Value
         boost::shared_ptr<Data> get(const T& t)
         {
           boost::shared_ptr<Data> data(new Data(
-              Get_Type_Info<T>()(), 
+              Get_Type_Info<T>::get(), 
               boost::any(boost::shared_ptr<T>(new T(t))), 
               false,
               boost::shared_ptr<Data::Shared_Ptr_Proxy>(new Data::Shared_Ptr_Proxy_Impl<T>()))

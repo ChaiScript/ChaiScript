@@ -2,17 +2,12 @@
 #define __bootstrap_hpp__
 
 #include "boxedcpp.hpp"
-#include "register_function.hpp"
+#include "bootstrap_pod.hpp"
 
 template<typename Ret, typename P1, typename P2>
 Ret add(P1 p1, P2 p2)
 {
   return p1 + p2;
-}
-
-Boxed_Value pod_add(Boxed_POD_Value l, Boxed_POD_Value r)
-{
-  return l + r;
 }
 
 
@@ -22,11 +17,6 @@ Ret subtract(P1 p1, P2 p2)
   return p1 - p2;
 }
 
-Boxed_Value pod_subtract(Boxed_POD_Value l, Boxed_POD_Value r)
-{
-  return l - r;
-}
-
 
 template<typename Ret, typename P1, typename P2>
 Ret divide(P1 p1, P2 p2)
@@ -34,21 +24,11 @@ Ret divide(P1 p1, P2 p2)
   return p1 / p2;
 }
 
-Boxed_Value pod_divide(Boxed_POD_Value l, Boxed_POD_Value r)
-{
-  return l / r;
-}
-
 
 template<typename Ret, typename P1, typename P2>
 Ret multiply(P1 p1, P2 p2)
 {
   return p1 * p2;
-}
-
-Boxed_Value pod_multiply(Boxed_POD_Value l, Boxed_POD_Value r)
-{
-  return l * r;
 }
 
 
@@ -88,20 +68,12 @@ bool equals(P1 p1, P2 p2)
   return p1 == p2;
 }
 
-bool pod_equals(Boxed_POD_Value l, Boxed_POD_Value r)
-{
-  return l == r;
-}
+
 
 template<typename P1, typename P2>
 bool not_equals(P1 p1, P2 p2)
 {
   return p1 != p2;
-}
-
-bool pod_not_equals(Boxed_POD_Value l, Boxed_POD_Value r)
-{
-  return l != r;
 }
 
 
@@ -111,20 +83,10 @@ bool less_than(P1 p1, P2 p2)
   return p1 < p2;
 }
 
-bool pod_less_than(Boxed_POD_Value l, Boxed_POD_Value r)
-{
-  return l < r;
-}
-
 template<typename P1, typename P2>
 bool greater_than(P1 p1, P2 p2)
 {
   return p1 > p2;
-}
-
-bool pod_greater_than(Boxed_POD_Value l, Boxed_POD_Value r)
-{
-  return l > r;
 }
 
 template<typename P1, typename P2>
@@ -133,20 +95,10 @@ bool less_than_equals(P1 p1, P2 p2)
   return p1 <= p2;
 }
 
-bool pod_less_than_equals(Boxed_POD_Value l, Boxed_POD_Value r)
-{
-  return l <= r;
-}
-
 template<typename P1, typename P2>
 bool greater_than_equals(P1 p1, P2 p2)
 {
   return p1 >= p2;
-}
-
-bool pod_greater_than_equals(Boxed_POD_Value l, Boxed_POD_Value r)
-{
-  return l >= r;
 }
 
 template<typename P1, typename P2>
@@ -344,24 +296,6 @@ void add_opers_comparison_overload(Dispatch_Engine &s)
   register_function(s, &greater_than_equals<const T&, const R&>, ">=");
 }
 
-void add_opers_comparison_pod(Dispatch_Engine &s)
-{
-  register_function(s, &pod_equals, "==");
-  register_function(s, &pod_not_equals, "!=");
-  register_function(s, &pod_less_than, "<");
-  register_function(s, &pod_greater_than, ">");
-  register_function(s, &pod_less_than_equals, "<=");
-  register_function(s, &pod_greater_than_equals, ">=");
-}
-
-void add_opers_arithmetic_pod(Dispatch_Engine &s)
-{
-  register_function(s, &pod_add, "+");
-  register_function(s, &pod_subtract, "-");
-  register_function(s, &pod_divide, "/");
-  register_function(s, &pod_multiply, "*");
-}
-
 template<typename T>
 void add_opers_comparison(Dispatch_Engine &s)
 {
@@ -436,15 +370,7 @@ class bad_boxed_value_cast : public std::bad_cast
     std::string m_val;
 };
 
-Boxed_Value unknown_assign(Boxed_Value lhs, Boxed_Value rhs)
-{
-  if (lhs.is_unknown())
-  {
-    return (lhs.assign(rhs));
-  } else {
-    throw bad_boxed_value_cast("boxed_value has a set type alread");
-  }
-}
+
 
 //Built in to_string operator
 template<typename Input>
@@ -475,48 +401,59 @@ void bootstrap_pod_type(Dispatch_Engine &s, const std::string &name)
   register_function(s, &to_string<T>, "to_string");
 }
 
-void print(const std::string &s)
+struct Bootstrap
 {
-  std::cout << s << std::endl;
-}
+  static Boxed_Value unknown_assign(Boxed_Value lhs, Boxed_Value rhs)
+  {
+    if (lhs.is_unknown())
+    {
+      return (lhs.assign(rhs));
+    } else {
+      throw bad_boxed_value_cast("boxed_value has a set type alread");
+    }
+  }
 
-void bootstrap(Dispatch_Engine &s)
-{
-  s.register_type<void>("void");
+  static void print(const std::string &s)
+  {
+    std::cout << s << std::endl;
+  }
 
-  s.register_type<std::string>("string");
+  static void bootstrap(Dispatch_Engine &s)
+  {
+    s.register_type<void>("void");
 
-  add_basic_constructors<bool>(s, "bool");
-  add_basic_constructors<std::string>(s, "string");
-  add_oper_assign<std::string>(s);
+    s.register_type<std::string>("string");
 
-  register_function(s, &to_string<const std::string &>, "to_string");
-  register_function(s, &to_string<bool>, "to_string");
-  register_function(s, &unknown_assign, "=");
+    add_basic_constructors<bool>(s, "bool");
+    add_basic_constructors<std::string>(s, "string");
+    add_oper_assign<std::string>(s);
 
-  bootstrap_pod_type<double>(s, "double");
-  bootstrap_pod_type<int>(s, "int");
-  bootstrap_pod_type<size_t>(s, "size_t");
-  bootstrap_pod_type<char>(s, "char");
-  bootstrap_pod_type<int64_t>(s, "int64_t");
+    register_function(s, &to_string<const std::string &>, "to_string");
+    register_function(s, &to_string<bool>, "to_string");
+    register_function(s, &unknown_assign, "=");
 
-
-
-  add_opers_comparison_pod(s);
-  add_opers_arithmetic_pod(s);
-
-  add_oper_add<std::string>(s);
-  add_oper_add_equals <std::string>(s);
-
-  register_function(s, &print, "print_string");
-
-  s.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(s))), "dump_system");
-  s.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1)), "dump_object");
+    bootstrap_pod_type<double>(s, "double");
+    bootstrap_pod_type<int>(s, "int");
+    bootstrap_pod_type<size_t>(s, "size_t");
+    bootstrap_pod_type<char>(s, "char");
+    bootstrap_pod_type<int64_t>(s, "int64_t");
 
 
-  register_function(s, &bool_and<bool, bool>, "&&");
-  register_function(s, &bool_or<bool, bool>, "||");
 
-}
+    Pod_Bootstrap::add_opers_comparison(s);
+    Pod_Bootstrap::add_opers_arithmetic(s);
+
+    add_oper_add<std::string>(s);
+    add_oper_add_equals <std::string>(s);
+
+    register_function(s, &print, "print_string");
+
+    s.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(s))), "dump_system");
+    s.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1)), "dump_object");
+
+    register_function(s, &bool_and<bool, bool>, "&&");
+    register_function(s, &bool_or<bool, bool>, "||");
+  }
+};
 
 #endif

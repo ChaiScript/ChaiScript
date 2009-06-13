@@ -88,7 +88,7 @@ void test(const std::string &p)
 int main()
 {
   Dispatch_Engine ss;
-  bootstrap(ss);
+  Bootstrap::bootstrap(ss);
   bootstrap_vector<std::vector<int> >(ss, "VectorInt");
   dump_system(ss);
 

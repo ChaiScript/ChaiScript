@@ -1,6 +1,6 @@
 #include <boost/preprocessor.hpp>
 
-#define gettypeinfo(z,n,text)  ti.push_back(Get_Type_Info<Param ## n>()());
+#define gettypeinfo(z,n,text)  ti.push_back(Get_Type_Info<Param ## n>::get());
 #define casthelper(z,n,text) ,Cast_Helper<Param ## n>()(params[n])
 
 
@@ -69,7 +69,7 @@ template<typename Ret>
 std::vector<Type_Info> build_param_type_list(const boost::function<Ret ()> &f)
 {
   std::vector<Type_Info> ti;
-  ti.push_back(Get_Type_Info<Ret>()());
+  ti.push_back(Get_Type_Info<Ret>::get());
   return ti;
 }
 
@@ -205,7 +205,7 @@ template<typename Ret, BOOST_PP_ENUM_PARAMS(n, typename Param) >
 std::vector<Type_Info> build_param_type_list(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f)
 {
   std::vector<Type_Info> ti;
-  ti.push_back(Get_Type_Info<Ret>()());
+  ti.push_back(Get_Type_Info<Ret>::get());
 
   BOOST_PP_REPEAT(n, gettypeinfo, ~)
 

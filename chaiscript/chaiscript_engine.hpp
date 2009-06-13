@@ -186,10 +186,8 @@ public:
 
     Eval_Engine build_eval_system(Lexer &lexer, Rule &parser) {
         Eval_Engine ss;
-        bootstrap(ss);
-        bootstrap_vector<std::vector<int> >(ss, "VectorInt");
+        Bootstrap::bootstrap(ss);
         bootstrap_vector<std::vector<Boxed_Value> >(ss, "Vector");
-        //dump_system(ss);
 
         ss.register_function(boost::shared_ptr<Proxy_Function>(
               new Dynamic_Proxy_Function(boost::bind(&ChaiScript_System<Eval_Engine>::eval, boost::ref(*this), _1), 1)), "eval");
