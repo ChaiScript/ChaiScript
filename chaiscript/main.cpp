@@ -3,6 +3,8 @@
 #include "chaiscript.hpp"
 
 int main(int argc, char *argv[]) {
+    using namespace dispatchkit;
+
     std::string input;
 
     ChaiScript_Engine chai;

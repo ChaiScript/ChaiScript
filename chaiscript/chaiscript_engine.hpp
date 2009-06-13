@@ -23,11 +23,11 @@ public:
         return engine;
     }
 
-    const Boxed_Value eval(const std::vector<Boxed_Value> &vals) {
+    const dispatchkit::Boxed_Value eval(const std::vector<dispatchkit::Boxed_Value> &vals) {
         std::string val;
 
         try {
-            val = Cast_Helper<std::string &>()(vals[0]);
+            val = dispatchkit::Cast_Helper<std::string &>()(vals[0]);
         }
         catch (std::exception &e) {
             throw EvalError("Can not evaluate string: " + val, langkit::TokenPtr());
@@ -191,11 +191,11 @@ public:
     Eval_Engine build_eval_system(langkit::Lexer &lexer, langkit::Rule &parser) {
         using namespace langkit;
         Eval_Engine ss;
-        Bootstrap::bootstrap(ss);
-        bootstrap_vector<std::vector<Boxed_Value> >(ss, "Vector");
+        dispatchkit::Bootstrap::bootstrap(ss);
+        dispatchkit::bootstrap_vector<std::vector<dispatchkit::Boxed_Value> >(ss, "Vector");
 
-        ss.register_function(boost::shared_ptr<Proxy_Function>(
-              new Dynamic_Proxy_Function(boost::bind(&ChaiScript_System<Eval_Engine>::eval, boost::ref(*this), _1), 1)), "eval");
+        ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
+              new dispatchkit::Dynamic_Proxy_Function(boost::bind(&ChaiScript_System<Eval_Engine>::eval, boost::ref(*this), _1), 1)), "eval");
 
         evaluate_string("def print(x) { print_string(x.to_string()) } ");
 
@@ -220,10 +220,10 @@ public:
         }
     }
 
-    Boxed_Value evaluate_string(const std::string &input, const char *filename = "__EVAL__") {
+    dispatchkit::Boxed_Value evaluate_string(const std::string &input, const char *filename = "__EVAL__") {
         using namespace langkit;
         std::vector<TokenPtr> tokens = lexer.lex(input, filename);
-        Boxed_Value value;
+        dispatchkit::Boxed_Value value;
 
         for (unsigned int i = 0; i < tokens.size(); ++i) {
             if ((tokens[i]->identifier == TokenType::Quoted_String) || (tokens[i]->identifier == TokenType::Single_Quoted_String)) {
@@ -262,12 +262,12 @@ public:
         return value;
     }
 
-    Boxed_Value evaluate_file(const char *filename) {
+    dispatchkit::Boxed_Value evaluate_file(const char *filename) {
         return evaluate_string(load_file(filename), filename);
     }
 };
 
-typedef ChaiScript_System<Dispatch_Engine> ChaiScript_Engine;
+typedef ChaiScript_System<dispatchkit::Dispatch_Engine> ChaiScript_Engine;
 
 #endif /* CHAISCRIPT_ENGINE_HPP_ */
 

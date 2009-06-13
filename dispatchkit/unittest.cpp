@@ -7,6 +7,8 @@
 
 BOOST_AUTO_TEST_CASE( add_operators )
 {
+  using namespace dispatchkit;
+
   Dispatch_Engine ss;
   Bootstrap::bootstrap(ss);
   dump_system(ss);

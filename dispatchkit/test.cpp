@@ -8,6 +8,8 @@
 #include "bootstrap.hpp"
 #include "bootstrap_stl.hpp"
 
+using namespace dispatchkit;
+
 struct Test
 {
   Test(const std::string &s)
