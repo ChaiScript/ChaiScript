@@ -15,6 +15,8 @@ void bootstrap_random_access_container(Dispatch_Engine &system, const std::strin
 
   typedef typename ContainerType::reference(ContainerType::*indexoper)(size_t);
 
+  //In the interest of runtime safety for the system, we prefer the at() method for [] access,
+  //to throw an exception in an out of bounds condition.
   system.register_function(
       boost::function<typename ContainerType::reference (ContainerType *, int)>(indexoper(&ContainerType::at)), "[]");
   system.register_function(

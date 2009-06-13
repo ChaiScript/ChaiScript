@@ -10,6 +10,11 @@
 
 class Boxed_Value
 {
+  public:
+    struct Void_Type
+    {
+    };
+
   private:
     struct Data
     {
@@ -73,75 +78,116 @@ class Boxed_Value
       boost::shared_ptr<Shared_Ptr_Proxy> m_ptr_proxy;
     };
 
-  public:
-    struct Void_Type
+    struct Object_Cache
     {
-    };
-
-    template<typename T>
-      explicit Boxed_Value(boost::shared_ptr<T> obj)
-       : m_data(new Data(
-           Get_Type_Info<T>()(), 
-           boost::any(obj), 
-           false,
-           boost::shared_ptr<Data::Shared_Ptr_Proxy>(new Data::Shared_Ptr_Proxy_Impl<T>()))
-         )
+      boost::shared_ptr<Data> get(Boxed_Value::Void_Type)
       {
-        boost::shared_ptr<T> *ptr = boost::any_cast<boost::shared_ptr<T> >(&m_data->m_obj);
-
-        std::map<void *, Data >::iterator itr
-          = m_ptrs.find(ptr->get());
-
-        if (itr != m_ptrs.end())
-        {
-          (*m_data) = (itr->second);
-        } else {
-          m_ptrs.insert(std::make_pair(ptr->get(), *m_data));
-        }
+        return boost::shared_ptr<Data> (new Data(
+              Get_Type_Info<void>()(),
+              boost::any(), 
+              false)
+            );
       }
 
-    template<typename T>
-      explicit Boxed_Value(boost::reference_wrapper<T> obj)
-       : m_data(new Data(
-             Get_Type_Info<T>()(),
-             boost::any(obj), 
-             true)
-           )
+      template<typename T>
+        boost::shared_ptr<Data> get(boost::shared_ptr<T> obj)
+        {
+          boost::shared_ptr<Data> data(new Data(
+              Get_Type_Info<T>()(), 
+              boost::any(obj), 
+              false,
+              boost::shared_ptr<Data::Shared_Ptr_Proxy>(new Data::Shared_Ptr_Proxy_Impl<T>()))
+              );
+
+          std::map<void *, Data >::iterator itr
+            = m_ptrs.find(obj.get());
+
+          if (itr != m_ptrs.end())
+          {
+            (*data) = (itr->second);
+          } else {
+            m_ptrs.insert(std::make_pair(obj.get(), *data));
+          }
+
+          return data;
+        }
+
+      template<typename T>
+        boost::shared_ptr<Data> get(boost::reference_wrapper<T> obj)
       {
-        void *ptr = boost::any_cast<boost::reference_wrapper<T> >(m_data->m_obj).get_pointer();
+        boost::shared_ptr<Data> data(new Data(
+              Get_Type_Info<T>()(),
+              boost::any(obj), 
+              true)
+            );
 
         std::map<void *, Data >::iterator itr
-          = m_ptrs.find(ptr);
+          = m_ptrs.find(obj.get_pointer());
 
         if (itr != m_ptrs.end())
         {
           std::cout << "Reference wrapper ptr found, using it" << std::endl;
-          (*m_data) = (itr->second);
+          (*data) = (itr->second);
         } 
+
+        return data;
       }
 
-    template<typename T>
-      explicit Boxed_Value(const T& t)
-       : m_data(new Data(
-             Get_Type_Info<T>()(), 
-             boost::any(boost::shared_ptr<T>(new T(t))), 
-             false,
-             boost::shared_ptr<Data::Shared_Ptr_Proxy>(new Data::Shared_Ptr_Proxy_Impl<T>()))
-            )
+      template<typename T>
+        boost::shared_ptr<Data> get(const T& t)
+        {
+          boost::shared_ptr<Data> data(new Data(
+              Get_Type_Info<T>()(), 
+              boost::any(boost::shared_ptr<T>(new T(t))), 
+              false,
+              boost::shared_ptr<Data::Shared_Ptr_Proxy>(new Data::Shared_Ptr_Proxy_Impl<T>()))
+            );
+     
+          boost::shared_ptr<T> *ptr = boost::any_cast<boost::shared_ptr<T> >(&data->m_obj);
+
+          m_ptrs.insert(std::make_pair(ptr->get(), *data));
+          return data;
+        }
+
+      boost::shared_ptr<Data> get()
       {
-        boost::shared_ptr<T> *ptr = boost::any_cast<boost::shared_ptr<T> >(&m_data->m_obj);
-
-        m_ptrs.insert(std::make_pair(ptr->get(), *m_data));
+        return boost::shared_ptr<Data> (new Data(
+            Type_Info(),
+            boost::any(),
+            false)
+            );
       }
 
-    Boxed_Value(Boxed_Value::Void_Type)
-      : m_data(new Data(
-            Get_Type_Info<void>()(),
-            boost::any(), 
-            false)
-          )
-    {
-    }
+      void cull()
+      {
+        std::map<void *, Data >::iterator itr = m_ptrs.begin();
+
+        while (itr != m_ptrs.end())
+        {
+          if (itr->second.m_ptr_proxy->unique(&itr->second.m_obj) == 1)
+          {
+            std::map<void *, Data >::iterator todel = itr;
+            //          std::cout << "Releasing unique ptr " << std::endl;
+            ++itr;
+            m_ptrs.erase(todel);
+          } else {
+            ++itr;
+          }
+        }
+
+        //      std::cout << "References held: " << m_ptrs.size() << std::endl;
+      }
+
+
+      std::map<void *, Data > m_ptrs;
+    };
+
+  public:
+    template<typename T>
+      explicit Boxed_Value(T t)
+        : m_data(get_object_cache().get(t))
+      {
+      }
 
     Boxed_Value(const Boxed_Value &t_so)
       : m_data(t_so.m_data)
@@ -149,18 +195,22 @@ class Boxed_Value
     }
 
     Boxed_Value()
-      : m_data(new Data(
-            Type_Info(),
-            boost::any(),
-            false)
-          )
+      : m_data(get_object_cache().get())    
     {
     }
 
     ~Boxed_Value()
     {
-      cleanup_ptrs(m_ptrs);
+      get_object_cache().cull();
     }
+
+
+    Object_Cache &get_object_cache()
+    {
+      static Object_Cache oc;
+      return oc;
+    }    
+
 
     Boxed_Value assign(const Boxed_Value &rhs)
     {
@@ -196,30 +246,8 @@ class Boxed_Value
 
   private:
     boost::shared_ptr<Data> m_data;
-    static std::map<void *, Data > m_ptrs;
-
-    void cleanup_ptrs(std::map<void *, Data > &m_ptrs)
-    {
-      std::map<void *, Data >::iterator itr = m_ptrs.begin();
-      
-      while (itr != m_ptrs.end())
-      {
-        if (itr->second.m_ptr_proxy->unique(&itr->second.m_obj) == 1)
-        {
-          std::map<void *, Data >::iterator todel = itr;
-//          std::cout << "Releasing unique ptr " << std::endl;
-          ++itr;
-          m_ptrs.erase(todel);
-        } else {
-          ++itr;
-        }
-      }
-
-//      std::cout << "References held: " << m_ptrs.size() << std::endl;
-    }
 };
 
-std::map<void *, Boxed_Value::Data > Boxed_Value::m_ptrs;
 
 //cast_help specializations
 template<typename Result>
