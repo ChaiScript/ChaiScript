@@ -8,6 +8,20 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
+namespace dispatchkit
+{
+  template<typename T, typename Class>
+    T &get_member(T Class::* m, Class *obj)
+    {
+      return obj->*m;
+    }
+
+  template<typename T, typename Class>
+    void register_member(Dispatch_Engine &s, T Class::* m, const std::string &name)
+    {
+      s.register_function(boost::function<T (Class *)>(boost::bind(&get_member<T, Class>, m, _1)), name);
+    }
+}
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
 #define BOOST_PP_FILENAME_1 "register_function.hpp"

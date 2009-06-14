@@ -13,7 +13,7 @@ using namespace dispatchkit;
 struct Test
 {
   Test(const std::string &s)
-    : message(s)
+    : number(-25), message(s)
   {
     std::cout << "Test class constructed with value: " << s << std::endl;
   }
@@ -27,6 +27,8 @@ struct Test
   {
     return message;
   }
+
+  int number;
 
   std::string message;
 };
@@ -114,7 +116,7 @@ int main()
   //so, we dispatch the to_string and pass its result as a param to "print"
   //In this example we don't bother with temporaries and we don't have to know
   //anything about types
-  dispatch(ss.get_function("print"),
+  dispatch(ss.get_function("print_string"),
       Param_List_Builder() << dispatch(ss.get_function("to_string"), Param_List_Builder() << addresult));
 
   // Now we are going to register a new dynamic function,
@@ -125,7 +127,7 @@ int main()
 
   // Call our newly defined dynamic function with 10 parameters, then send
   // its output to the "print" function
-  dispatch(ss.get_function("print"),
+  dispatch(ss.get_function("print_string"),
       Param_List_Builder() << dispatch(ss.get_function("concat_string"),
         Param_List_Builder() << std::string("\n\t") << std::string("The Value Was: ") 
                              << double(42.5) << std::string(".")
@@ -141,7 +143,7 @@ int main()
 
   register_function(ss, &Test::get_message, "get_message");
   register_function(ss, &Test::show_message, "show_message");
-
+  register_member(ss, &Test::number, "number");
 
   //Create a new object using the "Test" constructor, passing the param "Yo".
   //Then, add the new object to the system with the name "testobj2"
@@ -163,6 +165,14 @@ int main()
 
   //Update the value of the reference
   sr = "Bob Updated The message";
+
+  //Now, get a reference to the object's stored number
+  Boxed_Value numberref= dispatch(ss.get_function("number"), sos);
+
+  //Unbox it using Cast_Helper
+  int &ir = Cast_Helper<int &>()(numberref);
+
+  std::cout << "Number: " << ir << std::endl;
 
   //Now, prove that the reference was successfully acquired
   //and we are able to peek into the boxed types
