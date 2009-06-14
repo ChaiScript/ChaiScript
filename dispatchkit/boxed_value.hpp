@@ -128,7 +128,7 @@ namespace dispatchkit
 
             if (itr != m_ptrs.end())
             {
-              std::cout << "Reference wrapper ptr found, using it" << std::endl;
+//              std::cout << "Reference wrapper ptr found, using it" << std::endl;
               (*data) = (itr->second);
             } 
 
@@ -189,6 +189,7 @@ namespace dispatchkit
         explicit Boxed_Value(T t)
         : m_data(get_object_cache().get(t))
         {
+          get_object_cache().cull();
         }
 
       Boxed_Value(const Boxed_Value &t_so)
@@ -203,7 +204,6 @@ namespace dispatchkit
 
       ~Boxed_Value()
       {
-        get_object_cache().cull();
       }
 
 
@@ -347,61 +347,40 @@ namespace dispatchkit
     Boxed_POD_Value(const Boxed_Value &v)
       : d(0), i(0), m_isfloat(false)
     {
-      const int inp_ = int(v.get_type_info().m_type_info);
+      const std::type_info &inp_ = *v.get_type_info().m_type_info;
 
-      const int char_ = int(&typeid(char));
-      const int bool_ = int(&typeid(bool));
-
-      const int double_ = int(&typeid(double));
-      const int float_ = int(&typeid(float));
-
-      const int long_ = int(&typeid(long));
-      const int unsigned_long_ = int(&typeid(unsigned long));
-      const int int_ = int(&typeid(int));
-      const int unsigned_int_ = int(&typeid(unsigned int));
-
-      const int uint8_t_ = int(&typeid(uint8_t));
-      const int uint16_t_ = int(&typeid(uint16_t));
-      const int uint32_t_ = int(&typeid(uint32_t));
-      //    const int uint64_t_ = int(&typeid(uint64_t));
-
-      const int int8_t_ = int(&typeid(int8_t));
-      const int int16_t_ = int(&typeid(int16_t));
-      const int int32_t_ = int(&typeid(int32_t));
-      const int int64_t_ = int(&typeid(int64_t));
-
-      if (inp_ == double_)
+      if (inp_ == typeid(double))
       {
         d = Cast_Helper<double>()(v);
         m_isfloat = true;
-      } else if (inp_ == float_) {
+      } else if (inp_ == typeid(float)) {
         d = Cast_Helper<float>()(v);
         m_isfloat = true;
-      } else if (inp_ == bool_ ) {
+      } else if (inp_ == typeid(bool)) {
         i = Cast_Helper<bool>()(v);
-      } else if (inp_ == char_) {
+      } else if (inp_ == typeid(char)) {
         i = Cast_Helper<char>()(v);
-      } else if (inp_ == int_) {
+      } else if (inp_ == typeid(int)) {
         i = Cast_Helper<int>()(v);
-      } else if (inp_ == unsigned_int_) {
+      } else if (inp_ == typeid(unsigned int)) {
         i = Cast_Helper<unsigned int>()(v);
-      } else if (inp_ == long_) {
+      } else if (inp_ == typeid(long)) {
         i = Cast_Helper<long>()(v);
-      } else if (inp_ == unsigned_long_) {
+      } else if (inp_ == typeid(unsigned long)) {
         i = Cast_Helper<unsigned long>()(v);
-      } else if (inp_ == int8_t_) {
+      } else if (inp_ == typeid(int8_t)) {
         i = Cast_Helper<int8_t>()(v);
-      } else if (inp_ == int16_t_) {
+      } else if (inp_ == typeid(int16_t)) {
         i = Cast_Helper<int16_t>()(v);
-      } else if (inp_ == int32_t_) {
+      } else if (inp_ == typeid(int32_t)) {
         i = Cast_Helper<int32_t>()(v);
-      } else if (inp_ == int64_t_) {
+      } else if (inp_ == typeid(int64_t)) {
         i = Cast_Helper<int64_t>()(v);
-      } else if (inp_ == uint8_t_) {
+      } else if (inp_ == typeid(uint8_t)) {
         i = Cast_Helper<uint8_t>()(v);
-      } else if (inp_ == uint16_t_) {
+      } else if (inp_ == typeid(uint16_t)) {
         i = Cast_Helper<uint16_t>()(v);
-      } else if (inp_ == uint32_t_) {
+      } else if (inp_ == typeid(uint32_t)) {
         i = Cast_Helper<uint32_t>()(v);
       } else {
         throw boost::bad_any_cast();
