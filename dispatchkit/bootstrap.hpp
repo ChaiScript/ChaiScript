@@ -2,7 +2,7 @@
 #define __bootstrap_hpp__
 
 #include "dispatchkit.hpp"
-#include "bootstrap_pod.hpp"
+#include "register_function.hpp"
 
 namespace dispatchkit
 {
@@ -420,6 +420,24 @@ namespace dispatchkit
       std::cout << s << std::endl;
     }
 
+    static void add_opers_comparison_pod(Dispatch_Engine &s)
+    {
+      register_function(s, &equals<Boxed_POD_Value, Boxed_POD_Value>, "==");
+      register_function(s, &not_equals<Boxed_POD_Value, Boxed_POD_Value>, "!=");
+      register_function(s, &less_than<Boxed_POD_Value, Boxed_POD_Value>, "<");
+      register_function(s, &greater_than<Boxed_POD_Value, Boxed_POD_Value>, ">");
+      register_function(s, &less_than_equals<Boxed_POD_Value, Boxed_POD_Value>, "<=");
+      register_function(s, &greater_than_equals<Boxed_POD_Value, Boxed_POD_Value>, ">=");
+    }
+
+    static void add_opers_arithmetic_pod(Dispatch_Engine &s)
+    {
+      register_function(s, &add<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>, "+");
+      register_function(s, &subtract<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>, "-");
+      register_function(s, &divide<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>, "/");
+      register_function(s, &multiply<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>, "*");
+    }
+
     static void bootstrap(Dispatch_Engine &s)
     {
       s.register_type<void>("void");
@@ -441,9 +459,8 @@ namespace dispatchkit
       bootstrap_pod_type<int64_t>(s, "int64_t");
 
 
-
-      Pod_Bootstrap::add_opers_comparison(s);
-      Pod_Bootstrap::add_opers_arithmetic(s);
+      add_opers_comparison_pod(s);
+      add_opers_arithmetic_pod(s);
 
       add_oper_add<std::string>(s);
       add_oper_add_equals <std::string>(s);
