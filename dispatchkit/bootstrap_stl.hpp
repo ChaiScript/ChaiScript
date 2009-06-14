@@ -2,9 +2,56 @@
 #define __bootstrap_stl_hpp__
 
 #include "dispatchkit.hpp"
+#include "register_function.hpp"
+
 
 namespace dispatchkit
 {
+  template<typename Container>
+    struct Input_Range
+    {
+      Input_Range(Container &c)
+        : m_begin(c.begin()), m_end(c.end())
+      {
+      }
+
+      bool empty() const
+      {
+        return m_begin == m_end;
+      }
+
+      void popFront()
+      {
+        if (empty())
+        {
+          throw std::range_error("Range empty");
+        }
+        ++m_begin;
+      }
+
+      typename std::iterator_traits<typename Container::iterator>::reference front() const
+      {
+        if (empty())
+        {
+          throw std::range_error("Range empty");
+        }
+        return *m_begin;
+      }
+
+      typename Container::iterator m_begin;
+      typename Container::iterator m_end;
+    };
+
+  template<typename ContainerType>
+    void bootstrap_input_range(Dispatch_Engine &system, const std::string &type)
+    {
+      system.register_function(build_constructor<Input_Range<ContainerType>, ContainerType &>(), "range");
+
+      register_function(system, &Input_Range<ContainerType>::empty, "empty");
+      register_function(system, &Input_Range<ContainerType>::popFront, "popFront");
+      register_function(system, &Input_Range<ContainerType>::front, "front");
+    } 
+  
   template<typename ContainerType>
   void bootstrap_reversible_container(Dispatch_Engine &system, const std::string &type)
   {
@@ -46,6 +93,7 @@ namespace dispatchkit
   template<typename ContainerType>
   void bootstrap_forward_container(Dispatch_Engine &system, const std::string &type)
   {
+    bootstrap_input_range<ContainerType>(system, type);
     bootstrap_container<ContainerType>(system, type);
   }
 
