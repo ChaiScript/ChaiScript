@@ -130,6 +130,41 @@ namespace dispatchkit
     bootstrap_random_access_container<VectorType>(system, type);
     bootstrap_back_insertion_sequence<VectorType>(system, type);
   }
+
+  template<typename ContainerType>
+    void bootstrap_associative_container(Dispatch_Engine &system, const std::string &type)
+    {
+      bootstrap_forward_container<ContainerType>(system, type);
+      bootstrap_default_constructible<ContainerType>(system, type);
+    }
+
+
+  template<typename ContainerType>
+    void bootstrap_unique_associative_container(Dispatch_Engine &system, const std::string &type)
+    {
+      bootstrap_associative_container<ContainerType>(system, type);
+    }
+
+  template<typename ContainerType>
+    void bootstrap_sorted_associative_container(Dispatch_Engine &system, const std::string &type)
+    {
+      bootstrap_reversible_container<ContainerType>(system, type);
+    }
+
+  template<typename ContainerType>
+    void bootstrap_unique_sorted_associative_container(Dispatch_Engine &system, const std::string &type)
+    {
+      bootstrap_sorted_associative_container<ContainerType>(system, type);
+      bootstrap_unique_associative_container<ContainerType>(system, type);
+    }
+
+  template<typename MapType>
+    void bootstrap_map(Dispatch_Engine &system, const std::string &type)
+    {
+      system.register_type<MapType>(type);
+      register_function(system, &MapType::operator[], "[]");
+      bootstrap_unique_sorted_associative_container<MapType>(system, type);
+    }
 }
 
 #endif

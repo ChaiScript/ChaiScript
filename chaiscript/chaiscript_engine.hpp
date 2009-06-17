@@ -193,6 +193,8 @@ namespace chaiscript
             Eval_Engine ss;
             dispatchkit::Bootstrap::bootstrap(ss);
             dispatchkit::bootstrap_vector<std::vector<dispatchkit::Boxed_Value> >(ss, "Vector");
+            dispatchkit::bootstrap_map<std::map<std::string, dispatchkit::Boxed_Value> >(ss, "Map");
+
 
             ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
                   new dispatchkit::Dynamic_Proxy_Function(boost::bind(&ChaiScript_System<Eval_Engine>::eval, boost::ref(*this), _1), 1)), "eval");
