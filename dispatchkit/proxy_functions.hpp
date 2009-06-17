@@ -66,27 +66,6 @@ namespace dispatchkit
     };
 
 
-  // Build param type list (variadic)
-  template<typename Ret>
-    std::vector<Type_Info> build_param_type_list(const boost::function<Ret ()> &f)
-    {
-      std::vector<Type_Info> ti;
-      ti.push_back(Get_Type_Info<Ret>::get());
-      return ti;
-    }
-
-  // call_func implementations (variadic)
-  template<typename Ret>
-    Boxed_Value call_func(const boost::function<Ret ()> &f, const std::vector<Boxed_Value> &params)
-    {
-      if (params.size() != 0)
-      {
-        throw std::range_error("Incorrect number of parameters");
-      } else {
-        return Handle_Return<Ret>()(f);
-      }
-    }
-
   struct Param_List_Builder
   {
     Param_List_Builder &operator<<(const Boxed_Value &so)
@@ -111,7 +90,7 @@ namespace dispatchkit
   };
 }
 
-#define BOOST_PP_ITERATION_LIMITS ( 1, 10 )
+#define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
 #define BOOST_PP_FILENAME_1 "proxy_functions.hpp"
 #include BOOST_PP_ITERATE()
 
@@ -208,7 +187,8 @@ namespace dispatchkit
 
 namespace dispatchkit
 {
-  template<typename Ret, BOOST_PP_ENUM_PARAMS(n, typename Param) >
+
+  template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
     std::vector<Type_Info> build_param_type_list(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f)
     {
       std::vector<Type_Info> ti;
@@ -219,7 +199,7 @@ namespace dispatchkit
         return ti;
     }
 
-  template<typename Ret, BOOST_PP_ENUM_PARAMS(n, typename Param)>
+  template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
     Boxed_Value call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f,
         const std::vector<Boxed_Value> &params)
     {
