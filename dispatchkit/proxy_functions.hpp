@@ -102,7 +102,7 @@ namespace dispatchkit
       virtual ~Proxy_Function() {}
       virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) = 0;
       virtual std::vector<Type_Info> get_param_types() = 0;
-
+      virtual bool operator==(const Proxy_Function &) const = 0;
   };
 
   class Dynamic_Proxy_Function : public Proxy_Function
@@ -111,6 +111,11 @@ namespace dispatchkit
       Dynamic_Proxy_Function(const boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> &t_f, int arity=-1)
         : m_f(t_f), m_arity(arity)
       {
+      }
+
+      bool operator==(const Proxy_Function &f) const
+      {
+        return false;
       }
 
       virtual ~Dynamic_Proxy_Function() {}
@@ -146,7 +151,16 @@ namespace dispatchkit
 
       virtual ~Proxy_Function_Impl() {}
 
-
+      virtual bool operator==(const Proxy_Function &t_func) const
+      {
+        try {
+          dynamic_cast<const Proxy_Function_Impl<Func> &>(t_func);
+          return true; 
+        } catch (const std::bad_cast &) {
+          return false;
+        }
+      }
+ 
       virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
       {
         return call_func(m_f, params);

@@ -138,6 +138,11 @@ namespace dispatchkit
       bootstrap_default_constructible<ContainerType>(system, type);
     }
 
+  template<typename ContainerType>
+    void bootstrap_pair_associative_container(Dispatch_Engine &system, const std::string &type)
+    {
+      bootstrap_associative_container<ContainerType>(system, type);
+    }
 
   template<typename ContainerType>
     void bootstrap_unique_associative_container(Dispatch_Engine &system, const std::string &type)
@@ -164,7 +169,8 @@ namespace dispatchkit
       system.register_type<MapType>(type);
       register_function(system, &MapType::operator[], "[]");
       bootstrap_unique_sorted_associative_container<MapType>(system, type);
-    }
+      bootstrap_pair_associative_container<MapType>(system, type);
+     }
 }
 
 #endif

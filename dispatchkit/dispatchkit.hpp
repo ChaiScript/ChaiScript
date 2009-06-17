@@ -33,17 +33,25 @@ namespace dispatchkit
 
       void register_function(const boost::shared_ptr<Proxy_Function> &f, const std::string &name)
       {
-        m_functions.insert(std::make_pair(name, f));
-      }
+        if (!add_function(f, name))
+        {
+          std::cout << "Unable to add function: " << name 
+            << " another function with the exact signature exists." << std::endl;
+        }
+     }
 
 
       template<typename Function>
         void register_function(const Function &func, const std::string &name)
         {
-          m_functions.insert(std::make_pair(name, boost::shared_ptr<Proxy_Function>(new Proxy_Function_Impl<Function>(func))));
+          if (!add_function(boost::shared_ptr<Proxy_Function>(new Proxy_Function_Impl<Function>(func)), name))
+          {
+            std::cout << "Unable to add function: " << name 
+              << " another function with the exact signature exists." << std::endl;
+          }
         }
 
-
+ 
       template<typename Class>
         void set_object(const std::string &name, const Class &obj)
         {
@@ -146,6 +154,24 @@ namespace dispatchkit
       }
 
     private:
+      bool add_function(const boost::shared_ptr<Proxy_Function> &f, const std::string &t_name)
+      {
+        std::pair<Function_Map::const_iterator, Function_Map::const_iterator> range
+          = m_functions.equal_range(t_name);
+
+        while (range.first != range.second)
+        {
+          if ((*f) == *(range.first->second))
+          {
+            return false;
+          }
+          ++range.first;
+        }
+
+        m_functions.insert(std::make_pair(t_name, f));
+        return true;
+      }
+
       std::deque<Scope> m_scopes;
 
       Function_Map m_functions;
