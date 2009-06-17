@@ -15,6 +15,16 @@ namespace dispatchkit
       {
       }
 
+      Input_Range(typename Container::iterator itr)
+        : m_begin(itr), m_end(itr)
+      {
+      }
+
+      Input_Range(const std::pair<typename Container::iterator, typename Container::iterator> &t_p)
+        : m_begin(t_p.first), m_end(t_p.second)
+      {
+      }
+
       bool empty() const
       {
         return m_begin == m_end;
@@ -46,6 +56,11 @@ namespace dispatchkit
     void bootstrap_input_range(Dispatch_Engine &system, const std::string &type)
     {
       system.register_function(build_constructor<Input_Range<ContainerType>, ContainerType &>(), "range");
+      system.register_function(build_constructor<Input_Range<ContainerType>, 
+          typename ContainerType::iterator>(), "range");
+      system.register_function(build_constructor<Input_Range<ContainerType>, 
+          const std::pair<typename ContainerType::iterator, typename ContainerType::iterator> &>(), "range");
+
 
       register_function(system, &Input_Range<ContainerType>::empty, "empty");
       register_function(system, &Input_Range<ContainerType>::popFront, "popFront");
@@ -148,13 +163,19 @@ namespace dispatchkit
     void bootstrap_unique_associative_container(Dispatch_Engine &system, const std::string &type)
     {
       bootstrap_associative_container<ContainerType>(system, type);
-    }
+      register_function(system, &ContainerType::count, "count");
+     }
 
   template<typename ContainerType>
     void bootstrap_sorted_associative_container(Dispatch_Engine &system, const std::string &type)
     {
+      typedef std::pair<typename ContainerType::iterator, typename ContainerType::iterator> 
+                        (ContainerType::*eq_range)(const typename ContainerType::key_type &);
+
       bootstrap_reversible_container<ContainerType>(system, type);
-    }
+      bootstrap_associative_container<ContainerType>(system, type);
+      register_function(system, eq_range(&ContainerType::equal_range), "equal_range");
+     }
 
   template<typename ContainerType>
     void bootstrap_unique_sorted_associative_container(Dispatch_Engine &system, const std::string &type)
