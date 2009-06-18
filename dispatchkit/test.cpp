@@ -7,6 +7,7 @@
 #include "dispatchkit.hpp"
 #include "bootstrap.hpp"
 #include "bootstrap_stl.hpp"
+#include "function_call.hpp"
 
 using namespace dispatchkit;
 
@@ -154,8 +155,14 @@ int main()
   std::vector<Boxed_Value> sos;
   sos.push_back(ss.get_object("testobj2"));
 
+  //Build a bound function proxy for calling the script handled function
+  boost::function<void (Test &)> show_message = 
+    build_function_caller<void, Test &>(ss.get_function("show_message"));
+
+  Test &t = Cast_Helper<Test &>()(ss.get_object("testobj2"));
+
   //Print the message the object was created with
-  dispatch(ss.get_function("show_message"), sos);
+  show_message(t);
 
   //Now, get a reference to the object's stored message
   Boxed_Value stringref = dispatch(ss.get_function("get_message"), sos);
@@ -176,7 +183,7 @@ int main()
 
   //Now, prove that the reference was successfully acquired
   //and we are able to peek into the boxed types
-  dispatch(ss.get_function("show_message"), sos);
+  show_message(t);
 
 
   // Finally, we are going to register some named function aliases, for 
