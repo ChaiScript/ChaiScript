@@ -15,6 +15,9 @@ if(Boost_FOUND)
    add_executable(chaiscript_test main.cpp)
    target_link_libraries(chaiscript_test ${Boost_LIBRARIES})
 
+   add_executable(chaiscript_callbacktest callbacktest.cpp)
+   target_link_libraries(chaiscript_callbacktest ${Boost_LIBRARIES})
+
 endif()
 
 
