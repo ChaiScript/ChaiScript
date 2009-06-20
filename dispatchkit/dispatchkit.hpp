@@ -31,24 +31,15 @@ namespace dispatchkit
         m_scopes.push_back(Scope());
       }
 
-      void register_function(const boost::shared_ptr<Proxy_Function> &f, const std::string &name)
+      bool register_function(const boost::shared_ptr<Proxy_Function> &f, const std::string &name)
       {
-        if (!add_function(f, name))
-        {
-          std::cout << "Unable to add function: " << name 
-            << " another function with the exact signature exists." << std::endl;
-        }
-     }
-
+        return add_function(f, name);
+      }
 
       template<typename Function>
-        void register_function(const Function &func, const std::string &name)
+        bool register_function(const Function &func, const std::string &name)
         {
-          if (!add_function(boost::shared_ptr<Proxy_Function>(new Proxy_Function_Impl<Function>(func)), name))
-          {
-            std::cout << "Unable to add function: " << name 
-              << " another function with the exact signature exists." << std::endl;
-          }
+          return add_function(boost::shared_ptr<Proxy_Function>(new Proxy_Function_Impl<Function>(func)), name);
         }
 
  
