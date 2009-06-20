@@ -206,6 +206,25 @@ namespace chaiscript
                 }
             }
             break;
+            case (TokenType::Map_Init) : {
+                try {
+                    retval = dispatch(ss.get_function("Map"), dispatchkit::Param_List_Builder());
+                    for (i = 0; i < node->children.size(); ++i) {
+                        try {
+                            dispatchkit::Boxed_Value key = eval_token(ss, node->children[i]->children[0]);
+                            dispatchkit::Boxed_Value slot = dispatch(ss.get_function("[]"), dispatchkit::Param_List_Builder() << retval << key);
+                            dispatch(ss.get_function("="), dispatchkit::Param_List_Builder() << slot << eval_token(ss, node->children[i]->children[1]));
+                        }
+                        catch (std::exception inner_e) {
+                            throw EvalError("Can not find appropriate '=' for map init", node->children[i]);
+                        }
+                    }
+                }
+                catch (std::exception e) {
+                    throw EvalError("Can not find appropriate 'Vector()'", node);
+                }
+            }
+            break;
             case (TokenType::Fun_Call) : {
 
                 std::vector<std::pair<std::string, dispatchkit::Dispatch_Engine::Function_Map::mapped_type> > fn;

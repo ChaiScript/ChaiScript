@@ -87,7 +87,7 @@ namespace chaiscript
             lexer << Pattern("[A-Za-z_][A-Za-z_0-9]*", TokenType::Identifier);
             lexer << Pattern("[0-9]+\\.[0-9]+", TokenType::Real_Number);
             lexer << Pattern("[0-9]+", TokenType::Integer);
-            lexer << Pattern("[!@#$%^&*|\\-+=<>.]+|/[!@#$%^&|\\-+=<>]*", TokenType::Operator);
+            lexer << Pattern("[!@#$%^&*|\\-+=<>.:]+|/[!@#$%^&|\\-+=<>]*", TokenType::Operator);
             lexer << Pattern("\\(", TokenType::Parens_Open);
             lexer << Pattern("\\)", TokenType::Parens_Close);
             lexer << Pattern("\\[", TokenType::Square_Open);
@@ -126,6 +126,8 @@ namespace chaiscript
             Rule arraycall(TokenType::Array_Call);
             Rule vardecl(TokenType::Variable_Decl);
             Rule arrayinit(TokenType::Array_Init);
+            Rule mapinit(TokenType::Map_Init);
+            Rule mappair(TokenType::Map_Pair);
 
             Rule return_statement(TokenType::Return);
             Rule break_statement(TokenType::Break);
@@ -166,7 +168,7 @@ namespace chaiscript
             expression = term >> *((Str("+") >> term) | (Str("-") >> term));
             term = factor >> *((Str("*") >> factor) | (Str("/") >> factor));
             factor = methodcall | arraycall | value | negate | boolean_not | prefix | (Ign(Str("+")) >> value);
-            value =  vardecl | arrayinit | block | paren_block | lambda_def | return_statement | break_statement |
+            value =  vardecl | mapinit | arrayinit | block | paren_block | lambda_def | return_statement | break_statement |
                 funcall | Id(TokenType::Identifier) | Id(TokenType::Real_Number) | Id(TokenType::Integer) | Id(TokenType::Quoted_String) |
                 Id(TokenType::Single_Quoted_String) ;
 
@@ -178,6 +180,9 @@ namespace chaiscript
             arraycall = value >> +((Ign(Id(TokenType::Square_Open)) >> boolean >> Ign(Id(TokenType::Square_Close))));
 
             arrayinit = Ign(Id(TokenType::Square_Open)) >> ~(boolean >> *(Ign(Str(",")) >> boolean))  >> Ign(Id(TokenType::Square_Close));
+            mapinit = Ign(Id(TokenType::Square_Open)) >> ~(mappair >> *(Ign(Str(",")) >> mappair))  >> Ign(Id(TokenType::Square_Close));
+            mappair = Id(TokenType::Quoted_String) >> Ign(Str(":")) >> boolean;
+
             vardecl = Ign(Str("var")) >> Id(TokenType::Identifier);
             return_statement = Ign(Str("return")) >> ~boolean;
             break_statement = Wrap(Ign(Str("break")));
