@@ -204,7 +204,8 @@ namespace chaiscript
             ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
                   new dispatchkit::Dynamic_Proxy_Function(boost::bind(&ChaiScript_System<Eval_Engine>::eval, boost::ref(*this), _1), 1)), "eval");
 
-            evaluate_string("def print(x) { print_string(x.to_string()) } ");
+            evaluate_string("def print(x) { print_string(x.to_string()) }; "
+                "def for_each(container, func) { var range = range(container); while (!range.empty()) { func(range.front()); range.popFront();} }");
 
             return ss;
         }
@@ -235,6 +236,11 @@ namespace chaiscript
             for (unsigned int i = 0; i < tokens.size(); ++i) {
                 if ((tokens[i]->identifier == TokenType::Quoted_String) || (tokens[i]->identifier == TokenType::Single_Quoted_String)) {
                     tokens[i]->text = tokens[i]->text.substr(1, tokens[i]->text.size()-2);
+                    for (unsigned int j = 0; j < tokens[i]->text.size(); ++j) {
+                        if (tokens[i]->text[j] == '\\') {
+                            tokens[i]->text.erase(tokens[i]->text.begin() + j, tokens[i]->text.begin() + j + 1);
+                        }
+                    }
                 }
             }
 
