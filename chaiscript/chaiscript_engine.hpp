@@ -157,11 +157,11 @@ namespace chaiscript
             params = Id(TokenType::Identifier) >> *(Ign(Str(",")) >> Id(TokenType::Identifier));
             block = *(Ign(Id(TokenType::Semicolon))) >> Ign(Id(TokenType::Curly_Open)) >> *(Ign(Id(TokenType::Semicolon))) >> ~statement_list >> *(Ign(Id(TokenType::Semicolon))) >> Ign(Id(TokenType::Curly_Close));
 
-            equation = *(((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("=")) |
-                    ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("+=")) |
-                    ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("-=")) |
-                    ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("*=")) |
-                    ((vardecl | arraycall | Id(TokenType::Identifier)) >> Str("/="))) >> boolean;
+            equation = *(((vardecl | arraycall | funcall | methodcall | Id(TokenType::Identifier)) >> Str("=")) |
+                    ((vardecl | arraycall | funcall | methodcall | Id(TokenType::Identifier)) >> Str("+=")) |
+                    ((vardecl | arraycall | funcall | methodcall | Id(TokenType::Identifier)) >> Str("-=")) |
+                    ((vardecl | arraycall | funcall | methodcall | Id(TokenType::Identifier)) >> Str("*=")) |
+                    ((vardecl | arraycall | funcall | methodcall | Id(TokenType::Identifier)) >> Str("/="))) >> boolean;
             boolean = comparison >> *((Str("&&") >> comparison) | (Str("||") >> comparison));
             comparison = expression >> *((Str("==") >> expression) | (Str("!=") >> expression) | (Str("<") >> expression) |
                     (Str("<=") >> expression) |(Str(">") >> expression) | (Str(">=") >> expression));
