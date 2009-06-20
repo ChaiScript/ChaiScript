@@ -18,6 +18,10 @@ if(Boost_FOUND)
    add_executable(chaiscript_callbacktest callbacktest.cpp)
    target_link_libraries(chaiscript_callbacktest ${Boost_LIBRARIES})
 
+   add_executable(sensors sensors.cpp)
+   target_link_libraries(sensors ${Boost_LIBRARIES})
+
+
 endif()
 
 

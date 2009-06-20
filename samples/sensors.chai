@@ -1,0 +1,14 @@
+
+
+var global_state = Map()
+
+global_state["CPU"] = 0.0;
+global_state["CPU0"] = 0.0;
+                                                    
+def update_state(state, name)
+{
+  ++state[name];
+}                                                                     
+
+sensor_manager.add_sensor("CPU", 1000, global_state, function(state) { update_state(state, "CPU"); state["CPU"]; } )
+sensor_manager.add_sensor("CPU0", 1000, global_state, function(state) { update_state(state, "CPU0"); state["CPU0"]; } )
