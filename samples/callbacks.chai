@@ -1,5 +1,5 @@
 cb_handler.add_callbacks( function() { "First"; }, function (x) { x * 1.1; } );
-cb_handler.add_callbacks( function() { "TimesThree"; }, function (x) { x * 3.0001; } );
+cb_handler.add_callbacks( function() { "TimesThree"; }, function(x) { x * 3.0} );
 cb_handler.add_callbacks( function() { "DivOnePtTwo"; }, function (x) { x / 1.2; } );
 
 

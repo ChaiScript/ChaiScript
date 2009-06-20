@@ -164,6 +164,16 @@ namespace dispatchkit
     {
       bootstrap_associative_container<ContainerType>(system, type);
       register_function(system, &ContainerType::count, "count");
+    }
+
+  template<typename PairType>
+    void bootstrap_pair(Dispatch_Engine &system, const std::string &type)
+    {
+      register_member(system, &PairType::first, "first");
+      register_member(system, &PairType::second, "second");
+
+      system.register_function(build_constructor<PairType >(), type);
+      system.register_function(build_constructor<PairType, const typename PairType::first_type &, const typename PairType::second_type &>(), type);
      }
 
   template<typename ContainerType>
