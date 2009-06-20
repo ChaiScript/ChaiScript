@@ -173,7 +173,7 @@ namespace chaiscript
                 Id(TokenType::Single_Quoted_String) ;
 
             funcall = Id(TokenType::Identifier) >> Ign(Id(TokenType::Parens_Open)) >> ~(boolean >> *(Ign(Str("," )) >> boolean)) >> Ign(Id(TokenType::Parens_Close));
-            methodcall = value >> +(Ign(Str(".")) >> funcall);
+            methodcall = value >> +(Ign(Str(".")) >> (funcall | Id(TokenType::Identifier)));
             negate = (Str("-") >> (boolean | arraycall));
             boolean_not = (Str("!") >> (boolean | arraycall));
             prefix = (Str("++") >> (boolean | arraycall)) | (Str("--") >> (boolean | arraycall));

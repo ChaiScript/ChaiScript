@@ -274,19 +274,27 @@ namespace chaiscript
                             plb << eval_token(ss, node->children[i]->children[j]);
                         }
 
+                        std::string fun_name;
+                        if (node->children[i]->identifier == TokenType::Fun_Call) {
+                            fun_name = node->children[i]->children[0]->text;
+                        }
+                        else {
+                            fun_name = node->children[i]->text;
+                        }
+
                         try {
-                            fn = ss.get_function(node->children[i]->children[0]->text);
+                            fn = ss.get_function(fun_name);
                             ss.set_stack(new_stack);
                             retval = dispatch(fn, plb);
                             ss.set_stack(prev_stack);
                         }
                         catch(EvalError &ee) {
                             ss.set_stack(prev_stack);
-                            throw EvalError(ee.reason, node->children[0]);
+                            throw EvalError(ee.reason, node);
                         }
                         catch(std::exception &e){
                             ss.set_stack(prev_stack);
-                            throw EvalError("Can not find appropriate '" + node->children[i]->children[0]->text + "'", node->children[0]);
+                            throw EvalError("Can not find appropriate '" + fun_name + "'", node);
                         }
                         catch(ReturnValue &rv) {
                             ss.set_stack(prev_stack);
