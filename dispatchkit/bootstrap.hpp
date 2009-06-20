@@ -391,6 +391,14 @@ namespace dispatchkit
     }
   }
 
+  template<typename Input>
+  Input parse_string(const std::string &i)
+  {
+    return boost::lexical_cast<Input>(i);
+  }
+
+
+
   template<typename T>
   void bootstrap_pod_type(Dispatch_Engine &s, const std::string &name)
   {
@@ -401,6 +409,7 @@ namespace dispatchkit
     add_opers_arithmetic<T>(s);
     add_opers_arithmetic_modify_pod<T>(s);
     register_function(s, &to_string<T>, "to_string");
+    register_function(s, &parse_string<T>, "to_" + name);
   }
 
   struct Bootstrap
