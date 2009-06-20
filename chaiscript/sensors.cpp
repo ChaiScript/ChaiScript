@@ -5,6 +5,38 @@
 #include <boost/function.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
+
+std::string load_text_file(const std::string &filename)
+{
+  std::ifstream infile(filename.c_str());
+
+  std::string str;
+
+  std::string result;
+
+  while (std::getline(infile, str))
+  {
+    result += str + "\n";
+  }
+
+  return result;
+}
+
+std::vector<dispatchkit::Boxed_Value> regex_search(const std::string &str, const std::string &regex)
+{
+  boost::smatch matches;
+  boost::regex_search(str, matches, boost::regex(regex));
+
+  std::vector<dispatchkit::Boxed_Value> results;
+
+  for (unsigned int i = 0; i < matches.size(); ++i)
+  {
+    results.push_back(dispatchkit::Boxed_Value(std::string(matches.str(i))));
+  }
+
+  return results;
+}
+
 struct Sensor_Manager
 {
   struct Sensor
@@ -76,7 +108,12 @@ int main(int argc, char *argv[]) {
 
   Sensor_Manager sensor_manager;
   chai.get_eval_engine().add_object("sensor_manager", boost::ref(sensor_manager));
+
   dispatchkit::register_function(chai.get_eval_engine(), &Sensor_Manager::add_sensor, "add_sensor");
+  dispatchkit::register_function(chai.get_eval_engine(), &regex_search, "regex_search");
+  dispatchkit::register_function(chai.get_eval_engine(), &load_text_file, "load_text_file");
+
+
 
   for (int i = 1; i < argc; ++i) {
     try {

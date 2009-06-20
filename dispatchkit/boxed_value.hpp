@@ -347,6 +347,11 @@ namespace dispatchkit
     Boxed_POD_Value(const Boxed_Value &v)
       : d(0), i(0), m_isfloat(false)
     {
+      if (!v.get_type_info().m_type_info)
+      {
+        throw boost::bad_any_cast();
+      }
+
       const std::type_info &inp_ = *v.get_type_info().m_type_info;
 
       if (inp_ == typeid(double))
