@@ -464,6 +464,8 @@ namespace dispatchkit
 
       add_oper_add<std::string>(s);
       add_oper_add_equals <std::string>(s);
+      add_opers_comparison<std::string>(s);
+
 
       register_function(s, &print, "print_string");
 
