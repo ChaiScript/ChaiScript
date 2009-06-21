@@ -43,7 +43,14 @@ namespace chaiscript
             ss.add_object(param_names[i], vals[i]);
         }
 
-        dispatchkit::Boxed_Value retval = eval_token(ss, node);
+        dispatchkit::Boxed_Value retval;
+
+        try {
+            retval = eval_token(ss, node);
+        } catch (const ReturnValue &rv) {
+            retval = rv.retval;
+        }
+
         ss.pop_scope();
         return retval;
     }

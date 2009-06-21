@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
 
     boost::function<std::string (const std::string&, const std::string &)> f = 
       dispatchkit::build_functor<std::string (const std::string &, const std::string &)>
-        (chai, "function(x, y) { x + y }");
+        (chai, "function(x, y) { return x + y }");
 
     std::cout << "Functor call: " << f("Hello", " World") << std::endl;
 }
