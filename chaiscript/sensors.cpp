@@ -73,7 +73,7 @@ struct Sensor_Manager
     m_sensors.insert(
         std::make_pair(t_name, 
           Sensor(t_milliseconds, t_state_object, 
-            dispatchkit::build_function_caller<double, dispatchkit::Boxed_Value>(t_func)
+            dispatchkit::build_function_caller<double (dispatchkit::Boxed_Value)>(t_func)
             )
           )
         );

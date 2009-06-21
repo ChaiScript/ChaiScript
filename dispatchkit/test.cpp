@@ -157,7 +157,7 @@ int main()
 
   //Build a bound function proxy for calling the script handled function
   boost::function<void (Test &)> show_message = 
-    build_function_caller<void, Test &>(ss.get_function("show_message"));
+    build_function_caller<void (Test &)>(ss.get_function("show_message"));
 
   Test &t = Cast_Helper<Test &>()(ss.get_object("testobj2"));
 

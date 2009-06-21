@@ -48,6 +48,18 @@ namespace dispatchkit
 #define BOOST_PP_ITERATION_LIMITS ( 0, 9 )
 #define BOOST_PP_FILENAME_1 "function_call.hpp"
 #include BOOST_PP_ITERATE()
+
+namespace dispatchkit
+{ 
+  template<typename FunctionType, typename Function>
+    boost::function<FunctionType>
+      build_function_caller(Function func)
+      {
+        FunctionType *p;
+        return build_function_caller_helper(p, func);
+      }
+}
+
 # endif
 #else
 # define n BOOST_PP_ITERATION()
@@ -67,7 +79,7 @@ namespace dispatchkit
 
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
     boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param)) > 
-      build_function_caller(boost::shared_ptr<Proxy_Function> func)
+      build_function_caller_helper(Ret (BOOST_PP_ENUM_PARAMS(n, Param)), boost::shared_ptr<Proxy_Function> func)
       {
         std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > funcs;
         funcs.push_back(std::make_pair(std::string(), func));
@@ -77,11 +89,13 @@ namespace dispatchkit
 
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
     boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param)) > 
-      build_function_caller(const std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > &funcs)
+      build_function_caller_helper(Ret (BOOST_PP_ENUM_PARAMS(n, Param)), const std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > &funcs)
       {
         return boost::bind(&function_caller<Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>, funcs
             BOOST_PP_ENUM_TRAILING(n, curry, ~));
       }
+
+
 }
 
 #endif

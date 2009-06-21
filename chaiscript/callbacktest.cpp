@@ -15,8 +15,8 @@ struct Callback_Handler
       boost::shared_ptr<dispatchkit::Proxy_Function> t_value)
   {
     m_callbacks.push_back(
-        std::make_pair(dispatchkit::build_function_caller<std::string>(t_name),
-                       dispatchkit::build_function_caller<double, int>(t_value)
+        std::make_pair(dispatchkit::build_function_caller<std::string ()>(t_name),
+                       dispatchkit::build_function_caller<double (int)>(t_value)
           )
         );
   }
