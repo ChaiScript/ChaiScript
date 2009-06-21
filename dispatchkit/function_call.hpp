@@ -11,6 +11,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
+#include <string>
+#include <vector>
+#include "proxy_functions.hpp"
 
 namespace dispatchkit
 {
@@ -58,6 +61,13 @@ namespace dispatchkit
         FunctionType *p;
         return build_function_caller_helper(p, func);
       }
+
+
+  template<typename FunctionType, typename ScriptEngine>
+    boost::function<FunctionType> build_functor(ScriptEngine &e, const std::string &script)
+    {
+      return build_function_caller<FunctionType>(Cast_Helper<boost::shared_ptr<Proxy_Function> >()(e.evaluate_string(script)));
+    }
 }
 
 # endif

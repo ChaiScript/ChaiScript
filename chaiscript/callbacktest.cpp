@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "chaiscript.hpp"
 #include "function_call.hpp"
+#include "chaiscript.hpp"
 #include <boost/function.hpp>
 
 struct Callback_Handler
@@ -53,5 +53,11 @@ int main(int argc, char *argv[]) {
     }
 
     cb_handler.do_callbacks();
+
+    boost::function<std::string (const std::string&, const std::string &)> f = 
+      dispatchkit::build_functor<std::string (const std::string &, const std::string &)>
+        (chai, "function(x, y) { x + y }");
+
+    std::cout << "Functor call: " << f("Hello", " World") << std::endl;
 }
 
