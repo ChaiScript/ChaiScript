@@ -15,11 +15,16 @@ namespace chaiscript
         ParserError(const std::string &why, const langkit::TokenPtr where) : reason(why), location(where){ }
     };
 
-    struct EvalError {
+    struct EvalError : public std::runtime_error {
         std::string reason;
         langkit::TokenPtr location;
 
-        EvalError(const std::string &why, const langkit::TokenPtr where) : reason(why), location(where) { }
+        EvalError(const std::string &why, const langkit::TokenPtr where) 
+          : std::runtime_error("Eval error: \"" + why + "\" in '" 
+              + where->filename + "' line: " + boost::lexical_cast<std::string>(where->start.line+1)), 
+            reason(why), location(where) { }
+
+        virtual ~EvalError() throw() {}
     };
 
     struct ReturnValue {

@@ -29,11 +29,11 @@ namespace chaiscript
             try {
                 val = dispatchkit::Cast_Helper<std::string &>()(vals[0]);
             }
-            catch (std::exception &e) {
-                throw EvalError("Can not evaluate string: " + val, langkit::TokenPtr());
-            }
             catch (EvalError &ee) {
                 throw EvalError("Can not evaluate string: " + val + " reason: " + ee.reason, langkit::TokenPtr());
+            }
+            catch (std::exception &e) {
+                throw EvalError("Can not evaluate string: " + val, langkit::TokenPtr());
             }
             return evaluate_string(val);
         }
