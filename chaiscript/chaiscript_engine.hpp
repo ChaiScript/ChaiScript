@@ -187,7 +187,8 @@ namespace chaiscript
             return_statement = Ign(Str("return")) >> ~boolean;
             break_statement = Wrap(Ign(Str("break")));
             paren_block = (Ign(Id(TokenType::Parens_Open)) >> equation >> Ign(Id(TokenType::Parens_Close)));
-            lambda_def = (Ign(Str("function")) >> ~(Ign(Id(TokenType::Parens_Open)) >> ~params >> Ign(Id(TokenType::Parens_Close))) >> block) | (Ign(Id(TokenType::Parens_Open)) >> ~params >> Ign(Id(TokenType::Parens_Close)) >> Ign(Str(":")) >> block);
+            lambda_def = (Ign(Str("function")) >> ~(Ign(Id(TokenType::Parens_Open)) >> ~params >> Ign(Id(TokenType::Parens_Close))) >> block) |
+                (Ign(Id(TokenType::Parens_Open)) >> ~params >> Ign(Id(TokenType::Parens_Close)) >> Ign(Str(":")) >> block);
 
             return rule;
         }
@@ -205,7 +206,9 @@ namespace chaiscript
                   new dispatchkit::Dynamic_Proxy_Function(boost::bind(&ChaiScript_System<Eval_Engine>::eval, boost::ref(*this), _1), 1)), "eval");
 
             evaluate_string("def print(x) { print_string(x.to_string()) }; "
-                "def for_each(container, func) { var range = range(container); while (!range.empty()) { func(range.front()); range.popFront();} }");
+                "def for_each(container, func) { var range = range(container); while (!range.empty()) { func(range.front()); range.popFront();} }; "
+                "def map(container, func) { var retval = Vector(); var range = range(container); while (!range.empty()) { retval.push_back(func(range.front())); range.popFront();}; return retval;}; "
+                "def reduce(container, func, initial) { var retval = initial; var range = range(container); while (!range.empty()) { retval = (func(range.front(), retval)); range.popFront();}; return retval;}");
 
             return ss;
         }
