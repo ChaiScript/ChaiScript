@@ -27,7 +27,7 @@ namespace chaiscript
             std::string val;
 
             try {
-                val = dispatchkit::Cast_Helper<std::string &>()(vals[0]);
+                val = dispatchkit::boxed_cast<std::string &>(vals[0]);
             }
             catch (EvalError &ee) {
                 throw EvalError("Can not evaluate string: " + val + " reason: " + ee.reason, langkit::TokenPtr());

@@ -101,12 +101,12 @@ int main()
   //choose the most appropriate version of the function
   Boxed_Value addresult = dispatch(ss.get_function("+"), Param_List_Builder() << double(5.1) << double(10.3));
 
-  //Using the Cast_Helper to unbox the resultant value and output it
-  std::cout << Cast_Helper<double>()(addresult) << std::endl;
+  //Using the cast to unbox the resultant value and output it
+  std::cout << boxed_cast<double>(addresult) << std::endl;
 
   //Using the Boxed_Value as input to another function, again with automatic dispatch.
   //This time we will not bother saving the result and will instead send it straight out
-  std::cout << Cast_Helper<double>()(
+  std::cout << boxed_cast<double>(
       dispatch(ss.get_function("*"), Param_List_Builder() << 2 << addresult)
       ) << std::endl;
 
@@ -159,7 +159,7 @@ int main()
   boost::function<void (Test &)> show_message = 
     build_function_caller<void (Test &)>(ss.get_function("show_message"));
 
-  Test &t = Cast_Helper<Test &>()(ss.get_object("testobj2"));
+  Test &t = boxed_cast<Test &>(ss.get_object("testobj2"));
 
   //Print the message the object was created with
   show_message(t);
@@ -167,8 +167,8 @@ int main()
   //Now, get a reference to the object's stored message
   Boxed_Value stringref = dispatch(ss.get_function("get_message"), sos);
 
-  //Unbox it using Cast_Helper
-  std::string &sr = Cast_Helper<std::string &>()(stringref);
+  //Unbox it using boxed_cast
+  std::string &sr = boxed_cast<std::string &>(stringref);
 
   //Update the value of the reference
   sr = "Bob Updated The message";
@@ -176,8 +176,8 @@ int main()
   //Now, get a reference to the object's stored number
   Boxed_Value numberref= dispatch(ss.get_function("number"), sos);
 
-  //Unbox it using Cast_Helper
-  int &ir = Cast_Helper<int &>()(numberref);
+  //Unbox it using boxed_cast
+  int &ir = boxed_cast<int &>(numberref);
 
   std::cout << "Number: " << ir << std::endl;
 
@@ -194,7 +194,7 @@ int main()
   //Call our newly named "add" function (which in turn dispatches +)
   
   std::cout << "Result of add function: " << 
-    Cast_Helper<int>()(dispatch(ss.get_function("add"), Param_List_Builder() << 5 << 2))
+    boxed_cast<int>(dispatch(ss.get_function("add"), Param_List_Builder() << 5 << 2))
     << std::endl; 
 
 

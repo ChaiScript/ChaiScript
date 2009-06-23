@@ -14,7 +14,7 @@ def initialize_cpu_sensor(state, cpuname, sensor_manager)
 
 def update_cpu_state(state, statfile, cpuname)
 {
-  var regex = cpuname + "\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)\s+([0-9]+)";
+  var regex = cpuname + "\\s+([0-9]+)\\s+([0-9]+)\\s+([0-9]+)\\s+([0-9]+)\\s+([0-9]+)\\s+([0-9]+)\\s+([0-9]+)";
   var strs = regex_search(statfile, regex);
 
   var user = to_double(strs[1]);
@@ -55,11 +55,12 @@ def update_state(state)
   update_cpu_state(state, file, "cpu1");
 }
 
-
 var global_state = Map()
+
 initialize_cpu_sensor(global_state, "cpu", sensor_manager);
 initialize_cpu_sensor(global_state, "cpu0", sensor_manager);
 initialize_cpu_sensor(global_state, "cpu1", sensor_manager);
+
 sensor_manager.add_sensor("cpu", 500, global_state, function(state) { update_state(state); state["cpu"]; } )
 sensor_manager.add_sensor("cpu0", 500, global_state, function(state) { state["cpu0"]; } )
 sensor_manager.add_sensor("cpu1", 500, global_state, function(state) { state["cpu1"]; } )

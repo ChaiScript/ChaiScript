@@ -258,7 +258,7 @@ namespace dispatchkit
     {
       typedef typename boost::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
 
-      Result_Type operator()(Boxed_Value ob)
+      static Result_Type cast(const Boxed_Value &ob)
       {
         if (ob.is_ref())
         {
@@ -274,7 +274,7 @@ namespace dispatchkit
     {
       typedef typename boost::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
         
-      Result_Type operator()(Boxed_Value ob)
+      static Result_Type cast(const Boxed_Value &ob)
       {
         if (ob.is_ref())
         {
@@ -290,7 +290,7 @@ namespace dispatchkit
     {
       typedef const Result * Result_Type;
 
-      Result_Type operator()(Boxed_Value ob)
+      static Result_Type cast(const Boxed_Value &ob)
       {
         if (ob.is_ref())
         {
@@ -306,7 +306,7 @@ namespace dispatchkit
     {
       typedef Result * Result_Type;
 
-      Result_Type operator()(Boxed_Value ob)
+      static Result_Type cast(const Boxed_Value &ob)
       {
         if (ob.is_ref())
         {
@@ -322,7 +322,7 @@ namespace dispatchkit
     {
       typedef typename boost::reference_wrapper<Result> Result_Type;
 
-      Result_Type operator()(Boxed_Value ob)
+      static Result_Type cast(const Boxed_Value &ob)
       {
         if (ob.is_ref())
         {
@@ -338,7 +338,7 @@ namespace dispatchkit
     {
       typedef typename boost::shared_ptr<Result> Result_Type;
         
-      Result_Type operator()(Boxed_Value ob)
+      static Result_Type cast(const Boxed_Value &ob)
       {
         return boost::any_cast<boost::shared_ptr<Result> >(ob.get());
       }
@@ -350,12 +350,17 @@ namespace dispatchkit
     {
       typedef Boxed_Value Result_Type;
 
-      Result_Type operator()(Boxed_Value ob)
+      static Result_Type cast(const Boxed_Value &ob)
       {
         return ob;    
       }
     };
 
+  template<typename Type>
+  typename Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv)
+  {
+    return Cast_Helper<Type>::cast(bv);
+  }
 
   struct Boxed_POD_Value
   {
@@ -371,37 +376,37 @@ namespace dispatchkit
 
       if (inp_ == typeid(double))
       {
-        d = Cast_Helper<double>()(v);
+        d = boxed_cast<double>(v);
         m_isfloat = true;
       } else if (inp_ == typeid(float)) {
-        d = Cast_Helper<float>()(v);
+        d = boxed_cast<float>(v);
         m_isfloat = true;
       } else if (inp_ == typeid(bool)) {
-        i = Cast_Helper<bool>()(v);
+        i = boxed_cast<bool>(v);
       } else if (inp_ == typeid(char)) {
-        i = Cast_Helper<char>()(v);
+        i = boxed_cast<char>(v);
       } else if (inp_ == typeid(int)) {
-        i = Cast_Helper<int>()(v);
+        i = boxed_cast<int>(v);
       } else if (inp_ == typeid(unsigned int)) {
-        i = Cast_Helper<unsigned int>()(v);
+        i = boxed_cast<unsigned int>(v);
       } else if (inp_ == typeid(long)) {
-        i = Cast_Helper<long>()(v);
+        i = boxed_cast<long>(v);
       } else if (inp_ == typeid(unsigned long)) {
-        i = Cast_Helper<unsigned long>()(v);
+        i = boxed_cast<unsigned long>(v);
       } else if (inp_ == typeid(int8_t)) {
-        i = Cast_Helper<int8_t>()(v);
+        i = boxed_cast<int8_t>(v);
       } else if (inp_ == typeid(int16_t)) {
-        i = Cast_Helper<int16_t>()(v);
+        i = boxed_cast<int16_t>(v);
       } else if (inp_ == typeid(int32_t)) {
-        i = Cast_Helper<int32_t>()(v);
+        i = boxed_cast<int32_t>(v);
       } else if (inp_ == typeid(int64_t)) {
-        i = Cast_Helper<int64_t>()(v);
+        i = boxed_cast<int64_t>(v);
       } else if (inp_ == typeid(uint8_t)) {
-        i = Cast_Helper<uint8_t>()(v);
+        i = boxed_cast<uint8_t>(v);
       } else if (inp_ == typeid(uint16_t)) {
-        i = Cast_Helper<uint16_t>()(v);
+        i = boxed_cast<uint16_t>(v);
       } else if (inp_ == typeid(uint32_t)) {
-        i = Cast_Helper<uint32_t>()(v);
+        i = boxed_cast<uint32_t>(v);
       } else {
         throw boost::bad_any_cast();
       }
@@ -487,7 +492,9 @@ namespace dispatchkit
   template<>
     struct Cast_Helper<Boxed_POD_Value>
     {
-      Boxed_POD_Value operator()(Boxed_Value ob)
+      typedef Boxed_POD_Value Result_Type;
+
+      static Result_Type cast(const Boxed_Value &ob)
       {
         return Boxed_POD_Value(ob);
       }

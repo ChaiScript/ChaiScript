@@ -1,7 +1,7 @@
 #include <boost/preprocessor.hpp>
 
 #define gettypeinfo(z,n,text)  ti.push_back(Get_Type_Info<Param ## n>::get());
-#define casthelper(z,n,text) ,Cast_Helper<Param ## n>()(params[n])
+#define casthelper(z,n,text) ,dispatchkit::boxed_cast< Param ## n >(params[n])
 
 
 #ifndef  BOOST_PP_IS_ITERATING

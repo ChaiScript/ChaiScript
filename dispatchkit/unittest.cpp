@@ -13,5 +13,5 @@ BOOST_AUTO_TEST_CASE( add_operators )
   Bootstrap::bootstrap(ss);
   dump_system(ss);
 
-  BOOST_CHECK_EQUAL(Cast_Helper<int>()(dispatch(ss.get_function("+"), Param_List_Builder() << double(5.1) << double(10.3))), 15.4);
+  BOOST_CHECK_EQUAL(boxed_cast<int>(dispatch(ss.get_function("+"), Param_List_Builder() << double(5.1) << double(10.3))), 15.4);
 }

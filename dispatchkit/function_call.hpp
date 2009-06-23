@@ -28,7 +28,7 @@ namespace dispatchkit
         Ret call(const std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > &t_funcs, 
                  const std::vector<Boxed_Value> &params)
         {
-          return Cast_Helper<Ret>()(dispatch(t_funcs, params));
+          return boxed_cast<Ret>(dispatch(t_funcs, params));
         }
     };
 
@@ -66,7 +66,7 @@ namespace dispatchkit
   template<typename FunctionType, typename ScriptEngine>
     boost::function<FunctionType> build_functor(ScriptEngine &e, const std::string &script)
     {
-      return build_function_caller<FunctionType>(Cast_Helper<boost::shared_ptr<Proxy_Function> >()(e.evaluate_string(script)));
+      return build_function_caller<FunctionType>(boxed_cast<boost::shared_ptr<Proxy_Function> >(e.evaluate_string(script)));
     }
 }
 

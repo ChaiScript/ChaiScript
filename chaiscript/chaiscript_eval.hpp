@@ -179,7 +179,7 @@ namespace chaiscript
                 bool cond;
                 try {
                     retval = eval_token(ss, node->children[1]);
-                    cond = dispatchkit::Cast_Helper<bool &>()(retval);
+                    cond = dispatchkit::boxed_cast<bool &>(retval);
                 }
                 catch (std::exception) {
                     throw EvalError("Boolean not('!') condition not boolean", node->children[0]);
@@ -320,7 +320,7 @@ namespace chaiscript
                 retval = eval_token(ss, node->children[0]);
                 bool cond;
                 try {
-                    cond = dispatchkit::Cast_Helper<bool &>()(retval);
+                    cond = dispatchkit::boxed_cast<bool &>(retval);
                 }
                 catch (std::exception &e) {
                     throw EvalError("If condition not boolean", node->children[0]);
@@ -339,7 +339,7 @@ namespace chaiscript
                             else if (node->children[i]->text == "elseif") {
                                 retval = eval_token(ss, node->children[i+1]);
                                 try {
-                                    cond = dispatchkit::Cast_Helper<bool &>()(retval);
+                                    cond = dispatchkit::boxed_cast<bool &>(retval);
                                 }
                                 catch (std::exception &e) {
                                     throw EvalError("Elseif condition not boolean", node->children[i+1]);
@@ -358,7 +358,7 @@ namespace chaiscript
                 retval = eval_token(ss, node->children[0]);
                 bool cond;
                 try {
-                    cond = dispatchkit::Cast_Helper<bool &>()(retval);
+                    cond = dispatchkit::boxed_cast<bool &>(retval);
                 }
                 catch (std::exception) {
                     throw EvalError("While condition not boolean", node->children[0]);
@@ -368,7 +368,7 @@ namespace chaiscript
                         eval_token(ss, node->children[1]);
                         retval = eval_token(ss, node->children[0]);
                         try {
-                            cond = dispatchkit::Cast_Helper<bool &>()(retval);
+                            cond = dispatchkit::boxed_cast<bool &>(retval);
                         }
                         catch (std::exception) {
                             throw EvalError("While condition not boolean", node->children[0]);
@@ -393,7 +393,7 @@ namespace chaiscript
                     else if (node->children.size() == 3){
                         condition = eval_token(ss, node->children[0]);
                     }
-                    cond = dispatchkit::Cast_Helper<bool &>()(condition);
+                    cond = dispatchkit::boxed_cast<bool &>(condition);
                 }
                 catch (std::exception &e) {
                     throw EvalError("For condition not boolean", node);
@@ -410,7 +410,7 @@ namespace chaiscript
                             eval_token(ss, node->children[1]);
                             condition = eval_token(ss, node->children[0]);
                         }
-                        cond = dispatchkit::Cast_Helper<bool &>()(condition);
+                        cond = dispatchkit::boxed_cast<bool &>(condition);
 
                     }
                     catch (std::exception &e) {

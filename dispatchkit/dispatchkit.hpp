@@ -126,7 +126,7 @@ namespace dispatchkit
           funcs.insert(funcs.end(), 
               Function_Map::value_type(
                 t_name, 
-                Cast_Helper<Function_Map::mapped_type>()(get_object(t_name)))
+                boxed_cast<Function_Map::mapped_type>(get_object(t_name)))
               );
         } catch (const std::bad_cast &) {
         } catch (const std::range_error &) {
