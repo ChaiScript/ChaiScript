@@ -256,7 +256,9 @@ namespace dispatchkit
   template<typename Result>
     struct Cast_Helper
     {
-      typename boost::reference_wrapper<typename boost::add_const<Result>::type > operator()(Boxed_Value ob)
+      typedef typename boost::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
+
+      Result_Type operator()(Boxed_Value ob)
       {
         if (ob.is_ref())
         {
@@ -270,7 +272,9 @@ namespace dispatchkit
   template<typename Result>
     struct Cast_Helper<const Result &>
     {
-      typename boost::reference_wrapper<typename boost::add_const<Result>::type > operator()(Boxed_Value ob)
+      typedef typename boost::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
+        
+      Result_Type operator()(Boxed_Value ob)
       {
         if (ob.is_ref())
         {
@@ -284,7 +288,9 @@ namespace dispatchkit
   template<typename Result>
     struct Cast_Helper<const Result *>
     {
-      const Result *operator()(Boxed_Value ob)
+      typedef const Result * Result_Type;
+
+      Result_Type operator()(Boxed_Value ob)
       {
         if (ob.is_ref())
         {
@@ -298,7 +304,9 @@ namespace dispatchkit
   template<typename Result>
     struct Cast_Helper<Result *>
     {
-      Result *operator()(Boxed_Value ob)
+      typedef Result * Result_Type;
+
+      Result_Type operator()(Boxed_Value ob)
       {
         if (ob.is_ref())
         {
@@ -312,7 +320,9 @@ namespace dispatchkit
   template<typename Result>
     struct Cast_Helper<Result &>
     {
-      typename boost::reference_wrapper<Result> operator()(Boxed_Value ob)
+      typedef typename boost::reference_wrapper<Result> Result_Type;
+
+      Result_Type operator()(Boxed_Value ob)
       {
         if (ob.is_ref())
         {
@@ -326,7 +336,9 @@ namespace dispatchkit
   template<typename Result>
     struct Cast_Helper<typename boost::shared_ptr<Result> >
     {
-      typename boost::shared_ptr<Result> operator()(Boxed_Value ob)
+      typedef typename boost::shared_ptr<Result> Result_Type;
+        
+      Result_Type operator()(Boxed_Value ob)
       {
         return boost::any_cast<boost::shared_ptr<Result> >(ob.get());
       }
@@ -336,7 +348,9 @@ namespace dispatchkit
   template<>
     struct Cast_Helper<Boxed_Value>
     {
-      Boxed_Value operator()(Boxed_Value ob)
+      typedef Boxed_Value Result_Type;
+
+      Result_Type operator()(Boxed_Value ob)
       {
         return ob;    
       }
