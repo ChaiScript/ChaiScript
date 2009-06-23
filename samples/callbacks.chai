@@ -4,5 +4,4 @@ cb_handler.add_callbacks( function() { "DivOnePtTwo"; }, function (x) { x / 1.2;
 
 
 
-cb_handler.add_callbacks( function() { "DivOnePtTwo"; }, function (x) { blargh; } );
 

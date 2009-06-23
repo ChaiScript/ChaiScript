@@ -54,19 +54,35 @@ namespace dispatchkit
 
 namespace dispatchkit
 { 
-  template<typename FunctionType, typename Function>
+  template<typename FunctionType>
     boost::function<FunctionType>
-      build_function_caller(Function func)
+      build_function_caller(const std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > &funcs)
       {
         FunctionType *p;
-        return build_function_caller_helper(p, func);
+        return build_function_caller_helper(p, funcs);
       }
 
+  template<typename FunctionType>
+    boost::function<FunctionType>
+      build_function_caller(boost::shared_ptr<Proxy_Function> func)
+      {
+        std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > funcs;
+        funcs.push_back(std::make_pair(std::string(), func));
+        return build_function_caller<FunctionType>(funcs);
+      }
 
+  template<typename FunctionType>
+    boost::function<FunctionType>
+      build_function_caller(const Boxed_Value &bv)
+      {
+        return build_function_caller<FunctionType>(boxed_cast<boost::shared_ptr<Proxy_Function> >(bv));
+      }
+
+     
   template<typename FunctionType, typename ScriptEngine>
     boost::function<FunctionType> build_functor(ScriptEngine &e, const std::string &script)
     {
-      return build_function_caller<FunctionType>(boxed_cast<boost::shared_ptr<Proxy_Function> >(e.evaluate_string(script)));
+      return build_function_caller<FunctionType>(e.evaluate_string(script));
     }
 }
 
@@ -86,16 +102,6 @@ namespace dispatchkit
 
       return Function_Caller_Ret<Ret>().call(funcs, params);
     }
-
-  template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-    boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param)) > 
-      build_function_caller_helper(Ret (BOOST_PP_ENUM_PARAMS(n, Param)), boost::shared_ptr<Proxy_Function> func)
-      {
-        std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > funcs;
-        funcs.push_back(std::make_pair(std::string(), func));
-        return boost::bind(&function_caller<Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>, funcs
-            BOOST_PP_ENUM_TRAILING(n, curry, ~));
-      }
 
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
     boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param)) > 
