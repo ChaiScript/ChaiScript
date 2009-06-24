@@ -180,7 +180,7 @@ namespace chaiscript
             arraycall = value >> +((Ign(Id(TokenType::Square_Open)) >> boolean >> Ign(Id(TokenType::Square_Close))));
 
             arrayinit = Ign(Id(TokenType::Square_Open)) >> ~(boolean >> *(Ign(Str(",")) >> boolean))  >> Ign(Id(TokenType::Square_Close));
-            mapinit = Ign(Id(TokenType::Square_Open)) >> ~(mappair >> *(Ign(Str(",")) >> mappair))  >> Ign(Id(TokenType::Square_Close));
+            mapinit = Ign(Id(TokenType::Square_Open)) >> mappair >> *(Ign(Str(",")) >> mappair)  >> Ign(Id(TokenType::Square_Close));
             mappair = Id(TokenType::Quoted_String) >> Ign(Str(":")) >> boolean;
 
             vardecl = Ign(Str("var")) >> Id(TokenType::Identifier);
