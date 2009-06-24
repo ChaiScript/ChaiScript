@@ -13,4 +13,5 @@ include_directories(dispatchkit langkit)
 add_subdirectory(langkit bin)
 add_subdirectory(dispatchkit bin)
 add_subdirectory(chaiscript bin)
+add_subdirectory(chaioop bin)
  

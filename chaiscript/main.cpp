@@ -18,11 +18,11 @@ int main(int argc, char *argv[]) {
 
             if (val.get_type_info().m_bare_type_info && *(val.get_type_info().m_bare_type_info) != typeid(void)) {
                 try {
-                    dispatchkit::Boxed_Value printeval 
-                      = dispatchkit::dispatch(chai.get_eval_engine().get_function("to_string"), 
+                    dispatchkit::Boxed_Value printeval
+                      = dispatchkit::dispatch(chai.get_eval_engine().get_function("to_string"),
                           dispatchkit::Param_List_Builder() << val);
                     std::cout << "result: ";
-                    dispatchkit::dispatch(chai.get_eval_engine().get_function("print"), 
+                    dispatchkit::dispatch(chai.get_eval_engine().get_function("print"),
                         dispatchkit::Param_List_Builder() << printeval);
                 } catch (const std::runtime_error &e) {
                     std::cout << "result: object #" << &val << std::endl;
