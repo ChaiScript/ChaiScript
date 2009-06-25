@@ -19,9 +19,9 @@ namespace chaiscript
         std::string reason;
         langkit::TokenPtr location;
 
-        EvalError(const std::string &why, const langkit::TokenPtr where) 
-          : std::runtime_error("Eval error: \"" + why + "\" in '" 
-              + where->filename + "' line: " + boost::lexical_cast<std::string>(where->start.line+1)), 
+        EvalError(const std::string &why, const langkit::TokenPtr where)
+          : std::runtime_error("Eval error: \"" + why + "\" in '"
+              + where->filename + "' line: " + boost::lexical_cast<std::string>(where->start.line+1)),
             reason(why), location(where) { }
 
         virtual ~EvalError() throw() {}
@@ -431,7 +431,7 @@ namespace chaiscript
                 }
 
                 ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
-                      new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1))), node->children[0]->text);
+                      new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), num_args)), node->children[0]->text);
             }
             break;
             case (TokenType::Lambda_Def) : {
@@ -444,7 +444,7 @@ namespace chaiscript
                 //retval = boost::shared_ptr<dispatchkit::Proxy_Function>(new dispatchkit::Proxy_Function_Impl<boost::function<void (const std::string &)> >(&test));
                 retval = dispatchkit::Boxed_Value(boost::shared_ptr<dispatchkit::Proxy_Function>(
                       new dispatchkit::Dynamic_Proxy_Function(
-                        boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1))));
+                        boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), num_args)));
             }
             break;
             case (TokenType::Scoped_Block) : {

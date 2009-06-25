@@ -27,4 +27,5 @@ def concat(a,b,c,d)
 
 var d = bind(concat, _(), " Hello ", _(), " World ");
 print(d(1, 3));
-print(d(1, 3, 4));
+//This checks to make sure arity is handled correctly:
+//print(d(1, 3, 4));
