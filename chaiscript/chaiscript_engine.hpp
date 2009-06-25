@@ -6,6 +6,8 @@
 
 #include <exception>
 
+#include "chaiscript_prelude.hpp"
+
 namespace chaiscript
 {
     template <typename Eval_Engine>
@@ -205,12 +207,7 @@ namespace chaiscript
             ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
                   new dispatchkit::Dynamic_Proxy_Function(boost::bind(&ChaiScript_System<Eval_Engine>::eval, boost::ref(*this), _1), 1)), "eval");
 
-            evaluate_string("def puts(x) { print_string(x.to_string()) }; def print(x) { println_string(x.to_string()) };"
-                "def for_each(container, func) { var range = range(container); while (!range.empty()) { func(range.front()); range.popFront();} }; "
-                "def map(container, func) { var retval = Vector(); var range = range(container); while (!range.empty()) { retval.push_back(func(range.front())); range.popFront();}; return retval;}; "
-                "def reduce(container, func, initial) { var retval = initial; var range = range(container); while (!range.empty()) { retval = (func(range.front(), retval)); range.popFront();}; return retval;};"
-                "def join(container, delim) { var retval = \"\"; var range = range(container); if (!range.empty()) { retval += to_string(range.front()); range.popFront(); "
-                    "while (!range.empty()) { retval += delim; retval += to_string(range.front()); range.popFront(); }\n }\n return retval; };" );
+            evaluate_string(chaiscript_prelude);
 
             return ss;
         }
