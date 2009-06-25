@@ -356,10 +356,40 @@ namespace dispatchkit
       }
     };
 
+  class bad_boxed_cast : public std::bad_cast
+  {
+    public:
+      bad_boxed_cast(const Type_Info &t_from, const std::type_info &t_to) throw()
+        : from(t_from.m_type_info), to(&t_to), m_what("Cannot perform boxed_cast")
+      {
+      }
+
+      bad_boxed_cast(const std::string &w) throw()
+        : m_what(w)
+      {
+      }
+
+      virtual ~bad_boxed_cast() throw() {}
+
+      virtual const char * what () throw()
+      {
+        return m_what.c_str();
+      }
+      const std::type_info *from;
+      const std::type_info *to;
+
+    private:
+      std::string m_what;
+  };
+
   template<typename Type>
   typename Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv)
   {
-    return Cast_Helper<Type>::cast(bv);
+    try {
+      return Cast_Helper<Type>::cast(bv);
+    } catch (const boost::bad_any_cast &) {
+      throw bad_boxed_cast(bv.get_type_info(), typeid(Type));
+    }
   }
 
   struct Boxed_POD_Value

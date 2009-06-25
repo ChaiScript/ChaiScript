@@ -13,6 +13,8 @@
 #include <string>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <boost/lexical_cast.hpp>
+
 #include <stdexcept>
 #include <vector>
 
@@ -88,6 +90,20 @@ namespace dispatchkit
 
     std::vector<Boxed_Value> objects;
   };
+
+  struct arity_error : std::range_error
+  {
+    arity_error(int t_got, int t_expected)
+      : std::range_error("Function dispatch arity mismatch"),
+        got(t_got), expected(t_expected)
+    {
+    }
+
+    virtual ~arity_error() throw() {}
+    int got;
+    int expected;
+  };
+
 }
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
@@ -96,6 +112,8 @@ namespace dispatchkit
 
 namespace dispatchkit
 {
+
+
   class Proxy_Function
   {
     public:
@@ -126,7 +144,7 @@ namespace dispatchkit
         {
           return m_f(params);
         } else {
-          throw std::range_error("Incorrect number of parameters");
+          throw arity_error(params.size(), m_arity);
         } 
       }
 
@@ -175,6 +193,16 @@ namespace dispatchkit
       Func m_f;
   };
 
+  struct dispatch_error : std::runtime_error
+  {
+    dispatch_error() throw()
+      : std::runtime_error("No matching function to dispatch to")
+    {
+    }
+
+    virtual ~dispatch_error() throw() {}
+  };
+
   Boxed_Value dispatch(const std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > &funcs,
       const std::vector<Boxed_Value> &plist)
   {
@@ -184,14 +212,14 @@ namespace dispatchkit
     {
       try {
         return (*itr->second)(plist);
-      } catch (const std::bad_cast &) {
+      } catch (const bad_boxed_cast &) {
         //try again
-      } catch (const std::range_error &) {
+      } catch (const arity_error &) {
         //invalid num params, try again
       }
     }
 
-    throw std::runtime_error("No matching function to dispatch to");
+    throw dispatch_error();
   }
 }
 
@@ -210,7 +238,7 @@ namespace dispatchkit
 
       BOOST_PP_REPEAT(n, gettypeinfo, ~)
 
-        return ti;
+      return ti;
     }
 
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
@@ -219,7 +247,7 @@ namespace dispatchkit
     {
       if (params.size() != n)
       {
-        throw std::range_error("Incorrect number of parameters");
+        throw arity_error(params.size(), n);
       } else {
         return Handle_Return<Ret>()(boost::bind(f BOOST_PP_REPEAT(n, casthelper, ~)));
       }

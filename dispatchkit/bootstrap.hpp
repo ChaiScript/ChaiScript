@@ -351,27 +351,6 @@ namespace dispatchkit
 
   }
 
-  class bad_boxed_value_cast : public std::bad_cast
-  {
-    public:
-      bad_boxed_value_cast(const std::string &val) throw()
-        : m_val(val)
-      {
-      }
-
-      virtual ~bad_boxed_value_cast() throw()
-      {
-      }
-
-      virtual const char * what() const throw()
-      {
-        return m_val.c_str();
-      }
-
-    private:
-      std::string m_val;
-  };
-
 
 
   //Built in to_string operator
@@ -420,7 +399,7 @@ namespace dispatchkit
       {
         return (lhs.assign(rhs));
       } else {
-        throw bad_boxed_value_cast("boxed_value has a set type alread");
+        throw bad_boxed_cast("boxed_value has a set type already");
       }
     }
 

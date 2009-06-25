@@ -110,7 +110,7 @@ namespace chaiscript
                         try {
                             retval = dispatch(ss.get_function(node->children[i+1]->text), plb);
                         }
-                        catch(std::exception &e){
+                        catch(const dispatchkit::dispatch_error &e){
                             throw EvalError("Can not find appropriate '" + node->children[i+1]->text + "'", node->children[i+1]);
                         }
                     }
@@ -136,7 +136,7 @@ namespace chaiscript
                         try {
                             retval = dispatch(ss.get_function(node->children[i]->text), plb);
                         }
-                        catch(std::exception &e){
+                        catch(const dispatchkit::dispatch_error &e){
                             throw EvalError("Can not find appropriate '" + node->children[i]->text + "'", node->children[i]);
                         }
                     }
@@ -155,7 +155,7 @@ namespace chaiscript
                     catch(std::out_of_range &oor) {
                         throw EvalError("Out of bounds exception", node);
                     }
-                    catch(std::exception &e){
+                    catch(const dispatchkit::dispatch_error &e){
                         throw EvalError("Can not find appropriate array lookup '[]'", node->children[i]);
                     }
                 }
@@ -208,12 +208,12 @@ namespace chaiscript
                             dispatchkit::Boxed_Value tmp = eval_token(ss, node->children[i]);
                             dispatch(ss.get_function("push_back"), dispatchkit::Param_List_Builder() << retval << tmp);
                         }
-                        catch (std::exception inner_e) {
+                        catch (const dispatchkit::dispatch_error &inner_e) {
                             throw EvalError("Can not find appropriate 'push_back'", node->children[i]);
                         }
                     }
                 }
-                catch (std::exception e) {
+                catch (const dispatchkit::dispatch_error &e) {
                     throw EvalError("Can not find appropriate 'Vector()'", node);
                 }
             }
@@ -227,12 +227,12 @@ namespace chaiscript
                             dispatchkit::Boxed_Value slot = dispatch(ss.get_function("[]"), dispatchkit::Param_List_Builder() << retval << key);
                             dispatch(ss.get_function("="), dispatchkit::Param_List_Builder() << slot << eval_token(ss, node->children[i]->children[1]));
                         }
-                        catch (std::exception inner_e) {
+                        catch (const dispatchkit::dispatch_error &inner_e) {
                             throw EvalError("Can not find appropriate '=' for map init", node->children[i]);
                         }
                     }
                 }
-                catch (std::exception e) {
+                catch (const dispatchkit::dispatch_error &e) {
                     throw EvalError("Can not find appropriate 'Vector()'", node);
                 }
             }
@@ -259,7 +259,7 @@ namespace chaiscript
                     ss.set_stack(prev_stack);
                     throw EvalError(ee.reason, node->children[0]);
                 }
-                catch(std::exception &e){
+                catch(const dispatchkit::dispatch_error &e){
                     ss.set_stack(prev_stack);
                     throw EvalError("Engine error: " + std::string(e.what()) + " on '" + node->children[0]->text + "'", node->children[0]);
                 }
@@ -304,7 +304,7 @@ namespace chaiscript
                             ss.set_stack(prev_stack);
                             throw EvalError(ee.reason, node);
                         }
-                        catch(std::exception &e){
+                        catch(const dispatchkit::dispatch_error &e){
                             ss.set_stack(prev_stack);
                             throw EvalError("Can not find appropriate '" + fun_name + "'", node);
                         }
