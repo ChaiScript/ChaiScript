@@ -1,7 +1,13 @@
 #ifndef __type_info_hpp__
 #define __type_info_hpp__
 
-#include <boost/type_traits.hpp>
+#include <boost/type_traits/is_const.hpp>
+#include <boost/type_traits/is_void.hpp>
+#include <boost/type_traits/is_reference.hpp>
+#include <boost/type_traits/is_pointer.hpp>
+#include <boost/type_traits/remove_const.hpp>
+#include <boost/type_traits/remove_reference.hpp>
+#include <boost/type_traits/remove_pointer.hpp>
 #include <boost/ref.hpp>
 
 namespace dispatchkit

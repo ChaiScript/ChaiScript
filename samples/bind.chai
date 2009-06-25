@@ -1,0 +1,30 @@
+
+//This is a cheater function. The entire point of it is to return a variable
+// with an unspecified type.
+// The bind function will substitute any unknown object with those passed in
+def _()
+{
+  var i;
+  return i;
+}
+
+def add(x, y)
+{
+  return x + y;
+}
+
+var b = bind(add, 2, _());
+var c = bind(b, 3);
+
+print(b(4));
+print(c());
+
+
+def concat(a,b,c,d)
+{
+  return to_string(a) + to_string(b) + to_string(c) + to_string(d);
+}
+
+var d = bind(concat, _(), " Hello ", _(), " World ");
+print(d(1, 3));
+print(d(1, 3, 4));

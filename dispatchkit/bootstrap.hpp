@@ -431,6 +431,19 @@ namespace dispatchkit
       register_function(s, &multiply<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>, "*");
     }
 
+    static Boxed_Value bind_function(const std::vector<Boxed_Value> &params)
+    {
+      if (params.size() < 2)
+      {
+        throw arity_error(params.size(), 2);
+      }
+
+      boost::shared_ptr<Proxy_Function> f = boxed_cast<boost::shared_ptr<Proxy_Function> >(params[0]);
+
+      return Boxed_Value(boost::shared_ptr<Proxy_Function>(new Bound_Function(f,
+            std::vector<Boxed_Value>(params.begin() + 1, params.end()))));
+    }
+
     static void bootstrap(Dispatch_Engine &s)
     {
       s.register_type<void>("void");
@@ -441,6 +454,7 @@ namespace dispatchkit
       add_basic_constructors<std::string>(s, "string");
       add_oper_assign<std::string>(s);
 
+      
       register_function(s, &to_string<const std::string &>, "to_string");
       register_function(s, &to_string<bool>, "to_string");
       register_function(s, &unknown_assign, "=");
@@ -465,6 +479,9 @@ namespace dispatchkit
 
       s.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(s))), "dump_system");
       s.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1)), "dump_object");
+
+      s.register_function(boost::shared_ptr<Proxy_Function>(new Dynamic_Proxy_Function(boost::bind(&bind_function, _1))), 
+          "bind");
 
       register_function(s, &bool_and<bool, bool>, "&&");
       register_function(s, &bool_or<bool, bool>, "||");

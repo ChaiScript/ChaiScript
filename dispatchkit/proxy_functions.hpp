@@ -158,6 +158,69 @@ namespace dispatchkit
       int m_arity;
   };
 
+  class Bound_Function : public Proxy_Function
+  {
+    public:
+      Bound_Function(const boost::shared_ptr<Proxy_Function> &t_f, 
+                     const std::vector<Boxed_Value> &t_args)
+        : m_f(t_f), m_args(t_args)
+      {
+      }
+
+      bool operator==(const Proxy_Function &f) const
+      {
+        return false;
+      }
+
+      virtual ~Bound_Function() {}
+
+      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
+      {
+        typedef std::vector<Boxed_Value>::const_iterator pitr;
+
+        pitr parg = params.begin();
+        pitr barg = m_args.begin();
+
+        std::vector<Boxed_Value> args;
+
+        while (true)
+        {
+          while (barg != m_args.end() && !barg->is_unknown())
+          {
+            args.push_back(*barg);
+            ++barg;
+          }
+
+          if (parg != params.end())
+          {
+            args.push_back(*parg);
+            ++parg;
+          }
+
+          if (barg != m_args.end() && barg->is_unknown())
+          {
+            ++barg;
+          } 
+
+          if (parg == params.end() && barg == m_args.end())
+          {
+            break;
+          }
+        }
+
+        return (*m_f)(args);
+      }
+
+      virtual std::vector<Type_Info> get_param_types()
+      {
+        return std::vector<Type_Info>();
+      }
+
+    private:
+      boost::shared_ptr<Proxy_Function> m_f;
+      std::vector<Boxed_Value> m_args;
+  };
+
   template<typename Func>
     class Proxy_Function_Impl : public Proxy_Function
   {
