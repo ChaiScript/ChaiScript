@@ -18,6 +18,36 @@
 
 namespace dispatchkit
 {
+  class Dispatch_Function : public Proxy_Function
+  {
+    public:
+      Dispatch_Function(const std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > &t_funcs)
+        : m_funcs(t_funcs)
+      {
+      }
+
+      bool operator==(const Proxy_Function &f) const
+      {
+        return false;
+      }
+
+      virtual ~Dispatch_Function() {}
+
+      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
+      {
+        return dispatch(m_funcs, params);
+      }
+
+      virtual std::vector<Type_Info> get_param_types()
+      {
+        return std::vector<Type_Info>();
+      }
+
+    private:
+      std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > m_funcs;
+  };  
+  
+  
   class Dispatch_Engine
   {
     public:
@@ -103,7 +133,14 @@ namespace dispatchkit
           }
         }
 
-        throw std::range_error("Object not known: " + name);
+        std::vector<std::pair<std::string, Function_Map::mapped_type> > funcs = get_function_impl(name, false);
+
+        if (funcs.empty())
+        {
+          throw std::range_error("Object not known: " + name);
+        } else {
+          return Boxed_Value(boost::shared_ptr<Proxy_Function>(new Dispatch_Function(funcs)));
+        }
       }
 
       template<typename Type>
@@ -118,18 +155,21 @@ namespace dispatchkit
       }
 
       std::vector<std::pair<std::string, Function_Map::mapped_type> > 
-        get_function(const std::string &t_name) const
+        get_function_impl(const std::string &t_name, bool include_objects) const
       {
         std::vector<std::pair<std::string, Function_Map::mapped_type> > funcs;
 
-        try {
-          funcs.insert(funcs.end(), 
-              Function_Map::value_type(
-                t_name, 
-                boxed_cast<Function_Map::mapped_type>(get_object(t_name)))
-              );
-        } catch (const std::bad_cast &) {
-        } catch (const std::range_error &) {
+        if (include_objects)
+        {
+          try {
+            funcs.insert(funcs.end(), 
+                Function_Map::value_type(
+                  t_name, 
+                  boxed_cast<Function_Map::mapped_type>(get_object(t_name)))
+                );
+          } catch (const bad_boxed_cast &) {
+          } catch (const std::range_error &) {
+          }
         }
 
         std::pair<Function_Map::const_iterator, Function_Map::const_iterator> range
@@ -139,6 +179,12 @@ namespace dispatchkit
         return funcs;
       }
 
+      std::vector<std::pair<std::string, Function_Map::mapped_type> > 
+        get_function(const std::string &t_name) const
+      {
+        return get_function_impl(t_name, true);
+      }
+ 
       std::vector<Function_Map::value_type> get_functions() const
       {
         return std::vector<Function_Map::value_type>(m_functions.begin(), m_functions.end());
