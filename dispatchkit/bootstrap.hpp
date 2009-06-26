@@ -449,6 +449,18 @@ namespace dispatchkit
             std::vector<Boxed_Value>(params.begin() + 1, params.end()))));
     }
 
+    static Boxed_Value call_exists(const std::vector<Boxed_Value> &params)
+    {
+      if (params.size() < 1)
+      {
+        throw arity_error(params.size(), 1);
+      }
+
+      boost::shared_ptr<Proxy_Function> f = boxed_cast<boost::shared_ptr<Proxy_Function> >(params[0]);
+
+      return Boxed_Value(f->types_match(std::vector<Boxed_Value>(params.begin() + 1, params.end())));
+    }
+
     static void bootstrap(Dispatch_Engine &s)
     {
       s.register_type<void>("void");
@@ -487,6 +499,9 @@ namespace dispatchkit
 
       s.register_function(boost::shared_ptr<Proxy_Function>(new Dynamic_Proxy_Function(boost::bind(&bind_function, _1))), 
           "bind");
+
+      s.register_function(boost::shared_ptr<Proxy_Function>(new Dynamic_Proxy_Function(boost::bind(&call_exists, _1))), 
+          "call_exists");
 
       register_function(s, &type_match, "type_match");
       register_function(s, &bool_and<bool, bool>, "&&");

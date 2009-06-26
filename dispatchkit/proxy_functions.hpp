@@ -2,6 +2,8 @@
 
 #define gettypeinfo(z,n,text)  ti.push_back(Get_Type_Info<Param ## n>::get());
 #define casthelper(z,n,text) ,dispatchkit::boxed_cast< Param ## n >(params[n])
+#define comparetype(z,n,text)  && ((Get_Type_Info<Param ## n>::get() == params[n].get_type_info()))
+#define trycast(z,n,text) dispatchkit::boxed_cast<Param ## n>(params[n]);
 
 
 #ifndef  BOOST_PP_IS_ITERATING
@@ -119,8 +121,9 @@ namespace dispatchkit
     public:
       virtual ~Proxy_Function() {}
       virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) = 0;
-      virtual std::vector<Type_Info> get_param_types() = 0;
+      virtual std::vector<Type_Info> get_param_types() const = 0;
       virtual bool operator==(const Proxy_Function &) const = 0;
+      virtual bool types_match(const std::vector<Boxed_Value> &types) const = 0;
   };
 
   class Dynamic_Proxy_Function : public Proxy_Function
@@ -131,9 +134,14 @@ namespace dispatchkit
       {
       }
 
-      bool operator==(const Proxy_Function &f) const
+      virtual bool operator==(const Proxy_Function &f) const
       {
         return false;
+      }
+
+      virtual bool types_match(const std::vector<Boxed_Value> &types) const
+      {
+        return (m_arity < 0 || types.size() == size_t(m_arity));
       }
 
       virtual ~Dynamic_Proxy_Function() {}
@@ -148,7 +156,7 @@ namespace dispatchkit
         } 
       }
 
-      virtual std::vector<Type_Info> get_param_types()
+      virtual std::vector<Type_Info> get_param_types() const
       {
         return build_param_type_list(m_f);
       }
@@ -167,14 +175,25 @@ namespace dispatchkit
       {
       }
 
-      bool operator==(const Proxy_Function &f) const
+      virtual bool operator==(const Proxy_Function &f) const
       {
         return false;
       }
 
       virtual ~Bound_Function() {}
 
+      virtual bool types_match(const std::vector<Boxed_Value> &types) const
+      {
+        std::vector<Boxed_Value> params = build_param_list(types);
+        return m_f->types_match(params);
+      }
+
       virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
+      {
+        return (*m_f)(build_param_list(params));
+      }
+
+      std::vector<Boxed_Value> build_param_list(const std::vector<Boxed_Value> &params) const
       {
         typedef std::vector<Boxed_Value>::const_iterator pitr;
 
@@ -208,10 +227,10 @@ namespace dispatchkit
           }
         }
 
-        return (*m_f)(args);
+        return args;
       }
 
-      virtual std::vector<Type_Info> get_param_types()
+      virtual std::vector<Type_Info> get_param_types() const
       {
         return std::vector<Type_Info>();
       }
@@ -247,9 +266,14 @@ namespace dispatchkit
         return call_func(m_f, params);
       }
 
-      virtual std::vector<Type_Info> get_param_types()
+      virtual std::vector<Type_Info> get_param_types() const
       {
         return build_param_type_list(m_f);
+      }
+
+      virtual bool types_match(const std::vector<Boxed_Value> &types) const
+      {
+        return compare_types(m_f, types);
       }
 
     private:
@@ -315,6 +339,28 @@ namespace dispatchkit
         return Handle_Return<Ret>()(boost::bind(f BOOST_PP_REPEAT(n, casthelper, ~)));
       }
     }
+
+  template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
+    bool compare_types(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &,
+        const std::vector<Boxed_Value> &params)
+    {
+      if (params.size() != n)
+      {
+        return false;
+      } else {
+        bool val = true BOOST_PP_REPEAT(n, comparetype, ~);
+        if (val) return true;
+
+        try {
+          BOOST_PP_REPEAT(n, trycast, ~);
+        } catch (const bad_boxed_cast &) {
+          return false;
+        }
+
+        return true;
+      }
+    }
+
 }
 
 #endif

@@ -26,7 +26,7 @@ namespace dispatchkit
       {
       }
 
-      bool operator==(const Proxy_Function &f) const
+      virtual bool operator==(const Proxy_Function &f) const
       {
         return false;
       }
@@ -38,9 +38,29 @@ namespace dispatchkit
         return dispatch(m_funcs, params);
       }
 
-      virtual std::vector<Type_Info> get_param_types()
+      virtual std::vector<Type_Info> get_param_types() const
       {
         return std::vector<Type_Info>();
+      }
+
+      virtual bool types_match(const std::vector<Boxed_Value> &types) const
+      {
+        typedef std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > function_vec;
+
+        function_vec::const_iterator begin = m_funcs.begin();
+        function_vec::const_iterator end = m_funcs.end();
+
+        while (begin != end)
+        {
+          if (begin->second->types_match(types))
+          {
+            return true;
+          } else {
+            ++begin;
+          }
+        }
+
+        return false;
       }
 
     private:
