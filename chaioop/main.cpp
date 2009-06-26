@@ -11,6 +11,7 @@ namespace langkit {
     struct File_Position {
         int line;
         int column;
+        std::string::iterator text_pos;
 
         File_Position(int file_line, int file_column)
             : line(file_line), column(file_column) { }
@@ -50,7 +51,7 @@ namespace langkit {
     };
 
     void debug_print(TokenPtr t, std::string prepend = "") {
-        std::cout << prepend << "text: " << t->text << " id: " << token_type_to_string(t->identifier) << std::endl;
+        std::cout << prepend << "text: " << t->text << " id: " << token_type_to_string(t->identifier) << " pos: " << t->start.line << ", " << t->start.column << std::endl;
         for (unsigned int j = 0; j < t->children.size(); ++j) {
             debug_print(t->children[j], prepend + "  ");
         }
@@ -75,9 +76,14 @@ namespace langkit {
             match_stack.clear();
         }
 
-        void Start_Parse() {
+        bool Start_Parse() {
             TokenPtr t(new Token("", Token_Type::Internal_Match_Begin, filename));
             match_stack.push_back(t);
+            t->start.line = line;
+            t->start.column = col;
+            t->start.text_pos = input_pos;
+
+            return true;
         }
 
         void Fail_Parse() {
@@ -85,18 +91,24 @@ namespace langkit {
             while (t->identifier != Token_Type::Internal_Match_Begin) {
                 t = match_stack.back(); match_stack.pop_back();
             }
+            line = t->start.line;
+            col = t->start.column;
+            input_pos = t->start.text_pos;
         }
 
-        void Finish_Parse(int id) {
+        bool Finish_Parse(int id) {
             for (int i = (int)match_stack.size() - 1; i >= 0; --i) {
                 if (match_stack[i]->identifier == Token_Type::Internal_Match_Begin) {
                     //so we want to take everything to the right of this and make them children
                     match_stack[i]->children.insert(match_stack[i]->children.begin(), match_stack.begin() + (i+1), match_stack.end());
                     match_stack.erase(match_stack.begin() + (i+1), match_stack.end());
                     match_stack[i]->identifier = id;
-                    return;
+                    return true;
                 }
             }
+
+            throw Parse_Error("Could not find internal begin parse marker", File_Position());
+            return false;
         }
 
         bool SkipComment() {
@@ -373,9 +385,6 @@ namespace langkit {
 
             Start_Parse();
 
-            std::string::iterator prev = input_pos;
-            int prev_line = line;
-            int prev_col = col;
 
             if (Id(true) && Char('(')) {
 
@@ -384,14 +393,19 @@ namespace langkit {
             }
 
             if (!retval) {
-                input_pos = prev;
-                prev_line = line;
-                prev_col = col;
                 Fail_Parse();
             }
             else {
                 Finish_Parse(Token_Type::Fun_Call);
             }
+
+
+            /*
+             * The above can be shortened to this, but let's not get carried away :)
+            if (!(Start_Parse() && Id(true) && Char('(') && (Arg_List() || true) && Char(')') && Finish_Parse(Token_Type::Fun_Call))) {
+                Fail_Parse();
+            }
+            */
 
             return retval;
         }
@@ -415,7 +429,7 @@ namespace langkit {
             multiline_comment_end = "*/";
             singleline_comment = "//";
 
-            return Fun_Call();
+            return Fun_Calls();
         }
     };
 };
@@ -449,6 +463,7 @@ int main(int argc, char *argv[]) {
         }
         catch (langkit::Parse_Error &pe) {
             std::cout << pe.reason << " at " << pe.position.line << ", " << pe.position.column << std::endl;
+            parser.clear_match_stack();
         }
     }
     else {
@@ -462,6 +477,7 @@ int main(int argc, char *argv[]) {
             }
             catch (langkit::Parse_Error &pe) {
                 std::cout << pe.reason << " at " << pe.position.line << ", " << pe.position.column << std::endl;
+                parser.clear_match_stack();
             }
             std::cout << "eval> ";
             std::getline(std::cin, input);
