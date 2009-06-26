@@ -41,6 +41,11 @@ namespace dispatchkit
       return *this;
     }
 
+    bool operator==(const Type_Info &ti) const
+    {
+      return ti.m_type_info == m_type_info;
+    }
+
     bool m_is_const;
     bool m_is_reference;
     bool m_is_pointer;

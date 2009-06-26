@@ -431,6 +431,11 @@ namespace dispatchkit
       register_function(s, &multiply<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>, "*");
     }
 
+    static bool type_match(Boxed_Value l, Boxed_Value r)
+    {
+      return l.get_type_info() == r.get_type_info();
+    }
+
     static Boxed_Value bind_function(const std::vector<Boxed_Value> &params)
     {
       if (params.size() < 2)
@@ -483,6 +488,7 @@ namespace dispatchkit
       s.register_function(boost::shared_ptr<Proxy_Function>(new Dynamic_Proxy_Function(boost::bind(&bind_function, _1))), 
           "bind");
 
+      register_function(s, &type_match, "type_match");
       register_function(s, &bool_and<bool, bool>, "&&");
       register_function(s, &bool_or<bool, bool>, "||");
     }
