@@ -2,6 +2,7 @@
 #include <vector>
 #include <fstream>
 #include <stdexcept>
+#include <tr1/memory>
 
 #include <stdlib.h>
 #include <string.h>
@@ -10,12 +11,11 @@ namespace langkit {
     struct File_Position {
         int line;
         int column;
-        const char *filename;
 
-        File_Position(int file_line, int file_column, const char *file_name)
-            : line(file_line), column(file_column), filename(file_name) { }
+        File_Position(int file_line, int file_column)
+            : line(file_line), column(file_column) { }
 
-        File_Position() : line(0), column(0), filename(NULL) { }
+        File_Position() : line(0), column(0) { }
     };
 
     struct Parse_Error {
@@ -28,19 +28,77 @@ namespace langkit {
         virtual ~Parse_Error() throw() {}
     };
 
-    class Token {
-        std::string text;
+    typedef std::tr1::shared_ptr<struct Token> TokenPtr;
 
-        std::vector<Token> children;
+    class Token_Type { public: enum Type { Internal_Match_Begin, Int, Id, Char, Str, Eol, Fun_Call, Arg_List }; };
+
+    const char *token_type_to_string(int tokentype) {
+        const char *token_types[] = { "Internal: match begin", "Int", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List" };
+
+        return token_types[tokentype];
+    }
+
+    struct Token {
+        std::string text;
+        int identifier;
+        const char *filename;
+        File_Position start, end;
+
+        std::vector<TokenPtr> children;
+
+        Token(const std::string &token_text, int id, const char *fname) : text(token_text), identifier(id), filename(fname) { }
     };
+
+    void debug_print(TokenPtr t, std::string prepend = "") {
+        std::cout << prepend << "text: " << t->text << " id: " << token_type_to_string(t->identifier) << std::endl;
+        for (unsigned int j = 0; j < t->children.size(); ++j) {
+            debug_print(t->children[j], prepend + "  ");
+        }
+    }
 
     class Parser {
         std::string::iterator input_pos, input_end;
         int line, col;
         std::string multiline_comment_begin, multiline_comment_end;
         std::string singleline_comment;
+        char *filename;
+        std::vector<TokenPtr> match_stack;
 
     public:
+        void show_match_stack() {
+            for (unsigned int i = 0; i < match_stack.size(); ++i) {
+                debug_print(match_stack[i]);
+            }
+        }
+
+        void clear_match_stack() {
+            match_stack.clear();
+        }
+
+        void Start_Parse() {
+            TokenPtr t(new Token("", Token_Type::Internal_Match_Begin, filename));
+            match_stack.push_back(t);
+        }
+
+        void Fail_Parse() {
+            TokenPtr t = match_stack.back(); match_stack.pop_back();
+            while (t->identifier != Token_Type::Internal_Match_Begin) {
+                t = match_stack.back(); match_stack.pop_back();
+            }
+        }
+
+        void Finish_Parse(int id) {
+            for (int i = (int)match_stack.size() - 1; i >= 0; --i) {
+                if (match_stack[i]->identifier == Token_Type::Internal_Match_Begin) {
+                    //so we want to take everything to the right of this and make them children
+                    match_stack[i]->children.insert(match_stack[i]->children.begin(), match_stack.begin() + (i+1), match_stack.end());
+                    match_stack.erase(match_stack.begin() + (i+1), match_stack.end());
+                    match_stack[i]->identifier = id;
+                    return;
+                }
+            }
+        }
+
         bool SkipComment() {
             bool retval = false;
 
@@ -102,10 +160,30 @@ namespace langkit {
             return retval;
         }
 
-        bool Int() {
+        bool Int(bool capture = false) {
             SkipWS();
 
-            return Int_();
+            if (!capture) {
+                return Int_();
+            }
+            else {
+                std::string::iterator start = input_pos;
+                int prev_col = col;
+                int prev_line = line;
+                if (Int_()) {
+                    std::string match(start, input_pos);
+                    TokenPtr t(new Token(match, Token_Type::Int, filename));
+                    t->start.column = prev_col;
+                    t->start.line = prev_line;
+                    t->end.column = col;
+                    t->end.line = line;
+                    match_stack.push_back(t);
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
         }
 
         bool Id_() {
@@ -121,10 +199,30 @@ namespace langkit {
             return retval;
         }
 
-        bool Id() {
+        bool Id(bool capture = false) {
             SkipWS();
 
-            return Id_();
+            if (!capture) {
+                return Id_();
+            }
+            else {
+                std::string::iterator start = input_pos;
+                int prev_col = col;
+                int prev_line = line;
+                if (Id_()) {
+                    std::string match(start, input_pos);
+                    TokenPtr t(new Token(match, Token_Type::Id, filename));
+                    t->start.column = prev_col;
+                    t->start.line = prev_line;
+                    t->end.column = col;
+                    t->end.line = line;
+                    match_stack.push_back(t);
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
         }
 
         bool Char_(char c) {
@@ -138,10 +236,30 @@ namespace langkit {
             return retval;
         }
 
-        bool Char(char c) {
+        bool Char(char c, bool capture = false) {
             SkipWS();
 
-            return Char_(c);
+            if (!capture) {
+                return Char_(c);
+            }
+            else {
+                std::string::iterator start = input_pos;
+                int prev_col = col;
+                int prev_line = line;
+                if (Char_(c)) {
+                    std::string match(start, input_pos);
+                    TokenPtr t(new Token(match, Token_Type::Char, filename));
+                    t->start.column = prev_col;
+                    t->start.line = prev_line;
+                    t->end.column = col;
+                    t->end.line = line;
+                    match_stack.push_back(t);
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
         }
 
         bool Str_(const char *s) {
@@ -164,9 +282,30 @@ namespace langkit {
             return retval;
         }
 
-        bool Str(const char *s) {
+        bool Str(const char *s, bool capture = false) {
             SkipWS();
-            return Str_(s);
+
+            if (!capture) {
+                return Str_(s);
+            }
+            else {
+                std::string::iterator start = input_pos;
+                int prev_col = col;
+                int prev_line = line;
+                if (Str_(s)) {
+                    std::string match(start, input_pos);
+                    TokenPtr t(new Token(match, Token_Type::Str, filename));
+                    t->start.column = prev_col;
+                    t->start.line = prev_line;
+                    t->end.column = col;
+                    t->end.line = line;
+                    match_stack.push_back(t);
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
         }
 
         bool Eol_() {
@@ -181,19 +320,50 @@ namespace langkit {
             return retval;
         }
 
-        bool Eol() {
+        bool Eol(bool capture = false) {
             SkipWS();
 
-            return Eol_();
+            if (!capture) {
+                return Eol_();
+            }
+            else {
+                std::string::iterator start = input_pos;
+                int prev_col = col;
+                int prev_line = line;
+                if (Eol_()) {
+                    std::string match(start, input_pos);
+                    TokenPtr t(new Token(match, Token_Type::Eol, filename));
+                    t->start.column = prev_col;
+                    t->start.line = prev_line;
+                    t->end.column = col;
+                    t->end.line = line;
+                    match_stack.push_back(t);
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
         }
 
         bool Arg_List() {
-            bool retval = Id() || Int();
+            bool retval;
+
+            Start_Parse();
+
+            retval = Id(true) || Int(true);
             while (retval && Char(',')) {
-                retval = Id() || Int();
+                retval = Id(true) || Int(true);
                 if (!retval) {
-                    throw Parse_Error("Unexpected value in parameter list", File_Position(line, col, "_INPUT_"));
+                    throw Parse_Error("Unexpected value in parameter list", File_Position(line, col));
                 }
+            }
+
+            if (retval) {
+                Finish_Parse(Token_Type::Arg_List);
+            }
+            else {
+                Fail_Parse();
             }
             return retval;
         }
@@ -201,11 +371,13 @@ namespace langkit {
         bool Fun_Call() {
             bool retval = false;
 
+            Start_Parse();
+
             std::string::iterator prev = input_pos;
             int prev_line = line;
             int prev_col = col;
 
-            if (Id() && Char('(')) {
+            if (Id(true) && Char('(')) {
 
                 Arg_List();
                 retval = Char(')');
@@ -215,6 +387,10 @@ namespace langkit {
                 input_pos = prev;
                 prev_line = line;
                 prev_col = col;
+                Fail_Parse();
+            }
+            else {
+                Finish_Parse(Token_Type::Fun_Call);
             }
 
             return retval;
@@ -239,7 +415,7 @@ namespace langkit {
             multiline_comment_end = "*/";
             singleline_comment = "//";
 
-            return Fun_Calls();
+            return Fun_Call();
         }
     };
 };
@@ -281,6 +457,8 @@ int main(int argc, char *argv[]) {
         while (input != "quit") {
             try {
                 std::cout << parser.parse(input) << std::endl;
+                parser.show_match_stack();
+                parser.clear_match_stack();
             }
             catch (langkit::Parse_Error &pe) {
                 std::cout << pe.reason << " at " << pe.position.line << ", " << pe.position.column << std::endl;
