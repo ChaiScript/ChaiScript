@@ -392,17 +392,25 @@ namespace langkit {
 
             if (retval) {
                 Finish_Parse(Token_Type::Arg_List);
+                return true;
             }
             else {
                 Fail_Parse();
+                return false;
             }
-            return retval;
         }
 
         bool Fun_Call() {
+            bool retval = false;
+
             Start_Parse();
 
-            if (Id(true) && Char('(') && (Arg_List() || true) && Char(')')) {
+            if (Id(true) && Char('(')) {
+                Arg_List();
+                retval = Char(')');
+            }
+
+            if (retval) {
                 Finish_Parse(Token_Type::Fun_Call);
                 return true;
             }
@@ -429,6 +437,7 @@ namespace langkit {
                 return true;
             }
             else {
+                Fail_Parse();
                 return false;
             }
         }
@@ -450,6 +459,7 @@ namespace langkit {
                 return true;
             }
             else {
+                Fail_Parse();
                 return false;
             }
         }
@@ -462,6 +472,7 @@ namespace langkit {
                 return true;
             }
             else {
+                Fail_Parse();
                 return false;
             }
         }
@@ -471,18 +482,20 @@ namespace langkit {
 
             Start_Parse();
 
-            retval = Additive();
-            while (retval && (Str(">=", true) || Char('>', true) || Str("<=", true) || Char('<', true) || Str("==", true) || Str("!=", true))) {
-                retval = Additive();
+            if ( (retval = (Additive() && ((Str(">=", true) || Char('>', true) || Str("<=", true) || Char('<', true) || Str("==", true) || Str("!=", true))))) ) {
+                do {
+                    retval = Additive();
+                } while (retval && ((Str(">=", true) || Char('>', true) || Str("<=", true) || Char('<', true) || Str("==", true) || Str("!=", true))));
             }
 
             if (retval) {
                 Finish_Parse(Token_Type::Comparison);
+                return true;
             }
             else {
                 Fail_Parse();
+                return Additive();
             }
-            return retval;
         }
 
         bool Additive() {
@@ -490,18 +503,20 @@ namespace langkit {
 
             Start_Parse();
 
-            retval = Multiplicative();
-            while (retval && (Char('+', true) || Char('-', true))) {
-                retval = Multiplicative();
+            if ( (retval = (Multiplicative() && (Char('+', true) || Char('-', true)))) ) {
+                do {
+                    retval = Multiplicative();
+                } while (retval && (Char('+', true) || Char('-', true)));
             }
 
             if (retval) {
                 Finish_Parse(Token_Type::Additive);
+                return true;
             }
             else {
                 Fail_Parse();
+                return Multiplicative();
             }
-            return retval;
         }
 
         bool Multiplicative() {
@@ -509,26 +524,20 @@ namespace langkit {
 
             Start_Parse();
 
-            retval = Value();
-            while (retval && (Char('*', true) || Char('/', true))) {
-                retval = Value();
+            if ( (retval = (Value() && (Char('*', true) || Char('/', true)))) ) {
+                do {
+                    retval = Value();
+                } while (retval && (Char('*', true) || Char('/', true)));
             }
 
             if (retval) {
                 Finish_Parse(Token_Type::Multiplicative);
+                return true;
             }
             else {
                 Fail_Parse();
+                return Value();
             }
-
-            /*
-             * The above can be shortened to this, but let's not get carried away :)
-            if (!(Start_Parse() && Id(true) && Char('(') && (Arg_List() || true) && Char(')') && Finish_Parse(Token_Type::Fun_Call))) {
-                Fail_Parse();
-            }
-            */
-
-            return retval;
         }
 
         bool Expression() {
@@ -536,29 +545,40 @@ namespace langkit {
 
             Start_Parse();
 
-            retval = Comparison();
-            while (retval && (Str("&&", true) || Str("||", true))) {
-                retval = Comparison();
+            if ( (retval = (Comparison() && (Str("&&", true) || Str("||", true)))) ) {
+                do {
+                    retval = Comparison();
+                } while (retval && (Str("&&", true) || Str("||", true)));
             }
 
             if (retval) {
                 Finish_Parse(Token_Type::Expression);
+                return true;
             }
             else {
                 Fail_Parse();
+                return Comparison();
             }
-            return retval;
         }
 
         bool Equation() {
+            bool retval;
             Start_Parse();
-            if (LHS() && Char('=') && Expression()) {
+
+            if ( (retval = (Expression() && (Char('=', true)))) ) {
+                do {
+                    retval = Expression();
+                } while (retval && (Char('=', true)));
+            }
+
+
+            if (retval) {
                 Finish_Parse(Token_Type::Equation);
                 return true;
             }
             else {
                 Fail_Parse();
-                return false;
+                return Expression();
             }
         }
 
