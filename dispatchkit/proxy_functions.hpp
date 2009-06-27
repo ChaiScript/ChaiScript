@@ -126,11 +126,26 @@ namespace dispatchkit
       virtual bool types_match(const std::vector<Boxed_Value> &types) const = 0;
   };
 
+  class guard_error : public std::runtime_error
+  {
+    public:
+      guard_error() throw()
+        : std::runtime_error("Guard evaluation failed")
+      {
+      }
+
+      virtual ~guard_error() throw()
+      {
+      }
+  };
+
   class Dynamic_Proxy_Function : public Proxy_Function
   {
     public:
-      Dynamic_Proxy_Function(const boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> &t_f, int arity=-1)
-        : m_f(t_f), m_arity(arity)
+      Dynamic_Proxy_Function(const boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> &t_f, 
+              int t_arity=-1,
+              const boost::shared_ptr<Proxy_Function> &t_guard = boost::shared_ptr<Proxy_Function>())
+        : m_f(t_f), m_arity(t_arity), m_guard(t_guard)
       {
       }
 
@@ -141,8 +156,9 @@ namespace dispatchkit
 
       virtual bool types_match(const std::vector<Boxed_Value> &types) const
       {
-        return (m_arity < 0 || types.size() == size_t(m_arity));
-      }
+          return (m_arity < 0 || types.size() == size_t(m_arity))
+            && test_guard(types);
+      }    
 
       virtual ~Dynamic_Proxy_Function() {}
 
@@ -150,7 +166,14 @@ namespace dispatchkit
       {
         if (m_arity < 0 || params.size() == size_t(m_arity))
         {
-          return m_f(params);
+
+          if (test_guard(params))
+          {
+            return m_f(params);
+          } else {
+            throw guard_error();
+          }
+
         } else {
           throw arity_error(params.size(), m_arity);
         } 
@@ -162,8 +185,25 @@ namespace dispatchkit
       }
 
     private:
+      bool test_guard(const std::vector<Boxed_Value> &params) const
+      {
+        if (m_guard)
+        {
+          try {
+            return boxed_cast<bool>((*m_guard)(params));
+          } catch (const arity_error &) {
+            return false;
+          } catch (const bad_boxed_cast &) {
+            return false;
+          }
+        } else {
+          return true;
+        }
+      }
+
       boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
       int m_arity;
+      boost::shared_ptr<Proxy_Function> m_guard;
   };
 
   class Bound_Function : public Proxy_Function
