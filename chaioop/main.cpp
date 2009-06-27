@@ -31,10 +31,12 @@ namespace langkit {
 
     typedef std::tr1::shared_ptr<struct Token> TokenPtr;
 
-    class Token_Type { public: enum Type { Internal_Match_Begin, Int, Id, Char, Str, Eol, Fun_Call, Arg_List }; };
+    class Token_Type { public: enum Type { Internal_Match_Begin, Int, Id, Char, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
+        Expression, Comparison, Additive, Multiplicative, Negate, Not }; };
 
     const char *token_type_to_string(int tokentype) {
-        const char *token_types[] = { "Internal: match begin", "Int", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List" };
+        const char *token_types[] = { "Internal: match begin", "Int", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
+            "Expression", "Comparison", "Additive", "Multiplicative", "Negate", "Not" };
 
         return token_types[tokentype];
     }
@@ -48,6 +50,14 @@ namespace langkit {
         std::vector<TokenPtr> children;
 
         Token(const std::string &token_text, int id, const char *fname) : text(token_text), identifier(id), filename(fname) { }
+        Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+            text(token_text), identifier(id), filename(fname) {
+
+            start.line = start_line;
+            start.column = start_col;
+            end.line = end_line;
+            end.column = end_col;
+        }
     };
 
     void debug_print(TokenPtr t, std::string prepend = "") {
@@ -101,6 +111,7 @@ namespace langkit {
                 if (match_stack[i]->identifier == Token_Type::Internal_Match_Begin) {
                     //so we want to take everything to the right of this and make them children
                     match_stack[i]->children.insert(match_stack[i]->children.begin(), match_stack.begin() + (i+1), match_stack.end());
+                    //match_stack[i]->children.assign(match_stack.begin() + (i+1), match_stack.end());
                     match_stack.erase(match_stack.begin() + (i+1), match_stack.end());
                     match_stack[i]->identifier = id;
                     return true;
@@ -184,11 +195,12 @@ namespace langkit {
                 int prev_line = line;
                 if (Int_()) {
                     std::string match(start, input_pos);
-                    TokenPtr t(new Token(match, Token_Type::Int, filename));
+                    TokenPtr t(new Token(match, Token_Type::Int, filename, prev_col, prev_line, col, line));
+                    /*
                     t->start.column = prev_col;
                     t->start.line = prev_line;
                     t->end.column = col;
-                    t->end.line = line;
+                    t->end.line = line;*/
                     match_stack.push_back(t);
                     return true;
                 }
@@ -223,11 +235,12 @@ namespace langkit {
                 int prev_line = line;
                 if (Id_()) {
                     std::string match(start, input_pos);
-                    TokenPtr t(new Token(match, Token_Type::Id, filename));
+                    TokenPtr t(new Token(match, Token_Type::Id, filename, prev_col, prev_line, col, line));
+                    /*
                     t->start.column = prev_col;
                     t->start.line = prev_line;
                     t->end.column = col;
-                    t->end.line = line;
+                    t->end.line = line; */
                     match_stack.push_back(t);
                     return true;
                 }
@@ -260,11 +273,12 @@ namespace langkit {
                 int prev_line = line;
                 if (Char_(c)) {
                     std::string match(start, input_pos);
-                    TokenPtr t(new Token(match, Token_Type::Char, filename));
+                    TokenPtr t(new Token(match, Token_Type::Char, filename, prev_col, prev_line, col, line));
+                    /*
                     t->start.column = prev_col;
                     t->start.line = prev_line;
                     t->end.column = col;
-                    t->end.line = line;
+                    t->end.line = line; */
                     match_stack.push_back(t);
                     return true;
                 }
@@ -306,11 +320,12 @@ namespace langkit {
                 int prev_line = line;
                 if (Str_(s)) {
                     std::string match(start, input_pos);
-                    TokenPtr t(new Token(match, Token_Type::Str, filename));
+                    TokenPtr t(new Token(match, Token_Type::Str, filename, prev_col, prev_line, col, line));
+                    /*
                     t->start.column = prev_col;
                     t->start.line = prev_line;
                     t->end.column = col;
-                    t->end.line = line;
+                    t->end.line = line; */
                     match_stack.push_back(t);
                     return true;
                 }
@@ -328,6 +343,9 @@ namespace langkit {
                 ++line;
                 col = 1;
             }
+            else if ((input_pos != input_end) && Char_(';')) {
+                retval = true;
+            }
 
             return retval;
         }
@@ -344,11 +362,12 @@ namespace langkit {
                 int prev_line = line;
                 if (Eol_()) {
                     std::string match(start, input_pos);
-                    TokenPtr t(new Token(match, Token_Type::Eol, filename));
+                    TokenPtr t(new Token(match, Token_Type::Eol, filename, prev_col, prev_line, col, line));
+                    /*
                     t->start.column = prev_col;
                     t->start.line = prev_line;
                     t->end.column = col;
-                    t->end.line = line;
+                    t->end.line = line; */
                     match_stack.push_back(t);
                     return true;
                 }
@@ -363,9 +382,9 @@ namespace langkit {
 
             Start_Parse();
 
-            retval = Id(true) || Int(true);
+            retval = Expression();
             while (retval && Char(',')) {
-                retval = Id(true) || Int(true);
+                retval = Expression();
                 if (!retval) {
                     throw Parse_Error("Unexpected value in parameter list", File_Position(line, col));
                 }
@@ -381,24 +400,126 @@ namespace langkit {
         }
 
         bool Fun_Call() {
-            bool retval = false;
+            Start_Parse();
+
+            if (Id(true) && Char('(') && (Arg_List() || true) && Char(')')) {
+                Finish_Parse(Token_Type::Fun_Call);
+                return true;
+            }
+            else {
+                Fail_Parse();
+                return false;
+            }
+        }
+
+        bool LHS() {
+            if (Var_Decl() || Id()) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        bool Var_Decl() {
+            Start_Parse();
+
+            if (Str("var") && Id(true)) {
+                Finish_Parse(Token_Type::Var_Decl);
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        bool Value() {
+            if (Fun_Call() || Int(true) || Id(true) || Negate() || Not()) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        bool Negate() {
+            Start_Parse();
+
+            if (Char('-') && Additive()) {
+                Finish_Parse(Token_Type::Negate);
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        bool Not() {
+            Start_Parse();
+
+            if (Char('!') && Expression()) {
+                Finish_Parse(Token_Type::Not);
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        bool Comparison() {
+            bool retval;
 
             Start_Parse();
 
-
-            if (Id(true) && Char('(')) {
-
-                Arg_List();
-                retval = Char(')');
+            retval = Additive();
+            while (retval && (Str(">=", true) || Char('>', true) || Str("<=", true) || Char('<', true) || Str("==", true) || Str("!=", true))) {
+                retval = Additive();
             }
 
-            if (!retval) {
-                Fail_Parse();
+            if (retval) {
+                Finish_Parse(Token_Type::Comparison);
             }
             else {
-                Finish_Parse(Token_Type::Fun_Call);
+                Fail_Parse();
+            }
+            return retval;
+        }
+
+        bool Additive() {
+            bool retval;
+
+            Start_Parse();
+
+            retval = Multiplicative();
+            while (retval && (Char('+', true) || Char('-', true))) {
+                retval = Multiplicative();
             }
 
+            if (retval) {
+                Finish_Parse(Token_Type::Additive);
+            }
+            else {
+                Fail_Parse();
+            }
+            return retval;
+        }
+
+        bool Multiplicative() {
+            bool retval;
+
+            Start_Parse();
+
+            retval = Value();
+            while (retval && (Char('*', true) || Char('/', true))) {
+                retval = Value();
+            }
+
+            if (retval) {
+                Finish_Parse(Token_Type::Multiplicative);
+            }
+            else {
+                Fail_Parse();
+            }
 
             /*
              * The above can be shortened to this, but let's not get carried away :)
@@ -410,9 +531,52 @@ namespace langkit {
             return retval;
         }
 
-        bool Fun_Calls() {
+        bool Expression() {
+            bool retval;
+
+            Start_Parse();
+
+            retval = Comparison();
+            while (retval && (Str("&&", true) || Str("||", true))) {
+                retval = Comparison();
+            }
+
+            if (retval) {
+                Finish_Parse(Token_Type::Expression);
+            }
+            else {
+                Fail_Parse();
+            }
+            return retval;
+        }
+
+        bool Equation() {
+            Start_Parse();
+            if (LHS() && Char('=') && Expression()) {
+                Finish_Parse(Token_Type::Equation);
+                return true;
+            }
+            else {
+                Fail_Parse();
+                return false;
+            }
+        }
+
+        bool Statement() {
+            if (Equation() || Expression()) {
+                if (Eol()) {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        bool Statements() {
             bool retval = false;
-            while ((Fun_Call() && Eol()) || (Eol())) { }
+            while (Statement() || Eol()) { }
 
             if (input_pos == input_end) {
                 retval = true;
@@ -429,7 +593,7 @@ namespace langkit {
             multiline_comment_end = "*/";
             singleline_comment = "//";
 
-            return Fun_Calls();
+            return Statements();
         }
     };
 };
@@ -460,6 +624,7 @@ int main(int argc, char *argv[]) {
     if (argc > 1) {
         try {
             std::cout << parser.parse(load_file(argv[1])) << std::endl;
+            parser.show_match_stack();
         }
         catch (langkit::Parse_Error &pe) {
             std::cout << pe.reason << " at " << pe.position.line << ", " << pe.position.column << std::endl;
