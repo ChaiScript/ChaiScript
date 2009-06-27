@@ -340,9 +340,12 @@ namespace dispatchkit
       try {
         return (*itr->second)(plist);
       } catch (const bad_boxed_cast &) {
-        //try again
+        //parameter failed to cast, try again
       } catch (const arity_error &) {
         //invalid num params, try again
+      } catch (const guard_error &) {
+        //guard failed to allow the function to execute,
+        //try again
       }
     }
 
