@@ -11,7 +11,7 @@ namespace langkit {
     struct File_Position {
         int line;
         int column;
-        std::string::iterator text_pos;
+       // std::string::iterator text_pos;
 
         File_Position(int file_line, int file_column)
             : line(file_line), column(file_column) { }
@@ -86,40 +86,12 @@ namespace langkit {
             match_stack.clear();
         }
 
-        bool Start_Parse() {
-            TokenPtr t(new Token("", Token_Type::Internal_Match_Begin, filename));
+        void build_match(Token_Type::Type match_type, int match_start) {
+            //so we want to take everything to the right of this and make them children
+            TokenPtr t(new Token("", match_type, filename, match_stack[match_start]->start.line, match_stack[match_start]->start.column, line, col));
+            t->children.assign(match_stack.begin() + (match_start), match_stack.end());
+            match_stack.erase(match_stack.begin() + (match_start), match_stack.end());
             match_stack.push_back(t);
-            t->start.line = line;
-            t->start.column = col;
-            t->start.text_pos = input_pos;
-
-            return true;
-        }
-
-        void Fail_Parse() {
-            TokenPtr t = match_stack.back(); match_stack.pop_back();
-            while (t->identifier != Token_Type::Internal_Match_Begin) {
-                t = match_stack.back(); match_stack.pop_back();
-            }
-            line = t->start.line;
-            col = t->start.column;
-            input_pos = t->start.text_pos;
-        }
-
-        bool Finish_Parse(int id) {
-            for (int i = (int)match_stack.size() - 1; i >= 0; --i) {
-                if (match_stack[i]->identifier == Token_Type::Internal_Match_Begin) {
-                    //so we want to take everything to the right of this and make them children
-                    match_stack[i]->children.insert(match_stack[i]->children.begin(), match_stack.begin() + (i+1), match_stack.end());
-                    //match_stack[i]->children.assign(match_stack.begin() + (i+1), match_stack.end());
-                    match_stack.erase(match_stack.begin() + (i+1), match_stack.end());
-                    match_stack[i]->identifier = id;
-                    return true;
-                }
-            }
-
-            throw Parse_Error("Could not find internal begin parse marker", File_Position());
-            return false;
         }
 
         bool SkipComment() {
@@ -195,12 +167,7 @@ namespace langkit {
                 int prev_line = line;
                 if (Int_()) {
                     std::string match(start, input_pos);
-                    TokenPtr t(new Token(match, Token_Type::Int, filename, prev_col, prev_line, col, line));
-                    /*
-                    t->start.column = prev_col;
-                    t->start.line = prev_line;
-                    t->end.column = col;
-                    t->end.line = line;*/
+                    TokenPtr t(new Token(match, Token_Type::Int, filename, prev_line, prev_col, line, col));
                     match_stack.push_back(t);
                     return true;
                 }
@@ -235,12 +202,7 @@ namespace langkit {
                 int prev_line = line;
                 if (Id_()) {
                     std::string match(start, input_pos);
-                    TokenPtr t(new Token(match, Token_Type::Id, filename, prev_col, prev_line, col, line));
-                    /*
-                    t->start.column = prev_col;
-                    t->start.line = prev_line;
-                    t->end.column = col;
-                    t->end.line = line; */
+                    TokenPtr t(new Token(match, Token_Type::Id, filename, prev_line, prev_col, line, col));
                     match_stack.push_back(t);
                     return true;
                 }
@@ -273,12 +235,7 @@ namespace langkit {
                 int prev_line = line;
                 if (Char_(c)) {
                     std::string match(start, input_pos);
-                    TokenPtr t(new Token(match, Token_Type::Char, filename, prev_col, prev_line, col, line));
-                    /*
-                    t->start.column = prev_col;
-                    t->start.line = prev_line;
-                    t->end.column = col;
-                    t->end.line = line; */
+                    TokenPtr t(new Token(match, Token_Type::Char, filename, prev_line, prev_col, line, col));
                     match_stack.push_back(t);
                     return true;
                 }
@@ -320,12 +277,7 @@ namespace langkit {
                 int prev_line = line;
                 if (Str_(s)) {
                     std::string match(start, input_pos);
-                    TokenPtr t(new Token(match, Token_Type::Str, filename, prev_col, prev_line, col, line));
-                    /*
-                    t->start.column = prev_col;
-                    t->start.line = prev_line;
-                    t->end.column = col;
-                    t->end.line = line; */
+                    TokenPtr t(new Token(match, Token_Type::Str, filename, prev_line, prev_col, line, col));
                     match_stack.push_back(t);
                     return true;
                 }
@@ -362,12 +314,7 @@ namespace langkit {
                 int prev_line = line;
                 if (Eol_()) {
                     std::string match(start, input_pos);
-                    TokenPtr t(new Token(match, Token_Type::Eol, filename, prev_col, prev_line, col, line));
-                    /*
-                    t->start.column = prev_col;
-                    t->start.line = prev_line;
-                    t->end.column = col;
-                    t->end.line = line; */
+                    TokenPtr t(new Token(match, Token_Type::Eol, filename, prev_line, prev_col, line, col));
                     match_stack.push_back(t);
                     return true;
                 }
@@ -378,46 +325,45 @@ namespace langkit {
         }
 
         bool Arg_List() {
-            bool retval;
+            bool retval = false;
 
-            Start_Parse();
+            int prev_stack_top = match_stack.size();
 
-            retval = Expression();
-            while (retval && Char(',')) {
-                retval = Expression();
-                if (!retval) {
-                    throw Parse_Error("Unexpected value in parameter list", File_Position(line, col));
+            if (Expression()) {
+                retval = true;
+                if (Char(',')) {
+                    do {
+                        if (!Expression()) {
+                            throw Parse_Error("Unexpected value in parameter list", File_Position(line, col));
+                        }
+                    } while (retval && Char(','));
+                }
+                build_match(Token_Type::Arg_List, prev_stack_top);
+            }
+
+            return retval;
+
+        }
+
+        bool Fun_Or_Id() {
+            bool retval = false;
+            std::string::iterator prev_pos = input_pos;
+
+            unsigned int prev_stack_top = match_stack.size();
+            if (Id(true)) {
+                retval = true;
+
+                if (Char('(')) {
+                    Arg_List();
+                    if (!Char(')')) {
+                        throw Parse_Error("Incomplete function call", File_Position(line, col));
+                    }
+
+                    build_match(Token_Type::Fun_Call, prev_stack_top);
                 }
             }
 
-            if (retval) {
-                Finish_Parse(Token_Type::Arg_List);
-                return true;
-            }
-            else {
-                Fail_Parse();
-                return false;
-            }
-        }
-
-        bool Fun_Call() {
-            bool retval = false;
-
-            Start_Parse();
-
-            if (Id(true) && Char('(')) {
-                Arg_List();
-                retval = Char(')');
-            }
-
-            if (retval) {
-                Finish_Parse(Token_Type::Fun_Call);
-                return true;
-            }
-            else {
-                Fail_Parse();
-                return false;
-            }
+            return retval;
         }
 
         bool LHS() {
@@ -430,20 +376,26 @@ namespace langkit {
         }
 
         bool Var_Decl() {
-            Start_Parse();
+            bool retval = false;
 
-            if (Str("var") && Id(true)) {
-                Finish_Parse(Token_Type::Var_Decl);
-                return true;
+            int prev_stack_top = match_stack.size();
+
+            if (Str("var")) {
+                retval = true;
+
+                if (!Id(true)) {
+                    throw Parse_Error("Incomplete variable declaration", File_Position(line, col));
+                }
+
+                build_match(Token_Type::Var_Decl, prev_stack_top);
             }
-            else {
-                Fail_Parse();
-                return false;
-            }
+
+            return retval;
+
         }
 
         bool Value() {
-            if (Fun_Call() || Int(true) || Id(true) || Negate() || Not()) {
+            if (Fun_Or_Id() || Int(true) || Negate() || Not()) {
                 return true;
             }
             else {
@@ -452,134 +404,149 @@ namespace langkit {
         }
 
         bool Negate() {
-            Start_Parse();
+            bool retval = false;
 
-            if (Char('-') && Additive()) {
-                Finish_Parse(Token_Type::Negate);
-                return true;
+            int prev_stack_top = match_stack.size();
+
+            if (Char('-')) {
+                retval = true;
+
+                if (!Additive()) {
+                    throw Parse_Error("Incomplete negation expression", File_Position(line, col));
+                }
+
+                build_match(Token_Type::Negate, prev_stack_top);
             }
-            else {
-                Fail_Parse();
-                return false;
-            }
+
+            return retval;
+
         }
 
         bool Not() {
-            Start_Parse();
+            bool retval = false;
 
-            if (Char('!') && Expression()) {
-                Finish_Parse(Token_Type::Not);
-                return true;
+            int prev_stack_top = match_stack.size();
+
+            if (Char('!')) {
+                retval = true;
+
+                if (!Expression()) {
+                    throw Parse_Error("Incomplete '!' expression", File_Position(line, col));
+                }
+
+                build_match(Token_Type::Not, prev_stack_top);
             }
-            else {
-                Fail_Parse();
-                return false;
-            }
+
+            return retval;
+
         }
 
         bool Comparison() {
-            bool retval;
+            bool retval = false;
 
-            Start_Parse();
+            int prev_stack_top = match_stack.size();
 
-            if ( (retval = (Additive() && ((Str(">=", true) || Char('>', true) || Str("<=", true) || Char('<', true) || Str("==", true) || Str("!=", true))))) ) {
-                do {
-                    retval = Additive();
-                } while (retval && ((Str(">=", true) || Char('>', true) || Str("<=", true) || Char('<', true) || Str("==", true) || Str("!=", true))));
+            if (Additive()) {
+                retval = true;
+                if (Str(">=", true) || Char('>', true) || Str("<=", true) || Char('<', true) || Str("==", true) || Str("!=", true)) {
+                    do {
+                        if (!Additive()) {
+                            throw Parse_Error("Incomplete comparison expression", File_Position(line, col));
+                        }
+                    } while (retval && (Str(">=", true) || Char('>', true) || Str("<=", true) || Char('<', true) || Str("==", true) || Str("!=", true)));
+
+                    build_match(Token_Type::Comparison, prev_stack_top);
+                }
             }
 
-            if (retval) {
-                Finish_Parse(Token_Type::Comparison);
-                return true;
-            }
-            else {
-                Fail_Parse();
-                return Additive();
-            }
+            return retval;
+
         }
 
         bool Additive() {
-            bool retval;
+            bool retval = false;
 
-            Start_Parse();
+            int prev_stack_top = match_stack.size();
 
-            if ( (retval = (Multiplicative() && (Char('+', true) || Char('-', true)))) ) {
-                do {
-                    retval = Multiplicative();
-                } while (retval && (Char('+', true) || Char('-', true)));
+            if (Multiplicative()) {
+                retval = true;
+                if (Char('+', true) || Char('-', true)) {
+                    do {
+                        if (!Multiplicative()) {
+                            throw Parse_Error("Incomplete math expression", File_Position(line, col));
+                        }
+                    } while (retval && (Char('+', true) || Char('-', true)));
+
+                    build_match(Token_Type::Additive, prev_stack_top);
+                }
             }
 
-            if (retval) {
-                Finish_Parse(Token_Type::Additive);
-                return true;
-            }
-            else {
-                Fail_Parse();
-                return Multiplicative();
-            }
+            return retval;
         }
 
         bool Multiplicative() {
-            bool retval;
+            bool retval = false;
 
-            Start_Parse();
+            int prev_stack_top = match_stack.size();
 
-            if ( (retval = (Value() && (Char('*', true) || Char('/', true)))) ) {
-                do {
-                    retval = Value();
-                } while (retval && (Char('*', true) || Char('/', true)));
+            if (Value()) {
+                retval = true;
+                if (Char('*', true) || Char('/', true)) {
+                    do {
+                        if (!Value()) {
+                            throw Parse_Error("Incomplete math expression", File_Position(line, col));
+                        }
+                    } while (retval && (Char('*', true) || Char('/', true)));
+
+                    build_match(Token_Type::Multiplicative, prev_stack_top);
+                }
             }
 
-            if (retval) {
-                Finish_Parse(Token_Type::Multiplicative);
-                return true;
-            }
-            else {
-                Fail_Parse();
-                return Value();
-            }
+            return retval;
+
         }
 
         bool Expression() {
-            bool retval;
+            bool retval = false;
 
-            Start_Parse();
+            int prev_stack_top = match_stack.size();
 
-            if ( (retval = (Comparison() && (Str("&&", true) || Str("||", true)))) ) {
-                do {
-                    retval = Comparison();
-                } while (retval && (Str("&&", true) || Str("||", true)));
+            if (Comparison()) {
+                retval = true;
+                if (Str("&&", true) || Str("||", true)) {
+                    do {
+                        if (!Comparison()) {
+                            throw Parse_Error("Incomplete  expression", File_Position(line, col));
+                        }
+                    } while (retval && (Str("&&", true) || Str("||", true)));
+
+                    build_match(Token_Type::Expression, prev_stack_top);
+                }
             }
 
-            if (retval) {
-                Finish_Parse(Token_Type::Expression);
-                return true;
-            }
-            else {
-                Fail_Parse();
-                return Comparison();
-            }
+            return retval;
         }
 
         bool Equation() {
-            bool retval;
-            Start_Parse();
+            bool retval = false;
 
-            if ( (retval = (Expression() && (Char('=', true)))) ) {
-                do {
-                    retval = Expression();
-                } while (retval && (Char('=', true)));
+            int prev_stack_top = match_stack.size();
+
+            if (Expression()) {
+                retval = true;
+                if (Char('=', true)) {
+                    do {
+                        if (!Expression()) {
+                            throw Parse_Error("Incomplete math expression", File_Position(line, col));
+                        }
+                    } while (retval && (Char('=', true)));
+
+                    build_match(Token_Type::Equation, prev_stack_top);
+                }
             }
 
+            return retval;
 
-            if (retval) {
-                Finish_Parse(Token_Type::Equation);
-                return true;
-            }
-            else {
-                Fail_Parse();
-                return Expression();
-            }
         }
 
         bool Statement() {
