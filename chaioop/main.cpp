@@ -32,11 +32,11 @@ namespace langkit {
     typedef std::tr1::shared_ptr<struct Token> TokenPtr;
 
     class Token_Type { public: enum Type { Internal_Match_Begin, Int, Id, Char, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
-        Expression, Comparison, Additive, Multiplicative, Negate, Not, Array_Call, Dot_Access }; };
+        Expression, Comparison, Additive, Multiplicative, Negate, Not, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String }; };
 
     const char *token_type_to_string(int tokentype) {
         const char *token_types[] = { "Internal: match begin", "Int", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
-            "Expression", "Comparison", "Additive", "Multiplicative", "Negate", "Not", "Array_Call", "Dot_Access" };
+            "Expression", "Comparison", "Additive", "Multiplicative", "Negate", "Not", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String" };
 
         return token_types[tokentype];
     }
@@ -213,6 +213,177 @@ namespace langkit {
             }
         }
 
+        bool Quoted_String_() {
+            bool retval = false;
+            char prev_char = 0;
+            if ((input_pos != input_end) && (*input_pos == '\"')) {
+                retval = true;
+                prev_char = *input_pos;
+                ++input_pos;
+                ++col;
+
+                while ((input_pos != input_end) && ((*input_pos != '\"') || ((*input_pos == '\"') && (prev_char == '\\')))) {
+                    if (!Eol_()) {
+                        if (prev_char == '\\') {
+                            prev_char = 0;
+                        }
+                        else {
+                            prev_char = *input_pos;
+                        }
+                        ++input_pos;
+                        ++col;
+                    }
+                }
+
+                if (input_pos != input_end) {
+                    ++input_pos;
+                    ++col;
+                }
+                else {
+                    throw Parse_Error("Unclosed quoted string", File_Position(line, col));
+                }
+            }
+            return retval;
+        }
+
+        bool Quoted_String(bool capture = false) {
+            SkipWS();
+
+            if (!capture) {
+                return Quoted_String_();
+            }
+            else {
+                std::string::iterator start = input_pos;
+                int prev_col = col;
+                int prev_line = line;
+                if (Quoted_String_()) {
+                    std::string match;
+                    bool is_escaped = false;
+                    for (std::string::iterator s = start + 1, end = input_pos - 1; s != end; ++s) {
+                        if (*s == '\\') {
+                            if (is_escaped) {
+                                match.push_back('\\');
+                                is_escaped = false;
+                            }
+                            else {
+                                is_escaped = true;
+                            }
+                        }
+                        else {
+                            if (is_escaped) {
+                                switch (*s) {
+                                    case ('b') : match.push_back('\b'); break;
+                                    case ('f') : match.push_back('\f'); break;
+                                    case ('n') : match.push_back('\n'); break;
+                                    case ('r') : match.push_back('\r'); break;
+                                    case ('t') : match.push_back('\t'); break;
+                                    case ('\'') : match.push_back('\''); break;
+                                    case ('\"') : match.push_back('\"'); break;
+                                    default: throw Parse_Error("Unknown escaped sequence in string", File_Position(prev_line, prev_col));
+                                }
+                            }
+                            else {
+                                match.push_back(*s);
+                            }
+                            is_escaped = false;
+                        }
+                    }
+                    TokenPtr t(new Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
+                    match_stack.push_back(t);
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+        }
+
+        bool Single_Quoted_String_() {
+            bool retval = false;
+            char prev_char = 0;
+            if ((input_pos != input_end) && (*input_pos == '\'')) {
+                retval = true;
+                prev_char = *input_pos;
+                ++input_pos;
+                ++col;
+
+                while ((input_pos != input_end) && ((*input_pos != '\'') || ((*input_pos == '\'') && (prev_char == '\\')))) {
+                    if (!Eol_()) {
+                        if (prev_char == '\\') {
+                            prev_char = 0;
+                        }
+                        else {
+                            prev_char = *input_pos;
+                        }
+                        ++input_pos;
+                        ++col;
+                    }
+                }
+
+                if (input_pos != input_end) {
+                    ++input_pos;
+                    ++col;
+                }
+                else {
+                    throw Parse_Error("Unclosed single-quoted string", File_Position(line, col));
+                }
+            }
+            return retval;
+        }
+
+        bool Single_Quoted_String(bool capture = false) {
+            SkipWS();
+
+            if (!capture) {
+                return Single_Quoted_String_();
+            }
+            else {
+                std::string::iterator start = input_pos;
+                int prev_col = col;
+                int prev_line = line;
+                if (Single_Quoted_String_()) {
+                    std::string match;
+                    bool is_escaped = false;
+                    for (std::string::iterator s = start + 1, end = input_pos - 1; s != end; ++s) {
+                        if (*s == '\\') {
+                            if (is_escaped) {
+                                match.push_back('\\');
+                                is_escaped = false;
+                            }
+                            else {
+                                is_escaped = true;
+                            }
+                        }
+                        else {
+                            if (is_escaped) {
+                                switch (*s) {
+                                    case ('b') : match.push_back('\b'); break;
+                                    case ('f') : match.push_back('\f'); break;
+                                    case ('n') : match.push_back('\n'); break;
+                                    case ('r') : match.push_back('\r'); break;
+                                    case ('t') : match.push_back('\t'); break;
+                                    case ('\'') : match.push_back('\''); break;
+                                    case ('\"') : match.push_back('\"'); break;
+                                    default: throw Parse_Error("Unknown escaped sequence in string", File_Position(prev_line, prev_col));
+                                }
+                            }
+                            else {
+                                match.push_back(*s);
+                            }
+                            is_escaped = false;
+                        }
+                    }
+                    TokenPtr t(new Token(match, Token_Type::Single_Quoted_String, filename, prev_line, prev_col, line, col));
+                    match_stack.push_back(t);
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+        }
+
+
         bool Char_(char c) {
             bool retval = false;
             if ((input_pos != input_end) && (*input_pos == c)) {
@@ -383,6 +554,8 @@ namespace langkit {
             return retval;
         }
 
+        /*
+         * TODO: Look into if we need an explicit LHS for equations
         bool LHS() {
             if (Var_Decl() || Id()) {
                 return true;
@@ -391,6 +564,7 @@ namespace langkit {
                 return false;
             }
         }
+        */
 
         bool Var_Decl() {
             bool retval = false;
@@ -427,7 +601,7 @@ namespace langkit {
         }
 
         bool Value() {
-            if (Id_Fun_Array() || Int(true) || Negate() || Not() || Paren_Expression()) {
+            if (Var_Decl() || Id_Fun_Array() || Int(true) || Negate() || Not() || Quoted_String(true) || Single_Quoted_String(true) || Paren_Expression()) {
                 return true;
             }
             else {
