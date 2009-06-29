@@ -38,11 +38,13 @@ namespace chaiscript {
     typedef std::tr1::shared_ptr<struct Token> TokenPtr;
 
     class Token_Type { public: enum Type { Internal_Match_Begin, Int, Float, Id, Char, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
-        Expression, Comparison, Additive, Multiplicative, Negate, Not, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String }; };
+        Expression, Comparison, Additive, Multiplicative, Negate, Not, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
+        Lambda, Block}; };
 
     const char *token_type_to_string(int tokentype) {
         const char *token_types[] = { "Internal: match begin", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
-            "Expression", "Comparison", "Additive", "Multiplicative", "Negate", "Not", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String" };
+            "Expression", "Comparison", "Additive", "Multiplicative", "Negate", "Not", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
+            "Lambda", "Block"};
 
         return token_types[tokentype];
     }
@@ -94,10 +96,17 @@ namespace chaiscript {
 
         void build_match(Token_Type::Type match_type, int match_start) {
             //so we want to take everything to the right of this and make them children
-            TokenPtr t(new Token("", match_type, filename, match_stack[match_start]->start.line, match_stack[match_start]->start.column, line, col));
-            t->children.assign(match_stack.begin() + (match_start), match_stack.end());
-            match_stack.erase(match_stack.begin() + (match_start), match_stack.end());
-            match_stack.push_back(t);
+            if (match_start != (int)match_stack.size()) {
+                TokenPtr t(new Token("", match_type, filename, match_stack[match_start]->start.line, match_stack[match_start]->start.column, line, col));
+                t->children.assign(match_stack.begin() + (match_start), match_stack.end());
+                match_stack.erase(match_stack.begin() + (match_start), match_stack.end());
+                match_stack.push_back(t);
+            }
+            else {
+                //todo: fix the fact that a successful match that captured no tokens does't have any real start position
+                TokenPtr t(new Token("", match_type, filename, line, col, line, col));
+                match_stack.push_back(t);
+            }
         }
 
         bool SkipComment() {
@@ -558,6 +567,50 @@ namespace chaiscript {
 
         }
 
+        bool Lambda() {
+            bool retval = false;
+
+            int prev_stack_top = match_stack.size();
+
+            if (Str("fun")) {
+                retval = true;
+
+                if (Char('(')) {
+                    if (!(Arg_List() && Char(')'))) {
+                        throw Parse_Error("Incomplete anonymous function", File_Position(line, col));
+                    }
+                }
+
+                if (!Block()) {
+                    throw Parse_Error("Incomplete anonymous function", File_Position(line, col));
+                }
+
+                build_match(Token_Type::Lambda, prev_stack_top);
+            }
+
+            return retval;
+        }
+
+        bool Block() {
+            bool retval = false;
+
+            int prev_stack_top = match_stack.size();
+
+            if (Char('{')) {
+                retval = true;
+
+                Statements();
+                if (!Char('}')) {
+                    throw Parse_Error("Incomplete block", File_Position(line, col));
+                }
+
+                build_match(Token_Type::Block, prev_stack_top);
+            }
+
+            return retval;
+
+        }
+
         bool Id_Fun_Array() {
             bool retval = false;
             std::string::iterator prev_pos = input_pos;
@@ -642,7 +695,7 @@ namespace chaiscript {
         }
 
         bool Value() {
-            if (Var_Decl() || Id_Fun_Array() || Num(true) || Negate() || Not() || Quoted_String(true) || Single_Quoted_String(true) || Paren_Expression()) {
+            if (Var_Decl() || Lambda() || Id_Fun_Array() || Num(true) || Negate() || Not() || Quoted_String(true) || Single_Quoted_String(true) || Paren_Expression()) {
                 return true;
             }
             else {
@@ -817,22 +870,37 @@ namespace chaiscript {
 
         bool Statement() {
             if (Equation()) {
-                if (Eol()) {
-                    return true;
-                }
-                else {
-                    return false;
-                }
+                return true;
             }
-            return false;
+            else {
+                return false;
+            }
         }
 
         bool Statements() {
             bool retval = false;
-            while (Statement() || Eol()) { }
 
-            if (input_pos == input_end) {
-                retval = true;
+            bool has_more = true;
+            bool saw_eol = true;
+
+            while (has_more) {
+                has_more = false;
+                if (Statement()) {
+                    if (!saw_eol) {
+                        throw Parse_Error("Two expressions missing line separator", File_Position(line, col));
+                    }
+                    has_more = true;
+                    retval = true;
+                    saw_eol = false;
+                }
+                else if (Eol()) {
+                    has_more = true;
+                    retval = true;
+                    saw_eol = true;
+                }
+                else {
+                    has_more = false;
+                }
             }
 
             return retval;
