@@ -497,6 +497,8 @@ namespace dispatchkit
       s.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(s))), "dump_system");
       s.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1)), "dump_object");
 
+      s.add_object("_", Placeholder_Object());
+
       s.register_function(boost::shared_ptr<Proxy_Function>(new Dynamic_Proxy_Function(boost::bind(&bind_function, _1))), 
           "bind");
 

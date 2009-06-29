@@ -206,6 +206,10 @@ namespace dispatchkit
       boost::shared_ptr<Proxy_Function> m_guard;
   };
 
+  struct Placeholder_Object
+  {
+  };
+
   class Bound_Function : public Proxy_Function
   {
     public:
@@ -244,7 +248,8 @@ namespace dispatchkit
 
         while (true)
         {
-          while (barg != m_args.end() && !barg->is_unknown())
+          while (barg != m_args.end() 
+                 && !(barg->get_type_info() == Get_Type_Info<Placeholder_Object>::get()))
           {
             args.push_back(*barg);
             ++barg;
@@ -256,7 +261,8 @@ namespace dispatchkit
             ++parg;
           }
 
-          if (barg != m_args.end() && barg->is_unknown())
+          if (barg != m_args.end() 
+              && barg->get_type_info() == Get_Type_Info<Placeholder_Object>::get())
           {
             ++barg;
           } 
