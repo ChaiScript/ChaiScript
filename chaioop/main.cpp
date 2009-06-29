@@ -32,11 +32,11 @@ namespace langkit {
     typedef std::tr1::shared_ptr<struct Token> TokenPtr;
 
     class Token_Type { public: enum Type { Internal_Match_Begin, Int, Id, Char, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
-        Expression, Comparison, Additive, Multiplicative, Negate, Not, Array_Call }; };
+        Expression, Comparison, Additive, Multiplicative, Negate, Not, Array_Call, Dot_Access }; };
 
     const char *token_type_to_string(int tokentype) {
         const char *token_types[] = { "Internal: match begin", "Int", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
-            "Expression", "Comparison", "Additive", "Multiplicative", "Negate", "Not", "Array_Call" };
+            "Expression", "Comparison", "Additive", "Multiplicative", "Negate", "Not", "Array_Call", "Dot_Access" };
 
         return token_types[tokentype];
     }
@@ -179,9 +179,10 @@ namespace langkit {
 
         bool Id_() {
             bool retval = false;
-            if ((input_pos != input_end) && (((*input_pos >= 'A') && (*input_pos <= 'Z')) || ((*input_pos >= 'a') && (*input_pos <= 'z')))) {
+            if ((input_pos != input_end) && (((*input_pos >= 'A') && (*input_pos <= 'Z')) || (*input_pos == '_') || ((*input_pos >= 'a') && (*input_pos <= 'z')))) {
                 retval = true;
-                while ((input_pos != input_end) && (((*input_pos >= 'A') && (*input_pos <= 'Z')) || ((*input_pos >= 'a') && (*input_pos <= 'z')))) {
+                while ((input_pos != input_end) && (((*input_pos >= 'A') && (*input_pos <= 'Z')) || (*input_pos == '_') || ((*input_pos >= 'a') && (*input_pos <= 'z'))
+                        || ((*input_pos >= '0') && (*input_pos <= '9')))) {
                     ++input_pos;
                     ++col;
                 }
@@ -520,11 +521,11 @@ namespace langkit {
 
             int prev_stack_top = match_stack.size();
 
-            if (Value()) {
+            if (Dot_Access()) {
                 retval = true;
                 if (Char('*', true) || Char('/', true)) {
                     do {
-                        if (!Value()) {
+                        if (!Dot_Access()) {
                             throw Parse_Error("Incomplete math expression", File_Position(line, col));
                         }
                     } while (retval && (Char('*', true) || Char('/', true)));
@@ -535,6 +536,27 @@ namespace langkit {
 
             return retval;
 
+        }
+
+        bool Dot_Access() {
+            bool retval = false;
+
+            int prev_stack_top = match_stack.size();
+
+            if (Value()) {
+                retval = true;
+                if (Char('.')) {
+                    do {
+                        if (!Value()) {
+                            throw Parse_Error("Incomplete dot notation", File_Position(line, col));
+                        }
+                    } while (retval && Char('.'));
+
+                    build_match(Token_Type::Dot_Access, prev_stack_top);
+                }
+            }
+
+            return retval;
         }
 
         bool Expression() {
