@@ -32,11 +32,11 @@ namespace langkit {
     typedef std::tr1::shared_ptr<struct Token> TokenPtr;
 
     class Token_Type { public: enum Type { Internal_Match_Begin, Int, Id, Char, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
-        Expression, Comparison, Additive, Multiplicative, Negate, Not }; };
+        Expression, Comparison, Additive, Multiplicative, Negate, Not, Array_Call }; };
 
     const char *token_type_to_string(int tokentype) {
         const char *token_types[] = { "Internal: match begin", "Int", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
-            "Expression", "Comparison", "Additive", "Multiplicative", "Negate", "Not" };
+            "Expression", "Comparison", "Additive", "Multiplicative", "Negate", "Not", "Array_Call" };
 
         return token_types[tokentype];
     }
@@ -345,21 +345,37 @@ namespace langkit {
 
         }
 
-        bool Fun_Or_Id() {
+        bool Id_Fun_Array() {
             bool retval = false;
             std::string::iterator prev_pos = input_pos;
 
             unsigned int prev_stack_top = match_stack.size();
             if (Id(true)) {
                 retval = true;
+                bool has_more = true;
 
-                if (Char('(')) {
-                    Arg_List();
-                    if (!Char(')')) {
-                        throw Parse_Error("Incomplete function call", File_Position(line, col));
+                while (has_more) {
+                    has_more = false;
+
+                    if (Char('(')) {
+                        has_more = true;
+
+                        Arg_List();
+                        if (!Char(')')) {
+                            throw Parse_Error("Incomplete function call", File_Position(line, col));
+                        }
+
+                        build_match(Token_Type::Fun_Call, prev_stack_top);
                     }
+                    else if (Char('[')) {
+                        has_more = true;
 
-                    build_match(Token_Type::Fun_Call, prev_stack_top);
+                        if (!(Expression() && Char(']'))) {
+                            throw Parse_Error("Incomplete array access", File_Position(line, col));
+                        }
+
+                        build_match(Token_Type::Array_Call, prev_stack_top);
+                    }
                 }
             }
 
@@ -394,8 +410,23 @@ namespace langkit {
 
         }
 
+        bool Paren_Expression() {
+            bool retval = false;
+
+            if (Char('(')) {
+                retval = true;
+                if (!Expression()) {
+                    throw Parse_Error("Incomplete expression", File_Position(line, col));
+                }
+                if (!Char(')')) {
+                    throw Parse_Error("Missing closing parenthesis", File_Position(line, col));
+                }
+            }
+            return retval;
+        }
+
         bool Value() {
-            if (Fun_Or_Id() || Int(true) || Negate() || Not()) {
+            if (Id_Fun_Array() || Int(true) || Negate() || Not() || Paren_Expression()) {
                 return true;
             }
             else {
@@ -550,7 +581,7 @@ namespace langkit {
         }
 
         bool Statement() {
-            if (Equation() || Expression()) {
+            if (Equation()) {
                 if (Eol()) {
                     return true;
                 }
