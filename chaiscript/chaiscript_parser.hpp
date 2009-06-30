@@ -651,7 +651,8 @@ namespace chaiscript
                 }
 
                 if (Char('(')) {
-                    if (!(Arg_List() && Char(')'))) {
+                    Arg_List();
+                    if (!Char(')')) {
                         throw Parse_Error("Incomplete function definition", File_Position(line, col), filename);
                     }
                 }

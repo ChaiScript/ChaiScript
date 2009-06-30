@@ -411,10 +411,16 @@ namespace chaiscript
                     for (i = 0; i < node->children[1]->children.size(); ++i) {
                         param_names.push_back(node->children[1]->children[i]->text);
                     }
+                    ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
+                          new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), node->children[1]->children.size())), node->children[0]->text);
                 }
+                else {
+                    //no parameters
+                    ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
+                            //no parameters
+                          new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), 0)), node->children[0]->text);
 
-                ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
-                      new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), node->children[1]->children.size())), node->children[0]->text);
+                }
             }
             break;
             case (Token_Type::Lambda) : {
