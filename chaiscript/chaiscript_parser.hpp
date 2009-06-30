@@ -542,10 +542,12 @@ namespace chaiscript
                         line = prev_line;
                         return false;
                     }
-                    std::string match(start, input_pos);
-                    TokenPtr t(new Token(match, Token_Type::Str, filename, prev_line, prev_col, line, col));
-                    match_stack.push_back(t);
-                    return true;
+                    else {
+                        std::string match(start, input_pos);
+                        TokenPtr t(new Token(match, Token_Type::Str, filename, prev_line, prev_col, line, col));
+                        match_stack.push_back(t);
+                        return true;
+                    }
                 }
                 else {
                     return false;
@@ -905,7 +907,7 @@ namespace chaiscript
         }
 
         bool Value() {
-            if (Var_Decl() || Lambda() || Id_Fun_Array() || Num(true) || Negate() || Not() || Quoted_String(true) || Single_Quoted_String(true) ||
+            if (Var_Decl() || Lambda() || Id_Fun_Array() || Num(true) || Prefix() || Quoted_String(true) || Single_Quoted_String(true) ||
                     Paren_Expression() || Inline_Container() || Id_Literal()) {
                 return true;
             }
@@ -914,7 +916,7 @@ namespace chaiscript
             }
         }
 
-        bool Negate() {
+        bool Prefix() {
             bool retval = false;
 
             int prev_stack_top = match_stack.size();
@@ -928,17 +930,7 @@ namespace chaiscript
 
                 build_match(Token_Type::Negate, prev_stack_top);
             }
-
-            return retval;
-
-        }
-
-        bool Not() {
-            bool retval = false;
-
-            int prev_stack_top = match_stack.size();
-
-            if (Symbol("!")) {
+            else if (Symbol("!")) {
                 retval = true;
 
                 if (!Expression()) {
@@ -946,6 +938,24 @@ namespace chaiscript
                 }
 
                 build_match(Token_Type::Not, prev_stack_top);
+            }
+            if (Symbol("++", true)) {
+                retval = true;
+
+                if (!Expression()) {
+                    throw Parse_Error("Incomplete '++' expression", File_Position(line, col), filename);
+                }
+
+                build_match(Token_Type::Prefix, prev_stack_top);
+            }
+            else if (Symbol("--", true)) {
+                retval = true;
+
+                if (!Expression()) {
+                    throw Parse_Error("Incomplete '--' expression", File_Position(line, col), filename);
+                }
+
+                build_match(Token_Type::Prefix, prev_stack_top);
             }
 
             return retval;

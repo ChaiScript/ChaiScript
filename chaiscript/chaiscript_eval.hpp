@@ -153,7 +153,6 @@ namespace chaiscript
                 retval = dispatchkit::Boxed_Value(!cond);
             }
             break;
-            /*
             case (Token_Type::Prefix) : {
                 retval = eval_token(ss, node->children[1]);
                 dispatchkit::Param_List_Builder plb;
@@ -167,7 +166,6 @@ namespace chaiscript
                 }
             }
             break;
-            */
             case (Token_Type::Inline_Array) : {
                 try {
                     retval = dispatch(ss.get_function("Vector"), dispatchkit::Param_List_Builder());
