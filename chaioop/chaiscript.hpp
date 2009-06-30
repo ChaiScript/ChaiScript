@@ -39,12 +39,12 @@ namespace chaiscript {
 
     class Token_Type { public: enum Type { Internal_Match_Begin, Int, Float, Id, Char, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
         Expression, Comparison, Additive, Multiplicative, Negate, Not, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
-        Lambda, Block}; };
+        Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map }; };
 
     const char *token_type_to_string(int tokentype) {
         const char *token_types[] = { "Internal: match begin", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
             "Expression", "Comparison", "Additive", "Multiplicative", "Negate", "Not", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
-            "Lambda", "Block"};
+            "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map"};
 
         return token_types[tokentype];
     }
@@ -591,6 +591,34 @@ namespace chaiscript {
             return retval;
         }
 
+        bool Def() {
+            bool retval = false;
+
+            int prev_stack_top = match_stack.size();
+
+            if (Str("def")) {
+                retval = true;
+
+                if (!Id(true)) {
+                    throw Parse_Error("Missing function name in definition", File_Position(line, col));
+                }
+
+                if (Char('(')) {
+                    if (!(Arg_List() && Char(')'))) {
+                        throw Parse_Error("Incomplete anonymous function", File_Position(line, col));
+                    }
+                }
+
+                if (!Block()) {
+                    throw Parse_Error("Incomplete anonymous function", File_Position(line, col));
+                }
+
+                build_match(Token_Type::Def, prev_stack_top);
+            }
+
+            return retval;
+        }
+
         bool Block() {
             bool retval = false;
 
@@ -694,8 +722,53 @@ namespace chaiscript {
             return retval;
         }
 
+        bool Id_Literal() {
+            bool retval = false;
+
+            SkipWS();
+
+            if ((input_pos != input_end) && (*input_pos == '`')) {
+                retval = true;
+
+                int prev_col = col;
+                int prev_line = line;
+
+                ++col;
+                ++input_pos;
+
+                std::string::iterator start = input_pos;
+
+                while ((input_pos != input_end) && (*input_pos != '`')) {
+                    if (Eol()) {
+                        throw Parse_Error("Carriage return in identifier literal", File_Position(line, col));
+                    }
+                    else {
+                        ++input_pos;
+                        ++col;
+                    }
+                }
+
+                if (start == input_pos) {
+                    throw Parse_Error("Missing contents of identifier literal", File_Position(line, col));
+                }
+                else if (input_pos == input_end) {
+                    throw Parse_Error("Incomplete identifier literal", File_Position(line, col));
+                }
+
+                ++col;
+                std::string match(start, input_pos);
+                TokenPtr t(new Token(match, Token_Type::Id, filename, prev_line, prev_col, line, col));
+                match_stack.push_back(t);
+                ++input_pos;
+
+            }
+
+            return retval;
+        }
+
         bool Value() {
-            if (Var_Decl() || Lambda() || Id_Fun_Array() || Num(true) || Negate() || Not() || Quoted_String(true) || Single_Quoted_String(true) || Paren_Expression()) {
+            if (Var_Decl() || Lambda() || Id_Fun_Array() || Num(true) || Negate() || Not() || Quoted_String(true) || Single_Quoted_String(true) ||
+                    Paren_Expression() || Id_Literal()) {
                 return true;
             }
             else {
