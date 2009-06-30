@@ -424,12 +424,17 @@ namespace chaiscript
                     for (i = 0; i < node->children[0]->children.size(); ++i) {
                         param_names.push_back(node->children[0]->children[i]->text);
                     }
+                    //retval = boost::shared_ptr<dispatchkit::Proxy_Function>(new dispatchkit::Proxy_Function_Impl<boost::function<void (const std::string &)> >(&test));
+                    retval = dispatchkit::Boxed_Value(boost::shared_ptr<dispatchkit::Proxy_Function>(
+                          new dispatchkit::Dynamic_Proxy_Function(
+                            boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), node->children[0]->children.size())));
                 }
-
-                //retval = boost::shared_ptr<dispatchkit::Proxy_Function>(new dispatchkit::Proxy_Function_Impl<boost::function<void (const std::string &)> >(&test));
-                retval = dispatchkit::Boxed_Value(boost::shared_ptr<dispatchkit::Proxy_Function>(
-                      new dispatchkit::Dynamic_Proxy_Function(
-                        boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), node->children[0]->children.size())));
+                else {
+                    //no parameters
+                    retval = dispatchkit::Boxed_Value(boost::shared_ptr<dispatchkit::Proxy_Function>(
+                          new dispatchkit::Dynamic_Proxy_Function(
+                            boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), 0)));
+                }
             }
             break;
 

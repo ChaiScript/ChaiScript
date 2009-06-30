@@ -1,88 +1,18 @@
 // This file is distributed under the BSD License.
 // See LICENSE.TXT for details.
 
-#ifndef CHAISCRIPT_HPP_
-#define CHAISCRIPT_HPP_
+#ifndef CHAISCRIPT_PARSER_HPP_
+#define CHAISCRIPT_PARSER_HPP_
 
-#include <iostream>
-#include <vector>
+#include <exception>
 #include <fstream>
-#include <stdexcept>
-#include <tr1/memory>
 
-#include <stdlib.h>
-#include <string.h>
+#include "chaiscript_prelude.hpp"
 
-namespace chaiscript {
-    struct File_Position {
-        int line;
-        int column;
-       // std::string::iterator text_pos;
+namespace chaiscript
+{
+    class ChaiScript_Parser {
 
-        File_Position(int file_line, int file_column)
-            : line(file_line), column(file_column) { }
-
-        File_Position() : line(0), column(0) { }
-    };
-
-    typedef std::tr1::shared_ptr<struct Token> TokenPtr;
-
-    class Token_Type { public: enum Type { Internal_Match_Begin, Int, Float, Id, Char, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
-        Expression, Comparison, Additive, Multiplicative, Negate, Not, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
-        Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return }; };
-
-    const char *token_type_to_string(int tokentype) {
-        const char *token_types[] = { "Internal: match begin", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
-            "Expression", "Comparison", "Additive", "Multiplicative", "Negate", "Not", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
-            "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return" };
-
-        return token_types[tokentype];
-    }
-
-    struct Token {
-        std::string text;
-        int identifier;
-        const char *filename;
-        File_Position start, end;
-
-        std::vector<TokenPtr> children;
-
-        Token(const std::string &token_text, int id, const char *fname) : text(token_text), identifier(id), filename(fname) { }
-
-        Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
-            text(token_text), identifier(id), filename(fname) {
-
-            start.line = start_line;
-            start.column = start_col;
-            end.line = end_line;
-            end.column = end_col;
-        }
-    };
-
-    struct Parse_Error {
-        std::string reason;
-        File_Position position;
-        const char *filename;
-
-        Parse_Error(const std::string &why, const File_Position &where, const char *fname) :
-            reason(why), position(where), filename(fname) { }
-
-        Parse_Error(const std::string &why, const TokenPtr &where) : reason(why) {
-            filename = where->filename;
-            position = where->start;
-        }
-
-        virtual ~Parse_Error() throw() {}
-    };
-
-    void debug_print(TokenPtr t, std::string prepend = "") {
-        std::cout << prepend << "text: " << t->text << " id: " << token_type_to_string(t->identifier) << " pos: " << t->start.line << ", " << t->start.column << std::endl;
-        for (unsigned int j = 0; j < t->children.size(); ++j) {
-            debug_print(t->children[j], prepend + "  ");
-        }
-    }
-
-    class Parser {
         std::string::iterator input_pos, input_end;
         int line, col;
         std::string multiline_comment_begin, multiline_comment_end;
@@ -91,6 +21,19 @@ namespace chaiscript {
         std::vector<TokenPtr> match_stack;
 
     public:
+        ChaiScript_Parser() {
+            multiline_comment_begin = "/*";
+            multiline_comment_end = "*/";
+            singleline_comment = "//";
+        }
+
+        void debug_print(TokenPtr t, std::string prepend = "") {
+            std::cout << prepend << "(" << token_type_to_string(t->identifier) << ") " << t->text << " : " << t->start.line << ", " << t->start.column << std::endl;
+            for (unsigned int j = 0; j < t->children.size(); ++j) {
+                debug_print(t->children[j], prepend + "  ");
+            }
+        }
+
         void show_match_stack() {
             for (unsigned int i = 0; i < match_stack.size(); ++i) {
                 debug_print(match_stack[i]);
@@ -99,6 +42,10 @@ namespace chaiscript {
 
         void clear_match_stack() {
             match_stack.clear();
+        }
+
+        TokenPtr ast() {
+            return match_stack.front();
         }
 
         void build_match(Token_Type::Type match_type, int match_start) {
@@ -565,13 +512,36 @@ namespace chaiscript {
             SkipWS();
 
             if (!capture) {
-                return Symbol_(s);
+                std::string::iterator start = input_pos;
+                int prev_col = col;
+                int prev_line = line;
+                bool retval = Symbol_(s);
+                if (retval) {
+                    //todo: fix this.  Hacky workaround for preventing substring matches
+                    if ((input_pos != input_end) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') || (*input_pos == '='))) {
+                        input_pos = start;
+                        col = prev_col;
+                        line = prev_line;
+                        return false;
+                    }
+                    return true;
+                }
+                else {
+                    return retval;
+                }
             }
             else {
                 std::string::iterator start = input_pos;
                 int prev_col = col;
                 int prev_line = line;
                 if (Symbol_(s)) {
+                    //todo: fix this.  Hacky workaround for preventing substring matches
+                    if ((input_pos != input_end) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') || (*input_pos == '='))) {
+                        input_pos = start;
+                        col = prev_col;
+                        line = prev_line;
+                        return false;
+                    }
                     std::string match(start, input_pos);
                     TokenPtr t(new Token(match, Token_Type::Str, filename, prev_line, prev_col, line, col));
                     match_stack.push_back(t);
@@ -948,7 +918,7 @@ namespace chaiscript {
 
             int prev_stack_top = match_stack.size();
 
-            if (Char('-')) {
+            if (Symbol("-")) {
                 retval = true;
 
                 if (!Additive()) {
@@ -967,7 +937,7 @@ namespace chaiscript {
 
             int prev_stack_top = match_stack.size();
 
-            if (Char('!')) {
+            if (Symbol("!")) {
                 retval = true;
 
                 if (!Expression()) {
@@ -988,12 +958,12 @@ namespace chaiscript {
 
             if (Additive()) {
                 retval = true;
-                if (Symbol(">=", true) || Char('>', true) || Symbol("<=", true) || Char('<', true) || Symbol("==", true) || Symbol("!=", true)) {
+                if (Symbol(">=", true) || Symbol(">", true) || Symbol("<=", true) || Symbol("<", true) || Symbol("==", true) || Symbol("!=", true)) {
                     do {
                         if (!Additive()) {
                             throw Parse_Error("Incomplete comparison expression", File_Position(line, col), filename);
                         }
-                    } while (retval && (Symbol(">=", true) || Char('>', true) || Symbol("<=", true) || Char('<', true) || Symbol("==", true) || Symbol("!=", true)));
+                    } while (retval && (Symbol(">=", true) || Symbol(">", true) || Symbol("<=", true) || Symbol("<", true) || Symbol("==", true) || Symbol("!=", true)));
 
                     build_match(Token_Type::Comparison, prev_stack_top);
                 }
@@ -1010,12 +980,12 @@ namespace chaiscript {
 
             if (Multiplicative()) {
                 retval = true;
-                if (Char('+', true) || Char('-', true)) {
+                if (Symbol("+", true) || Symbol("-", true)) {
                     do {
                         if (!Multiplicative()) {
                             throw Parse_Error("Incomplete math expression", File_Position(line, col), filename);
                         }
-                    } while (retval && (Char('+', true) || Char('-', true)));
+                    } while (retval && (Symbol("+", true) || Symbol("-", true)));
 
                     build_match(Token_Type::Additive, prev_stack_top);
                 }
@@ -1031,12 +1001,12 @@ namespace chaiscript {
 
             if (Dot_Access()) {
                 retval = true;
-                if (Char('*', true) || Char('/', true)) {
+                if (Symbol("*", true) || Symbol("/", true)) {
                     do {
                         if (!Dot_Access()) {
                             throw Parse_Error("Incomplete math expression", File_Position(line, col), filename);
                         }
-                    } while (retval && (Char('*', true) || Char('/', true)));
+                    } while (retval && (Symbol("*", true) || Symbol("/", true)));
 
                     build_match(Token_Type::Multiplicative, prev_stack_top);
                 }
@@ -1053,12 +1023,12 @@ namespace chaiscript {
 
             if (Value()) {
                 retval = true;
-                if (Char('.')) {
+                if (Symbol(".")) {
                     do {
                         if (!Value()) {
                             throw Parse_Error("Incomplete dot notation", File_Position(line, col), filename);
                         }
-                    } while (retval && Char('.'));
+                    } while (retval && Symbol("."));
 
                     build_match(Token_Type::Dot_Access, prev_stack_top);
                 }
@@ -1095,7 +1065,7 @@ namespace chaiscript {
 
             if (Expression()) {
                 retval = true;
-                if (Char('=', true)) {
+                if (Symbol("=", true) || Symbol("+=", true) || Symbol("-=", true) || Symbol("*=", true) || Symbol("/=", true)) {
                     if (!Equation()) {
                         throw Parse_Error("Incomplete equation", match_stack.back());
                     }
@@ -1174,22 +1144,24 @@ namespace chaiscript {
             input_pos = input.begin();
             input_end = input.end();
             line = 1; col = 1;
-            multiline_comment_begin = "/*";
-            multiline_comment_end = "*/";
-            singleline_comment = "//";
             filename = fname;
 
             if (Statements()) {
                 if (input_pos != input_end) {
                     throw Parse_Error("Unparsed input", File_Position(line, col), fname);
                 }
-                return true;
+                else {
+                    build_match(Token_Type::File, 0);
+                    return true;
+                }
             }
             else {
                 return false;
             }
         }
-    };
-};
 
-#endif /* CHAISCRIPT_HPP_ */
+    };
+}
+
+
+#endif /* CHAISCRIPT_PARSER_HPP_ */
