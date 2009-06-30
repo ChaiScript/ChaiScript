@@ -33,13 +33,16 @@ int main(int argc, char *argv[]) {
     std::string input;
 
     if (argc > 1) {
-        try {
-            std::cout << parser.parse(load_file(argv[1])) << std::endl;
-            parser.show_match_stack();
-        }
-        catch (chaiscript::Parse_Error &pe) {
-            std::cout << pe.reason << " at " << pe.position.line << ", " << pe.position.column << std::endl;
-            parser.clear_match_stack();
+        for (int i = 1; i < argc; ++i) {
+            try {
+                std::cout << parser.parse(load_file(argv[i]), argv[i]) << std::endl;
+                parser.show_match_stack();
+            }
+            catch (chaiscript::Parse_Error &pe) {
+                std::cout << pe.reason << " in " << pe.filename << " at " << pe.position.line << ", " << pe.position.column << std::endl;
+                parser.clear_match_stack();
+                exit(0);
+            }
         }
     }
     else {
@@ -47,12 +50,13 @@ int main(int argc, char *argv[]) {
         std::getline(std::cin, input);
         while (input != "quit") {
             try {
-                std::cout << parser.parse(input) << std::endl;
+                const char *fname = "_INPUT_";
+                std::cout << parser.parse(input, fname) << std::endl;
                 parser.show_match_stack();
                 parser.clear_match_stack();
             }
             catch (chaiscript::Parse_Error &pe) {
-                std::cout << pe.reason << " at " << pe.position.line << ", " << pe.position.column << std::endl;
+                std::cout << pe.reason << " at " << pe.position.column << std::endl;
                 parser.clear_match_stack();
             }
             std::cout << "eval> ";

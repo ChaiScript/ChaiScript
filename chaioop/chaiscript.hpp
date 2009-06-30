@@ -25,26 +25,16 @@ namespace chaiscript {
         File_Position() : line(0), column(0) { }
     };
 
-    struct Parse_Error {
-        std::string reason;
-        File_Position position;
-
-        Parse_Error(const std::string &why, const File_Position &where) :
-            reason(why), position(where) { }
-
-        virtual ~Parse_Error() throw() {}
-    };
-
     typedef std::tr1::shared_ptr<struct Token> TokenPtr;
 
     class Token_Type { public: enum Type { Internal_Match_Begin, Int, Float, Id, Char, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
         Expression, Comparison, Additive, Multiplicative, Negate, Not, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
-        Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map }; };
+        Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return }; };
 
     const char *token_type_to_string(int tokentype) {
         const char *token_types[] = { "Internal: match begin", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
             "Expression", "Comparison", "Additive", "Multiplicative", "Negate", "Not", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
-            "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map"};
+            "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return" };
 
         return token_types[tokentype];
     }
@@ -58,6 +48,7 @@ namespace chaiscript {
         std::vector<TokenPtr> children;
 
         Token(const std::string &token_text, int id, const char *fname) : text(token_text), identifier(id), filename(fname) { }
+
         Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
             text(token_text), identifier(id), filename(fname) {
 
@@ -66,6 +57,22 @@ namespace chaiscript {
             end.line = end_line;
             end.column = end_col;
         }
+    };
+
+    struct Parse_Error {
+        std::string reason;
+        File_Position position;
+        const char *filename;
+
+        Parse_Error(const std::string &why, const File_Position &where, const char *fname) :
+            reason(why), position(where), filename(fname) { }
+
+        Parse_Error(const std::string &why, const TokenPtr &where) : reason(why) {
+            filename = where->filename;
+            position = where->start;
+        }
+
+        virtual ~Parse_Error() throw() {}
     };
 
     void debug_print(TokenPtr t, std::string prepend = "") {
@@ -80,7 +87,7 @@ namespace chaiscript {
         int line, col;
         std::string multiline_comment_begin, multiline_comment_end;
         std::string singleline_comment;
-        char *filename;
+        const char *filename;
         std::vector<TokenPtr> match_stack;
 
     public:
@@ -112,9 +119,9 @@ namespace chaiscript {
         bool SkipComment() {
             bool retval = false;
 
-            if (Str_(multiline_comment_begin.c_str())) {
+            if (Symbol_(multiline_comment_begin.c_str())) {
                 while (input_pos != input_end) {
-                    if (Str_(multiline_comment_end.c_str())) {
+                    if (Symbol_(multiline_comment_end.c_str())) {
                         break;
                     }
                     else if (!Eol_()) {
@@ -124,7 +131,7 @@ namespace chaiscript {
                 }
                 retval = true;
             }
-            else if (Str_(singleline_comment.c_str())) {
+            else if (Symbol_(singleline_comment.c_str())) {
                 while (input_pos != input_end) {
                     if (Eol_()) {
                         break;
@@ -290,7 +297,7 @@ namespace chaiscript {
                     ++col;
                 }
                 else {
-                    throw Parse_Error("Unclosed quoted string", File_Position(line, col));
+                    throw Parse_Error("Unclosed quoted string", File_Position(line, col), filename);
                 }
             }
             return retval;
@@ -329,7 +336,7 @@ namespace chaiscript {
                                     case ('t') : match.push_back('\t'); break;
                                     case ('\'') : match.push_back('\''); break;
                                     case ('\"') : match.push_back('\"'); break;
-                                    default: throw Parse_Error("Unknown escaped sequence in string", File_Position(prev_line, prev_col));
+                                    default: throw Parse_Error("Unknown escaped sequence in string", File_Position(prev_line, prev_col), filename);
                                 }
                             }
                             else {
@@ -375,7 +382,7 @@ namespace chaiscript {
                     ++col;
                 }
                 else {
-                    throw Parse_Error("Unclosed single-quoted string", File_Position(line, col));
+                    throw Parse_Error("Unclosed single-quoted string", File_Position(line, col), filename);
                 }
             }
             return retval;
@@ -414,7 +421,7 @@ namespace chaiscript {
                                     case ('t') : match.push_back('\t'); break;
                                     case ('\'') : match.push_back('\''); break;
                                     case ('\"') : match.push_back('\"'); break;
-                                    default: throw Parse_Error("Unknown escaped sequence in string", File_Position(prev_line, prev_col));
+                                    default: throw Parse_Error("Unknown escaped sequence in string", File_Position(prev_line, prev_col), filename);
                                 }
                             }
                             else {
@@ -467,7 +474,7 @@ namespace chaiscript {
             }
         }
 
-        bool Str_(const char *s) {
+        bool Keyword_(const char *s) {
             bool retval = false;
             int len = strlen(s);
 
@@ -487,17 +494,84 @@ namespace chaiscript {
             return retval;
         }
 
-        bool Str(const char *s, bool capture = false) {
+        bool Keyword(const char *s, bool capture = false) {
             SkipWS();
 
             if (!capture) {
-                return Str_(s);
+                std::string::iterator start = input_pos;
+                int prev_col = col;
+                int prev_line = line;
+                bool retval = Keyword_(s);
+                if (retval) {
+                    //todo: fix this.  Hacky workaround for preventing substring matches
+                    if ((input_pos != input_end) && (((*input_pos >= 'A') && (*input_pos <= 'Z')) || (*input_pos == '_') || ((*input_pos >= 'a') && (*input_pos <= 'z'))
+                            || ((*input_pos >= '0') && (*input_pos <= '9')))) {
+                        input_pos = start;
+                        col = prev_col;
+                        line = prev_line;
+                        return false;
+                    }
+                    return true;
+                }
+                else {
+                    return retval;
+                }
             }
             else {
                 std::string::iterator start = input_pos;
                 int prev_col = col;
                 int prev_line = line;
-                if (Str_(s)) {
+                if (Keyword_(s)) {
+                    //todo: fix this.  Hacky workaround for preventing substring matches
+                    if ((input_pos != input_end) && (((*input_pos >= 'A') && (*input_pos <= 'Z')) || (*input_pos == '_') || ((*input_pos >= 'a') && (*input_pos <= 'z'))
+                            || ((*input_pos >= '0') && (*input_pos <= '9')))) {
+                        input_pos = start;
+                        col = prev_col;
+                        line = prev_line;
+                        return false;
+                    }
+                    std::string match(start, input_pos);
+                    TokenPtr t(new Token(match, Token_Type::Str, filename, prev_line, prev_col, line, col));
+                    match_stack.push_back(t);
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
+        }
+
+        bool Symbol_(const char *s) {
+            bool retval = false;
+            int len = strlen(s);
+
+            if ((input_end - input_pos) >= len) {
+                std::string::iterator tmp = input_pos;
+                for (int i = 0; i < len; ++i) {
+                    if (*tmp != s[i]) {
+                        return false;
+                    }
+                    ++tmp;
+                }
+                retval = true;
+                input_pos = tmp;
+                col += len;
+            }
+
+            return retval;
+        }
+
+        bool Symbol(const char *s, bool capture = false) {
+            SkipWS();
+
+            if (!capture) {
+                return Symbol_(s);
+            }
+            else {
+                std::string::iterator start = input_pos;
+                int prev_col = col;
+                int prev_line = line;
+                if (Symbol_(s)) {
                     std::string match(start, input_pos);
                     TokenPtr t(new Token(match, Token_Type::Str, filename, prev_line, prev_col, line, col));
                     match_stack.push_back(t);
@@ -512,7 +586,7 @@ namespace chaiscript {
         bool Eol_() {
             bool retval = false;
 
-            if ((input_pos != input_end) && (Str_("\r\n") || Char_('\n'))) {
+            if ((input_pos != input_end) && (Symbol_("\r\n") || Char_('\n'))) {
                 retval = true;
                 ++line;
                 col = 1;
@@ -556,7 +630,7 @@ namespace chaiscript {
                 if (Char(',')) {
                     do {
                         if (!Expression()) {
-                            throw Parse_Error("Unexpected value in parameter list", File_Position(line, col));
+                            throw Parse_Error("Unexpected value in parameter list", match_stack.back());
                         }
                     } while (retval && Char(','));
                 }
@@ -572,17 +646,19 @@ namespace chaiscript {
 
             int prev_stack_top = match_stack.size();
 
-            if (Str("fun")) {
+            if (Keyword("fun")) {
                 retval = true;
 
                 if (Char('(')) {
                     if (!(Arg_List() && Char(')'))) {
-                        throw Parse_Error("Incomplete anonymous function", File_Position(line, col));
+                        throw Parse_Error("Incomplete anonymous function", File_Position(line, col), filename);
                     }
                 }
 
+                while (Eol());
+
                 if (!Block()) {
-                    throw Parse_Error("Incomplete anonymous function", File_Position(line, col));
+                    throw Parse_Error("Incomplete anonymous function", File_Position(line, col), filename);
                 }
 
                 build_match(Token_Type::Lambda, prev_stack_top);
@@ -596,24 +672,82 @@ namespace chaiscript {
 
             int prev_stack_top = match_stack.size();
 
-            if (Str("def")) {
+            if (Keyword("def")) {
                 retval = true;
 
                 if (!Id(true)) {
-                    throw Parse_Error("Missing function name in definition", File_Position(line, col));
+                    throw Parse_Error("Missing function name in definition", File_Position(line, col), filename);
                 }
 
                 if (Char('(')) {
                     if (!(Arg_List() && Char(')'))) {
-                        throw Parse_Error("Incomplete anonymous function", File_Position(line, col));
+                        throw Parse_Error("Incomplete function definition", File_Position(line, col), filename);
                     }
                 }
 
+                while (Eol());
+
                 if (!Block()) {
-                    throw Parse_Error("Incomplete anonymous function", File_Position(line, col));
+                    throw Parse_Error("Incomplete function definition", File_Position(line, col), filename);
                 }
 
                 build_match(Token_Type::Def, prev_stack_top);
+            }
+
+            return retval;
+        }
+
+        bool If() {
+            bool retval = false;
+
+            int prev_stack_top = match_stack.size();
+
+            if (Keyword("if")) {
+                retval = true;
+
+                if (!Char('(')) {
+                    throw Parse_Error("Incomplete if expression", File_Position(line, col), filename);
+                }
+
+                if (!(Expression() && Char(')'))) {
+                    throw Parse_Error("Incomplete if expression", File_Position(line, col), filename);
+                }
+
+                while (Eol());
+
+                if (!Block()) {
+                    throw Parse_Error("Incomplete if block", File_Position(line, col), filename);
+                }
+
+                build_match(Token_Type::If, prev_stack_top);
+            }
+
+            return retval;
+        }
+
+        bool While() {
+            bool retval = false;
+
+            int prev_stack_top = match_stack.size();
+
+            if (Keyword("while")) {
+                retval = true;
+
+                if (!Char('(')) {
+                    throw Parse_Error("Incomplete while expression", File_Position(line, col), filename);
+                }
+
+                if (!(Expression() && Char(')'))) {
+                    throw Parse_Error("Incomplete while expression", File_Position(line, col), filename);
+                }
+
+                while (Eol());
+
+                if (!Block()) {
+                    throw Parse_Error("Incomplete while block", File_Position(line, col), filename);
+                }
+
+                build_match(Token_Type::While, prev_stack_top);
             }
 
             return retval;
@@ -629,7 +763,7 @@ namespace chaiscript {
 
                 Statements();
                 if (!Char('}')) {
-                    throw Parse_Error("Incomplete block", File_Position(line, col));
+                    throw Parse_Error("Incomplete block", File_Position(line, col), filename);
                 }
 
                 build_match(Token_Type::Block, prev_stack_top);
@@ -637,6 +771,21 @@ namespace chaiscript {
 
             return retval;
 
+        }
+
+        bool Return() {
+            bool retval = false;
+
+            int prev_stack_top = match_stack.size();
+
+            if (Keyword("return")) {
+                retval = true;
+
+                Expression();
+                build_match(Token_Type::Return, prev_stack_top);
+            }
+
+            return retval;
         }
 
         bool Id_Fun_Array() {
@@ -656,7 +805,7 @@ namespace chaiscript {
 
                         Arg_List();
                         if (!Char(')')) {
-                            throw Parse_Error("Incomplete function call", File_Position(line, col));
+                            throw Parse_Error("Incomplete function call", File_Position(line, col), filename);
                         }
 
                         build_match(Token_Type::Fun_Call, prev_stack_top);
@@ -665,7 +814,7 @@ namespace chaiscript {
                         has_more = true;
 
                         if (!(Expression() && Char(']'))) {
-                            throw Parse_Error("Incomplete array access", File_Position(line, col));
+                            throw Parse_Error("Incomplete array access", File_Position(line, col), filename);
                         }
 
                         build_match(Token_Type::Array_Call, prev_stack_top);
@@ -693,11 +842,11 @@ namespace chaiscript {
 
             int prev_stack_top = match_stack.size();
 
-            if (Str("var")) {
+            if (Keyword("var")) {
                 retval = true;
 
                 if (!Id(true)) {
-                    throw Parse_Error("Incomplete variable declaration", File_Position(line, col));
+                    throw Parse_Error("Incomplete variable declaration", File_Position(line, col), filename);
                 }
 
                 build_match(Token_Type::Var_Decl, prev_stack_top);
@@ -713,12 +862,29 @@ namespace chaiscript {
             if (Char('(')) {
                 retval = true;
                 if (!Expression()) {
-                    throw Parse_Error("Incomplete expression", File_Position(line, col));
+                    throw Parse_Error("Incomplete expression", File_Position(line, col), filename);
                 }
                 if (!Char(')')) {
-                    throw Parse_Error("Missing closing parenthesis", File_Position(line, col));
+                    throw Parse_Error("Missing closing parenthesis", File_Position(line, col), filename);
                 }
             }
+            return retval;
+        }
+
+        bool Inline_Container() {
+            bool retval = false;
+
+            unsigned int prev_stack_top = match_stack.size();
+
+            if (Char('[')) {
+                retval = true;
+                Arg_List();
+                if (!Char(']')) {
+                    throw Parse_Error("Missing closing square bracket", File_Position(line, col), filename);
+                }
+                build_match(Token_Type::Inline_Array, prev_stack_top);
+            }
+
             return retval;
         }
 
@@ -740,7 +906,7 @@ namespace chaiscript {
 
                 while ((input_pos != input_end) && (*input_pos != '`')) {
                     if (Eol()) {
-                        throw Parse_Error("Carriage return in identifier literal", File_Position(line, col));
+                        throw Parse_Error("Carriage return in identifier literal", File_Position(line, col), filename);
                     }
                     else {
                         ++input_pos;
@@ -749,10 +915,10 @@ namespace chaiscript {
                 }
 
                 if (start == input_pos) {
-                    throw Parse_Error("Missing contents of identifier literal", File_Position(line, col));
+                    throw Parse_Error("Missing contents of identifier literal", File_Position(line, col), filename);
                 }
                 else if (input_pos == input_end) {
-                    throw Parse_Error("Incomplete identifier literal", File_Position(line, col));
+                    throw Parse_Error("Incomplete identifier literal", File_Position(line, col), filename);
                 }
 
                 ++col;
@@ -768,7 +934,7 @@ namespace chaiscript {
 
         bool Value() {
             if (Var_Decl() || Lambda() || Id_Fun_Array() || Num(true) || Negate() || Not() || Quoted_String(true) || Single_Quoted_String(true) ||
-                    Paren_Expression() || Id_Literal()) {
+                    Paren_Expression() || Inline_Container() || Id_Literal()) {
                 return true;
             }
             else {
@@ -785,7 +951,7 @@ namespace chaiscript {
                 retval = true;
 
                 if (!Additive()) {
-                    throw Parse_Error("Incomplete negation expression", File_Position(line, col));
+                    throw Parse_Error("Incomplete negation expression", File_Position(line, col), filename);
                 }
 
                 build_match(Token_Type::Negate, prev_stack_top);
@@ -804,7 +970,7 @@ namespace chaiscript {
                 retval = true;
 
                 if (!Expression()) {
-                    throw Parse_Error("Incomplete '!' expression", File_Position(line, col));
+                    throw Parse_Error("Incomplete '!' expression", File_Position(line, col), filename);
                 }
 
                 build_match(Token_Type::Not, prev_stack_top);
@@ -821,12 +987,12 @@ namespace chaiscript {
 
             if (Additive()) {
                 retval = true;
-                if (Str(">=", true) || Char('>', true) || Str("<=", true) || Char('<', true) || Str("==", true) || Str("!=", true)) {
+                if (Symbol(">=", true) || Char('>', true) || Symbol("<=", true) || Char('<', true) || Symbol("==", true) || Symbol("!=", true)) {
                     do {
                         if (!Additive()) {
-                            throw Parse_Error("Incomplete comparison expression", File_Position(line, col));
+                            throw Parse_Error("Incomplete comparison expression", File_Position(line, col), filename);
                         }
-                    } while (retval && (Str(">=", true) || Char('>', true) || Str("<=", true) || Char('<', true) || Str("==", true) || Str("!=", true)));
+                    } while (retval && (Symbol(">=", true) || Char('>', true) || Symbol("<=", true) || Char('<', true) || Symbol("==", true) || Symbol("!=", true)));
 
                     build_match(Token_Type::Comparison, prev_stack_top);
                 }
@@ -846,7 +1012,7 @@ namespace chaiscript {
                 if (Char('+', true) || Char('-', true)) {
                     do {
                         if (!Multiplicative()) {
-                            throw Parse_Error("Incomplete math expression", File_Position(line, col));
+                            throw Parse_Error("Incomplete math expression", File_Position(line, col), filename);
                         }
                     } while (retval && (Char('+', true) || Char('-', true)));
 
@@ -867,7 +1033,7 @@ namespace chaiscript {
                 if (Char('*', true) || Char('/', true)) {
                     do {
                         if (!Dot_Access()) {
-                            throw Parse_Error("Incomplete math expression", File_Position(line, col));
+                            throw Parse_Error("Incomplete math expression", File_Position(line, col), filename);
                         }
                     } while (retval && (Char('*', true) || Char('/', true)));
 
@@ -889,7 +1055,7 @@ namespace chaiscript {
                 if (Char('.')) {
                     do {
                         if (!Value()) {
-                            throw Parse_Error("Incomplete dot notation", File_Position(line, col));
+                            throw Parse_Error("Incomplete dot notation", File_Position(line, col), filename);
                         }
                     } while (retval && Char('.'));
 
@@ -907,12 +1073,12 @@ namespace chaiscript {
 
             if (Comparison()) {
                 retval = true;
-                if (Str("&&", true) || Str("||", true)) {
+                if (Symbol("&&", true) || Symbol("||", true)) {
                     do {
                         if (!Comparison()) {
-                            throw Parse_Error("Incomplete  expression", File_Position(line, col));
+                            throw Parse_Error("Incomplete  expression", File_Position(line, col), filename);
                         }
-                    } while (retval && (Str("&&", true) || Str("||", true)));
+                    } while (retval && (Symbol("&&", true) || Symbol("||", true)));
 
                     build_match(Token_Type::Expression, prev_stack_top);
                 }
@@ -930,7 +1096,7 @@ namespace chaiscript {
                 retval = true;
                 if (Char('=', true)) {
                     if (!Equation()) {
-                        throw Parse_Error("Incomplete equation", File_Position(line, col));
+                        throw Parse_Error("Incomplete equation", match_stack.back());
                     }
 
                     build_match(Token_Type::Equation, prev_stack_top);
@@ -942,7 +1108,7 @@ namespace chaiscript {
         }
 
         bool Statement() {
-            if (Equation()) {
+            if (Return() || Equation()) {
                 return true;
             }
             else {
@@ -958,9 +1124,33 @@ namespace chaiscript {
 
             while (has_more) {
                 has_more = false;
-                if (Statement()) {
+                if (Def()) {
                     if (!saw_eol) {
-                        throw Parse_Error("Two expressions missing line separator", File_Position(line, col));
+                        throw Parse_Error("Two function definitions missing line separator", match_stack.back());
+                    }
+                    has_more = true;
+                    retval = true;
+                    saw_eol = false;
+                }
+                else if (If()) {
+                    if (!saw_eol) {
+                        throw Parse_Error("Two function definitions missing line separator", match_stack.back());
+                    }
+                    has_more = true;
+                    retval = true;
+                    saw_eol = false;
+                }
+                else if (While()) {
+                    if (!saw_eol) {
+                        throw Parse_Error("Two function definitions missing line separator", match_stack.back());
+                    }
+                    has_more = true;
+                    retval = true;
+                    saw_eol = false;
+                }
+                else if (Statement()) {
+                    if (!saw_eol) {
+                        throw Parse_Error("Two expressions missing line separator", match_stack.back());
                     }
                     has_more = true;
                     retval = true;
@@ -979,15 +1169,24 @@ namespace chaiscript {
             return retval;
         }
 
-        bool parse(std::string input) {
+        bool parse(std::string input, const char *fname) {
             input_pos = input.begin();
             input_end = input.end();
             line = 1; col = 1;
             multiline_comment_begin = "/*";
             multiline_comment_end = "*/";
             singleline_comment = "//";
+            filename = fname;
 
-            return Statements();
+            if (Statements()) {
+                if (input_pos != input_end) {
+                    throw Parse_Error("Unparsed input", File_Position(line, col), fname);
+                }
+                return true;
+            }
+            else {
+                return false;
+            }
         }
     };
 };
