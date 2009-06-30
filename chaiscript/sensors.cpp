@@ -4,6 +4,7 @@
 #include "function_call.hpp"
 #include <boost/function.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/regex.hpp>
 
 
 std::string load_text_file(const std::string &filename)

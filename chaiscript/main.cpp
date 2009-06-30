@@ -7,12 +7,13 @@ int main(int argc, char *argv[]) {
     std::string input;
 
     chaiscript::ChaiScript_Engine chai;
+    chai.build_eval_system();
 
     if (argc < 2) {
         std::cout << "eval> ";
         std::getline(std::cin, input);
         while (input != "quit") {
-          dispatchkit::Boxed_Value val;
+            dispatchkit::Boxed_Value val;
 
             val = chai.evaluate_string(input);
 
@@ -25,7 +26,7 @@ int main(int argc, char *argv[]) {
                     dispatchkit::dispatch(chai.get_eval_engine().get_function("print"),
                         dispatchkit::Param_List_Builder() << printeval);
                 } catch (const std::runtime_error &e) {
-                    std::cout << "result: object #" << &val << std::endl;
+                    std::cout << "result: object #" << &val << " Error: " << e.what() << std::endl;
                 }
             }
             std::cout << "eval> ";
