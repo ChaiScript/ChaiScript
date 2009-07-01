@@ -1180,7 +1180,7 @@ namespace chaiscript
 
             if (Expression()) {
                 retval = true;
-                if (Symbol("=", true) || Symbol("+=", true) || Symbol("-=", true) || Symbol("*=", true) || Symbol("/=", true)) {
+                if (Symbol("=", true) || Symbol(":=", true) || Symbol("+=", true) || Symbol("-=", true) || Symbol("*=", true) || Symbol("/=", true)) {
                     if (!Equation()) {
                         throw Parse_Error("Incomplete equation", match_stack.back());
                     }
