@@ -506,8 +506,6 @@ namespace dispatchkit
           "call_exists");
 
       register_function(s, &type_match, "type_match");
-      register_function(s, &bool_and<bool, bool>, "&&");
-      register_function(s, &bool_or<bool, bool>, "||");
     }
   };
 }
