@@ -289,7 +289,7 @@ namespace chaiscript
             case (Token_Type::Fun_Call) : {
                 dispatchkit::Param_List_Builder plb;
 
-                std::vector<std::pair<std::string, dispatchkit::Dispatch_Engine::Function_Map::mapped_type> > fn;
+                //std::vector<std::pair<std::string, dispatchkit::Dispatch_Engine::Function_Map::mapped_type> > fn;
                 dispatchkit::Dispatch_Engine::Stack prev_stack = ss.get_stack();
 
                 dispatchkit::Dispatch_Engine::Stack new_stack;
@@ -301,9 +301,12 @@ namespace chaiscript
                     }
                 }
                 try {
-                    fn = ss.get_function(node->children[0]->text);
+                    dispatchkit::Boxed_Value fn = eval_token(ss, node->children[0]);
+                    //fn = ss.get_function(node->children[0]->text);
                     ss.set_stack(new_stack);
-                    retval = dispatch(fn, plb);
+                    //retval = dispatch(fn, plb);
+                    //retval = dispatch
+                    retval = (*dispatchkit::boxed_cast<boost::shared_ptr<dispatchkit::Proxy_Function> >(fn))(plb);
                     ss.set_stack(prev_stack);
                 }
                 catch(EvalError &ee) {
