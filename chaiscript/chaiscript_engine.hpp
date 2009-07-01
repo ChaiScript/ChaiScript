@@ -98,7 +98,7 @@ namespace chaiscript
             }
             catch (EvalError &ee) {
                 if (filename != std::string("__EVAL__")) {
-                    std::cout << "Eval error: \"" << ee.reason << "\" in '" << ee.location->filename << "' line: " << ee.location->start.line+1 << std::endl;
+                    std::cout << "Eval error: \"" << ee.reason << "\" in '" << ee.location->filename << "' line: " << ee.location->start.line << std::endl;
                 }
                 else {
                     std::cout << "Eval error: \"" << ee.reason << "\"" << std::endl;

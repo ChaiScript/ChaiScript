@@ -1269,6 +1269,12 @@ namespace chaiscript
             line = 1; col = 1;
             filename = fname;
 
+            if ((input.size() > 0) && (input[0] == '#')) {
+                while ((input_pos != input_end) && (!Eol())) {
+                    ++input_pos;
+                }
+            }
+
             if (Statements()) {
                 if (input_pos != input_end) {
                     throw Parse_Error("Unparsed input", File_Position(line, col), fname);
