@@ -36,7 +36,6 @@ namespace chaiscript
 
         const dispatchkit::Boxed_Value eval(const std::vector<dispatchkit::Boxed_Value> &vals) {
             std::string val;
-
             try {
                 val = dispatchkit::boxed_cast<std::string &>(vals[0]);
             }
@@ -83,6 +82,7 @@ namespace chaiscript
         dispatchkit::Boxed_Value evaluate_string(const std::string &input, const char *filename = "__EVAL__") {
             //debug_print(tokens);
             dispatchkit::Boxed_Value value;
+            parser.clear_match_stack();
 
             try {
                 if (parser.parse(input, filename)) {
@@ -107,7 +107,6 @@ namespace chaiscript
             catch (std::exception &e) {
                 std::cout << "Exception: " << e.what() << std::endl;
             }
-            parser.clear_match_stack();
 
             return value;
         }
