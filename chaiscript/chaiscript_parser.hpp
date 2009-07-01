@@ -714,6 +714,36 @@ namespace chaiscript
                     throw Parse_Error("Incomplete 'if' block", File_Position(line, col), filename);
                 }
 
+                bool has_matches = true;
+                while (has_matches) {
+                    while (Eol());
+                    has_matches = false;
+                    if (Keyword("elseif", true)) {
+                        if (!Char('(')) {
+                            throw Parse_Error("Incomplete 'elseif' expression", File_Position(line, col), filename);
+                        }
+
+                        if (!(Expression() && Char(')'))) {
+                            throw Parse_Error("Incomplete 'elseif' expression", File_Position(line, col), filename);
+                        }
+
+                        while (Eol());
+
+                        if (!Block()) {
+                            throw Parse_Error("Incomplete 'elseif' block", File_Position(line, col), filename);
+                        }
+                        has_matches = true;
+                    }
+                    else if (Keyword("else", true)) {
+                        while (Eol());
+
+                        if (!Block()) {
+                            throw Parse_Error("Incomplete 'else' block", File_Position(line, col), filename);
+                        }
+                        has_matches = true;
+                    }
+                }
+
                 build_match(Token_Type::If, prev_stack_top);
             }
 
@@ -751,7 +781,7 @@ namespace chaiscript
         bool For_Guards() {
             Equation();
 
-            if (Char(';') && Expression() && Char(';') && Expression()) {
+            if (Char(';') && Expression() && Char(';') && Equation()) {
                 return true;
             }
             else {
@@ -1216,7 +1246,7 @@ namespace chaiscript
                     }
                     has_more = true;
                     retval = true;
-                    saw_eol = false;
+                    saw_eol = true;
                 }
                 else if (If()) {
                     if (!saw_eol) {
@@ -1224,7 +1254,7 @@ namespace chaiscript
                     }
                     has_more = true;
                     retval = true;
-                    saw_eol = false;
+                    saw_eol = true;
                 }
                 else if (While()) {
                     if (!saw_eol) {
@@ -1232,7 +1262,7 @@ namespace chaiscript
                     }
                     has_more = true;
                     retval = true;
-                    saw_eol = false;
+                    saw_eol = true;
                 }
                 else if (For()) {
                     if (!saw_eol) {
@@ -1240,7 +1270,7 @@ namespace chaiscript
                     }
                     has_more = true;
                     retval = true;
-                    saw_eol = false;
+                    saw_eol = true;
                 }
                 else if (Statement()) {
                     if (!saw_eol) {
