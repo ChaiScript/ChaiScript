@@ -186,27 +186,25 @@ namespace chaiscript
                 }
             }
             break;
-            /*
-            case (TokenType::Map_Init) : {
+            case (Token_Type::Inline_Map) : {
                 try {
                     retval = dispatch(ss.get_function("Map"), dispatchkit::Param_List_Builder());
-                    for (i = 0; i < node->children.size(); ++i) {
+                    for (i = 0; i < node->children[0]->children.size(); ++i) {
                         try {
-                            dispatchkit::Boxed_Value key = eval_token(ss, node->children[i]->children[0]);
+                            dispatchkit::Boxed_Value key = eval_token(ss, node->children[0]->children[i]->children[0]);
                             dispatchkit::Boxed_Value slot = dispatch(ss.get_function("[]"), dispatchkit::Param_List_Builder() << retval << key);
-                            dispatch(ss.get_function("="), dispatchkit::Param_List_Builder() << slot << eval_token(ss, node->children[i]->children[1]));
+                            dispatch(ss.get_function("="), dispatchkit::Param_List_Builder() << slot << eval_token(ss, node->children[0]->children[i]->children[1]));
                         }
                         catch (const dispatchkit::dispatch_error &inner_e) {
-                            throw EvalError("Can not find appropriate '=' for map init", node->children[i]);
+                            throw EvalError("Can not find appropriate '=' for map init", node->children[0]->children[i]);
                         }
                     }
                 }
                 catch (const dispatchkit::dispatch_error &e) {
-                    throw EvalError("Can not find appropriate 'Vector()'", node);
+                    throw EvalError("Can not find appropriate 'Map()'", node);
                 }
             }
             break;
-            */
             case (Token_Type::Fun_Call) : {
                 dispatchkit::Param_List_Builder plb;
 
@@ -461,11 +459,11 @@ namespace chaiscript
                 throw ReturnValue(retval, node);
             }
             break;
-            /*
-            case (TokenType::Break) : {
+            case (Token_Type::Break) : {
                 throw BreakLoop(node);
             }
             break;
+            /*
             case (TokenType::Statement) :
             case (TokenType::Carriage_Return) :
             case (TokenType::Semicolon) :

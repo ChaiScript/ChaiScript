@@ -613,6 +613,27 @@ namespace chaiscript
 
         }
 
+        bool Container_Arg_List() {
+            bool retval = false;
+
+            int prev_stack_top = match_stack.size();
+
+            if (Map_Pair()) {
+                retval = true;
+                if (Char(',')) {
+                    do {
+                        if (!Map_Pair()) {
+                            throw Parse_Error("Unexpected value in container", match_stack.back());
+                        }
+                    } while (retval && Char(','));
+                }
+                build_match(Token_Type::Arg_List, prev_stack_top);
+            }
+
+            return retval;
+
+        }
+
         bool Lambda() {
             bool retval = false;
 
@@ -762,6 +783,20 @@ namespace chaiscript
             return retval;
         }
 
+        bool Break() {
+            bool retval = false;
+
+            int prev_stack_top = match_stack.size();
+
+            if (Keyword("break")) {
+                retval = true;
+
+                build_match(Token_Type::Break, prev_stack_top);
+            }
+
+            return retval;
+        }
+
         bool Id_Fun_Array() {
             bool retval = false;
             std::string::iterator prev_pos = input_pos;
@@ -852,11 +887,21 @@ namespace chaiscript
 
             if (Char('[')) {
                 retval = true;
-                Arg_List();
+                Container_Arg_List();
                 if (!Char(']')) {
                     throw Parse_Error("Missing closing square bracket", File_Position(line, col), filename);
                 }
-                build_match(Token_Type::Inline_Array, prev_stack_top);
+                if ((prev_stack_top != match_stack.size()) && (match_stack.back()->children.size() > 0)) {
+                    if (match_stack.back()->children[0]->identifier == Token_Type::Map_Pair) {
+                        build_match(Token_Type::Inline_Map, prev_stack_top);
+                    }
+                    else {
+                        build_match(Token_Type::Inline_Array, prev_stack_top);
+                    }
+                }
+                else {
+                    build_match(Token_Type::Inline_Array, prev_stack_top);
+                }
             }
 
             return retval;
@@ -1058,11 +1103,32 @@ namespace chaiscript
                 if (Symbol("&&", true) || Symbol("||", true)) {
                     do {
                         if (!Comparison()) {
-                            throw Parse_Error("Incomplete  expression", File_Position(line, col), filename);
+                            throw Parse_Error("Incomplete expression", File_Position(line, col), filename);
                         }
                     } while (retval && (Symbol("&&", true) || Symbol("||", true)));
 
                     build_match(Token_Type::Expression, prev_stack_top);
+                }
+            }
+
+            return retval;
+        }
+
+        bool Map_Pair() {
+            bool retval = false;
+
+            int prev_stack_top = match_stack.size();
+
+            if (Expression()) {
+                retval = true;
+                if (Symbol(":")) {
+                    do {
+                        if (!Expression()) {
+                            throw Parse_Error("Incomplete map pair", File_Position(line, col), filename);
+                        }
+                    } while (retval && Symbol(":"));
+
+                    build_match(Token_Type::Map_Pair, prev_stack_top);
                 }
             }
 
@@ -1090,7 +1156,7 @@ namespace chaiscript
         }
 
         bool Statement() {
-            if (Return() || Equation()) {
+            if (Return() || Break() || Equation()) {
                 return true;
             }
             else {

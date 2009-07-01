@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
                     dispatchkit::dispatch(chai.get_eval_engine().get_function("print"),
                         dispatchkit::Param_List_Builder() << printeval);
                 } catch (const std::runtime_error &e) {
-                    std::cout << "result: object #" << &val << " Error: " << e.what() << std::endl;
+                    //std::cout << "result: object #" << &val << " Error: " << e.what() << std::endl;
                 }
             }
             std::cout << "eval> ";

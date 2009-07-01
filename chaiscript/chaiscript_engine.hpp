@@ -85,11 +85,9 @@ namespace chaiscript
             dispatchkit::Boxed_Value value;
 
             try {
-                parser.clear_match_stack();
                 if (parser.parse(input, filename)) {
-                    //show_match_stack();
+                    //parser.show_match_stack();
                     value = eval_token<Eval_Engine>(engine, parser.ast());
-                    //clear_match_stack();
                 }
             }
             catch (const ReturnValue &rv) {
@@ -97,7 +95,6 @@ namespace chaiscript
             }
             catch (Parse_Error &pe) {
                 std::cout << pe.reason << " in " << pe.filename << " at " << pe.position.line << ", " << pe.position.column << std::endl;
-                parser.clear_match_stack();
             }
             catch (EvalError &ee) {
                 if (filename != std::string("__EVAL__")) {
@@ -110,6 +107,7 @@ namespace chaiscript
             catch (std::exception &e) {
                 std::cout << "Exception: " << e.what() << std::endl;
             }
+            parser.clear_match_stack();
 
             return value;
         }
