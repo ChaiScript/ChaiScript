@@ -30,7 +30,7 @@ namespace dispatchkit
         return m_begin == m_end;
       }
 
-      void popFront()
+      void pop_front()
       {
         if (empty())
         {
@@ -63,7 +63,7 @@ namespace dispatchkit
 
 
       register_function(system, &Input_Range<ContainerType>::empty, "empty");
-      register_function(system, &Input_Range<ContainerType>::popFront, "popFront");
+      register_function(system, &Input_Range<ContainerType>::pop_front, "pop_front");
       register_function(system, &Input_Range<ContainerType>::front, "front");
     } 
   

@@ -15,7 +15,7 @@ def for_each(container, func) { \n\
 	var range = range(container); \n\
 	while (!range.empty()) { \n\
 		func(range.front()) \n\
-		range.popFront() \n\
+		range.pop_front() \n\
 	} \n\
 } \n\
 def map(container, func) { \n\
@@ -23,7 +23,7 @@ def map(container, func) { \n\
 	var range = range(container) \n\
 	while (!range.empty()) { \n\
 		retval.push_back(func(range.front())) \n\
-		range.popFront() \n\
+		range.pop_front() \n\
 	} \n\
 	return retval \n\
 } \n\
@@ -32,7 +32,7 @@ def reduce(container, func, initial) { \n\
   var range = range(container) \n\
 	while (!range.empty()) { \n\
 		retval = (func(range.front(), retval)) \n\
-		range.popFront() \n\
+		range.pop_front() \n\
 	} \n\
 	return retval \n\
 } \n\
@@ -41,11 +41,11 @@ def join(container, delim) { \n\
 	var range = range(container) \n\
 	if (!range.empty()) { \n\
 		retval += to_string(range.front()) \n\
-		range.popFront() \n\
+		range.pop_front() \n\
 		while (!range.empty()) { \n\
 			retval += delim \n\
 			retval += to_string(range.front()) \n\
-			range.popFront() \n\
+			range.pop_front() \n\
 		} \n\
 	} \n\
 	return retval \n\
