@@ -139,8 +139,38 @@ namespace chaiscript
                 retval = ss.get_object(node->children[0]->text);
             }
             break;
+            case (Token_Type::Expression) : {
+                retval = eval_token(ss, node->children[0]);
+                if (node->children.size() > 1) {
+                    for (i = 1; i < node->children.size(); i += 2) {
+                        bool lhs;
+                        try {
+                            lhs = dispatchkit::boxed_cast<bool &>(retval);
+                        }
+                        catch (std::exception &e) {
+                            throw EvalError("Condition not boolean", node);
+                        }
+                        if (node->children[i]->text == "&&") {
+                            if (lhs) {
+                                retval = eval_token(ss, node->children[i+1]);
+                            }
+                            else {
+                                retval = dispatchkit::Boxed_Value(false);
+                            }
+                        }
+                        else if (node->children[i]->text == "||") {
+                            if (lhs) {
+                                retval = dispatchkit::Boxed_Value(true);
+                            }
+                            else {
+                                retval = eval_token(ss, node->children[i+1]);
+                            }
+                        }
+                    }
+                }
+            }
+            break;
             case (Token_Type::Comparison) :
-            case (Token_Type::Expression) :
             case (Token_Type::Additive) :
             case (Token_Type::Multiplicative) : {
                 retval = eval_token(ss, node->children[0]);
