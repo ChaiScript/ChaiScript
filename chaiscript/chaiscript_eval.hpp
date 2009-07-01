@@ -356,8 +356,7 @@ namespace chaiscript
                 retval = dispatchkit::Boxed_Value();
             }
             break;
-            /*
-            case(TokenType::For_Block) : {
+            case(Token_Type::For) : {
                 dispatchkit::Boxed_Value condition;
                 bool cond;
 
@@ -399,7 +398,6 @@ namespace chaiscript
                 retval = dispatchkit::Boxed_Value();
             }
             break;
-            */
             case (Token_Type::Def) : {
                 std::vector<std::string> param_names;
 
@@ -463,22 +461,6 @@ namespace chaiscript
                 throw BreakLoop(node);
             }
             break;
-            /*
-            case (TokenType::Statement) :
-            case (TokenType::Carriage_Return) :
-            case (TokenType::Semicolon) :
-            case (TokenType::Comment) :
-            case (TokenType::Operator) :
-            case (TokenType::Whitespace) :
-            case (TokenType::Parens_Open) :
-            case (TokenType::Parens_Close) :
-            case (TokenType::Square_Open) :
-            case (TokenType::Square_Close) :
-            case (TokenType::Curly_Open) :
-            case (TokenType::Curly_Close) :
-            case (TokenType::Comma) :
-            break;
-            */
         }
 
         return retval;

@@ -701,17 +701,17 @@ namespace chaiscript
                 retval = true;
 
                 if (!Char('(')) {
-                    throw Parse_Error("Incomplete if expression", File_Position(line, col), filename);
+                    throw Parse_Error("Incomplete 'if' expression", File_Position(line, col), filename);
                 }
 
                 if (!(Expression() && Char(')'))) {
-                    throw Parse_Error("Incomplete if expression", File_Position(line, col), filename);
+                    throw Parse_Error("Incomplete 'if' expression", File_Position(line, col), filename);
                 }
 
                 while (Eol());
 
                 if (!Block()) {
-                    throw Parse_Error("Incomplete if block", File_Position(line, col), filename);
+                    throw Parse_Error("Incomplete 'if' block", File_Position(line, col), filename);
                 }
 
                 build_match(Token_Type::If, prev_stack_top);
@@ -729,20 +729,58 @@ namespace chaiscript
                 retval = true;
 
                 if (!Char('(')) {
-                    throw Parse_Error("Incomplete while expression", File_Position(line, col), filename);
+                    throw Parse_Error("Incomplete 'while' expression", File_Position(line, col), filename);
                 }
 
                 if (!(Expression() && Char(')'))) {
-                    throw Parse_Error("Incomplete while expression", File_Position(line, col), filename);
+                    throw Parse_Error("Incomplete 'while' expression", File_Position(line, col), filename);
                 }
 
                 while (Eol());
 
                 if (!Block()) {
-                    throw Parse_Error("Incomplete while block", File_Position(line, col), filename);
+                    throw Parse_Error("Incomplete 'while' block", File_Position(line, col), filename);
                 }
 
                 build_match(Token_Type::While, prev_stack_top);
+            }
+
+            return retval;
+        }
+
+        bool For_Guards() {
+            Equation();
+
+            if (Char(';') && Expression() && Char(';') && Expression()) {
+                return true;
+            }
+            else {
+                throw Parse_Error("Incomplete conditions in 'for' loop", File_Position(line, col), filename);
+            }
+        }
+        bool For() {
+            bool retval = false;
+
+            int prev_stack_top = match_stack.size();
+
+            if (Keyword("for")) {
+                retval = true;
+
+                if (!Char('(')) {
+                    throw Parse_Error("Incomplete 'for' expression", File_Position(line, col), filename);
+                }
+
+                if (!(For_Guards() && Char(')'))) {
+                    throw Parse_Error("Incomplete 'for' expression", File_Position(line, col), filename);
+                }
+
+                while (Eol());
+
+                if (!Block()) {
+                    throw Parse_Error("Incomplete 'for' block", File_Position(line, col), filename);
+                }
+
+                build_match(Token_Type::For, prev_stack_top);
             }
 
             return retval;
@@ -1189,6 +1227,14 @@ namespace chaiscript
                     saw_eol = false;
                 }
                 else if (While()) {
+                    if (!saw_eol) {
+                        throw Parse_Error("Two function definitions missing line separator", match_stack.back());
+                    }
+                    has_more = true;
+                    retval = true;
+                    saw_eol = false;
+                }
+                else if (For()) {
                     if (!saw_eol) {
                         throw Parse_Error("Two function definitions missing line separator", match_stack.back());
                     }
