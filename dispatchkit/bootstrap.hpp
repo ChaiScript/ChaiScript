@@ -472,8 +472,8 @@ namespace dispatchkit
       add_oper_assign<std::string>(s);
 
       
-      register_function(s, &to_string<const std::string &>, "to_string");
-      register_function(s, &to_string<bool>, "to_string");
+      register_function(s, &to_string<const std::string &>, "internal_to_string");
+      register_function(s, &to_string<bool>, "internal_to_string");
       register_function(s, &unknown_assign, "=");
 
       bootstrap_pod_type<double>(s, "double");
