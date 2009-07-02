@@ -6,15 +6,13 @@
 
 const char *chaiscript_prelude = " \n\
 def to_string(x) : call_exists(range, x) { \n\
-  var outstr = \"[\" + x.join(\", \") + \"]\"\n\
-  outstr \n\
+    \"[\" + x.join(\", \") + \"]\"\n\
 }\n\
 def to_string(x) { \n\
-  var outstr = x.internal_to_string()\n\
-  outstr \n\
+    x.internal_to_string()\n\
 }\n\
 def puts(x) { \n\
-  print_string(x.to_string()) \n\
+    print_string(x.to_string()) \n\
 }; \n\
 def print(x) { \n\
 	println_string(x.to_string()) \n\
@@ -33,16 +31,16 @@ def map(container, func) { \n\
 		retval.push_back(func(range.front())) \n\
 		range.pop_front() \n\
 	} \n\
-	return retval \n\
+	retval \n\
 } \n\
 def reduce(container, func, initial) { \n\
 	var retval = initial \n\
-  var range = range(container) \n\
+    var range = range(container) \n\
 	while (!range.empty()) { \n\
 		retval = (func(range.front(), retval)) \n\
 		range.pop_front() \n\
 	} \n\
-	return retval \n\
+	retval \n\
 } \n\
 def join(container, delim) { \n\
 	var retval = \"\" \n\
@@ -56,7 +54,7 @@ def join(container, delim) { \n\
 			range.pop_front() \n\
 		} \n\
 	} \n\
-	return retval \n\
+	retval \n\
 }";
 
 #endif /* CHAISCRIPT_PRELUDE_HPP_ */
