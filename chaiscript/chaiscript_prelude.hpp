@@ -5,6 +5,9 @@
 #define CHAISCRIPT_PRELUDE_HPP_
 
 const char *chaiscript_prelude = " \n\
+def to_string(x) : call_exists(first, x) && call_exists(second, x) { \n\
+    \"<\" + x.first.to_string() + \", \" + x.second.to_string() + \">\"\n\
+}\n\
 def to_string(x) : call_exists(range, x) { \n\
     \"[\" + x.join(\", \") + \"]\"\n\
 }\n\
