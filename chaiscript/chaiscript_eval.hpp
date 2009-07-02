@@ -315,7 +315,7 @@ namespace chaiscript
                 }
                 catch(const dispatchkit::dispatch_error &e){
                     ss.set_stack(prev_stack);
-                    throw EvalError("Engine error: " + std::string(e.what()) + " on '" + node->children[0]->text + "'", node->children[0]);
+                    throw EvalError("Engine error: " + std::string(e.what()) + " with function '" + node->children[0]->text + "'", node->children[0]);
                 }
                 catch(ReturnValue &rv) {
                     ss.set_stack(prev_stack);
@@ -485,19 +485,41 @@ namespace chaiscript
             case (Token_Type::Def) : {
                 std::vector<std::string> param_names;
 
-                if ((node->children.size() > 1) && (node->children[1]->identifier == Token_Type::Arg_List)) {
+                if ((node->children.size() > 2) && (node->children[1]->identifier == Token_Type::Arg_List)) {
                     for (i = 0; i < node->children[1]->children.size(); ++i) {
                         param_names.push_back(node->children[1]->children[i]->text);
                     }
-                    ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
-                          new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), node->children[1]->children.size())), node->children[0]->text);
+
+                    if (node->children.size() > 3) {
+                        //Guarded function
+                        boost::shared_ptr<dispatchkit::Dynamic_Proxy_Function> guard = boost::shared_ptr<dispatchkit::Dynamic_Proxy_Function>
+                            (new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children[2], param_names, _1), node->children[1]->children.size()));
+
+                        ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
+                              new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), node->children[1]->children.size(),
+                              guard)), node->children[0]->text);
+
+                    }
+                    else {
+                        ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
+                              new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), node->children[1]->children.size())), node->children[0]->text);
+                    }
                 }
                 else {
                     //no parameters
-                    ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
-                            //no parameters
-                          new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), 0)), node->children[0]->text);
 
+                    if (node->children.size() > 2) {
+                        boost::shared_ptr<dispatchkit::Dynamic_Proxy_Function> guard = boost::shared_ptr<dispatchkit::Dynamic_Proxy_Function>
+                            (new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children[1], param_names, _1), 0));
+
+                        ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
+                              new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), 0,
+                              guard)), node->children[0]->text);
+                    }
+                    else {
+                        ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
+                          new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), 0)), node->children[0]->text);
+                    }
                 }
             }
             break;

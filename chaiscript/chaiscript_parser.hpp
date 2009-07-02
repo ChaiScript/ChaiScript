@@ -682,6 +682,13 @@ namespace chaiscript
 
                 while (Eol());
 
+                if (Char(':')) {
+                    if (!Expression()) {
+                        throw Parse_Error("Missing guard expression for function", File_Position(line, col), filename);
+                    }
+                }
+
+                while (Eol());
                 if (!Block()) {
                     throw Parse_Error("Incomplete function definition", File_Position(line, col), filename);
                 }
@@ -870,7 +877,7 @@ namespace chaiscript
             std::string::iterator prev_pos = input_pos;
 
             unsigned int prev_stack_top = match_stack.size();
-            if (Id(true)) {
+            if (Id(true) || Id_Literal()) {
                 retval = true;
                 bool has_more = true;
 
@@ -1021,7 +1028,7 @@ namespace chaiscript
 
         bool Value() {
             if (Var_Decl() || Lambda() || Id_Fun_Array() || Num(true) || Prefix() || Quoted_String(true) || Single_Quoted_String(true) ||
-                    Paren_Expression() || Inline_Container() || Id_Literal()) {
+                    Paren_Expression() || Inline_Container()) {
                 return true;
             }
             else {
