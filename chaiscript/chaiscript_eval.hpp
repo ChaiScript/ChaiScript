@@ -307,6 +307,10 @@ namespace chaiscript
                     ss.set_stack(prev_stack);
                     retval = rv.retval;
                 }
+                catch (const std::runtime_error &e) {
+                    ss.set_stack(prev_stack);
+                    throw;
+                }
             }
             break;
 
@@ -355,6 +359,10 @@ namespace chaiscript
                         catch(ReturnValue &rv) {
                             ss.set_stack(prev_stack);
                             retval = rv.retval;
+                        }
+                        catch (const std::runtime_error &e) {
+                            ss.set_stack(prev_stack);
+                            throw;
                         }
                     }
                 }

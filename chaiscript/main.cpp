@@ -2,6 +2,24 @@
 
 #include "chaiscript.hpp"
 
+dispatchkit::Boxed_Value evoke_fn(chaiscript::ChaiScript_Engine &chai, std::string name, dispatchkit::Param_List_Builder &plb) {
+    dispatchkit::Dispatch_Engine ss = chai.get_eval_engine();
+    dispatchkit::Dispatch_Engine::Stack prev_stack = ss.get_stack();
+    dispatchkit::Dispatch_Engine::Stack new_stack;
+    new_stack.push_back(dispatchkit::Dispatch_Engine::Scope());
+    ss.set_stack(new_stack);
+    try {
+        dispatchkit::Boxed_Value retval = dispatchkit::dispatch(ss.get_function(name), plb);
+        ss.set_stack(prev_stack);
+        return retval;
+    }
+    catch(...) {
+        ss.set_stack(prev_stack);
+        std::cout << "Exception caught" << std::endl;
+        throw;
+    }
+}
+
 int main(int argc, char *argv[]) {
 
     std::string input;
@@ -19,14 +37,11 @@ int main(int argc, char *argv[]) {
 
             if (val.get_type_info().m_bare_type_info && *(val.get_type_info().m_bare_type_info) != typeid(void)) {
                 try {
-                    dispatchkit::Boxed_Value printeval
-                      = dispatchkit::dispatch(chai.get_eval_engine().get_function("to_string"),
-                          dispatchkit::Param_List_Builder() << val);
+                    dispatchkit::Boxed_Value printeval = evoke_fn(chai, "to_string", dispatchkit::Param_List_Builder() << val);
                     std::cout << "result: ";
-                    dispatchkit::dispatch(chai.get_eval_engine().get_function("print"),
-                        dispatchkit::Param_List_Builder() << printeval);
+                    evoke_fn(chai, "print", dispatchkit::Param_List_Builder() << printeval);
                 } catch (const std::runtime_error &e) {
-                    //std::cout << "result: object #" << &val << " Error: " << e.what() << std::endl;
+                    std::cout << "result: object #" << &val << " Error: " << e.what() << std::endl;
                 }
             }
             std::cout << "eval> ";
