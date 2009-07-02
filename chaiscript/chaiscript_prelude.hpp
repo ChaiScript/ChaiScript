@@ -4,7 +4,7 @@
 #ifndef CHAISCRIPT_PRELUDE_HPP_
 #define CHAISCRIPT_PRELUDE_HPP_
 
-const char *chaiscript_prelude = " \n\
+const char *chaiscript_prelude = " \
 def to_string(x) : call_exists(first, x) && call_exists(second, x) { \n\
     \"<\" + x.first.to_string() + \", \" + x.second.to_string() + \">\"\n\
 }\n\

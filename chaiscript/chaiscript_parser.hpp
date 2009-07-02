@@ -597,11 +597,11 @@ namespace chaiscript
 
             int prev_stack_top = match_stack.size();
 
-            if (Expression()) {
+            if (Equation()) {
                 retval = true;
                 if (Char(',')) {
                     do {
-                        if (!Expression()) {
+                        if (!Equation()) {
                             throw Parse_Error("Unexpected value in parameter list", match_stack.back());
                         }
                     } while (retval && Char(','));
