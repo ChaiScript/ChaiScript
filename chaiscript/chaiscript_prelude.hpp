@@ -5,9 +5,19 @@
 #define CHAISCRIPT_PRELUDE_HPP_
 
 const char *chaiscript_prelude = " \n\
+def puts(x) : call_exists(range, x) { \n\
+  puts(\"[ \") \n\
+  x.for_each(fun(x) { puts(x); puts(\" \") }) \n\
+  puts(\"]\") \n\
+}\n\
 def puts(x) { \n\
   print_string(x.to_string()) \n\
 }; \n\
+def print(x) : call_exists(range, x) { \n\
+  puts(\"[ \") \n\
+  x.for_each(fun(x) { puts(x); puts(\" \") }) \n\
+  print(\"]\") \n\
+} \n\
 def print(x) { \n\
 	println_string(x.to_string()) \n\
 }; \n\
