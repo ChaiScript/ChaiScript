@@ -65,6 +65,7 @@ namespace dispatchkit
       register_function(system, &Input_Range<ContainerType>::empty, "empty");
       register_function(system, &Input_Range<ContainerType>::pop_front, "pop_front");
       register_function(system, &Input_Range<ContainerType>::front, "front");
+      system.register_function(build_constructor<Input_Range<ContainerType>, const Input_Range<ContainerType> &>(), "clone");
     } 
   
   template<typename ContainerType>
@@ -92,6 +93,8 @@ namespace dispatchkit
   {
     system.register_function(
         boost::function<Assignable &(Assignable*, const Assignable&)>(&Assignable::operator=), "=");
+    system.register_function(build_constructor<Assignable, const Assignable &>(), type);
+    system.register_function(build_constructor<Assignable, const Assignable &>(), "clone");
   }
 
   template<typename ContainerType>
@@ -153,10 +156,24 @@ namespace dispatchkit
       bootstrap_default_constructible<ContainerType>(system, type);
     }
 
+  template<typename PairType>
+    void bootstrap_pair(Dispatch_Engine &system, const std::string &type)
+    {
+      register_member(system, &PairType::first, "first");
+      register_member(system, &PairType::second, "second");
+
+      system.register_function(build_constructor<PairType >(), type);
+      system.register_function(build_constructor<PairType, const PairType &>(), type);
+      system.register_function(build_constructor<PairType, const PairType &>(), "clone");
+      system.register_function(build_constructor<PairType, const typename PairType::first_type &, const typename PairType::second_type &>(), type);
+     }
+
+
   template<typename ContainerType>
     void bootstrap_pair_associative_container(Dispatch_Engine &system, const std::string &type)
     {
       bootstrap_associative_container<ContainerType>(system, type);
+      bootstrap_pair<typename ContainerType::value_type>(system, type + "_Pair");
     }
 
   template<typename ContainerType>
@@ -165,16 +182,6 @@ namespace dispatchkit
       bootstrap_associative_container<ContainerType>(system, type);
       register_function(system, &ContainerType::count, "count");
     }
-
-  template<typename PairType>
-    void bootstrap_pair(Dispatch_Engine &system, const std::string &type)
-    {
-      register_member(system, &PairType::first, "first");
-      register_member(system, &PairType::second, "second");
-
-      system.register_function(build_constructor<PairType >(), type);
-      system.register_function(build_constructor<PairType, const typename PairType::first_type &, const typename PairType::second_type &>(), type);
-     }
 
   template<typename ContainerType>
     void bootstrap_sorted_associative_container(Dispatch_Engine &system, const std::string &type)

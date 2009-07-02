@@ -75,7 +75,10 @@ namespace chaiscript
                             dispatchkit::Boxed_Value lhs = eval_token(ss, node->children[i]);
                             if (lhs.is_unknown() || dispatchkit::Bootstrap::type_match(lhs, retval)) {
                                 try {
-                                    retval = dispatch(ss.get_function("clone"), dispatchkit::Param_List_Builder() << retval);
+                                    if (lhs.is_unknown())
+                                    {
+                                      retval = dispatch(ss.get_function("clone"), dispatchkit::Param_List_Builder() << retval);
+                                    }
                                     dispatchkit::Param_List_Builder plb;
                                     plb << lhs;
                                     plb << retval;
@@ -87,16 +90,7 @@ namespace chaiscript
                                     }
                                 }
                                 catch(const dispatchkit::dispatch_error &e){
-                                    //throw EvalError("Can not clone right hand side of equation", node->children[i+1]);
-                                    dispatchkit::Param_List_Builder plb;
-                                    plb << lhs;
-                                    plb << retval;
-                                    try {
-                                        retval = dispatch(ss.get_function("="), plb);
-                                    }
-                                    catch(const dispatchkit::dispatch_error &e){
-                                        throw EvalError("Can not find appropriate '" + node->children[i+1]->text + "'", node->children[i+1]);
-                                    }
+                                    throw EvalError("Can not clone right hand side of equation", node->children[i+1]);
                                 }
                             }
                             else {
@@ -106,15 +100,7 @@ namespace chaiscript
                         else if (node->children[i+1]->text == ":=") {
                             dispatchkit::Boxed_Value lhs = eval_token(ss, node->children[i]);
                             if (lhs.is_unknown() || dispatchkit::Bootstrap::type_match(lhs, retval)) {
-                                dispatchkit::Param_List_Builder plb;
-                                plb << lhs;
-                                plb << retval;
-                                try {
-                                    retval = dispatch(ss.get_function("="), plb);
-                                }
-                                catch(const dispatchkit::dispatch_error &e){
-                                    throw EvalError("Can not find appropriate '" + node->children[i+1]->text + "'", node->children[i+1]);
-                                }
+                                lhs.assign(retval);
                             }
                             else {
                                 throw EvalError("Mismatched types in equation", node->children[i+1]);

@@ -331,11 +331,17 @@ namespace dispatchkit
   }
 
   template<typename T>
+    void add_copy_constructor(Dispatch_Engine &s, const std::string &type)
+    {
+      s.register_function(build_constructor<T, const T &>(), type);
+      s.register_function(build_constructor<T, const T &>(), "clone");
+    }
+
+  template<typename T>
   void add_basic_constructors(Dispatch_Engine &s, const std::string &type)
   {
     s.register_function(build_constructor<T>(), type);
-    s.register_function(build_constructor<T, const T &>(), type);
-    s.register_function(build_constructor<T, const T &>(), "clone");
+    add_copy_constructor<T>(s, type);
   }
 
   template<typename T, typename U>
@@ -489,7 +495,7 @@ namespace dispatchkit
       add_oper_add<std::string>(s);
       add_oper_add_equals <std::string>(s);
       add_opers_comparison<std::string>(s);
-
+      s.register_function(build_constructor<boost::shared_ptr<Proxy_Function>, const boost::shared_ptr<Proxy_Function> &>(), "clone");
 
       register_function(s, &print, "print_string");
       register_function(s, &println, "println_string");
