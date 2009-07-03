@@ -397,6 +397,21 @@ namespace dispatchkit
     register_function(s, &parse_string<T>, "to_" + name);
   }
 
+  template<typename Type>
+    boost::shared_ptr<Type> shared_ptr_clone(boost::shared_ptr<Type> f)
+    {
+      return f;
+    }
+
+  template<typename Type>
+    Boxed_Value ptr_assign(Boxed_Value lhs, boost::shared_ptr<Type> rhs)
+    {
+      lhs.assign(Boxed_Value(rhs));
+
+      return lhs;
+    }
+
+
   struct Bootstrap
   {
     static Boxed_Value unknown_assign(Boxed_Value lhs, Boxed_Value rhs)
@@ -467,11 +482,6 @@ namespace dispatchkit
       return Boxed_Value(f->types_match(std::vector<Boxed_Value>(params.begin() + 1, params.end())));
     }
 
-    static boost::shared_ptr<Proxy_Function> function_clone(boost::shared_ptr<Proxy_Function> f)
-    {
-      return f;
-    }
-
     static void bootstrap(Dispatch_Engine &s)
     {
       s.register_type<void>("void");
@@ -512,7 +522,8 @@ namespace dispatchkit
       s.register_function(boost::shared_ptr<Proxy_Function>(new Dynamic_Proxy_Function(boost::bind(&bind_function, _1))), 
           "bind");
 
-      register_function(s, &function_clone, "clone");
+      register_function(s, &shared_ptr_clone<Proxy_Function>, "clone");
+      register_function(s, &ptr_assign<Proxy_Function>, "=");
 
       s.register_function(boost::shared_ptr<Proxy_Function>(new Dynamic_Proxy_Function(boost::bind(&call_exists, _1))), 
           "call_exists");
