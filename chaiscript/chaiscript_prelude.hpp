@@ -47,8 +47,8 @@ def foldl(container, func, initial) : call_exists(range, container){ \n\
   } \n\
   retval \n\
 } \n\
-def sum(container) { foldl(container, `+`, 0) } \n\
-def product(container) { foldl(container, `*`, 1) } \n\
+def sum(container) { foldl(container, `+`, 0.0) } \n\
+def product(container) { foldl(container, `*`, 1.0) } \n\
 def take(container, num) : call_exists(range, container) { \n\
   var r = range(container); \n\
   var i = num; \n\
