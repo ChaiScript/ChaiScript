@@ -20,14 +20,14 @@ def puts(x) { \n\
 def print(x) { \n\
   println_string(x.to_string()) \n\
 }; \n\
-def for_each(container, func) { \n\
+def for_each(container, func) : call_exists(range, container) { \n\
   var range = range(container); \n\
   while (!range.empty()) { \n\
     func(range.front()) \n\
     range.pop_front() \n\
   } \n\
 } \n\
-def map(container, func) { \n\
+def map(container, func) : call_exists(range, container) { \n\
   var retval = Vector() \n\
   var range = range(container) \n\
   while (!range.empty()) { \n\
@@ -36,7 +36,7 @@ def map(container, func) { \n\
   } \n\
   retval \n\
 } \n\
-def reduce(container, func, initial) { \n\
+def foldl(container, func, initial) : call_exists(range, container){ \n\
   var retval = initial \n\
   var range = range(container) \n\
   while (!range.empty()) { \n\
@@ -45,6 +45,47 @@ def reduce(container, func, initial) { \n\
   } \n\
   retval \n\
 } \n\
+def sum(x) { foldl(x, `+`, 0) } \n\
+def product(x) { foldl(x, `*`, 1) } \n\
+def take(container, num) : call_exists(range, container) { \n\
+  var r = range(container); \n\
+  var i = num; \n\
+  var retval = Vector(); \n\
+  while ((i > 0) && (!r.empty())) { \n\
+    retval.push_back(r.front()); \n\
+    r.pop_front(); \n\
+    --i; \n\
+  } \n\
+  retval \n\
+} \n\
+def drop(container, num) : call_exists(range, container) { \n\
+  var r = range(container); \n\
+  var i = num; \n\
+  var retval = Vector(); \n\
+  while ((i > 0) && (!r.empty())) { \n\
+    r.pop_front(); \n\
+    --i; \n\
+  } \n\
+  while (!r.empty()) { \n\
+    retval.push_back(r.front()); \n\
+    r.pop_front(); \n\
+  } \n\
+  retval \n\
+} \n\
+def reduce(container, func) : container.size() >= 2 && call_exists(range, container) { \n\
+  var r = range(container); \n\
+  var retval = r.front(); \n\
+  r.pop_front(); \n\
+  retval = func(retval, r.front()); \n\
+  r.pop_front(); \n\
+  while (!r.empty()) { \n\
+    retval = func(retval, r.front()); \n\
+    r.pop_front(); \n\
+  } \n\
+  retval \n\
+} \n\
+def max(a, b) { if (a>b) { a } else { b } } \n\
+def min(a, b) { if (a<b) { a } else { b } } \n\
 def join(container, delim) { \n\
   var retval = \"\" \n\
   var range = range(container) \n\
@@ -56,6 +97,17 @@ def join(container, delim) { \n\
       retval += to_string(range.front()) \n\
       range.pop_front() \n\
     } \n\
+  } \n\
+  retval \n\
+} \n\
+def filter(a, f) : call_exists(range, a) { \n\
+  var retval = Vector(); \n\
+  var r = range(a); \n\
+  while (!r.empty()) { \n\
+    if (f(r.front())) { \n\
+      retval.push_back(r.front()); \n\
+    } \n\
+    r.pop_front(); \n\
   } \n\
   retval \n\
 } \n\
