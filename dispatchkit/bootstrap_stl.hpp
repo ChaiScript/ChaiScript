@@ -91,10 +91,8 @@ namespace dispatchkit
   template<typename Assignable>
   void bootstrap_assignable(Dispatch_Engine &system, const std::string &type)
   {
-    system.register_function(
-        boost::function<Assignable &(Assignable*, const Assignable&)>(&Assignable::operator=), "=");
-    system.register_function(build_constructor<Assignable, const Assignable &>(), type);
-    system.register_function(build_constructor<Assignable, const Assignable &>(), "clone");
+    add_basic_constructors<Assignable>(system, type);
+    add_oper_assign<Assignable>(system);
   }
 
   template<typename ContainerType>
@@ -209,6 +207,18 @@ namespace dispatchkit
       bootstrap_unique_sorted_associative_container<MapType>(system, type);
       bootstrap_pair_associative_container<MapType>(system, type);
      }
+
+  template<typename String>
+    void bootstrap_string(Dispatch_Engine &system, const std::string &type)
+    {
+      system.register_type<String>(type);
+      add_oper_add<String>(system);
+      add_oper_add_equals<String>(system);
+      add_opers_comparison<String>(system);
+      bootstrap_random_access_container<String>(system, type);
+      bootstrap_sequence<String>(system, type);
+    }
+
 }
 
 #endif

@@ -494,16 +494,12 @@ namespace dispatchkit
     static void bootstrap(Dispatch_Engine &s)
     {
       s.register_type<void>("void");
-
-      s.register_type<std::string>("string");
-
+      s.register_type<bool>("bool");
       s.register_type<Proxy_Function>("function");
 
       add_basic_constructors<bool>(s, "bool");
-      add_basic_constructors<std::string>(s, "string");
       add_oper_assign<std::string>(s);
 
-      
       register_function(s, &to_string<const std::string &>, "internal_to_string");
       register_function(s, &to_string<bool>, "internal_to_string");
       register_function(s, &unknown_assign, "=");
@@ -518,16 +514,12 @@ namespace dispatchkit
       add_opers_comparison_pod(s);
       add_opers_arithmetic_pod(s);
 
-      add_oper_add<std::string>(s);
-      add_oper_add_equals <std::string>(s);
-      add_opers_comparison<std::string>(s);
-
       register_function(s, &print, "print_string");
       register_function(s, &println, "println_string");
 
       s.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(s))), "dump_system");
       s.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1)), "dump_object");
-      s.register_function(boost::function<bool (const std::string &, Boxed_Value)>(boost::bind(&is_type, s, _1, _2)),
+      s.register_function(boost::function<bool (const std::string &, Boxed_Value)>(boost::bind(&is_type, boost::ref(s), _1, _2)),
           "is_type");
 
       s.add_object("_", Placeholder_Object());

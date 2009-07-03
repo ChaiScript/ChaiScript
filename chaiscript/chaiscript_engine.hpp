@@ -70,6 +70,7 @@ namespace chaiscript
         void build_eval_system() {
             dispatchkit::Bootstrap::bootstrap(engine);
             dispatchkit::bootstrap_vector<std::vector<dispatchkit::Boxed_Value> >(engine, "Vector");
+            dispatchkit::bootstrap_string<std::string>(engine, "string");
             dispatchkit::bootstrap_map<std::map<std::string, dispatchkit::Boxed_Value> >(engine, "Map");
             dispatchkit::bootstrap_pair<std::pair<dispatchkit::Boxed_Value, dispatchkit::Boxed_Value > >(engine, "Pair");
 
