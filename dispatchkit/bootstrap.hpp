@@ -467,6 +467,11 @@ namespace dispatchkit
       return Boxed_Value(f->types_match(std::vector<Boxed_Value>(params.begin() + 1, params.end())));
     }
 
+    static boost::shared_ptr<Proxy_Function> function_clone(boost::shared_ptr<Proxy_Function> f)
+    {
+      return f;
+    }
+
     static void bootstrap(Dispatch_Engine &s)
     {
       s.register_type<void>("void");
@@ -495,7 +500,6 @@ namespace dispatchkit
       add_oper_add<std::string>(s);
       add_oper_add_equals <std::string>(s);
       add_opers_comparison<std::string>(s);
-      s.register_function(build_constructor<boost::shared_ptr<Proxy_Function>, const boost::shared_ptr<Proxy_Function> &>(), "clone");
 
       register_function(s, &print, "print_string");
       register_function(s, &println, "println_string");
@@ -507,6 +511,8 @@ namespace dispatchkit
 
       s.register_function(boost::shared_ptr<Proxy_Function>(new Dynamic_Proxy_Function(boost::bind(&bind_function, _1))), 
           "bind");
+
+      register_function(s, &function_clone, "clone");
 
       s.register_function(boost::shared_ptr<Proxy_Function>(new Dynamic_Proxy_Function(boost::bind(&call_exists, _1))), 
           "call_exists");
