@@ -20,11 +20,16 @@ namespace chaiscript
 
         try {
             retval = eval_token(ss, node);
+            ss.pop_scope();
         } catch (const ReturnValue &rv) {
             retval = rv.retval;
+            ss.pop_scope();
+        } catch (...) {
+            ss.pop_scope();
+            throw;
         }
 
-        ss.pop_scope();
+
         return retval;
     }
 
@@ -189,7 +194,7 @@ namespace chaiscript
                         throw EvalError("Out of bounds exception", node);
                     }
                     catch(const dispatchkit::dispatch_error &e){
-                        throw EvalError("Can not find appropriate array lookup '[]'", node->children[i]);
+                        throw EvalError("Can not find appropriate array lookup '[]' " + node->children[i]->text, node->children[i]);
                     }
                 }
             }
@@ -541,7 +546,17 @@ namespace chaiscript
             case (Token_Type::Block) : {
                 ss.new_scope();
                 for (i = 0; i < node->children.size(); ++i) {
-                    retval = eval_token(ss, node->children[i]);
+                    try {
+                        retval = eval_token(ss, node->children[i]);
+                    }
+                    catch (const chaiscript::ReturnValue &rv) {
+                        retval = rv.retval;
+                        break;
+                    }
+                    catch (...) {
+                        ss.pop_scope();
+                        throw;
+                    }
                 }
                 ss.pop_scope();
             }

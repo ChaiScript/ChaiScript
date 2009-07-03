@@ -12,7 +12,7 @@ def to_string(x) : call_exists(range, x) { \n\
     \"[\" + x.join(\", \") + \"]\"\n\
 }\n\
 def to_string(x) { \n\
-    x.internal_to_string()\n\
+    return internal_to_string(x)\n\
 }\n\
 def puts(x) { \n\
     print_string(x.to_string()) \n\
