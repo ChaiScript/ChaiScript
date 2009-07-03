@@ -1044,7 +1044,7 @@ namespace chaiscript
             if (Symbol("-")) {
                 retval = true;
 
-                if (!Additive()) {
+                if (!Dot_Access()) {
                     throw Parse_Error("Incomplete negation expression", File_Position(line, col), filename);
                 }
 
@@ -1053,7 +1053,7 @@ namespace chaiscript
             else if (Symbol("!")) {
                 retval = true;
 
-                if (!Expression()) {
+                if (!Dot_Access()) {
                     throw Parse_Error("Incomplete '!' expression", File_Position(line, col), filename);
                 }
 
@@ -1062,7 +1062,7 @@ namespace chaiscript
             if (Symbol("++", true)) {
                 retval = true;
 
-                if (!Expression()) {
+                if (!Dot_Access()) {
                     throw Parse_Error("Incomplete '++' expression", File_Position(line, col), filename);
                 }
 
@@ -1071,7 +1071,7 @@ namespace chaiscript
             else if (Symbol("--", true)) {
                 retval = true;
 
-                if (!Expression()) {
+                if (!Dot_Access()) {
                     throw Parse_Error("Incomplete '--' expression", File_Position(line, col), filename);
                 }
 
