@@ -8,10 +8,8 @@ SET (CMAKE_BUILD_TYPE gdb)
 SET (CMAKE_C_FLAGS_GDB " -Wall -ggdb")
 SET (CMAKE_CXX_FLAGS_GDB " -Wall -ggdb")
 
-include_directories(dispatchkit langkit)
+include_directories(dispatchkit)
 
-add_subdirectory(langkit bin)
 add_subdirectory(dispatchkit bin)
 add_subdirectory(chaiscript bin)
-add_subdirectory(chaioop bin)
  

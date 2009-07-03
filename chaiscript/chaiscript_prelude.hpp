@@ -20,6 +20,8 @@ def puts(x) { \n\
 def print(x) { \n\
   println_string(x.to_string()) \n\
 }; \n\
+def max(a, b) { if (a>b) { a } else { b } } \n\
+def min(a, b) { if (a<b) { a } else { b } } \n\
 def for_each(container, func) : call_exists(range, container) { \n\
   var range = range(container); \n\
   while (!range.empty()) { \n\
@@ -45,8 +47,8 @@ def foldl(container, func, initial) : call_exists(range, container){ \n\
   } \n\
   retval \n\
 } \n\
-def sum(x) { foldl(x, `+`, 0) } \n\
-def product(x) { foldl(x, `*`, 1) } \n\
+def sum(container) { foldl(container, `+`, 0) } \n\
+def product(container) { foldl(container, `*`, 1) } \n\
 def take(container, num) : call_exists(range, container) { \n\
   var r = range(container); \n\
   var i = num; \n\
@@ -105,8 +107,6 @@ def reduce(container, func) : container.size() >= 2 && call_exists(range, contai
   } \n\
   retval \n\
 } \n\
-def max(a, b) { if (a>b) { a } else { b } } \n\
-def min(a, b) { if (a<b) { a } else { b } } \n\
 def join(container, delim) { \n\
   var retval = \"\" \n\
   var range = range(container) \n\
@@ -121,9 +121,9 @@ def join(container, delim) { \n\
   } \n\
   retval \n\
 } \n\
-def filter(a, f) : call_exists(range, a) { \n\
+def filter(container, f) : call_exists(range, container) { \n\
   var retval = Vector(); \n\
-  var r = range(a); \n\
+  var r = range(container); \n\
   while (!r.empty()) { \n\
     if (f(r.front())) { \n\
       retval.push_back(r.front()); \n\

@@ -10,7 +10,7 @@ SET (CMAKE_CXX_FLAGS_GDB " -Wall -ggdb")
 find_package(Boost 1.36.0 COMPONENTS regex unit_test_framework)
 if(Boost_FOUND)
    include_directories(${Boost_INCLUDE_DIRS})
-   include_directories(../langkit ../dispatchkit)
+   include_directories(../dispatchkit)
    
    add_executable(chaiscript_test main.cpp)
    target_link_libraries(chaiscript_test ${Boost_LIBRARIES})
@@ -25,3 +25,4 @@ if(Boost_FOUND)
 endif()
 
 
+ 
