@@ -58,6 +58,15 @@ def take(container, num) : call_exists(range, container) { \n\
   } \n\
   retval \n\
 } \n\
+def take_while(container, f) : call_exists(range, container) { \n\
+  var r = range(container); \n\
+  var retval = Vector(); \n\
+  while ((!r.empty()) && f(r.front())) { \n\
+    retval.push_back(r.front()); \n\
+    r.pop_front(); \n\
+  } \n\
+  retval \n\
+} \n\
 def drop(container, num) : call_exists(range, container) { \n\
   var r = range(container); \n\
   var i = num; \n\
@@ -65,6 +74,18 @@ def drop(container, num) : call_exists(range, container) { \n\
   while ((i > 0) && (!r.empty())) { \n\
     r.pop_front(); \n\
     --i; \n\
+  } \n\
+  while (!r.empty()) { \n\
+    retval.push_back(r.front()); \n\
+    r.pop_front(); \n\
+  } \n\
+  retval \n\
+} \n\
+def drop_while(container, f) : call_exists(range, container) { \n\
+  var r = range(container); \n\
+  var retval = Vector(); \n\
+  while ((!r.empty())&& f(r.front())) { \n\
+    r.pop_front(); \n\
   } \n\
   while (!r.empty()) { \n\
     retval.push_back(r.front()); \n\
