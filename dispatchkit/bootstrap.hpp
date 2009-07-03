@@ -457,6 +457,15 @@ namespace dispatchkit
       return l.get_type_info() == r.get_type_info();
     }
 
+    static bool is_type(const Dispatch_Engine &e, const std::string &type_name, Boxed_Value r)
+    {
+      try {
+        return e.get_type(type_name) == r.get_type_info();
+      } catch (const std::range_error &) {
+        return false;
+      }
+    }
+
     static Boxed_Value bind_function(const std::vector<Boxed_Value> &params)
     {
       if (params.size() < 2)
@@ -488,6 +497,8 @@ namespace dispatchkit
 
       s.register_type<std::string>("string");
 
+      s.register_type<Proxy_Function>("function");
+
       add_basic_constructors<bool>(s, "bool");
       add_basic_constructors<std::string>(s, "string");
       add_oper_assign<std::string>(s);
@@ -516,6 +527,8 @@ namespace dispatchkit
 
       s.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(s))), "dump_system");
       s.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1)), "dump_object");
+      s.register_function(boost::function<bool (const std::string &, Boxed_Value)>(boost::bind(&is_type, s, _1, _2)),
+          "is_type");
 
       s.add_object("_", Placeholder_Object());
 

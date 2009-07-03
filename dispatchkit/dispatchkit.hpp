@@ -169,6 +169,17 @@ namespace dispatchkit
           m_types.insert(std::make_pair(name, Get_Type_Info<Type>::get()));
         }
 
+      Type_Info get_type(const std::string &name) const
+      {
+        Type_Name_Map::const_iterator itr = m_types.find(name);
+        if (itr != m_types.end())
+        {
+          return itr->second;
+        } else {
+          throw std::range_error("Type Not Known");
+        }
+      }
+
       std::vector<Type_Name_Map::value_type> get_types() const
       {
         return std::vector<Type_Name_Map::value_type>(m_types.begin(), m_types.end());
