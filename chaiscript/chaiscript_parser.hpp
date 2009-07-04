@@ -1132,12 +1132,12 @@ namespace chaiscript
 
             if (Dot_Access()) {
                 retval = true;
-                if (Symbol("*", true) || Symbol("/", true)) {
+                if (Symbol("*", true) || Symbol("/", true) || Symbol("%", true)) {
                     do {
                         if (!Dot_Access()) {
                             throw Parse_Error("Incomplete math expression", File_Position(line, col), filename);
                         }
-                    } while (retval && (Symbol("*", true) || Symbol("/", true)));
+                    } while (retval && (Symbol("*", true) || Symbol("/", true) || Symbol("%", true)));
 
                     build_match(Token_Type::Multiplicative, prev_stack_top);
                 }

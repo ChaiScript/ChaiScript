@@ -8,7 +8,7 @@ const char *chaiscript_prelude = " \
 def to_string(x) : call_exists(first, x) && call_exists(second, x) { \n\
   \"<\" + x.first.to_string() + \", \" + x.second.to_string() + \">\"\n\
 }\n\
-def to_string(x) : !is_type(\"string\", x) && call_exists(range, x) { \n\
+def to_string(x) : call_exists(range, x) && !is_type(\"string\", x){ \n\
   \"[\" + x.join(\", \") + \"]\"\n\
 }\n\
 def to_string(x) { \n\
