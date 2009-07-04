@@ -137,10 +137,9 @@ def filter(container, f) : call_exists(range, container) { \n\
 def generate_range(x, y) { \n\
   var i = x; \n\
   var retval = Vector(); \n\
-  retval.push_back(clone(i)); \n\
-  while (i != y) { \n\
-    ++i; \n\
+  while (i <= y) { \n\
     retval.push_back(clone(i)); \n\
+    ++i; \n\
   } \n\
   retval \n\
 } \n\
