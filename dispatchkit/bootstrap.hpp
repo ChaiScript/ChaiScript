@@ -34,6 +34,13 @@ namespace dispatchkit
   }
 
 
+  template<typename Ret, typename P1, typename P2>
+  Ret modulus(P1 p1, P2 p2)
+  {
+    return p1 % p2;
+  }
+
+
   template<typename P1, typename P2>
   bool bool_and(P1 p1, P2 p2)
   {
@@ -510,9 +517,9 @@ namespace dispatchkit
       bootstrap_pod_type<char>(s, "char");
       bootstrap_pod_type<int64_t>(s, "int64_t");
 
-
       add_opers_comparison_pod(s);
       add_opers_arithmetic_pod(s);
+      register_function(s, &modulus<int, int, int>, "%");
 
       register_function(s, &print, "print_string");
       register_function(s, &println, "println_string");
