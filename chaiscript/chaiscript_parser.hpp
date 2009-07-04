@@ -518,7 +518,7 @@ namespace chaiscript
                 bool retval = Symbol_(s);
                 if (retval) {
                     //todo: fix this.  Hacky workaround for preventing substring matches
-                    if ((input_pos != input_end) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') || (*input_pos == '='))) {
+                    if ((input_pos != input_end) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') || (*input_pos == '=') || (*input_pos == '.'))) {
                         input_pos = start;
                         col = prev_col;
                         line = prev_line;
@@ -536,7 +536,7 @@ namespace chaiscript
                 int prev_line = line;
                 if (Symbol_(s)) {
                     //todo: fix this.  Hacky workaround for preventing substring matches
-                    if ((input_pos != input_end) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') || (*input_pos == '='))) {
+                    if ((input_pos != input_end) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') || (*input_pos == '=') || (*input_pos == '.'))) {
                         input_pos = start;
                         col = prev_col;
                         line = prev_line;
@@ -618,7 +618,11 @@ namespace chaiscript
 
             int prev_stack_top = match_stack.size();
 
-            if (Map_Pair()) {
+            if (Value_Range()) {
+                retval = true;
+                build_match(Token_Type::Arg_List, prev_stack_top);
+            }
+            else if (Map_Pair()) {
                 retval = true;
                 if (Char(',')) {
                     do {
@@ -967,7 +971,10 @@ namespace chaiscript
                     throw Parse_Error("Missing closing square bracket", File_Position(line, col), filename);
                 }
                 if ((prev_stack_top != match_stack.size()) && (match_stack.back()->children.size() > 0)) {
-                    if (match_stack.back()->children[0]->identifier == Token_Type::Map_Pair) {
+                    if (match_stack.back()->children[0]->identifier == Token_Type::Value_Range) {
+                        build_match(Token_Type::Inline_Range, prev_stack_top);
+                    }
+                    else if (match_stack.back()->children[0]->identifier == Token_Type::Map_Pair) {
                         build_match(Token_Type::Inline_Map, prev_stack_top);
                     }
                     else {
@@ -1210,6 +1217,33 @@ namespace chaiscript
             return retval;
         }
 
+        bool Value_Range() {
+            bool retval = false;
+
+            unsigned int prev_stack_top = match_stack.size();
+            std::string::iterator prev_pos = input_pos;
+            int prev_col = col;
+
+            if (Expression()) {
+                if (Symbol("..")) {
+                    retval = true;
+                    if (!Expression()) {
+                        throw Parse_Error("Incomplete value range", File_Position(line, col), filename);
+                    }
+
+                    build_match(Token_Type::Value_Range, prev_stack_top);
+                }
+                else {
+                    input_pos = prev_pos;
+                    col = prev_col;
+                    while (prev_stack_top != match_stack.size()) {
+                        match_stack.pop_back();
+                    }
+                }
+            }
+
+            return retval;
+        }
         bool Equation() {
             bool retval = false;
 

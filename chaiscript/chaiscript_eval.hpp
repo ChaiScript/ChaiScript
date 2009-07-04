@@ -253,6 +253,56 @@ namespace chaiscript
                 }
             }
             break;
+            case (Token_Type::Inline_Range) : {
+                try {
+                    retval = dispatch(ss.get_function("Vector"), dispatchkit::Param_List_Builder());
+                    if (node->children.size() > 0) {
+                        dispatchkit::Boxed_Value range_iter = dispatch(ss.get_function("clone"), dispatchkit::Param_List_Builder() << eval_token(ss, node->children[0]->children[0]->children[0]));
+                        dispatchkit::Boxed_Value range_stop = eval_token(ss, node->children[0]->children[0]->children[1]);
+
+                        dispatchkit::Boxed_Value not_equal;
+
+                        bool cond = true;
+                        try {
+                            not_equal = dispatch(ss.get_function("!="), dispatchkit::Param_List_Builder() << range_iter << range_stop);
+                            cond = dispatchkit::boxed_cast<bool &>(not_equal);
+                        }
+                        catch (std::exception &e) {
+                            throw EvalError("Range values missing != comparison", node->children[0]);
+                        }
+
+                        dispatch(ss.get_function("push_back"), dispatchkit::Param_List_Builder() << retval << range_iter);
+                        not_equal = dispatch(ss.get_function("!="), dispatchkit::Param_List_Builder() << range_iter << range_stop);
+                        try {
+                            cond = dispatchkit::boxed_cast<bool &>(not_equal);
+                        }
+                        catch (std::exception &e) {
+                            throw EvalError("Range values missing != comparison", node->children[0]);
+                        }
+                        while (cond) {
+                            try {
+                                range_iter = dispatch(ss.get_function("clone"), dispatchkit::Param_List_Builder() << range_iter);
+                                range_iter = dispatch(ss.get_function("++"), dispatchkit::Param_List_Builder() << range_iter);
+                                dispatch(ss.get_function("push_back"), dispatchkit::Param_List_Builder() << retval << range_iter);
+                                not_equal = dispatch(ss.get_function("!="), dispatchkit::Param_List_Builder() << range_iter << range_stop);
+                                try {
+                                    cond = dispatchkit::boxed_cast<bool &>(not_equal);
+                                }
+                                catch (std::exception &e) {
+                                    throw EvalError("Range values missing != comparison", node->children[0]);
+                                }
+                            }
+                            catch (const dispatchkit::dispatch_error &inner_e) {
+                                throw EvalError("Can not find appropriate range increment", node->children[0]->children[i]);
+                            }
+                        }
+                    }
+                }
+                catch (const dispatchkit::dispatch_error &e) {
+                    throw EvalError("Can not find appropriate 'Vector()'", node);
+                }
+            }
+            break;
             case (Token_Type::Inline_Map) : {
                 try {
                     retval = dispatch(ss.get_function("Map"), dispatchkit::Param_List_Builder());
