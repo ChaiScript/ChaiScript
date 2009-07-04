@@ -135,7 +135,7 @@ namespace dispatchkit
     typedef typename SequenceType::reference (SequenceType::*backptr)();
 
     system.register_function(boost::function<typename SequenceType::reference (SequenceType *)>(backptr(&SequenceType::back)), "back");
-    system.register_function(boost::function<void (SequenceType *,typename SequenceType::value_type)>(&SequenceType::push_back), "push_back");
+    system.register_function(boost::function<void (SequenceType *,typename SequenceType::value_type)>(&SequenceType::push_back), "push_back_ref");
     system.register_function(boost::function<void (SequenceType *)>(&SequenceType::pop_back), "pop_back");
   }
 
