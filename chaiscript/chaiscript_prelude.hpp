@@ -134,6 +134,16 @@ def filter(container, f) : call_exists(range, container) { \n\
   } \n\
   retval \n\
 } \n\
+def generate_range(x, y) { \n\
+  var i = x; \n\
+  var retval = Vector(); \n\
+  retval.push_back(clone(i)); \n\
+  while (i != y) { \n\
+    ++i; \n\
+    retval.push_back(clone(i)); \n\
+  } \n\
+  retval \n\
+} \n\
 def collate(x, y) { \n\
   [x, y] \n\
 } \n\
