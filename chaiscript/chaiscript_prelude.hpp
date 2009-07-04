@@ -22,6 +22,8 @@ def print(x) { \n\
 }; \n\
 def max(a, b) { if (a>b) { a } else { b } } \n\
 def min(a, b) { if (a<b) { a } else { b } } \n\
+def odd(x)  { if (x % 2 == 1) { true } else { false } } \n\
+def even(x) { if (x % 2 == 0) { true } else { false } } \n\
 def for_each(container, func) : call_exists(range, container) { \n\
   var range = range(container); \n\
   while (!range.empty()) { \n\
