@@ -8,7 +8,7 @@ const char *chaiscript_prelude = " \
 def to_string(x) : call_exists(first, x) && call_exists(second, x) { \n\
   \"<\" + x.first.to_string() + \", \" + x.second.to_string() + \">\"\n\
 }\n\
-def to_string(x) : call_exists(range, x) && !is_type(\"string\", x){ \n\
+def to_string(x) : call_exists(range, x) && !x.is_type(\"string\"){ \n\
   \"[\" + x.join(\", \") + \"]\"\n\
 }\n\
 def to_string(x) { \n\
@@ -52,6 +52,16 @@ def foldl(container, func, initial) : call_exists(range, container){ \n\
 } \n\
 def sum(container) { foldl(container, `+`, 0.0) } \n\
 def product(container) { foldl(container, `*`, 1.0) } \n\
+def concat(x, y) : call_exists(clone, x) { \n\
+  var retval = x; \n\
+  var len = y.size(); \n\
+  var i = 0; \n\
+  while (i < len) { \n\
+    retval.push_back(y[i]); \n\
+    ++i; \n\
+  } \n\
+  retval; \n\
+} \n\
 def take(container, num) : call_exists(range, container) { \n\
   var r = range(container); \n\
   var i = num; \n\

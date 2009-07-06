@@ -526,7 +526,7 @@ namespace dispatchkit
 
       s.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(s))), "dump_system");
       s.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1)), "dump_object");
-      s.register_function(boost::function<bool (const std::string &, Boxed_Value)>(boost::bind(&is_type, boost::ref(s), _1, _2)),
+      s.register_function(boost::function<bool (Boxed_Value, const std::string &)>(boost::bind(&is_type, boost::ref(s), _2, _1)),
           "is_type");
 
       s.add_object("_", Placeholder_Object());
