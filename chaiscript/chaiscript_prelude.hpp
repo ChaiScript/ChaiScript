@@ -139,7 +139,7 @@ def generate_range(x, y) { \n\
   var i = x; \n\
   var retval = Vector(); \n\
   while (i <= y) { \n\
-    retval.push_back(clone(i)); \n\
+    retval.push_back(i); \n\
     ++i; \n\
   } \n\
   retval \n\

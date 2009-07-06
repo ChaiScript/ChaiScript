@@ -556,8 +556,9 @@ namespace chaiscript
                         retval = eval_token(ss, node->children[i]);
                     }
                     catch (const chaiscript::ReturnValue &rv) {
+                        ss.pop_scope();
                         retval = rv.retval;
-                        break;
+                        throw;
                     }
                     catch (...) {
                         ss.pop_scope();
