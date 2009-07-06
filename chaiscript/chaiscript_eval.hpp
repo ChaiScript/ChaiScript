@@ -90,7 +90,7 @@ namespace chaiscript
                                     retval = dispatch(ss.get_function(node->children[i+1]->text), plb);
                                 }
                                 catch(const dispatchkit::dispatch_error &e){
-                                    throw EvalError("Can not find appropriate '" + node->children[i+1]->text + "'", node->children[i+1]);
+                                    throw EvalError("Mismatched types in equation", node->children[i+1]);
                                 }
                             }
                             catch(const dispatchkit::dispatch_error &e){
@@ -297,18 +297,21 @@ namespace chaiscript
                         plb << eval_token(ss, node->children[1]->children[i]);
                     }
                 }
+                dispatchkit::Boxed_Value fn;
                 try {
-                    dispatchkit::Boxed_Value fn = eval_token(ss, node->children[0]);
+                    fn = eval_token(ss, node->children[0]);
+                }
+                catch(EvalError &ee) {
+                    ss.set_stack(prev_stack);
+                    throw EvalError(ee.reason, node->children[0]);
+                }
+                try {
                     //fn = ss.get_function(node->children[0]->text);
                     ss.set_stack(new_stack);
                     //retval = dispatch(fn, plb);
                     //retval = dispatch
                     retval = (*dispatchkit::boxed_cast<boost::shared_ptr<dispatchkit::Proxy_Function> >(fn))(plb);
                     ss.set_stack(prev_stack);
-                }
-                catch(EvalError &ee) {
-                    ss.set_stack(prev_stack);
-                    throw EvalError(ee.reason, node->children[0]);
                 }
                 catch(const dispatchkit::dispatch_error &e){
                     ss.set_stack(prev_stack);
@@ -358,10 +361,6 @@ namespace chaiscript
                             ss.set_stack(new_stack);
                             retval = dispatch(fn, plb);
                             ss.set_stack(prev_stack);
-                        }
-                        catch(EvalError &ee) {
-                            ss.set_stack(prev_stack);
-                            throw EvalError(ee.reason, node);
                         }
                         catch(const dispatchkit::dispatch_error &e){
                             ss.set_stack(prev_stack);
