@@ -127,6 +127,7 @@ namespace chaiscript
     };
 
     struct BreakLoop {
+        dispatchkit::Boxed_Value retval;
         TokenPtr location;
 
         BreakLoop(const TokenPtr where) : location(where) { }

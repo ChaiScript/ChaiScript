@@ -506,6 +506,7 @@ namespace dispatchkit
 
       add_basic_constructors<bool>(s, "bool");
       add_oper_assign<std::string>(s);
+      add_oper_assign<bool>(s);
 
       register_function(s, &to_string<const std::string &>, "internal_to_string");
       register_function(s, &to_string<bool>, "internal_to_string");
