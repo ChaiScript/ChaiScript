@@ -204,6 +204,24 @@ def zip_with(f, x, y) { \
 def zip(x, y) { \
   zip_with(collate, x, y); \
 }\
+def find(str, substr) { \
+  return int(find(str, substr, size_t(0))); \
+} \
+def rfind(str, substr) { \
+  return int(rfind(str, substr, size_t(-1))); \
+} \
+def find_first_of(str, list) { \
+  return int(find_first_of(str, list, size_t(0))); \
+} \
+def find_last_of(str, list) { \
+  return int(find_last_of(str, list, size_t(-1))); \
+} \
+def find_first_not_of(str, list) { \
+  return int(find_first_not_of(str, list, size_t(0))); \
+} \
+def find_last_not_of(str, list) { \
+  return int(find_last_not_of(str, list, size_t(-1))); \
+} \
 )
 
 #endif /* CHAISCRIPT_PRELUDE_HPP_ */

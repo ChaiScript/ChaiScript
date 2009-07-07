@@ -70,6 +70,17 @@ namespace dispatchkit
     }
   }
 
+  template<typename P1>
+    P1 construct_pod(Boxed_POD_Value v)
+    {
+      if (v.m_isfloat)
+      {
+        return (v.d);
+      } else {
+        return (v.i);
+      }    
+    }
+
 
   template<typename P1, typename P2>
   bool equals(P1 p1, P2 p2)
@@ -351,6 +362,12 @@ namespace dispatchkit
     add_copy_constructor<T>(s, type);
   }
 
+  template<typename T>
+  void add_construct_pod(Dispatch_Engine &s, const std::string &type)
+  {
+    register_function(s, &construct_pod<T>, type);
+  }
+
   template<typename T, typename U>
   void add_constructor_overload(Dispatch_Engine &s, const std::string &type)
   {
@@ -398,6 +415,7 @@ namespace dispatchkit
     add_basic_constructors<T>(s, name);
     add_oper_assign<T>(s);
     add_oper_assign_pod<T>(s);
+    add_construct_pod<T>(s, name);
     add_opers_arithmetic<T>(s);
     add_opers_arithmetic_modify_pod<T>(s);
     register_function(s, &to_string<T>, "to_string");

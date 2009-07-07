@@ -218,6 +218,13 @@ namespace dispatchkit
       add_opers_comparison<String>(system);
       bootstrap_random_access_container<String>(system, type);
       bootstrap_sequence<String>(system, type);
+      typedef typename String::size_type (String::*find_func)(const String &, typename String::size_type) const;
+      register_function(system, find_func(&String::find), "find");
+      register_function(system, find_func(&String::rfind), "rfind");
+      register_function(system, find_func(&String::find_first_of), "find_first_of");
+      register_function(system, find_func(&String::find_last_of), "find_last_of");
+      register_function(system, find_func(&String::find_first_not_of), "find_first_not_of");
+      register_function(system, find_func(&String::find_last_not_of), "find_last_not_of");
     }
 
 }
