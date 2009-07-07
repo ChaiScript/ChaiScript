@@ -104,6 +104,7 @@ namespace dispatchkit
         boost::function<size_t (ContainerType *)>(&ContainerType::size), "size");
     system.register_function(
         boost::function<size_t (ContainerType *)>(&ContainerType::size), "maxsize");
+    register_function(system, &ContainerType::empty, "empty");
   }
 
   template<typename ContainerType>
