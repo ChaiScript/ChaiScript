@@ -77,6 +77,7 @@ namespace dispatchkit
       typedef std::deque<Scope> Stack;
 
       Dispatch_Engine()
+        : m_place_holder(boost::shared_ptr<Placeholder_Object>(new Placeholder_Object()))
       {
         m_scopes.push_back(Scope());
       }
@@ -144,6 +145,11 @@ namespace dispatchkit
 
       Boxed_Value get_object(const std::string &name) const
       {
+        if (name == "_")
+        {
+          return m_place_holder;
+        }
+
         for (int i = m_scopes.size()-1; i >= 0; --i)
         {
           std::map<std::string, Boxed_Value>::const_iterator itr = m_scopes[i].find(name);
@@ -244,6 +250,7 @@ namespace dispatchkit
 
       Function_Map m_functions;
       Type_Name_Map m_types;
+      Boxed_Value m_place_holder;
   };
 
   void dump_object(Boxed_Value o)

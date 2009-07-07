@@ -530,8 +530,6 @@ namespace dispatchkit
       s.register_function(boost::function<bool (Boxed_Value, const std::string &)>(boost::bind(&is_type, boost::ref(s), _2, _1)),
           "is_type");
 
-      s.add_object("_", Placeholder_Object());
-
       s.register_function(boost::shared_ptr<Proxy_Function>(new Dynamic_Proxy_Function(boost::bind(&bind_function, _1))), 
           "bind");
 

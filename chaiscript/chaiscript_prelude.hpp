@@ -4,6 +4,9 @@
 #ifndef CHAISCRIPT_PRELUDE_HPP_
 #define CHAISCRIPT_PRELUDE_HPP_
 
+
+//Note, the expression "[x,y]" in "collate" is parsed as two separate expressions
+//by C++, so CODE_STRING, takes two expressions and adds in the missing comma
 #define CODE_STRING(x, y) #x ", " #y
 
 #define chaiscript_prelude CODE_STRING(\
@@ -34,15 +37,22 @@ def for_each(container, func) : call_exists(range, container) { \
     range.pop_front(); \
   } \
 } \
-def map(container, func) : call_exists(range, container) { \
-  var retval = Vector(); \
+def back_inserter(container) { \
+  return bind(push_back, container, _);     \
+}\
+\
+def map(container, func, inserter) : call_exists(range, container) { \
   var range = range(container); \
   while (!range.empty()) { \
-    retval.push_back(func(range.front())); \
+    inserter(func(range.front())); \
     range.pop_front(); \
   } \
-  retval \
 } \
+def map(container, func) { \
+  var retval = Vector();\
+  map(container, func, back_inserter(retval));\
+  return retval;\
+}\
 def foldl(container, func, initial) : call_exists(range, container){ \
   var retval = initial; \
   var range = range(container); \
@@ -64,52 +74,64 @@ def concat(x, y) : call_exists(clone, x) { \
   } \
   retval; \
 } \
-def take(container, num) : call_exists(range, container) { \
+def take(container, num, inserter) : call_exists(range, container) { \
   var r = range(container); \
   var i = num; \
-  var retval = Vector(); \
   while ((i > 0) && (!r.empty())) { \
-    retval.push_back(r.front()); \
+    inserter(r.front()); \
     r.pop_front(); \
     --i; \
   } \
-  retval; \
 } \
-def take_while(container, f) : call_exists(range, container) { \
-  var r = range(container); \
+def take(container, num) {\
   var retval = Vector(); \
+  take(container, num, back_inserter(retval)); \
+  return retval; \
+}\
+def take_while(container, f, inserter) : call_exists(range, container) { \
+  var r = range(container); \
   while ((!r.empty()) && f(r.front())) { \
-    retval.push_back(r.front()); \
+    inserter(r.front()); \
     r.pop_front(); \
   } \
-  retval; \
 } \
-def drop(container, num) : call_exists(range, container) { \
+def take_while(container, f) {\
+  var retval = Vector(); \
+  take_while(container, f, back_inserter(retval)); \
+  return retval;\
+}\
+def drop(container, num, inserter) : call_exists(range, container) { \
   var r = range(container); \
   var i = num; \
-  var retval = Vector(); \
   while ((i > 0) && (!r.empty())) { \
     r.pop_front(); \
     --i; \
   } \
   while (!r.empty()) { \
-    retval.push_back(r.front()); \
+    inserter(r.front()); \
     r.pop_front(); \
   } \
-  retval; \
 } \
-def drop_while(container, f) : call_exists(range, container) { \
-  var r = range(container); \
+def drop(container, num) {\
   var retval = Vector(); \
+  drop(container, num, back_inserter(retval)); \
+  return retval; \
+}\
+def drop_while(container, f, inserter) : call_exists(range, container) { \
+  var r = range(container); \
   while ((!r.empty())&& f(r.front())) { \
     r.pop_front(); \
   } \
   while (!r.empty()) { \
-    retval.push_back(r.front()); \
+    inserter(r.front()); \
     r.pop_front(); \
   } \
-  retval; \
 } \
+def drop_while(container, f) {\
+  var retval = Vector(); \
+  drop_while(container, f, back_inserter(retval)); \
+  return retval; \
+}\
 def reduce(container, func) : container.size() >= 2 && call_exists(range, container) { \
   var r = range(container); \
   var retval = r.front(); \
@@ -136,40 +158,49 @@ def join(container, delim) { \
   } \
   retval; \
 } \
-def filter(container, f) : call_exists(range, container) { \
-  var retval = Vector(); \
+def filter(container, f, inserter) : call_exists(range, container) { \
   var r = range(container); \
   while (!r.empty()) { \
     if (f(r.front())) { \
-      retval.push_back(r.front()); \
+      inserter(r.front()); \
     } \
     r.pop_front(); \
   } \
-  retval; \
 } \
-def generate_range(x, y) { \
-  var i = x; \
+def filter(container, f) { \
   var retval = Vector(); \
+  filter(container, f, back_inserter(retval));\
+  return retval;\
+}\
+def generate_range(x, y, inserter) { \
+  var i = x; \
   while (i <= y) { \
-    retval.push_back(i); \
+    inserter(i); \
     ++i; \
   } \
-  retval; \
 } \
+def generate_range(x, y) { \
+  var retval = Vector(); \
+  generate_range(x,y,back_inserter(retval)); \
+  return retval; \
+}\
 def collate(x, y) { \
   [x, y]; \
 } \
-def zip_with(f, x, y) : call_exists(range, x) && call_exists(range, y) { \
+def zip_with(f, x, y, inserter) : call_exists(range, x) && call_exists(range, y) { \
   var r_x = range(x); \
   var r_y = range(y); \
-  var retval = Vector(); \
   while (!r_x.empty() && !r_y.empty()) { \
-    retval.push_back(f(r_x.front(), r_y.front())); \
+    inserter(f(r_x.front(), r_y.front())); \
     r_x.pop_front(); \
     r_y.pop_front(); \
   } \
-  retval; \
 } \
+def zip_with(f, x, y) { \
+  var retval = Vector(); \
+  zip_with(f,x,y,back_inserter(retval)); \
+  return retval;\
+}\
 def zip(x, y) { \
   zip_with(collate, x, y); \
 }\
