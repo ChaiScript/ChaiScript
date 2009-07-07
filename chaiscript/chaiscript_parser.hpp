@@ -217,6 +217,33 @@ namespace chaiscript
             }
         }
 
+        bool Annotation() {
+            std::string::iterator start = input_pos;
+            int prev_col = col;
+            int prev_line = line;
+            if (Symbol_("#")) {
+                do {
+                    while (input_pos != input_end) {
+                        if (Eol_()) {
+                            break;
+                        }
+                        else {
+                            ++col;
+                            ++input_pos;
+                        }
+                    }
+                } while (Symbol_("#"));
+
+                std::string match(start, input_pos);
+                TokenPtr t(new Token(match, Token_Type::Annotation, filename, prev_line, prev_col, line, col));
+                match_stack.push_back(t);
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
         bool Quoted_String_() {
             bool retval = false;
             char prev_char = 0;
@@ -667,6 +694,16 @@ namespace chaiscript
 
         bool Def() {
             bool retval = false;
+            bool is_annotated = false;
+
+            TokenPtr annotation;
+
+            if (Annotation()) {
+                while (Eol_());
+                annotation = match_stack.back();
+                match_stack.pop_back();
+                is_annotated = true;
+            }
 
             int prev_stack_top = match_stack.size();
 
@@ -698,6 +735,10 @@ namespace chaiscript
                 }
 
                 build_match(Token_Type::Def, prev_stack_top);
+
+                if (is_annotated) {
+                    match_stack.back()->annotation = annotation;
+                }
             }
 
             return retval;
@@ -912,18 +953,6 @@ namespace chaiscript
 
             return retval;
         }
-
-        /*
-         * TODO: Look into if we need an explicit LHS for equations
-        bool LHS() {
-            if (Var_Decl() || Id()) {
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-        */
 
         bool Var_Decl() {
             bool retval = false;

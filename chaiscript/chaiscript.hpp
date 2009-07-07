@@ -40,13 +40,13 @@ namespace chaiscript
     class Token_Type { public: enum Type { Error, Int, Float, Id, Char, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
         Expression, Comparison, Additive, Multiplicative, Negate, Not, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
         Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Map_Pair, Value_Range,
-        Inline_Range }; };
+        Inline_Range, Annotation }; };
 
     const char *token_type_to_string(int tokentype) {
         const char *token_types[] = { "Internal Parser Error", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
             "Expression", "Comparison", "Additive", "Multiplicative", "Negate", "Not", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
             "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Map_Pair", "Value_Range",
-            "Inline_Range" };
+            "Inline_Range", "Annotation"};
 
         return token_types[tokentype];
     }
@@ -71,6 +71,7 @@ namespace chaiscript
         File_Position start, end;
 
         std::vector<TokenPtr> children;
+        TokenPtr annotation;
 
         Token(const std::string &token_text, int id, const char *fname) : text(token_text), identifier(id), filename(fname) { }
 
