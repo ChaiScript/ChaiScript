@@ -3,7 +3,6 @@
 #include "chaiscript.hpp"
 
 int main(int argc, char *argv[]) {
-
     std::string input;
 
     chaiscript::ChaiScript_Engine chai;

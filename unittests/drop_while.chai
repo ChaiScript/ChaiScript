@@ -1,0 +1,1 @@
+print(drop_while([1, 2, 3], odd))

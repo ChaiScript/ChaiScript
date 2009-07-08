@@ -1,0 +1,1 @@
+print(find("123abab", "ab"))

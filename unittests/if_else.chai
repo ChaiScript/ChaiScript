@@ -1,0 +1,8 @@
+var i = 3
+if (i == 2) {
+	print("2")
+}
+else {
+	print("other")
+}
+print("done")

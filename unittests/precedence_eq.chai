@@ -1,0 +1,2 @@
+var x = var y = 4
+print(x); print(y)

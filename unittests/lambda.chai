@@ -1,0 +1,2 @@
+var bob = fun(x) { x + 1 }
+print(bob(3))
