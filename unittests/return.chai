@@ -1,5 +1,5 @@
-def bob() {
+def sam() {
 	return 5
 }
 
-print(bob())
+print(sam())

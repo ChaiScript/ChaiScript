@@ -23,10 +23,16 @@ namespace chaiscript
 
         }
 
+        /**
+         * Returns the current evaluation engine
+         */
         Eval_Engine &get_eval_engine() {
             return engine;
         }
 
+        /**
+         * Prints the contents of an AST node, including its children, recursively
+         */
         void debug_print(TokenPtr t, std::string prepend = "") {
             std::cout << prepend << "(" << token_type_to_string(t->identifier) << ") " << t->text << " : " << t->start.line << ", " << t->start.column << std::endl;
             for (unsigned int j = 0; j < t->children.size(); ++j) {
@@ -34,6 +40,9 @@ namespace chaiscript
             }
         }
 
+        /**
+         * Evaluates the given boxed string, used during eval() inside of a script
+         */
         const dispatchkit::Boxed_Value eval(const std::vector<dispatchkit::Boxed_Value> &vals) {
             std::string val;
             try {
@@ -48,6 +57,9 @@ namespace chaiscript
             return evaluate_string(val);
         }
 
+        /**
+         * Helper function for loading a file
+         */
         std::string load_file(const char *filename) {
             std::ifstream infile (filename, std::ios::in | std::ios::ate);
 
@@ -67,6 +79,9 @@ namespace chaiscript
             return ret_val;
         }
 
+        /**
+         * Builds all the requirements for ChaiScript, including its evaluator and a run of its prelude.
+         */
         void build_eval_system() {
             dispatchkit::Bootstrap::bootstrap(engine);
             dispatchkit::bootstrap_vector<std::vector<dispatchkit::Boxed_Value> >(engine, "Vector");
@@ -80,6 +95,9 @@ namespace chaiscript
             evaluate_string(chaiscript_prelude);
         }
 
+        /**
+         * Evaluates the given string in by parsing it and running the results through the evaluator
+         */
         dispatchkit::Boxed_Value evaluate_string(const std::string &input, const char *filename = "__EVAL__") {
             //debug_print(tokens);
             dispatchkit::Boxed_Value value;
@@ -112,6 +130,9 @@ namespace chaiscript
             return value;
         }
 
+        /**
+         * Loads the file specified by filename, evaluates it, and returns the result
+         */
         dispatchkit::Boxed_Value evaluate_file(const char *filename) {
             return evaluate_string(load_file(filename), filename);
         }

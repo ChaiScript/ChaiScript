@@ -56,7 +56,7 @@ def update_state(state)
   update_cpu_state(state, file, "cpu1");
 }
 
-dump_system()
+//dump_system()
 
 var global_state = Map()
 
