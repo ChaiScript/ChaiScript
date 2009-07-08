@@ -218,6 +218,7 @@ namespace chaiscript
         }
 
         bool Annotation() {
+            SkipWS();
             std::string::iterator start = input_pos;
             int prev_col = col;
             int prev_line = line;
@@ -232,7 +233,7 @@ namespace chaiscript
                             ++input_pos;
                         }
                     }
-                } while (Symbol_("#"));
+                } while (Symbol("#"));
 
                 std::string match(start, input_pos);
                 TokenPtr t(new Token(match, Token_Type::Annotation, filename, prev_line, prev_col, line, col));
@@ -1369,7 +1370,7 @@ namespace chaiscript
             line = 1; col = 1;
             filename = fname;
 
-            if ((input.size() > 0) && (input[0] == '#')) {
+            if ((input.size() > 1) && (input[0] == '#') && (input[1] == '!')) {
                 while ((input_pos != input_end) && (!Eol())) {
                     ++input_pos;
                 }

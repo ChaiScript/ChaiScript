@@ -286,7 +286,13 @@ namespace dispatchkit
   void dump_function(const Dispatch_Engine::Function_Map::value_type &f, const Dispatch_Engine &e)
   {
     std::vector<Type_Info> params = f.second->get_param_types();
+    std::string annotation = f.second->annotation();
 
+    if (annotation.size() > 0) {
+        std::cout << "##############" << std::endl;
+        std::cout << annotation;
+        std::cout << "##############" << std::endl;
+    }
     dump_type(params.front(), e);
     std::cout << " " << f.first << "(";
 
@@ -304,7 +310,7 @@ namespace dispatchkit
 
     }
 
-    std::cout << ") " << f.second->annotation() << std::endl;
+    std::cout << ") " << std::endl;
   }
 
   void dump_system(const Dispatch_Engine &s)
