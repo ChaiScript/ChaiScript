@@ -488,63 +488,65 @@ namespace chaiscript
             break;
             case (Token_Type::Def) : {
                 std::vector<std::string> param_names;
+                std::string annotation = node->annotation?node->annotation->text:"";
+                boost::shared_ptr<dispatchkit::Dynamic_Proxy_Function> guard;
+                size_t numparams = 0;
+                std::string function_name = node->children[0]->text;
+                TokenPtr guardnode;
 
                 if ((node->children.size() > 2) && (node->children[1]->identifier == Token_Type::Arg_List)) {
-                    for (i = 0; i < node->children[1]->children.size(); ++i) {
+                    numparams = node->children[1]->children.size();
+                    for (i = 0; i < numparams; ++i) {
                         param_names.push_back(node->children[1]->children[i]->text);
                     }
 
                     if (node->children.size() > 3) {
-                        //Guarded function
-                        boost::shared_ptr<dispatchkit::Dynamic_Proxy_Function> guard = boost::shared_ptr<dispatchkit::Dynamic_Proxy_Function>
-                            (new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children[2], param_names, _1), node->children[1]->children.size()));
-
-                        ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
-                              new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), node->children[1]->children.size(),
-                              guard)), node->children[0]->text);
-
-                    }
-                    else {
-                        ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
-                              new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), node->children[1]->children.size())), node->children[0]->text);
+                        guardnode = node->children[2];
                     }
                 }
                 else {
                     //no parameters
+                    numparams = 0;
 
                     if (node->children.size() > 2) {
-                        boost::shared_ptr<dispatchkit::Dynamic_Proxy_Function> guard = boost::shared_ptr<dispatchkit::Dynamic_Proxy_Function>
-                            (new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children[1], param_names, _1), 0));
-
-                        ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
-                              new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), 0,
-                              guard)), node->children[0]->text);
-                    }
-                    else {
-                        ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
-                          new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), 0)), node->children[0]->text);
+                        guardnode = node->children[1];
                     }
                 }
+
+                if (guardnode) {
+                    guard = boost::shared_ptr<dispatchkit::Dynamic_Proxy_Function>
+                        (new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, 
+                                                                             boost::ref(ss), guardnode, 
+                                                                             param_names, _1), numparams));
+                }
+
+                ss.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>
+                    (new dispatchkit::Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>, 
+                                                                         boost::ref(ss), node->children.back(), 
+                                                                         param_names, _1), numparams,
+                                                             annotation, guard)), function_name);
+
             }
             break;
             case (Token_Type::Lambda) : {
                 std::vector<std::string> param_names;
+                size_t numparams = 0;
 
                 if ((node->children.size() > 0) && (node->children[0]->identifier == Token_Type::Arg_List)) {
-                    for (i = 0; i < node->children[0]->children.size(); ++i) {
+                    numparams = node->children[0]->children.size();
+                    for (i = 0; i < numparams; ++i) {
                         param_names.push_back(node->children[0]->children[i]->text);
                     }
-                    //retval = boost::shared_ptr<dispatchkit::Proxy_Function>(new dispatchkit::Proxy_Function_Impl<boost::function<void (const std::string &)> >(&test));
-                    retval = dispatchkit::Boxed_Value(boost::shared_ptr<dispatchkit::Proxy_Function>(
-                          new dispatchkit::Dynamic_Proxy_Function(
-                            boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), node->children[0]->children.size())));
+
                 }
                 else {
                     //no parameters
-                    retval = dispatchkit::Boxed_Value(boost::shared_ptr<dispatchkit::Proxy_Function>(
-                          new dispatchkit::Dynamic_Proxy_Function(
-                            boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), 0)));
+                    numparams = 0;
                 }
+
+                retval = dispatchkit::Boxed_Value(boost::shared_ptr<dispatchkit::Proxy_Function>(
+                      new dispatchkit::Dynamic_Proxy_Function(
+                        boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), numparams)));
             }
             break;
 

@@ -6,6 +6,9 @@
 
 namespace dispatchkit
 {
+  /**
+   * Set of helper functions for common operators
+   */
   template<typename Ret, typename P1, typename P2>
   Ret add(P1 p1, P2 p2)
   {
@@ -40,46 +43,12 @@ namespace dispatchkit
     return p1 % p2;
   }
 
-
-  template<typename P1, typename P2>
-  bool bool_and(P1 p1, P2 p2)
-  {
-    return p1 && p2;
-  }
-
-  template<typename P1, typename P2>
-  bool bool_or(P1 p1, P2 p2)
-  {
-    return p1 || p2;
-  }
-
   template<typename P1, typename P2>
   P1 &assign(P1 &p1, const P2 &p2)
   {
     return (p1 = p2);
   }
 
-  template<typename P1>
-  P1 &assign_pod(P1 &p1, Boxed_POD_Value v)
-  {
-    if (v.m_isfloat)
-    {
-      return (p1 = v.d);
-    } else {
-      return (p1 = v.i);
-    }
-  }
-
-  template<typename P1>
-    P1 construct_pod(Boxed_POD_Value v)
-    {
-      if (v.m_isfloat)
-      {
-        return (v.d);
-      } else {
-        return (v.i);
-      }    
-    }
 
 
   template<typename P1, typename P2>
@@ -127,33 +96,10 @@ namespace dispatchkit
     return (p1 *= p2);
   }
 
-  template<typename P1>
-  P1 &timesequal_pod(P1 &p1, Boxed_POD_Value r)
-  {
-    if (r.m_isfloat)
-    {
-      return (p1 *= r.d);
-    } else {
-      return (p1 *= r.i);
-    }
-  }
-
-
   template<typename P1, typename P2>
   P1 &dividesequal(P1 &p1, const P2 &p2)
   {
     return (p1 /= p2);
-  }
-
-  template<typename P1>
-  P1 &dividesequal_pod(P1 &p1, Boxed_POD_Value r)
-  {
-    if (r.m_isfloat)
-    {
-      return (p1 /= r.d);
-    } else {
-      return (p1 /= r.i);
-    }
   }
 
 
@@ -163,33 +109,13 @@ namespace dispatchkit
     return (p1 += p2);
   }
 
-  template<typename P1>
-  P1 &addsequal_pod(P1 &p1, Boxed_POD_Value r)
-  {
-    if (r.m_isfloat)
-    {
-      return (p1 += r.d);
-    } else {
-      return (p1 += r.i);
-    }
-  }
-
   template<typename P1, typename P2>
   P1 &subtractsequal(P1 &p1, const P2 &p2)
   {
     return (p1 -= p2);
   }
 
-  template<typename P1>
-  P1 &subtractsequal_pod(P1 &p1, Boxed_POD_Value r)
-  {
-    if (r.m_isfloat)
-    {
-      return (p1 -= r.d);
-    } else {
-      return (p1 -= r.i);
-    }
-  }
+
 
   template<typename P1>
   P1 &prefixincrement(P1 &p1)
@@ -215,36 +141,122 @@ namespace dispatchkit
     return (p1);
   }
 
+  /* Special helpers for generating generic "POD" type operators
+   * The POD operators are needed for general support of C++ POD
+   * types without iterating out all possible combinations of operators
+   * (<, >, +, +=, *=, \=, -, <=, >=, ==) and types
+   * (char, uint8_t, int8_t, uint16_t, int16_t...)
+   */
+  template<typename P1>
+    P1 &assign_pod(P1 &p1, Boxed_POD_Value v)
+    {
+      if (v.m_isfloat)
+      {
+        return (p1 = v.d);
+      } else {
+        return (p1 = v.i);
+      }
+    }
 
-  //Add canonical forms of operators
+  template<typename P1>
+    P1 construct_pod(Boxed_POD_Value v)
+    {
+      if (v.m_isfloat)
+      {
+        return (v.d);
+      } else {
+        return (v.i);
+      }    
+    }
+
+  template<typename P1>
+    P1 &timesequal_pod(P1 &p1, Boxed_POD_Value r)
+    {
+      if (r.m_isfloat)
+      {
+        return (p1 *= r.d);
+      } else {
+        return (p1 *= r.i);
+      }
+    }
+
+  template<typename P1>
+    P1 &dividesequal_pod(P1 &p1, Boxed_POD_Value r)
+    {
+      if (r.m_isfloat)
+      {
+        return (p1 /= r.d);
+      } else {
+        return (p1 /= r.i);
+      }
+    }
+
+  template<typename P1>
+    P1 &addsequal_pod(P1 &p1, Boxed_POD_Value r)
+    {
+      if (r.m_isfloat)
+      {
+        return (p1 += r.d);
+      } else {
+        return (p1 += r.i);
+      }
+    }
+
+  template<typename P1>
+    P1 &subtractsequal_pod(P1 &p1, Boxed_POD_Value r)
+    {
+      if (r.m_isfloat)
+      {
+        return (p1 -= r.d);
+      } else {
+        return (p1 -= r.i);
+      }
+    }
+
+
+  /**
+   * Add canonical form of "=" for type T
+   */
   template<typename T>
   void add_oper_equals(Dispatch_Engine &s)
   {
     register_function(s, &equals<const T&, const T&>, "=");
   }
 
+  /**
+   * Add canonical form of "+" for type T
+   */
   template<typename T>
   void add_oper_add(Dispatch_Engine &s)
   {
     register_function(s, &add<T, const T&, const T&>, "+");
   }
 
+  /**
+   * Add canonical form of "+=" for type T
+   */
   template<typename T>
   void add_oper_add_equals(Dispatch_Engine &s)
   {
     register_function(s, &addsequal<T, T>, "+=");
   }
 
+  /**
+   * Add canonical form of "-" for type T
+   */
   template<typename T>
   void add_oper_subtract(Dispatch_Engine &s)
   {
     register_function(s, &subtract<T, const T&, const T&>, "-");
   }
 
+  /**
+   * Add canonical form of "/" for type T
+   */
   template<typename T>
   void add_oper_divide(Dispatch_Engine &s)
   {
-    register_function(s, &divide<T, const T&, const T&>, "-");
+    register_function(s, &divide<T, const T&, const T&>, "/");
   }
 
   template<typename T>

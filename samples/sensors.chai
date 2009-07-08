@@ -46,6 +46,7 @@ def update_cpu_state(state, statfile, cpuname)
   state[cpuname + ".softirq"] = softirq;
 }                                                                     
 
+# annotation
 def update_state(state)
 {
   var file = load_text_file("/proc/stat");
@@ -61,7 +62,7 @@ initialize_cpu_sensor(global_state, "cpu", sensor_manager);
 initialize_cpu_sensor(global_state, "cpu0", sensor_manager);
 initialize_cpu_sensor(global_state, "cpu1", sensor_manager);
 
-sensor_manager.add_sensor("cpu", 500, global_state, function(state) { update_state(state); state["cpu"]; } )
-sensor_manager.add_sensor("cpu0", 500, global_state, function(state) { state["cpu0"]; } )
-sensor_manager.add_sensor("cpu1", 500, global_state, function(state) { state["cpu1"]; } )
+sensor_manager.add_sensor("cpu", 500, global_state, fun(state) { update_state(state); state["cpu"]; } )
+sensor_manager.add_sensor("cpu0", 500, global_state, fun(state) { state["cpu0"]; } )
+sensor_manager.add_sensor("cpu1", 500, global_state, fun(state) { state["cpu1"]; } )
 

@@ -114,8 +114,6 @@ namespace dispatchkit
 
 namespace dispatchkit
 {
-
-
   class Proxy_Function
   {
     public:
@@ -131,21 +129,21 @@ namespace dispatchkit
     public:
       guard_error() throw()
         : std::runtime_error("Guard evaluation failed")
-      {
-      }
+      { }
 
       virtual ~guard_error() throw()
-      {
-      }
+      { }
   };
 
   class Dynamic_Proxy_Function : public Proxy_Function
   {
     public:
-      Dynamic_Proxy_Function(const boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> &t_f, 
-              int t_arity=-1,
-              const boost::shared_ptr<Proxy_Function> &t_guard = boost::shared_ptr<Proxy_Function>())
-        : m_f(t_f), m_arity(t_arity), m_guard(t_guard)
+      Dynamic_Proxy_Function(
+          const boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> &t_f, 
+          int t_arity=-1,
+          const std::string &t_description = "",
+          const boost::shared_ptr<Proxy_Function> &t_guard = boost::shared_ptr<Proxy_Function>())
+        : m_f(t_f), m_arity(t_arity), m_description(t_description), m_guard(t_guard)
       {
       }
 
@@ -203,6 +201,7 @@ namespace dispatchkit
 
       boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
       int m_arity;
+      std::string m_description;
       boost::shared_ptr<Proxy_Function> m_guard;
   };
 
