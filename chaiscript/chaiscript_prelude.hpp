@@ -9,10 +9,10 @@
 //by C++, so CODE_STRING, takes two expressions and adds in the missing comma
 #define CODE_STRING(x, y) #x ", " #y
 
-#define chaiscript_prelude CODE_STRING(\
+#define chaiscript_prelude CODE_STRING( \n\n \
 def to_string(x) : call_exists(first, x) && call_exists(second, x) { \
   "<" + x.first.to_string() + ", " + x.second.to_string() + ">"; \
-} \
+} \n \n \
 def to_string(x) : call_exists(range, x) && !x.is_type("string"){ \
   "[" + x.join(", ") + "]"; \
 } \

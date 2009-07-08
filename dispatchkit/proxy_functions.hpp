@@ -122,6 +122,7 @@ namespace dispatchkit
       virtual std::vector<Type_Info> get_param_types() const = 0;
       virtual bool operator==(const Proxy_Function &) const = 0;
       virtual bool types_match(const std::vector<Boxed_Value> &types) const = 0;
+      virtual std::string annotation() const = 0;
   };
 
   class guard_error : public std::runtime_error
@@ -179,7 +180,26 @@ namespace dispatchkit
 
       virtual std::vector<Type_Info> get_param_types() const
       {
-        return build_param_type_list(m_f);
+        std::vector<Type_Info> types;
+
+        types.push_back(Get_Type_Info<Boxed_Value>::get());
+
+        if (m_arity >= 0)
+        {
+          for (int i = 0; i < m_arity; ++i)
+          {
+            types.push_back(Get_Type_Info<Boxed_Value>::get());
+          }
+        } else {
+          types.push_back(Get_Type_Info<std::vector<Boxed_Value> >::get());
+        }
+
+        return types;
+      }
+
+      virtual std::string annotation() const
+      {
+        return m_description;
       }
 
     private:
@@ -280,6 +300,12 @@ namespace dispatchkit
         return std::vector<Type_Info>();
       }
 
+      virtual std::string annotation() const
+      {
+        return "";
+      }
+
+
     private:
       boost::shared_ptr<Proxy_Function> m_f;
       std::vector<Boxed_Value> m_args;
@@ -320,6 +346,12 @@ namespace dispatchkit
       {
         return compare_types(m_f, types);
       }
+
+      virtual std::string annotation() const
+      {
+        return "";
+      }
+
 
     private:
       Func m_f;

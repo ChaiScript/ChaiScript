@@ -63,6 +63,11 @@ namespace dispatchkit
         return false;
       }
 
+      virtual std::string annotation() const
+      {
+        return "";
+      }
+
     private:
       std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > m_funcs;
   };  
@@ -186,6 +191,21 @@ namespace dispatchkit
         }
       }
 
+      std::string get_type_name(const Type_Info &ti) const
+      {
+        for (Type_Name_Map::const_iterator itr = m_types.begin();
+             itr != m_types.end();
+             ++itr)
+        {
+          if (itr->second.m_bare_type_info == ti.m_bare_type_info)
+          {
+            return itr->first;
+          }
+        }
+
+        return ti.m_bare_type_info->name();
+      }
+
       std::vector<Type_Name_Map::value_type> get_types() const
       {
         return std::vector<Type_Name_Map::value_type>(m_types.begin(), m_types.end());
@@ -253,32 +273,38 @@ namespace dispatchkit
       Boxed_Value m_place_holder;
   };
 
-  void dump_object(Boxed_Value o)
+  void dump_object(Boxed_Value o, const Dispatch_Engine &e)
   {
-    std::cout << o.get_type_info().m_type_info->name() << std::endl;
+    std::cout << e.get_type_name(o.get_type_info()) << std::endl;
   }
 
-  void dump_type(const Type_Info &type)
+  void dump_type(const Type_Info &type, const Dispatch_Engine &e)
   {
-    std::cout << type.m_bare_type_info->name();
+    std::cout << e.get_type_name(type);
   }
 
-  void dump_function(const Dispatch_Engine::Function_Map::value_type &f)
+  void dump_function(const Dispatch_Engine::Function_Map::value_type &f, const Dispatch_Engine &e)
   {
     std::vector<Type_Info> params = f.second->get_param_types();
 
-    dump_type(params.front());
+    dump_type(params.front(), e);
     std::cout << " " << f.first << "(";
 
     for (std::vector<Type_Info>::const_iterator itr = params.begin() + 1;
          itr != params.end();
-         ++itr)
+         )
     {
-      dump_type(*itr);
-      std::cout << ", ";
+      dump_type(*itr, e);
+      ++itr;
+
+      if (itr != params.end())
+      {
+        std::cout << ", ";
+      }
+
     }
 
-    std::cout << ")" << std::endl;
+    std::cout << ") " << f.second->annotation() << std::endl;
   }
 
   void dump_system(const Dispatch_Engine &s)
@@ -290,7 +316,7 @@ namespace dispatchkit
          ++itr)
     {
       std::cout << itr->first << ": ";
-      dump_type(itr->second);
+      std::cout << itr->second.m_bare_type_info->name();
       std::cout << std::endl;
     }
 
@@ -302,7 +328,7 @@ namespace dispatchkit
          itr != funcs.end();
          ++itr)
     {
-      dump_function(*itr);
+      dump_function(*itr, s);
     }
     std::cout << std::endl;
   }

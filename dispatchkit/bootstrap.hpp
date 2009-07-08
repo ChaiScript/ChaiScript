@@ -532,6 +532,8 @@ namespace dispatchkit
     {
       s.register_type<void>("void");
       s.register_type<bool>("bool");
+      s.register_type<Boxed_Value>("Object");
+      s.register_type<Boxed_POD_Value>("PODObject");
       s.register_type<Proxy_Function>("function");
 
       add_basic_constructors<bool>(s, "bool");
@@ -556,7 +558,7 @@ namespace dispatchkit
       register_function(s, &println, "println_string");
 
       s.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(s))), "dump_system");
-      s.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1)), "dump_object");
+      s.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1, boost::ref(s))), "dump_object");
       s.register_function(boost::function<bool (Boxed_Value, const std::string &)>(boost::bind(&is_type, boost::ref(s), _2, _1)),
           "is_type");
 

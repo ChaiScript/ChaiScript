@@ -56,6 +56,8 @@ def update_state(state)
   update_cpu_state(state, file, "cpu1");
 }
 
+dump_system()
+
 var global_state = Map()
 
 initialize_cpu_sensor(global_state, "cpu", sensor_manager);

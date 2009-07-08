@@ -55,11 +55,19 @@ namespace dispatchkit
   template<typename ContainerType>
     void bootstrap_input_range(Dispatch_Engine &system, const std::string &type)
     {
+      system.register_type<Input_Range<ContainerType> >(type+"_Range");
+      system.register_type<typename ContainerType::iterator>(type+"_Iterator");
+
       system.register_function(build_constructor<Input_Range<ContainerType>, ContainerType &>(), "range");
       system.register_function(build_constructor<Input_Range<ContainerType>, 
           typename ContainerType::iterator>(), "range");
+
+      typedef std::pair<typename ContainerType::iterator, typename ContainerType::iterator> ItrPair;
+
       system.register_function(build_constructor<Input_Range<ContainerType>, 
-          const std::pair<typename ContainerType::iterator, typename ContainerType::iterator> &>(), "range");
+          const ItrPair &>(), "range");
+      system.register_type<ItrPair>(type+"_Iterator_Pair");
+
 
 
       register_function(system, &Input_Range<ContainerType>::empty, "empty");
@@ -158,6 +166,8 @@ namespace dispatchkit
   template<typename PairType>
     void bootstrap_pair(Dispatch_Engine &system, const std::string &type)
     {
+      system.register_type<PairType>(type);
+
       register_member(system, &PairType::first, "first");
       register_member(system, &PairType::second, "second");
 
