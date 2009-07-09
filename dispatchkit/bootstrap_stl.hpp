@@ -76,7 +76,7 @@ namespace dispatchkit
     } 
   
   template<typename ContainerType>
-  void bootstrap_reversible_container(Dispatch_Engine &system, const std::string &type)
+  void bootstrap_reversible_container(Dispatch_Engine &/*system*/, const std::string &/*type*/)
   {
   }
 

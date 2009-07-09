@@ -4,6 +4,7 @@
 #include <typeinfo>
 #include <string>
 #include <map>
+#include <set>
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
 #include <stdexcept>
@@ -26,7 +27,7 @@ namespace dispatchkit
       {
       }
 
-      virtual bool operator==(const Proxy_Function &f) const
+      virtual bool operator==(const Proxy_Function &) const
       {
         return false;
       }
@@ -76,8 +77,7 @@ namespace dispatchkit
   class Dispatch_Engine
   {
     public:
-      typedef std::multimap<std::string, boost::shared_ptr<Proxy_Function> > Function_Map;
-      typedef std::map<std::string, Type_Info> Type_Name_Map;
+      typedef std::map<std::string, dispatchkit::Type_Info> Type_Name_Map;
       typedef std::map<std::string, Boxed_Value> Scope;
       typedef std::deque<Scope> Stack;
 
@@ -143,7 +143,7 @@ namespace dispatchkit
 
       Stack set_stack(Stack s)
       {
-        swap(s, m_scopes);
+        std::swap(s, m_scopes);
         return s;
       }
 
@@ -164,7 +164,7 @@ namespace dispatchkit
           }
         }
 
-        std::vector<std::pair<std::string, Function_Map::mapped_type> > funcs = get_function_impl(name, false);
+        std::vector<std::pair<std::string, std::multimap<std::string, boost::shared_ptr<Proxy_Function> >::mapped_type> > funcs = get_function_impl(name, false);
 
         if (funcs.empty())
         {
@@ -180,15 +180,17 @@ namespace dispatchkit
           m_types.insert(std::make_pair(name, Get_Type_Info<Type>::get()));
         }
 
+
       Type_Info get_type(const std::string &name) const
       {
         Type_Name_Map::const_iterator itr = m_types.find(name);
+
         if (itr != m_types.end())
         {
           return itr->second;
-        } else {
-          throw std::range_error("Type Not Known");
         }
+
+        throw std::range_error("Type Not Known");
       }
 
       std::string get_type_name(const Type_Info &ti) const
@@ -206,51 +208,51 @@ namespace dispatchkit
         return ti.m_bare_type_info->name();
       }
 
-      std::vector<Type_Name_Map::value_type> get_types() const
+      std::vector<std::pair<std::string, Type_Info> > get_types() const
       {
-        return std::vector<Type_Name_Map::value_type>(m_types.begin(), m_types.end());
+        return std::vector<std::pair<std::string, Type_Info> >(m_types.begin(), m_types.end());
       }
 
-      std::vector<std::pair<std::string, Function_Map::mapped_type> > 
+      std::vector<std::pair<std::string, std::multimap<std::string, boost::shared_ptr<Proxy_Function> >::mapped_type> > 
         get_function_impl(const std::string &t_name, bool include_objects) const
       {
-        std::vector<std::pair<std::string, Function_Map::mapped_type> > funcs;
+        std::vector<std::pair<std::string, std::multimap<std::string, boost::shared_ptr<Proxy_Function> >::mapped_type> > funcs;
 
         if (include_objects)
         {
           try {
             funcs.insert(funcs.end(), 
-                Function_Map::value_type(
+              std::make_pair(
                   t_name, 
-                  boxed_cast<Function_Map::mapped_type>(get_object(t_name)))
+                  boxed_cast<std::multimap<std::string, boost::shared_ptr<Proxy_Function> >::mapped_type>(get_object(t_name)))
                 );
           } catch (const bad_boxed_cast &) {
           } catch (const std::range_error &) {
           }
         }
 
-        std::pair<Function_Map::const_iterator, Function_Map::const_iterator> range
+        std::pair<std::multimap<std::string, boost::shared_ptr<Proxy_Function> >::const_iterator, std::multimap<std::string, boost::shared_ptr<Proxy_Function> >::const_iterator> range
           = m_functions.equal_range(t_name);
 
         funcs.insert(funcs.end(), range.first, range.second);
         return funcs;
       }
 
-      std::vector<std::pair<std::string, Function_Map::mapped_type> > 
+      std::vector<std::pair<std::string, std::multimap<std::string, boost::shared_ptr<Proxy_Function> >::mapped_type> > 
         get_function(const std::string &t_name) const
       {
         return get_function_impl(t_name, true);
       }
  
-      std::vector<Function_Map::value_type> get_functions() const
+      std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > get_functions() const
       {
-        return std::vector<Function_Map::value_type>(m_functions.begin(), m_functions.end());
+        return std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > >(m_functions.begin(), m_functions.end());
       }
 
     private:
       bool add_function(const boost::shared_ptr<Proxy_Function> &f, const std::string &t_name)
       {
-        std::pair<Function_Map::const_iterator, Function_Map::const_iterator> range
+        std::pair<std::multimap<std::string, boost::shared_ptr<Proxy_Function> >::const_iterator, std::multimap<std::string, boost::shared_ptr<Proxy_Function> >::const_iterator> range
           = m_functions.equal_range(t_name);
 
         while (range.first != range.second)
@@ -268,7 +270,7 @@ namespace dispatchkit
 
       std::deque<Scope> m_scopes;
 
-      Function_Map m_functions;
+      std::multimap<std::string, boost::shared_ptr<Proxy_Function> > m_functions;
       Type_Name_Map m_types;
       Boxed_Value m_place_holder;
   };
@@ -283,7 +285,7 @@ namespace dispatchkit
     std::cout << e.get_type_name(type);
   }
 
-  void dump_function(const Dispatch_Engine::Function_Map::value_type &f, const Dispatch_Engine &e)
+  void dump_function(const std::pair<const std::string, boost::shared_ptr<Proxy_Function> > &f, const Dispatch_Engine &e)
   {
     std::vector<Type_Info> params = f.second->get_param_types();
     std::string annotation = f.second->annotation();
@@ -314,8 +316,8 @@ namespace dispatchkit
   void dump_system(const Dispatch_Engine &s)
   {
     std::cout << "Registered Types: " << std::endl;
-    std::vector<Dispatch_Engine::Type_Name_Map::value_type> types = s.get_types();
-    for (std::vector<Dispatch_Engine::Type_Name_Map::value_type>::const_iterator itr = types.begin();
+    std::vector<std::pair<std::string, Type_Info> > types = s.get_types();
+    for (std::vector<std::pair<std::string, Type_Info> >::const_iterator itr = types.begin();
          itr != types.end();
          ++itr)
     {
@@ -325,10 +327,11 @@ namespace dispatchkit
     }
 
 
-    std::cout << std::endl;  std::vector<Dispatch_Engine::Function_Map::value_type> funcs = s.get_functions();
+    std::cout << std::endl;  
+    std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > funcs = s.get_functions();
 
     std::cout << "Functions: " << std::endl;
-    for (std::vector<Dispatch_Engine::Function_Map::value_type>::const_iterator itr = funcs.begin();
+    for (std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > >::const_iterator itr = funcs.begin();
          itr != funcs.end();
          ++itr)
     {

@@ -51,7 +51,7 @@ namespace chaiscript
             catch (Eval_Error &ee) {
                 throw Eval_Error("Can not evaluate string: " + val + " reason: " + ee.reason, TokenPtr());
             }
-            catch (std::exception &e) {
+            catch (std::exception &) {
                 throw Eval_Error("Can not evaluate string: " + val, TokenPtr());
             }
             return evaluate_string(val);

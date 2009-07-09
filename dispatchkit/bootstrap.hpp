@@ -152,9 +152,9 @@ namespace dispatchkit
     {
       if (v.m_isfloat)
       {
-        return (p1 = v.d);
+        return (p1 = P1(v.d));
       } else {
-        return (p1 = v.i);
+        return (p1 = P1(v.i));
       }
     }
 
@@ -163,9 +163,9 @@ namespace dispatchkit
     {
       if (v.m_isfloat)
       {
-        return (v.d);
+        return P1(v.d);
       } else {
-        return (v.i);
+        return P1(v.i);
       }    
     }
 
@@ -174,9 +174,9 @@ namespace dispatchkit
     {
       if (r.m_isfloat)
       {
-        return (p1 *= r.d);
+        return p1 *= P1(r.d);
       } else {
-        return (p1 *= r.i);
+        return p1 *= P1(r.i);
       }
     }
 
@@ -185,9 +185,9 @@ namespace dispatchkit
     {
       if (r.m_isfloat)
       {
-        return (p1 /= r.d);
+        return p1 /= P1(r.d);
       } else {
-        return (p1 /= r.i);
+        return p1 /= P1(r.i);
       }
     }
 
@@ -196,9 +196,9 @@ namespace dispatchkit
     {
       if (r.m_isfloat)
       {
-        return (p1 += r.d);
+        return p1 += P1(r.d);
       } else {
-        return (p1 += r.i);
+        return p1 += P1(r.i);
       }
     }
 
@@ -207,9 +207,9 @@ namespace dispatchkit
     {
       if (r.m_isfloat)
       {
-        return (p1 -= r.d);
+        return p1 -= P1(r.d);
       } else {
-        return (p1 -= r.i);
+        return p1 -= P1(r.i);
       }
     }
 
@@ -548,7 +548,7 @@ namespace dispatchkit
       bootstrap_pod_type<int>(s, "int");
       bootstrap_pod_type<size_t>(s, "size_t");
       bootstrap_pod_type<char>(s, "char");
-      bootstrap_pod_type<int64_t>(s, "int64_t");
+      bootstrap_pod_type<boost::int64_t>(s, "int64_t");
 
       add_opers_comparison_pod(s);
       add_opers_arithmetic_pod(s);

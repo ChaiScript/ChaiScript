@@ -64,7 +64,7 @@ namespace chaiscript
             try {
                 return ss.get_object(node->text);
             }
-            catch (std::exception &e) {
+            catch (std::exception &) {
                 throw Eval_Error("Can not find object: " + node->text, node);
             }
         }
@@ -74,7 +74,7 @@ namespace chaiscript
      * Evaluates a floating point number
      */
     template <typename Eval_System>
-    dispatchkit::Boxed_Value eval_float(Eval_System &ss, TokenPtr node) {
+    dispatchkit::Boxed_Value eval_float(Eval_System &, TokenPtr node) {
         return dispatchkit::Boxed_Value(double(atof(node->text.c_str())));
     }
 
@@ -82,7 +82,7 @@ namespace chaiscript
      * Evaluates an integer
      */
     template <typename Eval_System>
-    dispatchkit::Boxed_Value eval_int(Eval_System &ss, TokenPtr node) {
+    dispatchkit::Boxed_Value eval_int(Eval_System &, TokenPtr node) {
         return dispatchkit::Boxed_Value(atoi(node->text.c_str()));
     }
 
@@ -90,7 +90,7 @@ namespace chaiscript
      * Evaluates a quoted string
      */
     template <typename Eval_System>
-    dispatchkit::Boxed_Value eval_quoted_string(Eval_System &ss, TokenPtr node) {
+    dispatchkit::Boxed_Value eval_quoted_string(Eval_System &, TokenPtr node) {
         return dispatchkit::Boxed_Value(node->text);
     }
 
@@ -98,7 +98,7 @@ namespace chaiscript
      * Evaluates a char group
      */
     template <typename Eval_System>
-    dispatchkit::Boxed_Value eval_single_quoted_string(Eval_System &ss, TokenPtr node) {
+    dispatchkit::Boxed_Value eval_single_quoted_string(Eval_System &, TokenPtr node) {
         return dispatchkit::Boxed_Value(node->text);
     }
 
@@ -125,11 +125,11 @@ namespace chaiscript
                         try {
                             retval = dispatch(ss.get_function(node->children[i+1]->text), plb);
                         }
-                        catch(const dispatchkit::dispatch_error &e){
+                        catch(const dispatchkit::dispatch_error &){
                             throw Eval_Error("Mismatched types in equation", node->children[i+1]);
                         }
                     }
-                    catch(const dispatchkit::dispatch_error &e){
+                    catch(const dispatchkit::dispatch_error &){
                         throw Eval_Error("Can not clone right hand side of equation", node->children[i+1]);
                     }
                 }
@@ -149,7 +149,7 @@ namespace chaiscript
                     try {
                         retval = dispatch(ss.get_function(node->children[i+1]->text), plb);
                     }
-                    catch(const dispatchkit::dispatch_error &e){
+                    catch(const dispatchkit::dispatch_error &){
                         throw Eval_Error("Can not find appropriate '" + node->children[i+1]->text + "'", node->children[i+1]);
                     }
                 }
@@ -182,7 +182,7 @@ namespace chaiscript
                 try {
                     lhs = dispatchkit::boxed_cast<bool &>(retval);
                 }
-                catch (std::exception &e) {
+                catch (const dispatchkit::bad_boxed_cast &) {
                     throw Eval_Error("Condition not boolean", node);
                 }
                 if (node->children[i]->text == "&&") {
@@ -224,7 +224,7 @@ namespace chaiscript
                 try {
                     retval = dispatch(ss.get_function(node->children[i]->text), plb);
                 }
-                catch(const dispatchkit::dispatch_error &e){
+                catch(const dispatchkit::dispatch_error &){
                     throw Eval_Error("Can not find appropriate '" + node->children[i]->text + "'", node->children[i]);
                 }
             }
@@ -249,10 +249,10 @@ namespace chaiscript
             try {
                 retval = dispatch(ss.get_function("[]"), plb);
             }
-            catch(std::out_of_range &oor) {
+            catch(std::out_of_range &) {
                 throw Eval_Error("Out of bounds exception", node);
             }
-            catch(const dispatchkit::dispatch_error &e){
+            catch(const dispatchkit::dispatch_error &){
                 throw Eval_Error("Can not find appropriate array lookup '[]' " + node->children[i]->text, node->children[i]);
             }
         }
@@ -275,7 +275,7 @@ namespace chaiscript
         try {
             return dispatch(ss.get_function("*"), plb);
         }
-        catch(std::exception &e){
+        catch(std::exception &){
             throw Eval_Error("Can not find appropriate negation", node->children[0]);
         }
     }
@@ -292,7 +292,7 @@ namespace chaiscript
             retval = eval_token(ss, node->children[0]);
             cond = dispatchkit::boxed_cast<bool &>(retval);
         }
-        catch (std::exception) {
+        catch (const dispatchkit::bad_boxed_cast &) {
             throw Eval_Error("Boolean not('!') condition not boolean", node->children[0]);
         }
         return dispatchkit::Boxed_Value(!cond);
@@ -312,7 +312,7 @@ namespace chaiscript
         try {
             return dispatch(ss.get_function(node->children[0]->text), plb);
         }
-        catch(std::exception &e){
+        catch(std::exception &){
             throw Eval_Error("Can not find appropriate prefix", node->children[0]);
         }
     }
@@ -333,13 +333,13 @@ namespace chaiscript
                         dispatchkit::Boxed_Value tmp = eval_token(ss, node->children[0]->children[i]);
                         dispatch(ss.get_function("push_back"), dispatchkit::Param_List_Builder() << retval << tmp);
                     }
-                    catch (const dispatchkit::dispatch_error &inner_e) {
+                    catch (const dispatchkit::dispatch_error &) {
                         throw Eval_Error("Can not find appropriate 'push_back'", node->children[0]->children[i]);
                     }
                 }
             }
         }
-        catch (const dispatchkit::dispatch_error &e) {
+        catch (const dispatchkit::dispatch_error &) {
             throw Eval_Error("Can not find appropriate 'Vector()'", node);
         }
 
@@ -356,7 +356,7 @@ namespace chaiscript
                 << eval_token(ss, node->children[0]->children[0]->children[0])
                 << eval_token(ss, node->children[0]->children[0]->children[1]));
         }
-        catch (const dispatchkit::dispatch_error &e) {
+        catch (const dispatchkit::dispatch_error &) {
             throw Eval_Error("Unable to generate range vector", node);
         }
     }
@@ -377,12 +377,12 @@ namespace chaiscript
                     dispatchkit::Boxed_Value slot = dispatch(ss.get_function("[]"), dispatchkit::Param_List_Builder() << retval << key);
                     dispatch(ss.get_function("="), dispatchkit::Param_List_Builder() << slot << eval_token(ss, node->children[0]->children[i]->children[1]));
                 }
-                catch (const dispatchkit::dispatch_error &inner_e) {
+                catch (const dispatchkit::dispatch_error &) {
                     throw Eval_Error("Can not find appropriate '=' for map init", node->children[0]->children[i]);
                 }
             }
         }
-        catch (const dispatchkit::dispatch_error &e) {
+        catch (const dispatchkit::dispatch_error &) {
             throw Eval_Error("Can not find appropriate 'Map()'", node);
         }
 
@@ -442,7 +442,7 @@ namespace chaiscript
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_dot_access(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
-        std::vector<std::pair<std::string, dispatchkit::Dispatch_Engine::Function_Map::mapped_type> > fn;
+        std::vector<std::pair<std::string, boost::shared_ptr<dispatchkit::Proxy_Function> > > fn;
         dispatchkit::Dispatch_Engine::Stack prev_stack = ss.get_stack();
         dispatchkit::Dispatch_Engine::Stack new_stack;
         unsigned int i, j;
@@ -477,7 +477,7 @@ namespace chaiscript
                     retval = dispatch(fn, plb);
                     ss.set_stack(prev_stack);
                 }
-                catch(const dispatchkit::dispatch_error &e){
+                catch(const dispatchkit::dispatch_error &){
                     ss.set_stack(prev_stack);
                     throw Eval_Error("Can not find appropriate '" + fun_name + "'", node);
                 }
@@ -508,7 +508,7 @@ namespace chaiscript
         try {
             cond = dispatchkit::boxed_cast<bool &>(retval);
         }
-        catch (std::exception &e) {
+        catch (const dispatchkit::bad_boxed_cast &) {
             throw Eval_Error("If condition not boolean", node->children[0]);
         }
         if (cond) {
@@ -527,7 +527,7 @@ namespace chaiscript
                         try {
                             cond = dispatchkit::boxed_cast<bool &>(retval);
                         }
-                        catch (std::exception &e) {
+                        catch (const dispatchkit::bad_boxed_cast &) {
                             throw Eval_Error("Elseif condition not boolean", node->children[i+1]);
                         }
                         if (cond) {
@@ -554,7 +554,7 @@ namespace chaiscript
         try {
             cond = dispatchkit::boxed_cast<bool &>(retval);
         }
-        catch (std::exception) {
+        catch (const dispatchkit::bad_boxed_cast &) {
             throw Eval_Error("While condition not boolean", node->children[0]);
         }
         while (cond) {
@@ -564,11 +564,11 @@ namespace chaiscript
                 try {
                     cond = dispatchkit::boxed_cast<bool &>(retval);
                 }
-                catch (std::exception) {
+                catch (const dispatchkit::bad_boxed_cast &) {
                     throw Eval_Error("While condition not boolean", node->children[0]);
                 }
             }
-            catch (Break_Loop &bl) {
+            catch (Break_Loop &) {
                 cond = false;
             }
         }
@@ -595,7 +595,7 @@ namespace chaiscript
             }
             cond = dispatchkit::boxed_cast<bool &>(condition);
         }
-        catch (std::exception &e) {
+        catch (const dispatchkit::bad_boxed_cast &) {
             throw Eval_Error("For condition not boolean", node);
         }
         while (cond) {
@@ -613,10 +613,10 @@ namespace chaiscript
                 cond = dispatchkit::boxed_cast<bool &>(condition);
 
             }
-            catch (std::exception &e) {
+            catch (const dispatchkit::bad_boxed_cast &) {
                 throw Eval_Error("For condition not boolean", node);
             }
-            catch (Break_Loop &bl) {
+            catch (Break_Loop &) {
                 cond = false;
             }
         }
@@ -748,7 +748,7 @@ namespace chaiscript
      * Evaluates a break statement
      */
     template <typename Eval_System>
-    dispatchkit::Boxed_Value eval_break(Eval_System &ss, TokenPtr node) {
+    dispatchkit::Boxed_Value eval_break(Eval_System &, TokenPtr node) {
         throw Break_Loop(node);
     }
 

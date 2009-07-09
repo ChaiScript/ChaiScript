@@ -17,6 +17,7 @@ namespace dispatchkit
     Type_Info(bool t_is_const, bool t_is_reference, bool t_is_pointer, bool t_is_void, 
         const std::type_info *t_ti, const std::type_info *t_bareti)
       : m_is_const(t_is_const), m_is_reference(t_is_reference), m_is_pointer(t_is_pointer),
+        m_is_void(t_is_void),
       m_type_info(t_ti), m_bare_type_info(t_bareti),
       m_is_unknown(false)
     {
@@ -29,6 +30,14 @@ namespace dispatchkit
     {
     }
 
+    Type_Info(const Type_Info &ti)
+    : m_is_const(ti.m_is_const), m_is_reference(ti.m_is_reference), 
+      m_is_pointer(ti.m_is_pointer),
+      m_is_void(ti.m_is_void), m_type_info(ti.m_type_info), 
+      m_bare_type_info(ti.m_bare_type_info),
+      m_is_unknown(ti.m_is_unknown)
+    {
+    }
     Type_Info &operator=(const Type_Info &ti)
     {
       m_is_const = ti.m_is_const;
@@ -39,6 +48,10 @@ namespace dispatchkit
       m_bare_type_info = ti.m_bare_type_info;
       m_is_unknown = ti.m_is_unknown;
       return *this;
+    }
+    bool operator<(const Type_Info &ti) const
+    {
+      return m_type_info < ti.m_type_info;
     }
 
     bool operator==(const Type_Info &ti) const

@@ -8,6 +8,7 @@
 #include <boost/function.hpp>
 #include <boost/ref.hpp>
 #include <boost/bind.hpp>
+#include <boost/cstdint.hpp>
 #include <boost/type_traits/add_const.hpp>
 
 namespace dispatchkit
@@ -436,20 +437,20 @@ namespace dispatchkit
         i = boxed_cast<long>(v);
       } else if (inp_ == typeid(unsigned long)) {
         i = boxed_cast<unsigned long>(v);
-      } else if (inp_ == typeid(int8_t)) {
-        i = boxed_cast<int8_t>(v);
-      } else if (inp_ == typeid(int16_t)) {
-        i = boxed_cast<int16_t>(v);
-      } else if (inp_ == typeid(int32_t)) {
-        i = boxed_cast<int32_t>(v);
-      } else if (inp_ == typeid(int64_t)) {
-        i = boxed_cast<int64_t>(v);
-      } else if (inp_ == typeid(uint8_t)) {
-        i = boxed_cast<uint8_t>(v);
-      } else if (inp_ == typeid(uint16_t)) {
-        i = boxed_cast<uint16_t>(v);
-      } else if (inp_ == typeid(uint32_t)) {
-        i = boxed_cast<uint32_t>(v);
+      } else if (inp_ == typeid(boost::int8_t)) {
+        i = boxed_cast<boost::int8_t>(v);
+      } else if (inp_ == typeid(boost::int16_t)) {
+        i = boxed_cast<boost::int16_t>(v);
+      } else if (inp_ == typeid(boost::int32_t)) {
+        i = boxed_cast<boost::int32_t>(v);
+      } else if (inp_ == typeid(boost::int64_t)) {
+        i = boxed_cast<boost::int64_t>(v);
+      } else if (inp_ == typeid(boost::uint8_t)) {
+        i = boxed_cast<boost::uint8_t>(v);
+      } else if (inp_ == typeid(boost::uint16_t)) {
+        i = boxed_cast<boost::uint16_t>(v);
+      } else if (inp_ == typeid(boost::uint32_t)) {
+        i = boxed_cast<boost::uint32_t>(v);
       } else {
         throw boost::bad_any_cast();
       }
@@ -527,7 +528,7 @@ namespace dispatchkit
     }
 
     double d;
-    int64_t i;
+    boost::int64_t i;
 
     bool m_isfloat;
   };

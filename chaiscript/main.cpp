@@ -10,6 +10,8 @@ void print_help() {
 }
 
 int main(int argc, char *argv[]) {
+  
+
     std::string input;
 
     chaiscript::ChaiScript_Engine chai;
@@ -29,13 +31,11 @@ int main(int argc, char *argv[]) {
                 val = chai.evaluate_string(input);
 
                 if (val.get_type_info().m_bare_type_info && *(val.get_type_info().m_bare_type_info) != typeid(void)) {
-
                     try {
                         dispatchkit::dispatch(chai.get_eval_engine().get_function("print"), dispatchkit::Param_List_Builder() << val);
                     } catch (const std::runtime_error &e) {
                         std::cout << e.what() << std::endl;
                     }
-
                 }
             }
 
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
             try {
               dispatchkit::Boxed_Value val = chai.evaluate_file(argv[i]);
             }
-            catch (std::exception &e) {
+            catch (std::exception &) {
                 std::cerr << "Could not open: " << argv[i] << std::endl;
                 exit(1);
             }

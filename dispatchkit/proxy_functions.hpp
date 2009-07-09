@@ -148,7 +148,7 @@ namespace dispatchkit
       {
       }
 
-      virtual bool operator==(const Proxy_Function &f) const
+      virtual bool operator==(const Proxy_Function &) const
       {
         return false;
       }
@@ -238,7 +238,7 @@ namespace dispatchkit
       {
       }
 
-      virtual bool operator==(const Proxy_Function &f) const
+      virtual bool operator==(const Proxy_Function &) const
       {
         return false;
       }
@@ -398,7 +398,7 @@ namespace dispatchkit
 {
 
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-    std::vector<Type_Info> build_param_type_list(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f)
+    std::vector<Type_Info> build_param_type_list(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &)
     {
       std::vector<Type_Info> ti;
       ti.push_back(Get_Type_Info<Ret>::get());

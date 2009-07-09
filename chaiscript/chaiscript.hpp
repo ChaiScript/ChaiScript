@@ -9,10 +9,10 @@
 #include <boost/function.hpp>
 
 #include <stdexcept>
-#include <tr1/memory>
 #include <iostream>
 #include <map>
 #include <fstream>
+#include <boost/shared_ptr.hpp>
 
 #include "dispatchkit.hpp"
 #include "bootstrap.hpp"
@@ -53,7 +53,7 @@ namespace chaiscript
         File_Position() : line(0), column(0) { }
     };
 
-    typedef std::tr1::shared_ptr<struct Token> TokenPtr;
+    typedef boost::shared_ptr<struct Token> TokenPtr;
 
     /**
      * The struct that doubles as both a parser token and an AST node
