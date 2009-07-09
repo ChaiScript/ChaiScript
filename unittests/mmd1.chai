@@ -1,0 +1,20 @@
+def bob(x, y, z) {
+	x + y + z
+}
+
+def bob(x, y) {
+	x - y
+}
+
+def bob(x) {
+	-x
+}
+
+def bob() {
+	10
+}
+
+print(bob())
+print(bob(5))
+print(bob(5,6))
+print(bob(5,6,7))
