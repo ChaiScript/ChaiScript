@@ -422,7 +422,7 @@ namespace chaiscript
         }
         catch(const dispatchkit::dispatch_error &e){
             ss.set_stack(prev_stack);
-            throw Eval_Error("Engine error: " + std::string(e.what()) + " with function '" + node->children[0]->text + "'", node->children[0]);
+            throw Eval_Error(std::string(e.what()) + " with function '" + node->children[0]->text + "'", node->children[0]);
         }
         catch(Return_Value &rv) {
             ss.set_stack(prev_stack);
@@ -477,9 +477,9 @@ namespace chaiscript
                     retval = dispatch(fn, plb);
                     ss.set_stack(prev_stack);
                 }
-                catch(const dispatchkit::dispatch_error &){
+                catch(const dispatchkit::dispatch_error &e){
                     ss.set_stack(prev_stack);
-                    throw Eval_Error("Can not find appropriate '" + fun_name + "'", node);
+                    throw Eval_Error(std::string(e.what()) + " with function '" + fun_name + "'", node->children[i]);
                 }
                 catch(Return_Value &rv) {
                     ss.set_stack(prev_stack);

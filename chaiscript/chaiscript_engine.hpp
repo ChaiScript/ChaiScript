@@ -45,15 +45,8 @@ namespace chaiscript
          */
         const dispatchkit::Boxed_Value eval(const std::vector<dispatchkit::Boxed_Value> &vals) {
             std::string val;
-            try {
-                val = dispatchkit::boxed_cast<std::string &>(vals[0]);
-            }
-            catch (Eval_Error &ee) {
-                throw Eval_Error("Can not evaluate string: " + val + " reason: " + ee.reason, TokenPtr());
-            }
-            catch (std::exception &) {
-                throw Eval_Error("Can not evaluate string: " + val, TokenPtr());
-            }
+            val = dispatchkit::boxed_cast<std::string &>(vals[0]);
+
             return evaluate_string(val);
         }
 
@@ -111,20 +104,6 @@ namespace chaiscript
             }
             catch (const Return_Value &rv) {
                 value = rv.retval;
-            }
-            catch (Parse_Error &pe) {
-                std::cout << pe.reason << " in " << pe.filename << " at " << pe.position.line << ", " << pe.position.column << std::endl;
-            }
-            catch (Eval_Error &ee) {
-                if (filename != std::string("__EVAL__")) {
-                    std::cout << "Eval error: \"" << ee.reason << "\" in '" << ee.location->filename << "' line: " << ee.location->start.line << std::endl;
-                }
-                else {
-                    std::cout << "Eval error: \"" << ee.reason << "\"" << std::endl;
-                }
-            }
-            catch (std::exception &e) {
-                std::cout << "Exception: " << e.what() << std::endl;
             }
 
             return value;
