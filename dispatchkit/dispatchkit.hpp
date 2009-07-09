@@ -289,9 +289,7 @@ namespace dispatchkit
     std::string annotation = f.second->annotation();
 
     if (annotation.size() > 0) {
-        std::cout << "##############" << std::endl;
         std::cout << annotation;
-        std::cout << "##############" << std::endl;
     }
     dump_type(params.front(), e);
     std::cout << " " << f.first << "(";
