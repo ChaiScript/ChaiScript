@@ -38,8 +38,11 @@ def min(a, b) { if (a<b) { a } else { b } } \
 def odd(x)  { if (x % 2 == 1) { true } else { false } } \
 # Returns true if the value is even\n\
 def even(x) { if (x % 2 == 0) { true } else { false } } \
-# Pushes the second value onto the container first value\n\
-def push_back(container, x) { container.push_back_ref(clone(x)) } \
+# Pushes the second value onto the container first value while making a clone of the value\n\
+def push_back(container, x) { container.push_back_ref(clone(x)) } \n\
+# Inserts the third value at the position of the second value into the container of the first\n\
+# while making a clone. \n\
+def insert_at(container, pos, x) { container.insert_ref_at(pos, clone(x)); } \n\
 # Performs the second value function over the container first value\n\
 def for_each(container, func) : call_exists(range, container) { \
   var range = range(container); \

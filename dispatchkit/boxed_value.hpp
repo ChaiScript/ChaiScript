@@ -357,6 +357,18 @@ namespace dispatchkit
       }
     };
 
+  template<>
+    struct Cast_Helper<const Boxed_Value &>
+    {
+      typedef Boxed_Value Result_Type;
+
+      static Result_Type cast(const Boxed_Value &ob)
+      {
+        return ob;    
+      }
+    };
+
+
   class bad_boxed_cast : public std::bad_cast
   {
     public:

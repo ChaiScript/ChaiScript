@@ -69,7 +69,6 @@ namespace dispatchkit
       system.register_type<ItrPair>(type+"_Iterator_Pair");
 
 
-
       register_function(system, &Input_Range<ContainerType>::empty, "empty");
       register_function(system, &Input_Range<ContainerType>::pop_front, "pop_front");
       register_function(system, &Input_Range<ContainerType>::front, "front");
@@ -108,10 +107,8 @@ namespace dispatchkit
   {
     bootstrap_assignable<ContainerType>(system, type);
 
-    system.register_function(
-        boost::function<size_t (ContainerType *)>(&ContainerType::size), "size");
-    system.register_function(
-        boost::function<size_t (ContainerType *)>(&ContainerType::size), "maxsize");
+    register_function(system, &ContainerType::size, "size");
+    register_function(system, &ContainerType::max_size, "max_size");
     register_function(system, &ContainerType::empty, "empty");
   }
 
@@ -128,11 +125,52 @@ namespace dispatchkit
     system.register_function(build_constructor<Type>(), type);
   }
 
+  template<typename Type>
+    void insert_at(Type &container, int pos, const typename Type::value_type &v)
+    {
+      typename Type::iterator itr = container.begin();
+      typename Type::iterator end = container.end();
+      
+      if (pos < 0 || std::distance(itr, end) < pos)
+      {
+        throw std::range_error("Cannot insert past end of range");
+      }
+
+      std::advance(itr, pos);
+      container.insert(itr, v);
+    }
+
+  template<typename Type>
+    void erase_at(Type &container, int pos)
+    {
+      typename Type::iterator itr = container.begin();
+      typename Type::iterator end = container.end();
+      
+      if (pos < 0 || std::distance(itr, end) < (pos-1))
+      {
+        throw std::range_error("Cannot erase past end of range");
+      }
+
+      std::advance(itr, pos);
+      container.erase(itr);
+    }
+
   template<typename SequenceType>
   void bootstrap_sequence(Dispatch_Engine &system, const std::string &type)
   {
     bootstrap_forward_container<SequenceType>(system, type);
     bootstrap_default_constructible<SequenceType>(system, type);
+
+    std::string insert_name;
+    if (typeid(typename SequenceType::value_type) == typeid(Boxed_Value))
+    {
+      insert_name = "insert_ref_at";
+    } else {
+      insert_name = "insert_at";
+    }
+
+    register_function(system, &insert_at<SequenceType>, insert_name);
+    register_function(system, &erase_at<SequenceType>, "erase_at");
   }
 
   template<typename SequenceType>
@@ -144,8 +182,17 @@ namespace dispatchkit
     typedef typename SequenceType::reference (SequenceType::*backptr)();
 
     system.register_function(boost::function<typename SequenceType::reference (SequenceType *)>(backptr(&SequenceType::back)), "back");
-    system.register_function(boost::function<void (SequenceType *,typename SequenceType::value_type)>(&SequenceType::push_back), "push_back_ref");
-    system.register_function(boost::function<void (SequenceType *)>(&SequenceType::pop_back), "pop_back");
+
+    std::string push_back_name;
+    if (typeid(typename SequenceType::value_type) == typeid(Boxed_Value))
+    {
+      push_back_name = "push_back_ref";
+    } else {
+      push_back_name = "push_back";
+    }
+
+    register_function(system, &SequenceType::push_back, push_back_name);
+    register_function(system, &SequenceType::pop_back, "pop_back");
   }
 
   template<typename VectorType>
@@ -217,7 +264,7 @@ namespace dispatchkit
       register_function(system, &MapType::operator[], "[]");
       bootstrap_unique_sorted_associative_container<MapType>(system, type);
       bootstrap_pair_associative_container<MapType>(system, type);
-     }
+    }
 
   template<typename String>
     void bootstrap_string(Dispatch_Engine &system, const std::string &type)
