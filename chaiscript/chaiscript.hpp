@@ -20,28 +20,17 @@
 
 namespace chaiscript
 {
-    /*
-    class TokenType { public: enum Type { File, Whitespace, Identifier, Integer, Operator, Parens_Open, Parens_Close,
-        Square_Open, Square_Close, Curly_Open, Curly_Close, Comma, Quoted_String, Single_Quoted_String, Carriage_Return, Semicolon,
-        Function_Def, Lambda_Def, Scoped_Block, Statement, Equation, Return, Expression, Term, Factor, Negate, Not, Comment,
-        Value, Fun_Call, Method_Call, Comparison, If_Block, While_Block, Boolean, Real_Number, Array_Call, Variable_Decl, Array_Init, Map_Init,
-        For_Block, Prefix, Break, Map_Pair}; };
-
-    const char *tokentype_to_string(int tokentype) {
-        const char *token_types[] = {"File", "Whitespace", "Identifier", "Integer", "Operator", "Parens_Open", "Parens_Close",
-            "Square_Open", "Square_Close", "Curly_Open", "Curly_Close", "Comma", "Quoted_String", "Single_Quoted_String", "Carriage_Return", "Semicolon",
-            "Function_Def", "Lambda_Def", "Scoped_Block", "Statement", "Equation", "Return", "Expression", "Term", "Factor", "Negate", "Not", "Comment",
-            "Value", "Fun_Call", "Method_Call", "Comparison", "If_Block", "While_Block", "Boolean", "Real Number", "Array_Call", "Variable_Decl", "Array_Init", "Map_Init",
-            "For_Block", "Prefix", "Break", "Map_Pair"};
-
-        return token_types[tokentype];
-    }
-    */
+    /**
+     * Types of AST nodes available to the parser and eval
+     */
     class Token_Type { public: enum Type { Error, Int, Float, Id, Char, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
         Expression, Comparison, Additive, Multiplicative, Negate, Not, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
         Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Map_Pair, Value_Range,
         Inline_Range, Annotation }; };
 
+    /**
+     * Helper lookup to get the name of each node type
+     */
     const char *token_type_to_string(int tokentype) {
         const char *token_types[] = { "Internal Parser Error", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
             "Expression", "Comparison", "Additive", "Multiplicative", "Negate", "Not", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
@@ -51,10 +40,12 @@ namespace chaiscript
         return token_types[tokentype];
     }
 
+    /**
+     * Convenience type for file positions
+     */
     struct File_Position {
         int line;
         int column;
-       // std::string::iterator text_pos;
 
         File_Position(int file_line, int file_column)
             : line(file_line), column(file_column) { }
@@ -64,6 +55,9 @@ namespace chaiscript
 
     typedef std::tr1::shared_ptr<struct Token> TokenPtr;
 
+    /**
+     * The struct that doubles as both a parser token and an AST node
+     */
     struct Token {
         std::string text;
         int identifier;
@@ -85,6 +79,9 @@ namespace chaiscript
         }
     };
 
+    /**
+     * Errors generated inside the parser
+     */
     struct Parse_Error {
         std::string reason;
         File_Position position;
@@ -101,36 +98,38 @@ namespace chaiscript
         virtual ~Parse_Error() throw() {}
     };
 
-    struct ParserError {
+    /**
+     * Errors generated inside the evaluator
+     */
+    struct Eval_Error : public std::runtime_error {
         std::string reason;
         TokenPtr location;
 
-        ParserError(const std::string &why, const TokenPtr where) : reason(why), location(where){ }
-    };
-
-    struct EvalError : public std::runtime_error {
-        std::string reason;
-        TokenPtr location;
-
-        EvalError(const std::string &why, const TokenPtr where)
+        Eval_Error(const std::string &why, const TokenPtr where)
           : std::runtime_error("Eval error: \"" + why + "\" in '"
               + where->filename + "' line: " + boost::lexical_cast<std::string>(where->start.line+1)),
             reason(why), location(where) { }
 
-        virtual ~EvalError() throw() {}
+        virtual ~Eval_Error() throw() {}
     };
 
-    struct ReturnValue {
+    /**
+     * Special type for returned values
+     */
+    struct Return_Value {
         dispatchkit::Boxed_Value retval;
         TokenPtr location;
 
-        ReturnValue(const dispatchkit::Boxed_Value &return_value, const TokenPtr where) : retval(return_value), location(where) { }
+        Return_Value(const dispatchkit::Boxed_Value &return_value, const TokenPtr where) : retval(return_value), location(where) { }
     };
 
-    struct BreakLoop {
+    /**
+     * Special type indicating a call to 'break'
+     */
+    struct Break_Loop {
         TokenPtr location;
 
-        BreakLoop(const TokenPtr where) : location(where) { }
+        Break_Loop(const TokenPtr where) : location(where) { }
     };
 }
 

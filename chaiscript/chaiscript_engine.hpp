@@ -48,11 +48,11 @@ namespace chaiscript
             try {
                 val = dispatchkit::boxed_cast<std::string &>(vals[0]);
             }
-            catch (EvalError &ee) {
-                throw EvalError("Can not evaluate string: " + val + " reason: " + ee.reason, TokenPtr());
+            catch (Eval_Error &ee) {
+                throw Eval_Error("Can not evaluate string: " + val + " reason: " + ee.reason, TokenPtr());
             }
             catch (std::exception &e) {
-                throw EvalError("Can not evaluate string: " + val, TokenPtr());
+                throw Eval_Error("Can not evaluate string: " + val, TokenPtr());
             }
             return evaluate_string(val);
         }
@@ -109,13 +109,13 @@ namespace chaiscript
                     value = eval_token<Eval_Engine>(engine, parser.ast());
                 }
             }
-            catch (const ReturnValue &rv) {
+            catch (const Return_Value &rv) {
                 value = rv.retval;
             }
             catch (Parse_Error &pe) {
                 std::cout << pe.reason << " in " << pe.filename << " at " << pe.position.line << ", " << pe.position.column << std::endl;
             }
-            catch (EvalError &ee) {
+            catch (Eval_Error &ee) {
                 if (filename != std::string("__EVAL__")) {
                     std::cout << "Eval error: \"" << ee.reason << "\" in '" << ee.location->filename << "' line: " << ee.location->start.line << std::endl;
                 }

@@ -8,6 +8,9 @@
 
 namespace chaiscript
 {
+    /**
+     * Helper function that will set up the scope around a function call, including handling the named function parameters
+     */
     template <typename Eval_System>
     const dispatchkit::Boxed_Value eval_function (Eval_System &ss, TokenPtr node, const std::vector<std::string> &param_names, const std::vector<dispatchkit::Boxed_Value> &vals) {
         ss.new_scope();
@@ -21,7 +24,7 @@ namespace chaiscript
         try {
             retval = eval_token(ss, node);
             ss.pop_scope();
-        } catch (const ReturnValue &rv) {
+        } catch (const Return_Value &rv) {
             retval = rv.retval;
             ss.pop_scope();
         } catch (...) {
@@ -29,10 +32,12 @@ namespace chaiscript
             throw;
         }
 
-
         return retval;
     }
 
+    /**
+     * Evaluates the top-level file node
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_file(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -43,6 +48,9 @@ namespace chaiscript
         return retval;
     }
 
+    /**
+     * Evaluates a variable or function name identifier
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_id(Eval_System &ss, TokenPtr node) {
 
@@ -57,31 +65,46 @@ namespace chaiscript
                 return ss.get_object(node->text);
             }
             catch (std::exception &e) {
-                throw EvalError("Can not find object: " + node->text, node);
+                throw Eval_Error("Can not find object: " + node->text, node);
             }
         }
     }
 
+    /**
+     * Evaluates a floating point number
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_float(Eval_System &ss, TokenPtr node) {
         return dispatchkit::Boxed_Value(double(atof(node->text.c_str())));
     }
 
+    /**
+     * Evaluates an integer
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_int(Eval_System &ss, TokenPtr node) {
         return dispatchkit::Boxed_Value(atoi(node->text.c_str()));
     }
 
+    /**
+     * Evaluates a quoted string
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_quoted_string(Eval_System &ss, TokenPtr node) {
         return dispatchkit::Boxed_Value(node->text);
     }
 
+    /**
+     * Evaluates a char group
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_single_quoted_string(Eval_System &ss, TokenPtr node) {
         return dispatchkit::Boxed_Value(node->text);
     }
 
+    /**
+     * Evaluates a string of equations in reverse order so that the right-most side has precedence
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_equation(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -103,11 +126,11 @@ namespace chaiscript
                             retval = dispatch(ss.get_function(node->children[i+1]->text), plb);
                         }
                         catch(const dispatchkit::dispatch_error &e){
-                            throw EvalError("Mismatched types in equation", node->children[i+1]);
+                            throw Eval_Error("Mismatched types in equation", node->children[i+1]);
                         }
                     }
                     catch(const dispatchkit::dispatch_error &e){
-                        throw EvalError("Can not clone right hand side of equation", node->children[i+1]);
+                        throw Eval_Error("Can not clone right hand side of equation", node->children[i+1]);
                     }
                 }
                 else if (node->children[i+1]->text == ":=") {
@@ -116,7 +139,7 @@ namespace chaiscript
                         lhs.assign(retval);
                     }
                     else {
-                        throw EvalError("Mismatched types in equation", node->children[i+1]);
+                        throw Eval_Error("Mismatched types in equation", node->children[i+1]);
                     }
                 }
                 else {
@@ -127,7 +150,7 @@ namespace chaiscript
                         retval = dispatch(ss.get_function(node->children[i+1]->text), plb);
                     }
                     catch(const dispatchkit::dispatch_error &e){
-                        throw EvalError("Can not find appropriate '" + node->children[i+1]->text + "'", node->children[i+1]);
+                        throw Eval_Error("Can not find appropriate '" + node->children[i+1]->text + "'", node->children[i+1]);
                     }
                 }
             }
@@ -135,12 +158,18 @@ namespace chaiscript
         return retval;
     }
 
+    /**
+     * Evaluates a variable declaration
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_var_decl(Eval_System &ss, TokenPtr node) {
         ss.add_object(node->children[0]->text, dispatchkit::Boxed_Value());
         return ss.get_object(node->children[0]->text);
     }
 
+    /**
+     * Evaluates binary boolean operators.  Respects short-circuiting rules.
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_expression(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -154,7 +183,7 @@ namespace chaiscript
                     lhs = dispatchkit::boxed_cast<bool &>(retval);
                 }
                 catch (std::exception &e) {
-                    throw EvalError("Condition not boolean", node);
+                    throw Eval_Error("Condition not boolean", node);
                 }
                 if (node->children[i]->text == "&&") {
                     if (lhs) {
@@ -177,6 +206,9 @@ namespace chaiscript
         return retval;
     }
 
+    /**
+     * Evaluates comparison, additions, and multiplications and their relatives
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_comp_add_mul(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -193,7 +225,7 @@ namespace chaiscript
                     retval = dispatch(ss.get_function(node->children[i]->text), plb);
                 }
                 catch(const dispatchkit::dispatch_error &e){
-                    throw EvalError("Can not find appropriate '" + node->children[i]->text + "'", node->children[i]);
+                    throw Eval_Error("Can not find appropriate '" + node->children[i]->text + "'", node->children[i]);
                 }
             }
         }
@@ -201,6 +233,9 @@ namespace chaiscript
         return retval;
     }
 
+    /**
+     * Evaluates an array lookup
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_array_call(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -215,16 +250,19 @@ namespace chaiscript
                 retval = dispatch(ss.get_function("[]"), plb);
             }
             catch(std::out_of_range &oor) {
-                throw EvalError("Out of bounds exception", node);
+                throw Eval_Error("Out of bounds exception", node);
             }
             catch(const dispatchkit::dispatch_error &e){
-                throw EvalError("Can not find appropriate array lookup '[]' " + node->children[i]->text, node->children[i]);
+                throw Eval_Error("Can not find appropriate array lookup '[]' " + node->children[i]->text, node->children[i]);
             }
         }
 
         return retval;
     }
 
+    /**
+     * Evaluates a unary negation
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_negate(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -232,16 +270,19 @@ namespace chaiscript
         retval = eval_token(ss, node->children[0]);
         dispatchkit::Param_List_Builder plb;
         plb << retval;
-        plb << dispatchkit::Boxed_Value(-1);
+        plb << dispatchkit::Boxed_Value(-1.0);
 
         try {
             return dispatch(ss.get_function("*"), plb);
         }
         catch(std::exception &e){
-            throw EvalError("Can not find appropriate negation", node->children[0]);
+            throw Eval_Error("Can not find appropriate negation", node->children[0]);
         }
     }
 
+    /**
+     * Evaluates a unary boolean not
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_not(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -252,11 +293,14 @@ namespace chaiscript
             cond = dispatchkit::boxed_cast<bool &>(retval);
         }
         catch (std::exception) {
-            throw EvalError("Boolean not('!') condition not boolean", node->children[0]);
+            throw Eval_Error("Boolean not('!') condition not boolean", node->children[0]);
         }
         return dispatchkit::Boxed_Value(!cond);
     }
 
+    /**
+     * Evaluates any unary prefix
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_prefix(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -269,10 +313,13 @@ namespace chaiscript
             return dispatch(ss.get_function(node->children[0]->text), plb);
         }
         catch(std::exception &e){
-            throw EvalError("Can not find appropriate prefix", node->children[0]);
+            throw Eval_Error("Can not find appropriate prefix", node->children[0]);
         }
     }
 
+    /**
+     * Evaluates (and generates) an inline array initialization
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_inline_array(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -287,18 +334,21 @@ namespace chaiscript
                         dispatch(ss.get_function("push_back"), dispatchkit::Param_List_Builder() << retval << tmp);
                     }
                     catch (const dispatchkit::dispatch_error &inner_e) {
-                        throw EvalError("Can not find appropriate 'push_back'", node->children[0]->children[i]);
+                        throw Eval_Error("Can not find appropriate 'push_back'", node->children[0]->children[i]);
                     }
                 }
             }
         }
         catch (const dispatchkit::dispatch_error &e) {
-            throw EvalError("Can not find appropriate 'Vector()'", node);
+            throw Eval_Error("Can not find appropriate 'Vector()'", node);
         }
 
         return retval;
     }
 
+    /**
+     * Evaluates (and generates) an inline range initialization
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_inline_range(Eval_System &ss, TokenPtr node) {
         try {
@@ -307,10 +357,13 @@ namespace chaiscript
                 << eval_token(ss, node->children[0]->children[0]->children[1]));
         }
         catch (const dispatchkit::dispatch_error &e) {
-            throw EvalError("Unable to generate range vector", node);
+            throw Eval_Error("Unable to generate range vector", node);
         }
     }
 
+    /**
+     * Evaluates (and generates) an inline map initialization
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_inline_map(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -325,17 +378,20 @@ namespace chaiscript
                     dispatch(ss.get_function("="), dispatchkit::Param_List_Builder() << slot << eval_token(ss, node->children[0]->children[i]->children[1]));
                 }
                 catch (const dispatchkit::dispatch_error &inner_e) {
-                    throw EvalError("Can not find appropriate '=' for map init", node->children[0]->children[i]);
+                    throw Eval_Error("Can not find appropriate '=' for map init", node->children[0]->children[i]);
                 }
             }
         }
         catch (const dispatchkit::dispatch_error &e) {
-            throw EvalError("Can not find appropriate 'Map()'", node);
+            throw Eval_Error("Can not find appropriate 'Map()'", node);
         }
 
         return retval;
     }
 
+    /**
+     * Evaluates a function call, starting with its arguments.  Handles resetting the scope to the previous one after the call.
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_fun_call(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -355,9 +411,9 @@ namespace chaiscript
         try {
             fn = eval_token(ss, node->children[0]);
         }
-        catch(EvalError &ee) {
+        catch(Eval_Error &ee) {
             ss.set_stack(prev_stack);
-            throw EvalError(ee.reason, node->children[0]);
+            throw Eval_Error(ee.reason, node->children[0]);
         }
         try {
             ss.set_stack(new_stack);
@@ -366,9 +422,9 @@ namespace chaiscript
         }
         catch(const dispatchkit::dispatch_error &e){
             ss.set_stack(prev_stack);
-            throw EvalError("Engine error: " + std::string(e.what()) + " with function '" + node->children[0]->text + "'", node->children[0]);
+            throw Eval_Error("Engine error: " + std::string(e.what()) + " with function '" + node->children[0]->text + "'", node->children[0]);
         }
-        catch(ReturnValue &rv) {
+        catch(Return_Value &rv) {
             ss.set_stack(prev_stack);
             retval = rv.retval;
         }
@@ -380,6 +436,9 @@ namespace chaiscript
         return retval;
     }
 
+    /**
+     * Evaluates a method/attributes invocation
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_dot_access(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -420,9 +479,9 @@ namespace chaiscript
                 }
                 catch(const dispatchkit::dispatch_error &e){
                     ss.set_stack(prev_stack);
-                    throw EvalError("Can not find appropriate '" + fun_name + "'", node);
+                    throw Eval_Error("Can not find appropriate '" + fun_name + "'", node);
                 }
-                catch(ReturnValue &rv) {
+                catch(Return_Value &rv) {
                     ss.set_stack(prev_stack);
                     retval = rv.retval;
                 }
@@ -436,6 +495,9 @@ namespace chaiscript
         return retval;
     }
 
+    /**
+     * Evaluates an if/elseif/else block
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_if(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -447,7 +509,7 @@ namespace chaiscript
             cond = dispatchkit::boxed_cast<bool &>(retval);
         }
         catch (std::exception &e) {
-            throw EvalError("If condition not boolean", node->children[0]);
+            throw Eval_Error("If condition not boolean", node->children[0]);
         }
         if (cond) {
             retval = eval_token(ss, node->children[1]);
@@ -466,7 +528,7 @@ namespace chaiscript
                             cond = dispatchkit::boxed_cast<bool &>(retval);
                         }
                         catch (std::exception &e) {
-                            throw EvalError("Elseif condition not boolean", node->children[i+1]);
+                            throw Eval_Error("Elseif condition not boolean", node->children[i+1]);
                         }
                         if (cond) {
                             retval = eval_token(ss, node->children[i+2]);
@@ -480,6 +542,9 @@ namespace chaiscript
         return retval;
     }
 
+    /**
+     * Evaluates a while block
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_while(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -490,7 +555,7 @@ namespace chaiscript
             cond = dispatchkit::boxed_cast<bool &>(retval);
         }
         catch (std::exception) {
-            throw EvalError("While condition not boolean", node->children[0]);
+            throw Eval_Error("While condition not boolean", node->children[0]);
         }
         while (cond) {
             try {
@@ -500,16 +565,19 @@ namespace chaiscript
                     cond = dispatchkit::boxed_cast<bool &>(retval);
                 }
                 catch (std::exception) {
-                    throw EvalError("While condition not boolean", node->children[0]);
+                    throw Eval_Error("While condition not boolean", node->children[0]);
                 }
             }
-            catch (BreakLoop &bl) {
+            catch (Break_Loop &bl) {
                 cond = false;
             }
         }
         return dispatchkit::Boxed_Value();
     }
 
+    /**
+     * Evaluates a for block, including the for's conditions, from left to right
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_for(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -528,7 +596,7 @@ namespace chaiscript
             cond = dispatchkit::boxed_cast<bool &>(condition);
         }
         catch (std::exception &e) {
-            throw EvalError("For condition not boolean", node);
+            throw Eval_Error("For condition not boolean", node);
         }
         while (cond) {
             try {
@@ -546,15 +614,18 @@ namespace chaiscript
 
             }
             catch (std::exception &e) {
-                throw EvalError("For condition not boolean", node);
+                throw Eval_Error("For condition not boolean", node);
             }
-            catch (BreakLoop &bl) {
+            catch (Break_Loop &bl) {
                 cond = false;
             }
         }
         return dispatchkit::Boxed_Value();
     }
 
+    /**
+     * Evaluates a function definition
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_def(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -602,6 +673,9 @@ namespace chaiscript
         return retval;
     }
 
+    /**
+     * Evaluates a lambda (anonymous function)
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_lambda(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -627,6 +701,9 @@ namespace chaiscript
                 boost::bind(&eval_function<Eval_System>, boost::ref(ss), node->children.back(), param_names, _1), numparams)));
     }
 
+    /**
+     * Evaluates a scoped block.  Handles resetting the scope after the block has completed.
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_block(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -637,7 +714,7 @@ namespace chaiscript
             try {
                 retval = eval_token(ss, node->children[i]);
             }
-            catch (const chaiscript::ReturnValue &rv) {
+            catch (const chaiscript::Return_Value &rv) {
                 ss.pop_scope();
                 retval = rv.retval;
                 throw;
@@ -652,6 +729,9 @@ namespace chaiscript
         return retval;
     }
 
+    /**
+     * Evaluates a return statement
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_return(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;
@@ -661,14 +741,20 @@ namespace chaiscript
         else {
             retval = dispatchkit::Boxed_Value();
         }
-        throw ReturnValue(retval, node);
+        throw Return_Value(retval, node);
     }
 
+    /**
+     * Evaluates a break statement
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_break(Eval_System &ss, TokenPtr node) {
-        throw BreakLoop(node);
+        throw Break_Loop(node);
     }
 
+    /**
+     * Top-level evaluation dispatch for all AST node types
+     */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_token(Eval_System &ss, TokenPtr node) {
         dispatchkit::Boxed_Value retval;

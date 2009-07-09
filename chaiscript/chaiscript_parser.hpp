@@ -27,6 +27,9 @@ namespace chaiscript
             singleline_comment = "//";
         }
 
+        /**
+         * Prints the parsed tokens as a tree
+         */
         void debug_print(TokenPtr t, std::string prepend = "") {
             std::cout << prepend << "(" << token_type_to_string(t->identifier) << ") " << t->text << " : " << t->start.line << ", " << t->start.column << std::endl;
             for (unsigned int j = 0; j < t->children.size(); ++j) {
@@ -34,20 +37,32 @@ namespace chaiscript
             }
         }
 
+        /**
+         * Shows the current stack of matched tokens
+         */
         void show_match_stack() {
             for (unsigned int i = 0; i < match_stack.size(); ++i) {
                 debug_print(match_stack[i]);
             }
         }
 
+        /**
+         * Clears the stack of matched tokens
+         */
         void clear_match_stack() {
             match_stack.clear();
         }
 
+        /**
+         * Returns the front-most AST node
+         */
         TokenPtr ast() {
             return match_stack.front();
         }
 
+        /**
+         * Helper function that collects tokens from a starting position to the top of the stack into a new AST node
+         */
         void build_match(Token_Type::Type match_type, int match_start) {
             //so we want to take everything to the right of this and make them children
             if (match_start != (int)match_stack.size()) {
@@ -63,6 +78,9 @@ namespace chaiscript
             }
         }
 
+        /**
+         * Skips any multi-line or single-line comment
+         */
         bool SkipComment() {
             bool retval = false;
 
@@ -93,6 +111,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Skips ChaiScript whitespace, which means space and tab, but not cr/lf
+         */
         bool SkipWS() {
             bool retval = false;
             while (input_pos != input_end) {
@@ -111,19 +132,9 @@ namespace chaiscript
             return retval;
         }
 
-        bool Int_() {
-            bool retval = false;
-            if ((input_pos != input_end) && (*input_pos >= '0') && (*input_pos <= '9')) {
-                retval = true;
-                while ((input_pos != input_end) && (*input_pos >= '0') && (*input_pos <= '9')) {
-                    ++input_pos;
-                    ++col;
-                }
-            }
-
-            return retval;
-        }
-
+        /**
+         * Reads a floating point value from input, without skipping initial whitespace
+         */
         bool Float_() {
             bool retval = false;
             if ((input_pos != input_end) && (*input_pos >= '0') && (*input_pos <= '9')) {
@@ -151,6 +162,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads a number from the input, detecting if it's an integer or floating point
+         */
         bool Num(bool capture = false) {
             SkipWS();
 
@@ -181,6 +195,9 @@ namespace chaiscript
             }
         }
 
+        /**
+         * Reads an identifier from input which conforms to C's identifier naming conventions, without skipping initial whitespace
+         */
         bool Id_() {
             bool retval = false;
             if ((input_pos != input_end) && (((*input_pos >= 'A') && (*input_pos <= 'Z')) || (*input_pos == '_') || ((*input_pos >= 'a') && (*input_pos <= 'z')))) {
@@ -195,6 +212,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads (and potentially captures) an identifier from input
+         */
         bool Id(bool capture = false) {
             SkipWS();
 
@@ -217,6 +237,9 @@ namespace chaiscript
             }
         }
 
+        /**
+         * Checks for a node annotation of the form "#<annotation>"
+         */
         bool Annotation() {
             SkipWS();
             std::string::iterator start = input_pos;
@@ -245,6 +268,9 @@ namespace chaiscript
             }
         }
 
+        /**
+         * Reads a quoted string from input, without skipping initial whitespace
+         */
         bool Quoted_String_() {
             bool retval = false;
             char prev_char = 0;
@@ -278,6 +304,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads (and potentially captures) a quoted string from input.  Translates escaped sequences.
+         */
         bool Quoted_String(bool capture = false) {
             SkipWS();
 
@@ -330,6 +359,9 @@ namespace chaiscript
             }
         }
 
+        /**
+         * Reads a character group from input, without skipping initial whitespace
+         */
         bool Single_Quoted_String_() {
             bool retval = false;
             char prev_char = 0;
@@ -363,6 +395,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads (and potentially captures) a char group from input.  Translates escaped sequences.
+         */
         bool Single_Quoted_String(bool capture = false) {
             SkipWS();
 
@@ -415,7 +450,9 @@ namespace chaiscript
             }
         }
 
-
+        /**
+         * Reads a char from input if it matches the parameter, without skipping initial whitespace
+         */
         bool Char_(char c) {
             bool retval = false;
             if ((input_pos != input_end) && (*input_pos == c)) {
@@ -427,6 +464,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads (and potentially captures) a char from input if it matches the parameter
+         */
         bool Char(char c, bool capture = false) {
             SkipWS();
 
@@ -449,6 +489,9 @@ namespace chaiscript
             }
         }
 
+        /**
+         * Reads a string from input if it matches the parameter, without skipping initial whitespace
+         */
         bool Keyword_(const char *s) {
             bool retval = false;
             int len = strlen(s);
@@ -469,6 +512,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads (and potentially captures) a string from input if it matches the parameter
+         */
         bool Keyword(const char *s, bool capture = false) {
             SkipWS();
 
@@ -516,6 +562,9 @@ namespace chaiscript
             }
         }
 
+        /**
+         * Reads a symbol group from input if it matches the parameter, without skipping initial whitespace
+         */
         bool Symbol_(const char *s) {
             bool retval = false;
             int len = strlen(s);
@@ -536,6 +585,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads (and potentially captures) a symbol group from input if it matches the parameter
+         */
         bool Symbol(const char *s, bool capture = false) {
             SkipWS();
 
@@ -583,6 +635,9 @@ namespace chaiscript
             }
         }
 
+        /**
+         * Reads an end-of-line group from input, without skipping initial whitespace
+         */
         bool Eol_() {
             bool retval = false;
 
@@ -598,6 +653,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads (and potentially captures) an end-of-line group from input
+         */
         bool Eol(bool capture = false) {
             SkipWS();
 
@@ -620,6 +678,9 @@ namespace chaiscript
             }
         }
 
+        /**
+         * Reads a comma-separated list of values from input
+         */
         bool Arg_List() {
             bool retval = false;
 
@@ -638,9 +699,11 @@ namespace chaiscript
             }
 
             return retval;
-
         }
 
+        /**
+         * Reads possible special container values, including ranges and map_pairs
+         */
         bool Container_Arg_List() {
             bool retval = false;
 
@@ -666,6 +729,9 @@ namespace chaiscript
 
         }
 
+        /**
+         * Reads a lambda (anonymous function) from input
+         */
         bool Lambda() {
             bool retval = false;
 
@@ -693,6 +759,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads a function definition from input
+         */
         bool Def() {
             bool retval = false;
             bool is_annotated = false;
@@ -745,6 +814,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads an if/elseif/else block from input
+         */
         bool If() {
             bool retval = false;
 
@@ -803,6 +875,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads a while block from input
+         */
         bool While() {
             bool retval = false;
 
@@ -831,6 +906,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads the C-style for conditions from input
+         */
         bool For_Guards() {
             Equation();
 
@@ -841,6 +919,10 @@ namespace chaiscript
                 throw Parse_Error("Incomplete conditions in 'for' loop", File_Position(line, col), filename);
             }
         }
+
+        /**
+         * Reads a for block from input
+         */
         bool For() {
             bool retval = false;
 
@@ -869,6 +951,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads a curly-brace C-style block from input
+         */
         bool Block() {
             bool retval = false;
 
@@ -886,9 +971,11 @@ namespace chaiscript
             }
 
             return retval;
-
         }
 
+        /**
+         * Reads a return statement from input
+         */
         bool Return() {
             bool retval = false;
 
@@ -904,6 +991,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads a break statement from input
+         */
         bool Break() {
             bool retval = false;
 
@@ -918,6 +1008,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads an identifier, then proceeds to check if it's a function or array call
+         */
         bool Id_Fun_Array() {
             bool retval = false;
             std::string::iterator prev_pos = input_pos;
@@ -955,6 +1048,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads a variable declaration from input
+         */
         bool Var_Decl() {
             bool retval = false;
 
@@ -971,9 +1067,11 @@ namespace chaiscript
             }
 
             return retval;
-
         }
 
+        /**
+         * Reads an expression surrounded by parentheses from input
+         */
         bool Paren_Expression() {
             bool retval = false;
 
@@ -989,6 +1087,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads, and identifies, a short-form container initialization from input
+         */
         bool Inline_Container() {
             bool retval = false;
 
@@ -1019,6 +1120,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads an identifier literal of the special form `<name>` from input
+         */
         bool Id_Literal() {
             bool retval = false;
 
@@ -1063,16 +1167,9 @@ namespace chaiscript
             return retval;
         }
 
-        bool Value() {
-            if (Var_Decl() || Lambda() || Id_Fun_Array() || Num(true) || Prefix() || Quoted_String(true) || Single_Quoted_String(true) ||
-                    Paren_Expression() || Inline_Container()) {
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-
+        /**
+         * Reads a unary prefixed expression from input
+         */
         bool Prefix() {
             bool retval = false;
 
@@ -1116,9 +1213,24 @@ namespace chaiscript
             }
 
             return retval;
-
         }
 
+        /**
+         * Parses any of a group of 'value' style token groups from input
+         */
+        bool Value() {
+            if (Var_Decl() || Lambda() || Id_Fun_Array() || Num(true) || Prefix() || Quoted_String(true) || Single_Quoted_String(true) ||
+                    Paren_Expression() || Inline_Container()) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        /**
+         * Reads a string of binary comparisons from input
+         */
         bool Comparison() {
             bool retval = false;
 
@@ -1138,9 +1250,11 @@ namespace chaiscript
             }
 
             return retval;
-
         }
 
+        /**
+         * Reads a string of binary additions/subtractions from input
+         */
         bool Additive() {
             bool retval = false;
 
@@ -1162,6 +1276,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads a string of multiplication/division/modulus from input
+         */
         bool Multiplicative() {
             bool retval = false;
 
@@ -1181,9 +1298,11 @@ namespace chaiscript
             }
 
             return retval;
-
         }
 
+        /**
+         * Reads a string of dot-notation accesses from input
+         */
         bool Dot_Access() {
             bool retval = false;
 
@@ -1205,6 +1324,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Top-level expression, parses a string of binary boolean operators from input
+         */
         bool Expression() {
             bool retval = false;
 
@@ -1226,6 +1348,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads a pair of values used to create a map initialization from input
+         */
         bool Map_Pair() {
             bool retval = false;
 
@@ -1247,6 +1372,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads a pair of values used to create a range initialization from input
+         */
         bool Value_Range() {
             bool retval = false;
 
@@ -1274,6 +1402,10 @@ namespace chaiscript
 
             return retval;
         }
+
+        /**
+         * Parses a string of binary equation operators
+         */
         bool Equation() {
             bool retval = false;
 
@@ -1291,18 +1423,11 @@ namespace chaiscript
             }
 
             return retval;
-
         }
 
-        bool Statement() {
-            if (Return() || Break() || Equation()) {
-                return true;
-            }
-            else {
-                return false;
-            }
-        }
-
+        /**
+         * Top level parser, starts parsing of all known parses
+         */
         bool Statements() {
             bool retval = false;
 
@@ -1343,7 +1468,23 @@ namespace chaiscript
                     retval = true;
                     saw_eol = true;
                 }
-                else if (Statement()) {
+                else if (Return()) {
+                    if (!saw_eol) {
+                        throw Parse_Error("Two expressions missing line separator", match_stack.back());
+                    }
+                    has_more = true;
+                    retval = true;
+                    saw_eol = false;
+                }
+                else if (Break()) {
+                    if (!saw_eol) {
+                        throw Parse_Error("Two expressions missing line separator", match_stack.back());
+                    }
+                    has_more = true;
+                    retval = true;
+                    saw_eol = false;
+                }
+                else if (Equation()) {
                     if (!saw_eol) {
                         throw Parse_Error("Two expressions missing line separator", match_stack.back());
                     }
@@ -1364,6 +1505,9 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Parses the given input string, tagging parsed tokens with the given filename.
+         */
         bool parse(std::string input, const char *fname) {
             input_pos = input.begin();
             input_end = input.end();
