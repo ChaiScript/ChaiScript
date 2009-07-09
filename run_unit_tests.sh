@@ -1,5 +1,8 @@
 #!/bin/bash
 
+successes=0
+failures=0
+
 echo -n "Running unit tests"
 for file in unittests/*.chai
 do
@@ -10,8 +13,13 @@ do
 	if [ "$?" -eq "0" ]
 	then
 		echo -n "."
+		successes=$((successes+1))
 	else
 		echo "[from failed test $file]"
+		failures=$((failures+1))
 	fi
 done
-echo "done"
+echo ""
+
+total=$((successes+failures))
+echo "$successes out of $total succeeded"
