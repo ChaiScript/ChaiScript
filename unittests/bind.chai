@@ -1,0 +1,2 @@
+var prod = bind(foldl, _, `*`, 1.0)
+print(prod([3, 4, 5]))
