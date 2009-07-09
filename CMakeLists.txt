@@ -1,15 +1,23 @@
 cmake_minimum_required(VERSION 2.6)
 
-enable_testing()
-
-project(jaytea)
+project(chaiscript)
 
 SET (CMAKE_BUILD_TYPE gdb)
 SET (CMAKE_C_FLAGS_GDB " -Wall -ggdb")
 SET (CMAKE_CXX_FLAGS_GDB " -Wall -ggdb")
 
-include_directories(dispatchkit)
+#SET (CMAKE_BUILD_TYPE rel)
+#SET (CMAKE_C_FLAGS_REL " -Wall -O3")
+#SET (CMAKE_CXX_FLAGS_REL " -Wall -O3")
 
-add_subdirectory(dispatchkit bin)
-add_subdirectory(chaiscript bin)
+include_directories(dispatchkit chaiscript)
  
+find_package(Boost 1.36.0)
+if (Boost_FOUND)
+	include_directories(${Boost_INCLUDE_DIRS})
+	add_executable(chaiscript_eval chaiscript/main.cpp)
+	#add_executable(dispatchkit_test dispatchkit/test.cpp)
+	target_link_libraries(chaiscript_eval ${Boost_LIBRARIES})
+	install(TARGETS chaiscript_eval DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+endif(Boost_FOUND)
+
