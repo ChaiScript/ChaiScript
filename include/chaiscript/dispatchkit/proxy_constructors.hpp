@@ -10,7 +10,8 @@
 
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
-#define BOOST_PP_FILENAME_1 "proxy_constructors.hpp"
+//#define BOOST_PP_FILENAME_1 "proxy_constructors.hpp"
+#define BOOST_PP_FILENAME_1 <chaiscript/dispatchkit/proxy_constructors.hpp>
 #include BOOST_PP_ITERATE()
 # endif
 #else

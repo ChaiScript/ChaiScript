@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "chaiscript.hpp"
+#include <chaiscript/chaiscript.hpp>
 
 void print_help() {
     std::cout << "ChaiScript evaluator.  To evaluate and expression, type it and press <enter>." << std::endl;

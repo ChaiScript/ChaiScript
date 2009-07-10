@@ -4,10 +4,10 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
 
-#include "dispatchkit.hpp"
-#include "bootstrap.hpp"
-#include "bootstrap_stl.hpp"
-#include "function_call.hpp"
+#include <chaiscript/dispatchkit/dispatchkit.hpp>
+#include <chaiscript/dispatchkit/bootstrap.hpp>
+#include <chaiscript/dispatchkit/bootstrap_stl.hpp>
+#include <chaiscript/dispatchkit/function_call.hpp>
 
 using namespace dispatchkit;
 

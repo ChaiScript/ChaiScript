@@ -10,8 +10,8 @@
 #ifndef __proxy_functions_hpp__
 #define __proxy_functions_hpp__
 
-#include "boxed_value.hpp"
-#include "type_info.hpp"
+#include <chaiscript/dispatchkit/boxed_value.hpp>
+#include <chaiscript/dispatchkit/type_info.hpp>
 #include <string>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
@@ -109,7 +109,8 @@ namespace dispatchkit
 }
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
-#define BOOST_PP_FILENAME_1 "proxy_functions.hpp"
+//#define BOOST_PP_FILENAME_1 "proxy_functions.hpp"
+#define BOOST_PP_FILENAME_1 <chaiscript/dispatchkit/proxy_functions.hpp>
 #include BOOST_PP_ITERATE()
 
 namespace dispatchkit

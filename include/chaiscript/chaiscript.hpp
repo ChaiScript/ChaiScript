@@ -14,9 +14,9 @@
 #include <fstream>
 #include <boost/shared_ptr.hpp>
 
-#include "dispatchkit.hpp"
-#include "bootstrap.hpp"
-#include "bootstrap_stl.hpp"
+#include <chaiscript/dispatchkit/dispatchkit.hpp>
+#include <chaiscript/dispatchkit/bootstrap.hpp>
+#include <chaiscript/dispatchkit/bootstrap_stl.hpp>
 
 namespace chaiscript
 {
@@ -133,7 +133,7 @@ namespace chaiscript
     };
 }
 
-#include "chaiscript_eval.hpp"
-#include "chaiscript_engine.hpp"
+#include <chaiscript/language/chaiscript_eval.hpp>
+#include <chaiscript/language/chaiscript_engine.hpp>
 
 #endif /* CHAISCRIPT_HPP_ */

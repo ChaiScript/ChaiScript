@@ -8,8 +8,8 @@
 #include <fstream>
 
 
-#include "chaiscript_prelude.hpp"
-#include "chaiscript_parser.hpp"
+#include <chaiscript/language/chaiscript_prelude.hpp>
+#include <chaiscript/language/chaiscript_parser.hpp>
 
 namespace chaiscript
 {
