@@ -20,7 +20,7 @@ namespace chaiscript
 
     public:
         ChaiScript_System()  {
-
+            build_eval_system();
         }
 
         /**

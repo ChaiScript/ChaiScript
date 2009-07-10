@@ -13,8 +13,6 @@ int main(int argc, char *argv[]) {
     std::string input;
     chaiscript::ChaiScript_Engine chai;
 
-    chai.build_eval_system();
-
     if (argc < 2) {
         std::cout << "eval> ";
         std::getline(std::cin, input);
