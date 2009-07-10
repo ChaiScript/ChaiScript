@@ -109,7 +109,6 @@ namespace dispatchkit
 }
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
-//#define BOOST_PP_FILENAME_1 "proxy_functions.hpp"
 #define BOOST_PP_FILENAME_1 <chaiscript/dispatchkit/proxy_functions.hpp>
 #include BOOST_PP_ITERATE()
 

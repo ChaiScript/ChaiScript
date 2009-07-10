@@ -24,7 +24,6 @@ namespace dispatchkit
 }
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
-//#define BOOST_PP_FILENAME_1 "register_function.hpp"
 #define BOOST_PP_FILENAME_1 <chaiscript/dispatchkit/register_function.hpp>
 #include BOOST_PP_ITERATE()
 
