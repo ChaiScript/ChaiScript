@@ -1,8 +1,8 @@
 #ifndef __bootstrap_stl_hpp
 #define __bootstrap_stl_hpp__
 
-#include <chaiscript/dispatchkit/dispatchkit.hpp>
-#include <chaiscript/dispatchkit/register_function.hpp>
+#include "dispatchkit.hpp"
+#include "register_function.hpp"
 
 
 namespace dispatchkit

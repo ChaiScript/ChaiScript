@@ -10,8 +10,8 @@
 #ifndef __proxy_functions_hpp__
 #define __proxy_functions_hpp__
 
-#include <chaiscript/dispatchkit/boxed_value.hpp>
-#include <chaiscript/dispatchkit/type_info.hpp>
+#include "boxed_value.hpp"
+#include "type_info.hpp"
 #include <string>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>

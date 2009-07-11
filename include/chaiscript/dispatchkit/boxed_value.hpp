@@ -1,7 +1,7 @@
 #ifndef __boxed_value_hpp__
 #define __boxed_value_hpp__
 
-#include <chaiscript/dispatchkit/type_info.hpp>
+#include "type_info.hpp"
 #include <map>
 #include <boost/shared_ptr.hpp>
 #include <boost/any.hpp>

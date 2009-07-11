@@ -12,10 +12,10 @@
 #include <iostream>
 #include <deque>
 
-#include <chaiscript/dispatchkit/boxed_value.hpp>
-#include <chaiscript/dispatchkit/type_info.hpp>
-#include <chaiscript/dispatchkit/proxy_functions.hpp>
-#include <chaiscript/dispatchkit/proxy_constructors.hpp>
+#include "boxed_value.hpp"
+#include "type_info.hpp"
+#include "proxy_functions.hpp"
+#include "proxy_constructors.hpp"
 
 namespace dispatchkit
 {

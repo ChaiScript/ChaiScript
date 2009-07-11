@@ -13,7 +13,7 @@
 #include <boost/function.hpp>
 #include <string>
 #include <vector>
-#include <chaiscript/dispatchkit/proxy_functions.hpp>
+#include "proxy_functions.hpp"
 
 namespace dispatchkit
 {
