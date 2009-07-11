@@ -44,7 +44,7 @@
 				Name="VCCLCompilerTool"
 				UseUnicodeResponseFiles="false"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\dispatchkit&quot;;&quot;$(ProjectDir)\..\..\chaiscript&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -180,7 +180,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\chaiscript\main.cpp"
+				RelativePath="..\..\src\main.cpp"
 				>
 			</File>
 		</Filter>
@@ -190,59 +190,59 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\dispatchkit\bootstrap.hpp"
+				RelativePath="..\..\include\chaiscript\dispatchkit\bootstrap.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\dispatchkit\bootstrap_stl.hpp"
+				RelativePath="..\..\include\chaiscript\dispatchkit\bootstrap_stl.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\dispatchkit\boxed_value.hpp"
+				RelativePath="..\..\include\chaiscript\dispatchkit\boxed_value.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\chaiscript\chaiscript.hpp"
+				RelativePath="..\..\include\chaiscript\chaiscript.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\chaiscript\chaiscript_engine.hpp"
+				RelativePath="..\..\include\chaiscript\language\chaiscript_engine.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\chaiscript\chaiscript_eval.hpp"
+				RelativePath="..\..\include\chaiscript\language\chaiscript_eval.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\chaiscript\chaiscript_parser.hpp"
+				RelativePath="..\..\include\chaiscript\language\chaiscript_parser.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\chaiscript\chaiscript_prelude.hpp"
+				RelativePath="..\..\include\chaiscript\language\chaiscript_prelude.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\dispatchkit\dispatchkit.hpp"
+				RelativePath="..\..\include\chaiscript\dispatchkit\dispatchkit.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\dispatchkit\function_call.hpp"
+				RelativePath="..\..\include\chaiscript\dispatchkit\function_call.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\dispatchkit\proxy_constructors.hpp"
+				RelativePath="..\..\include\chaiscript\dispatchkit\proxy_constructors.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\dispatchkit\proxy_functions.hpp"
+				RelativePath="..\..\include\chaiscript\dispatchkit\proxy_functions.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\dispatchkit\register_function.hpp"
+				RelativePath="..\..\include\chaiscript\dispatchkit\register_function.hpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\dispatchkit\type_info.hpp"
+				RelativePath="..\..\include\chaiscript\dispatchkit\type_info.hpp"
 				>
 			</File>
 		</Filter>
