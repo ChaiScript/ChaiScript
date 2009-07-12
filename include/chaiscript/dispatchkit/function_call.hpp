@@ -62,7 +62,7 @@ namespace dispatchkit
 }
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 9 )
-#define BOOST_PP_FILENAME_1 "function_call.hpp"
+#define BOOST_PP_FILENAME_1 <chaiscript/dispatchkit/function_call.hpp>
 #include BOOST_PP_ITERATE()
 
 namespace dispatchkit

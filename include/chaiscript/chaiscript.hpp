@@ -85,17 +85,22 @@ namespace chaiscript
     /**
      * Errors generated inside the parser
      */
-    struct Parse_Error {
+    struct Parse_Error : public std::runtime_error {
         std::string reason;
         File_Position position;
         const char *filename;
 
         Parse_Error(const std::string &why, const File_Position &where, const char *fname) :
-            reason(why), position(where), filename(fname) { }
+            std::runtime_error("Parse error: \"" + why + "\" in '"
+                + std::string(fname) + "' at: (" + boost::lexical_cast<std::string>(where.line+1) + ", " +
+                 boost::lexical_cast<std::string>(where.column) + ")"),
+            reason(why), position(where), filename(fname) 
+        { }
 
-        Parse_Error(const std::string &why, const TokenPtr &where) : reason(why) {
-            filename = where->filename;
-            position = where->start;
+        Parse_Error(const std::string &why, const TokenPtr &where) 
+            : std::runtime_error("Parse error: \"" + why + "\" in '"
+                + where->filename + "' line: " + boost::lexical_cast<std::string>(where->start.line+1)),
+              reason(why), position(where->start), filename(where->filename) {
         }
 
         virtual ~Parse_Error() throw() {}
