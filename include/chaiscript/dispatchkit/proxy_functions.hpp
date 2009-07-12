@@ -1,3 +1,9 @@
+// This file is distributed under the BSD License.
+// See LICENSE.TXT for details.
+// Copyright 2009, Jonathan Turner (jonathan.d.turner@gmail.com) 
+// and Jason Turner (lefticus@gmail.com)
+// http://www.chaiscript.com
+
 #include <boost/preprocessor.hpp>
 
 #define gettypeinfo(z,n,text)  ti.push_back(Get_Type_Info<Param ## n>::get());
@@ -22,7 +28,9 @@
 
 namespace dispatchkit
 {
-  // handle_return implementations
+  /**
+   * Used internally for handling a return value from a Proxy_Function call
+   */
   template<typename Ret>
     struct Handle_Return
     {
@@ -32,6 +40,9 @@ namespace dispatchkit
       }
     };
 
+  /**
+   * Used internally for handling a return value from a Proxy_Function call
+   */
   template<typename Ret>
     struct Handle_Return<Ret &>
     {
@@ -41,6 +52,9 @@ namespace dispatchkit
       }
     };
 
+  /**
+   * Used internally for handling a return value from a Proxy_Function call
+   */
   template<>
     struct Handle_Return<Boxed_Value>
     {
@@ -50,6 +64,9 @@ namespace dispatchkit
       }
     };
 
+  /**
+   * Used internally for handling a return value from a Proxy_Function call
+   */
   template<>
     struct Handle_Return<Boxed_Value &>
     {
@@ -59,6 +76,9 @@ namespace dispatchkit
       }
     };
 
+  /**
+   * Used internally for handling a return value from a Proxy_Function call
+   */
   template<>
     struct Handle_Return<void>
     {
@@ -69,7 +89,14 @@ namespace dispatchkit
       }
     };
 
-
+  /**
+   * Helper for building a list of parameters for calling a Proxy_Function
+   * it does automatic conversion to Boxed_Value types via operator<<
+   *
+   * example usage:
+   * Boxed_Value retval = dispatch(dispatchengine.get_function("+"), 
+   *                               dispatchkit::Param_List_Builder() << 5 << 6);
+   */
   struct Param_List_Builder
   {
     Param_List_Builder &operator<<(const Boxed_Value &so)
@@ -93,6 +120,10 @@ namespace dispatchkit
     std::vector<Boxed_Value> objects;
   };
 
+  /**
+   * Exception thrown when there is a mismatch in number of
+   * parameters during Proxy_Function execution
+   */
   struct arity_error : std::range_error
   {
     arity_error(int t_got, int t_expected)
@@ -105,7 +136,6 @@ namespace dispatchkit
     int got;
     int expected;
   };
-
 }
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
@@ -114,6 +144,14 @@ namespace dispatchkit
 
 namespace dispatchkit
 {
+  /**
+   * Pure virtual base class for all Proxy_Function implementations
+   * Proxy_Functions are a type erasure of type safe C++
+   * function calls. At runtime parameter types are expected to be
+   * tested against passed in types.
+   * Dispatch_Engine only knows how to work with Proxy_Function, no other
+   * function classes.
+   */
   class Proxy_Function
   {
     public:
@@ -125,6 +163,9 @@ namespace dispatchkit
       virtual std::string annotation() const = 0;
   };
 
+  /**
+   * Exception thrown if a function's guard fails to execute
+   */
   class guard_error : public std::runtime_error
   {
     public:
@@ -136,6 +177,10 @@ namespace dispatchkit
       { }
   };
 
+  /**
+   * A Proxy_Function implementation that is not type safe, the called function
+   * is expecting a vector<Boxed_Value> that it works with how it chooses.
+   */
   class Dynamic_Proxy_Function : public Proxy_Function
   {
     public:
@@ -225,10 +270,20 @@ namespace dispatchkit
       boost::shared_ptr<Proxy_Function> m_guard;
   };
 
+  /**
+   * An object used by Bound_Function to represent "_" parameters
+   * of a binding. This allows for unbound parameters during bind.
+   */
   struct Placeholder_Object
   {
   };
 
+  /**
+   * An implementation of Proxy_Function that takes a Proxy_Function
+   * and substitutes bound parameters into the parameter list
+   * at runtime, when call() is executed.
+   * it is used for bind(function, param1, _, param2) style calls
+   */
   class Bound_Function : public Proxy_Function
   {
     public:
@@ -291,7 +346,6 @@ namespace dispatchkit
             break;
           }
         }
-
         return args;
       }
 
@@ -305,12 +359,16 @@ namespace dispatchkit
         return "";
       }
 
-
     private:
       boost::shared_ptr<Proxy_Function> m_f;
       std::vector<Boxed_Value> m_args;
   };
 
+  /**
+   * The standard typesafe function call implementation of Proxy_Function
+   * It takes a boost::function<> object and performs runtime 
+   * type checking of Boxed_Value parameters, in a type safe manner
+   */
   template<typename Func>
     class Proxy_Function_Impl : public Proxy_Function
   {
@@ -352,11 +410,16 @@ namespace dispatchkit
         return "";
       }
 
-
     private:
       Func m_f;
   };
 
+  /**
+   * Exception thrown in the case that a multi method dispatch fails
+   * because no matching function was found
+   * at runtime due to either an arity_error, a guard_error or a bad_boxed_cast
+   * exception
+   */
   struct dispatch_error : std::runtime_error
   {
     dispatch_error() throw()
@@ -367,6 +430,11 @@ namespace dispatchkit
     virtual ~dispatch_error() throw() {}
   };
 
+  /**
+   * Take a vector of functions and a vector of parameters. Attempt to execute
+   * each function against the set of parameters, in order, until a matching
+   * function is found or throw dispatch_error if no matching function is found
+   */
   Boxed_Value dispatch(const std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > &funcs,
       const std::vector<Boxed_Value> &plist)
   {
@@ -385,7 +453,6 @@ namespace dispatchkit
         //try again
       }
     }
-
     throw dispatch_error();
   }
 }
@@ -396,7 +463,10 @@ namespace dispatchkit
 
 namespace dispatchkit
 {
-
+  /**
+   * Used by Proxy_Function_Impl to return a list of all param types
+   * it contains.
+   */
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
     std::vector<Type_Info> build_param_type_list(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &)
     {
@@ -408,6 +478,12 @@ namespace dispatchkit
       return ti;
     }
 
+  /**
+   * Used by Proxy_Function_Impl to perform typesafe execution of a function.
+   * The function attempts to unbox each paramter to the expected type.
+   * if any unboxing fails the execution of the function fails and
+   * the bad_boxed_cast is passed up to the caller.
+   */
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
     Boxed_Value call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f,
         const std::vector<Boxed_Value> &params)
@@ -420,6 +496,11 @@ namespace dispatchkit
       }
     }
 
+  /**
+   * Used by Proxy_Function_Impl to determine if it is equivalent to another
+   * Proxy_Function_Impl object. This function is primarly used to prevent
+   * registration of two functions with the exact same signatures
+   */
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
     bool compare_types(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &,
         const std::vector<Boxed_Value> &params)
@@ -440,8 +521,6 @@ namespace dispatchkit
         return true;
       }
     }
-
 }
 
 #endif
-

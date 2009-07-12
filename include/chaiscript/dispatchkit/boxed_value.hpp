@@ -1,3 +1,9 @@
+// This file is distributed under the BSD License.
+// See LICENSE.TXT for details.
+// Copyright 2009, Jonathan Turner (jonathan.d.turner@gmail.com) 
+// and Jason Turner (lefticus@gmail.com)
+// http://www.chaiscript.com
+
 #ifndef __boxed_value_hpp__
 #define __boxed_value_hpp__
 
@@ -13,16 +19,32 @@
 
 namespace dispatchkit
 {
+  /**
+   * Boxed_Value is the main tool of the dispatchkit. It allows
+   * for boxed / untyped containment of any C++ object. It uses
+   * boost::any internally but also provides user access the underlying
+   * stored type information
+   */
   class Boxed_Value
   {
     public:
+      /**
+       * used for explicitly creating a "void" object
+       */
       struct Void_Type
       {
       };
 
     private:
+      /**
+       * structure which holds the internal state of a Boxed_Value
+       */
       struct Data
       {
+        /** 
+         * used to provide type-erased access to the internal boost::shared_ptr
+         * reference count information 
+         */
         struct Shared_Ptr_Proxy
         {
           virtual ~Shared_Ptr_Proxy()
@@ -33,6 +55,9 @@ namespace dispatchkit
           virtual long use_count(boost::any *) = 0;
         };
 
+        /** 
+         * Typed implementation of the Shared_Ptr_Proxy
+         */
         template<typename T>
           struct Shared_Ptr_Proxy_Impl : Shared_Ptr_Proxy
         {
@@ -83,6 +108,12 @@ namespace dispatchkit
         boost::shared_ptr<Shared_Ptr_Proxy> m_ptr_proxy;
       };
 
+      /**
+       * Cache of all created objects in the dispatch kit. Used to return the 
+       * same shared_ptr if the same object is created more than once.
+       * Also used for acquiring a shared_ptr of a reference object, if the 
+       * value of the shared_ptr is known
+       */
       struct Object_Cache
       {
         boost::shared_ptr<Data> get(Boxed_Value::Void_Type)
@@ -131,7 +162,6 @@ namespace dispatchkit
 
             if (itr != m_ptrs.end())
             {
-//              std::cout << "Reference wrapper ptr found, using it" << std::endl;
               (*data) = (itr->second);
             } 
 
@@ -163,6 +193,10 @@ namespace dispatchkit
               );
         }
 
+        /**
+         * Drop objects from the cache where there is only one (ie, our)
+         * reference to it, so it may be destructed
+         */
         void cull()
         {
           std::map<void *, Data >::iterator itr = m_ptrs.begin();
@@ -172,22 +206,21 @@ namespace dispatchkit
             if (itr->second.m_ptr_proxy->unique(&itr->second.m_obj) == 1)
             {
               std::map<void *, Data >::iterator todel = itr;
-              //          std::cout << "Releasing unique ptr " << std::endl;
               ++itr;
               m_ptrs.erase(todel);
             } else {
               ++itr;
             }
           }
-
-          //      std::cout << "References held: " << m_ptrs.size() << std::endl;
         }
-
 
         std::map<void *, Data > m_ptrs;
       };
 
     public:
+      /**
+       * Basic Boxed_Value constructor
+       */
       template<typename T>
         explicit Boxed_Value(T t)
         : m_data(get_object_cache().get(t))
@@ -195,11 +228,17 @@ namespace dispatchkit
           get_object_cache().cull();
         }
 
+      /**
+       * Copy constructor - each copy shares the same data pointer
+       */
       Boxed_Value(const Boxed_Value &t_so)
         : m_data(t_so.m_data)
       {
       }
 
+      /**
+       * Unknown-type constructor
+       */
       Boxed_Value()
         : m_data(get_object_cache().get())    
       {
@@ -209,20 +248,28 @@ namespace dispatchkit
       {
       }
 
-
+      /**
+       * Return a reference to the static global Object_Cache
+       */
       Object_Cache &get_object_cache()
       {
         static Object_Cache oc;
         return oc;
       }    
 
-
+      /**
+       * copy the values stored in rhs.m_data to m_data
+       * m_data pointers are not shared in this case
+       */
       Boxed_Value assign(const Boxed_Value &rhs)
       {
         (*m_data) = (*rhs.m_data);
         return *this;
       }
 
+      /**
+       * shared data assignment, same as copy construction
+       */
       Boxed_Value &operator=(const Boxed_Value &rhs)
       {
         m_data = rhs.m_data;
@@ -234,6 +281,9 @@ namespace dispatchkit
         return m_data->m_type_info;
       }
 
+      /**
+       * return true if the object is uninitialized
+       */
       bool is_unknown() const
       {
         return m_data->m_type_info.m_is_unknown;
@@ -254,7 +304,11 @@ namespace dispatchkit
   };
 
 
-  //cast_help specializations
+  // Cast_Helper helper classes
+
+  /**
+   * Generic Cast_Helper, for casting to any type
+   */
   template<typename Result>
     struct Cast_Helper
     {
@@ -271,6 +325,9 @@ namespace dispatchkit
       }
     };
 
+  /**
+   * Cast_Helper for casting to a const & type
+   */
   template<typename Result>
     struct Cast_Helper<const Result &>
     {
@@ -287,6 +344,9 @@ namespace dispatchkit
       }
     };
 
+  /**
+   * Cast_Helper for casting to a const * type
+   */
   template<typename Result>
     struct Cast_Helper<const Result *>
     {
@@ -303,6 +363,9 @@ namespace dispatchkit
       }
     };
 
+  /**
+   * Cast_Helper for casting to a * type
+   */
   template<typename Result>
     struct Cast_Helper<Result *>
     {
@@ -319,6 +382,9 @@ namespace dispatchkit
       }
     };
 
+  /**
+   * Cast_Helper for casting to a & type
+   */
   template<typename Result>
     struct Cast_Helper<Result &>
     {
@@ -335,6 +401,9 @@ namespace dispatchkit
       }
     };
 
+  /**
+   * Cast_Helper for casting to a boost::shared_ptr<> type
+   */
   template<typename Result>
     struct Cast_Helper<typename boost::shared_ptr<Result> >
     {
@@ -347,6 +416,9 @@ namespace dispatchkit
     };
 
 
+  /**
+   * Cast_Helper for casting to a Boxed_Value type
+   */
   template<>
     struct Cast_Helper<Boxed_Value>
     {
@@ -358,6 +430,9 @@ namespace dispatchkit
       }
     };
 
+  /**
+   * Cast_Helper for casting to a const Boxed_Value & type
+   */
   template<>
     struct Cast_Helper<const Boxed_Value &>
     {
@@ -369,7 +444,10 @@ namespace dispatchkit
       }
     };
 
-
+  /**
+   * class that is thrown in the event of a bad_boxed_cast. That is,
+   * in the case that a Boxed_Value cannot be cast to the desired type
+   */
   class bad_boxed_cast : public std::bad_cast
   {
     public:
@@ -396,6 +474,11 @@ namespace dispatchkit
       std::string m_what;
   };
 
+  /**
+   * boxed_cast function for casting a Boxed_Value into a given type
+   * example:
+   * int &i = boxed_cast<int &>(boxedvalue);
+   */
   template<typename Type>
   typename Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv)
   {
@@ -406,6 +489,10 @@ namespace dispatchkit
     }
   }
 
+  /**
+   * Object which attempts to convert a Boxed_Value into a generic
+   * POD type and provide generic POD type operations
+   */
   struct Boxed_POD_Value
   {
     Boxed_POD_Value(const Boxed_Value &v)
@@ -455,7 +542,6 @@ namespace dispatchkit
         throw boost::bad_any_cast();
       }
     }
-
 
     bool operator==(const Boxed_POD_Value &r) const
     {
@@ -533,6 +619,9 @@ namespace dispatchkit
     bool m_isfloat;
   };
 
+  /**
+   * Cast_Helper for converting from Boxed_Value to Boxed_POD_Value
+   */
   template<>
     struct Cast_Helper<Boxed_POD_Value>
     {

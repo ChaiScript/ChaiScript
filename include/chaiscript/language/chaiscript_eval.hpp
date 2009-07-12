@@ -1,5 +1,8 @@
 // This file is distributed under the BSD License.
 // See LICENSE.TXT for details.
+// Copyright 2009, Jonathan Turner (jonathan.d.turner@gmail.com) 
+// and Jason Turner (lefticus@gmail.com)
+// http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_EVAL_HPP_
 #define CHAISCRIPT_EVAL_HPP_

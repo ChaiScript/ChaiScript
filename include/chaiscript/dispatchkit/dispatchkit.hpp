@@ -1,3 +1,9 @@
+// This file is distributed under the BSD License.
+// See LICENSE.TXT for details.
+// Copyright 2009, Jonathan Turner (jonathan.d.turner@gmail.com) 
+// and Jason Turner (lefticus@gmail.com)
+// http://www.chaiscript.com
+
 #ifndef __dispatchkit_hpp__
 #define __dispatchkit_hpp__
 
@@ -19,6 +25,11 @@
 
 namespace dispatchkit
 {
+  /**
+   * A Proxy_Function implementation that is able to take
+   * a vector of Proxy_Functions and perform a dispatch on them. It is 
+   * used specifically in the case of dealing with Function object variables
+   */
   class Dispatch_Function : public Proxy_Function
   {
     public:
@@ -73,7 +84,11 @@ namespace dispatchkit
       std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > m_funcs;
   };  
   
-  
+
+  /**
+   * Main class for the dispatchkit. Handles management
+   * of the object stack, functions and registered types.
+   */
   class Dispatch_Engine
   {
     public:
@@ -87,18 +102,27 @@ namespace dispatchkit
         m_scopes.push_back(Scope());
       }
 
+      /**
+       * Add a new named Proxy_Function to the system
+       */
       bool register_function(const boost::shared_ptr<Proxy_Function> &f, const std::string &name)
       {
         return add_function(f, name);
       }
 
+      /**
+       * Add a generic, named boost::function() to the system
+       */
       template<typename Function>
         bool register_function(const Function &func, const std::string &name)
         {
           return add_function(boost::shared_ptr<Proxy_Function>(new Proxy_Function_Impl<Function>(func)), name);
         }
-
  
+      /**
+       * Set the value of an object, by name. If the object
+       * is not available in the current scope it is created
+       */
       template<typename Class>
         void set_object(const std::string &name, const Class &obj)
         {
@@ -115,17 +139,26 @@ namespace dispatchkit
           add_object(name, obj);
         }
 
+      /**
+       * Adds a named object to the current scope
+       */
       template<typename Class>
         void add_object(const std::string &name, const Class &obj)
         {
           m_scopes.back()[name] = Boxed_Value(obj);
         }
 
+      /**
+       * Adds a new scope to the stack
+       */
       void new_scope()
       {
         m_scopes.push_back(Scope());
       }
 
+      /**
+       * Pops the current scope from the stack
+       */
       void pop_scope()
       {
         if (m_scopes.size() > 1)
@@ -136,18 +169,30 @@ namespace dispatchkit
         }
       }
 
+      /**
+       * Returns the current stack
+       */
       Stack get_stack()
       {
         return m_scopes;
       }
 
+      /**
+       * Swaps out the stack with a new stack
+       * \returns the old stack
+       * \param[in] s The new stack
+       */
       Stack set_stack(Stack s)
       {
         std::swap(s, m_scopes);
         return s;
       }
 
-
+      /**
+       * Searches the current stack for an object of the given name
+       * includes a special overload for the _ place holder object to
+       * ensure that it is always in scope.
+       */
       Boxed_Value get_object(const std::string &name) const
       {
         if (name == "_")
@@ -174,13 +219,18 @@ namespace dispatchkit
         }
       }
 
+      /**
+       * Registers a new named type
+       */
       template<typename Type>
         void register_type(const std::string &name)
         {
           m_types.insert(std::make_pair(name, Get_Type_Info<Type>::get()));
         }
 
-
+      /**
+       * Returns the type info for a named type
+       */
       Type_Info get_type(const std::string &name) const
       {
         Type_Name_Map::const_iterator itr = m_types.find(name);
@@ -193,6 +243,11 @@ namespace dispatchkit
         throw std::range_error("Type Not Known");
       }
 
+      /**
+       * Returns the registered name of a known type_info object
+       * compares the "bare_type_info" for the broadest possible
+       * match
+       */
       std::string get_type_name(const Type_Info &ti) const
       {
         for (Type_Name_Map::const_iterator itr = m_types.begin();
@@ -208,11 +263,37 @@ namespace dispatchkit
         return ti.m_bare_type_info->name();
       }
 
+      /**
+       * Return all registered types
+       */
       std::vector<std::pair<std::string, Type_Info> > get_types() const
       {
         return std::vector<std::pair<std::string, Type_Info> >(m_types.begin(), m_types.end());
       }
 
+      /**
+       * Return a function by name
+       */
+      std::vector<std::pair<std::string, std::multimap<std::string, boost::shared_ptr<Proxy_Function> >::mapped_type> > 
+        get_function(const std::string &t_name) const
+      {
+        return get_function_impl(t_name, true);
+      }
+ 
+      /**
+       * Get a vector of all registered functions
+       */
+      std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > get_functions() const
+      {
+        return std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > >(m_functions.begin(), m_functions.end());
+      }
+
+    private:
+      /**
+       * Implementation detail for searching for a function by name.
+       * Looks for all registered global functions and optionally for an object
+       * in scope with the same name
+       */
       std::vector<std::pair<std::string, std::multimap<std::string, boost::shared_ptr<Proxy_Function> >::mapped_type> > 
         get_function_impl(const std::string &t_name, bool include_objects) const
       {
@@ -238,18 +319,11 @@ namespace dispatchkit
         return funcs;
       }
 
-      std::vector<std::pair<std::string, std::multimap<std::string, boost::shared_ptr<Proxy_Function> >::mapped_type> > 
-        get_function(const std::string &t_name) const
-      {
-        return get_function_impl(t_name, true);
-      }
- 
-      std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > get_functions() const
-      {
-        return std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > >(m_functions.begin(), m_functions.end());
-      }
-
-    private:
+      /**
+       * Implementation detail for adding a function. Returns
+       * true if the function was added, false if a function with the
+       * same signature and name already exists.
+       */
       bool add_function(const boost::shared_ptr<Proxy_Function> &f, const std::string &t_name)
       {
         std::pair<std::multimap<std::string, boost::shared_ptr<Proxy_Function> >::const_iterator, std::multimap<std::string, boost::shared_ptr<Proxy_Function> >::const_iterator> range
@@ -275,16 +349,25 @@ namespace dispatchkit
       Boxed_Value m_place_holder;
   };
 
+  /**
+   * Dump object info to stdout
+   */
   void dump_object(Boxed_Value o, const Dispatch_Engine &e)
   {
     std::cout << e.get_type_name(o.get_type_info()) << std::endl;
   }
 
+  /**
+   * Dump type info to stdout
+   */
   void dump_type(const Type_Info &type, const Dispatch_Engine &e)
   {
     std::cout << e.get_type_name(type);
   }
 
+  /**
+   * Dump function to stdout
+   */
   void dump_function(const std::pair<const std::string, boost::shared_ptr<Proxy_Function> > &f, const Dispatch_Engine &e)
   {
     std::vector<Type_Info> params = f.second->get_param_types();
@@ -307,12 +390,14 @@ namespace dispatchkit
       {
         std::cout << ", ";
       }
-
     }
 
     std::cout << ") " << std::endl;
   }
 
+  /**
+   * Dump all system info to stdout
+   */
   void dump_system(const Dispatch_Engine &s)
   {
     std::cout << "Registered Types: " << std::endl;
@@ -326,7 +411,6 @@ namespace dispatchkit
       std::cout << std::endl;
     }
 
-
     std::cout << std::endl;  
     std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > funcs = s.get_functions();
 
@@ -339,8 +423,6 @@ namespace dispatchkit
     }
     std::cout << std::endl;
   }
-
-
 }
 
 #endif

@@ -1,3 +1,9 @@
+// This file is distributed under the BSD License.
+// See LICENSE.TXT for details.
+// Copyright 2009, Jonathan Turner (jonathan.d.turner@gmail.com) 
+// and Jason Turner (lefticus@gmail.com)
+// http://www.chaiscript.com
+
 #ifndef __type_info_hpp__
 #define __type_info_hpp__
 
@@ -12,6 +18,9 @@
 
 namespace dispatchkit
 {
+  /**
+   * compile time deduced information about a type
+   */
   struct Type_Info
   {
     Type_Info(bool t_is_const, bool t_is_reference, bool t_is_pointer, bool t_is_void, 
@@ -68,6 +77,9 @@ namespace dispatchkit
     bool m_is_unknown;
   };
 
+  /**
+   * Helper used to create a Type_Info object
+   */
   template<typename T>
     struct Get_Type_Info
     {

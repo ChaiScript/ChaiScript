@@ -1,3 +1,9 @@
+// This file is distributed under the BSD License.
+// See LICENSE.TXT for details.
+// Copyright 2009, Jonathan Turner (jonathan.d.turner@gmail.com) 
+// and Jason Turner (lefticus@gmail.com)
+// http://www.chaiscript.com
+
 #ifndef __bootstrap_hpp
 #define __bootstrap_hpp__
 
@@ -15,13 +21,11 @@ namespace dispatchkit
     return p1 + p2;
   }
 
-
   template<typename Ret, typename P1, typename P2>
   Ret subtract(P1 p1, P2 p2)
   {
     return p1 - p2;
   }
-
 
   template<typename Ret, typename P1, typename P2>
   Ret divide(P1 p1, P2 p2)
@@ -29,13 +33,11 @@ namespace dispatchkit
     return p1 / p2;
   }
 
-
   template<typename Ret, typename P1, typename P2>
   Ret multiply(P1 p1, P2 p2)
   {
     return p1 * p2;
   }
-
 
   template<typename Ret, typename P1, typename P2>
   Ret modulus(P1 p1, P2 p2)
@@ -49,15 +51,11 @@ namespace dispatchkit
     return (p1 = p2);
   }
 
-
-
   template<typename P1, typename P2>
   bool equals(P1 p1, P2 p2)
   {
     return p1 == p2;
   }
-
-
 
   template<typename P1, typename P2>
   bool not_equals(P1 p1, P2 p2)
@@ -102,7 +100,6 @@ namespace dispatchkit
     return (p1 /= p2);
   }
 
-
   template<typename P1, typename P2>
   P1 &addsequal(P1 &p1, const P2 &p2)
   {
@@ -114,8 +111,6 @@ namespace dispatchkit
   {
     return (p1 -= p2);
   }
-
-
 
   template<typename P1>
   P1 &prefixincrement(P1 &p1)
@@ -259,18 +254,27 @@ namespace dispatchkit
     register_function(s, &divide<T, const T&, const T&>, "/");
   }
 
+  /**
+   * Add canonical form of "*" for type T
+   */
   template<typename T>
   void add_oper_multiply(Dispatch_Engine &s)
   {
     register_function(s, &multiply<T, const T&, const T&>, "*");
   }
 
+  /**
+   * Add canonical form of "!=" for type T
+   */
   template<typename T>
   void add_oper_not_equals(Dispatch_Engine &s)
   {
     register_function(s, &not_equals<const T&, const T&>, "!=");
   }
 
+  /**
+   * Add user defined assignment operator for T = U
+   */
   template<typename T, typename U>
   void add_oper_assign_overload(Dispatch_Engine &s)
   {
@@ -278,6 +282,9 @@ namespace dispatchkit
   }
 
 
+  /**
+   * Add canonical form of "=" for type T
+   */
   template<typename T>
   void add_oper_assign(Dispatch_Engine &s)
   {
@@ -285,6 +292,9 @@ namespace dispatchkit
   }
 
 
+  /**
+   * Add assignment operator for T = POD.
+   */
   template<typename T>
   void add_oper_assign_pod(Dispatch_Engine &s)
   {
@@ -292,31 +302,46 @@ namespace dispatchkit
   }
 
 
+  /**
+   * Add canonical form of "<" for type T
+   */
   template<typename T>
   void add_oper_less_than(Dispatch_Engine &s)
   {
     register_function(s, &less_than<const T&, const T&>, "<");
   }
 
+  /**
+   * Add canonical form of ">" for type T
+   */
   template<typename T>
   void add_oper_greater_than(Dispatch_Engine &s)
   {
     register_function(s, &greater_than<const T&, const T&>, ">");
   }
 
+  /**
+   * Add canonical form of "<=" for type T
+   */
   template<typename T>
   void add_oper_less_than_equals(Dispatch_Engine &s)
   {
     register_function(s, &less_than_equals<const T&, const T&>, "<=");
   }
 
+  /**
+   * Add canonical form of ">=" for type T
+   */
   template<typename T>
   void add_oper_greater_than_equals(Dispatch_Engine &s)
   {
     register_function(s, &greater_than_equals<const T&, const T&>, ">=");
   }
 
-
+  /**
+   * Add user defined comparison operators for T and R.
+   * Examples: T < R, T == R, etc.
+   */
   template<typename T, typename R>
   void add_opers_comparison_overload(Dispatch_Engine &s)
   {
@@ -328,12 +353,22 @@ namespace dispatchkit
     register_function(s, &greater_than_equals<const T&, const R&>, ">=");
   }
 
+  /**
+   * Add canonical forms of all comparison operators for type T
+   */
   template<typename T>
   void add_opers_comparison(Dispatch_Engine &s)
   {
     add_opers_comparison_overload<T, T>(s);
   }
 
+  /**
+   * Add all arithmetic operators that return a type of Ret, taking
+   * a lhs of T and a rhs of R, when possible.
+   * examples: Ret = T + R;
+   * ++T
+   * T *= R;
+   */
   template<typename Ret, typename T, typename R>
   void add_opers_arithmetic_overload(Dispatch_Engine &s)
   {
@@ -351,6 +386,10 @@ namespace dispatchkit
     register_function(s, &prefixnot<T>, "!");
   }
 
+  /**
+   * Add arithmetic assign operators for POD types:
+   * example: POD *= T, POD /= T
+   */
   template<typename T>
   void add_opers_arithmetic_modify_pod(Dispatch_Engine &s)
   {
@@ -360,6 +399,11 @@ namespace dispatchkit
     register_function(s, &addsequal_pod<T>, "+=");
   }
 
+  /**
+   * Add a copy constructor for type T, also creates the standard
+   * function "clone" for the type. "clone" is a synonym for
+   * the copy constructor.
+   */
   template<typename T>
     void add_copy_constructor(Dispatch_Engine &s, const std::string &type)
     {
@@ -367,6 +411,9 @@ namespace dispatchkit
       s.register_function(build_constructor<T, const T &>(), "clone");
     }
 
+  /**
+   * Add default and copy constructors (including "clone") for type T
+   */
   template<typename T>
   void add_basic_constructors(Dispatch_Engine &s, const std::string &type)
   {
@@ -374,18 +421,28 @@ namespace dispatchkit
     add_copy_constructor<T>(s, type);
   }
 
+  /**
+   * Add POD type constructor for type T. ie: T = type(POD)
+   */
   template<typename T>
   void add_construct_pod(Dispatch_Engine &s, const std::string &type)
   {
     register_function(s, &construct_pod<T>, type);
   }
 
+  /**
+   * add user defined single parameter constructor for type T.
+   * T = type(const U &)
+   */
   template<typename T, typename U>
   void add_constructor_overload(Dispatch_Engine &s, const std::string &type)
   {
     s.register_function(build_constructor<T, const U &>(), type);
   }
 
+  /**
+   * Add canonical forms of all arithmetic operators for type T
+   */
   template<typename T>
   void add_opers_arithmetic(Dispatch_Engine &s)
   {
@@ -393,15 +450,18 @@ namespace dispatchkit
 
   }
 
-
-
-  //Built in to_string operator
+  /**
+   * to_string function for internal use. Uses ostream operator<<
+   */
   template<typename Input>
   std::string to_string(Input i)
   {
     return boost::lexical_cast<std::string>(i);
   }
 
+  /**
+   * Boolean specialization of internal to_string function 
+   */
   template<> std::string to_string(bool b)
   {
     if (b)
@@ -412,14 +472,20 @@ namespace dispatchkit
     }
   }
 
+  /**
+   * Internal function for converting from a string to a value
+   * uses ostream operator >> to perform the conversion
+   */
   template<typename Input>
   Input parse_string(const std::string &i)
   {
     return boost::lexical_cast<Input>(i);
   }
 
-
-
+  /**
+   * Add all common functions for a POD type. All operators, and
+   * common conversions
+   */
   template<typename T>
   void bootstrap_pod_type(Dispatch_Engine &s, const std::string &name)
   {
@@ -434,12 +500,24 @@ namespace dispatchkit
     register_function(s, &parse_string<T>, "to_" + name);
   }
 
+  /**
+   * "clone" function for a shared_ptr type. This is used in the case
+   * where you do not want to make a deep copy of an object during cloning
+   * but want to instead maintain the shared_ptr. It is needed internally
+   * for handling of boost::shared_ptr<Proxy_Function> object (that is,
+   * function variables.
+   */
   template<typename Type>
     boost::shared_ptr<Type> shared_ptr_clone(boost::shared_ptr<Type> f)
     {
       return f;
     }
 
+  /**
+   * Assignment function for shared_ptr objects, does not perform a copy of the
+   * object pointed to, instead maintains the shared_ptr concept.
+   * Similar to shared_ptr_clone. Used for Proxy_Function.
+   */
   template<typename Type>
     Boxed_Value ptr_assign(Boxed_Value lhs, boost::shared_ptr<Type> rhs)
     {
@@ -448,9 +526,15 @@ namespace dispatchkit
       return lhs;
     }
 
-
+  /**
+   * Class consisting of only static functions. All default bootstrapping occurs
+   * from this class.
+   */
   struct Bootstrap
   {
+    /**
+     * Function allowing for assignment of an unknown type to any other value
+     */
     static Boxed_Value unknown_assign(Boxed_Value lhs, Boxed_Value rhs)
     {
       if (lhs.is_unknown())
@@ -471,6 +555,9 @@ namespace dispatchkit
       std::cout << s << std::endl;
     }
 
+    /**
+     * Add all comparison operators for POD types
+     */
     static void add_opers_comparison_pod(Dispatch_Engine &s)
     {
       register_function(s, &equals<Boxed_POD_Value, Boxed_POD_Value>, "==");
@@ -481,6 +568,9 @@ namespace dispatchkit
       register_function(s, &greater_than_equals<Boxed_POD_Value, Boxed_POD_Value>, ">=");
     }
 
+    /**
+     * Add all arithmetic operators for PODs
+     */
     static void add_opers_arithmetic_pod(Dispatch_Engine &s)
     {
       register_function(s, &add<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>, "+");
@@ -489,11 +579,17 @@ namespace dispatchkit
       register_function(s, &multiply<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>, "*");
     }
 
+    /**
+     * Return true if the two Boxed_Value's share the same internal type
+     */
     static bool type_match(Boxed_Value l, Boxed_Value r)
     {
       return l.get_type_info() == r.get_type_info();
     }
 
+    /**
+     * return true if the Boxed_Value matches the registered type by name
+     */
     static bool is_type(const Dispatch_Engine &e, const std::string &type_name, Boxed_Value r)
     {
       try {
@@ -503,6 +599,11 @@ namespace dispatchkit
       }
     }
 
+    /**
+     * Create a bound function object. The first param is the function to bind
+     * the remaining parameters are the args to bind into the
+     * result
+     */
     static Boxed_Value bind_function(const std::vector<Boxed_Value> &params)
     {
       if (params.size() < 2)
@@ -516,6 +617,10 @@ namespace dispatchkit
             std::vector<Boxed_Value>(params.begin() + 1, params.end()))));
     }
 
+    /**
+     * Returns true if a call can be made that consists of the first parameter
+     * (the function) with the remaining parameters as its arguments.
+     */
     static Boxed_Value call_exists(const std::vector<Boxed_Value> &params)
     {
       if (params.size() < 1)
@@ -528,6 +633,9 @@ namespace dispatchkit
       return Boxed_Value(f->types_match(std::vector<Boxed_Value>(params.begin() + 1, params.end())));
     }
 
+    /**
+     * perform all common bootstrap functions for std::string, void and POD types
+     */
     static void bootstrap(Dispatch_Engine &s)
     {
       s.register_type<void>("void");

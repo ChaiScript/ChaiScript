@@ -1,3 +1,16 @@
+// This file is distributed under the BSD License.
+// See LICENSE.TXT for details.
+// Copyright 2009, Jonathan Turner (jonathan.d.turner@gmail.com) 
+// and Jason Turner (lefticus@gmail.com)
+// http://www.chaiscript.com
+
+
+/**
+ * This file contains utility functions for registration of STL container
+ * classes. The methodology used is based on the SGI STL concepts.
+ * http://www.sgi.com/tech/stl/table_of_contents.html
+ */
+
 #ifndef __bootstrap_stl_hpp
 #define __bootstrap_stl_hpp__
 
@@ -7,6 +20,11 @@
 
 namespace dispatchkit
 {
+  /**
+   * Input_Range, based on the D concept of ranges.
+   * \todo Update the Range code to base its capabilities on
+   *       the type_traits of the iterator passed in
+   */
   template<typename Container>
     struct Input_Range
     {
@@ -52,6 +70,10 @@ namespace dispatchkit
       typename Container::iterator m_end;
     };
 
+  
+  /**
+   * Add Input_Range support for the given ContainerType
+   */
   template<typename ContainerType>
     void bootstrap_input_range(Dispatch_Engine &system, const std::string &type)
     {
@@ -75,11 +97,19 @@ namespace dispatchkit
       system.register_function(build_constructor<Input_Range<ContainerType>, const Input_Range<ContainerType> &>(), "clone");
     } 
   
+  /**
+   * Add reversible_container concept to the given ContainerType
+   * http://www.sgi.com/tech/stl/ReversibleContainer.html
+   */
   template<typename ContainerType>
   void bootstrap_reversible_container(Dispatch_Engine &/*system*/, const std::string &/*type*/)
   {
   }
 
+  /**
+   * Add random_access_container concept to the given ContainerType
+   * http://www.sgi.com/tech/stl/RandomAccessContainer.html
+   */
   template<typename ContainerType>
   void bootstrap_random_access_container(Dispatch_Engine &system, const std::string &type)
   {
@@ -89,19 +119,25 @@ namespace dispatchkit
 
     //In the interest of runtime safety for the system, we prefer the at() method for [] access,
     //to throw an exception in an out of bounds condition.
-    system.register_function(
-        boost::function<typename ContainerType::reference (ContainerType *, int)>(indexoper(&ContainerType::at)), "[]");
-    system.register_function(
-        boost::function<typename ContainerType::reference (ContainerType *, int)>(indexoper(&ContainerType::operator[])), "at");
+    register_function(system, indexoper(&ContainerType::at), "[]");
+    register_function(system, indexoper(&ContainerType::operator[]), "at");
   }
 
-  template<typename Assignable>
+  /**
+   * Add assignable concept to the given ContainerType
+   * http://www.sgi.com/tech/stl/Assignable.html
+   */
+  template<typename ContainerType>
   void bootstrap_assignable(Dispatch_Engine &system, const std::string &type)
   {
-    add_basic_constructors<Assignable>(system, type);
-    add_oper_assign<Assignable>(system);
+    add_basic_constructors<ContainerType>(system, type);
+    add_oper_assign<ContainerType>(system);
   }
 
+  /**
+   * Add container concept to the given ContainerType
+   * http://www.sgi.com/tech/stl/Container.html
+   */
   template<typename ContainerType>
   void bootstrap_container(Dispatch_Engine &system, const std::string &type)
   {
@@ -112,6 +148,10 @@ namespace dispatchkit
     register_function(system, &ContainerType::empty, "empty");
   }
 
+  /**
+   * Add forward container concept to the given ContainerType
+   * http://www.sgi.com/tech/stl/ForwardContainer.html
+   */
   template<typename ContainerType>
   void bootstrap_forward_container(Dispatch_Engine &system, const std::string &type)
   {
@@ -119,12 +159,19 @@ namespace dispatchkit
     bootstrap_container<ContainerType>(system, type);
   }
 
+  /**
+   * Add default constructable concept to the given Type
+   * http://www.sgi.com/tech/stl/DefaultConstructible.html
+   */
   template<typename Type>
   void bootstrap_default_constructible(Dispatch_Engine &system, const std::string &type)
   {
     system.register_function(build_constructor<Type>(), type);
   }
 
+  /**
+   * Algorithm for inserting at a specific position into a container
+   */
   template<typename Type>
     void insert_at(Type &container, int pos, const typename Type::value_type &v)
     {
@@ -140,6 +187,9 @@ namespace dispatchkit
       container.insert(itr, v);
     }
 
+  /**
+   * Algorithm for erasing a specific position from a container
+   */
   template<typename Type>
     void erase_at(Type &container, int pos)
     {
@@ -155,46 +205,58 @@ namespace dispatchkit
       container.erase(itr);
     }
 
-  template<typename SequenceType>
+  /**
+   * Add sequence concept to the given ContainerType
+   * http://www.sgi.com/tech/stl/Sequence.html
+   */
+  template<typename ContainerType>
   void bootstrap_sequence(Dispatch_Engine &system, const std::string &type)
   {
-    bootstrap_forward_container<SequenceType>(system, type);
-    bootstrap_default_constructible<SequenceType>(system, type);
+    bootstrap_forward_container<ContainerType>(system, type);
+    bootstrap_default_constructible<ContainerType>(system, type);
 
     std::string insert_name;
-    if (typeid(typename SequenceType::value_type) == typeid(Boxed_Value))
+    if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value))
     {
       insert_name = "insert_ref_at";
     } else {
       insert_name = "insert_at";
     }
 
-    register_function(system, &insert_at<SequenceType>, insert_name);
-    register_function(system, &erase_at<SequenceType>, "erase_at");
+    register_function(system, &insert_at<ContainerType>, insert_name);
+    register_function(system, &erase_at<ContainerType>, "erase_at");
   }
 
-  template<typename SequenceType>
+  /**
+   * Add back insertion sequence concept to the given ContainerType
+   * http://www.sgi.com/tech/stl/BackInsertionSequence.html
+   */
+  template<typename ContainerType>
   void bootstrap_back_insertion_sequence(Dispatch_Engine &system, const std::string &type)
   {
-    bootstrap_sequence<SequenceType>(system, type);
+    bootstrap_sequence<ContainerType>(system, type);
 
 
-    typedef typename SequenceType::reference (SequenceType::*backptr)();
+    typedef typename ContainerType::reference (ContainerType::*backptr)();
 
-    system.register_function(boost::function<typename SequenceType::reference (SequenceType *)>(backptr(&SequenceType::back)), "back");
+    register_function(system, (backptr(&ContainerType::back)), "back");
 
     std::string push_back_name;
-    if (typeid(typename SequenceType::value_type) == typeid(Boxed_Value))
+    if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value))
     {
       push_back_name = "push_back_ref";
     } else {
       push_back_name = "push_back";
     }
 
-    register_function(system, &SequenceType::push_back, push_back_name);
-    register_function(system, &SequenceType::pop_back, "pop_back");
+    register_function(system, &ContainerType::push_back, push_back_name);
+    register_function(system, &ContainerType::pop_back, "pop_back");
   }
 
+  /**
+   * Create a vector type with associated concepts
+   * http://www.sgi.com/tech/stl/Vector.html
+   */
   template<typename VectorType>
   void bootstrap_vector(Dispatch_Engine &system, const std::string &type)
   {
@@ -203,6 +265,10 @@ namespace dispatchkit
     bootstrap_back_insertion_sequence<VectorType>(system, type);
   }
 
+  /**
+   * Create a vector type with associated concepts
+   * http://www.sgi.com/tech/stl/Vector.html
+   */
   template<typename ContainerType>
     void bootstrap_associative_container(Dispatch_Engine &system, const std::string &type)
     {
@@ -210,6 +276,10 @@ namespace dispatchkit
       bootstrap_default_constructible<ContainerType>(system, type);
     }
 
+  /**
+   * bootstrap a given PairType
+   * http://www.sgi.com/tech/stl/pair.html
+   */
   template<typename PairType>
     void bootstrap_pair(Dispatch_Engine &system, const std::string &type)
     {
@@ -225,6 +295,10 @@ namespace dispatchkit
      }
 
 
+  /**
+   * Add pair associative container concept to the given ContainerType
+   * http://www.sgi.com/tech/stl/PairAssociativeContainer.html
+   */
   template<typename ContainerType>
     void bootstrap_pair_associative_container(Dispatch_Engine &system, const std::string &type)
     {
@@ -232,6 +306,10 @@ namespace dispatchkit
       bootstrap_pair<typename ContainerType::value_type>(system, type + "_Pair");
     }
 
+  /**
+   * Add unique associative container concept to the given ContainerType
+   * http://www.sgi.com/tech/stl/UniqueAssociativeContainer.html
+   */
   template<typename ContainerType>
     void bootstrap_unique_associative_container(Dispatch_Engine &system, const std::string &type)
     {
@@ -239,6 +317,10 @@ namespace dispatchkit
       register_function(system, &ContainerType::count, "count");
     }
 
+  /**
+   * Add sorted associative container concept to the given ContainerType
+   * http://www.sgi.com/tech/stl/SortedAssociativeContainer.html
+   */
   template<typename ContainerType>
     void bootstrap_sorted_associative_container(Dispatch_Engine &system, const std::string &type)
     {
@@ -250,6 +332,10 @@ namespace dispatchkit
       register_function(system, eq_range(&ContainerType::equal_range), "equal_range");
      }
 
+  /**
+   * Add unique sorted associative container concept to the given ContainerType
+   * http://www.sgi.com/tech/stl/UniqueSortedAssociativeContainer.html
+   */
   template<typename ContainerType>
     void bootstrap_unique_sorted_associative_container(Dispatch_Engine &system, const std::string &type)
     {
@@ -257,6 +343,10 @@ namespace dispatchkit
       bootstrap_unique_associative_container<ContainerType>(system, type);
     }
 
+  /**
+   * Add a MapType container
+   * http://www.sgi.com/tech/stl/Map.html
+   */
   template<typename MapType>
     void bootstrap_map(Dispatch_Engine &system, const std::string &type)
     {
@@ -266,6 +356,10 @@ namespace dispatchkit
       bootstrap_pair_associative_container<MapType>(system, type);
     }
 
+  /**
+   * Add a String container
+   * http://www.sgi.com/tech/stl/basic_string.html
+   */
   template<typename String>
     void bootstrap_string(Dispatch_Engine &system, const std::string &type)
     {
@@ -283,7 +377,6 @@ namespace dispatchkit
       register_function(system, find_func(&String::find_first_not_of), "find_first_not_of");
       register_function(system, find_func(&String::find_last_not_of), "find_last_not_of");
     }
-
 }
 
 #endif
