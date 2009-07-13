@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
-// See LICENSE.TXT for details.
-// Copyright 2009, Jonathan Turner (jonathan.d.turner@gmail.com) 
+// See "license.txt" for details.
+// Copyright 2009, Jonathan Turner (jturner@minnow-lang.org)
 // and Jason Turner (lefticus@gmail.com)
 // http://www.chaiscript.com
 

@@ -1,12 +1,11 @@
 // This file is distributed under the BSD License.
-// See LICENSE.TXT for details.
-// Copyright 2009, Jonathan Turner (jonathan.d.turner@gmail.com) 
+// See "license.txt" for details.
+// Copyright 2009, Jonathan Turner (jturner@minnow-lang.org)
 // and Jason Turner (lefticus@gmail.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_PRELUDE_HPP_
 #define CHAISCRIPT_PRELUDE_HPP_
-
 
 //Note, the expression "[x,y]" in "collate" is parsed as two separate expressions
 //by C++, so CODE_STRING, takes two expressions and adds in the missing comma
