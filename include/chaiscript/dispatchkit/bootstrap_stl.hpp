@@ -114,13 +114,15 @@ namespace dispatchkit
   void bootstrap_random_access_container(Dispatch_Engine &system, const std::string &type)
   {
     bootstrap_reversible_container<ContainerType>(system, type);
-
     typedef typename ContainerType::reference(ContainerType::*indexoper)(size_t);
 
     //In the interest of runtime safety for the system, we prefer the at() method for [] access,
     //to throw an exception in an out of bounds condition.
-    register_function(system, indexoper(&ContainerType::at), "[]");
-    register_function(system, indexoper(&ContainerType::operator[]), "at");
+    system.register_function(
+        boost::function<typename ContainerType::reference (ContainerType *, int)>(indexoper(&ContainerType::at)), "[]");
+    system.register_function(
+        boost::function<typename ContainerType::reference (ContainerType *, int)>(indexoper(&ContainerType::operator[])), "at");
+
   }
 
   /**
