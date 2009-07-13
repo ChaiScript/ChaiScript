@@ -145,7 +145,7 @@ namespace chaiscript
                     ++input_pos;
                     ++col;
                 }
-                if (*input_pos == '.') {
+                if ((input_pos != input_end) && (*input_pos == '.')) {
                     ++input_pos;
                     ++col;
                     if ((input_pos != input_end) && (*input_pos >= '0') && (*input_pos <= '9')) {
