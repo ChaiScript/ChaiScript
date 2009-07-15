@@ -55,6 +55,18 @@ namespace dispatchkit
   /**
    * Used internally for handling a return value from a Proxy_Function call
    */
+  template<typename Ret>
+    struct Handle_Return<Ret *>
+    {
+      Boxed_Value operator()(const boost::function<Ret *()> &f)
+      {
+        return Boxed_Value(boost::ref(*f()));
+      }
+    };
+
+  /**
+   * Used internally for handling a return value from a Proxy_Function call
+   */
   template<>
     struct Handle_Return<Boxed_Value>
     {

@@ -135,7 +135,7 @@ namespace dispatchkit
                   boost::shared_ptr<Data::Shared_Ptr_Proxy>(new Data::Shared_Ptr_Proxy_Impl<T>()))
                 );
 
-            std::map<void *, Data >::iterator itr
+            std::map<const void *, Data>::iterator itr
               = m_ptrs.find(obj.get());
 
             if (itr != m_ptrs.end())
@@ -157,10 +157,18 @@ namespace dispatchkit
                   true)
                 );
 
-            std::map<void *, Data >::iterator itr
+            std::map<const void *, Data >::iterator itr
               = m_ptrs.find(obj.get_pointer());
 
-            if (itr != m_ptrs.end())
+            // If the ptr is found in the cache and it is the correct type,
+            // return it. It may be the incorrect type when two variables share the
+            // same memory location. Example:
+            // struct test { int x; };
+            // test t;
+            // Both t and t.x share the same memory location, but do not represent
+            // objects of the same type.
+            if (itr != m_ptrs.end() 
+                && itr->second.m_type_info.m_bare_type_info == data->m_type_info.m_bare_type_info)
             {
               (*data) = (itr->second);
             } 
@@ -199,13 +207,13 @@ namespace dispatchkit
          */
         void cull()
         {
-          std::map<void *, Data >::iterator itr = m_ptrs.begin();
+          std::map<const void *, Data >::iterator itr = m_ptrs.begin();
 
           while (itr != m_ptrs.end())
           {
             if (itr->second.m_ptr_proxy->unique(&itr->second.m_obj) == 1)
             {
-              std::map<void *, Data >::iterator todel = itr;
+              std::map<const void *, Data >::iterator todel = itr;
               ++itr;
               m_ptrs.erase(todel);
             } else {
@@ -214,7 +222,7 @@ namespace dispatchkit
           }
         }
 
-        std::map<void *, Data > m_ptrs;
+        std::map<const void *, Data > m_ptrs;
       };
 
     public:
