@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 2.6)
 
 project(chaiscript)
 
-#SET (CMAKE_BUILD_TYPE gdb)
-#SET (CMAKE_C_FLAGS_GDB " -Wall -ggdb")
-#SET (CMAKE_CXX_FLAGS_GDB " -Wall -ggdb")
+SET (CMAKE_BUILD_TYPE gdb)
+SET (CMAKE_C_FLAGS_GDB " -Wall -ggdb")
+SET (CMAKE_CXX_FLAGS_GDB " -Wall -ggdb")
 
-SET (CMAKE_BUILD_TYPE rel)
-SET (CMAKE_C_FLAGS_REL " -Wall -O3")
-SET (CMAKE_CXX_FLAGS_REL " -Wall -O3")
+#SET (CMAKE_BUILD_TYPE rel)
+#SET (CMAKE_C_FLAGS_REL " -Wall -O3")
+#SET (CMAKE_CXX_FLAGS_REL " -Wall -O3")
 
 include_directories(include)
  
