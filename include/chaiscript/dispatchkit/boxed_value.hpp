@@ -326,7 +326,12 @@ namespace dispatchkit
       {
         if (ob.is_ref())
         {
-          return boost::cref((boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get());
+          if (!ob.get_type_info().m_is_const)
+          {
+            return boost::cref((boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get());
+          } else {
+            return boost::any_cast<boost::reference_wrapper<const Result> >(ob.get());
+          }
         } else {
           return boost::cref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));   
         }
@@ -345,7 +350,12 @@ namespace dispatchkit
       {
         if (ob.is_ref())
         {
-          return boost::cref((boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get());
+          if (!ob.get_type_info().m_is_const)
+          {
+            return boost::cref((boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get());
+          } else {
+            return boost::any_cast<boost::reference_wrapper<const Result> >(ob.get());
+          }
         } else {
           return boost::cref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));   
         }
@@ -364,7 +374,12 @@ namespace dispatchkit
       {
         if (ob.is_ref())
         {
-          return (boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get_pointer();
+          if (!ob.get_type_info().m_is_const)
+          {
+            return (boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get_pointer();
+          } else {
+            return (boost::any_cast<boost::reference_wrapper<const Result> >(ob.get())).get_pointer();
+          }
         } else {
           return (boost::any_cast<boost::shared_ptr<Result> >(ob.get())).get();
         }
