@@ -550,12 +550,9 @@ namespace chaiscript
      */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_while(Eval_System &ss, TokenPtr node) {
-        dispatchkit::Boxed_Value retval;
-
-        retval = eval_token(ss, node->children[0]);
         bool cond;
         try {
-            cond = dispatchkit::boxed_cast<bool &>(retval);
+            cond = dispatchkit::boxed_cast<bool &>(eval_token(ss, node->children[0]));
         }
         catch (const dispatchkit::bad_boxed_cast &) {
             throw Eval_Error("While condition not boolean", node->children[0]);
@@ -563,9 +560,8 @@ namespace chaiscript
         while (cond) {
             try {
                 eval_token(ss, node->children[1]);
-                retval = eval_token(ss, node->children[0]);
                 try {
-                    cond = dispatchkit::boxed_cast<bool &>(retval);
+                    cond = dispatchkit::boxed_cast<bool &>(eval_token(ss, node->children[0]));
                 }
                 catch (const dispatchkit::bad_boxed_cast &) {
                     throw Eval_Error("While condition not boolean", node->children[0]);
@@ -583,20 +579,16 @@ namespace chaiscript
      */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_for(Eval_System &ss, TokenPtr node) {
-        dispatchkit::Boxed_Value retval;
-
-        dispatchkit::Boxed_Value condition;
         bool cond;
 
         try {
             if (node->children.size() == 4) {
                 eval_token(ss, node->children[0]);
-                condition = eval_token(ss, node->children[1]);
+                cond = dispatchkit::boxed_cast<bool &>(eval_token(ss, node->children[1]));
             }
-            else if (node->children.size() == 3){
-                condition = eval_token(ss, node->children[0]);
+            else {
+                cond = dispatchkit::boxed_cast<bool &>(eval_token(ss, node->children[0]));
             }
-            cond = dispatchkit::boxed_cast<bool &>(condition);
         }
         catch (const dispatchkit::bad_boxed_cast &) {
             throw Eval_Error("For condition not boolean", node);
@@ -606,15 +598,13 @@ namespace chaiscript
                 if (node->children.size() == 4) {
                     eval_token(ss, node->children[3]);
                     eval_token(ss, node->children[2]);
-                    condition = eval_token(ss, node->children[1]);
+                    cond = dispatchkit::boxed_cast<bool &>(eval_token(ss, node->children[1]));
                 }
-                else if (node->children.size() == 3) {
+                else {
                     eval_token(ss, node->children[2]);
                     eval_token(ss, node->children[1]);
-                    condition = eval_token(ss, node->children[0]);
+                    cond = dispatchkit::boxed_cast<bool &>(eval_token(ss, node->children[0]));
                 }
-                cond = dispatchkit::boxed_cast<bool &>(condition);
-
             }
             catch (const dispatchkit::bad_boxed_cast &) {
                 throw Eval_Error("For condition not boolean", node);
@@ -760,121 +750,120 @@ namespace chaiscript
      */
     template <typename Eval_System>
     dispatchkit::Boxed_Value eval_token(Eval_System &ss, TokenPtr node) {
-        dispatchkit::Boxed_Value retval;
-
         switch (node->identifier) {
             case (Token_Type::File) :
-                retval = eval_file(ss, node);
+                return eval_file(ss, node);
             break;
 
             case (Token_Type::Id) :
-                retval = eval_id(ss, node);
+                return eval_id(ss, node);
             break;
 
             case (Token_Type::Float) :
-                retval = eval_float(ss, node);
+                return eval_float(ss, node);
             break;
 
             case (Token_Type::Int) :
-                retval = eval_int(ss, node);
+                return eval_int(ss, node);
             break;
 
             case (Token_Type::Quoted_String) :
-                retval = eval_quoted_string(ss, node);
+                return eval_quoted_string(ss, node);
             break;
 
             case (Token_Type::Single_Quoted_String) :
-                retval = eval_single_quoted_string(ss, node);
+                return eval_single_quoted_string(ss, node);
             break;
 
             case (Token_Type::Equation) :
-                retval = eval_equation(ss, node);
+                return eval_equation(ss, node);
             break;
 
             case (Token_Type::Var_Decl) :
-                retval = eval_var_decl(ss, node);
+                return eval_var_decl(ss, node);
             break;
 
             case (Token_Type::Expression) :
-                retval = eval_expression(ss, node);
+                return eval_expression(ss, node);
             break;
 
             case (Token_Type::Comparison) :
             case (Token_Type::Additive) :
             case (Token_Type::Multiplicative) :
-                retval = eval_comp_add_mul(ss, node);
+                return eval_comp_add_mul(ss, node);
             break;
 
             case (Token_Type::Array_Call) :
-                retval = eval_array_call(ss, node);
+                return eval_array_call(ss, node);
             break;
 
             case (Token_Type::Negate) :
-                retval = eval_negate(ss, node);
+                return eval_negate(ss, node);
             break;
 
             case (Token_Type::Not) :
-                retval = eval_not(ss, node);
+                return eval_not(ss, node);
             break;
 
             case (Token_Type::Prefix) :
-                retval = eval_prefix(ss, node);
+                return eval_prefix(ss, node);
             break;
 
             case (Token_Type::Inline_Array) :
-                retval = eval_inline_array(ss, node);
+                return eval_inline_array(ss, node);
             break;
 
             case (Token_Type::Inline_Range) :
-                retval = eval_inline_range(ss, node);
+                return eval_inline_range(ss, node);
             break;
 
             case (Token_Type::Inline_Map) :
-                retval = eval_inline_map(ss, node);
+                return eval_inline_map(ss, node);
             break;
 
             case (Token_Type::Fun_Call) :
-                retval = eval_fun_call(ss, node);
+                return eval_fun_call(ss, node);
             break;
 
             case (Token_Type::Dot_Access) :
-                retval = eval_dot_access(ss, node);
+                return eval_dot_access(ss, node);
             break;
 
             case(Token_Type::If) :
-                retval = eval_if(ss, node);
+                return eval_if(ss, node);
             break;
 
             case(Token_Type::While) :
-                retval = eval_while(ss, node);
+                return eval_while(ss, node);
             break;
 
             case(Token_Type::For) :
-                retval = eval_for(ss, node);
+                return eval_for(ss, node);
             break;
 
             case (Token_Type::Def) :
-                retval = eval_def(ss, node);
+                return eval_def(ss, node);
             break;
 
             case (Token_Type::Lambda) :
-                retval = eval_lambda(ss, node);
+                return eval_lambda(ss, node);
             break;
 
             case (Token_Type::Block) :
-                retval = eval_block(ss, node);
+                return eval_block(ss, node);
             break;
 
             case (Token_Type::Return) :
-                retval = eval_return(ss, node);
+                return eval_return(ss, node);
             break;
 
             case (Token_Type::Break) :
-                retval = eval_break(ss, node);
+                return eval_break(ss, node);
             break;
-        }
 
-        return retval;
+            default :
+                return dispatchkit::Boxed_Value();
+        }
     }
 }
 #endif /* CHAISCRIPT_EVAL_HPP_ */
