@@ -442,7 +442,7 @@ namespace dispatchkit
    * Cast_Helper for casting to a boost::shared_ptr<> type
    */
   template<typename Result>
-    struct Cast_Helper<typename const boost::shared_ptr<Result> &>
+    struct Cast_Helper<const boost::shared_ptr<Result> &>
     {
       typedef typename boost::shared_ptr<Result> Result_Type;
         
