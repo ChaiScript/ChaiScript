@@ -88,7 +88,7 @@ namespace chaiscript
             engine.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
                   new dispatchkit::Dynamic_Proxy_Function(boost::bind(&ChaiScript_System<Eval_Engine>::eval, boost::ref(*this), _1), 1)), "eval");
 
-            evaluate_string(chaiscript_prelude);
+            evaluate_string(chaiscript_prelude, "standard prelude");
         }
 
         /**

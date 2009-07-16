@@ -83,40 +83,28 @@ namespace chaiscript
     };
 
     /**
-     * Errors generated inside the parser
+     * Errors generated during parsing or evaluation
      */
-    struct Parse_Error : public std::runtime_error {
+    struct Eval_Error : public std::runtime_error {
         std::string reason;
         File_Position position;
         const char *filename;
 
-        Parse_Error(const std::string &why, const File_Position &where, const char *fname) :
-            std::runtime_error("Parse error: \"" + why + "\" in '"
-                + std::string(fname) + "' at: (" + boost::lexical_cast<std::string>(where.line+1) + ", " +
-                 boost::lexical_cast<std::string>(where.column) + ")"),
+        Eval_Error(const std::string &why, const File_Position &where, const char *fname) :
+            std::runtime_error("Error: \"" + why + "\" " +
+                (std::string(fname) != "__EVAL__" ? ("in '" + std::string(fname) + "' ") : "during evaluation ") +
+                + "at (" + boost::lexical_cast<std::string>(where.line) + ", " +
+                boost::lexical_cast<std::string>(where.column) + ")"),
             reason(why), position(where), filename(fname) 
         { }
 
-        Parse_Error(const std::string &why, const TokenPtr &where) 
-            : std::runtime_error("Parse error: \"" + why + "\" in '"
-                + where->filename + "' line: " + boost::lexical_cast<std::string>(where->start.line+1)),
+        Eval_Error(const std::string &why, const TokenPtr &where)
+            : std::runtime_error("Error: \"" + why + "\" " +
+                (std::string(where->filename) != "__EVAL__" ? ("in '" + std::string(where->filename) + "' ") : "during evaluation ") +
+                "at (" + boost::lexical_cast<std::string>(where->start.line) + ", " +
+                boost::lexical_cast<std::string>(where->start.column) + ")"),
               reason(why), position(where->start), filename(where->filename) {
         }
-
-        virtual ~Parse_Error() throw() {}
-    };
-
-    /**
-     * Errors generated inside the evaluator
-     */
-    struct Eval_Error : public std::runtime_error {
-        std::string reason;
-        TokenPtr location;
-
-        Eval_Error(const std::string &why, const TokenPtr where)
-          : std::runtime_error("Eval error: \"" + why + "\" in '"
-              + where->filename + "' line: " + boost::lexical_cast<std::string>(where->start.line+1)),
-            reason(why), location(where) { }
 
         virtual ~Eval_Error() throw() {}
     };

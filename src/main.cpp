@@ -44,12 +44,6 @@ int main(int argc, char *argv[]) {
                         }
                     }
                 }
-                catch (chaiscript::Parse_Error &pe) {
-                    std::cout << pe.reason << " in " << pe.filename << " at " << pe.position.line << ", " << pe.position.column << std::endl;
-                }
-                catch (chaiscript::Eval_Error &ee) {
-                    std::cout << ee.reason << std::endl;
-                }
                 catch (std::exception &e) {
                     std::cout << e.what() << std::endl;
                 }
@@ -64,22 +58,6 @@ int main(int argc, char *argv[]) {
             std::string filename(argv[i]);
             try {
               dispatchkit::Boxed_Value val = chai.evaluate_file(argv[i]);
-            }
-            catch (chaiscript::Parse_Error &pe) {
-                if (filename != std::string("__EVAL__")) {
-                    std::cout << pe.reason << " in " << pe.filename << " at " << pe.position.line << ", " << pe.position.column << std::endl;
-                }
-                else {
-                    std::cout << pe.reason << std::endl;
-                }
-            }
-            catch (chaiscript::Eval_Error &ee) {
-                if (filename != std::string("__EVAL__")) {
-                    std::cout << ee.reason << " in '" << ee.location->filename << "' at " << ee.location->start.line  << ", " << ee.location->start.column << std::endl;
-                }
-                else {
-                    std::cout << ee.reason << std::endl;
-                }
             }
             catch (std::exception &e) {
                 std::cout << e.what() << std::endl;
