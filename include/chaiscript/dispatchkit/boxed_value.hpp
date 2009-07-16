@@ -438,6 +438,21 @@ namespace dispatchkit
       }
     };
 
+  /**
+   * Cast_Helper for casting to a boost::shared_ptr<> type
+   */
+  template<typename Result>
+    struct Cast_Helper<typename const boost::shared_ptr<Result> &>
+    {
+      typedef typename boost::shared_ptr<Result> Result_Type;
+        
+      static Result_Type cast(const Boxed_Value &ob)
+      {
+        return boost::any_cast<boost::shared_ptr<Result> >(ob.get());
+      }
+    };
+
+
 
   /**
    * Cast_Helper for casting to a Boxed_Value type
