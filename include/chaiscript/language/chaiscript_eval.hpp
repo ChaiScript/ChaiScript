@@ -525,13 +525,13 @@ namespace chaiscript
                         retval = eval_token(ss, node->children[i+1]);
                         cond = true;
                     }
-                    else if (node->children[i]->text == "elseif") {
+                    else if (node->children[i]->text == "else if") {
                         retval = eval_token(ss, node->children[i+1]);
                         try {
                             cond = dispatchkit::boxed_cast<bool &>(retval);
                         }
                         catch (const dispatchkit::bad_boxed_cast &) {
-                            throw Eval_Error("Elseif condition not boolean", node->children[i+1]);
+                            throw Eval_Error("'else if' condition not boolean", node->children[i+1]);
                         }
                         if (cond) {
                             retval = eval_token(ss, node->children[i+2]);

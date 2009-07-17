@@ -846,29 +846,32 @@ namespace chaiscript
                 while (has_matches) {
                     while (Eol());
                     has_matches = false;
-                    if (Keyword("elseif", true)) {
-                        if (!Char('(')) {
-                            throw Eval_Error("Incomplete 'elseif' expression", File_Position(line, col), filename);
-                        }
+                    if (Keyword("else", true)) {
+                        if (Keyword("if")) {
+                            match_stack.back()->text = "else if";
+                            if (!Char('(')) {
+                                throw Eval_Error("Incomplete 'else if' expression", File_Position(line, col), filename);
+                            }
 
-                        if (!(Expression() && Char(')'))) {
-                            throw Eval_Error("Incomplete 'elseif' expression", File_Position(line, col), filename);
-                        }
+                            if (!(Expression() && Char(')'))) {
+                                throw Eval_Error("Incomplete 'else if' expression", File_Position(line, col), filename);
+                            }
 
-                        while (Eol());
+                            while (Eol());
 
-                        if (!Block()) {
-                            throw Eval_Error("Incomplete 'elseif' block", File_Position(line, col), filename);
+                            if (!Block()) {
+                                throw Eval_Error("Incomplete 'else if' block", File_Position(line, col), filename);
+                            }
+                            has_matches = true;
                         }
-                        has_matches = true;
-                    }
-                    else if (Keyword("else", true)) {
-                        while (Eol());
+                        else {
+                            while (Eol());
 
-                        if (!Block()) {
-                            throw Eval_Error("Incomplete 'else' block", File_Position(line, col), filename);
+                            if (!Block()) {
+                                throw Eval_Error("Incomplete 'else' block", File_Position(line, col), filename);
+                            }
+                            has_matches = true;
                         }
-                        has_matches = true;
                     }
                 }
 

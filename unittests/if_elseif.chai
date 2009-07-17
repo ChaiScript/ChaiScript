@@ -2,10 +2,10 @@ var i = 3
 if (i == 2) {
 	print("2")
 }
-elseif (i == 4) {
+else if (i == 4) {
 	print("4") 
 }
-elseif (i == 3) {
+else if (i == 3) {
 	print("3")
 }
 
