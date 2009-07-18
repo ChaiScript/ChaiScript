@@ -489,7 +489,7 @@ namespace chaiscript
   template<typename T>
   void bootstrap_pod_type(Dispatch_Engine &s, const std::string &name)
   {
-    s.add(type_<T>(), name);
+    s.add(user_type<T>(), name);
     add_basic_constructors<T>(s, name);
     add_oper_assign<T>(s);
     add_oper_assign_pod<T>(s);
@@ -590,10 +590,10 @@ namespace chaiscript
     /**
      * return true if the Boxed_Value matches the registered type by name
      */
-    static bool is_type(const Dispatch_Engine &e, const std::string &type_name, Boxed_Value r)
+    static bool is_type(const Dispatch_Engine &e, const std::string &user_typename, Boxed_Value r)
     {
       try {
-        return e.get_type(type_name) == r.get_type_info();
+        return e.get_type(user_typename) == r.get_type_info();
       } catch (const std::range_error &) {
         return false;
       }
@@ -638,11 +638,11 @@ namespace chaiscript
      */
     static void bootstrap(Dispatch_Engine &s)
     {
-      s.add(type_<void>(), "void");
-      s.add(type_<bool>(), "bool");
-      s.add(type_<Boxed_Value>(), "Object");
-      s.add(type_<Boxed_POD_Value>(), "PODObject");
-      s.add(type_<Proxy_Function>(), "function");
+      s.add(user_type<void>(), "void");
+      s.add(user_type<bool>(), "bool");
+      s.add(user_type<Boxed_Value>(), "Object");
+      s.add(user_type<Boxed_POD_Value>(), "PODObject");
+      s.add(user_type<Proxy_Function>(), "function");
 
       add_basic_constructors<bool>(s, "bool");
       add_oper_assign<std::string>(s);

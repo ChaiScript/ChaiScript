@@ -17,7 +17,7 @@ void print_help() {
 
 int main(int argc, char *argv[]) {
     std::string input;
-    chaiscript::ChaiScript_Engine chai;
+    chaiscript::ChaiScript chai;
 
     if (argc < 2) {
         std::cout << "eval> ";
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
             else {
                 try {
                     //First, we evaluate it
-                    val = chai.evaluate_string(input);
+                    val = chai.eval(input);
 
                     //Then, we try to print the result of the evaluation to the user
                     if (val.get_type_info().m_bare_type_info && *(val.get_type_info().m_bare_type_info) != typeid(void)) {
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
         for (int i = 1; i < argc; ++i) {
             std::string filename(argv[i]);
             try {
-              chaiscript::Boxed_Value val = chai.evaluate_file(argv[i]);
+              chaiscript::Boxed_Value val = chai.eval_file(argv[i]);
             }
             catch (std::exception &e) {
                 std::cout << e.what() << std::endl;

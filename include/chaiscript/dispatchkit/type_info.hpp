@@ -118,14 +118,14 @@ namespace chaiscript
 
   
   template<typename T>
-  Type_Info type_(T)
+  Type_Info user_type(T)
   {
     return Get_Type_Info<T>::get();
   }
 
 
   template<typename T>
-  Type_Info type_()
+  Type_Info user_type()
   {
     return Get_Type_Info<T>::get();
   }

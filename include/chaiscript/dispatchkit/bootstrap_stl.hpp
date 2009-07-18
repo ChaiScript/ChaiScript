@@ -22,7 +22,7 @@ namespace chaiscript
   /**
    * Input_Range, based on the D concept of ranges.
    * \todo Update the Range code to base its capabilities on
-   *       the type_traits of the iterator passed in
+   *       the user_typetraits of the iterator passed in
    */
   template<typename Container>
     struct Input_Range
@@ -76,8 +76,8 @@ namespace chaiscript
   template<typename ContainerType>
     void bootstrap_input_range(Dispatch_Engine &system, const std::string &type)
     {
-      system.add(type_<Input_Range<ContainerType> >(), type + "_Range");
-      system.add(type_<typename ContainerType::iterator>(), type+"_Iterator");
+      system.add(user_type<Input_Range<ContainerType> >(), type + "_Range");
+      system.add(user_type<typename ContainerType::iterator>(), type+"_Iterator");
 
       system.add(constructor<Input_Range<ContainerType> (ContainerType &)>(), "range");
       system.add(constructor<Input_Range<ContainerType> (typename ContainerType::iterator)>(), "range");
@@ -86,7 +86,7 @@ namespace chaiscript
 
       system.add(constructor<Input_Range<ContainerType> (const ItrPair &)>(), "range");
 
-      system.add(type_<ItrPair>(), type+"_Iterator_Pair");
+      system.add(user_type<ItrPair>(), type+"_Iterator_Pair");
 
       system.add(fun(&Input_Range<ContainerType>::empty), "empty");
       system.add(fun(&Input_Range<ContainerType>::pop_front), "pop_front");
@@ -259,7 +259,7 @@ namespace chaiscript
   template<typename VectorType>
   void bootstrap_vector(Dispatch_Engine &system, const std::string &type)
   {
-    system.add(type_<VectorType>(), type);
+    system.add(user_type<VectorType>(), type);
     bootstrap_random_access_container<VectorType>(system, type);
     bootstrap_back_insertion_sequence<VectorType>(system, type);
   }
@@ -282,7 +282,7 @@ namespace chaiscript
   template<typename PairType>
     void bootstrap_pair(Dispatch_Engine &system, const std::string &type)
     {
-      system.add(type_<PairType>(), type);
+      system.add(user_type<PairType>(), type);
 
       system.add(fun(&PairType::first), "first");
       system.add(fun(&PairType::second), "second");
@@ -349,7 +349,7 @@ namespace chaiscript
   template<typename MapType>
     void bootstrap_map(Dispatch_Engine &system, const std::string &type)
     {
-      system.add(type_<MapType>(), type);
+      system.add(user_type<MapType>(), type);
       system.add(fun(&MapType::operator[]), "[]");
       bootstrap_unique_sorted_associative_container<MapType>(system, type);
       bootstrap_pair_associative_container<MapType>(system, type);
@@ -362,7 +362,7 @@ namespace chaiscript
   template<typename String>
     void bootstrap_string(Dispatch_Engine &system, const std::string &type)
     {
-      system.add(type_<String>(), type);
+      system.add(user_type<String>(), type);
       add_oper_add<String>(system);
       add_oper_add_equals<String>(system);
       add_opers_comparison<String>(system);

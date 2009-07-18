@@ -49,7 +49,7 @@ struct System
 int main(int argc, char *argv[]) {
   using namespace chaiscript;
 
-  ChaiScript_Engine chai;
+  ChaiScript chai;
 
   //Create a new system object and share it with the chaiscript engine
   System system;
@@ -63,12 +63,12 @@ int main(int argc, char *argv[]) {
   // The function "{ 'Callback1' + x }" is created in chaiscript and passed into our C++ application
   // in the "add_callback" function of struct System the chaiscript function is converted into a 
   // boost::function, so it can be handled and called easily and type-safely
-  chai.evaluate_string("system.add_callback('#1', fun(x) { 'Callback1 ' + x });");
+  chai.eval("system.add_callback('#1', fun(x) { 'Callback1 ' + x });");
   
   // Because we are sharing the "system" object with the chaiscript engine we have equal
   // access to it both from within chaiscript and from C++ code
   system.do_callbacks("TestString");
-  chai.evaluate_string("system.do_callbacks(\"TestString\");");
+  chai.eval("system.do_callbacks(\"TestString\");");
 
   // The log function is overloaded, therefore we have to give the C++ compiler a hint as to which
   // version we want to register. One way to do this is to create a typedef of the function pointer
@@ -78,17 +78,42 @@ int main(int argc, char *argv[]) {
   chai.add(fun(PlainLog(&log)), "log");
   chai.add(fun(ModuleLog(&log)), "log");
 
-  chai.evaluate_string("log('Test Message')");
-  chai.evaluate_string("log('Test Module', 'Test Message');");
+  chai.eval("log('Test Message')");
+
+  // A shortcut to using eval is just to use the chai operator()
+  chai("log('Test Module', 'Test Message');");
 
   //Finally, it is possible to register any boost::function as a system function, in this 
   //way, we can, for instance add a bound member function to the system
   chai.add(fun(boost::function<void ()>(boost::bind(&System::do_callbacks, boost::ref(system), "Bound Test"))), "do_callbacks");
 
   //Call bound version of do_callbacks
-  chai.evaluate_string("do_callbacks()");
+  chai("do_callbacks()");
 
   boost::function<void ()> caller = chai.functor<void ()>("fun() { system.do_callbacks(\"From Functor\"); }");
   caller();
+
+
+  //If we would like a type-safe return value from all call, we can use
+  //the templated version of eval:
+  int i = chai.eval<int>("5+5");
+
+  std::cout << "5+5: " << i << std::endl;
+
+  //Add a new variable
+  chai("var scripti = 15");
+
+  //We can even get a handle to the variables in the system
+  int &scripti = chai.eval<int &>("scripti");
+
+  std::cout << "scripti: " << scripti << std::endl;
+  scripti *= 2;
+  std::cout << "scripti (updated): " << scripti << std::endl;
+  chai("print(\"Scripti from chai: \" + to_string(scripti))");
+
+  // Add examples of handling Boxed_Values directly when needed
+
+  // Add usage model for mixed use:
+  // chai.eval("call(?, ?)", 5, "hello world"); or something
 }
 
