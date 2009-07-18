@@ -10,7 +10,7 @@
 #include "dispatchkit.hpp"
 #include "register_function.hpp"
 
-namespace dispatchkit
+namespace chaiscript 
 {
   /**
    * Set of helper functions for common operators
@@ -215,7 +215,7 @@ namespace dispatchkit
   template<typename T>
   void add_oper_equals(Dispatch_Engine &s)
   {
-    register_function(s, &equals<const T&, const T&>, "=");
+    s.add(fun(&equals<const T&, const T&>), "=");
   }
 
   /**
@@ -224,7 +224,7 @@ namespace dispatchkit
   template<typename T>
   void add_oper_add(Dispatch_Engine &s)
   {
-    register_function(s, &add<T, const T&, const T&>, "+");
+    s.add(fun(&add<T, const T&, const T&>), "+");
   }
 
   /**
@@ -233,7 +233,7 @@ namespace dispatchkit
   template<typename T>
   void add_oper_add_equals(Dispatch_Engine &s)
   {
-    register_function(s, &addsequal<T, T>, "+=");
+    s.add(fun(&addsequal<T, T>), "+=");
   }
 
   /**
@@ -242,7 +242,7 @@ namespace dispatchkit
   template<typename T>
   void add_oper_subtract(Dispatch_Engine &s)
   {
-    register_function(s, &subtract<T, const T&, const T&>, "-");
+    s.add(fun(&subtract<T, const T&, const T&>), "-");
   }
 
   /**
@@ -251,7 +251,7 @@ namespace dispatchkit
   template<typename T>
   void add_oper_divide(Dispatch_Engine &s)
   {
-    register_function(s, &divide<T, const T&, const T&>, "/");
+    s.add(fun(&divide<T, const T&, const T&>), "/");
   }
 
   /**
@@ -260,7 +260,7 @@ namespace dispatchkit
   template<typename T>
   void add_oper_multiply(Dispatch_Engine &s)
   {
-    register_function(s, &multiply<T, const T&, const T&>, "*");
+    s.add(fun(&multiply<T, const T&, const T&>), "*");
   }
 
   /**
@@ -269,7 +269,7 @@ namespace dispatchkit
   template<typename T>
   void add_oper_not_equals(Dispatch_Engine &s)
   {
-    register_function(s, &not_equals<const T&, const T&>, "!=");
+    s.add(fun(&not_equals<const T&, const T&>), "!=");
   }
 
   /**
@@ -278,7 +278,7 @@ namespace dispatchkit
   template<typename T, typename U>
   void add_oper_assign_overload(Dispatch_Engine &s)
   {
-    register_function(s, &assign<T,U>, "=");
+    s.add(fun(&assign<T,U>), "=");
   }
 
 
@@ -288,7 +288,7 @@ namespace dispatchkit
   template<typename T>
   void add_oper_assign(Dispatch_Engine &s)
   {
-    register_function(s, &assign<T,T>, "=");
+    s.add(fun(&assign<T,T>), "=");
   }
 
 
@@ -298,7 +298,7 @@ namespace dispatchkit
   template<typename T>
   void add_oper_assign_pod(Dispatch_Engine &s)
   {
-    register_function(s, &assign_pod<T>, "=");
+    s.add(fun(&assign_pod<T>), "=");
   }
 
 
@@ -308,7 +308,7 @@ namespace dispatchkit
   template<typename T>
   void add_oper_less_than(Dispatch_Engine &s)
   {
-    register_function(s, &less_than<const T&, const T&>, "<");
+    s.add(fun(&less_than<const T&, const T&>), "<");
   }
 
   /**
@@ -317,7 +317,7 @@ namespace dispatchkit
   template<typename T>
   void add_oper_greater_than(Dispatch_Engine &s)
   {
-    register_function(s, &greater_than<const T&, const T&>, ">");
+    s.add(fun(&greater_than<const T&, const T&>), ">");
   }
 
   /**
@@ -326,7 +326,7 @@ namespace dispatchkit
   template<typename T>
   void add_oper_less_than_equals(Dispatch_Engine &s)
   {
-    register_function(s, &less_than_equals<const T&, const T&>, "<=");
+    s.add(fun(&less_than_equals<const T&, const T&>), "<=");
   }
 
   /**
@@ -335,7 +335,7 @@ namespace dispatchkit
   template<typename T>
   void add_oper_greater_than_equals(Dispatch_Engine &s)
   {
-    register_function(s, &greater_than_equals<const T&, const T&>, ">=");
+    s.add(fun(&greater_than_equals<const T&, const T&>), ">=");
   }
 
   /**
@@ -345,12 +345,12 @@ namespace dispatchkit
   template<typename T, typename R>
   void add_opers_comparison_overload(Dispatch_Engine &s)
   {
-    register_function(s, &equals<const T&, const R&>, "==");
-    register_function(s, &not_equals<const T&, const R&>, "!=");
-    register_function(s, &less_than<const T&, const R&>, "<");
-    register_function(s, &greater_than<const T&, const R&>, ">");
-    register_function(s, &less_than_equals<const T&, const R&>, "<=");
-    register_function(s, &greater_than_equals<const T&, const R&>, ">=");
+    s.add(fun(&equals<const T&, const R&>), "==");
+    s.add(fun(&not_equals<const T&, const R&>), "!=");
+    s.add(fun(&less_than<const T&, const R&>), "<");
+    s.add(fun(&greater_than<const T&, const R&>), ">");
+    s.add(fun(&less_than_equals<const T&, const R&>), "<=");
+    s.add(fun(&greater_than_equals<const T&, const R&>), ">=");
   }
 
   /**
@@ -372,18 +372,18 @@ namespace dispatchkit
   template<typename Ret, typename T, typename R>
   void add_opers_arithmetic_overload(Dispatch_Engine &s)
   {
-    register_function(s, &add<Ret, T, R>, "+");
-    register_function(s, &subtract<Ret, T, R>, "-");
-    register_function(s, &divide<Ret, T, R>, "/");
-    register_function(s, &multiply<Ret, T, R>, "*");
-    register_function(s, &timesequal<T, R>, "*=");
-    register_function(s, &dividesequal<T, R>, "/=");
-    register_function(s, &subtractsequal<T, R>, "-=");
-    register_function(s, &addsequal<T, R>, "+=");
-    register_function(s, &prefixincrement<T>, "++");
-    register_function(s, &prefixdecrement<T>, "--");
-    register_function(s, &prefixnegate<T>, "-");
-    register_function(s, &prefixnot<T>, "!");
+    s.add(fun(&add<Ret, T, R>), "+");
+    s.add(fun(&subtract<Ret, T, R>), "-");
+    s.add(fun(&divide<Ret, T, R>), "/");
+    s.add(fun(&multiply<Ret, T, R>), "*");
+    s.add(fun(&timesequal<T, R>), "*=");
+    s.add(fun(&dividesequal<T, R>), "/=");
+    s.add(fun(&subtractsequal<T, R>), "-=");
+    s.add(fun(&addsequal<T, R>), "+=");
+    s.add(fun(&prefixincrement<T>), "++");
+    s.add(fun(&prefixdecrement<T>), "--");
+    s.add(fun(&prefixnegate<T>), "-");
+    s.add(fun(&prefixnot<T>), "!");
   }
 
   /**
@@ -393,10 +393,10 @@ namespace dispatchkit
   template<typename T>
   void add_opers_arithmetic_modify_pod(Dispatch_Engine &s)
   {
-    register_function(s, &timesequal_pod<T>, "*=");
-    register_function(s, &dividesequal_pod<T>, "/=");
-    register_function(s, &subtractsequal_pod<T>, "-=");
-    register_function(s, &addsequal_pod<T>, "+=");
+    s.add(fun(&timesequal_pod<T>), "*=");
+    s.add(fun(&dividesequal_pod<T>), "/=");
+    s.add(fun(&subtractsequal_pod<T>), "-=");
+    s.add(fun(&addsequal_pod<T>), "+=");
   }
 
   /**
@@ -407,8 +407,8 @@ namespace dispatchkit
   template<typename T>
     void add_copy_constructor(Dispatch_Engine &s, const std::string &type)
     {
-      s.register_function(build_constructor<T, const T &>(), type);
-      s.register_function(build_constructor<T, const T &>(), "clone");
+      s.add(constructor<T (const T &)>(), type);
+      s.add(constructor<T (const T &)>(), "clone");
     }
 
   /**
@@ -417,7 +417,7 @@ namespace dispatchkit
   template<typename T>
   void add_basic_constructors(Dispatch_Engine &s, const std::string &type)
   {
-    s.register_function(build_constructor<T>(), type);
+    s.add(constructor<T ()>(), type);
     add_copy_constructor<T>(s, type);
   }
 
@@ -427,7 +427,7 @@ namespace dispatchkit
   template<typename T>
   void add_construct_pod(Dispatch_Engine &s, const std::string &type)
   {
-    register_function(s, &construct_pod<T>, type);
+    s.add(fun(&construct_pod<T>), type);
   }
 
   /**
@@ -437,7 +437,7 @@ namespace dispatchkit
   template<typename T, typename U>
   void add_constructor_overload(Dispatch_Engine &s, const std::string &type)
   {
-    s.register_function(build_constructor<T, const U &>(), type);
+    s.add(constructor<T (const U &)>(), type);
   }
 
   /**
@@ -489,22 +489,22 @@ namespace dispatchkit
   template<typename T>
   void bootstrap_pod_type(Dispatch_Engine &s, const std::string &name)
   {
-    s.register_type<T>(name);
+    s.add(type_<T>(), name);
     add_basic_constructors<T>(s, name);
     add_oper_assign<T>(s);
     add_oper_assign_pod<T>(s);
     add_construct_pod<T>(s, name);
     add_opers_arithmetic<T>(s);
     add_opers_arithmetic_modify_pod<T>(s);
-    register_function(s, &to_string<T>, "to_string");
-    register_function(s, &parse_string<T>, "to_" + name);
+    s.add(fun(&to_string<T>), "to_string");
+    s.add(fun(&parse_string<T>), "to_" + name);
   }
 
   /**
    * "clone" function for a shared_ptr type. This is used in the case
    * where you do not want to make a deep copy of an object during cloning
    * but want to instead maintain the shared_ptr. It is needed internally
-   * for handling of boost::shared_ptr<Proxy_Function> object (that is,
+   * for handling of Proxy_Function object (that is,
    * function variables.
    */
   template<typename Type>
@@ -560,12 +560,12 @@ namespace dispatchkit
      */
     static void add_opers_comparison_pod(Dispatch_Engine &s)
     {
-      register_function(s, &equals<Boxed_POD_Value, Boxed_POD_Value>, "==");
-      register_function(s, &not_equals<Boxed_POD_Value, Boxed_POD_Value>, "!=");
-      register_function(s, &less_than<Boxed_POD_Value, Boxed_POD_Value>, "<");
-      register_function(s, &greater_than<Boxed_POD_Value, Boxed_POD_Value>, ">");
-      register_function(s, &less_than_equals<Boxed_POD_Value, Boxed_POD_Value>, "<=");
-      register_function(s, &greater_than_equals<Boxed_POD_Value, Boxed_POD_Value>, ">=");
+      s.add(fun(&equals<Boxed_POD_Value, Boxed_POD_Value>), "==");
+      s.add(fun(&not_equals<Boxed_POD_Value, Boxed_POD_Value>), "!=");
+      s.add(fun(&less_than<Boxed_POD_Value, Boxed_POD_Value>), "<");
+      s.add(fun(&greater_than<Boxed_POD_Value, Boxed_POD_Value>), ">");
+      s.add(fun(&less_than_equals<Boxed_POD_Value, Boxed_POD_Value>), "<=");
+      s.add(fun(&greater_than_equals<Boxed_POD_Value, Boxed_POD_Value>), ">=");
     }
 
     /**
@@ -573,10 +573,10 @@ namespace dispatchkit
      */
     static void add_opers_arithmetic_pod(Dispatch_Engine &s)
     {
-      register_function(s, &add<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>, "+");
-      register_function(s, &subtract<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>, "-");
-      register_function(s, &divide<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>, "/");
-      register_function(s, &multiply<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>, "*");
+      s.add(fun(&add<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "+");
+      s.add(fun(&subtract<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "-");
+      s.add(fun(&divide<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "/");
+      s.add(fun(&multiply<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "*");
     }
 
     /**
@@ -611,9 +611,9 @@ namespace dispatchkit
         throw arity_error(params.size(), 2);
       }
 
-      boost::shared_ptr<Proxy_Function> f = boxed_cast<boost::shared_ptr<Proxy_Function> >(params[0]);
+      Proxy_Function f = boxed_cast<Proxy_Function >(params[0]);
 
-      return Boxed_Value(boost::shared_ptr<Proxy_Function>(new Bound_Function(f,
+      return Boxed_Value(Proxy_Function(new Bound_Function(f,
             std::vector<Boxed_Value>(params.begin() + 1, params.end()))));
     }
 
@@ -628,7 +628,7 @@ namespace dispatchkit
         throw arity_error(params.size(), 1);
       }
 
-      boost::shared_ptr<Proxy_Function> f = boxed_cast<boost::shared_ptr<Proxy_Function> >(params[0]);
+      Proxy_Function f = boxed_cast<Proxy_Function >(params[0]);
 
       return Boxed_Value(f->types_match(std::vector<Boxed_Value>(params.begin() + 1, params.end())));
     }
@@ -638,19 +638,19 @@ namespace dispatchkit
      */
     static void bootstrap(Dispatch_Engine &s)
     {
-      s.register_type<void>("void");
-      s.register_type<bool>("bool");
-      s.register_type<Boxed_Value>("Object");
-      s.register_type<Boxed_POD_Value>("PODObject");
-      s.register_type<Proxy_Function>("function");
+      s.add(type_<void>(), "void");
+      s.add(type_<bool>(), "bool");
+      s.add(type_<Boxed_Value>(), "Object");
+      s.add(type_<Boxed_POD_Value>(), "PODObject");
+      s.add(type_<Proxy_Function>(), "function");
 
       add_basic_constructors<bool>(s, "bool");
       add_oper_assign<std::string>(s);
       add_oper_assign<bool>(s);
 
-      register_function(s, &to_string<const std::string &>, "internal_to_string");
-      register_function(s, &to_string<bool>, "internal_to_string");
-      register_function(s, &unknown_assign, "=");
+      s.add(fun(&to_string<const std::string &>), "internal_to_string");
+      s.add(fun(&to_string<bool>), "internal_to_string");
+      s.add(fun(&unknown_assign), "=");
 
       bootstrap_pod_type<double>(s, "double");
       bootstrap_pod_type<int>(s, "int");
@@ -660,26 +660,26 @@ namespace dispatchkit
 
       add_opers_comparison_pod(s);
       add_opers_arithmetic_pod(s);
-      register_function(s, &modulus<int, int, int>, "%");
+      s.add(fun(&modulus<int, int, int>), "%");
 
-      register_function(s, &print, "print_string");
-      register_function(s, &println, "println_string");
+      s.add(fun(&print), "print_string");
+      s.add(fun(&println), "println_string");
 
-      s.register_function(boost::function<void ()>(boost::bind(&dump_system, boost::ref(s))), "dump_system");
-      s.register_function(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1, boost::ref(s))), "dump_object");
-      s.register_function(boost::function<bool (Boxed_Value, const std::string &)>(boost::bind(&is_type, boost::ref(s), _2, _1)),
+      s.add(fun(boost::function<void ()>(boost::bind(&dump_system, boost::ref(s)))), "dump_system");
+      s.add(fun(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1, boost::ref(s)))), "dump_object");
+      s.add(fun(boost::function<bool (Boxed_Value, const std::string &)>(boost::bind(&is_type, boost::ref(s), _2, _1))),
           "is_type");
 
-      s.register_function(boost::shared_ptr<Proxy_Function>(new Dynamic_Proxy_Function(boost::bind(&bind_function, _1))), 
+      s.add(Proxy_Function(new Dynamic_Proxy_Function(boost::bind(&bind_function, _1))), 
           "bind");
 
-      register_function(s, &shared_ptr_clone<Proxy_Function>, "clone");
-      register_function(s, &ptr_assign<Proxy_Function>, "=");
+      s.add(fun(&shared_ptr_clone<Proxy_Function_Base>), "clone");
+      s.add(fun(&ptr_assign<Proxy_Function_Base>), "=");
 
-      s.register_function(boost::shared_ptr<Proxy_Function>(new Dynamic_Proxy_Function(boost::bind(&call_exists, _1))), 
+      s.add(Proxy_Function(new Dynamic_Proxy_Function(boost::bind(&call_exists, _1))), 
           "call_exists");
 
-      register_function(s, &type_match, "type_match");
+      s.add(fun(&type_match), "type_match");
     }
   };
 }

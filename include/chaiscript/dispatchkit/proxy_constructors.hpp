@@ -19,17 +19,28 @@
 #define BOOST_PP_FILENAME_1 <chaiscript/dispatchkit/proxy_constructors.hpp>
 #include BOOST_PP_ITERATE()
 # endif
+
+namespace chaiscript
+{
+  template<typename T>
+    Proxy_Function constructor()
+    {
+      T *f;
+      return (build_constructor_(f));
+    }
+}
+
 #else
 # define n BOOST_PP_ITERATION()
 
-namespace dispatchkit
+namespace chaiscript
 {
   /**
    * A constructor function, used for creating a new object
    * of a given type with a given set of params
    */
   template<typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-    boost::shared_ptr<Class> constructor( BOOST_PP_ENUM_BINARY_PARAMS(n, Param, p) )
+    boost::shared_ptr<Class> constructor_( BOOST_PP_ENUM_BINARY_PARAMS(n, Param, p) )
     {
       return boost::shared_ptr<Class>(new Class( BOOST_PP_ENUM_PARAMS(n, p) ));
     }
@@ -41,10 +52,10 @@ namespace dispatchkit
    * \todo See if it is possible to make this not be a variadic function
    */
   template<typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-    boost::function<boost::shared_ptr<Class> (BOOST_PP_ENUM_PARAMS(n, Param))> build_constructor()
+    Proxy_Function build_constructor_(Class (*f)(BOOST_PP_ENUM_PARAMS(n, Param)))
     {
-      typedef boost::shared_ptr<Class> (*func)(BOOST_PP_ENUM_PARAMS(n, Param));
-      return boost::function<boost::shared_ptr<Class> (BOOST_PP_ENUM_PARAMS(n, Param))>(func(&(constructor<Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>)));
+      typedef boost::shared_ptr<Class> (sig)(BOOST_PP_ENUM_PARAMS(n, Param));
+      return Proxy_Function(new Proxy_Function_Impl<sig>(&(constructor_<Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>)));
     }
 }
 

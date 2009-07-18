@@ -27,6 +27,27 @@ namespace chaiscript
         }
 
         /**
+         * Adds an object to the system: type, function, object
+         */
+        template<typename T>
+          void add(const T &t, const std::string &name)
+          {
+              engine.add(t, name);
+          }
+        /**
+         * Helper for calling script code as if it were native C++ code
+         * example:
+         * boost::function<int (int, int)> f = build_functor(chai, "func(x, y){x+y}");
+         * \return a boost::function representing the passed in script
+         * \param[in] script Script code to build a function from
+         */
+        template<typename FunctionType>
+          boost::function<FunctionType> functor(const std::string &script)
+          {
+            return chaiscript::functor<FunctionType>(evaluate_string(script));
+          }
+
+        /**
          * Returns the current evaluation engine
          */
         Eval_Engine &get_eval_engine() {
@@ -46,9 +67,9 @@ namespace chaiscript
         /**
          * Evaluates the given boxed string, used during eval() inside of a script
          */
-        const dispatchkit::Boxed_Value eval(const std::vector<dispatchkit::Boxed_Value> &vals) {
+        const Boxed_Value eval(const std::vector<Boxed_Value> &vals) {
             std::string val;
-            val = dispatchkit::boxed_cast<std::string &>(vals[0]);
+            val = boxed_cast<std::string &>(vals[0]);
 
             return evaluate_string(val);
         }
@@ -79,14 +100,14 @@ namespace chaiscript
          * Builds all the requirements for ChaiScript, including its evaluator and a run of its prelude.
          */
         void build_eval_system() {
-            dispatchkit::Bootstrap::bootstrap(engine);
-            dispatchkit::bootstrap_vector<std::vector<dispatchkit::Boxed_Value> >(engine, "Vector");
-            dispatchkit::bootstrap_string<std::string>(engine, "string");
-            dispatchkit::bootstrap_map<std::map<std::string, dispatchkit::Boxed_Value> >(engine, "Map");
-            dispatchkit::bootstrap_pair<std::pair<dispatchkit::Boxed_Value, dispatchkit::Boxed_Value > >(engine, "Pair");
+            Bootstrap::bootstrap(engine);
+            bootstrap_vector<std::vector<Boxed_Value> >(engine, "Vector");
+            bootstrap_string<std::string>(engine, "string");
+            bootstrap_map<std::map<std::string, Boxed_Value> >(engine, "Map");
+            bootstrap_pair<std::pair<Boxed_Value, Boxed_Value > >(engine, "Pair");
 
-            engine.register_function(boost::shared_ptr<dispatchkit::Proxy_Function>(
-                  new dispatchkit::Dynamic_Proxy_Function(boost::bind(&ChaiScript_System<Eval_Engine>::eval, boost::ref(*this), _1), 1)), "eval");
+            engine.add(Proxy_Function(
+                  new Dynamic_Proxy_Function(boost::bind(&ChaiScript_System<Eval_Engine>::eval, boost::ref(*this), _1), 1)), "eval");
 
             evaluate_string(chaiscript_prelude, "standard prelude");
         }
@@ -94,9 +115,9 @@ namespace chaiscript
         /**
          * Evaluates the given string in by parsing it and running the results through the evaluator
          */
-        dispatchkit::Boxed_Value evaluate_string(const std::string &input, const char *filename = "__EVAL__") {
+        Boxed_Value evaluate_string(const std::string &input, const char *filename = "__EVAL__") {
             //debug_print(tokens);
-            dispatchkit::Boxed_Value value;
+            Boxed_Value value;
             parser.clear_match_stack();
 
             try {
@@ -115,12 +136,12 @@ namespace chaiscript
         /**
          * Loads the file specified by filename, evaluates it, and returns the result
          */
-        dispatchkit::Boxed_Value evaluate_file(const char *filename) {
+        Boxed_Value evaluate_file(const char *filename) {
             return evaluate_string(load_file(filename), filename);
         }
     };
 
-    typedef ChaiScript_System<dispatchkit::Dispatch_Engine> ChaiScript_Engine;
+    typedef ChaiScript_System<Dispatch_Engine> ChaiScript_Engine;
 }
 #endif /* CHAISCRIPT_ENGINE_HPP_ */
 

@@ -14,8 +14,15 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
-namespace dispatchkit
+namespace chaiscript
 {
+  template<typename T>
+    Proxy_Function fun(const boost::function<T> &f)
+    {
+      return Proxy_Function(new Proxy_Function_Impl<T>(f));
+    }
+
+
   /**
    * Helper function for register_member function
    */
@@ -31,10 +38,11 @@ namespace dispatchkit
    * for example, the case of std::pair<>::first and std::pair<>::second
    */
   template<typename T, typename Class>
-    void register_member(Dispatch_Engine &s, T Class::* m, const std::string &name)
+    Proxy_Function fun(T Class::* m)
     {
-      s.register_function(boost::function<T& (Class *)>(boost::bind(&get_member<T, Class>, m, _1)), name);
+      return fun(boost::function<T& (Class *)>(boost::bind(&get_member<T, Class>, m, _1)));
     }
+
 }
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
@@ -45,33 +53,33 @@ namespace dispatchkit
 #else
 # define n BOOST_PP_ITERATION()
 
-namespace dispatchkit
+namespace chaiscript
 {
   /**
    * Register a global function of n parameters with name 
    */
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-    void register_function(Dispatch_Engine &s, Ret (*f)(BOOST_PP_ENUM_PARAMS(n, Param)), const std::string &name)
+    Proxy_Function fun(Ret (*f)(BOOST_PP_ENUM_PARAMS(n, Param)))
     {
-      s.register_function(boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))>(f), name);
+      return fun(boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))>(f));
     }
 
   /**
    * Register a class method of n parameters with name 
    */
   template<typename Ret, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-    void register_function(Dispatch_Engine &s, Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)), const std::string &name)
+    Proxy_Function fun(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)))
     {
-      s.register_function(boost::function<Ret (Class* BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param))>(f), name);
+      return fun(boost::function<Ret (Class* BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param))>(f));
     }
 
   /**
    * Register a const class method of n parameters with name 
    */
   template<typename Ret, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-    void register_function(Dispatch_Engine &s, Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param))const, const std::string &name)
+    Proxy_Function fun(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param))const)
     {
-      s.register_function(boost::function<Ret (const Class* BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param))>(f), name);
+      return fun(boost::function<Ret (const Class* BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param))>(f));
     }
 }
 

@@ -20,7 +20,7 @@
 #include "dispatchkit/dispatchkit.hpp"
 #include "dispatchkit/bootstrap.hpp"
 #include "dispatchkit/bootstrap_stl.hpp"
-
+#include "dispatchkit/function_call.hpp"
 namespace chaiscript
 {
     /**
@@ -113,10 +113,10 @@ namespace chaiscript
      * Special type for returned values
      */
     struct Return_Value {
-        dispatchkit::Boxed_Value retval;
+        Boxed_Value retval;
         TokenPtr location;
 
-        Return_Value(const dispatchkit::Boxed_Value &return_value, const TokenPtr where) : retval(return_value), location(where) { }
+        Return_Value(const Boxed_Value &return_value, const TokenPtr where) : retval(return_value), location(where) { }
     };
 
     /**

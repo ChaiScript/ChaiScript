@@ -21,7 +21,7 @@
 #include <vector>
 #include "proxy_functions.hpp"
 
-namespace dispatchkit
+namespace chaiscript
 {
   /**
    * Internal helper class for handling the return
@@ -35,7 +35,7 @@ namespace dispatchkit
         {
         }
 
-        Ret call(const std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > &t_funcs, 
+        Ret call(const std::vector<std::pair<std::string, Proxy_Function > > &t_funcs, 
                  const std::vector<Boxed_Value> &params)
         {
           return boxed_cast<Ret>(dispatch(t_funcs, params));
@@ -53,7 +53,7 @@ namespace dispatchkit
         {
         }
 
-        void call(const std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > &t_funcs, 
+        void call(const std::vector<std::pair<std::string, Proxy_Function > > &t_funcs, 
                   const std::vector<Boxed_Value> &params)
         {
           dispatch(t_funcs, params);
@@ -65,7 +65,7 @@ namespace dispatchkit
 #define BOOST_PP_FILENAME_1 <chaiscript/dispatchkit/function_call.hpp>
 #include BOOST_PP_ITERATE()
 
-namespace dispatchkit
+namespace chaiscript
 {
   /**
    * Build a function caller that knows how to dispatch on a set of functions
@@ -77,7 +77,7 @@ namespace dispatchkit
    */
   template<typename FunctionType>
     boost::function<FunctionType>
-      build_function_caller(const std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > &funcs)
+      functor(const std::vector<std::pair<std::string, Proxy_Function > > &funcs)
       {
         FunctionType *p;
         return build_function_caller_helper(p, funcs);
@@ -88,7 +88,7 @@ namespace dispatchkit
    * useful in the case that a function is being pass out from scripting back
    * into code
    * example: 
-   * void my_function(boost::shared_ptr<Proxy_Function> f)
+   * void my_function(Proxy_Function f)
    * {
    *   boost::function<void (int)> local_f = 
    *      build_function_caller(f);
@@ -98,11 +98,11 @@ namespace dispatchkit
    */
   template<typename FunctionType>
     boost::function<FunctionType>
-      build_function_caller(boost::shared_ptr<Proxy_Function> func)
+      functor(Proxy_Function func)
       {
-        std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > funcs;
+        std::vector<std::pair<std::string, Proxy_Function > > funcs;
         funcs.push_back(std::make_pair(std::string(), func));
-        return build_function_caller<FunctionType>(funcs);
+        return functor<FunctionType>(funcs);
       }
 
   /**
@@ -111,37 +111,24 @@ namespace dispatchkit
    */
   template<typename FunctionType>
     boost::function<FunctionType>
-      build_function_caller(const Boxed_Value &bv)
+      functor(const Boxed_Value &bv)
       {
-        return build_function_caller<FunctionType>(boxed_cast<boost::shared_ptr<Proxy_Function> >(bv));
+        return functor<FunctionType>(boxed_cast<Proxy_Function >(bv));
       }
 
-  /**
-   * Helper for calling script code as if it were native C++ code
-   * example:
-   * boost::function<int (int, int)> f = build_functor(chai, "func(x, y){x+y}");
-   * \return a boost::function representing the passed in script
-   * \param[in] e ScriptEngine to build the script execution from
-   * \param[in] script Script code to build a function from
-   */
-  template<typename FunctionType, typename ScriptEngine>
-    boost::function<FunctionType> build_functor(ScriptEngine &e, const std::string &script)
-    {
-      return build_function_caller<FunctionType>(e.evaluate_string(script));
-    }
 }
 
 # endif
 #else
 # define n BOOST_PP_ITERATION()
 
-namespace dispatchkit
+namespace chaiscript
 {
   /**
    * used internally for unwrapping a function call's types
    */
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-    Ret function_caller(const std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > &funcs 
+    Ret function_caller(const std::vector<std::pair<std::string, Proxy_Function > > &funcs 
         BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_BINARY_PARAMS(n, Param, p) )
     {
       std::vector<Boxed_Value> params;
@@ -156,7 +143,7 @@ namespace dispatchkit
    */
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
     boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param)) > 
-      build_function_caller_helper(Ret (BOOST_PP_ENUM_PARAMS(n, Param)), const std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > &funcs)
+      build_function_caller_helper(Ret (BOOST_PP_ENUM_PARAMS(n, Param)), const std::vector<std::pair<std::string, Proxy_Function> > &funcs)
       {
         return boost::bind(&function_caller<Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>, funcs
             BOOST_PP_ENUM_TRAILING(n, curry, ~));

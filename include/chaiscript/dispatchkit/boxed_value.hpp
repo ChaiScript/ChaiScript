@@ -17,7 +17,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/type_traits/add_const.hpp>
 
-namespace dispatchkit
+namespace chaiscript 
 {
   /**
    * Boxed_Value is the main tool of the dispatchkit. It allows
@@ -146,6 +146,12 @@ namespace dispatchkit
             }
 
             return data;
+          }
+
+        template<typename T>
+          boost::shared_ptr<Data> get(T *t)
+          {
+            return get(boost::ref(*t));
           }
 
         template<typename T>
@@ -670,6 +676,12 @@ namespace dispatchkit
         return Boxed_POD_Value(ob);
       }
     };
+
+  template<typename T>
+    Boxed_Value var(T t)
+    {
+      return Boxed_Value(t);
+    }
 }
 
 #endif

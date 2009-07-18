@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
         std::getline(std::cin, input);
         while (input != "quit") {
 
-            dispatchkit::Boxed_Value val;
+            chaiscript::Boxed_Value val;
 
             if (input == "help") {
                 print_help();
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
                     //Then, we try to print the result of the evaluation to the user
                     if (val.get_type_info().m_bare_type_info && *(val.get_type_info().m_bare_type_info) != typeid(void)) {
                         try {
-                            dispatchkit::dispatch(chai.get_eval_engine().get_function("print"), dispatchkit::Param_List_Builder() << val);
+                            chaiscript::dispatch(chai.get_eval_engine().get_function("print"), chaiscript::Param_List_Builder() << val);
                         }
                         catch (...) {
                             //If we can't, do nothing
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
         for (int i = 1; i < argc; ++i) {
             std::string filename(argv[i]);
             try {
-              dispatchkit::Boxed_Value val = chai.evaluate_file(argv[i]);
+              chaiscript::Boxed_Value val = chai.evaluate_file(argv[i]);
             }
             catch (std::exception &e) {
                 std::cout << e.what() << std::endl;

@@ -7,9 +7,9 @@
 #include <boost/preprocessor.hpp>
 
 #define gettypeinfo(z,n,text)  ti.push_back(Get_Type_Info<Param ## n>::get());
-#define casthelper(z,n,text) ,dispatchkit::boxed_cast< Param ## n >(params[n])
+#define casthelper(z,n,text) ,chaiscript::boxed_cast< Param ## n >(params[n])
 #define comparetype(z,n,text)  && ((Get_Type_Info<Param ## n>::get() == params[n].get_type_info()))
-#define trycast(z,n,text) dispatchkit::boxed_cast<Param ## n>(params[n]);
+#define trycast(z,n,text) chaiscript::boxed_cast<Param ## n>(params[n]);
 
 
 #ifndef  BOOST_PP_IS_ITERATING
@@ -26,7 +26,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace dispatchkit
+namespace chaiscript
 {
   /**
    * Used internally for handling a return value from a Proxy_Function call
@@ -49,18 +49,6 @@ namespace dispatchkit
       Boxed_Value operator()(const boost::function<Ret &()> &f)
       {
         return Boxed_Value(boost::ref(f()));
-      }
-    };
-
-  /**
-   * Used internally for handling a return value from a Proxy_Function call
-   */
-  template<typename Ret>
-    struct Handle_Return<Ret *>
-    {
-      Boxed_Value operator()(const boost::function<Ret *()> &f)
-      {
-        return Boxed_Value(boost::ref(*f()));
       }
     };
 
@@ -107,7 +95,7 @@ namespace dispatchkit
    *
    * example usage:
    * Boxed_Value retval = dispatch(dispatchengine.get_function("+"), 
-   *                               dispatchkit::Param_List_Builder() << 5 << 6);
+   *                               chaiscript::Param_List_Builder() << 5 << 6);
    */
   struct Param_List_Builder
   {
@@ -154,7 +142,7 @@ namespace dispatchkit
 #define BOOST_PP_FILENAME_1 <chaiscript/dispatchkit/proxy_functions.hpp>
 #include BOOST_PP_ITERATE()
 
-namespace dispatchkit
+namespace chaiscript
 {
   /**
    * Pure virtual base class for all Proxy_Function implementations
@@ -164,16 +152,18 @@ namespace dispatchkit
    * Dispatch_Engine only knows how to work with Proxy_Function, no other
    * function classes.
    */
-  class Proxy_Function
+  class Proxy_Function_Base
   {
     public:
-      virtual ~Proxy_Function() {}
+      virtual ~Proxy_Function_Base() {}
       virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) = 0;
       virtual std::vector<Type_Info> get_param_types() const = 0;
-      virtual bool operator==(const Proxy_Function &) const = 0;
+      virtual bool operator==(const Proxy_Function_Base &) const = 0;
       virtual bool types_match(const std::vector<Boxed_Value> &types) const = 0;
       virtual std::string annotation() const = 0;
   };
+
+  typedef boost::shared_ptr<Proxy_Function_Base> Proxy_Function;
 
   /**
    * Exception thrown if a function's guard fails to execute
@@ -193,19 +183,19 @@ namespace dispatchkit
    * A Proxy_Function implementation that is not type safe, the called function
    * is expecting a vector<Boxed_Value> that it works with how it chooses.
    */
-  class Dynamic_Proxy_Function : public Proxy_Function
+  class Dynamic_Proxy_Function : public Proxy_Function_Base
   {
     public:
       Dynamic_Proxy_Function(
           const boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> &t_f, 
           int t_arity=-1,
           const std::string &t_description = "",
-          const boost::shared_ptr<Proxy_Function> &t_guard = boost::shared_ptr<Proxy_Function>())
+          const Proxy_Function &t_guard = Proxy_Function())
         : m_f(t_f), m_arity(t_arity), m_description(t_description), m_guard(t_guard)
       {
       }
 
-      virtual bool operator==(const Proxy_Function &) const
+      virtual bool operator==(const Proxy_Function_Base &) const
       {
         return false;
       }
@@ -279,7 +269,7 @@ namespace dispatchkit
       boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
       int m_arity;
       std::string m_description;
-      boost::shared_ptr<Proxy_Function> m_guard;
+      Proxy_Function m_guard;
   };
 
   /**
@@ -296,16 +286,16 @@ namespace dispatchkit
    * at runtime, when call() is executed.
    * it is used for bind(function, param1, _, param2) style calls
    */
-  class Bound_Function : public Proxy_Function
+  class Bound_Function : public Proxy_Function_Base
   {
     public:
-      Bound_Function(const boost::shared_ptr<Proxy_Function> &t_f, 
+      Bound_Function(const Proxy_Function &t_f, 
                      const std::vector<Boxed_Value> &t_args)
         : m_f(t_f), m_args(t_args)
       {
       }
 
-      virtual bool operator==(const Proxy_Function &) const
+      virtual bool operator==(const Proxy_Function_Base &) const
       {
         return false;
       }
@@ -372,7 +362,7 @@ namespace dispatchkit
       }
 
     private:
-      boost::shared_ptr<Proxy_Function> m_f;
+      Proxy_Function m_f;
       std::vector<Boxed_Value> m_args;
   };
 
@@ -382,17 +372,17 @@ namespace dispatchkit
    * type checking of Boxed_Value parameters, in a type safe manner
    */
   template<typename Func>
-    class Proxy_Function_Impl : public Proxy_Function
+    class Proxy_Function_Impl : public Proxy_Function_Base
   {
     public:
-      Proxy_Function_Impl(const Func &f)
+      Proxy_Function_Impl(const boost::function<Func> &f)
         : m_f(f)
       {
       }
 
       virtual ~Proxy_Function_Impl() {}
 
-      virtual bool operator==(const Proxy_Function &t_func) const
+      virtual bool operator==(const Proxy_Function_Base &t_func) const
       {
         try {
           dynamic_cast<const Proxy_Function_Impl<Func> &>(t_func);
@@ -409,12 +399,14 @@ namespace dispatchkit
 
       virtual std::vector<Type_Info> get_param_types() const
       {
-        return build_param_type_list(m_f);
+        Func *f;
+        return build_param_type_list(f);
       }
 
       virtual bool types_match(const std::vector<Boxed_Value> &types) const
       {
-        return compare_types(m_f, types);
+        Func *f;
+        return compare_types(f, types);
       }
 
       virtual std::string annotation() const
@@ -423,7 +415,7 @@ namespace dispatchkit
       }
 
     private:
-      Func m_f;
+      boost::function<Func> m_f;
   };
 
   /**
@@ -447,10 +439,10 @@ namespace dispatchkit
    * each function against the set of parameters, in order, until a matching
    * function is found or throw dispatch_error if no matching function is found
    */
-  Boxed_Value dispatch(const std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > > &funcs,
+  Boxed_Value dispatch(const std::vector<std::pair<std::string, Proxy_Function> > &funcs,
       const std::vector<Boxed_Value> &plist)
   {
-    for (std::vector<std::pair<std::string, boost::shared_ptr<Proxy_Function> > >::const_iterator itr = funcs.begin();
+    for (std::vector<std::pair<std::string, Proxy_Function> >::const_iterator itr = funcs.begin();
         itr != funcs.end();
         ++itr)
     {
@@ -473,14 +465,14 @@ namespace dispatchkit
 #else
 # define n BOOST_PP_ITERATION()
 
-namespace dispatchkit
+namespace chaiscript
 {
   /**
    * Used by Proxy_Function_Impl to return a list of all param types
    * it contains.
    */
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-    std::vector<Type_Info> build_param_type_list(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &)
+    std::vector<Type_Info> build_param_type_list(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)))
     {
       std::vector<Type_Info> ti;
       ti.push_back(Get_Type_Info<Ret>::get());
@@ -514,7 +506,7 @@ namespace dispatchkit
    * registration of two functions with the exact same signatures
    */
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-    bool compare_types(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &,
+    bool compare_types(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)),
         const std::vector<Boxed_Value> &params)
     {
       if (params.size() != n)

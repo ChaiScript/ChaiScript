@@ -16,7 +16,7 @@
 #include <boost/type_traits/remove_pointer.hpp>
 #include <boost/ref.hpp>
 
-namespace dispatchkit
+namespace chaiscript
 {
   /**
    * compile time deduced information about a type
@@ -115,6 +115,22 @@ namespace dispatchkit
             &typeid(typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type));
       }
     };
+
+  
+  template<typename T>
+  Type_Info type_(T)
+  {
+    return Get_Type_Info<T>::get();
+  }
+
+
+  template<typename T>
+  Type_Info type_()
+  {
+    return Get_Type_Info<T>::get();
+  }
+
+
 }
 
 #endif
