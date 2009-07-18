@@ -115,5 +115,11 @@ int main(int argc, char *argv[]) {
 
   // Add usage model for mixed use:
   // chai.eval("call(?, ?)", 5, "hello world"); or something
+ 
+  // add examples for and clean up usage of bootstrap stuffs 
+ 
+  int x = chai.functor<int (int, int)>("fun (x, y) { return x + y; }")(5, 6);
+
+  log("Functor test output", boost::lexical_cast<std::string>(x));
 }
 
