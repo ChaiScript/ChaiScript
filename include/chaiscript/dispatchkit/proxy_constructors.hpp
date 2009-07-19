@@ -25,7 +25,7 @@ namespace chaiscript
   template<typename T>
     Proxy_Function constructor()
     {
-      T *f;
+      T *f = 0;
       return (build_constructor_(f));
     }
 }
@@ -52,10 +52,10 @@ namespace chaiscript
    * \todo See if it is possible to make this not be a variadic function
    */
   template<typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-    Proxy_Function build_constructor_(Class (*f)(BOOST_PP_ENUM_PARAMS(n, Param)))
+    Proxy_Function build_constructor_(Class (*)(BOOST_PP_ENUM_PARAMS(n, Param)))
     {
       typedef boost::shared_ptr<Class> (sig)(BOOST_PP_ENUM_PARAMS(n, Param));
-      return Proxy_Function(new Proxy_Function_Impl<sig>(&(constructor_<Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>)));
+      return Proxy_Function(new Proxy_Function_Impl<sig>(boost::function<sig>(&(constructor_<Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>))));
     }
 }
 

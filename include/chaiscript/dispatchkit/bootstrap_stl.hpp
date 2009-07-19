@@ -100,7 +100,7 @@ namespace chaiscript
    * http://www.sgi.com/tech/stl/ReversibleContainer.html
    */
   template<typename ContainerType>
-  ModulePtr reversible_container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+  ModulePtr reversible_container_type(const std::string &, ModulePtr m = ModulePtr(new Module()))
   {
     return m;
   }

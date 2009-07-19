@@ -399,13 +399,13 @@ namespace chaiscript
 
       virtual std::vector<Type_Info> get_param_types() const
       {
-        Func *f;
+        Func *f = 0;
         return build_param_type_list(f);
       }
 
       virtual bool types_match(const std::vector<Boxed_Value> &types) const
       {
-        Func *f;
+        Func *f = 0;
         return compare_types(f, types);
       }
 
