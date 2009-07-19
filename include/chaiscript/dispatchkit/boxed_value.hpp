@@ -682,6 +682,15 @@ namespace chaiscript
     {
       return Boxed_Value(t);
     }
+
+  /**
+   * Return true if the two Boxed_Value's share the same internal type
+   */
+  static bool type_match(Boxed_Value l, Boxed_Value r)
+  {
+    return l.get_type_info() == r.get_type_info();
+  }
+
 }
 
 #endif

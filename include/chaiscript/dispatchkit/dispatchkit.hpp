@@ -25,6 +25,45 @@
 
 namespace chaiscript
 {
+  class Module
+  {
+    public:
+      Module &add(const Type_Info &ti, const std::string &name)
+      {
+        m_typeinfos.push_back(std::make_pair(ti, name));
+        return *this;
+      }
+
+      Module &add(const Proxy_Function &f, const std::string &name)
+      {
+        m_funcs.push_back(std::make_pair(f, name));
+        return *this;
+      }
+
+      template<typename T>
+        void apply(T &t) const
+        {
+          apply(m_typeinfos.begin(), m_typeinfos.end(), t);
+          apply(m_funcs.begin(), m_funcs.end(), t);
+        }
+
+    private:
+      std::vector<std::pair<Type_Info, std::string> > m_typeinfos;
+      std::vector<std::pair<Proxy_Function, std::string> > m_funcs;
+
+      template<typename T, typename InItr>
+        void apply(InItr begin, InItr end, T &t) const
+        {
+          while (begin != end)
+          {
+            t.add(begin->first, begin->second);
+            ++begin;
+          }
+        }
+  };
+
+  typedef boost::shared_ptr<Module> ModulePtr;
+
   /**
    * A Proxy_Function implementation that is able to take
    * a vector of Proxy_Functions and perform a dispatch on them. It is 
@@ -108,6 +147,14 @@ namespace chaiscript
       bool add(const Proxy_Function &f, const std::string &name)
       {
         return add_function(f, name);
+      }
+
+      /**
+       * Add a module's worth of registrations to the system
+       */
+      void add(const ModulePtr &m)
+      {
+        m->apply(*this);
       }
 
       /**
@@ -411,6 +458,19 @@ namespace chaiscript
     }
     std::cout << std::endl;
   }
+
+  /**
+   * return true if the Boxed_Value matches the registered type by name
+   */
+  static bool is_type(const Dispatch_Engine &e, const std::string &user_typename, Boxed_Value r)
+  {
+    try {
+      return e.get_type(user_typename) == r.get_type_info();
+    } catch (const std::range_error &) {
+      return false;
+    }
+  }
+
 }
 
 #endif

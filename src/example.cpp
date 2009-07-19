@@ -115,11 +115,17 @@ int main(int argc, char *argv[]) {
 
   // Add usage model for mixed use:
   // chai.eval("call(?, ?)", 5, "hello world"); or something
- 
-  // add examples for and clean up usage of bootstrap stuffs 
- 
+
+
+  //Creating a functor on the stack and using it immediatly 
   int x = chai.functor<int (int, int)>("fun (x, y) { return x + y; }")(5, 6);
 
   log("Functor test output", boost::lexical_cast<std::string>(x));
+
+
+  //Ability to create our own container types when needed. std::vector and std::map are
+  //mostly supported currently
+  chai.add(vector_type<std::vector<int> >("IntVector"));
+
 }
 

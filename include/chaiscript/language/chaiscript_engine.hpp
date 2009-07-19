@@ -59,10 +59,19 @@ namespace chaiscript
          * Adds an object to the system: type, function, object
          */
         template<typename T>
-          void add(const T &t, const std::string &name)
+          ChaiScript_System &add(const T &t, const std::string &name)
           {
               engine.add(t, name);
+              return *this;
           }
+
+        /**
+         * Adds a module object to the system
+         */
+        ChaiScript_System &add(const ModulePtr &p)
+        {
+            engine.add(p);
+        }
 
         /**
          * Helper for calling script code as if it were native C++ code
@@ -129,11 +138,18 @@ namespace chaiscript
          * Builds all the requirements for ChaiScript, including its evaluator and a run of its prelude.
          */
         void build_eval_system() {
-            Bootstrap::bootstrap(engine);
-            bootstrap_vector<std::vector<Boxed_Value> >(engine, "Vector");
-            bootstrap_string<std::string>(engine, "string");
-            bootstrap_map<std::map<std::string, Boxed_Value> >(engine, "Map");
-            bootstrap_pair<std::pair<Boxed_Value, Boxed_Value > >(engine, "Pair");
+            engine.add(Bootstrap::bootstrap());
+
+            engine.add(fun(boost::function<void ()>(boost::bind(&dump_system, boost::ref(engine)))), "dump_system");
+            engine.add(fun(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1, boost::ref(engine)))), "dump_object");
+            engine.add(fun(boost::function<bool (Boxed_Value, const std::string &)>(boost::bind(&is_type, boost::ref(engine), _2, _1))),
+                "is_type");
+
+
+            engine.add(vector_type<std::vector<Boxed_Value> >("Vector"));
+            engine.add(string_type<std::string>("string"));
+            engine.add(map_type<std::map<std::string, Boxed_Value> >("Map"));
+            engine.add(pair_type<std::pair<Boxed_Value, Boxed_Value > >("Pair"));
 
             engine.add(Proxy_Function(
                   new Dynamic_Proxy_Function(boost::bind(&ChaiScript_System<Eval_Engine>::internal_eval, boost::ref(*this), _1), 1)), "eval");
