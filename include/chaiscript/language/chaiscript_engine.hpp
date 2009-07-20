@@ -71,6 +71,8 @@ namespace chaiscript
         ChaiScript_System &add(const ModulePtr &p)
         {
             engine.add(p);
+
+            return *this;
         }
 
         /**
