@@ -40,6 +40,24 @@ namespace chaiscript
       }
     };
 
+  template<typename Ret>
+    struct Handle_Return<boost::shared_ptr<Ret> &>
+    {
+      Boxed_Value operator()(const boost::function<boost::shared_ptr<Ret> & ()> &f)
+      {
+        return Boxed_Value(f());
+      }
+    };
+
+  template<typename Ret>
+    struct Handle_Return<const boost::shared_ptr<Ret> &>
+    {
+      Boxed_Value operator()(const boost::function<const boost::shared_ptr<Ret> & ()> &f)
+      {
+        return Boxed_Value(f());
+      }
+    };
+
   /**
    * Used internally for handling a return value from a Proxy_Function call
    */

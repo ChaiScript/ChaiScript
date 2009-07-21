@@ -126,7 +126,13 @@ namespace chaiscript
         }
 
         template<typename T>
-          boost::shared_ptr<Data> get(boost::shared_ptr<T> obj)
+          boost::shared_ptr<Data> get(const boost::shared_ptr<T> *obj)
+          {
+            return get(*obj);
+          }
+
+        template<typename T>
+          boost::shared_ptr<Data> get(const boost::shared_ptr<T> &obj)
           {
             boost::shared_ptr<Data> data(new Data(
                   Get_Type_Info<T>::get(), 

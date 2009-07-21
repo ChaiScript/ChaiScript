@@ -389,7 +389,8 @@ namespace chaiscript
    */
   void dump_object(Boxed_Value o, const Dispatch_Engine &e)
   {
-    std::cout << e.get_type_name(o.get_type_info()) << std::endl;
+    Type_Info ti = o.get_type_info();
+    std::cout << (ti.m_is_const?"const ":"") << e.get_type_name(ti) << std::endl;
   }
 
   /**
@@ -397,7 +398,7 @@ namespace chaiscript
    */
   void dump_type(const Type_Info &type, const Dispatch_Engine &e)
   {
-    std::cout << e.get_type_name(type);
+    std::cout << (type.m_is_const?"const ":"") << e.get_type_name(type);
   }
 
   /**
