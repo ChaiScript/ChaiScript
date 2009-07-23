@@ -12,6 +12,7 @@
 #define CODE_STRING(x, y) #x ", " #y
 
 #define chaiscript_prelude CODE_STRING(\
+def new(x) { var retval = clone(x); clear(x); x } \
 # to_string for Pair()\n\
 def to_string(x) : call_exists(first, x) && call_exists(second, x) { \
   "<" + x.first.to_string() + ", " + x.second.to_string() + ">"; \
@@ -22,7 +23,7 @@ def to_string(x) : call_exists(range, x) && !x.is_type("string"){ \
 }\
 # Basic to_string function\n\
 def to_string(x) { \
-  return internal_to_string(x); \
+  internal_to_string(x); \
 }\
 # Prints to console with no carriage return\n\
 def puts(x) { \
@@ -45,6 +46,16 @@ def push_back(container, x) : call_exists(push_back_ref, container, x) { contain
 # Inserts the third value at the position of the second value into the container of the first\n\
 # while making a clone. \n\
 def insert_at(container, pos, x) { container.insert_ref_at(pos, clone(x)); } \n\
+# Returns the reverse of the given container\n\
+def reverse(container) {\
+  var retval = Vector(); \
+  var r = retro(range(container)); \
+  while (!r.empty()) { \
+    retval.push_back(r.front()); \
+    r.pop_front(); \
+  } \
+  retval; \
+} \
 # Performs the second value function over the container first value\n\
 def for_each(container, func) : call_exists(range, container) { \
   var range = range(container); \
@@ -54,7 +65,7 @@ def for_each(container, func) : call_exists(range, container) { \
   } \
 } \
 def back_inserter(container) { \
-  return bind(push_back, container, _);     \
+  bind(push_back, container, _);     \
 }\
 \
 def map(container, func, inserter) : call_exists(range, container) { \
@@ -66,9 +77,9 @@ def map(container, func, inserter) : call_exists(range, container) { \
 } \
 # Performs the second value function over the container first value. Creates a new Vector with the results\n\
 def map(container, func) { \
-  var retval = Vector();\
+  var retval = Vector(); \
   map(container, func, back_inserter(retval));\
-  return retval;\
+  retval;\
 }\
 # Performs the second value function over the container first value. Starts with initial and continues with each element.\n\
 def foldl(container, func, initial) : call_exists(range, container){ \
@@ -108,7 +119,7 @@ def take(container, num, inserter) : call_exists(range, container) { \
 def take(container, num) {\
   var retval = Vector(); \
   take(container, num, back_inserter(retval)); \
-  return retval; \
+  retval; \
 }\
 def take_while(container, f, inserter) : call_exists(range, container) { \
   var r = range(container); \
@@ -121,7 +132,7 @@ def take_while(container, f, inserter) : call_exists(range, container) { \
 def take_while(container, f) {\
   var retval = Vector(); \
   take_while(container, f, back_inserter(retval)); \
-  return retval;\
+  retval;\
 }\
 def drop(container, num, inserter) : call_exists(range, container) { \
   var r = range(container); \
@@ -139,7 +150,7 @@ def drop(container, num, inserter) : call_exists(range, container) { \
 def drop(container, num) {\
   var retval = Vector(); \
   drop(container, num, back_inserter(retval)); \
-  return retval; \
+  retval; \
 }\
 def drop_while(container, f, inserter) : call_exists(range, container) { \
   var r = range(container); \
@@ -155,7 +166,7 @@ def drop_while(container, f, inserter) : call_exists(range, container) { \
 def drop_while(container, f) {\
   var retval = Vector(); \
   drop_while(container, f, back_inserter(retval)); \
-  return retval; \
+  retval; \
 }\
 # Applies the second value function to the container. Starts with the first two elements. Expects at least 2 elements.\n\
 def reduce(container, func) : container.size() >= 2 && call_exists(range, container) { \
@@ -198,7 +209,7 @@ def filter(container, f, inserter) : call_exists(range, container) { \
 def filter(container, f) { \
   var retval = Vector(); \
   filter(container, f, back_inserter(retval));\
-  return retval;\
+  retval;\
 }\
 def generate_range(x, y, inserter) { \
   var i = x; \
@@ -211,7 +222,7 @@ def generate_range(x, y, inserter) { \
 def generate_range(x, y) { \
   var retval = Vector(); \
   generate_range(x,y,back_inserter(retval)); \
-  return retval; \
+  retval; \
 }\
 # Returns a new Vector with the first value to the second value as its elements\n\
 def collate(x, y) { \
@@ -230,7 +241,7 @@ def zip_with(f, x, y, inserter) : call_exists(range, x) && call_exists(range, y)
 def zip_with(f, x, y) { \
   var retval = Vector(); \
   zip_with(f,x,y,back_inserter(retval)); \
-  return retval;\
+  retval;\
 }\
 # Returns a new Vector which joins matching elements of the first and second\n\
 def zip(x, y) { \
@@ -238,27 +249,27 @@ def zip(x, y) { \
 }\
 # Returns the position of the second value string in the first value string\n\
 def find(str, substr) { \
-  return int(find(str, substr, size_t(0))); \
+  int(find(str, substr, size_t(0))); \
 } \
 # Returns the position of last match of the second value string in the first value string\n\
 def rfind(str, substr) { \
-  return int(rfind(str, substr, size_t(-1))); \
+  int(rfind(str, substr, size_t(-1))); \
 } \
 # Returns the position of the first match of elements in the second value string in the first value string\n\
 def find_first_of(str, list) { \
-  return int(find_first_of(str, list, size_t(0))); \
+  int(find_first_of(str, list, size_t(0))); \
 } \
 # Returns the position of the last match of elements in the second value string in the first value string\n\
 def find_last_of(str, list) { \
-  return int(find_last_of(str, list, size_t(-1))); \
+  int(find_last_of(str, list, size_t(-1))); \
 } \
 # Returns the position of the first non-matching element in the second value string in the first value string\n\
 def find_first_not_of(str, list) { \
-  return int(find_first_not_of(str, list, size_t(0))); \
+  int(find_first_not_of(str, list, size_t(0))); \
 } \
 # Returns the position of the last non-matching element in the second value string in the first value string\n\
 def find_last_not_of(str, list) { \
-  return int(find_last_not_of(str, list, size_t(-1))); \
+  int(find_last_not_of(str, list, size_t(-1))); \
 } \
 )
 

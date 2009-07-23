@@ -102,7 +102,12 @@ namespace chaiscript
      */
     template <typename Eval_System>
     Boxed_Value eval_single_quoted_string(Eval_System &, TokenPtr node) {
-        return Boxed_Value(node->text);
+        if (node->text.size() == 1) {
+            return Boxed_Value(char(node->text[0]));
+        }
+        else {
+            return Boxed_Value(char((int)node->text[0] * 0xff + (int)node->text[0]));
+        }
     }
 
     /**

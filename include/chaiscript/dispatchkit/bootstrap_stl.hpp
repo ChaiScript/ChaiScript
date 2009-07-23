@@ -205,6 +205,7 @@ namespace chaiscript
       m->add(fun(&ContainerType::size), "size");
       m->add(fun(&ContainerType::max_size), "max_size");
       m->add(fun(&ContainerType::empty), "empty");
+      m->add(fun(&ContainerType::clear), "clear");
 
       return m;
     }
@@ -450,6 +451,17 @@ namespace chaiscript
       opers_comparison<String>(m);
       random_access_container_type<String>(type, m);
       sequence_type<String>(type, m);
+
+      //Special case: add push_back to string (which doesn't support other back_insertion operations
+      std::string push_back_name;
+      if (typeid(typename String::value_type) == typeid(Boxed_Value))
+      {
+        push_back_name = "push_back_ref";
+      } else {
+        push_back_name = "push_back";
+      }
+      m->add(fun(&String::push_back), push_back_name);
+
       typedef typename String::size_type (String::*find_func)(const String &, typename String::size_type) const;
       m->add(fun(find_func(&String::find)), "find");
       m->add(fun(find_func(&String::rfind)), "rfind");
