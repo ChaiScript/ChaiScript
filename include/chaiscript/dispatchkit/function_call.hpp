@@ -6,7 +6,7 @@
 
 #include <boost/preprocessor.hpp>
 
-#define addparam(z,n,text)  params.push_back(Boxed_Value(BOOST_PP_CAT(p, n) ));
+#define addparam(z,n,text)  params.push_back(boost::is_reference<Param ## n>::value?Boxed_Value(boost::ref(BOOST_PP_CAT(p, n))):Boxed_Value(BOOST_PP_CAT(p, n) ));
 #define curry(z,n,text)  BOOST_PP_CAT(_, BOOST_PP_INC(n))
 
 
@@ -79,7 +79,7 @@ namespace chaiscript
     boost::function<FunctionType>
       functor(const std::vector<std::pair<std::string, Proxy_Function > > &funcs)
       {
-        FunctionType *p;
+        FunctionType *p=0;
         return build_function_caller_helper(p, funcs);
       }
 

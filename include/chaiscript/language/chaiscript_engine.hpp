@@ -140,6 +140,7 @@ namespace chaiscript
          * Builds all the requirements for ChaiScript, including its evaluator and a run of its prelude.
          */
         void build_eval_system() {
+            using namespace bootstrap;
             engine.add(Bootstrap::bootstrap());
 
             engine.add(fun(boost::function<void ()>(boost::bind(&dump_system, boost::ref(engine)))), "dump_system");

@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
 
   //Ability to create our own container types when needed. std::vector and std::map are
   //mostly supported currently
-  chai.add(vector_type<std::vector<int> >("IntVector"));
+  chai.add(bootstrap::vector_type<std::vector<int> >("IntVector"));
 
 }
 

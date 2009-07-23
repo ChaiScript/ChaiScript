@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual C++ Express 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "chaiscript", "chaiscript.vcproj", "{46FD9DC7-2DA9-4C17-ADE4-E3A18C46E87B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "chai-example", "..\chai-example\chai-example.vcproj", "{CE422E94-B360-4588-8C65-6A9BE80798F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -13,6 +15,10 @@ Global
 		{46FD9DC7-2DA9-4C17-ADE4-E3A18C46E87B}.Debug|Win32.Build.0 = Debug|Win32
 		{46FD9DC7-2DA9-4C17-ADE4-E3A18C46E87B}.Release|Win32.ActiveCfg = Release|Win32
 		{46FD9DC7-2DA9-4C17-ADE4-E3A18C46E87B}.Release|Win32.Build.0 = Release|Win32
+		{CE422E94-B360-4588-8C65-6A9BE80798F9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CE422E94-B360-4588-8C65-6A9BE80798F9}.Debug|Win32.Build.0 = Debug|Win32
+		{CE422E94-B360-4588-8C65-6A9BE80798F9}.Release|Win32.ActiveCfg = Release|Win32
+		{CE422E94-B360-4588-8C65-6A9BE80798F9}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

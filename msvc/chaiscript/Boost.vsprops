@@ -8,4 +8,12 @@
 		Name="VCCLCompilerTool"
 		AdditionalIncludeDirectories="&quot;C:\Programming\Boost\include\boost-1_38&quot;"
 	/>
+	<Tool
+		Name="VCLibrarianTool"
+		AdditionalLibraryDirectories="C:\Programming\Boost\lib"
+	/>
+	<Tool
+		Name="VCLinkerTool"
+		AdditionalLibraryDirectories="C:\Programming\Boost\lib"
+	/>
 </VisualStudioPropertySheet>
