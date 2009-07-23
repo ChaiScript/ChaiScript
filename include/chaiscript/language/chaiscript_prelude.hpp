@@ -12,7 +12,7 @@
 #define CODE_STRING(x, y) #x ", " #y
 
 #define chaiscript_prelude CODE_STRING(\
-def new(x) { var retval = clone(x); clear(x); x } \
+def new(x) { var retval = clone(x); clear(retval); retval; } \
 # to_string for Pair()\n\
 def to_string(x) : call_exists(first, x) && call_exists(second, x) { \
   "<" + x.first.to_string() + ", " + x.second.to_string() + ">"; \
@@ -48,7 +48,7 @@ def push_back(container, x) : call_exists(push_back_ref, container, x) { contain
 def insert_at(container, pos, x) { container.insert_ref_at(pos, clone(x)); } \n\
 # Returns the reverse of the given container\n\
 def reverse(container) {\
-  var retval = Vector(); \
+  var retval = new(container); \
   var r = retro(range(container)); \
   while (!r.empty()) { \
     retval.push_back(r.front()); \
@@ -75,9 +75,9 @@ def map(container, func, inserter) : call_exists(range, container) { \
     range.pop_front(); \
   } \
 } \
-# Performs the second value function over the container first value. Creates a new Vector with the results\n\
+# Performs the second value function over the container first value. Creates a new container with the results\n\
 def map(container, func) { \
-  var retval = Vector(); \
+  var retval = new(container); \
   map(container, func, back_inserter(retval));\
   retval;\
 }\
@@ -95,7 +95,7 @@ def foldl(container, func, initial) : call_exists(range, container){ \
 def sum(container) { foldl(container, `+`, 0.0) } \
 # Returns the product of the elements of the given value\n\
 def product(container) { foldl(container, `*`, 1.0) } \
-# Returns a new Vector with the elements of the first value concatenated with the elements of the second value\n\
+# Returns a new container with the elements of the first value concatenated with the elements of the second value\n\
 def concat(x, y) : call_exists(clone, x) { \
   var retval = x; \
   var len = y.size(); \
@@ -115,9 +115,9 @@ def take(container, num, inserter) : call_exists(range, container) { \
     --i; \
   } \
 } \
-# Returns a new Vector with the given number of elements taken from the container\n\
+# Returns a new container with the given number of elements taken from the container\n\
 def take(container, num) {\
-  var retval = Vector(); \
+  var retval = new(container); \
   take(container, num, back_inserter(retval)); \
   retval; \
 }\
@@ -128,9 +128,9 @@ def take_while(container, f, inserter) : call_exists(range, container) { \
     r.pop_front(); \
   } \
 } \
-# Returns a new Vector with the given elements match the second value function\n\
+# Returns a new container with the given elements match the second value function\n\
 def take_while(container, f) {\
-  var retval = Vector(); \
+  var retval = new(container); \
   take_while(container, f, back_inserter(retval)); \
   retval;\
 }\
@@ -146,9 +146,9 @@ def drop(container, num, inserter) : call_exists(range, container) { \
     r.pop_front(); \
   } \
 } \
-# Returns a new Vector with the given number of elements dropped from the given container \n\
+# Returns a new container with the given number of elements dropped from the given container \n\
 def drop(container, num) {\
-  var retval = Vector(); \
+  var retval = new(container); \
   drop(container, num, back_inserter(retval)); \
   retval; \
 }\
@@ -162,9 +162,9 @@ def drop_while(container, f, inserter) : call_exists(range, container) { \
     r.pop_front(); \
   } \
 } \
-# Returns a new Vector with the given elements dropped that match the second value function\n\
+# Returns a new container with the given elements dropped that match the second value function\n\
 def drop_while(container, f) {\
-  var retval = Vector(); \
+  var retval = new(container); \
   drop_while(container, f, back_inserter(retval)); \
   retval; \
 }\
@@ -207,7 +207,7 @@ def filter(container, f, inserter) : call_exists(range, container) { \
 } \
 # Returns a new Vector which match the second value function\n\
 def filter(container, f) { \
-  var retval = Vector(); \
+  var retval = new(container); \
   filter(container, f, back_inserter(retval));\
   retval;\
 }\
@@ -271,6 +271,14 @@ def find_first_not_of(str, list) { \
 def find_last_not_of(str, list) { \
   int(find_last_not_of(str, list, size_t(-1))); \
 } \
+def ltrim(str) { \
+  drop_while(str, fun(x) { x == ' ' || x == '\t' }); \
+} \
+def rtrim(str) { \
+  reverse(drop_while(reverse(str), fun(x) { x == ' ' || x == '\t' })); \
+} \
+def trim(str) { \
+  ltrim(rtrim(str)); \
+} \
 )
-
 #endif /* CHAISCRIPT_PRELUDE_HPP_ */
