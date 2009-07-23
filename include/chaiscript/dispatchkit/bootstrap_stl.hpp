@@ -84,7 +84,7 @@ namespace chaiscript
         {
           throw std::range_error("Range empty");
         }
-        Container::iterator pos = m_end;
+        typename Container::iterator pos = m_end;
         --pos;
         return *(pos);
       }
