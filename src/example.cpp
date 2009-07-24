@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
   // The function "{ 'Callback1' + x }" is created in chaiscript and passed into our C++ application
   // in the "add_callback" function of struct System the chaiscript function is converted into a 
   // boost::function, so it can be handled and called easily and type-safely
-  chai.eval("system.add_callback('#1', fun(x) { 'Callback1 ' + x });");
+  chai.eval("system.add_callback(\"#1\", fun(x) { \"Callback1 \" + x });");
   
   // Because we are sharing the "system" object with the chaiscript engine we have equal
   // access to it both from within chaiscript and from C++ code
@@ -78,10 +78,10 @@ int main(int argc, char *argv[]) {
   chai.add(fun(PlainLog(&log)), "log");
   chai.add(fun(ModuleLog(&log)), "log");
 
-  chai.eval("log('Test Message')");
+  chai.eval("log(\"Test Message\")");
 
   // A shortcut to using eval is just to use the chai operator()
-  chai("log('Test Module', 'Test Message');");
+  chai("log(\"Test Module\", \"Test Message\");");
 
   //Finally, it is possible to register any boost::function as a system function, in this 
   //way, we can, for instance add a bound member function to the system
