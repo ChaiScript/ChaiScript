@@ -12,7 +12,7 @@
 #define CODE_STRING(x, y) #x ", " #y
 
 #define chaiscript_prelude CODE_STRING(\
-def new(x) { var retval = clone(x); clear(retval); retval; } \
+def new(x) { eval(type_name(x))(); } \
 # to_string for Pair()\n\
 def to_string(x) : call_exists(first, x) && call_exists(second, x) { \
   "<" + x.first.to_string() + ", " + x.second.to_string() + ">"; \

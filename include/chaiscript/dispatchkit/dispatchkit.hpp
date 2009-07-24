@@ -463,13 +463,18 @@ namespace chaiscript
   /**
    * return true if the Boxed_Value matches the registered type by name
    */
-  static bool is_type(const Dispatch_Engine &e, const std::string &user_typename, Boxed_Value r)
+  bool is_type(const Dispatch_Engine &e, const std::string &user_typename, Boxed_Value r)
   {
     try {
       return e.get_type(user_typename) == r.get_type_info();
     } catch (const std::range_error &) {
       return false;
     }
+  }
+
+  std::string type_name(const Dispatch_Engine &e, Boxed_Value obj)
+  {
+    return e.get_type_name(obj.get_type_info());
   }
 
 }

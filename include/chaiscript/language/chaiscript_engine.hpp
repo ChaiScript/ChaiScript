@@ -148,6 +148,8 @@ namespace chaiscript
             engine.add(fun(boost::function<bool (Boxed_Value, const std::string &)>(boost::bind(&is_type, boost::ref(engine), _2, _1))),
                 "is_type");
 
+            engine.add(fun(boost::function<std::string (Boxed_Value)>(boost::bind(&chaiscript::type_name, boost::ref(engine), _1))),
+                "type_name");
 
             engine.add(vector_type<std::vector<Boxed_Value> >("Vector"));
             engine.add(string_type<std::string>("string"));
