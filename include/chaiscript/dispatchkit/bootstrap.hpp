@@ -422,20 +422,17 @@ namespace chaiscript
     }
 
     /**
-    * Add a copy constructor for type T, also creates the standard
-    * function "clone" for the type. "clone" is a synonym for
-    * the copy constructor.
+    * Add a copy constructor for type T
     */
     template<typename T>
     ModulePtr copy_constructor(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
       m->add(constructor<T (const T &)>(), type);
-      m->add(constructor<T (const T &)>(), "clone");
       return m;
     }
 
     /**
-    * Add default and copy constructors (including "clone") for type T
+    * Add default and copy constructors for type T
     */
     template<typename T>
     ModulePtr basic_constructors(const std::string &type, ModulePtr m = ModulePtr(new Module()))

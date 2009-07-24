@@ -121,6 +121,9 @@ namespace chaiscript
       m->add(user_type<Retro<Bidir_Range<ContainerType> > >(), type + "_Retro_Range");
       m->add(user_type<typename ContainerType::iterator>(), type+"_Iterator");
 
+      copy_constructor<Bidir_Range<ContainerType> >(type + "_Range", m);
+      copy_constructor<Retro<Bidir_Range<ContainerType> > >(type + "_Retro_Range", m);
+
       m->add(constructor<Bidir_Range<ContainerType> (ContainerType &)>(), "range");
       m->add(constructor<Bidir_Range<ContainerType> (typename ContainerType::iterator)>(), "range");
 
@@ -145,8 +148,6 @@ namespace chaiscript
       m->add(constructor<Retro<Bidir_Range<ContainerType> > (const Bidir_Range<ContainerType> &)>(), "retro");
 
 
-      m->add(constructor<Bidir_Range<ContainerType> (const Bidir_Range<ContainerType> &)>(), "clone");
-      m->add(constructor<Retro<Bidir_Range<ContainerType> > (const Retro<Bidir_Range<ContainerType> > &)>(), "clone");
 
       return m;
     } 
@@ -358,9 +359,7 @@ namespace chaiscript
       m->add(fun(&PairType::first), "first");
       m->add(fun(&PairType::second), "second");
 
-      m->add(constructor<PairType ()>(), type);
-      m->add(constructor<PairType (const PairType &)>(), type);
-      m->add(constructor<PairType (const PairType &)>(), "clone");
+      basic_constructors<PairType>(type, m);
       m->add(constructor<PairType (const typename PairType::first_type &, const typename PairType::second_type &)>(), type);
 
       return m;
