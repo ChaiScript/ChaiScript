@@ -111,11 +111,7 @@ int main(int argc, char *argv[]) {
   std::cout << "scripti (updated): " << scripti << std::endl;
   chai("print(\"Scripti from chai: \" + to_string(scripti))");
 
-  // Add examples of handling Boxed_Values directly when needed
-
-  // Add usage model for mixed use:
-  // chai.eval("call(?, ?)", 5, "hello world"); or something
-
+  //To do: Add examples of handling Boxed_Values directly when needed
 
   //Creating a functor on the stack and using it immediatly 
   int x = chai.functor<int (int, int)>("fun (x, y) { return x + y; }")(5, 6);
