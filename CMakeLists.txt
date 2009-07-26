@@ -19,5 +19,7 @@ if (Boost_FOUND)
 	#add_executable(dispatchkit_test contrib/test/dispatchkit_test.cpp)
 	target_link_libraries(chaiscript_eval ${Boost_LIBRARIES})
 	install(TARGETS chaiscript_eval DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+else(Boost_FOUND)
+        message(FATAL_ERROR "Can not find Boost")
 endif(Boost_FOUND)
 
