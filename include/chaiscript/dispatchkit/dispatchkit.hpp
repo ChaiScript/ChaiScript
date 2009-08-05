@@ -133,12 +133,13 @@ namespace chaiscript
     public:
       typedef std::map<std::string, chaiscript::Type_Info> Type_Name_Map;
       typedef std::map<std::string, Boxed_Value> Scope;
-      typedef std::deque<Scope> Stack;
+      typedef boost::shared_ptr<std::deque<Scope> > Stack;
 
       Dispatch_Engine()
-        : m_place_holder(boost::shared_ptr<Placeholder_Object>(new Placeholder_Object()))
+        : m_scopes(new Stack::element_type()),
+          m_place_holder(boost::shared_ptr<Placeholder_Object>(new Placeholder_Object()))
       {
-        m_scopes.push_back(Scope());
+        m_scopes->push_back(Scope());
       }
 
       /**
@@ -163,12 +164,12 @@ namespace chaiscript
        */
       void add(const Boxed_Value &obj, const std::string &name)
       {
-        for (int i = m_scopes.size()-1; i >= 0; --i)
+        for (int i = m_scopes->size()-1; i >= 0; --i)
         {
-          std::map<std::string, Boxed_Value>::const_iterator itr = m_scopes[i].find(name);
-          if (itr != m_scopes[i].end())
+          std::map<std::string, Boxed_Value>::const_iterator itr = (*m_scopes)[i].find(name);
+          if (itr != (*m_scopes)[i].end())
           {
-            m_scopes[i][name] = Boxed_Value(obj);
+            (*m_scopes)[i][name] = Boxed_Value(obj);
             return;
           }
         }
@@ -181,7 +182,7 @@ namespace chaiscript
        */
       void add_object(const std::string &name, const Boxed_Value &obj)
       {
-        m_scopes.back()[name] = Boxed_Value(obj);
+        m_scopes->back()[name] = Boxed_Value(obj);
       }
 
       /**
@@ -189,7 +190,7 @@ namespace chaiscript
        */
       void new_scope()
       {
-        m_scopes.push_back(Scope());
+        m_scopes->push_back(Scope());
       }
 
       /**
@@ -197,9 +198,9 @@ namespace chaiscript
        */
       void pop_scope()
       {
-        if (m_scopes.size() > 1)
+        if (m_scopes->size() > 1)
         {
-          m_scopes.pop_back();
+          m_scopes->pop_back();
         } else {
           throw std::range_error("Unable to pop global stack");
         }
@@ -218,10 +219,16 @@ namespace chaiscript
        * \returns the old stack
        * \param[in] s The new stack
        */
-      Stack set_stack(Stack s)
+      Stack set_stack(const Stack &s)
       {
-        std::swap(s, m_scopes);
-        return s;
+        Stack old = m_scopes;
+        m_scopes = s;
+        return old;
+      }
+
+      Stack new_stack()
+      {
+        return Stack(new Stack::element_type());
       }
 
       /**
@@ -236,10 +243,10 @@ namespace chaiscript
           return m_place_holder;
         }
 
-        for (int i = m_scopes.size()-1; i >= 0; --i)
+        for (int i = m_scopes->size()-1; i >= 0; --i)
         {
-          std::map<std::string, Boxed_Value>::const_iterator itr = m_scopes[i].find(name);
-          if (itr != m_scopes[i].end())
+          std::map<std::string, Boxed_Value>::const_iterator itr = (*m_scopes)[i].find(name);
+          if (itr != (*m_scopes)[i].end())
           {
             return itr->second;
           }
@@ -377,7 +384,7 @@ namespace chaiscript
         return true;
       }
 
-      std::deque<Scope> m_scopes;
+      Stack m_scopes;
 
       std::multimap<std::string, Proxy_Function > m_functions;
       Type_Name_Map m_types;

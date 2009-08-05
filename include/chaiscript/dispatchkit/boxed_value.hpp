@@ -116,6 +116,11 @@ namespace chaiscript
        */
       struct Object_Cache
       {
+        Object_Cache()
+          : m_cullcount(0)
+        {
+        }
+
         boost::shared_ptr<Data> get(Boxed_Value::Void_Type)
         {
           return boost::shared_ptr<Data> (new Data(
@@ -219,6 +224,12 @@ namespace chaiscript
          */
         void cull()
         {
+          ++m_cullcount;
+          if (m_cullcount % 10 != 0)
+          {
+            return;
+          }
+
           std::map<const void *, Data >::iterator itr = m_ptrs.begin();
 
           while (itr != m_ptrs.end())
@@ -235,6 +246,7 @@ namespace chaiscript
         }
 
         std::map<const void *, Data > m_ptrs;
+        int m_cullcount;
       };
 
     public:
@@ -472,7 +484,7 @@ namespace chaiscript
   template<>
     struct Cast_Helper<Boxed_Value>
     {
-      typedef Boxed_Value Result_Type;
+      typedef const Boxed_Value & Result_Type;
 
       static Result_Type cast(const Boxed_Value &ob)
       {
@@ -486,7 +498,7 @@ namespace chaiscript
   template<>
     struct Cast_Helper<const Boxed_Value &>
     {
-      typedef Boxed_Value Result_Type;
+      typedef const Boxed_Value & Result_Type;
 
       static Result_Type cast(const Boxed_Value &ob)
       {

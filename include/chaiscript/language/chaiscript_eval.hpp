@@ -405,10 +405,10 @@ namespace chaiscript
         Boxed_Value retval;
         Param_List_Builder plb;
         Dispatch_Engine::Stack prev_stack = ss.get_stack();
-        Dispatch_Engine::Stack new_stack;
+        Dispatch_Engine::Stack new_stack = ss.new_stack();
         unsigned int i;
 
-        new_stack.push_back(Dispatch_Engine::Scope());
+        new_stack->push_back(Dispatch_Engine::Scope());
 
         if ((node->children.size() > 1) && (node->children[1]->identifier == Token_Type::Arg_List)) {
             for (i = 0; i < node->children[1]->children.size(); ++i) {
@@ -452,10 +452,10 @@ namespace chaiscript
         Boxed_Value retval;
         std::vector<std::pair<std::string, Proxy_Function > > fn;
         Dispatch_Engine::Stack prev_stack = ss.get_stack();
-        Dispatch_Engine::Stack new_stack;
+        Dispatch_Engine::Stack new_stack = ss.new_stack();
         unsigned int i, j;
 
-        new_stack.push_back(Dispatch_Engine::Scope());
+        new_stack->push_back(Dispatch_Engine::Scope());
 
         //todo: Please extract a single way of doing function calls between this and eval_fun_call
 
