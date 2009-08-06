@@ -177,7 +177,7 @@ namespace chaiscript
       virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) = 0;
       virtual std::vector<Type_Info> get_param_types() const = 0;
       virtual bool operator==(const Proxy_Function_Base &) const = 0;
-      virtual bool types_match(const std::vector<Boxed_Value> &types) const = 0;
+      virtual bool call_match(const std::vector<Boxed_Value> &vals) const = 0;
       virtual std::string annotation() const = 0;
   };
 
@@ -218,10 +218,10 @@ namespace chaiscript
         return false;
       }
 
-      virtual bool types_match(const std::vector<Boxed_Value> &types) const
+      virtual bool call_match(const std::vector<Boxed_Value> &vals) const
       {
-          return (m_arity < 0 || types.size() == size_t(m_arity))
-            && test_guard(types);
+          return (m_arity < 0 || vals.size() == size_t(m_arity))
+            && test_guard(vals);
       }    
 
       virtual ~Dynamic_Proxy_Function() {}
@@ -320,10 +320,9 @@ namespace chaiscript
 
       virtual ~Bound_Function() {}
 
-      virtual bool types_match(const std::vector<Boxed_Value> &types) const
+      virtual bool call_match(const std::vector<Boxed_Value> &vals) const
       {
-        std::vector<Boxed_Value> params = build_param_list(types);
-        return m_f->types_match(params);
+        return m_f->call_match(build_param_list(vals));
       }
 
       virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
@@ -421,10 +420,10 @@ namespace chaiscript
         return build_param_type_list(f);
       }
 
-      virtual bool types_match(const std::vector<Boxed_Value> &types) const
+      virtual bool call_match(const std::vector<Boxed_Value> &vals) const
       {
         Func *f = 0;
-        return compare_types(f, types);
+        return compare_types(f, vals);
       }
 
       virtual std::string annotation() const

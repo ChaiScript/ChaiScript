@@ -94,7 +94,7 @@ namespace chaiscript
         return std::vector<Type_Info>();
       }
 
-      virtual bool types_match(const std::vector<Boxed_Value> &types) const
+      virtual bool call_match(const std::vector<Boxed_Value> &vals) const
       {
         typedef std::vector<std::pair<std::string, Proxy_Function > > function_vec;
 
@@ -103,7 +103,7 @@ namespace chaiscript
 
         while (begin != end)
         {
-          if (begin->second->types_match(types))
+          if (begin->second->call_match(vals))
           {
             return true;
           } else {

@@ -635,7 +635,7 @@ namespace chaiscript
 
         Proxy_Function f = boxed_cast<Proxy_Function >(params[0]);
 
-        return Boxed_Value(f->types_match(std::vector<Boxed_Value>(params.begin() + 1, params.end())));
+        return Boxed_Value(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end())));
       }
 
       static boost::shared_ptr<Dispatch_Engine> bootstrap2(boost::shared_ptr<Dispatch_Engine> e = boost::shared_ptr<Dispatch_Engine> (new Dispatch_Engine()))
