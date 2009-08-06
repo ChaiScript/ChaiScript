@@ -178,6 +178,47 @@ namespace chaiscript
       virtual std::vector<Type_Info> get_param_types() const = 0;
       virtual bool operator==(const Proxy_Function_Base &) const = 0;
       virtual bool call_match(const std::vector<Boxed_Value> &vals) const = 0;
+
+      //! Return true if the function is a possible match
+      //! to the passed in values
+      bool filter(const std::vector<Boxed_Value> &vals) const
+      {
+        int arity = get_arity();
+
+        if (arity < 0)
+        {
+          return true;
+        } else if (size_t(arity) == vals.size()) {
+          if (arity == 0)
+          {
+            return true;
+          } else {
+            const std::vector<Type_Info> &types = get_param_types();
+
+            if (types.size() < 2)
+            {
+              return true;
+            }
+
+            const Type_Info &ti = types[1];
+
+            if (!ti.m_bare_type_info || !(vals[0].get_type_info().m_bare_type_info)
+                || (*ti.m_bare_type_info) == (*user_type<Boxed_Value>().m_bare_type_info)
+                || (*ti.m_bare_type_info) == (*user_type<Boxed_POD_Value>().m_bare_type_info)
+                || (*vals[0].get_type_info().m_bare_type_info) == (*ti.m_bare_type_info))
+            {
+              return true;
+            } else {
+              return false;
+            }
+          }
+        } else {
+          return false;
+        }
+      }
+
+      virtual int get_arity() const = 0;
+
       virtual std::string annotation() const = 0;
   };
 
@@ -209,7 +250,8 @@ namespace chaiscript
           int t_arity=-1,
           const std::string &t_description = "",
           const Proxy_Function &t_guard = Proxy_Function())
-        : m_f(t_f), m_arity(t_arity), m_description(t_description), m_guard(t_guard)
+        : m_f(t_f), m_arity(t_arity), m_description(t_description), m_guard(t_guard),
+          m_types(build_param_type_list(t_arity))
       {
       }
 
@@ -243,23 +285,14 @@ namespace chaiscript
         } 
       }
 
+      virtual int get_arity() const
+      {
+	return m_arity;
+      }
+
       virtual std::vector<Type_Info> get_param_types() const
       {
-        std::vector<Type_Info> types;
-
-        types.push_back(Get_Type_Info<Boxed_Value>::get());
-
-        if (m_arity >= 0)
-        {
-          for (int i = 0; i < m_arity; ++i)
-          {
-            types.push_back(Get_Type_Info<Boxed_Value>::get());
-          }
-        } else {
-          types.push_back(Get_Type_Info<std::vector<Boxed_Value> >::get());
-        }
-
-        return types;
+	return m_types;
       }
 
       virtual std::string annotation() const
@@ -284,10 +317,30 @@ namespace chaiscript
         }
       }
 
+      static std::vector<Type_Info> build_param_type_list(int arity)
+      {
+        std::vector<Type_Info> types;
+
+        types.push_back(Get_Type_Info<Boxed_Value>::get());
+
+        if (arity >= 0)
+        {
+          for (int i = 0; i < arity; ++i)
+          {
+            types.push_back(Get_Type_Info<Boxed_Value>::get());
+          }
+        } else {
+          types.push_back(Get_Type_Info<std::vector<Boxed_Value> >::get());
+        }
+
+        return types;
+      }
+
       boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
       int m_arity;
       std::string m_description;
       Proxy_Function m_guard;
+      std::vector<Type_Info> m_types;
   };
 
   /**
@@ -309,7 +362,7 @@ namespace chaiscript
     public:
       Bound_Function(const Proxy_Function &t_f, 
                      const std::vector<Boxed_Value> &t_args)
-        : m_f(t_f), m_args(t_args)
+        : m_f(t_f), m_args(t_args), m_arity(m_f->get_arity()<0?-1:(m_f->get_arity() - m_args.size()))
       {
       }
 
@@ -373,6 +426,11 @@ namespace chaiscript
         return std::vector<Type_Info>();
       }
 
+      virtual int get_arity() const
+      {
+        return m_arity;
+      }
+
       virtual std::string annotation() const
       {
         return "";
@@ -381,6 +439,7 @@ namespace chaiscript
     private:
       Proxy_Function m_f;
       std::vector<Boxed_Value> m_args;
+      int m_arity;
   };
 
   /**
@@ -393,7 +452,7 @@ namespace chaiscript
   {
     public:
       Proxy_Function_Impl(const boost::function<Func> &f)
-        : m_f(f)
+        : m_f(f), m_dummy_func(0), m_types(build_param_type_list(m_dummy_func))
       {
       }
 
@@ -416,14 +475,18 @@ namespace chaiscript
 
       virtual std::vector<Type_Info> get_param_types() const
       {
-        Func *f = 0;
-        return build_param_type_list(f);
+	return m_types;
       }
+
+      virtual int get_arity() const
+      {
+        return m_types.size() - 1;
+      }
+
 
       virtual bool call_match(const std::vector<Boxed_Value> &vals) const
       {
-        Func *f = 0;
-        return compare_types(f, vals);
+        return compare_types(m_dummy_func, vals);
       }
 
       virtual std::string annotation() const
@@ -433,6 +496,8 @@ namespace chaiscript
 
     private:
       boost::function<Func> m_f;
+      Func *m_dummy_func;
+      std::vector<Type_Info> m_types;
   };
 
   /**
@@ -464,7 +529,10 @@ namespace chaiscript
         ++itr)
     {
       try {
-        return (*itr->second)(plist);
+        if (itr->second->filter(plist))
+        {
+          return (*itr->second)(plist);
+        }
       } catch (const bad_boxed_cast &) {
         //parameter failed to cast, try again
       } catch (const arity_error &) {

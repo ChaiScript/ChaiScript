@@ -97,11 +97,6 @@ namespace chaiscript
           return *this;
         }
 
-        static bool get_false()
-        {
-          return false;
-        }
-
         Type_Info m_type_info;
         boost::any m_obj;
         bool m_is_ref;

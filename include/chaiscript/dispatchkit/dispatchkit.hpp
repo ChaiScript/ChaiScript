@@ -94,6 +94,11 @@ namespace chaiscript
         return std::vector<Type_Info>();
       }
 
+      virtual int get_arity() const
+      {
+        return -1;
+      }
+
       virtual bool call_match(const std::vector<Boxed_Value> &vals) const
       {
         typedef std::vector<std::pair<std::string, Proxy_Function > > function_vec;
