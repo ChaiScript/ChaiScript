@@ -22,15 +22,17 @@ namespace chaiscript
       return Proxy_Function(new Proxy_Function_Impl<T>(f));
     }
 
-
-  /**
-   * Helper function for register_member function
-   */
-  template<typename T, typename Class>
-    T &get_member(T Class::* m, Class *obj)
-    {
-      return (obj->*m);
-    }
+  namespace detail
+  {
+    /**
+     * Helper function for register_member function
+     */
+    template<typename T, typename Class>
+      T &get_member(T Class::* m, Class *obj)
+      {
+        return (obj->*m);
+      }
+  }
 
   /**
    * Automatically create a get_member helper function for an object 
@@ -40,7 +42,7 @@ namespace chaiscript
   template<typename T, typename Class>
     Proxy_Function fun(T Class::* m)
     {
-      return fun(boost::function<T& (Class *)>(boost::bind(&get_member<T, Class>, m, _1)));
+      return fun(boost::function<T& (Class *)>(boost::bind(&detail::get_member<T, Class>, m, _1)));
     }
 
 }

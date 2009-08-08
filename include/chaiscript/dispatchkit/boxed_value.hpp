@@ -119,7 +119,7 @@ namespace chaiscript
         boost::shared_ptr<Data> get(Boxed_Value::Void_Type)
         {
           return boost::shared_ptr<Data> (new Data(
-                Get_Type_Info<void>::get(),
+                detail::Get_Type_Info<void>::get(),
                 boost::any(), 
                 false)
               );
@@ -135,7 +135,7 @@ namespace chaiscript
           boost::shared_ptr<Data> get(const boost::shared_ptr<T> &obj)
           {
             boost::shared_ptr<Data> data(new Data(
-                  Get_Type_Info<T>::get(), 
+                  detail::Get_Type_Info<T>::get(), 
                   boost::any(obj), 
                   false,
                   boost::shared_ptr<Data::Shared_Ptr_Proxy>(new Data::Shared_Ptr_Proxy_Impl<T>()))
@@ -164,7 +164,7 @@ namespace chaiscript
           boost::shared_ptr<Data> get(boost::reference_wrapper<T> obj)
           {
             boost::shared_ptr<Data> data(new Data(
-                  Get_Type_Info<T>::get(),
+                  detail::Get_Type_Info<T>::get(),
                   boost::any(obj), 
                   true)
                 );
@@ -192,7 +192,7 @@ namespace chaiscript
           boost::shared_ptr<Data> get(const T& t)
           {
             boost::shared_ptr<Data> data(new Data(
-                  Get_Type_Info<T>::get(), 
+                  detail::Get_Type_Info<T>::get(), 
                   boost::any(boost::shared_ptr<T>(new T(t))), 
                   false,
                   boost::shared_ptr<Data::Shared_Ptr_Proxy>(new Data::Shared_Ptr_Proxy_Impl<T>()))
@@ -331,175 +331,178 @@ namespace chaiscript
   };
 
 
-  // Cast_Helper helper classes
+  namespace detail
+  {
+    // Cast_Helper helper classes
 
-  /**
-   * Generic Cast_Helper, for casting to any type
-   */
-  template<typename Result>
-    struct Cast_Helper
-    {
-      typedef typename boost::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
-
-      static Result_Type cast(const Boxed_Value &ob)
+    /**
+     * Generic Cast_Helper, for casting to any type
+     */
+    template<typename Result>
+      struct Cast_Helper
       {
-        if (ob.is_ref())
+        typedef typename boost::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
+
+        static Result_Type cast(const Boxed_Value &ob)
         {
-          if (!ob.get_type_info().m_is_const)
+          if (ob.is_ref())
           {
-            return boost::cref((boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get());
+            if (!ob.get_type_info().m_is_const)
+            {
+              return boost::cref((boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get());
+            } else {
+              return boost::any_cast<boost::reference_wrapper<const Result> >(ob.get());
+            }
           } else {
-            return boost::any_cast<boost::reference_wrapper<const Result> >(ob.get());
+            return boost::cref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));   
           }
-        } else {
-          return boost::cref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));   
         }
-      }
-    };
+      };
 
-  /**
-   * Cast_Helper for casting to a const & type
-   */
-  template<typename Result>
-    struct Cast_Helper<const Result &>
-    {
-      typedef typename boost::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
-        
-      static Result_Type cast(const Boxed_Value &ob)
+    /**
+     * Cast_Helper for casting to a const & type
+     */
+    template<typename Result>
+      struct Cast_Helper<const Result &>
       {
-        if (ob.is_ref())
+        typedef typename boost::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
+
+        static Result_Type cast(const Boxed_Value &ob)
         {
-          if (!ob.get_type_info().m_is_const)
+          if (ob.is_ref())
           {
-            return boost::cref((boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get());
+            if (!ob.get_type_info().m_is_const)
+            {
+              return boost::cref((boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get());
+            } else {
+              return boost::any_cast<boost::reference_wrapper<const Result> >(ob.get());
+            }
           } else {
-            return boost::any_cast<boost::reference_wrapper<const Result> >(ob.get());
+            return boost::cref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));   
           }
-        } else {
-          return boost::cref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));   
         }
-      }
-    };
+      };
 
-  /**
-   * Cast_Helper for casting to a const * type
-   */
-  template<typename Result>
-    struct Cast_Helper<const Result *>
-    {
-      typedef const Result * Result_Type;
-
-      static Result_Type cast(const Boxed_Value &ob)
+    /**
+     * Cast_Helper for casting to a const * type
+     */
+    template<typename Result>
+      struct Cast_Helper<const Result *>
       {
-        if (ob.is_ref())
+        typedef const Result * Result_Type;
+
+        static Result_Type cast(const Boxed_Value &ob)
         {
-          if (!ob.get_type_info().m_is_const)
+          if (ob.is_ref())
+          {
+            if (!ob.get_type_info().m_is_const)
+            {
+              return (boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get_pointer();
+            } else {
+              return (boost::any_cast<boost::reference_wrapper<const Result> >(ob.get())).get_pointer();
+            }
+          } else {
+            return (boost::any_cast<boost::shared_ptr<Result> >(ob.get())).get();
+          }
+        }
+      };
+
+    /**
+     * Cast_Helper for casting to a * type
+     */
+    template<typename Result>
+      struct Cast_Helper<Result *>
+      {
+        typedef Result * Result_Type;
+
+        static Result_Type cast(const Boxed_Value &ob)
+        {
+          if (ob.is_ref())
           {
             return (boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get_pointer();
           } else {
-            return (boost::any_cast<boost::reference_wrapper<const Result> >(ob.get())).get_pointer();
+            return (boost::any_cast<boost::shared_ptr<Result> >(ob.get())).get();
           }
-        } else {
-          return (boost::any_cast<boost::shared_ptr<Result> >(ob.get())).get();
         }
-      }
-    };
+      };
 
-  /**
-   * Cast_Helper for casting to a * type
-   */
-  template<typename Result>
-    struct Cast_Helper<Result *>
-    {
-      typedef Result * Result_Type;
-
-      static Result_Type cast(const Boxed_Value &ob)
+    /**
+     * Cast_Helper for casting to a & type
+     */
+    template<typename Result>
+      struct Cast_Helper<Result &>
       {
-        if (ob.is_ref())
+        typedef typename boost::reference_wrapper<Result> Result_Type;
+
+        static Result_Type cast(const Boxed_Value &ob)
         {
-          return (boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get_pointer();
-        } else {
-          return (boost::any_cast<boost::shared_ptr<Result> >(ob.get())).get();
+          if (ob.is_ref())
+          {
+            return boost::any_cast<boost::reference_wrapper<Result> >(ob.get());
+          } else {
+            return boost::ref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));
+          }
         }
-      }
-    };
+      };
 
-  /**
-   * Cast_Helper for casting to a & type
-   */
-  template<typename Result>
-    struct Cast_Helper<Result &>
-    {
-      typedef typename boost::reference_wrapper<Result> Result_Type;
-
-      static Result_Type cast(const Boxed_Value &ob)
+    /**
+     * Cast_Helper for casting to a boost::shared_ptr<> type
+     */
+    template<typename Result>
+      struct Cast_Helper<typename boost::shared_ptr<Result> >
       {
-        if (ob.is_ref())
+        typedef typename boost::shared_ptr<Result> Result_Type;
+
+        static Result_Type cast(const Boxed_Value &ob)
         {
-          return boost::any_cast<boost::reference_wrapper<Result> >(ob.get());
-        } else {
-          return boost::ref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));
+          return boost::any_cast<boost::shared_ptr<Result> >(ob.get());
         }
-      }
-    };
+      };
 
-  /**
-   * Cast_Helper for casting to a boost::shared_ptr<> type
-   */
-  template<typename Result>
-    struct Cast_Helper<typename boost::shared_ptr<Result> >
-    {
-      typedef typename boost::shared_ptr<Result> Result_Type;
-        
-      static Result_Type cast(const Boxed_Value &ob)
+    /**
+     * Cast_Helper for casting to a boost::shared_ptr<> type
+     */
+    template<typename Result>
+      struct Cast_Helper<const boost::shared_ptr<Result> &>
       {
-        return boost::any_cast<boost::shared_ptr<Result> >(ob.get());
-      }
-    };
+        typedef typename boost::shared_ptr<Result> Result_Type;
 
-  /**
-   * Cast_Helper for casting to a boost::shared_ptr<> type
-   */
-  template<typename Result>
-    struct Cast_Helper<const boost::shared_ptr<Result> &>
-    {
-      typedef typename boost::shared_ptr<Result> Result_Type;
-        
-      static Result_Type cast(const Boxed_Value &ob)
+        static Result_Type cast(const Boxed_Value &ob)
+        {
+          return boost::any_cast<boost::shared_ptr<Result> >(ob.get());
+        }
+      };
+
+
+
+    /**
+     * Cast_Helper for casting to a Boxed_Value type
+     */
+    template<>
+      struct Cast_Helper<Boxed_Value>
       {
-        return boost::any_cast<boost::shared_ptr<Result> >(ob.get());
-      }
-    };
+        typedef const Boxed_Value & Result_Type;
 
+        static Result_Type cast(const Boxed_Value &ob)
+        {
+          return ob;    
+        }
+      };
 
-
-  /**
-   * Cast_Helper for casting to a Boxed_Value type
-   */
-  template<>
-    struct Cast_Helper<Boxed_Value>
-    {
-      typedef const Boxed_Value & Result_Type;
-
-      static Result_Type cast(const Boxed_Value &ob)
+    /**
+     * Cast_Helper for casting to a const Boxed_Value & type
+     */
+    template<>
+      struct Cast_Helper<const Boxed_Value &>
       {
-        return ob;    
-      }
-    };
+        typedef const Boxed_Value & Result_Type;
 
-  /**
-   * Cast_Helper for casting to a const Boxed_Value & type
-   */
-  template<>
-    struct Cast_Helper<const Boxed_Value &>
-    {
-      typedef const Boxed_Value & Result_Type;
-
-      static Result_Type cast(const Boxed_Value &ob)
-      {
-        return ob;    
-      }
-    };
+        static Result_Type cast(const Boxed_Value &ob)
+        {
+          return ob;    
+        }
+      };
+  }
 
   /**
    * class that is thrown in the event of a bad_boxed_cast. That is,
@@ -537,10 +540,10 @@ namespace chaiscript
    * int &i = boxed_cast<int &>(boxedvalue);
    */
   template<typename Type>
-  typename Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv)
+  typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv)
   {
     try {
-      return Cast_Helper<Type>::cast(bv);
+      return detail::Cast_Helper<Type>::cast(bv);
     } catch (const boost::bad_any_cast &) {
       throw bad_boxed_cast(bv.get_type_info(), typeid(Type));
     }
@@ -676,19 +679,22 @@ namespace chaiscript
     bool m_isfloat;
   };
 
-  /**
-   * Cast_Helper for converting from Boxed_Value to Boxed_POD_Value
-   */
-  template<>
-    struct Cast_Helper<Boxed_POD_Value>
-    {
-      typedef Boxed_POD_Value Result_Type;
-
-      static Result_Type cast(const Boxed_Value &ob)
+  namespace detail
+  {
+    /**
+     * Cast_Helper for converting from Boxed_Value to Boxed_POD_Value
+     */
+    template<>
+      struct Cast_Helper<Boxed_POD_Value>
       {
-        return Boxed_POD_Value(ob);
-      }
-    };
+        typedef Boxed_POD_Value Result_Type;
+
+        static Result_Type cast(const Boxed_Value &ob)
+        {
+          return Boxed_POD_Value(ob);
+        }
+      };
+  }
 
   template<typename T>
     Boxed_Value var(T t)
@@ -697,7 +703,7 @@ namespace chaiscript
     }
 
   /**
-   * Return true if the two Boxed_Value's share the same internal type
+   * Return true if the two Boxed_Values share the same internal type
    */
   static bool type_match(Boxed_Value l, Boxed_Value r)
   {

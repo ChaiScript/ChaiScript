@@ -4,109 +4,22 @@
 // and Jason Turner (lefticus@gmail.com)
 // http://www.chaiscript.com
 
-#include <boost/preprocessor.hpp>
 
-#define gettypeinfo(z,n,text)  ti.push_back(Get_Type_Info<Param ## n>::get());
-#define casthelper(z,n,text) ,chaiscript::boxed_cast< Param ## n >(params[n])
-#define comparetype(z,n,text)  && ((Get_Type_Info<Param ## n>::get() == params[n].get_type_info()))
-#define trycast(z,n,text) chaiscript::boxed_cast<Param ## n>(params[n]);
-
-
-#ifndef  BOOST_PP_IS_ITERATING
 #ifndef __proxy_functions_hpp__
 #define __proxy_functions_hpp__
+
 
 #include "boxed_value.hpp"
 #include "type_info.hpp"
 #include <string>
 #include <boost/function.hpp>
-#include <boost/bind.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <stdexcept>
 #include <vector>
+#include "proxy_functions_detail.hpp"
 
 namespace chaiscript
 {
-  /**
-   * Used internally for handling a return value from a Proxy_Function call
-   */
-  template<typename Ret>
-    struct Handle_Return
-    {
-      Boxed_Value operator()(const boost::function<Ret ()> &f)
-      {
-        return Boxed_Value(f());
-      }
-    };
-
-  template<typename Ret>
-    struct Handle_Return<boost::shared_ptr<Ret> &>
-    {
-      Boxed_Value operator()(const boost::function<boost::shared_ptr<Ret> & ()> &f)
-      {
-        return Boxed_Value(f());
-      }
-    };
-
-  template<typename Ret>
-    struct Handle_Return<const boost::shared_ptr<Ret> &>
-    {
-      Boxed_Value operator()(const boost::function<const boost::shared_ptr<Ret> & ()> &f)
-      {
-        return Boxed_Value(f());
-      }
-    };
-
-  /**
-   * Used internally for handling a return value from a Proxy_Function call
-   */
-  template<typename Ret>
-    struct Handle_Return<Ret &>
-    {
-      Boxed_Value operator()(const boost::function<Ret &()> &f)
-      {
-        return Boxed_Value(boost::ref(f()));
-      }
-    };
-
-  /**
-   * Used internally for handling a return value from a Proxy_Function call
-   */
-  template<>
-    struct Handle_Return<Boxed_Value>
-    {
-      Boxed_Value operator()(const boost::function<Boxed_Value ()> &f)
-      {
-        return f();
-      }
-    };
-
-  /**
-   * Used internally for handling a return value from a Proxy_Function call
-   */
-  template<>
-    struct Handle_Return<Boxed_Value &>
-    {
-      Boxed_Value operator()(const boost::function<Boxed_Value &()> &f)
-      {
-        return f();
-      }
-    };
-
-  /**
-   * Used internally for handling a return value from a Proxy_Function call
-   */
-  template<>
-    struct Handle_Return<void>
-    {
-      Boxed_Value operator()(const boost::function<void ()> &f)
-      {
-        f();
-        return Boxed_Value(Boxed_Value::Void_Type());
-      }
-    };
-
   /**
    * Helper for building a list of parameters for calling a Proxy_Function
    * it does automatic conversion to Boxed_Value types via operator<<
@@ -138,30 +51,6 @@ namespace chaiscript
     std::vector<Boxed_Value> objects;
   };
 
-  /**
-   * Exception thrown when there is a mismatch in number of
-   * parameters during Proxy_Function execution
-   */
-  struct arity_error : std::range_error
-  {
-    arity_error(int t_got, int t_expected)
-      : std::range_error("Function dispatch arity mismatch"),
-        got(t_got), expected(t_expected)
-    {
-    }
-
-    virtual ~arity_error() throw() {}
-    int got;
-    int expected;
-  };
-}
-
-#define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
-#define BOOST_PP_FILENAME_1 <chaiscript/dispatchkit/proxy_functions.hpp>
-#include BOOST_PP_ITERATE()
-
-namespace chaiscript
-{
   /**
    * Pure virtual base class for all Proxy_Function implementations
    * Proxy_Functions are a type erasure of type safe C++
@@ -321,16 +210,16 @@ namespace chaiscript
       {
         std::vector<Type_Info> types;
 
-        types.push_back(Get_Type_Info<Boxed_Value>::get());
+        types.push_back(detail::Get_Type_Info<Boxed_Value>::get());
 
         if (arity >= 0)
         {
           for (int i = 0; i < arity; ++i)
           {
-            types.push_back(Get_Type_Info<Boxed_Value>::get());
+            types.push_back(detail::Get_Type_Info<Boxed_Value>::get());
           }
         } else {
-          types.push_back(Get_Type_Info<std::vector<Boxed_Value> >::get());
+          types.push_back(detail::Get_Type_Info<std::vector<Boxed_Value> >::get());
         }
 
         return types;
@@ -395,7 +284,7 @@ namespace chaiscript
         while (true)
         {
           while (barg != m_args.end() 
-                 && !(barg->get_type_info() == Get_Type_Info<Placeholder_Object>::get()))
+                 && !(barg->get_type_info() == detail::Get_Type_Info<Placeholder_Object>::get()))
           {
             args.push_back(*barg);
             ++barg;
@@ -408,7 +297,7 @@ namespace chaiscript
           }
 
           if (barg != m_args.end() 
-              && barg->get_type_info() == Get_Type_Info<Placeholder_Object>::get())
+              && barg->get_type_info() == detail::Get_Type_Info<Placeholder_Object>::get())
           {
             ++barg;
           } 
@@ -546,70 +435,5 @@ namespace chaiscript
   }
 }
 
-# endif
-#else
-# define n BOOST_PP_ITERATION()
-
-namespace chaiscript
-{
-  /**
-   * Used by Proxy_Function_Impl to return a list of all param types
-   * it contains.
-   */
-  template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-    std::vector<Type_Info> build_param_type_list(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)))
-    {
-      std::vector<Type_Info> ti;
-      ti.push_back(Get_Type_Info<Ret>::get());
-
-      BOOST_PP_REPEAT(n, gettypeinfo, ~)
-
-      return ti;
-    }
-
-  /**
-   * Used by Proxy_Function_Impl to perform typesafe execution of a function.
-   * The function attempts to unbox each paramter to the expected type.
-   * if any unboxing fails the execution of the function fails and
-   * the bad_boxed_cast is passed up to the caller.
-   */
-  template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-    Boxed_Value call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f,
-        const std::vector<Boxed_Value> &params)
-    {
-      if (params.size() != n)
-      {
-        throw arity_error(params.size(), n);
-      } else {
-        return Handle_Return<Ret>()(boost::bind(f BOOST_PP_REPEAT(n, casthelper, ~)));
-      }
-    }
-
-  /**
-   * Used by Proxy_Function_Impl to determine if it is equivalent to another
-   * Proxy_Function_Impl object. This function is primarly used to prevent
-   * registration of two functions with the exact same signatures
-   */
-  template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-    bool compare_types(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)),
-        const std::vector<Boxed_Value> &params)
-    {
-      if (params.size() != n)
-      {
-        return false;
-      } else {
-        bool val = true BOOST_PP_REPEAT(n, comparetype, ~);
-        if (val) return true;
-
-        try {
-          BOOST_PP_REPEAT(n, trycast, ~);
-        } catch (const bad_boxed_cast &) {
-          return false;
-        }
-
-        return true;
-      }
-    }
-}
 
 #endif

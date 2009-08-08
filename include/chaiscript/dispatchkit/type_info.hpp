@@ -77,57 +77,59 @@ namespace chaiscript
     bool m_is_unknown;
   };
 
-  /**
-   * Helper used to create a Type_Info object
-   */
-  template<typename T>
-    struct Get_Type_Info
-    {
-      static Type_Info get()
+  namespace detail
+  {
+    /**
+     * Helper used to create a Type_Info object
+     */
+    template<typename T>
+      struct Get_Type_Info
       {
-        return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
-            boost::is_void<T>::value,
-            &typeid(T), 
-            &typeid(typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type));
-      }
-    };
+        static Type_Info get()
+        {
+          return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
+              boost::is_void<T>::value,
+              &typeid(T), 
+              &typeid(typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type));
+        }
+      };
 
-  template<typename T>
-    struct Get_Type_Info<boost::shared_ptr<T> >
-    {
-      static Type_Info get()
+    template<typename T>
+      struct Get_Type_Info<boost::shared_ptr<T> >
       {
-        return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
-            boost::is_void<T>::value,
-            &typeid(boost::shared_ptr<T> ), 
-            &typeid(typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type));
-      }
-    };
+        static Type_Info get()
+        {
+          return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
+              boost::is_void<T>::value,
+              &typeid(boost::shared_ptr<T> ), 
+              &typeid(typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type));
+        }
+      };
 
-  template<typename T>
-    struct Get_Type_Info<boost::reference_wrapper<T> >
-    {
-      static Type_Info get()
+    template<typename T>
+      struct Get_Type_Info<boost::reference_wrapper<T> >
       {
-        return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
-            boost::is_void<T>::value,
-            &typeid(boost::reference_wrapper<T> ), 
-            &typeid(typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type));
-      }
-    };
-
+        static Type_Info get()
+        {
+          return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
+              boost::is_void<T>::value,
+              &typeid(boost::reference_wrapper<T> ), 
+              &typeid(typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type));
+        }
+      };
+  }
   
   template<typename T>
   Type_Info user_type(T)
   {
-    return Get_Type_Info<T>::get();
+    return detail::Get_Type_Info<T>::get();
   }
 
 
   template<typename T>
   Type_Info user_type()
   {
-    return Get_Type_Info<T>::get();
+    return detail::Get_Type_Info<T>::get();
   }
 
 
