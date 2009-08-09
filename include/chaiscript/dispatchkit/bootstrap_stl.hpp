@@ -387,7 +387,7 @@ namespace chaiscript
     ModulePtr unique_associative_container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
       associative_container_type<ContainerType>(type, m);
-      m->add(fun<size_t (ContainerType::*)(const ContainerType::key_type &) const>(&ContainerType::count), "count");
+      m->add(fun<size_t (ContainerType::*)(const typename ContainerType::key_type &) const>(&ContainerType::count), "count");
 
       return m;
     }
