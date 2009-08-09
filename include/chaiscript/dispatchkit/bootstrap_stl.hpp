@@ -203,10 +203,10 @@ namespace chaiscript
     {
       assignable_type<ContainerType>(type, m);
 
-      m->add(fun(&ContainerType::size), "size");
-      m->add(fun(&ContainerType::max_size), "max_size");
-      m->add(fun(&ContainerType::empty), "empty");
-      m->add(fun(&ContainerType::clear), "clear");
+      m->add(fun<size_t (ContainerType::*)() const>(&ContainerType::size), "size");
+      m->add(fun<size_t (ContainerType::*)() const>(&ContainerType::max_size), "max_size");
+      m->add(fun<bool (ContainerType::*)() const>(&ContainerType::empty), "empty");
+      m->add(fun<void (ContainerType::*)()>(&ContainerType::clear), "clear");
 
       return m;
     }
@@ -387,7 +387,7 @@ namespace chaiscript
     ModulePtr unique_associative_container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
       associative_container_type<ContainerType>(type, m);
-      m->add(fun(&ContainerType::count), "count");
+      m->add(fun<size_t (ContainerType::*)(const ContainerType::key_type &) const>(&ContainerType::count), "count");
 
       return m;
     }

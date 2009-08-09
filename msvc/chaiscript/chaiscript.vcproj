@@ -122,7 +122,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="3"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\dispatchkit&quot;;&quot;$(ProjectDir)\..\..\chaiscript&quot;"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -230,11 +230,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\include\chaiscript\dispatchkit\function_call_detail.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\chaiscript\dispatchkit\handle_return.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\include\chaiscript\dispatchkit\proxy_constructors.hpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\include\chaiscript\dispatchkit\proxy_functions.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\chaiscript\dispatchkit\proxy_functions_detail.hpp"
 				>
 			</File>
 			<File

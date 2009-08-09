@@ -17,10 +17,17 @@
 namespace chaiscript
 {
   template<typename T>
-    Proxy_Function fun(const boost::function<T> &f)
+    Proxy_Function fun(T t)
+    {
+      return fun_helper(t);
+    }
+
+  template<typename T>
+    Proxy_Function fun_helper(const boost::function<T> &f)
     {
       return Proxy_Function(new Proxy_Function_Impl<T>(f));
     }
+
 
   namespace detail
   {
@@ -40,9 +47,9 @@ namespace chaiscript
    * for example, the case of std::pair<>::first and std::pair<>::second
    */
   template<typename T, typename Class>
-    Proxy_Function fun(T Class::* m)
+    Proxy_Function fun_helper(T Class::* m)
     {
-      return fun(boost::function<T& (Class *)>(boost::bind(&detail::get_member<T, Class>, m, _1)));
+      return fun_helper(boost::function<T& (Class *)>(boost::bind(&detail::get_member<T, Class>, m, _1)));
     }
 
 }
@@ -61,27 +68,27 @@ namespace chaiscript
    * Register a global function of n parameters with name 
    */
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-    Proxy_Function fun(Ret (*f)(BOOST_PP_ENUM_PARAMS(n, Param)))
+    Proxy_Function fun_helper(Ret (*f)(BOOST_PP_ENUM_PARAMS(n, Param)))
     {
-      return fun(boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))>(f));
+      return fun_helper(boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))>(f));
     }
 
   /**
    * Register a class method of n parameters with name 
    */
   template<typename Ret, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-    Proxy_Function fun(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)))
+    Proxy_Function fun_helper(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)))
     {
-      return fun(boost::function<Ret (Class* BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param))>(f));
+      return fun_helper(boost::function<Ret (Class* BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param))>(f));
     }
 
   /**
    * Register a const class method of n parameters with name 
    */
   template<typename Ret, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-    Proxy_Function fun(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param))const)
+    Proxy_Function fun_helper(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param))const)
     {
-      return fun(boost::function<Ret (const Class* BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param))>(f));
+      return fun_helper(boost::function<Ret (const Class* BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param))>(f));
     }
 }
 
