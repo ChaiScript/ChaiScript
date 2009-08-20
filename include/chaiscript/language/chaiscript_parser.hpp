@@ -140,7 +140,7 @@ namespace chaiscript
          */
         bool Float_() {
             bool retval = false;
-            if ((input_pos != input_end) && (*input_pos >= '0') && (*input_pos <= '9')) {
+            if ((input_pos != input_end) && (((*input_pos >= '0') && (*input_pos <= '9')) || (*input_pos == '.'))) {
                 while ((input_pos != input_end) && (*input_pos >= '0') && (*input_pos <= '9')) {
                     ++input_pos;
                     ++col;
@@ -178,7 +178,7 @@ namespace chaiscript
                 std::string::iterator start = input_pos;
                 int prev_col = col;
                 int prev_line = line;
-                if ((input_pos != input_end) && (*input_pos >= '0') && (*input_pos <= '9')) {
+                if ((input_pos != input_end) && (((*input_pos >= '0') && (*input_pos <= '9')) || (*input_pos == '.')) ) {
                     if (Float_()) {
                         std::string match(start, input_pos);
                         TokenPtr t(new Token(match, Token_Type::Float, filename, prev_line, prev_col, line, col));
