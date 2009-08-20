@@ -30,7 +30,7 @@ namespace chaiscript
       functor(const std::vector<std::pair<std::string, Proxy_Function > > &funcs)
       {
         FunctionType *p=0;
-        return build_function_caller_helper(p, funcs);
+        return detail::build_function_caller_helper(p, funcs);
       }
 
   /**

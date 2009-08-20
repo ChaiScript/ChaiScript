@@ -45,6 +45,10 @@ struct System
   }
 };
 
+void take_shared_ptr(const boost::shared_ptr<std::string> &p)
+{
+  std::cout << *p << std::endl;
+}
 
 int main(int argc, char *argv[]) {
   using namespace chaiscript;
@@ -58,6 +62,8 @@ int main(int argc, char *argv[]) {
   //Register the two methods of the System structure.
   chai.add(fun(&System::add_callback), "add_callback");
   chai.add(fun(&System::do_callbacks), "do_callbacks");
+
+  chai.add(fun(&take_shared_ptr), "take_shared_ptr");
 
   // Let's use chaiscript to add a new lambda callback to our system. 
   // The function "{ 'Callback1' + x }" is created in chaiscript and passed into our C++ application
@@ -123,5 +129,8 @@ int main(int argc, char *argv[]) {
   //mostly supported currently
   chai.add(bootstrap::vector_type<std::vector<int> >("IntVector"));
 
+
+  chai("dump_system()");
+  chai("take_shared_ptr(\"Hello World as a shared_ptr\");");
 }
 

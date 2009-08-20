@@ -107,6 +107,18 @@ namespace chaiscript
       };
 
     template<typename T>
+      struct Get_Type_Info<const boost::shared_ptr<T> &>
+      {
+        static Type_Info get()
+        {
+          return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
+              boost::is_void<T>::value,
+              &typeid(const boost::shared_ptr<T> &), 
+              &typeid(typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type));
+        }
+      };
+
+    template<typename T>
       struct Get_Type_Info<boost::reference_wrapper<T> >
       {
         static Type_Info get()

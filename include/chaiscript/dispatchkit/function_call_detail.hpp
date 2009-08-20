@@ -30,7 +30,7 @@ namespace chaiscript
      * value of a build_function_caller
      */
     template<typename Ret>
-      class Function_Caller_Ret
+      struct Function_Caller_Ret
       {
         static Ret call(const std::vector<std::pair<std::string, Proxy_Function > > &t_funcs, 
             const std::vector<Boxed_Value> &params)
