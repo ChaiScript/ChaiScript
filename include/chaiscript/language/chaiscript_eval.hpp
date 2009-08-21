@@ -471,23 +471,32 @@ namespace chaiscript
                     }
                 }
 
-                std::string fun_name;
-                if (node->children[i]->identifier == Token_Type::Fun_Call) {
-                    fun_name = node->children[i]->children[0]->text;
-                }
-                else {
-                    fun_name = node->children[i]->text;
-                }
-
+                //std::string fun_name;
+                Boxed_Value fn;
                 try {
-                    fn = ss.get_function(fun_name);
+                    if (node->children[i]->identifier == Token_Type::Fun_Call) {
+                        //fun_name = node->children[i]->children[0]->text;
+                        fn = eval_token(ss, node->children[i]->children[0]);
+                    }
+                    else {
+                        //fun_name = node->children[i]->text;
+                        fn = eval_token(ss, node->children[i]);
+                    }
+                }
+                catch(Eval_Error &ee) {
+                    ss.set_stack(prev_stack);
+                    throw Eval_Error(ee.reason, node->children[i]);
+                }
+                try {
+                    //fn = ss.get_function(fun_name);
                     ss.set_stack(new_stack);
-                    retval = dispatch(fn, plb);
+                    //retval = dispatch(fn, plb);
+                    retval = (*boxed_cast<Proxy_Function >(fn))(plb);
                     ss.set_stack(prev_stack);
                 }
                 catch(const dispatch_error &e){
                     ss.set_stack(prev_stack);
-                    throw Eval_Error(std::string(e.what()) + " with function '" + fun_name + "'", node->children[i]);
+                    throw Eval_Error(std::string(e.what()), node->children[i]);
                 }
                 catch(Return_Value &rv) {
                     ss.set_stack(prev_stack);

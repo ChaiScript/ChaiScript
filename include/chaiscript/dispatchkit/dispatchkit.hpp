@@ -324,7 +324,7 @@ namespace chaiscript
       std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> > 
         get_function(const std::string &t_name) const
       {
-        return get_function_impl(t_name, true);
+        return get_function_impl(t_name, false);
       }
  
       /**
