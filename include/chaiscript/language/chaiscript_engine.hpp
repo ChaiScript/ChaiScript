@@ -19,18 +19,27 @@ namespace chaiscript
     template <typename Eval_Engine>
     class ChaiScript_System {
         Eval_Engine engine;
+
+        std::set<std::string> loaded_files;
+
         ChaiScript_Parser parser;
+
 
         /**
          * Evaluates the given string in by parsing it and running the results through the evaluator
          */
-        Boxed_Value do_eval(const std::string &input, const char *filename = "__EVAL__") {
+        Boxed_Value do_eval(const std::string &input, const std::string &filename = "__EVAL__") {
             //debug_print(tokens);
             Boxed_Value value;
             parser.clear_match_stack();
 
+            // Keep a cache of all loaded filenames and use the char * from this cache to pass 
+            // to the parser. This is so that the parser does not have the overhead of passing 
+            // around and copying strings
+            loaded_files.insert(filename);
+
             try {
-                if (parser.parse(input, filename)) {
+                if (parser.parse(input, loaded_files.find(filename)->c_str())) {
                     //parser.show_match_stack();
                     value = eval_token<Eval_Engine>(engine, parser.ast());
                 }
@@ -47,6 +56,14 @@ namespace chaiscript
          */
         const Boxed_Value internal_eval(const std::vector<Boxed_Value> &vals) {
             return do_eval(boxed_cast<std::string>(vals.at(0)));
+        }
+
+        void use(const std::string &filename)
+        {
+          if (loaded_files.count(filename) == 0)
+          {
+            eval_file(filename);
+          }
         }
 
 
@@ -117,12 +134,11 @@ namespace chaiscript
         /**
          * Helper function for loading a file
          */
-        std::string load_file(const char *filename) {
-            std::ifstream infile (filename, std::ios::in | std::ios::ate);
+        std::string load_file(const std::string &filename) {
+            std::ifstream infile (filename.c_str(), std::ios::in | std::ios::ate);
 
             if (!infile.is_open()) {
-                std::string fname = filename;
-                throw std::runtime_error("Can not open: " + fname);
+                throw std::runtime_error("Can not open: " + filename);
             }
 
             std::streampos size = infile.tellg();
@@ -156,6 +172,8 @@ namespace chaiscript
             engine.add(map_type<std::map<std::string, Boxed_Value> >("Map"));
             engine.add(pair_type<std::pair<Boxed_Value, Boxed_Value > >("Pair"));
 
+            engine.add(fun(boost::function<void (const std::string &)>(boost::bind(&ChaiScript_System<Eval_Engine>::use, this, _1))), "use");
+
             engine.add(Proxy_Function(
                   new Dynamic_Proxy_Function(boost::bind(&ChaiScript_System<Eval_Engine>::internal_eval, boost::ref(*this), _1), 1)), "eval");
 
@@ -176,7 +194,7 @@ namespace chaiscript
         /**
          * Loads the file specified by filename, evaluates it, and returns the result
          */
-        Boxed_Value eval_file(const char *filename) {
+        Boxed_Value eval_file(const std::string &filename) {
             return do_eval(load_file(filename), filename);
         }
 
@@ -184,7 +202,7 @@ namespace chaiscript
          * Loads the file specified by filename, evaluates it, and returns the as the specified type
          */
         template<typename T>
-        T eval_file(const char *filename) {
+        T eval_file(const std::string &filename) {
             return boxed_cast<T>(do_eval(load_file(filename), filename));
         }
     };
