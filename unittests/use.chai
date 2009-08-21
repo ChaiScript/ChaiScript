@@ -1,0 +1,3 @@
+use("unittests/use.inc")
+
+greet()

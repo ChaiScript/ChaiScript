@@ -1,0 +1,3 @@
+def greet {
+	print("hello")
+}
