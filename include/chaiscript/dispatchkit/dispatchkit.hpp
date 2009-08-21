@@ -257,7 +257,7 @@ namespace chaiscript
           }
         }
 
-        std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> > funcs = get_function_impl(name, false);
+        std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> > funcs = get_function(name);
 
         if (funcs.empty())
         {
@@ -321,12 +321,16 @@ namespace chaiscript
       /**
        * Return a function by name
        */
-      std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> > 
+     std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> > 
         get_function(const std::string &t_name) const
       {
-        return get_function_impl(t_name, false);
+        std::pair<std::multimap<std::string, Proxy_Function >::const_iterator, std::multimap<std::string, Proxy_Function >::const_iterator> range
+          = m_functions.equal_range(t_name);
+
+        return  std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> >(range.first, range.second);
       }
- 
+
+
       /**
        * Get a vector of all registered functions
        */
@@ -336,36 +340,6 @@ namespace chaiscript
       }
 
     private:
-      /**
-       * Implementation detail for searching for a function by name.
-       * Looks for all registered global functions and optionally for an object
-       * in scope with the same name
-       */
-      std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> > 
-        get_function_impl(const std::string &t_name, bool include_objects) const
-      {
-        std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> > funcs;
-
-        if (include_objects)
-        {
-          try {
-            funcs.insert(funcs.end(), 
-              std::make_pair(
-                  t_name, 
-                  boxed_cast<std::multimap<std::string, Proxy_Function >::mapped_type>(get_object(t_name)))
-                );
-          } catch (const bad_boxed_cast &) {
-          } catch (const std::range_error &) {
-          }
-        }
-
-        std::pair<std::multimap<std::string, Proxy_Function >::const_iterator, std::multimap<std::string, Proxy_Function >::const_iterator> range
-          = m_functions.equal_range(t_name);
-
-        funcs.insert(funcs.end(), range.first, range.second);
-        return funcs;
-      }
-
       /**
        * Implementation detail for adding a function. Returns
        * true if the function was added, false if a function with the
