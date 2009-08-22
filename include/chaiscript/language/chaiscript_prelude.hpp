@@ -13,7 +13,7 @@
 
 #define chaiscript_prelude CODE_STRING(\
 def new(x) { eval(type_name(x))(); } \
-def clone(x) { eval(type_name(x))(x); } \
+def clone(x) : function_exists(type_name(x))  { eval(type_name(x))(x); } \
 # to_string for Pair()\n\
 def to_string(x) : call_exists(first, x) && call_exists(second, x) { \
   "<" + x.first.to_string() + ", " + x.second.to_string() + ">"; \

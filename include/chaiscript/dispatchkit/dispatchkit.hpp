@@ -330,6 +330,13 @@ namespace chaiscript
         return  std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> >(range.first, range.second);
       }
 
+     /**
+      * Return true if a function exists
+      */
+     bool function_exists(const std::string &name) const
+     {
+       return m_functions.find(name) != m_functions.end();
+     }
 
       /**
        * Get a vector of all registered functions
