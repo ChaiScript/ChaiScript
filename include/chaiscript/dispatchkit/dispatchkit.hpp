@@ -127,7 +127,24 @@ namespace chaiscript
     private:
       std::vector<std::pair<std::string, Proxy_Function > > m_funcs;
   };  
-  
+
+
+  /**
+   * Exception thrown in the case that a multi method dispatch fails
+   * because no matching function was found
+   * at runtime due to either an arity_error, a guard_error or a bad_boxed_cast
+   * exception
+   */
+  struct reserved_word_error : std::runtime_error
+  {
+    reserved_word_error(const std::string &word) throw()
+      : std::runtime_error("Reserved word not allowed in object name: " + word)
+    {
+    }
+
+    virtual ~reserved_word_error() throw() {}
+  };
+
 
   /**
    * Main class for the dispatchkit. Handles management
@@ -152,6 +169,7 @@ namespace chaiscript
        */
       bool add(const Proxy_Function &f, const std::string &name)
       {
+        validate_object_name(name);
         return add_function(f, name);
       }
 
@@ -169,6 +187,7 @@ namespace chaiscript
        */
       void add(const Boxed_Value &obj, const std::string &name)
       {
+        validate_object_name(name);
         for (int i = m_scopes->size()-1; i >= 0; --i)
         {
           std::map<std::string, Boxed_Value>::const_iterator itr = (*m_scopes)[i].find(name);
@@ -187,6 +206,7 @@ namespace chaiscript
        */
       void add_object(const std::string &name, const Boxed_Value &obj)
       {
+        validate_object_name(name);
         m_scopes->back()[name] = Boxed_Value(obj);
       }
 
@@ -330,13 +350,13 @@ namespace chaiscript
         return  std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> >(range.first, range.second);
       }
 
-     /**
-      * Return true if a function exists
-      */
-     bool function_exists(const std::string &name) const
-     {
-       return m_functions.find(name) != m_functions.end();
-     }
+      /**
+       * Return true if a function exists
+       */
+      bool function_exists(const std::string &name) const
+      {
+        return m_functions.find(name) != m_functions.end();
+      }
 
       /**
        * Get a vector of all registered functions
@@ -346,7 +366,24 @@ namespace chaiscript
         return std::vector<std::pair<std::string, Proxy_Function > >(m_functions.begin(), m_functions.end());
       }
 
+      void add_reserved_word(const std::string &name)
+      {
+        m_reserved_words.insert(name);
+      }
+
+
     private:
+      /**
+       * Throw a reserved_word exception if the name is not allowed
+       */
+      void validate_object_name(const std::string &name)
+      {
+        if (m_reserved_words.find(name) != m_reserved_words.end())
+        {
+          throw reserved_word_error(name);
+        }
+      }
+
       /**
        * Implementation detail for adding a function. Returns
        * true if the function was added, false if a function with the
@@ -375,6 +412,7 @@ namespace chaiscript
       std::multimap<std::string, Proxy_Function > m_functions;
       Type_Name_Map m_types;
       Boxed_Value m_place_holder;
+      std::set<std::string> m_reserved_words;
   };
 
   /**

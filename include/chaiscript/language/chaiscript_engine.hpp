@@ -157,6 +157,13 @@ namespace chaiscript
          */
         void build_eval_system() {
             using namespace bootstrap;
+            engine.add_reserved_word("def");
+            engine.add_reserved_word("fun");
+            engine.add_reserved_word("while");
+            engine.add_reserved_word("for");
+            engine.add_reserved_word("if");
+            engine.add_reserved_word("else");
+
             engine.add(Bootstrap::bootstrap());
 
             engine.add(fun(boost::function<void ()>(boost::bind(&dump_system, boost::ref(engine)))), "dump_system");
