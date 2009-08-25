@@ -87,7 +87,8 @@ namespace chaiscript
      */
     struct Eval_Error : public std::runtime_error {
         std::string reason;
-        File_Position position;
+        File_Position start_position;
+        File_Position end_position;
         const char *filename;
 
         Eval_Error(const std::string &why, const File_Position &where, const char *fname) :
@@ -95,7 +96,7 @@ namespace chaiscript
                 (std::string(fname) != "__EVAL__" ? ("in '" + std::string(fname) + "' ") : "during evaluation ") +
                 + "at (" + boost::lexical_cast<std::string>(where.line) + ", " +
                 boost::lexical_cast<std::string>(where.column) + ")"),
-            reason(why), position(where), filename(fname) 
+            reason(why), start_position(where), end_position(where), filename(fname)
         { }
 
         Eval_Error(const std::string &why, const TokenPtr &where)
@@ -103,7 +104,7 @@ namespace chaiscript
                 (std::string(where->filename) != "__EVAL__" ? ("in '" + std::string(where->filename) + "' ") : "during evaluation ") +
                 "at (" + boost::lexical_cast<std::string>(where->start.line) + ", " +
                 boost::lexical_cast<std::string>(where->start.column) + ")"),
-              reason(why), position(where->start), filename(where->filename) {
+              reason(why), start_position(where->start), end_position(where->end), filename(where->filename) {
         }
 
         virtual ~Eval_Error() throw() {}

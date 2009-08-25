@@ -171,7 +171,12 @@ namespace chaiscript
      */
     template <typename Eval_System>
     Boxed_Value eval_var_decl(Eval_System &ss, TokenPtr node) {
-        ss.add_object(node->children[0]->text, Boxed_Value());
+        try {
+            ss.add_object(node->children[0]->text, Boxed_Value());
+        }
+        catch (reserved_word_error &rwe) {
+            throw Eval_Error("Reserved word used as variable '" + node->children[0]->text + "'", node);
+        }
         return ss.get_object(node->children[0]->text);
     }
 
@@ -671,12 +676,16 @@ namespace chaiscript
                                                                      param_names, _1), numparams));
         }
 
-        ss.add(Proxy_Function
-            (new Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>,
+        try {
+            ss.add(Proxy_Function
+                    (new Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>,
                                                                  boost::ref(ss), node->children.back(),
                                                                  param_names, _1), numparams,
                                                      annotation, guard)), function_name);
-
+        }
+        catch (reserved_word_error &rwe) {
+            throw Eval_Error("Reserved word used as function name '" + function_name + "'", node);
+        }
         return retval;
     }
 
