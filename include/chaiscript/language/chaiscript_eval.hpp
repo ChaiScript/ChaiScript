@@ -570,10 +570,14 @@ namespace chaiscript
     template <typename Eval_System>
     Boxed_Value eval_while(Eval_System &ss, TokenPtr node) {
         bool cond;
+
+        ss.new_scope();
+
         try {
             cond = boxed_cast<bool &>(eval_token(ss, node->children[0]));
         }
         catch (const bad_boxed_cast &) {
+            ss.pop_scope();
             throw Eval_Error("While condition not boolean", node->children[0]);
         }
         while (cond) {
@@ -583,6 +587,7 @@ namespace chaiscript
                     cond = boxed_cast<bool &>(eval_token(ss, node->children[0]));
                 }
                 catch (const bad_boxed_cast &) {
+                    ss.pop_scope();
                     throw Eval_Error("While condition not boolean", node->children[0]);
                 }
             }
@@ -590,6 +595,7 @@ namespace chaiscript
                 cond = false;
             }
         }
+        ss.pop_scope();
         return Boxed_Value();
     }
 
@@ -599,6 +605,8 @@ namespace chaiscript
     template <typename Eval_System>
     Boxed_Value eval_for(Eval_System &ss, TokenPtr node) {
         bool cond;
+
+        ss.new_scope();
 
         try {
             if (node->children.size() == 4) {
@@ -610,6 +618,7 @@ namespace chaiscript
             }
         }
         catch (const bad_boxed_cast &) {
+            ss.pop_scope();
             throw Eval_Error("For condition not boolean", node);
         }
         while (cond) {
@@ -626,12 +635,14 @@ namespace chaiscript
                 }
             }
             catch (const bad_boxed_cast &) {
+                ss.pop_scope();
                 throw Eval_Error("For condition not boolean", node);
             }
             catch (Break_Loop &) {
                 cond = false;
             }
         }
+        ss.pop_scope();
         return Boxed_Value();
     }
 
