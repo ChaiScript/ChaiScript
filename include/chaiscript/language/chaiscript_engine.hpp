@@ -163,6 +163,17 @@ namespace chaiscript
             engine.add_reserved_word("for");
             engine.add_reserved_word("if");
             engine.add_reserved_word("else");
+            engine.add_reserved_word("&&");
+            engine.add_reserved_word("||");
+            engine.add_reserved_word(",");
+            engine.add_reserved_word(":=");
+            engine.add_reserved_word("var");
+            engine.add_reserved_word("return");
+            engine.add_reserved_word("break");
+            engine.add_reserved_word("true");
+            engine.add_reserved_word("false");
+            engine.add_reserved_word("_");
+
 
             engine.add(Bootstrap::bootstrap());
 
