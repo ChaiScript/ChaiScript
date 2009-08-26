@@ -691,8 +691,10 @@ namespace chaiscript
 
             if (Equation()) {
                 retval = true;
+                while (Eol());
                 if (Char(',')) {
                     do {
+                        while (Eol());
                         if (!Equation()) {
                             throw Eval_Error("Unexpected value in parameter list", match_stack.back());
                         }
@@ -718,8 +720,10 @@ namespace chaiscript
             }
             else if (Map_Pair()) {
                 retval = true;
+                while (Eol());
                 if (Char(',')) {
                     do {
+                        while (Eol());
                         if (!Map_Pair()) {
                             throw Eval_Error("Unexpected value in container", match_stack.back());
                         }
