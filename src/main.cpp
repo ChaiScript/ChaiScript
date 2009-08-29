@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include <list>
+
 #include <chaiscript/chaiscript.hpp>
 
 void print_help() {
@@ -18,6 +20,8 @@ void print_help() {
 int main(int argc, char *argv[]) {
     std::string input;
     chaiscript::ChaiScript chai;
+
+    chai.add(chaiscript::bootstrap::list_type<std::list<chaiscript::Boxed_Value> >("List"));
 
     if (argc < 2) {
         std::cout << "eval> ";

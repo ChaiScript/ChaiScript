@@ -44,6 +44,8 @@ def odd(x)  { if (x % 2 == 1) { true } else { false } } \
 def even(x) { if (x % 2 == 0) { true } else { false } } \
 # Pushes the second value onto the container first value while making a clone of the value\n\
 def push_back(container, x) : call_exists(push_back_ref, container, x) { container.push_back_ref(clone(x)) } \n\
+# Pushes the second value onto the front of the container first value while making a clone of the value\n\
+def push_front(container, x) : call_exists(push_front_ref, container, x) { container.push_front_ref(clone(x)) } \n\
 # Inserts the third value at the position of the second value into the container of the first\n\
 # while making a clone. \n\
 def insert_at(container, pos, x) { container.insert_ref_at(pos, clone(x)); } \n\

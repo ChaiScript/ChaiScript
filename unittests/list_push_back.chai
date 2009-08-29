@@ -1,0 +1,4 @@
+var x = List()
+x.push_back(3)
+x.push_back("A")
+print(x)

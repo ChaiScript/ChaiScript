@@ -322,6 +322,45 @@ namespace chaiscript
       return m;
     }
 
+
+    /**
+     *Front insertion sequence
+     *http://www.sgi.com/tech/stl/FrontInsertionSequence.html
+     */
+    template<typename ContainerType>
+    ModulePtr front_insertion_sequence_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    {
+      sequence_type<ContainerType>(type, m);
+
+      typedef typename ContainerType::reference (ContainerType::*frontptr)();
+
+      m->add(fun(frontptr(&ContainerType::front)), "front");
+
+      std::string push_front_name;
+      if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value))
+      {
+        push_front_name = "push_front_ref";
+      } else {
+        push_front_name = "push_front";
+      }
+      m->add(fun(&ContainerType::push_front), push_front_name);
+      m->add(fun(&ContainerType::pop_front), "pop_front");
+      return m;
+    }
+
+    /**
+     * hopefully working List type
+     * http://www.sgi.com/tech/stl/List.html
+     */
+    template<typename ListType>
+    ModulePtr list_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    {
+      m->add(user_type<ListType>(), type);
+      front_insertion_sequence_type<ListType>(type, m);
+      back_insertion_sequence_type<ListType>(type, m);
+      return m;
+    }
+
     /**
     * Create a vector type with associated concepts
     * http://www.sgi.com/tech/stl/Vector.html
