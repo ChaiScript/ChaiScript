@@ -125,13 +125,13 @@ namespace chaiscript
                     try {
                         if (lhs.is_unknown())
                         {
-                          retval = dispatch(ss.get_function("clone"), Param_List_Builder() << retval);
+                          retval = ss.call_function("clone", Param_List_Builder() << retval);
                         }
                         Param_List_Builder plb;
                         plb << lhs;
                         plb << retval;
                         try {
-                            retval = dispatch(ss.get_function(node->children[i+1]->text), plb);
+                            retval = ss.call_function(node->children[i+1]->text, plb);
                         }
                         catch(const dispatch_error &){
                             throw Eval_Error("Mismatched types in equation", node->children[i+1]);
@@ -155,7 +155,7 @@ namespace chaiscript
                     plb << eval_token(ss, node->children[i]);
                     plb << retval;
                     try {
-                        retval = dispatch(ss.get_function(node->children[i+1]->text), plb);
+                        retval = ss.call_function(node->children[i+1]->text, plb);
                     }
                     catch(const dispatch_error &){
                         throw Eval_Error("Can not find appropriate '" + node->children[i+1]->text + "'", node->children[i+1]);
@@ -235,7 +235,7 @@ namespace chaiscript
                 plb << eval_token(ss, node->children[i + 1]);
 
                 try {
-                    retval = dispatch(ss.get_function(node->children[i]->text), plb);
+                    retval = ss.call_function(node->children[i]->text, plb);
                 }
                 catch(const dispatch_error &){
                     throw Eval_Error("Can not find appropriate '" + node->children[i]->text + "'", node->children[i]);
@@ -260,7 +260,7 @@ namespace chaiscript
             plb << retval;
             plb << eval_token(ss, node->children[i]);
             try {
-                retval = dispatch(ss.get_function("[]"), plb);
+                retval = ss.call_function("[]", plb);
             }
             catch(std::out_of_range &) {
                 throw Eval_Error("Out of bounds exception", node);
@@ -286,7 +286,7 @@ namespace chaiscript
         plb << Boxed_Value(-1.0);
 
         try {
-            return dispatch(ss.get_function("*"), plb);
+            return ss.call_function("*", plb);
         }
         catch(std::exception &){
             throw Eval_Error("Can not find appropriate negation", node->children[0]);
@@ -323,7 +323,7 @@ namespace chaiscript
         plb << retval;
 
         try {
-            return dispatch(ss.get_function(node->children[0]->text), plb);
+            return ss.call_function(node->children[0]->text, plb);
         }
         catch(std::exception &){
             throw Eval_Error("Can not find appropriate prefix", node->children[0]);
@@ -339,12 +339,12 @@ namespace chaiscript
         unsigned int i;
 
         try {
-            retval = dispatch(ss.get_function("Vector"), Param_List_Builder());
+            retval = ss.call_function("Vector", Param_List_Builder());
             if (node->children.size() > 0) {
                 for (i = 0; i < node->children[0]->children.size(); ++i) {
                     try {
                         Boxed_Value tmp = eval_token(ss, node->children[0]->children[i]);
-                        dispatch(ss.get_function("push_back"), Param_List_Builder() << retval << tmp);
+                        ss.call_function("push_back", Param_List_Builder() << retval << tmp);
                     }
                     catch (const dispatch_error &) {
                         throw Eval_Error("Can not find appropriate 'push_back'", node->children[0]->children[i]);
@@ -365,7 +365,7 @@ namespace chaiscript
     template <typename Eval_System>
     Boxed_Value eval_inline_range(Eval_System &ss, TokenPtr node) {
         try {
-            return dispatch(ss.get_function("generate_range"), Param_List_Builder()
+            return ss.call_function("generate_range", Param_List_Builder()
                 << eval_token(ss, node->children[0]->children[0]->children[0])
                 << eval_token(ss, node->children[0]->children[0]->children[1]));
         }
@@ -383,12 +383,12 @@ namespace chaiscript
         unsigned int i;
 
         try {
-            retval = dispatch(ss.get_function("Map"), Param_List_Builder());
+            retval = ss.call_function("Map", Param_List_Builder());
             for (i = 0; i < node->children[0]->children.size(); ++i) {
                 try {
                     Boxed_Value key = eval_token(ss, node->children[0]->children[i]->children[0]);
-                    Boxed_Value slot = dispatch(ss.get_function("[]"), Param_List_Builder() << retval << key);
-                    dispatch(ss.get_function("="), Param_List_Builder() << slot << eval_token(ss, node->children[0]->children[i]->children[1]));
+                    Boxed_Value slot = ss.call_function("[]", Param_List_Builder() << retval << key);
+                    ss.call_function("=", Param_List_Builder() << slot << eval_token(ss, node->children[0]->children[i]->children[1]));
                 }
                 catch (const dispatch_error &) {
                     throw Eval_Error("Can not find appropriate '=' for map init", node->children[0]->children[i]);

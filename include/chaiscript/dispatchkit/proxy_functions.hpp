@@ -410,17 +410,16 @@ namespace chaiscript
    * each function against the set of parameters, in order, until a matching
    * function is found or throw dispatch_error if no matching function is found
    */
-  Boxed_Value dispatch(const std::vector<std::pair<std::string, Proxy_Function> > &funcs,
+  template<typename InItr>
+  Boxed_Value dispatch(InItr begin, InItr end,
       const std::vector<Boxed_Value> &plist)
   {
-    for (std::vector<std::pair<std::string, Proxy_Function> >::const_iterator itr = funcs.begin();
-        itr != funcs.end();
-        ++itr)
+    while (begin != end)
     {
       try {
-        if (itr->second->filter(plist))
+        if (begin->second->filter(plist))
         {
-          return (*itr->second)(plist);
+          return (*begin->second)(plist);
         }
       } catch (const bad_boxed_cast &) {
         //parameter failed to cast, try again
@@ -430,8 +429,21 @@ namespace chaiscript
         //guard failed to allow the function to execute,
         //try again
       }
+      ++begin;
     }
+
     throw dispatch_error();
+  }
+
+  /**
+   * Take a vector of functions and a vector of parameters. Attempt to execute
+   * each function against the set of parameters, in order, until a matching
+   * function is found or throw dispatch_error if no matching function is found
+   */
+  Boxed_Value dispatch(const std::vector<std::pair<std::string, Proxy_Function> > &funcs,
+      const std::vector<Boxed_Value> &plist)
+  {
+    return dispatch(funcs.begin(), funcs.end(), plist);
   }
 }
 

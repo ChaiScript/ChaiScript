@@ -86,7 +86,7 @@ namespace chaiscript
 
       virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
       {
-        return dispatch(m_funcs, params);
+        return dispatch(m_funcs.begin(), m_funcs.end(), params);
       }
 
       virtual std::vector<Type_Info> get_param_types() const
@@ -371,6 +371,13 @@ namespace chaiscript
         m_reserved_words.insert(name);
       }
 
+      Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params)
+      {
+        std::pair<std::multimap<std::string, Proxy_Function >::const_iterator, std::multimap<std::string, Proxy_Function >::const_iterator> range
+          = m_functions.equal_range(t_name);
+
+        return  dispatch(range.first, range.second, params);
+      }
 
     private:
       /**
