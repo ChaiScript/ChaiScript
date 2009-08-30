@@ -155,13 +155,13 @@ namespace chaiscript
     public:
       typedef std::map<std::string, chaiscript::Type_Info> Type_Name_Map;
       typedef std::map<std::string, Boxed_Value> Scope;
-      typedef boost::shared_ptr<std::deque<Scope> > Stack;
+      typedef boost::shared_ptr<std::pair<std::map<std::string, Boxed_Value>, std::deque<Scope> > > Stack;
 
       Dispatch_Engine()
         : m_scopes(new Stack::element_type()),
           m_place_holder(boost::shared_ptr<Placeholder_Object>(new Placeholder_Object()))
       {
-        m_scopes->push_back(Scope());
+        m_scopes->second.push_back(Scope());
       }
 
       /**
@@ -188,12 +188,13 @@ namespace chaiscript
       void add(const Boxed_Value &obj, const std::string &name)
       {
         validate_object_name(name);
-        for (int i = m_scopes->size()-1; i >= 0; --i)
+        for (int i = m_scopes->second.size()-1; i >= 0; --i)
         {
-          std::map<std::string, Boxed_Value>::const_iterator itr = (*m_scopes)[i].find(name);
-          if (itr != (*m_scopes)[i].end())
+          std::map<std::string, Boxed_Value>::const_iterator itr = (m_scopes->second)[i].find(name);
+          if (itr != (m_scopes->second)[i].end())
           {
-            (*m_scopes)[i][name] = Boxed_Value(obj);
+            m_scopes->first.erase(name);
+            (m_scopes->second)[i][name] = Boxed_Value(obj);
             return;
           }
         }
@@ -206,8 +207,9 @@ namespace chaiscript
        */
       void add_object(const std::string &name, const Boxed_Value &obj)
       {
+        m_scopes->first.erase(name);
         validate_object_name(name);
-        m_scopes->back()[name] = Boxed_Value(obj);
+        m_scopes->second.back()[name] = Boxed_Value(obj);
       }
 
       /**
@@ -215,7 +217,7 @@ namespace chaiscript
        */
       void new_scope()
       {
-        m_scopes->push_back(Scope());
+        m_scopes->second.push_back(Scope());
       }
 
       /**
@@ -223,9 +225,16 @@ namespace chaiscript
        */
       void pop_scope()
       {
-        if (m_scopes->size() > 1)
+        if (m_scopes->second.size() > 1)
         {
-          m_scopes->pop_back();
+          Scope &scope(m_scopes->second.back());
+          for (Scope::const_iterator itr = scope.begin();
+               itr != scope.end();
+               ++itr)
+          {
+            m_scopes->first.erase(itr->first);
+          }
+          m_scopes->second.pop_back();
         } else {
           throw std::range_error("Unable to pop global stack");
         }
@@ -253,7 +262,9 @@ namespace chaiscript
 
       Stack new_stack()
       {
-        return Stack(new Stack::element_type());
+        Stack s(new Stack::element_type());
+        s->second.push_back(Scope());
+        return s;
       }
 
       /**
@@ -268,11 +279,20 @@ namespace chaiscript
           return m_place_holder;
         }
 
-        for (int i = m_scopes->size()-1; i >= 0; --i)
+        std::map<std::string, Boxed_Value> &cache = m_scopes->first;
+
+        std::map<std::string, Boxed_Value>::const_iterator itr = cache.find(name);
+        if (itr != cache.end())
         {
-          std::map<std::string, Boxed_Value>::const_iterator itr = (*m_scopes)[i].find(name);
-          if (itr != (*m_scopes)[i].end())
+          return itr->second;
+        }
+
+        for (int i = m_scopes->second.size()-1; i >= 0; --i)
+        {
+          std::map<std::string, Boxed_Value>::const_iterator itr = (m_scopes->second)[i].find(name);
+          if (itr != (m_scopes->second)[i].end())
           {
+            cache[name] = itr->second;
             return itr->second;
           }
         }
@@ -283,7 +303,9 @@ namespace chaiscript
         {
           throw std::range_error("Object not known: " + name);
         } else {
-          return Boxed_Value(Proxy_Function(new Dispatch_Function(funcs)));
+          Boxed_Value f(Proxy_Function(new Dispatch_Function(funcs)));
+          cache[name] = f;
+          return f;
         }
       }
 

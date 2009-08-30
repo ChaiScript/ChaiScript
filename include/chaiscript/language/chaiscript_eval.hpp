@@ -413,8 +413,6 @@ namespace chaiscript
         Dispatch_Engine::Stack new_stack = ss.new_stack();
         unsigned int i;
 
-        new_stack->push_back(Dispatch_Engine::Scope());
-
         if ((node->children.size() > 1) && (node->children[1]->identifier == Token_Type::Arg_List)) {
             for (i = 0; i < node->children[1]->children.size(); ++i) {
                 plb << eval_token(ss, node->children[1]->children[i]);
@@ -459,8 +457,6 @@ namespace chaiscript
         Dispatch_Engine::Stack prev_stack = ss.get_stack();
         Dispatch_Engine::Stack new_stack = ss.new_stack();
         unsigned int i, j;
-
-        new_stack->push_back(Dispatch_Engine::Scope());
 
         //todo: Please extract a single way of doing function calls between this and eval_fun_call
 
