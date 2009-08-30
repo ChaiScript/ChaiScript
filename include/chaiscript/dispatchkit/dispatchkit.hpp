@@ -170,6 +170,7 @@ namespace chaiscript
       bool add(const Proxy_Function &f, const std::string &name)
       {
         validate_object_name(name);
+        m_scopes->first.erase(name);
         return add_function(f, name);
       }
 
