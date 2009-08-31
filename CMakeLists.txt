@@ -12,7 +12,7 @@ SET (CMAKE_CXX_FLAGS_GDB " -Wall -ggdb")
 
 include_directories(include)
  
-find_package(Boost 1.36.0)
+find_package(Boost 1.36.0 COMPONENTS thread)
 if (Boost_FOUND)
 	include_directories(${Boost_INCLUDE_DIRS})
 	add_executable(chaiscript_eval src/main.cpp)

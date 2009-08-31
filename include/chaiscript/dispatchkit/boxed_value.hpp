@@ -280,8 +280,12 @@ namespace chaiscript
        */
       Object_Cache &get_object_cache()
       {
-        static Object_Cache oc;
-        return oc;
+        static boost::thread_specific_ptr<Object_Cache> oc;
+        if (!oc.get())
+        {
+          oc.reset(new Object_Cache);
+        }
+        return *oc;
       }    
 
       /**

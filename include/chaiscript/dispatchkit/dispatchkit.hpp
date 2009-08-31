@@ -17,6 +17,7 @@
 #include <vector>
 #include <iostream>
 #include <deque>
+#include <boost/thread.hpp>
 
 #include "boxed_value.hpp"
 #include "type_info.hpp"
@@ -155,13 +156,14 @@ namespace chaiscript
     public:
       typedef std::map<std::string, chaiscript::Type_Info> Type_Name_Map;
       typedef std::map<std::string, Boxed_Value> Scope;
-      typedef boost::shared_ptr<std::pair<std::map<std::string, Boxed_Value>, std::deque<Scope> > > Stack;
+      typedef std::pair<std::map<std::string, Boxed_Value>, std::deque<Scope> > StackData;
+      typedef boost::shared_ptr<StackData> Stack;
 
       Dispatch_Engine()
-        : m_scopes(new Stack::element_type()),
-          m_place_holder(boost::shared_ptr<Placeholder_Object>(new Placeholder_Object()))
+        : m_place_holder(boost::shared_ptr<Placeholder_Object>(new Placeholder_Object()))
       {
-        m_scopes->second.push_back(Scope());
+        StackData &stack = get_stack_data();
+        stack.second.push_back(Scope());
       }
 
       /**
@@ -170,7 +172,9 @@ namespace chaiscript
       bool add(const Proxy_Function &f, const std::string &name)
       {
         validate_object_name(name);
-        m_scopes->first.erase(name);
+
+        StackData &stack = get_stack_data();
+        stack.first.erase(name);
         return add_function(f, name);
       }
 
@@ -189,13 +193,15 @@ namespace chaiscript
       void add(const Boxed_Value &obj, const std::string &name)
       {
         validate_object_name(name);
-        for (int i = m_scopes->second.size()-1; i >= 0; --i)
+        StackData &stack = get_stack_data();
+
+        for (int i = stack.second.size()-1; i >= 0; --i)
         {
-          std::map<std::string, Boxed_Value>::const_iterator itr = (m_scopes->second)[i].find(name);
-          if (itr != (m_scopes->second)[i].end())
+          std::map<std::string, Boxed_Value>::const_iterator itr = (stack.second)[i].find(name);
+          if (itr != (stack.second)[i].end())
           {
-            m_scopes->first.erase(name);
-            (m_scopes->second)[i][name] = Boxed_Value(obj);
+            stack.first.erase(name);
+            (stack.second)[i][name] = Boxed_Value(obj);
             return;
           }
         }
@@ -208,9 +214,10 @@ namespace chaiscript
        */
       void add_object(const std::string &name, const Boxed_Value &obj)
       {
-        m_scopes->first.erase(name);
+        StackData &stack = get_stack_data();
         validate_object_name(name);
-        m_scopes->second.back()[name] = Boxed_Value(obj);
+        stack.first.erase(name);
+        stack.second.back()[name] = Boxed_Value(obj);
       }
 
       /**
@@ -218,7 +225,8 @@ namespace chaiscript
        */
       void new_scope()
       {
-        m_scopes->second.push_back(Scope());
+        StackData &stack = get_stack_data();
+        stack.second.push_back(Scope());
       }
 
       /**
@@ -226,16 +234,17 @@ namespace chaiscript
        */
       void pop_scope()
       {
-        if (m_scopes->second.size() > 1)
+        StackData &stack = get_stack_data();
+        if (stack.second.size() > 1)
         {
-          Scope &scope(m_scopes->second.back());
+          Scope &scope(stack.second.back());
           for (Scope::const_iterator itr = scope.begin();
                itr != scope.end();
                ++itr)
           {
-            m_scopes->first.erase(itr->first);
+            stack.first.erase(itr->first);
           }
-          m_scopes->second.pop_back();
+          stack.second.pop_back();
         } else {
           throw std::range_error("Unable to pop global stack");
         }
@@ -246,7 +255,8 @@ namespace chaiscript
        */
       Stack get_stack()
       {
-        return m_scopes;
+        setup_stack();
+        return m_thread_stack->stack;
       }
 
       /**
@@ -256,16 +266,23 @@ namespace chaiscript
        */
       Stack set_stack(const Stack &s)
       {
-        Stack old = m_scopes;
-        m_scopes = s;
+        setup_stack();
+
+        Stack old = m_thread_stack->stack;
+        m_thread_stack->stack = s;
         return old;
       }
 
-      Stack new_stack()
+      Stack new_stack() const
       {
         Stack s(new Stack::element_type());
         s->second.push_back(Scope());
         return s;
+      }
+
+      void sync_cache()
+      {
+        get_stack()->first.clear();
       }
 
       /**
@@ -280,7 +297,8 @@ namespace chaiscript
           return m_place_holder;
         }
 
-        std::map<std::string, Boxed_Value> &cache = m_scopes->first;
+        StackData &stack = get_stack_data();
+        std::map<std::string, Boxed_Value> &cache = stack.first;
 
         std::map<std::string, Boxed_Value>::const_iterator itr = cache.find(name);
         if (itr != cache.end())
@@ -288,10 +306,10 @@ namespace chaiscript
           return itr->second;
         }
 
-        for (int i = m_scopes->second.size()-1; i >= 0; --i)
+        for (int i = stack.second.size()-1; i >= 0; --i)
         {
-          std::map<std::string, Boxed_Value>::const_iterator itr = (m_scopes->second)[i].find(name);
-          if (itr != (m_scopes->second)[i].end())
+          std::map<std::string, Boxed_Value>::const_iterator itr = (stack.second)[i].find(name);
+          if (itr != (stack.second)[i].end())
           {
             cache[name] = itr->second;
             return itr->second;
@@ -315,6 +333,7 @@ namespace chaiscript
        */
       void add(const Type_Info &ti, const std::string &name)
       {
+        boost::unique_lock<boost::shared_mutex> l(m_mutex);
         m_types.insert(std::make_pair(name, ti));
       }
 
@@ -323,6 +342,7 @@ namespace chaiscript
        */
       Type_Info get_type(const std::string &name) const
       {
+        boost::shared_lock<boost::shared_mutex> l(m_mutex);
         Type_Name_Map::const_iterator itr = m_types.find(name);
 
         if (itr != m_types.end())
@@ -340,6 +360,7 @@ namespace chaiscript
        */
       std::string get_type_name(const Type_Info &ti) const
       {
+        boost::shared_lock<boost::shared_mutex> l(m_mutex);
         for (Type_Name_Map::const_iterator itr = m_types.begin();
              itr != m_types.end();
              ++itr)
@@ -358,6 +379,7 @@ namespace chaiscript
        */
       std::vector<std::pair<std::string, Type_Info> > get_types() const
       {
+        boost::shared_lock<boost::shared_mutex> l(m_mutex);
         return std::vector<std::pair<std::string, Type_Info> >(m_types.begin(), m_types.end());
       }
 
@@ -367,6 +389,8 @@ namespace chaiscript
      std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> > 
         get_function(const std::string &t_name) const
       {
+        boost::shared_lock<boost::shared_mutex> l(m_mutex);
+
         std::pair<std::multimap<std::string, Proxy_Function >::const_iterator, std::multimap<std::string, Proxy_Function >::const_iterator> range
           = m_functions.equal_range(t_name);
 
@@ -378,6 +402,7 @@ namespace chaiscript
        */
       bool function_exists(const std::string &name) const
       {
+        boost::shared_lock<boost::shared_mutex> l(m_mutex);
         return m_functions.find(name) != m_functions.end();
       }
 
@@ -386,28 +411,52 @@ namespace chaiscript
        */
       std::vector<std::pair<std::string, Proxy_Function > > get_functions() const
       {
+        boost::shared_lock<boost::shared_mutex> l(m_mutex);
         return std::vector<std::pair<std::string, Proxy_Function > >(m_functions.begin(), m_functions.end());
       }
 
       void add_reserved_word(const std::string &name)
       {
+        boost::unique_lock<boost::shared_mutex> l(m_mutex);
         m_reserved_words.insert(name);
       }
 
-      Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params)
+      Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params) const
       {
+        boost::shared_lock<boost::shared_mutex> l(m_mutex);
         std::pair<std::multimap<std::string, Proxy_Function >::const_iterator, std::multimap<std::string, Proxy_Function >::const_iterator> range
           = m_functions.equal_range(t_name);
+        l.unlock();
 
         return  dispatch(range.first, range.second, params);
       }
 
     private:
       /**
+       * Returns the current stack
+       */
+      StackData &get_stack_data() const
+      {
+        setup_stack();
+        return *(m_thread_stack->stack);
+      }
+
+      void setup_stack() const
+      {
+        if (!m_thread_stack.get())
+        {
+          m_thread_stack.reset(new Stack_Holder(new_stack()));
+        }
+
+      }
+
+      /**
        * Throw a reserved_word exception if the name is not allowed
        */
-      void validate_object_name(const std::string &name)
+      void validate_object_name(const std::string &name) const
       {
+        boost::shared_lock<boost::shared_mutex> l(m_mutex);
+
         if (m_reserved_words.find(name) != m_reserved_words.end())
         {
           throw reserved_word_error(name);
@@ -421,6 +470,8 @@ namespace chaiscript
        */
       bool add_function(const Proxy_Function &f, const std::string &t_name)
       {
+        boost::unique_lock<boost::shared_mutex> l(m_mutex);
+
         std::pair<std::multimap<std::string, Proxy_Function >::const_iterator, std::multimap<std::string, Proxy_Function >::const_iterator> range
           = m_functions.equal_range(t_name);
 
@@ -437,11 +488,24 @@ namespace chaiscript
         return true;
       }
 
-      Stack m_scopes;
+      mutable boost::shared_mutex m_mutex;
+
+      struct Stack_Holder
+      {
+        Stack_Holder(Stack s)
+          : stack(s)
+        {
+        }
+
+        Stack stack;
+      };  
+
+      mutable boost::thread_specific_ptr<Stack_Holder> m_thread_stack;
 
       std::multimap<std::string, Proxy_Function > m_functions;
       Type_Name_Map m_types;
       Boxed_Value m_place_holder;
+
       std::set<std::string> m_reserved_words;
   };
 

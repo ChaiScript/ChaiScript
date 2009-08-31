@@ -21,25 +21,31 @@ namespace chaiscript
         Eval_Engine engine;
 
         std::set<std::string> loaded_files;
-
-        ChaiScript_Parser parser;
+        mutable boost::shared_mutex mutex;
+        mutable boost::recursive_mutex use_mutex;
 
 
         /**
          * Evaluates the given string in by parsing it and running the results through the evaluator
          */
         Boxed_Value do_eval(const std::string &input, const std::string &filename = "__EVAL__") {
+            ChaiScript_Parser parser;
+
+            engine.sync_cache();
+
             //debug_print(tokens);
             Boxed_Value value;
-            parser.clear_match_stack();
 
             // Keep a cache of all loaded filenames and use the char * from this cache to pass 
             // to the parser. This is so that the parser does not have the overhead of passing 
             // around and copying strings
+            //
+            boost::unique_lock<boost::shared_mutex> l(mutex);
             loaded_files.insert(filename);
 
             try {
                 if (parser.parse(input, loaded_files.find(filename)->c_str())) {
+                    l.unlock();
                     //parser.show_match_stack();
                     value = eval_token<Eval_Engine>(engine, parser.ast());
                 }
@@ -60,8 +66,11 @@ namespace chaiscript
 
         void use(const std::string &filename)
         {
+          boost::lock_guard<boost::recursive_mutex> l(use_mutex);
+          boost::shared_lock<boost::shared_mutex> l2(mutex);
           if (loaded_files.count(filename) == 0)
           {
+            l2.unlock();
             eval_file(filename);
           }
         }
