@@ -54,6 +54,8 @@ namespace chaiscript
                 value = rv.retval;
             }
 
+            engine.sync_cache();
+
             return value;
         }
 
@@ -72,7 +74,10 @@ namespace chaiscript
           {
             l2.unlock();
             eval_file(filename);
+          } else {
+            engine.sync_cache();
           }
+
         }
 
 

@@ -283,6 +283,8 @@ namespace chaiscript
       void sync_cache()
       {
         get_stack()->first.clear();
+        boost::shared_lock<boost::shared_mutex> l(m_mutex);
+        get_function_cache() = m_functions;
       }
 
       /**
@@ -386,13 +388,11 @@ namespace chaiscript
       /**
        * Return a function by name
        */
-     std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> > 
+      std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> > 
         get_function(const std::string &t_name) const
       {
-        boost::shared_lock<boost::shared_mutex> l(m_mutex);
-
         std::pair<std::multimap<std::string, Proxy_Function >::const_iterator, std::multimap<std::string, Proxy_Function >::const_iterator> range
-          = m_functions.equal_range(t_name);
+          = get_function_cache().equal_range(t_name);
 
         return  std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> >(range.first, range.second);
       }
@@ -402,8 +402,8 @@ namespace chaiscript
        */
       bool function_exists(const std::string &name) const
       {
-        boost::shared_lock<boost::shared_mutex> l(m_mutex);
-        return m_functions.find(name) != m_functions.end();
+        std::multimap<std::string, Proxy_Function> &functions = get_function_cache();
+        return functions.find(name) != functions.end();
       }
 
       /**
@@ -411,8 +411,8 @@ namespace chaiscript
        */
       std::vector<std::pair<std::string, Proxy_Function > > get_functions() const
       {
-        boost::shared_lock<boost::shared_mutex> l(m_mutex);
-        return std::vector<std::pair<std::string, Proxy_Function > >(m_functions.begin(), m_functions.end());
+        std::multimap<std::string, Proxy_Function> &functions = get_function_cache();
+        return std::vector<std::pair<std::string, Proxy_Function > >(functions.begin(), functions.end());
       }
 
       void add_reserved_word(const std::string &name)
@@ -423,10 +423,9 @@ namespace chaiscript
 
       Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params) const
       {
-        boost::shared_lock<boost::shared_mutex> l(m_mutex);
+        std::multimap<std::string, Proxy_Function> &functions = get_function_cache();
         std::pair<std::multimap<std::string, Proxy_Function >::const_iterator, std::multimap<std::string, Proxy_Function >::const_iterator> range
-          = m_functions.equal_range(t_name);
-        l.unlock();
+          = functions.equal_range(t_name);
 
         return  dispatch(range.first, range.second, params);
       }
@@ -441,13 +440,18 @@ namespace chaiscript
         return *(m_thread_stack->stack);
       }
 
+      std::multimap<std::string, Proxy_Function> &get_function_cache() const
+      {
+        setup_stack();
+        return m_thread_stack->function_cache;
+      }
+
       void setup_stack() const
       {
         if (!m_thread_stack.get())
         {
           m_thread_stack.reset(new Stack_Holder(new_stack()));
         }
-
       }
 
       /**
@@ -485,6 +489,8 @@ namespace chaiscript
         }
 
         m_functions.insert(std::make_pair(t_name, f));
+        get_function_cache().insert(std::make_pair(t_name, f));
+
         return true;
       }
 
@@ -498,11 +504,13 @@ namespace chaiscript
         }
 
         Stack stack;
+
+        std::multimap<std::string, Proxy_Function> function_cache;
       };  
 
       mutable boost::thread_specific_ptr<Stack_Holder> m_thread_stack;
 
-      std::multimap<std::string, Proxy_Function > m_functions;
+      std::multimap<std::string, Proxy_Function> m_functions;
       Type_Name_Map m_types;
       Boxed_Value m_place_holder;
 
