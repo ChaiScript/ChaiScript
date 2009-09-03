@@ -87,6 +87,15 @@ namespace chaiscript
         }
 
         /**
+         * Adds a shared object, that can be used by all threads, to the system
+         */
+        ChaiScript_System &add_shared_object(const Boxed_Value &bv, const std::string &name)
+        {
+            engine.add_shared_object(bv, name);
+            return *this;
+        }
+
+        /**
          * Adds an object to the system: type, function, object
          */
         template<typename T>

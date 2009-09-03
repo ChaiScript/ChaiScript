@@ -13,6 +13,7 @@
 #include <set>
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/tuple/tuple.hpp>
 #include <stdexcept>
 #include <vector>
 #include <iostream>
@@ -156,14 +157,14 @@ namespace chaiscript
     public:
       typedef std::map<std::string, chaiscript::Type_Info> Type_Name_Map;
       typedef std::map<std::string, Boxed_Value> Scope;
-      typedef std::pair<std::map<std::string, Boxed_Value>, std::deque<Scope> > StackData;
+      typedef boost::tuples::tuple<std::map<std::string, Boxed_Value>, std::deque<Scope>, bool> StackData;
       typedef boost::shared_ptr<StackData> Stack;
 
       Dispatch_Engine()
         : m_place_holder(boost::shared_ptr<Placeholder_Object>(new Placeholder_Object()))
       {
         StackData &stack = get_stack_data();
-        stack.second.push_back(Scope());
+        stack.get<1>().push_back(Scope());
       }
 
       /**
@@ -174,7 +175,7 @@ namespace chaiscript
         validate_object_name(name);
 
         StackData &stack = get_stack_data();
-        stack.first.erase(name);
+        stack.get<0>().erase(name);
         return add_function(f, name);
       }
 
@@ -195,13 +196,13 @@ namespace chaiscript
         validate_object_name(name);
         StackData &stack = get_stack_data();
 
-        for (int i = stack.second.size()-1; i >= 0; --i)
+        for (int i = stack.get<1>().size()-1; i >= 0; --i)
         {
-          std::map<std::string, Boxed_Value>::const_iterator itr = (stack.second)[i].find(name);
-          if (itr != (stack.second)[i].end())
+          std::map<std::string, Boxed_Value>::const_iterator itr = (stack.get<1>())[i].find(name);
+          if (itr != (stack.get<1>())[i].end())
           {
-            stack.first.erase(name);
-            (stack.second)[i][name] = Boxed_Value(obj);
+            stack.get<0>().erase(name);
+            (stack.get<1>())[i][name] = obj;
             return;
           }
         }
@@ -216,8 +217,21 @@ namespace chaiscript
       {
         StackData &stack = get_stack_data();
         validate_object_name(name);
-        stack.first.erase(name);
-        stack.second.back()[name] = Boxed_Value(obj);
+        stack.get<0>().erase(name);
+        stack.get<1>().back()[name] = obj;
+      }
+
+      /**
+       * Adds a new shared object, between all the threads
+       */
+      void add_shared_object(const Boxed_Value &obj, const std::string &name)
+      {
+        StackData &stack = get_stack_data();
+        validate_object_name(name);
+        stack.get<0>().erase(name);
+        
+        boost::unique_lock<boost::shared_mutex> l(m_shared_object_mutex);
+        m_shared_objects[name] = obj;
       }
 
       /**
@@ -226,7 +240,7 @@ namespace chaiscript
       void new_scope()
       {
         StackData &stack = get_stack_data();
-        stack.second.push_back(Scope());
+        stack.get<1>().push_back(Scope());
       }
 
       /**
@@ -235,16 +249,16 @@ namespace chaiscript
       void pop_scope()
       {
         StackData &stack = get_stack_data();
-        if (stack.second.size() > 1)
+        if (stack.get<1>().size() > 1)
         {
-          Scope &scope(stack.second.back());
+          Scope &scope(stack.get<1>().back());
           for (Scope::const_iterator itr = scope.begin();
                itr != scope.end();
                ++itr)
           {
-            stack.first.erase(itr->first);
+            stack.get<0>().erase(itr->first);
           }
-          stack.second.pop_back();
+          stack.get<1>().pop_back();
         } else {
           throw std::range_error("Unable to pop global stack");
         }
@@ -276,13 +290,14 @@ namespace chaiscript
       Stack new_stack() const
       {
         Stack s(new Stack::element_type());
-        s->second.push_back(Scope());
+        s->get<1>().push_back(Scope());
+        s->get<2>() = false;
         return s;
       }
 
       void sync_cache()
       {
-        get_stack()->first.clear();
+        get_stack()->get<0>().clear();
         boost::shared_lock<boost::shared_mutex> l(m_mutex);
         get_function_cache() = m_functions;
       }
@@ -294,30 +309,46 @@ namespace chaiscript
        */
       Boxed_Value get_object(const std::string &name) const
       {
+        // Is it a placeholder object?
         if (name == "_")
         {
           return m_place_holder;
         }
 
         StackData &stack = get_stack_data();
-        std::map<std::string, Boxed_Value> &cache = stack.first;
+        std::map<std::string, Boxed_Value> &cache = stack.get<0>();
 
+        // Is it in the cache?
         std::map<std::string, Boxed_Value>::const_iterator itr = cache.find(name);
         if (itr != cache.end())
         {
           return itr->second;
         }
 
-        for (int i = stack.second.size()-1; i >= 0; --i)
+        // Is it in the stack?
+        for (int i = stack.get<1>().size()-1; i >= 0; --i)
         {
-          std::map<std::string, Boxed_Value>::const_iterator itr = (stack.second)[i].find(name);
-          if (itr != (stack.second)[i].end())
+          std::map<std::string, Boxed_Value>::const_iterator itr = (stack.get<1>())[i].find(name);
+          if (itr != (stack.get<1>())[i].end())
           {
             cache[name] = itr->second;
             return itr->second;
           }
         }
 
+        // Are we in the 0th stack and should check the shared objects?
+        if (stack.get<2>())
+        {
+          boost::shared_lock<boost::shared_mutex> l(m_shared_object_mutex);
+          itr = m_shared_objects.find(name);
+          if (itr != m_shared_objects.end())
+          {
+            cache[name] = itr->second;
+            return itr->second;
+          }
+        }
+
+        // If all that failed, then check to see if it's a function
         std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> > funcs = get_function(name);
 
         if (funcs.empty())
@@ -451,6 +482,7 @@ namespace chaiscript
         if (!m_thread_stack.get())
         {
           m_thread_stack.reset(new Stack_Holder(new_stack()));
+          m_thread_stack->stack->get<2>() = true;
         }
       }
 
@@ -495,6 +527,7 @@ namespace chaiscript
       }
 
       mutable boost::shared_mutex m_mutex;
+      mutable boost::shared_mutex m_shared_object_mutex;
 
       struct Stack_Holder
       {
@@ -511,6 +544,8 @@ namespace chaiscript
       mutable boost::thread_specific_ptr<Stack_Holder> m_thread_stack;
 
       std::multimap<std::string, Proxy_Function> m_functions;
+      std::map<std::string, Boxed_Value> m_shared_objects;
+
       Type_Name_Map m_types;
       Boxed_Value m_place_holder;
 
