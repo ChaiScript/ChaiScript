@@ -175,9 +175,9 @@ namespace chaiscript
       //In the interest of runtime safety for the m, we prefer the at() method for [] access,
       //to throw an exception in an out of bounds condition.
       m->add(
-        fun(boost::function<typename ContainerType::reference (ContainerType *, int)>(indexoper(&ContainerType::at))), "[]");
+        fun(boost::function<typename ContainerType::reference (ContainerType *, int)>(static_cast<indexoper>(&ContainerType::at))), "[]");
       m->add(
-        fun(boost::function<typename ContainerType::reference (ContainerType *, int)>(indexoper(&ContainerType::operator[]))), "at");
+        fun(boost::function<typename ContainerType::reference (ContainerType *, int)>(static_cast<indexoper>(&ContainerType::operator[]))), "at");
 
       return m;
     }
@@ -307,7 +307,7 @@ namespace chaiscript
 
       typedef typename ContainerType::reference (ContainerType::*backptr)();
 
-      m->add(fun(backptr(&ContainerType::back)), "back");
+      m->add(fun(static_cast<backptr>(&ContainerType::back)), "back");
 
       std::string push_back_name;
       if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value))
@@ -334,7 +334,7 @@ namespace chaiscript
 
       typedef typename ContainerType::reference (ContainerType::*frontptr)();
 
-      m->add(fun(frontptr(&ContainerType::front)), "front");
+      m->add(fun(static_cast<frontptr>(&ContainerType::front)), "front");
 
       std::string push_front_name;
       if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value))
@@ -443,7 +443,7 @@ namespace chaiscript
 
       reversible_container_type<ContainerType>(type, m);
       associative_container_type<ContainerType>(type, m);
-      m->add(fun(eq_range(&ContainerType::equal_range)), "equal_range");
+      m->add(fun(static_cast<eq_range>(&ContainerType::equal_range)), "equal_range");
 
       return m;
     }
@@ -501,12 +501,12 @@ namespace chaiscript
       m->add(fun(&String::push_back), push_back_name);
 
       typedef typename String::size_type (String::*find_func)(const String &, typename String::size_type) const;
-      m->add(fun(find_func(&String::find)), "find");
-      m->add(fun(find_func(&String::rfind)), "rfind");
-      m->add(fun(find_func(&String::find_first_of)), "find_first_of");
-      m->add(fun(find_func(&String::find_last_of)), "find_last_of");
-      m->add(fun(find_func(&String::find_first_not_of)), "find_first_not_of");
-      m->add(fun(find_func(&String::find_last_not_of)), "find_last_not_of");
+      m->add(fun(static_cast<find_func>(&String::find)), "find");
+      m->add(fun(static_cast<find_func>(&String::rfind)), "rfind");
+      m->add(fun(static_cast<find_func>(&String::find_first_of)), "find_first_of");
+      m->add(fun(static_cast<find_func>(&String::find_last_of)), "find_last_of");
+      m->add(fun(static_cast<find_func>(&String::find_first_not_of)), "find_first_not_of");
+      m->add(fun(static_cast<find_func>(&String::find_last_not_of)), "find_last_not_of");
 
       return m;
     }
