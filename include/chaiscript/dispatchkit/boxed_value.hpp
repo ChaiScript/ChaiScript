@@ -355,7 +355,12 @@ namespace chaiscript
               return boost::any_cast<boost::reference_wrapper<const Result> >(ob.get());
             }
           } else {
-            return boost::cref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));   
+            if (!ob.get_type_info().m_is_const)
+            {
+              return boost::cref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));   
+            } else {
+              return boost::cref(*(boost::any_cast<boost::shared_ptr<const Result> >(ob.get())));   
+            }
           }
         }
       };
@@ -379,7 +384,12 @@ namespace chaiscript
               return boost::any_cast<boost::reference_wrapper<const Result> >(ob.get());
             }
           } else {
-            return boost::cref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));   
+            if (!ob.get_type_info().m_is_const)
+            {
+              return boost::cref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));   
+            } else {
+              return boost::cref(*(boost::any_cast<boost::shared_ptr<const Result> >(ob.get())));   
+            }
           }
         }
       };
@@ -403,7 +413,12 @@ namespace chaiscript
               return (boost::any_cast<boost::reference_wrapper<const Result> >(ob.get())).get_pointer();
             }
           } else {
-            return (boost::any_cast<boost::shared_ptr<Result> >(ob.get())).get();
+            if (!ob.get_type_info().m_is_const)
+            {
+              return (boost::any_cast<boost::shared_ptr<Result> >(ob.get())).get();
+            } else {
+              return (boost::any_cast<boost::shared_ptr<const Result> >(ob.get())).get();
+            }
           }
         }
       };
@@ -461,7 +476,26 @@ namespace chaiscript
       };
 
     /**
-     * Cast_Helper for casting to a boost::shared_ptr<> type
+     * Cast_Helper for casting to a boost::shared_ptr<const> type
+     */
+    template<typename Result>
+      struct Cast_Helper<typename boost::shared_ptr<const Result> >
+      {
+        typedef typename boost::shared_ptr<const Result> Result_Type;
+
+        static Result_Type cast(const Boxed_Value &ob)
+        {
+          if (!ob.get_type_info().m_is_const)
+          {
+            return boost::const_pointer_cast<const Result>(boost::any_cast<boost::shared_ptr<Result> >(ob.get()));
+          } else {
+            return boost::any_cast<boost::shared_ptr<const Result> >(ob.get());
+          }
+        }
+      };
+
+    /**
+     * Cast_Helper for casting to a const boost::shared_ptr<> & type
      */
     template<typename Result>
       struct Cast_Helper<const boost::shared_ptr<Result> &>
@@ -471,6 +505,25 @@ namespace chaiscript
         static Result_Type cast(const Boxed_Value &ob)
         {
           return boost::any_cast<boost::shared_ptr<Result> >(ob.get());
+        }
+      };
+
+    /**
+     * Cast_Helper for casting to a const boost::shared_ptr<const> & type
+     */
+    template<typename Result>
+      struct Cast_Helper<const boost::shared_ptr<const Result> &>
+      {
+        typedef typename boost::shared_ptr<const Result> Result_Type;
+
+        static Result_Type cast(const Boxed_Value &ob)
+        {
+          if (!ob.get_type_info().m_is_const)
+          {
+            return boost::const_pointer_cast<const Result>(boost::any_cast<boost::shared_ptr<Result> >(ob.get()));
+          } else {
+            return boost::any_cast<boost::shared_ptr<const Result> >(ob.get());
+          }
         }
       };
 
