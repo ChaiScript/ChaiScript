@@ -18,12 +18,12 @@
 #include <vector>
 #include <iostream>
 #include <deque>
-#include <boost/thread.hpp>
 
 #include "boxed_value.hpp"
 #include "type_info.hpp"
 #include "proxy_functions.hpp"
 #include "proxy_constructors.hpp"
+#include "../chaiscript_threading.hpp"
 
 namespace chaiscript
 {
@@ -230,7 +230,10 @@ namespace chaiscript
         validate_object_name(name);
         stack.get<0>().erase(name);
         
+#ifndef CHAISCRIPT_NO_THREADS
         boost::unique_lock<boost::shared_mutex> l(m_shared_object_mutex);
+#endif
+
         m_shared_objects[name] = obj;
       }
 
@@ -265,25 +268,14 @@ namespace chaiscript
       }
 
       /**
-       * Returns the current stack
-       */
-      Stack get_stack()
-      {
-        setup_stack();
-        return m_thread_stack->stack;
-      }
-
-      /**
        * Swaps out the stack with a new stack
        * \returns the old stack
        * \param[in] s The new stack
        */
       Stack set_stack(const Stack &s)
       {
-        setup_stack();
-
-        Stack old = m_thread_stack->stack;
-        m_thread_stack->stack = s;
+        Stack old = m_stack_holder->stack;
+        m_stack_holder->stack = s;
         return old;
       }
 
@@ -295,10 +287,19 @@ namespace chaiscript
         return s;
       }
 
+      Stack get_stack() const
+      {
+        return m_stack_holder->stack;
+      }
+
       void sync_cache()
       {
-        get_stack()->get<0>().clear();
+        m_stack_holder->stack->get<0>().clear();
+
+#ifndef CHAISCRIPT_NO_THREADS
         boost::shared_lock<boost::shared_mutex> l(m_mutex);
+#endif
+
         get_function_cache() = m_functions;
       }
 
@@ -339,7 +340,10 @@ namespace chaiscript
         // Are we in the 0th stack and should check the shared objects?
         if (stack.get<2>())
         {
+#ifndef CHAISCRIPT_NO_THREADS
           boost::shared_lock<boost::shared_mutex> l(m_shared_object_mutex);
+#endif
+
           itr = m_shared_objects.find(name);
           if (itr != m_shared_objects.end())
           {
@@ -366,7 +370,10 @@ namespace chaiscript
        */
       void add(const Type_Info &ti, const std::string &name)
       {
+#ifndef CHAISCRIPT_NO_THREADS
         boost::unique_lock<boost::shared_mutex> l(m_mutex);
+#endif
+
         m_types.insert(std::make_pair(name, ti));
       }
 
@@ -375,7 +382,10 @@ namespace chaiscript
        */
       Type_Info get_type(const std::string &name) const
       {
+#ifndef CHAISCRIPT_NO_THREADS
         boost::shared_lock<boost::shared_mutex> l(m_mutex);
+#endif
+
         Type_Name_Map::const_iterator itr = m_types.find(name);
 
         if (itr != m_types.end())
@@ -393,7 +403,10 @@ namespace chaiscript
        */
       std::string get_type_name(const Type_Info &ti) const
       {
+#ifndef CHAISCRIPT_NO_THREADS
         boost::shared_lock<boost::shared_mutex> l(m_mutex);
+#endif
+
         for (Type_Name_Map::const_iterator itr = m_types.begin();
              itr != m_types.end();
              ++itr)
@@ -412,7 +425,10 @@ namespace chaiscript
        */
       std::vector<std::pair<std::string, Type_Info> > get_types() const
       {
+#ifndef CHAISCRIPT_NO_THREADS
         boost::shared_lock<boost::shared_mutex> l(m_mutex);
+#endif
+
         return std::vector<std::pair<std::string, Type_Info> >(m_types.begin(), m_types.end());
       }
 
@@ -448,7 +464,10 @@ namespace chaiscript
 
       void add_reserved_word(const std::string &name)
       {
+#ifndef CHAISCRIPT_NO_THREADS
         boost::unique_lock<boost::shared_mutex> l(m_mutex);
+#endif
+
         m_reserved_words.insert(name);
       }
 
@@ -464,34 +483,27 @@ namespace chaiscript
     private:
       /**
        * Returns the current stack
+       * make const/non const versions
        */
       StackData &get_stack_data() const
       {
-        setup_stack();
-        return *(m_thread_stack->stack);
+        return *(m_stack_holder->stack);
       }
 
       std::multimap<std::string, Proxy_Function> &get_function_cache() const
       {
-        setup_stack();
-        return m_thread_stack->function_cache;
+        return m_stack_holder->function_cache;
       }
 
-      void setup_stack() const
-      {
-        if (!m_thread_stack.get())
-        {
-          m_thread_stack.reset(new Stack_Holder(new_stack()));
-          m_thread_stack->stack->get<2>() = true;
-        }
-      }
 
       /**
        * Throw a reserved_word exception if the name is not allowed
        */
       void validate_object_name(const std::string &name) const
       {
+#ifndef CHAISCRIPT_NO_THREADS
         boost::shared_lock<boost::shared_mutex> l(m_mutex);
+#endif
 
         if (m_reserved_words.find(name) != m_reserved_words.end())
         {
@@ -506,7 +518,9 @@ namespace chaiscript
        */
       bool add_function(const Proxy_Function &f, const std::string &t_name)
       {
+#ifndef CHAISCRIPT_NO_THREADS
         boost::unique_lock<boost::shared_mutex> l(m_mutex);
+#endif
 
         std::pair<std::multimap<std::string, Proxy_Function >::const_iterator, std::multimap<std::string, Proxy_Function >::const_iterator> range
           = m_functions.equal_range(t_name);
@@ -526,14 +540,17 @@ namespace chaiscript
         return true;
       }
 
+#ifndef CHAISCRIPT_NO_THREADS
       mutable boost::shared_mutex m_mutex;
       mutable boost::shared_mutex m_shared_object_mutex;
+#endif
 
       struct Stack_Holder
       {
-        Stack_Holder(Stack s)
-          : stack(s)
+        Stack_Holder()
+          : stack(new StackData())
         {
+          stack->get<2>() = true;
         }
 
         Stack stack;
@@ -541,7 +558,8 @@ namespace chaiscript
         std::multimap<std::string, Proxy_Function> function_cache;
       };  
 
-      mutable boost::thread_specific_ptr<Stack_Holder> m_thread_stack;
+      chaiscript::threading::Thread_Storage<Stack_Holder> m_stack_holder;
+
 
       std::multimap<std::string, Proxy_Function> m_functions;
       std::map<std::string, Boxed_Value> m_shared_objects;

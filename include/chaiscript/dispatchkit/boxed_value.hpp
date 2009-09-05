@@ -8,6 +8,7 @@
 #define __boxed_value_hpp__
 
 #include "type_info.hpp"
+#include "../chaiscript_threading.hpp"
 #include <map>
 #include <boost/shared_ptr.hpp>
 #include <boost/any.hpp>
@@ -280,11 +281,7 @@ namespace chaiscript
        */
       Object_Cache &get_object_cache()
       {
-        static boost::thread_specific_ptr<Object_Cache> oc;
-        if (!oc.get())
-        {
-          oc.reset(new Object_Cache);
-        }
+        static chaiscript::threading::Thread_Storage<Object_Cache> oc;
         return *oc;
       }    
 

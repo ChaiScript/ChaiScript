@@ -9,7 +9,7 @@
 #include <list>
 
 #include <chaiscript/chaiscript.hpp>
-
+#include <boost/thread.hpp>
 
 void do_work(chaiscript::ChaiScript &c)
 {

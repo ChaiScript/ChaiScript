@@ -21,8 +21,11 @@ namespace chaiscript
         Eval_Engine engine;
 
         std::set<std::string> loaded_files;
+
+#ifndef CHAISCRIPT_NO_THREADS
         mutable boost::shared_mutex mutex;
         mutable boost::recursive_mutex use_mutex;
+#endif
 
 
         /**
@@ -40,12 +43,16 @@ namespace chaiscript
             // to the parser. This is so that the parser does not have the overhead of passing 
             // around and copying strings
             //
+#ifndef CHAISCRIPT_NO_THREADS
             boost::unique_lock<boost::shared_mutex> l(mutex);
+#endif
             loaded_files.insert(filename);
 
             try {
                 if (parser.parse(input, loaded_files.find(filename)->c_str())) {
+#ifndef CHAISCRIPT_NO_THREADS
                     l.unlock();
+#endif
                     //parser.show_match_stack();
                     value = eval_token<Eval_Engine>(engine, parser.ast());
                 }
@@ -68,11 +75,16 @@ namespace chaiscript
 
         void use(const std::string &filename)
         {
+#ifndef CHAISCRIPT_NO_THREADS
           boost::lock_guard<boost::recursive_mutex> l(use_mutex);
           boost::shared_lock<boost::shared_mutex> l2(mutex);
+#endif
+
           if (loaded_files.count(filename) == 0)
           {
+#ifndef CHAISCRIPT_NO_THREADS
             l2.unlock();
+#endif
             eval_file(filename);
           } else {
             engine.sync_cache();
