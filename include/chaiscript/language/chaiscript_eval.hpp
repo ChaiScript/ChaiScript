@@ -55,10 +55,12 @@ namespace chaiscript
     Boxed_Value eval_id(Eval_System &ss, const TokenPtr &node) {
 
         if (node->text == "true") {
-            return Boxed_Value(true);
+            //return Boxed_Value(true);
+            return const_var(true);
         }
         else if (node->text == "false") {
-            return Boxed_Value(false);
+            //return Boxed_Value(false);
+            return const_var(false);
         }
         else {
             try {
@@ -75,7 +77,8 @@ namespace chaiscript
      */
     template <typename Eval_System>
     Boxed_Value eval_float(Eval_System &, const TokenPtr &node) {
-        return Boxed_Value(double(atof(node->text.c_str())));
+        //return Boxed_Value(double(atof(node->text.c_str())));
+        return const_var(double(atof(node->text.c_str())));
     }
 
     /**
@@ -83,7 +86,8 @@ namespace chaiscript
      */
     template <typename Eval_System>
     Boxed_Value eval_int(Eval_System &, const TokenPtr &node) {
-        return Boxed_Value(atoi(node->text.c_str()));
+        //return Boxed_Value(atoi(node->text.c_str()));
+        return const_var(double(atoi(node->text.c_str())));
     }
 
     /**
@@ -91,7 +95,8 @@ namespace chaiscript
      */
     template <typename Eval_System>
     Boxed_Value eval_quoted_string(Eval_System &, const TokenPtr &node) {
-        return Boxed_Value(node->text);
+        //return Boxed_Value(node->text);
+        return const_var(node->text);
     }
 
     /**
@@ -100,10 +105,12 @@ namespace chaiscript
     template <typename Eval_System>
     Boxed_Value eval_single_quoted_string(Eval_System &, const TokenPtr &node) {
         if (node->text.size() == 1) {
-            return Boxed_Value(char(node->text[0]));
+            //return Boxed_Value(char(node->text[0]));
+            return const_var(char(node->text[0]));
         }
         else {
-            return Boxed_Value(char((int)node->text[0] * 0xff + (int)node->text[0]));
+            //return Boxed_Value(char((int)node->text[0] * 0xff + (int)node->text[0]));
+            return const_var(char((int)node->text[0] * 0xff + (int)node->text[0]));
         }
     }
 
