@@ -87,7 +87,7 @@ namespace chaiscript
     template <typename Eval_System>
     Boxed_Value eval_int(Eval_System &, const TokenPtr &node) {
         //return Boxed_Value(atoi(node->text.c_str()));
-        return const_var(double(atoi(node->text.c_str())));
+        return const_var(int(atoi(node->text.c_str())));
     }
 
     /**
@@ -510,7 +510,7 @@ namespace chaiscript
         Boxed_Value retval = eval_token(ss, node->children[0]);
         bool cond;
         try {
-            cond = boxed_cast<bool &>(retval);
+            cond = boxed_cast<bool>(retval);
         }
         catch (const bad_boxed_cast &) {
             throw Eval_Error("If condition not boolean", node->children[0]);
@@ -529,7 +529,7 @@ namespace chaiscript
                     else if (node->children[i]->text == "else if") {
                         retval = eval_token(ss, node->children[i+1]);
                         try {
-                            cond = boxed_cast<bool &>(retval);
+                            cond = boxed_cast<bool>(retval);
                         }
                         catch (const bad_boxed_cast &) {
                             throw Eval_Error("'else if' condition not boolean", node->children[i+1]);
@@ -556,7 +556,7 @@ namespace chaiscript
         ss.new_scope();
 
         try {
-            cond = boxed_cast<bool &>(eval_token(ss, node->children[0]));
+            cond = boxed_cast<bool>(eval_token(ss, node->children[0]));
         }
         catch (const bad_boxed_cast &) {
             ss.pop_scope();
@@ -566,7 +566,7 @@ namespace chaiscript
             try {
                 eval_token(ss, node->children[1]);
                 try {
-                    cond = boxed_cast<bool &>(eval_token(ss, node->children[0]));
+                    cond = boxed_cast<bool>(eval_token(ss, node->children[0]));
                 }
                 catch (const bad_boxed_cast &) {
                     ss.pop_scope();
@@ -593,10 +593,10 @@ namespace chaiscript
         try {
             if (node->children.size() == 4) {
                 eval_token(ss, node->children[0]);
-                cond = boxed_cast<bool &>(eval_token(ss, node->children[1]));
+                cond = boxed_cast<bool>(eval_token(ss, node->children[1]));
             }
             else {
-                cond = boxed_cast<bool &>(eval_token(ss, node->children[0]));
+                cond = boxed_cast<bool>(eval_token(ss, node->children[0]));
             }
         }
         catch (const bad_boxed_cast &) {
@@ -608,12 +608,12 @@ namespace chaiscript
                 if (node->children.size() == 4) {
                     eval_token(ss, node->children[3]);
                     eval_token(ss, node->children[2]);
-                    cond = boxed_cast<bool &>(eval_token(ss, node->children[1]));
+                    cond = boxed_cast<bool>(eval_token(ss, node->children[1]));
                 }
                 else {
                     eval_token(ss, node->children[2]);
                     eval_token(ss, node->children[1]);
-                    cond = boxed_cast<bool &>(eval_token(ss, node->children[0]));
+                    cond = boxed_cast<bool>(eval_token(ss, node->children[0]));
                 }
             }
             catch (const bad_boxed_cast &) {
