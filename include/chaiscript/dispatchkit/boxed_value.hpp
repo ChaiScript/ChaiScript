@@ -218,13 +218,15 @@ namespace chaiscript
          * Drop objects from the cache where there is only one (ie, our)
          * reference to it, so it may be destructed
          */
-        void cull()
+        void cull(bool force = false)
         {
+          
           ++m_cullcount;
-          if (m_cullcount % 10 != 0)
+          if (force || m_cullcount % 10 != 0)
           {
             return;
           }
+
 
           std::map<const void *, Data >::iterator itr = m_ptrs.begin();
 
@@ -279,11 +281,16 @@ namespace chaiscript
       /**
        * Return a reference to the static global Object_Cache
        */
-      Object_Cache &get_object_cache()
+      static Object_Cache &get_object_cache()
       {
         static chaiscript::threading::Thread_Storage<Object_Cache> oc;
         return *oc;
-      }    
+      }   
+
+      static void clear_cache()
+      {
+        get_object_cache().m_ptrs.clear();
+      }
 
       /**
        * copy the values stored in rhs.m_data to m_data

@@ -17,8 +17,12 @@ if (Boost_FOUND)
 	include_directories(${Boost_INCLUDE_DIRS})
 	add_executable(chaiscript_eval src/main.cpp)
 	#add_executable(dispatchkit_test contrib/test/dispatchkit_test.cpp)
-	target_link_libraries(chaiscript_eval ${Boost_LIBRARIES})
+	target_link_libraries(chaiscript_eval dl ${Boost_LIBRARIES})
+
+        add_library(test MODULE src/test_module.cpp)
+
 	install(TARGETS chaiscript_eval DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+        
 else(Boost_FOUND)
         message(FATAL_ERROR "Can not find Boost")
 endif(Boost_FOUND)

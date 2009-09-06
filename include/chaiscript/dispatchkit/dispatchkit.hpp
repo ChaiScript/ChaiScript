@@ -167,6 +167,11 @@ namespace chaiscript
         stack.get<1>().push_back(Scope());
       }
 
+      ~Dispatch_Engine()
+      {
+        Boxed_Value::clear_cache();
+      }
+
       /**
        * Add a new named Proxy_Function to the system
        */

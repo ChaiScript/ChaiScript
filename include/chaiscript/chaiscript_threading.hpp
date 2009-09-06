@@ -18,6 +18,11 @@ namespace chaiscript
       class Thread_Storage
       {
         public:
+          ~Thread_Storage()
+          {
+            m_thread_storage.reset();
+          }
+
           inline T *operator->() const
           {
             if (!m_thread_storage.get())

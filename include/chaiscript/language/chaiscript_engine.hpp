@@ -9,23 +9,101 @@
 
 #include <exception>
 #include <fstream>
-
+#include <dlfcn.h>
 
 #include "chaiscript_prelude.hpp"
 #include "chaiscript_parser.hpp"
 
 namespace chaiscript
 {
+    struct load_module_error : std::runtime_error
+    {
+       load_module_error(const std::string &reason) throw()
+         : std::runtime_error(reason)
+       {
+       }
+
+       virtual ~load_module_error() throw()
+       {
+       }
+    };
+
+#ifdef _POSIX_VERSION
+    struct Loadable_Module
+    {
+        struct DLModule
+        {
+           DLModule(const std::string &t_filename)
+             : m_data(dlopen(t_filename.c_str(), RTLD_NOW))
+           {
+              if (!m_data)
+              {
+                 throw load_module_error(dlerror());
+              }
+           }
+
+           ~DLModule()
+           {
+              dlclose(m_data);
+           }
+
+           void *m_data;
+        };
+
+        template<typename T>
+        struct DLSym
+        {
+            DLSym(DLModule &t_mod, const std::string &t_symbol)
+              : m_symbol(reinterpret_cast<T>(dlsym(t_mod.m_data, t_symbol.c_str())))
+            {
+            }
+
+            T m_symbol;
+        };
+
+        Loadable_Module(const std::string &t_module_name, const std::string &t_filename)
+          : m_dlmodule(t_filename), m_func(m_dlmodule, "create_chaiscript_module_" + t_module_name)
+        {
+        }
+
+        ModulePtr get()
+        {
+          return m_func.m_symbol();
+        }
+
+        DLModule m_dlmodule;
+        DLSym<Create_Module_Func> m_func;
+    };
+#else
+    struct Loadable_Module
+    {
+        Loadable_Module(const std::string &t_module_name, const std::string &t_filename)
+        {
+          throw load_module_error("Loadable module support not available for your platform");
+        }
+
+        ModulePtr get()
+        {
+          throw load_module_error("Loadable module support not available for your platform");
+        }
+    };
+
+#endif
+
+    typedef boost::shared_ptr<Loadable_Module> Loadable_Module_Ptr;
+
+
     template <typename Eval_Engine>
     class ChaiScript_System {
-        Eval_Engine engine;
-
-        std::set<std::string> loaded_files;
-
 #ifndef CHAISCRIPT_NO_THREADS
         mutable boost::shared_mutex mutex;
         mutable boost::recursive_mutex use_mutex;
 #endif
+
+        std::set<std::string> loaded_files;
+        std::map<std::string, Loadable_Module_Ptr> loaded_modules;
+
+        Eval_Engine engine;
 
 
         /**
@@ -128,6 +206,57 @@ namespace chaiscript
         }
 
         /**
+         * Load a dynamic library containing a chaiscript module
+         */
+        void load_module(const std::string &t_module_name)
+        {
+            std::vector<std::string> prefixes;
+            prefixes.push_back("lib");
+            prefixes.push_back("");
+
+            std::vector<std::string> postfixes;
+            postfixes.push_back(".dll");
+            postfixes.push_back(".so");
+            postfixes.push_back("");
+
+            for (size_t i = 0; i < prefixes.size(); ++i)
+            {
+                for (size_t j = 0; j < postfixes.size(); ++j)
+                {
+                    try {
+                        std::string name = prefixes[i] + t_module_name + postfixes[j];
+                        load_module(t_module_name, name);
+                        return;
+                    } catch (const load_module_error &) {
+                        // Try next set
+                    }
+                }
+            }
+
+            throw load_module_error("Unable to find module: " + t_module_name);
+        }
+
+        /**
+         * Load a dynamic library and provide the file name to load it from
+         */
+        void load_module(const std::string &t_module_name, const std::string &t_filename)
+        {
+#ifndef CHAISCRIPT_NO_THREADS
+            boost::lock_guard<boost::recursive_mutex> l(use_mutex);
+#endif
+
+            if (loaded_modules.count(t_module_name) == 0)
+            {
+                Loadable_Module_Ptr lm(new Loadable_Module(t_module_name, t_filename));
+                loaded_modules[t_module_name] = lm;
+                add(lm->get());
+            } else {
+                engine.sync_cache();
+            }
+        }
+
+
+        /**
          * Helper for calling script code as if it were native C++ code
          * example:
          * boost::function<int (int, int)> f = build_functor(chai, "func(x, y){x+y}");
@@ -221,6 +350,17 @@ namespace chaiscript
                 "type_name");
             engine.add(fun(boost::function<bool (const std::string &)>(boost::bind(&Eval_Engine::function_exists, boost::ref(engine), _1))),
                 "function_exists");
+
+
+            engine.add(fun(boost::function<void (const std::string &)>(
+                    boost::bind(static_cast<void (ChaiScript_System<Eval_Engine>::*)(const std::string&)>(
+                        &ChaiScript_System<Eval_Engine>::load_module), boost::ref(*this), _1))),
+                "load_module");
+
+            engine.add(fun(boost::function<void (const std::string &, const std::string &)>(
+                    boost::bind(static_cast<void (ChaiScript_System<Eval_Engine>::*)(const std::string&, const std::string&)>(
+                        &ChaiScript_System<Eval_Engine>::load_module), boost::ref(*this), _1, _2))),
+                "load_module");
 
             engine.add(vector_type<std::vector<Boxed_Value> >("Vector"));
             engine.add(string_type<std::string>("string"));

@@ -23,6 +23,8 @@
 #include "dispatchkit/function_call.hpp"
 namespace chaiscript
 {
+    typedef ModulePtr (*Create_Module_Func)();
+
     /**
      * Types of AST nodes available to the parser and eval
      */
