@@ -756,6 +756,30 @@ namespace chaiscript
       return Boxed_Value(t);
     }
 
+  template<typename T>
+    Boxed_Value const_var(T *t)
+    {
+      return Boxed_Value( const_cast<typename boost::add_const<T>::type>(t) );
+    }
+
+  template<typename T>
+    Boxed_Value const_var(const boost::shared_ptr<T> &t)
+    {
+      return Boxed_Value( boost::const_pointer_cast<typename boost::add_const<T>::type>(t) );
+    }
+
+  template<typename T>
+    Boxed_Value const_var(const boost::reference_wrapper<T> &t)
+    {
+      return Boxed_Value( boost::cref(t.get()) );
+    }
+
+  template<typename T>
+    Boxed_Value const_var(const T &t)
+    {
+      return Boxed_Value(boost::shared_ptr<typename boost::add_const<T>::type >(new T(t)));
+    }
+
   /**
    * Return true if the two Boxed_Values share the same internal type
    */
