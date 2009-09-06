@@ -1,1 +1,2 @@
-print(--3)
+var i = 3
+print(--i)
