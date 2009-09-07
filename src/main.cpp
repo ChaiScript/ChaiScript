@@ -8,6 +8,11 @@
 
 #include <list>
 
+#ifdef READLINE_AVAILABLE
+#include <readline/readline.h>
+#include <readline/history.h>
+#endif
+
 #include <chaiscript/chaiscript.hpp>
 
 void print_help() {
@@ -17,16 +22,33 @@ void print_help() {
     std::cout << "  dump_object(x) - dumps information about the given symbol" << std::endl;
 }
 
+std::string get_next_command() {
+#ifdef READLINE_AVAILABLE
+    char *input_raw;
+    input_raw = readline("eval> ");
+    add_history(input_raw);
+    return std::string(input_raw);
+#else
+    std::string retval;
+    std::cout << "eval> ";
+    std::getline(std::cin, retval);
+    return retval;
+#endif
+}
+
 int main(int argc, char *argv[]) {
     std::string input;
     chaiscript::ChaiScript chai;
 
     chai.add(chaiscript::bootstrap::list_type<std::list<chaiscript::Boxed_Value> >("List"));
 
-
     if (argc < 2) {
-        std::cout << "eval> ";
-        std::getline(std::cin, input);
+        //std::cout << "eval> ";
+        //std::getline(std::cin, input);
+#ifdef READLINE_AVAILABLE
+        using_history();
+#endif
+        input = get_next_command();
         while (input != "quit") {
 
             chaiscript::Boxed_Value val;
@@ -54,8 +76,7 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-            std::cout << "eval> ";
-            std::getline(std::cin, input);
+            input = get_next_command();
         }
     }
     else {
