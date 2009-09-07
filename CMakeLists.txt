@@ -2,13 +2,13 @@ cmake_minimum_required(VERSION 2.6)
 
 project(chaiscript)
 
-SET (CMAKE_BUILD_TYPE gdb)
-SET (CMAKE_C_FLAGS_GDB " -Wall -ggdb")
-SET (CMAKE_CXX_FLAGS_GDB " -Wall -ggdb")
+#SET (CMAKE_BUILD_TYPE gdb)
+#SET (CMAKE_C_FLAGS_GDB " -Wall -ggdb")
+#SET (CMAKE_CXX_FLAGS_GDB " -Wall -ggdb")
 
-#SET (CMAKE_BUILD_TYPE rel)
-#SET (CMAKE_C_FLAGS_REL " -Wall -O3")
-#SET (CMAKE_CXX_FLAGS_REL " -Wall -O3")
+SET (CMAKE_BUILD_TYPE rel)
+SET (CMAKE_C_FLAGS_REL " -Wall -O3")
+SET (CMAKE_CXX_FLAGS_REL " -Wall -O3")
 
 include_directories(include)
  
@@ -19,7 +19,8 @@ if (Boost_FOUND)
 	#add_executable(dispatchkit_test contrib/test/dispatchkit_test.cpp)
 	target_link_libraries(chaiscript_eval dl ${Boost_LIBRARIES})
 
-        add_library(test MODULE src/test_module.cpp)
+  add_library(test MODULE src/test_module.cpp)
+	target_link_libraries(test ${Boost_LIBRARIES})
 
 	install(TARGETS chaiscript_eval DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/bin)
         
