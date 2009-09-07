@@ -48,6 +48,11 @@ namespace chaiscript
         return retval;
     }
 
+    template <typename Eval_System>
+    void cache_const(Eval_System &ss, const TokenPtr &node, Boxed_Value value) {
+        node->cached_value = value;
+        node->is_cached = true;
+    }
     /**
      * Evaluates a variable or function name identifier
      */
@@ -55,12 +60,18 @@ namespace chaiscript
     Boxed_Value eval_id(Eval_System &ss, const TokenPtr &node) {
 
         if (node->text == "true") {
-            //return Boxed_Value(true);
-            return const_var(true);
+            //return const_var(true);
+            if (!node->is_cached) {
+                cache_const(ss, node, const_var(true));
+            }
+            return node->cached_value;
         }
         else if (node->text == "false") {
-            //return Boxed_Value(false);
-            return const_var(false);
+            //return const_var(false);
+            if (!node->is_cached) {
+                cache_const(ss, node, const_var(true));
+            }
+            return node->cached_value;
         }
         else {
             try {
@@ -76,34 +87,47 @@ namespace chaiscript
      * Evaluates a floating point number
      */
     template <typename Eval_System>
-    Boxed_Value eval_float(Eval_System &, const TokenPtr &node) {
-        //return Boxed_Value(double(atof(node->text.c_str())));
-        return const_var(double(atof(node->text.c_str())));
+    Boxed_Value eval_float(Eval_System &ss, const TokenPtr &node) {
+        //return const_var(double(atof(node->text.c_str())));
+
+        if (!node->is_cached) {
+            cache_const(ss, node, const_var(double(atof(node->text.c_str()))));
+        }
+        return node->cached_value;
     }
 
     /**
      * Evaluates an integer
      */
     template <typename Eval_System>
-    Boxed_Value eval_int(Eval_System &, const TokenPtr &node) {
-        //return Boxed_Value(atoi(node->text.c_str()));
-        return const_var(int(atoi(node->text.c_str())));
+    Boxed_Value eval_int(Eval_System &ss, const TokenPtr &node) {
+        //return const_var(atoi(node->text.c_str()));
+
+        if (!node->is_cached) {
+            cache_const(ss, node, const_var(int(atoi(node->text.c_str()))));
+        }
+        return node->cached_value;
     }
 
     /**
      * Evaluates a quoted string
      */
     template <typename Eval_System>
-    Boxed_Value eval_quoted_string(Eval_System &, const TokenPtr &node) {
-        //return Boxed_Value(node->text);
-        return const_var(node->text);
+    Boxed_Value eval_quoted_string(Eval_System &ss, const TokenPtr &node) {
+        //return const_var(node->text);
+
+        if (!node->is_cached) {
+            cache_const(ss, node, const_var(node->text));
+        }
+        return node->cached_value;
     }
 
     /**
      * Evaluates a char group
      */
     template <typename Eval_System>
-    Boxed_Value eval_single_quoted_string(Eval_System &, const TokenPtr &node) {
+    Boxed_Value eval_single_quoted_string(Eval_System &ss, const TokenPtr &node) {
+        /*
         if (node->text.size() == 1) {
             //return Boxed_Value(char(node->text[0]));
             return const_var(char(node->text[0]));
@@ -112,6 +136,15 @@ namespace chaiscript
             //return Boxed_Value(char((int)node->text[0] * 0xff + (int)node->text[0]));
             return const_var(char((int)node->text[0] * 0xff + (int)node->text[0]));
         }
+        */
+
+        if (!node->is_cached) {
+            cache_const(ss, node,
+                node->text.size() == 1 ?
+                        const_var(char(node->text[0])) :
+                        const_var(char((int)node->text[0] * 0xff + (int)node->text[0])));
+        }
+        return node->cached_value;
     }
 
     /**

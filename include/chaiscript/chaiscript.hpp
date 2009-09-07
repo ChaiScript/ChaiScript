@@ -68,14 +68,17 @@ namespace chaiscript
         int identifier;
         const char *filename;
         File_Position start, end;
+        bool is_cached;
+        Boxed_Value cached_value;
 
         std::vector<TokenPtr> children;
         TokenPtr annotation;
 
-        Token(const std::string &token_text, int id, const char *fname) : text(token_text), identifier(id), filename(fname) { }
+        Token(const std::string &token_text, int id, const char *fname) :
+            text(token_text), identifier(id), filename(fname), is_cached(false) { }
 
         Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
-            text(token_text), identifier(id), filename(fname) {
+            text(token_text), identifier(id), filename(fname), is_cached(false) {
 
             start.line = start_line;
             start.column = start_col;
