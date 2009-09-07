@@ -7,9 +7,15 @@ std::string hello_world()
   return "Hello World";
 }
 
-extern "C"
+#ifdef _MSC_VER
+#define EXPORT __declspec(dllexport)
+#else
+#define EXPORT 
+#endif
+
+extern "C" 
 {
-  chaiscript::ModulePtr create_chaiscript_module_test()
+EXPORT chaiscript::ModulePtr create_chaiscript_module_test()
   {
     chaiscript::ModulePtr m(new chaiscript::Module());
 

@@ -210,7 +210,7 @@ namespace chaiscript
         try {
             ss.add_object(node->children[0]->text, Boxed_Value());
         }
-        catch (reserved_word_error &rwe) {
+        catch (reserved_word_error &) {
             throw Eval_Error("Reserved word used as variable '" + node->children[0]->text + "'", node);
         }
         return ss.get_object(node->children[0]->text);
@@ -708,7 +708,7 @@ namespace chaiscript
                                                                  param_names, _1), numparams,
                                                      annotation, guard)), function_name);
         }
-        catch (reserved_word_error &rwe) {
+        catch (reserved_word_error &) {
             throw Eval_Error("Reserved word used as function name '" + function_name + "'", node);
         }
         return Boxed_Value();

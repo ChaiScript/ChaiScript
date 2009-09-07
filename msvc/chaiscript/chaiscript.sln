@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "chaiscript", "chaiscript.vc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "chai-example", "..\chai-example\chai-example.vcproj", "{CE422E94-B360-4588-8C65-6A9BE80798F9}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_module", "..\test_module\test_module.vcproj", "{775EDCC2-102F-4E75-A860-9AF398D04145}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +21,10 @@ Global
 		{CE422E94-B360-4588-8C65-6A9BE80798F9}.Debug|Win32.Build.0 = Debug|Win32
 		{CE422E94-B360-4588-8C65-6A9BE80798F9}.Release|Win32.ActiveCfg = Release|Win32
 		{CE422E94-B360-4588-8C65-6A9BE80798F9}.Release|Win32.Build.0 = Release|Win32
+		{775EDCC2-102F-4E75-A860-9AF398D04145}.Debug|Win32.ActiveCfg = Debug|Win32
+		{775EDCC2-102F-4E75-A860-9AF398D04145}.Debug|Win32.Build.0 = Debug|Win32
+		{775EDCC2-102F-4E75-A860-9AF398D04145}.Release|Win32.ActiveCfg = Release|Win32
+		{775EDCC2-102F-4E75-A860-9AF398D04145}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

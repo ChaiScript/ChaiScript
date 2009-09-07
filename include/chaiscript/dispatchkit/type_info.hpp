@@ -65,7 +65,8 @@ namespace chaiscript
 
     bool operator==(const Type_Info &ti) const
     {
-      return ti.m_type_info == m_type_info;
+      return ti.m_type_info == m_type_info 
+         || (ti.m_type_info && m_type_info && *ti.m_type_info == *m_type_info);
     }
 
     bool m_is_const;
@@ -144,6 +145,20 @@ namespace chaiscript
     return detail::Get_Type_Info<T>::get();
   }
 
+  bool type_info_bare_equals(const Type_Info &l, const Type_Info &r)
+  {
+    if (l.m_bare_type_info == 0 
+        && r.m_bare_type_info == 0)
+    {
+      return true;
+    } else if (l.m_bare_type_info == 0 
+               || r.m_bare_type_info == 0) 
+    {
+      return false;
+    } else {
+      return *(l.m_bare_type_info) == *(r.m_bare_type_info);
+    }
+  }
 
 }
 

@@ -92,9 +92,9 @@ namespace chaiscript
             const Type_Info &ti = types[1];
 
             if (!ti.m_bare_type_info || !(vals[0].get_type_info().m_bare_type_info)
-                || (*ti.m_bare_type_info) == (*user_type<Boxed_Value>().m_bare_type_info)
-                || (*ti.m_bare_type_info) == (*user_type<Boxed_POD_Value>().m_bare_type_info)
-                || (*vals[0].get_type_info().m_bare_type_info) == (*ti.m_bare_type_info))
+                || type_info_bare_equals(ti, user_type<Boxed_Value>())
+                || type_info_bare_equals(ti, user_type<Boxed_POD_Value>())
+                || type_info_bare_equals(vals[0].get_type_info(), ti))
             {
               return true;
             } else {

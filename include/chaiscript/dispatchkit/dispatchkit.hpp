@@ -416,7 +416,7 @@ namespace chaiscript
              itr != m_types.end();
              ++itr)
         {
-          if (itr->second.m_bare_type_info == ti.m_bare_type_info)
+          if (type_info_bare_equals(itr->second, ti))
           {
             return itr->first;
           }

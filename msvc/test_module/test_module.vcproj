@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="chaiscript"
-	ProjectGUID="{46FD9DC7-2DA9-4C17-ADE4-E3A18C46E87B}"
-	RootNamespace="chaiscript"
+	Name="test_module"
+	ProjectGUID="{775EDCC2-102F-4E75-A860-9AF398D04145}"
+	RootNamespace="test_module"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -20,9 +20,9 @@
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
-			InheritedPropertySheets=".\Boost.vsprops"
-			UseOfMFC="2"
+			ConfigurationType="2"
+			InheritedPropertySheets="..\chaiscript\Boost.vsprops"
+			UseOfMFC="0"
 			CharacterSet="0"
 			>
 			<Tool
@@ -42,19 +42,15 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				UseUnicodeResponseFiles="false"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
+				AdditionalIncludeDirectories="C:\Programming\chaiscript\trunk\include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;TEST_MODULE_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				DisableLanguageExtensions="false"
-				TreatWChar_tAsBuiltInType="false"
 				UsePrecompiledHeader="0"
-				WarningLevel="4"
+				WarningLevel="3"
 				DebugInformationFormat="4"
-				CompileAs="2"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -69,7 +65,7 @@
 				Name="VCLinkerTool"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
-				SubSystem="1"
+				SubSystem="2"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -98,9 +94,9 @@
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="1"
-			InheritedPropertySheets=".\Boost.vsprops"
-			CharacterSet="0"
+			ConfigurationType="2"
+			InheritedPropertySheets="..\chaiscript\Boost.vsprops"
+			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -120,14 +116,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
+				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;TEST_MODULE_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				WarningLevel="4"
+				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -143,7 +138,7 @@
 				Name="VCLinkerTool"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
-				SubSystem="1"
+				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
@@ -180,7 +175,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\src\main.cpp"
+				RelativePath="..\..\src\test_module.cpp"
 				>
 			</File>
 		</Filter>
@@ -189,74 +184,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath="..\..\include\chaiscript\dispatchkit\bootstrap.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\dispatchkit\bootstrap_stl.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\dispatchkit\boxed_value.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\chaiscript.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\language\chaiscript_engine.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\language\chaiscript_eval.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\language\chaiscript_parser.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\language\chaiscript_prelude.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\dispatchkit\dispatchkit.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\dispatchkit\function_call.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\dispatchkit\function_call_detail.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\dispatchkit\handle_return.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\dispatchkit\proxy_constructors.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\dispatchkit\proxy_functions.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\dispatchkit\proxy_functions_detail.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\dispatchkit\register_function.hpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\chaiscript\dispatchkit\type_info.hpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

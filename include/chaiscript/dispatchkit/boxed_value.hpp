@@ -181,7 +181,7 @@ namespace chaiscript
             // Both t and t.x share the same memory location, but do not represent
             // objects of the same type.
             if (itr != m_ptrs.end() 
-                && itr->second.m_type_info.m_bare_type_info == data->m_type_info.m_bare_type_info)
+                && type_info_bare_equals(itr->second.m_type_info, data->m_type_info))
             {
               (*data) = (itr->second);
             } 

@@ -9,7 +9,14 @@
 
 #include <exception>
 #include <fstream>
+
+#ifdef _POSIX_VERSION
 #include <dlfcn.h>
+#else
+#ifdef _MSC_VER
+#include <Windows.h>
+#endif
+#endif
 
 #include "chaiscript_prelude.hpp"
 #include "chaiscript_parser.hpp"
@@ -56,6 +63,10 @@ namespace chaiscript
             DLSym(DLModule &t_mod, const std::string &t_symbol)
               : m_symbol(reinterpret_cast<T>(dlsym(t_mod.m_data, t_symbol.c_str())))
             {
+              if (!m_symbol)
+              {
+                 throw load_module_error(dlerror());
+              }
             }
 
             T m_symbol;
@@ -75,9 +86,109 @@ namespace chaiscript
         DLSym<Create_Module_Func> m_func;
     };
 #else
+
+#ifdef _MSC_VER
+
+    std::string GetErrorMessage(DWORD err)
+    {
+        LPSTR lpMsgBuf = 0;
+
+        FormatMessage(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+            FORMAT_MESSAGE_FROM_SYSTEM |
+            FORMAT_MESSAGE_IGNORE_INSERTS,
+            NULL,
+            err,
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            lpMsgBuf,
+            0, NULL );
+        
+        std::string retval;
+/*
+        int bsz = WideCharToMultiByte(codepage,
+            0,
+            pw,-1,
+            0,0,
+            0,0);
+        if (bsz > 0) {
+            char p[bsz];
+            int rc = WideCharToMultiByte(codepage,
+                0,
+                pw,-1,
+                p,bsz,
+                0,0);
+            if (rc != 0) {
+                p[bsz-1] = 0;
+                retval = p;
+            }
+        }
+        */
+
+        if (lpMsgBuf)
+        {
+          retval = lpMsgBuf;
+        } else {
+          retval = "Unknown error occured";
+        }
+
+        LocalFree(lpMsgBuf);
+        return retval;
+    }
+
     struct Loadable_Module
     {
+        struct DLModule
+        {
+           DLModule(const std::string &t_filename)
+             : m_data(LoadLibrary(t_filename.c_str()))
+           {
+              if (!m_data)
+              {
+                 throw load_module_error(GetErrorMessage(GetLastError()));
+              }
+           }
+
+           ~DLModule()
+           {
+              FreeLibrary(m_data);
+           }
+
+           HMODULE m_data;
+        };
+
+        template<typename T>
+        struct DLSym
+        {
+            DLSym(DLModule &t_mod, const std::string &t_symbol)
+              : m_symbol(reinterpret_cast<T>(GetProcAddress(t_mod.m_data, t_symbol.c_str())))
+            {
+              if (!m_symbol)
+              {
+                 throw load_module_error(GetErrorMessage(GetLastError()));
+              }
+            }
+
+            T m_symbol;
+        };
+
         Loadable_Module(const std::string &t_module_name, const std::string &t_filename)
+          : m_dlmodule(t_filename), m_func(m_dlmodule, "create_chaiscript_module_" + t_module_name)
+        {
+        }
+
+        ModulePtr get()
+        {
+          return m_func.m_symbol();
+        }
+
+        DLModule m_dlmodule;
+        DLSym<Create_Module_Func> m_func;
+    };
+
+#else
+    struct Loadable_Module
+    {
+        Loadable_Module(const std::string &, const std::string &)
         {
           throw load_module_error("Loadable module support not available for your platform");
         }
@@ -87,7 +198,7 @@ namespace chaiscript
           throw load_module_error("Loadable module support not available for your platform");
         }
     };
-
+#endif
 #endif
 
     typedef boost::shared_ptr<Loadable_Module> Loadable_Module_Ptr;
