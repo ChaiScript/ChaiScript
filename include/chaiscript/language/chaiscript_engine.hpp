@@ -13,7 +13,7 @@
 #ifdef _POSIX_VERSION
 #include <dlfcn.h>
 #else
-#ifdef _WINDOWS
+#ifdef WIN32
 #include <Windows.h>
 #endif
 #endif
@@ -87,7 +87,7 @@ namespace chaiscript
     };
 #else
 
-#ifdef _WINDOWS
+#ifdef WIN32
 
     std::string GetErrorMessage(DWORD err)
     {
@@ -100,7 +100,7 @@ namespace chaiscript
             NULL,
             err,
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            (LPWSTR)&lpMsgBuf,
+            (LPSTR)&lpMsgBuf,
             0, NULL );
         
         std::string retval;
