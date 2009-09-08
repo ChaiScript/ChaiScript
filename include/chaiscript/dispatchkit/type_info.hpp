@@ -21,61 +21,91 @@ namespace chaiscript
   /**
    * compile time deduced information about a type
    */
-  struct Type_Info
+  class Type_Info
   {
-    Type_Info(bool t_is_const, bool t_is_reference, bool t_is_pointer, bool t_is_void, 
-        const std::type_info *t_ti, const std::type_info *t_bareti)
-      : m_is_const(t_is_const), m_is_reference(t_is_reference), m_is_pointer(t_is_pointer),
+    public:
+      Type_Info(bool t_is_const, bool t_is_reference, bool t_is_pointer, bool t_is_void, 
+          const std::type_info *t_ti, const std::type_info *t_bareti)
+        : m_is_const(t_is_const), m_is_reference(t_is_reference), m_is_pointer(t_is_pointer),
         m_is_void(t_is_void),
-      m_type_info(t_ti), m_bare_type_info(t_bareti),
-      m_is_unknown(false)
-    {
-    }
+        m_type_info(t_ti), m_bare_type_info(t_bareti),
+        m_is_unknown(false)
+      {
+      }
 
-    Type_Info()
-      : m_is_const(false), m_is_reference(false), m_is_pointer(false),
-      m_is_void(false), m_type_info(0), m_bare_type_info(0),
-      m_is_unknown(true)
-    {
-    }
+      Type_Info()
+        : m_is_const(false), m_is_reference(false), m_is_pointer(false),
+        m_is_void(false), m_type_info(0), m_bare_type_info(0),
+        m_is_unknown(true)
+      {
+      }
 
-    Type_Info(const Type_Info &ti)
-    : m_is_const(ti.m_is_const), m_is_reference(ti.m_is_reference), 
-      m_is_pointer(ti.m_is_pointer),
-      m_is_void(ti.m_is_void), m_type_info(ti.m_type_info), 
-      m_bare_type_info(ti.m_bare_type_info),
-      m_is_unknown(ti.m_is_unknown)
-    {
-    }
-    Type_Info &operator=(const Type_Info &ti)
-    {
-      m_is_const = ti.m_is_const;
-      m_is_reference = ti.m_is_reference;
-      m_is_pointer = ti.m_is_pointer;
-      m_is_void = ti.m_is_void;
-      m_type_info = ti.m_type_info;
-      m_bare_type_info = ti.m_bare_type_info;
-      m_is_unknown = ti.m_is_unknown;
-      return *this;
-    }
-    bool operator<(const Type_Info &ti) const
-    {
-      return m_type_info < ti.m_type_info;
-    }
+      Type_Info(const Type_Info &ti)
+        : m_is_const(ti.m_is_const), m_is_reference(ti.m_is_reference), 
+        m_is_pointer(ti.m_is_pointer),
+        m_is_void(ti.m_is_void), m_type_info(ti.m_type_info), 
+        m_bare_type_info(ti.m_bare_type_info),
+        m_is_unknown(ti.m_is_unknown)
+      {
+      }
 
-    bool operator==(const Type_Info &ti) const
-    {
-      return ti.m_type_info == m_type_info 
-         || (ti.m_type_info && m_type_info && *ti.m_type_info == *m_type_info);
-    }
+      Type_Info &operator=(const Type_Info &ti)
+      {
+        m_is_const = ti.m_is_const;
+        m_is_reference = ti.m_is_reference;
+        m_is_pointer = ti.m_is_pointer;
+        m_is_void = ti.m_is_void;
+        m_type_info = ti.m_type_info;
+        m_bare_type_info = ti.m_bare_type_info;
+        m_is_unknown = ti.m_is_unknown;
+        return *this;
+      }
 
-    bool m_is_const;
-    bool m_is_reference;
-    bool m_is_pointer;
-    bool m_is_void;
-    const std::type_info *m_type_info;
-    const std::type_info *m_bare_type_info;
-    bool m_is_unknown;
+      bool operator<(const Type_Info &ti) const
+      {
+        return m_type_info < ti.m_type_info;
+      }
+
+      bool operator==(const Type_Info &ti) const
+      {
+        return ti.m_type_info == m_type_info 
+          || (ti.m_type_info && m_type_info && *ti.m_type_info == *m_type_info);
+      }
+
+      bool operator==(const std::type_info &ti) const
+      {
+        return m_type_info != 0 && (*m_type_info) == ti;
+      }
+
+      bool bare_equal(const Type_Info &ti) const
+      {
+        return ti.m_bare_type_info == m_bare_type_info 
+          || (ti.m_bare_type_info && m_bare_type_info && *ti.m_bare_type_info == *m_bare_type_info);
+      }
+
+      bool is_const() const { return m_is_const; }
+      bool is_reference() const { return m_is_reference; }
+      bool is_void() const { return m_is_void; }
+      bool is_unknown() const { return m_is_unknown || m_bare_type_info == 0; }
+
+      std::string bare_name() const
+      {
+        if (m_bare_type_info)
+        {
+          return m_bare_type_info->name();
+        } else {
+          return "";
+        }
+      }
+
+    private:
+      bool m_is_const;
+      bool m_is_reference;
+      bool m_is_pointer;
+      bool m_is_void;
+      const std::type_info *m_type_info;
+      const std::type_info *m_bare_type_info;
+      bool m_is_unknown;
   };
 
   namespace detail
@@ -143,21 +173,6 @@ namespace chaiscript
   Type_Info user_type()
   {
     return detail::Get_Type_Info<T>::get();
-  }
-
-  bool type_info_bare_equals(const Type_Info &l, const Type_Info &r)
-  {
-    if (l.m_bare_type_info == 0 
-        && r.m_bare_type_info == 0)
-    {
-      return true;
-    } else if (l.m_bare_type_info == 0 
-               || r.m_bare_type_info == 0) 
-    {
-      return false;
-    } else {
-      return *(l.m_bare_type_info) == *(r.m_bare_type_info);
-    }
   }
 
 }

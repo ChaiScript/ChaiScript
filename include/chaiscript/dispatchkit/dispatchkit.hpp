@@ -416,13 +416,13 @@ namespace chaiscript
              itr != m_types.end();
              ++itr)
         {
-          if (type_info_bare_equals(itr->second, ti))
+          if (itr->second.bare_equal(ti))
           {
             return itr->first;
           }
         }
 
-        return ti.m_bare_type_info->name();
+        return ti.bare_name();
       }
 
       /**
@@ -581,7 +581,7 @@ namespace chaiscript
   void dump_object(Boxed_Value o, const Dispatch_Engine &e)
   {
     Type_Info ti = o.get_type_info();
-    std::cout << (ti.m_is_const?"const ":"") << e.get_type_name(ti) << std::endl;
+    std::cout << (ti.is_const()?"const ":"") << e.get_type_name(ti) << std::endl;
   }
 
   /**
@@ -589,7 +589,7 @@ namespace chaiscript
    */
   void dump_type(const Type_Info &type, const Dispatch_Engine &e)
   {
-    std::cout << (type.m_is_const?"const ":"") << e.get_type_name(type);
+    std::cout << (type.is_const()?"const ":"") << e.get_type_name(type);
   }
 
   /**
@@ -634,7 +634,7 @@ namespace chaiscript
          ++itr)
     {
       std::cout << itr->first << ": ";
-      std::cout << itr->second.m_bare_type_info->name();
+      std::cout << itr->second.bare_name();
       std::cout << std::endl;
     }
 

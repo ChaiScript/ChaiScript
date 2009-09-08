@@ -181,7 +181,7 @@ namespace chaiscript
             // Both t and t.x share the same memory location, but do not represent
             // objects of the same type.
             if (itr != m_ptrs.end() 
-                && type_info_bare_equals(itr->second.m_type_info, data->m_type_info))
+                && itr->second.m_type_info.bare_equal(data->m_type_info))
             {
               (*data) = (itr->second);
             } 
@@ -321,7 +321,7 @@ namespace chaiscript
        */
       bool is_unknown() const
       {
-        return m_data->m_type_info.m_is_unknown;
+        return m_data->m_type_info.is_unknown();
       }
 
       boost::any get() const
@@ -355,14 +355,14 @@ namespace chaiscript
         {
           if (ob.is_ref())
           {
-            if (!ob.get_type_info().m_is_const)
+            if (!ob.get_type_info().is_const())
             {
               return boost::cref((boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get());
             } else {
               return boost::any_cast<boost::reference_wrapper<const Result> >(ob.get());
             }
           } else {
-            if (!ob.get_type_info().m_is_const)
+            if (!ob.get_type_info().is_const())
             {
               return boost::cref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));   
             } else {
@@ -384,14 +384,14 @@ namespace chaiscript
         {
           if (ob.is_ref())
           {
-            if (!ob.get_type_info().m_is_const)
+            if (!ob.get_type_info().is_const())
             {
               return boost::cref((boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get());
             } else {
               return boost::any_cast<boost::reference_wrapper<const Result> >(ob.get());
             }
           } else {
-            if (!ob.get_type_info().m_is_const)
+            if (!ob.get_type_info().is_const())
             {
               return boost::cref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));   
             } else {
@@ -413,14 +413,14 @@ namespace chaiscript
         {
           if (ob.is_ref())
           {
-            if (!ob.get_type_info().m_is_const)
+            if (!ob.get_type_info().is_const())
             {
               return (boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get_pointer();
             } else {
               return (boost::any_cast<boost::reference_wrapper<const Result> >(ob.get())).get_pointer();
             }
           } else {
-            if (!ob.get_type_info().m_is_const)
+            if (!ob.get_type_info().is_const())
             {
               return (boost::any_cast<boost::shared_ptr<Result> >(ob.get())).get();
             } else {
@@ -492,7 +492,7 @@ namespace chaiscript
 
         static Result_Type cast(const Boxed_Value &ob)
         {
-          if (!ob.get_type_info().m_is_const)
+          if (!ob.get_type_info().is_const())
           {
             return boost::const_pointer_cast<const Result>(boost::any_cast<boost::shared_ptr<Result> >(ob.get()));
           } else {
@@ -525,7 +525,7 @@ namespace chaiscript
 
         static Result_Type cast(const Boxed_Value &ob)
         {
-          if (!ob.get_type_info().m_is_const)
+          if (!ob.get_type_info().is_const())
           {
             return boost::const_pointer_cast<const Result>(boost::any_cast<boost::shared_ptr<Result> >(ob.get()));
           } else {
@@ -573,7 +573,7 @@ namespace chaiscript
   {
     public:
       bad_boxed_cast(const Type_Info &t_from, const std::type_info &t_to) throw()
-        : from(t_from.m_type_info), to(&t_to), m_what("Cannot perform boxed_cast")
+        : from(t_from), to(&t_to), m_what("Cannot perform boxed_cast")
       {
       }
 
@@ -588,7 +588,8 @@ namespace chaiscript
       {
         return m_what.c_str();
       }
-      const std::type_info *from;
+
+      Type_Info from;
       const std::type_info *to;
 
     private:
@@ -619,12 +620,12 @@ namespace chaiscript
     Boxed_POD_Value(const Boxed_Value &v)
       : d(0), i(0), m_isfloat(false)
     {
-      if (!v.get_type_info().m_type_info)
+      if (v.get_type_info().is_unknown())
       {
         throw boost::bad_any_cast();
       }
 
-      const std::type_info &inp_ = *v.get_type_info().m_type_info;
+      const Type_Info &inp_ = v.get_type_info();
 
       if (inp_ == typeid(double))
       {
