@@ -69,7 +69,7 @@ namespace chaiscript
         else if (node->text == "false") {
             //return const_var(false);
             if (!node->is_cached) {
-                cache_const(ss, node, const_var(true));
+                cache_const(ss, node, const_var(false));
             }
             return node->cached_value;
         }
