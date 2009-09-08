@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
                     val = chai.eval(input);
 
                     //Then, we try to print the result of the evaluation to the user
-                    if (val.get_type_info().bare_equal(chaiscript::user_type<void>())) {
+                    if (!val.get_type_info().bare_equal(chaiscript::user_type<void>())) {
                         try {
                             chaiscript::dispatch(chai.get_eval_engine().get_function("print"), chaiscript::Param_List_Builder() << val);
                         }
