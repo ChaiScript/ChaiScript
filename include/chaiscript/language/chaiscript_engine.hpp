@@ -13,7 +13,7 @@
 #ifdef _POSIX_VERSION
 #include <dlfcn.h>
 #else
-#ifdef _MSC_VER
+#ifdef _WINDOWS
 #include <Windows.h>
 #endif
 #endif
@@ -87,7 +87,7 @@ namespace chaiscript
     };
 #else
 
-#ifdef _MSC_VER
+#ifdef _WINDOWS
 
     std::string GetErrorMessage(DWORD err)
     {
@@ -100,29 +100,10 @@ namespace chaiscript
             NULL,
             err,
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            lpMsgBuf,
+            (LPWSTR)&lpMsgBuf,
             0, NULL );
         
         std::string retval;
-/*
-        int bsz = WideCharToMultiByte(codepage,
-            0,
-            pw,-1,
-            0,0,
-            0,0);
-        if (bsz > 0) {
-            char p[bsz];
-            int rc = WideCharToMultiByte(codepage,
-                0,
-                pw,-1,
-                p,bsz,
-                0,0);
-            if (rc != 0) {
-                p[bsz-1] = 0;
-                retval = p;
-            }
-        }
-        */
 
         if (lpMsgBuf)
         {
