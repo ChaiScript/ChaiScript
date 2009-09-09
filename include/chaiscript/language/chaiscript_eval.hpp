@@ -49,7 +49,7 @@ namespace chaiscript
     }
 
     template <typename Eval_System>
-    void cache_const(Eval_System &ss, const TokenPtr &node, Boxed_Value value) {
+    void cache_const(Eval_System &/*ss*/, const TokenPtr &node, const Boxed_Value &value) {
         node->cached_value = value;
         node->is_cached = true;
     }
