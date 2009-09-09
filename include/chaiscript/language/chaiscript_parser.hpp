@@ -591,7 +591,7 @@ namespace chaiscript
         /**
          * Reads (and potentially captures) a symbol group from input if it matches the parameter
          */
-        bool Symbol(const char *s, bool capture = false) {
+        bool Symbol(const char *s, bool capture = false, bool disallow_prevention=false) {
             SkipWS();
 
             if (!capture) {
@@ -601,7 +601,7 @@ namespace chaiscript
                 bool retval = Symbol_(s);
                 if (retval) {
                     //todo: fix this.  Hacky workaround for preventing substring matches
-                    if ((input_pos != input_end) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') || (*input_pos == '=') || (*input_pos == '.'))) {
+                    if ((input_pos != input_end) && (disallow_prevention == false) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') || (*input_pos == '=') || (*input_pos == '.'))) {
                         input_pos = start;
                         col = prev_col;
                         line = prev_line;
@@ -619,7 +619,7 @@ namespace chaiscript
                 int prev_line = line;
                 if (Symbol_(s)) {
                     //todo: fix this.  Hacky workaround for preventing substring matches
-                    if ((input_pos != input_end) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') || (*input_pos == '=') || (*input_pos == '.'))) {
+                    if ((input_pos != input_end) && (disallow_prevention == false) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') || (*input_pos == '=') || (*input_pos == '.'))) {
                         input_pos = start;
                         col = prev_col;
                         line = prev_line;
@@ -1185,24 +1185,6 @@ namespace chaiscript
 
             int prev_stack_top = match_stack.size();
 
-            if (Symbol("-")) {
-                retval = true;
-
-                if (!Dot_Access()) {
-                    throw Eval_Error("Incomplete negation expression", File_Position(line, col), filename);
-                }
-
-                build_match(Token_Type::Negate, prev_stack_top);
-            }
-            else if (Symbol("!")) {
-                retval = true;
-
-                if (!Dot_Access()) {
-                    throw Eval_Error("Incomplete '!' expression", File_Position(line, col), filename);
-                }
-
-                build_match(Token_Type::Not, prev_stack_top);
-            }
             if (Symbol("++", true)) {
                 retval = true;
 
@@ -1220,6 +1202,24 @@ namespace chaiscript
                 }
 
                 build_match(Token_Type::Prefix, prev_stack_top);
+            }
+            else if (Char('-')) {
+                retval = true;
+
+                if (!Dot_Access()) {
+                    throw Eval_Error("Incomplete negation expression", File_Position(line, col), filename);
+                }
+
+                build_match(Token_Type::Negate, prev_stack_top);
+            }
+            else if (Char('!')) {
+                retval = true;
+
+                if (!Dot_Access()) {
+                    throw Eval_Error("Incomplete '!' expression", File_Position(line, col), filename);
+                }
+
+                build_match(Token_Type::Not, prev_stack_top);
             }
 
             return retval;
@@ -1423,7 +1423,8 @@ namespace chaiscript
 
             if (Expression()) {
                 retval = true;
-                if (Symbol("=", true) || Symbol(":=", true) || Symbol("+=", true) || Symbol("-=", true) || Symbol("*=", true) || Symbol("/=", true)) {
+                if (Symbol("=", true, true) || Symbol(":=", true, true) || Symbol("+=", true, true) ||
+                        Symbol("-=", true, true) || Symbol("*=", true, true) || Symbol("/=", true, true)) {
                     if (!Equation()) {
                         throw Eval_Error("Incomplete equation", match_stack.back());
                     }

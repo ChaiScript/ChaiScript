@@ -12,36 +12,36 @@
 #define CODE_STRING(x, y, z) #x ", " #y ", " #z
 
 #define chaiscript_prelude CODE_STRING(\
-def new(x) { eval(type_name(x))(); } \
-def clone(x) : function_exists(type_name(x))  { eval(type_name(x))(x); } \
+def new(x) { eval(type_name(x))(); } \n\
+def clone(x) : function_exists(type_name(x))  { eval(type_name(x))(x); } \n\
 # to_string for Pair()\n\
-def to_string(x) : call_exists(first, x) && call_exists(second, x) { \
-  "<" + x.first.to_string() + ", " + x.second.to_string() + ">"; \
-}\
+def to_string(x) : call_exists(first, x) && call_exists(second, x) { \n\
+  "<" + x.first.to_string() + ", " + x.second.to_string() + ">"; \n\
+}\n\
 # to_string for containers\n\
-def to_string(x) : call_exists(range, x) && !x.is_type("string"){ \
-  "[" + x.join(", ") + "]"; \
-}\
+def to_string(x) : call_exists(range, x) && !x.is_type("string"){ \n\
+  "[" + x.join(", ") + "]"; \n\
+}\n\
 # Basic to_string function\n\
-def to_string(x) { \
-  internal_to_string(x); \
-}\
+def to_string(x) { \n\
+  internal_to_string(x); \n\
+}\n\
 # Prints to console with no carriage return\n\
-def puts(x) { \
-  print_string(x.to_string()); \
-} \
+def puts(x) { \n\
+  print_string(x.to_string()); \n\
+} \n\
 # Prints to console with carriage return\n\
-def print(x) { \
-  println_string(x.to_string()); \
-} \
+def print(x) { \n\
+  println_string(x.to_string()); \n\
+} \n\
 # Returns the maximum value of two numbers\n\
-def max(a, b) { if (a>b) { a } else { b } } \
+def max(a, b) { if (a>b) { a } else { b } } \n\
 # Returns the minimum value of two numbers\n\
-def min(a, b) { if (a<b) { a } else { b } } \
+def min(a, b) { if (a<b) { a } else { b } } \n\
 # Returns true if the value is odd\n\
-def odd(x)  { if (x % 2 == 1) { true } else { false } } \
+def odd(x)  { if (x % 2 == 1) { true } else { false } } \n\
 # Returns true if the value is even\n\
-def even(x) { if (x % 2 == 0) { true } else { false } } \
+def even(x) { if (x % 2 == 0) { true } else { false } } \n\
 # Pushes the second value onto the container first value while making a clone of the value\n\
 def push_back(container, x) : call_exists(push_back_ref, container, x) { container.push_back_ref(clone(x)) } \n\
 # Pushes the second value onto the front of the container first value while making a clone of the value\n\
@@ -50,14 +50,14 @@ def push_front(container, x) : call_exists(push_front_ref, container, x) { conta
 # while making a clone. \n\
 def insert_at(container, pos, x) { container.insert_ref_at(pos, clone(x)); } \n\
 # Returns the reverse of the given container\n\
-def reverse(container) {\
-  var retval = new(container); \
-  var r = range(container); \
-  while (!r.empty()) { \
-    retval.push_back(r.back()); \
-    r.pop_back(); \
-  } \
-  retval; \
+def reverse(container) {\n\
+  var retval = new(container); \n\
+  var r = range(container); \n\
+  while (!r.empty()) { \n\
+    retval.push_back(r.back()); \n\
+    r.pop_back(); \n\
+  } \n\
+  retval; \n\
 } \
 # Returns true if the object is a retro object\n\
 def is_retro(r) { call_exists(count, r, "data_type") && r.count("data_type") == 1 && r["data_type"] == "retro" }\n\
@@ -74,228 +74,228 @@ def pop_back(r) : is_retro(r) { pop_front(r["data"]) }\n\
 # Moves the front iterator of a retro towards the back by one \n\
 def pop_front(r) : is_retro(r) { pop_back(r["data"]) } \n\
 # Performs the second value function over the container first value\n\
-def for_each(container, func) : call_exists(range, container) { \
-  var range = range(container); \
-  while (!range.empty()) { \
-    func(range.front()); \
-    range.pop_front(); \
-  } \
-} \
-def back_inserter(container) { \
-  bind(push_back, container, _);     \
-}\
-\
-def map(container, func, inserter) : call_exists(range, container) { \
-  var range = range(container); \
-  while (!range.empty()) { \
-    inserter(func(range.front())); \
-    range.pop_front(); \
-  } \
-} \
+def for_each(container, func) : call_exists(range, container) { \n\
+  var range = range(container); \n\
+  while (!range.empty()) { \n\
+    func(range.front()); \n\
+    range.pop_front(); \n\
+  } \n\
+} \n\
+def back_inserter(container) { \n\
+  bind(push_back, container, _);     \n\
+}\n\
+\n\
+def map(container, func, inserter) : call_exists(range, container) { \n\
+  var range = range(container); \n\
+  while (!range.empty()) { \n\
+    inserter(func(range.front())); \n\
+    range.pop_front(); \n\
+  } \n\
+} \n\
 # Performs the second value function over the container first value. Creates a new container with the results\n\
-def map(container, func) { \
-  var retval = new(container); \
-  map(container, func, back_inserter(retval));\
-  retval;\
-}\
+def map(container, func) { \n\
+  var retval = new(container); \n\
+  map(container, func, back_inserter(retval));\n\
+  retval;\n\
+}\n\
 # Performs the second value function over the container first value. Starts with initial and continues with each element.\n\
-def foldl(container, func, initial) : call_exists(range, container){ \
-  var retval = initial; \
-  var range = range(container); \
-  while (!range.empty()) { \
-    retval = (func(range.front(), retval)); \
-    range.pop_front(); \
-  } \
-  retval; \
-} \
+def foldl(container, func, initial) : call_exists(range, container){ \n\
+  var retval = initial; \n\
+  var range = range(container); \n\
+  while (!range.empty()) { \n\
+    retval = (func(range.front(), retval)); \n\
+    range.pop_front(); \n\
+  } \n\
+  retval; \n\
+} \n\
 # Returns the sum of the elements of the given value\n\
-def sum(container) { foldl(container, `+`, 0.0) } \
+def sum(container) { foldl(container, `+`, 0.0) } \n\
 # Returns the product of the elements of the given value\n\
-def product(container) { foldl(container, `*`, 1.0) } \
+def product(container) { foldl(container, `*`, 1.0) } \n\
 # Returns a new container with the elements of the first value concatenated with the elements of the second value\n\
-def concat(x, y) : call_exists(clone, x) { \
-  var retval = x; \
-  var len = y.size(); \
-  var i = 0; \
-  while (i < len) { \
-    retval.push_back(y[i]); \
-    ++i; \
-  } \
-  retval; \
-} \
-def take(container, num, inserter) : call_exists(range, container) { \
-  var r = range(container); \
-  var i = num; \
-  while ((i > 0) && (!r.empty())) { \
-    inserter(r.front()); \
-    r.pop_front(); \
-    --i; \
-  } \
-} \
+def concat(x, y) : call_exists(clone, x) { \n\
+  var retval = x; \n\
+  var len = y.size(); \n\
+  var i = 0; \n\
+  while (i < len) { \n\
+    retval.push_back(y[i]); \n\
+    ++i; \n\
+  } \n\
+  retval; \n\
+} \n\
+def take(container, num, inserter) : call_exists(range, container) { \n\
+  var r = range(container); \n\
+  var i = num; \n\
+  while ((i > 0) && (!r.empty())) { \n\
+    inserter(r.front()); \n\
+    r.pop_front(); \n\
+    --i; \n\
+  } \n\
+} \n\
 # Returns a new container with the given number of elements taken from the container\n\
-def take(container, num) {\
-  var retval = new(container); \
-  take(container, num, back_inserter(retval)); \
-  retval; \
-}\
-def take_while(container, f, inserter) : call_exists(range, container) { \
-  var r = range(container); \
-  while ((!r.empty()) && f(r.front())) { \
-    inserter(r.front()); \
-    r.pop_front(); \
-  } \
-} \
+def take(container, num) {\n\
+  var retval = new(container); \n\
+  take(container, num, back_inserter(retval)); \n\
+  retval; \n\
+}\n\
+def take_while(container, f, inserter) : call_exists(range, container) { \n\
+  var r = range(container); \n\
+  while ((!r.empty()) && f(r.front())) { \n\
+    inserter(r.front()); \n\
+    r.pop_front(); \n\
+  } \n\
+} \n\
 # Returns a new container with the given elements match the second value function\n\
-def take_while(container, f) {\
-  var retval = new(container); \
-  take_while(container, f, back_inserter(retval)); \
-  retval;\
-}\
-def drop(container, num, inserter) : call_exists(range, container) { \
-  var r = range(container); \
-  var i = num; \
-  while ((i > 0) && (!r.empty())) { \
-    r.pop_front(); \
-    --i; \
-  } \
-  while (!r.empty()) { \
-    inserter(r.front()); \
-    r.pop_front(); \
-  } \
-} \
+def take_while(container, f) {\n\
+  var retval = new(container); \n\
+  take_while(container, f, back_inserter(retval)); \n\
+  retval;\n\
+}\n\
+def drop(container, num, inserter) : call_exists(range, container) { \n\
+  var r = range(container); \n\
+  var i = num; \n\
+  while ((i > 0) && (!r.empty())) { \n\
+    r.pop_front(); \n\
+    --i; \n\
+  } \n\
+  while (!r.empty()) { \n\
+    inserter(r.front()); \n\
+    r.pop_front(); \n\
+  } \n\
+} \n\
 # Returns a new container with the given number of elements dropped from the given container \n\
-def drop(container, num) {\
-  var retval = new(container); \
-  drop(container, num, back_inserter(retval)); \
-  retval; \
-}\
-def drop_while(container, f, inserter) : call_exists(range, container) { \
-  var r = range(container); \
-  while ((!r.empty())&& f(r.front())) { \
-    r.pop_front(); \
-  } \
-  while (!r.empty()) { \
-    inserter(r.front()); \
-    r.pop_front(); \
-  } \
-} \
+def drop(container, num) {\n\
+  var retval = new(container); \n\
+  drop(container, num, back_inserter(retval)); \n\
+  retval; \n\
+}\n\
+def drop_while(container, f, inserter) : call_exists(range, container) { \n\
+  var r = range(container); \n\
+  while ((!r.empty())&& f(r.front())) { \n\
+    r.pop_front(); \n\
+  } \n\
+  while (!r.empty()) { \n\
+    inserter(r.front()); \n\
+    r.pop_front(); \n\
+  } \n\
+} \n\
 # Returns a new container with the given elements dropped that match the second value function\n\
-def drop_while(container, f) {\
-  var retval = new(container); \
-  drop_while(container, f, back_inserter(retval)); \
-  retval; \
-}\
+def drop_while(container, f) {\n\
+  var retval = new(container); \n\
+  drop_while(container, f, back_inserter(retval)); \n\
+  retval; \n\
+}\n\
 # Applies the second value function to the container. Starts with the first two elements. Expects at least 2 elements.\n\
-def reduce(container, func) : container.size() >= 2 && call_exists(range, container) { \
-  var r = range(container); \
-  var retval = r.front(); \
-  r.pop_front(); \
-  retval = func(retval, r.front()); \
-  r.pop_front(); \
-  while (!r.empty()) { \
-    retval = func(retval, r.front()); \
-    r.pop_front(); \
-  } \
-  retval; \
-} \
+def reduce(container, func) : container.size() >= 2 && call_exists(range, container) { \n\
+  var r = range(container); \n\
+  var retval = r.front(); \n\
+  r.pop_front(); \n\
+  retval = func(retval, r.front()); \n\
+  r.pop_front(); \n\
+  while (!r.empty()) { \n\
+    retval = func(retval, r.front()); \n\
+    r.pop_front(); \n\
+  } \n\
+  retval; \n\
+} \n\
 # Returns a string of the elements in container delimited by the second value string\n\
-def join(container, delim) { \
-  var retval = ""; \
-  var range = range(container); \
-  if (!range.empty()) { \
-    retval += to_string(range.front()); \
-    range.pop_front(); \
-    while (!range.empty()) { \
-      retval += delim; \
-      retval += to_string(range.front()); \
-      range.pop_front(); \
-    } \
-  } \
-  retval; \
-} \
-def filter(container, f, inserter) : call_exists(range, container) { \
-  var r = range(container); \
-  while (!r.empty()) { \
-    if (f(r.front())) { \
-      inserter(r.front()); \
-    } \
-    r.pop_front(); \
-  } \
-} \
+def join(container, delim) { \n\
+  var retval = ""; \n\
+  var range = range(container); \n\
+  if (!range.empty()) { \n\
+    retval += to_string(range.front()); \n\
+    range.pop_front(); \n\
+    while (!range.empty()) { \n\
+      retval += delim; \n\
+      retval += to_string(range.front()); \n\
+      range.pop_front(); \n\
+    } \n\
+  } \n\
+  retval; \n\
+} \n\
+def filter(container, f, inserter) : call_exists(range, container) { \n\
+  var r = range(container); \n\
+  while (!r.empty()) { \n\
+    if (f(r.front())) { \n\
+      inserter(r.front()); \n\
+    } \n\
+    r.pop_front(); \n\
+  } \n\
+} \n\
 # Returns a new Vector which match the second value function\n\
-def filter(container, f) { \
-  var retval = new(container); \
-  filter(container, f, back_inserter(retval));\
-  retval;\
-}\
-def generate_range(x, y, inserter) { \
-  var i = x; \
-  while (i <= y) { \
-    inserter(i); \
-    ++i; \
-  } \
-} \
+def filter(container, f) { \n\
+  var retval = new(container); \n\
+  filter(container, f, back_inserter(retval));\n\
+  retval;\n\
+}\n\
+def generate_range(x, y, inserter) { \n\
+  var i = x; \n\
+  while (i <= y) { \n\
+    inserter(i); \n\
+    ++i; \n\
+  } \n\
+} \n\
 # Returns a new Vector which represents the range from the first value to the second value\n\
-def generate_range(x, y) { \
-  var retval = Vector(); \
-  generate_range(x,y,back_inserter(retval)); \
-  retval; \
-}\
+def generate_range(x, y) { \n\
+  var retval = Vector(); \n\
+  generate_range(x,y,back_inserter(retval)); \n\
+  retval; \n\
+}\n\
 # Returns a new Vector with the first value to the second value as its elements\n\
-def collate(x, y) { \
-  [x, y]; \
-} \
-def zip_with(f, x, y, inserter) : call_exists(range, x) && call_exists(range, y) { \
-  var r_x = range(x); \
-  var r_y = range(y); \
-  while (!r_x.empty() && !r_y.empty()) { \
-    inserter(f(r_x.front(), r_y.front())); \
-    r_x.pop_front(); \
-    r_y.pop_front(); \
-  } \
-} \
+def collate(x, y) { \n\
+  [x, y]; \n\
+} \n\
+def zip_with(f, x, y, inserter) : call_exists(range, x) && call_exists(range, y) { \n\
+  var r_x = range(x); \n\
+  var r_y = range(y); \n\
+  while (!r_x.empty() && !r_y.empty()) { \n\
+    inserter(f(r_x.front(), r_y.front())); \n\
+    r_x.pop_front(); \n\
+    r_y.pop_front(); \n\
+  } \n\
+} \n\
 # Returns a new Vector which joins matching elements of the second and third value with the first value function\n\
-def zip_with(f, x, y) { \
-  var retval = Vector(); \
-  zip_with(f,x,y,back_inserter(retval)); \
-  retval;\
-}\
+def zip_with(f, x, y) { \n\
+  var retval = Vector(); \n\
+  zip_with(f,x,y,back_inserter(retval)); \n\
+  retval;\n\
+}\n\
 # Returns a new Vector which joins matching elements of the first and second\n\
-def zip(x, y) { \
-  zip_with(collate, x, y); \
-}\
+def zip(x, y) { \n\
+  zip_with(collate, x, y); \n\
+}\n\
 # Returns the position of the second value string in the first value string\n\
-def find(str, substr) { \
-  int(find(str, substr, size_t(0))); \
-} \
+def find(str, substr) { \n\
+  int(find(str, substr, size_t(0))); \n\
+} \n\
 # Returns the position of last match of the second value string in the first value string\n\
-def rfind(str, substr) { \
-  int(rfind(str, substr, size_t(-1))); \
-} \
+def rfind(str, substr) { \n\
+  int(rfind(str, substr, size_t(-1))); \n\
+} \n\
 # Returns the position of the first match of elements in the second value string in the first value string\n\
-def find_first_of(str, list) { \
-  int(find_first_of(str, list, size_t(0))); \
-} \
+def find_first_of(str, list) { \n\
+  int(find_first_of(str, list, size_t(0))); \n\
+} \n\
 # Returns the position of the last match of elements in the second value string in the first value string\n\
-def find_last_of(str, list) { \
-  int(find_last_of(str, list, size_t(-1))); \
-} \
+def find_last_of(str, list) { \n\
+  int(find_last_of(str, list, size_t(-1))); \n\
+} \n\
 # Returns the position of the first non-matching element in the second value string in the first value string\n\
-def find_first_not_of(str, list) { \
-  int(find_first_not_of(str, list, size_t(0))); \
-} \
+def find_first_not_of(str, list) { \n\
+  int(find_first_not_of(str, list, size_t(0))); \n\
+} \n\
 # Returns the position of the last non-matching element in the second value string in the first value string\n\
-def find_last_not_of(str, list) { \
-  int(find_last_not_of(str, list, size_t(-1))); \
-} \
-def ltrim(str) { \
-  drop_while(str, fun(x) { x == ' ' || x == '\t' }); \
-} \
-def rtrim(str) { \
-  reverse(drop_while(reverse(str), fun(x) { x == ' ' || x == '\t' })); \
-} \
-def trim(str) { \
-  ltrim(rtrim(str)); \
+def find_last_not_of(str, list) { \n\
+  int(find_last_not_of(str, list, size_t(-1))); \n\
+} \n\
+def ltrim(str) { \n\
+  drop_while(str, fun(x) { x == ' ' || x == '\t' }); \n\
+} \n\
+def rtrim(str) { \n\
+  reverse(drop_while(reverse(str), fun(x) { x == ' ' || x == '\t' })); \n\
+} \n\
+def trim(str) { \n\
+  ltrim(rtrim(str)); \n\
 } \
 )
 #endif /* CHAISCRIPT_PRELUDE_HPP_ */
