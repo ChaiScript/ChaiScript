@@ -36,16 +36,6 @@ namespace chaiscript
       {
       }
 
-      Bidir_Range(typename Container::iterator itr)
-        : m_begin(itr), m_end(itr)
-      {
-      }
-
-      Bidir_Range(const std::pair<typename Container::iterator, typename Container::iterator> &t_p)
-        : m_begin(t_p.first), m_end(t_p.second)
-      {
-      }
-
       bool empty() const
       {
         return m_begin == m_end;
@@ -118,36 +108,16 @@ namespace chaiscript
     ModulePtr input_range_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
       m->add(user_type<Bidir_Range<ContainerType> >(), type + "_Range");
-      m->add(user_type<Retro<Bidir_Range<ContainerType> > >(), type + "_Retro_Range");
-      m->add(user_type<typename ContainerType::iterator>(), type+"_Iterator");
 
       copy_constructor<Bidir_Range<ContainerType> >(type + "_Range", m);
-      copy_constructor<Retro<Bidir_Range<ContainerType> > >(type + "_Retro_Range", m);
 
       m->add(constructor<Bidir_Range<ContainerType> (ContainerType &)>(), "range");
-      m->add(constructor<Bidir_Range<ContainerType> (typename ContainerType::iterator)>(), "range");
-
-      typedef std::pair<typename ContainerType::iterator, typename ContainerType::iterator> ItrPair;
-
-      m->add(constructor<Bidir_Range<ContainerType> (const ItrPair &)>(), "range");
-
-      m->add(user_type<ItrPair>(), type+"_Iterator_Pair");
 
       m->add(fun(&Bidir_Range<ContainerType>::empty), "empty");
       m->add(fun(&Bidir_Range<ContainerType>::pop_front), "pop_front");
       m->add(fun(&Bidir_Range<ContainerType>::front), "front");
       m->add(fun(&Bidir_Range<ContainerType>::pop_back), "pop_back");
       m->add(fun(&Bidir_Range<ContainerType>::back), "back");
-
-      m->add(fun(&Retro<Bidir_Range<ContainerType> >::empty), "empty");
-      m->add(fun(&Retro<Bidir_Range<ContainerType> >::pop_front), "pop_front");
-      m->add(fun(&Retro<Bidir_Range<ContainerType> >::front), "front");
-      m->add(fun(&Retro<Bidir_Range<ContainerType> >::pop_back), "pop_back");
-      m->add(fun(&Retro<Bidir_Range<ContainerType> >::back), "back");
-
-      m->add(constructor<Retro<Bidir_Range<ContainerType> > (const Bidir_Range<ContainerType> &)>(), "retro");
-
-
 
       return m;
     } 
@@ -176,8 +146,6 @@ namespace chaiscript
       //to throw an exception in an out of bounds condition.
       m->add(
         fun(boost::function<typename ContainerType::reference (ContainerType *, int)>(static_cast<indexoper>(&ContainerType::at))), "[]");
-      m->add(
-        fun(boost::function<typename ContainerType::reference (ContainerType *, int)>(static_cast<indexoper>(&ContainerType::operator[]))), "at");
 
       return m;
     }
@@ -204,7 +172,6 @@ namespace chaiscript
       assignable_type<ContainerType>(type, m);
 
       m->add(fun<size_t (ContainerType::*)() const>(&ContainerType::size), "size");
-      m->add(fun<size_t (ContainerType::*)() const>(&ContainerType::max_size), "max_size");
       m->add(fun<bool (ContainerType::*)() const>(&ContainerType::empty), "empty");
       m->add(fun<void (ContainerType::*)()>(&ContainerType::clear), "clear");
 
@@ -443,7 +410,6 @@ namespace chaiscript
 
       reversible_container_type<ContainerType>(type, m);
       associative_container_type<ContainerType>(type, m);
-      m->add(fun(static_cast<eq_range>(&ContainerType::equal_range)), "equal_range");
 
       return m;
     }
