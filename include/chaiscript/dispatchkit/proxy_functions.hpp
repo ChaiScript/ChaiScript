@@ -13,7 +13,6 @@
 #include "type_info.hpp"
 #include <string>
 #include <boost/function.hpp>
-
 #include <stdexcept>
 #include <vector>
 #include "proxy_functions_detail.hpp"
@@ -64,7 +63,9 @@ namespace chaiscript
     public:
       virtual ~Proxy_Function_Base() {}
       virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) = 0;
-      virtual std::vector<Type_Info> get_param_types() const = 0;
+
+      std::vector<Type_Info> get_param_types() const { return m_types; }
+
       virtual bool operator==(const Proxy_Function_Base &) const = 0;
       virtual bool call_match(const std::vector<Boxed_Value> &vals) const = 0;
 
@@ -109,6 +110,32 @@ namespace chaiscript
       virtual int get_arity() const = 0;
 
       virtual std::string annotation() const = 0;
+
+    protected:
+      Proxy_Function_Base(const std::vector<Type_Info> &t_types)
+        : m_types(t_types)
+      {
+      }
+
+      bool compare_types(const std::vector<Type_Info> &tis, const std::vector<Boxed_Value> &bvs) const
+      {
+        if (tis.size() - 1 != bvs.size())
+        {
+          return false;
+        } else {
+          const int size = bvs.size();
+          for (int i = 0; i < size; ++i)
+          {
+            if (!(tis[i+1].bare_equal(bvs[i].get_type_info()) && tis[i+1].is_const() >= bvs[i].get_type_info().is_const() ))
+            {
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+
+      std::vector<Type_Info> m_types;
   };
 
   typedef boost::shared_ptr<Proxy_Function_Base> Proxy_Function;
@@ -139,8 +166,8 @@ namespace chaiscript
           int t_arity=-1,
           const std::string &t_description = "",
           const Proxy_Function &t_guard = Proxy_Function())
-        : m_f(t_f), m_arity(t_arity), m_description(t_description), m_guard(t_guard),
-          m_types(build_param_type_list(t_arity))
+        : Proxy_Function_Base(build_param_type_list(t_arity)),
+          m_f(t_f), m_arity(t_arity), m_description(t_description), m_guard(t_guard)
       {
       }
 
@@ -177,11 +204,6 @@ namespace chaiscript
       virtual int get_arity() const
       {
 	return m_arity;
-      }
-
-      virtual std::vector<Type_Info> get_param_types() const
-      {
-	return m_types;
       }
 
       virtual std::string annotation() const
@@ -251,7 +273,8 @@ namespace chaiscript
     public:
       Bound_Function(const Proxy_Function &t_f, 
                      const std::vector<Boxed_Value> &t_args)
-        : m_f(t_f), m_args(t_args), m_arity(m_f->get_arity()<0?-1:(m_f->get_arity() - m_args.size()))
+        : Proxy_Function_Base(std::vector<Type_Info>()),
+          m_f(t_f), m_args(t_args), m_arity(m_f->get_arity()<0?-1:(m_f->get_arity() - m_args.size()))
       {
       }
 
@@ -310,11 +333,6 @@ namespace chaiscript
         return args;
       }
 
-      virtual std::vector<Type_Info> get_param_types() const
-      {
-        return std::vector<Type_Info>();
-      }
-
       virtual int get_arity() const
       {
         return m_arity;
@@ -341,7 +359,8 @@ namespace chaiscript
   {
     public:
       Proxy_Function_Impl(const boost::function<Func> &f)
-        : m_f(f), m_dummy_func(0), m_types(build_param_type_list(m_dummy_func))
+        : Proxy_Function_Base(build_param_type_list((Func *)(0))),
+          m_f(f), m_dummy_func(0)
       {
       }
 
@@ -359,12 +378,7 @@ namespace chaiscript
  
       virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
       {
-        return call_func(m_f, params);
-      }
-
-      virtual std::vector<Type_Info> get_param_types() const
-      {
-	return m_types;
+        return Do_Call<typename boost::function<Func>::result_type>::go(m_f, params);
       }
 
       virtual int get_arity() const
@@ -375,7 +389,12 @@ namespace chaiscript
 
       virtual bool call_match(const std::vector<Boxed_Value> &vals) const
       {
-        return compare_types(m_dummy_func, vals);
+        if (int(vals.size()) != get_arity()) 
+        {
+          return false;
+        }
+
+        return compare_types(m_types, vals) || compare_types_cast(m_dummy_func, vals);
       }
 
       virtual std::string annotation() const
@@ -386,7 +405,6 @@ namespace chaiscript
     private:
       boost::function<Func> m_f;
       Func *m_dummy_func;
-      std::vector<Type_Info> m_types;
   };
 
   /**

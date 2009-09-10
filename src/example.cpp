@@ -45,7 +45,7 @@ struct System
   }
 };
 
-void take_shared_ptr(const boost::shared_ptr<std::string> &p)
+void take_shared_ptr(const boost::shared_ptr<const std::string> &p)
 {
   std::cout << *p << std::endl;
 }
@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
   chai.add(bootstrap::vector_type<std::vector<int> >("IntVector"));
 
 
-  chai("dump_system()");
+//  chai("dump_system()");
   chai("take_shared_ptr(\"Hello World as a shared_ptr\");");
 }
 

@@ -75,7 +75,8 @@ namespace chaiscript
   {
     public:
       Dispatch_Function(const std::vector<std::pair<std::string, Proxy_Function > > &t_funcs)
-        : m_funcs(t_funcs)
+        : Proxy_Function_Base(std::vector<Type_Info>()),
+          m_funcs(t_funcs)
       {
       }
 
@@ -89,11 +90,6 @@ namespace chaiscript
       virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
       {
         return dispatch(m_funcs.begin(), m_funcs.end(), params);
-      }
-
-      virtual std::vector<Type_Info> get_param_types() const
-      {
-        return std::vector<Type_Info>();
       }
 
       virtual int get_arity() const

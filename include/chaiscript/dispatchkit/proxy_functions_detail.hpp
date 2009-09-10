@@ -7,10 +7,8 @@
 #include <boost/preprocessor.hpp>
 
 #define gettypeinfo(z,n,text)  ti.push_back(detail::Get_Type_Info<Param ## n>::get());
-#define casthelper(z,n,text) ,chaiscript::boxed_cast< Param ## n >(params[n])
-#define comparetype(z,n,text)  && ((detail::Get_Type_Info<Param ## n>::get() == params[n].get_type_info()))
+#define casthelper(z,n,text) BOOST_PP_COMMA_IF(n) chaiscript::boxed_cast< Param ## n >(params[n])
 #define trycast(z,n,text) chaiscript::boxed_cast<Param ## n>(params[n]);
-
 
 #ifndef  BOOST_PP_IS_ITERATING
 #ifndef __proxy_functions_detail_hpp__
@@ -45,6 +43,27 @@ namespace chaiscript
     int got;
     int expected;
   };
+
+  template<typename Ret>
+    struct Do_Call
+    {
+      template<typename Fun>
+      static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
+      {
+        return Handle_Return<Ret>::handle(call_func(fun, params, false));
+      }
+    };
+
+  template<>
+    struct Do_Call<void>
+    {
+      template<typename Fun>
+      static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
+      {
+        call_func(fun, params, false);
+        return Handle_Return<void>::handle();
+      };
+    };
 }
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
@@ -68,7 +87,7 @@ namespace chaiscript
       std::vector<Type_Info> ti;
       ti.push_back(detail::Get_Type_Info<Ret>::get());
 
-      BOOST_PP_REPEAT(n, gettypeinfo, ~)
+      BOOST_PP_REPEAT(n, gettypeinfo, ~) 
 
       return ti;
     }
@@ -80,14 +99,14 @@ namespace chaiscript
    * the bad_boxed_cast is passed up to the caller.
    */
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-    Boxed_Value call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f,
-        const std::vector<Boxed_Value> &params)
+    Ret call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f,
+        const std::vector<Boxed_Value> &params, bool t_test)
     {
       if (params.size() != n)
       {
         throw arity_error(params.size(), n);
       } else {
-        return Handle_Return<Ret>::call(boost::bind(f BOOST_PP_REPEAT(n, casthelper, ~)));
+        return f(BOOST_PP_REPEAT(n, casthelper, ~));
       }
     }
 
@@ -97,25 +116,18 @@ namespace chaiscript
    * registration of two functions with the exact same signatures
    */
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-    bool compare_types(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)),
+    bool compare_types_cast(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)),
         const std::vector<Boxed_Value> &params)
     {
-      if (params.size() != n)
-      {
+      try {
+        BOOST_PP_REPEAT(n, trycast, ~);
+      } catch (const bad_boxed_cast &) {
         return false;
-      } else {
-        bool val = true BOOST_PP_REPEAT(n, comparetype, ~);
-        if (val) return true;
-
-        try {
-          BOOST_PP_REPEAT(n, trycast, ~);
-        } catch (const bad_boxed_cast &) {
-          return false;
-        }
-
-        return true;
       }
+
+      return true;
     }
+
 }
 
 #endif

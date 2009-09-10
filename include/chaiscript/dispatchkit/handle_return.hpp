@@ -23,27 +23,27 @@ namespace chaiscript
   template<typename Ret>
     struct Handle_Return
     {
-      static Boxed_Value call(const boost::function<Ret ()> &f)
+      static Boxed_Value handle(const Ret &r)
       {
-        return Boxed_Value(f());
+        return Boxed_Value(r);
       }
     };
 
   template<typename Ret>
     struct Handle_Return<boost::shared_ptr<Ret> &>
     {
-      static Boxed_Value call(const boost::function<boost::shared_ptr<Ret> & ()> &f)
+      static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
       {
-        return Boxed_Value(f());
+        return Boxed_Value(r);
       }
     };
 
   template<typename Ret>
     struct Handle_Return<const boost::shared_ptr<Ret> &>
     {
-      static Boxed_Value call(const boost::function<const boost::shared_ptr<Ret> & ()> &f)
+      static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
       {
-        return Boxed_Value(f());
+        return Boxed_Value(r);
       }
     };
 
@@ -53,9 +53,9 @@ namespace chaiscript
   template<typename Ret>
     struct Handle_Return<Ret &>
     {
-      static Boxed_Value call(const boost::function<Ret &()> &f)
+      static Boxed_Value handle(Ret &r)
       {
-        return Boxed_Value(boost::ref(f()));
+        return Boxed_Value(boost::ref(r));
       }
     };
 
@@ -65,9 +65,9 @@ namespace chaiscript
   template<>
     struct Handle_Return<Boxed_Value>
     {
-      static Boxed_Value call(const boost::function<Boxed_Value ()> &f)
+      static Boxed_Value handle(const Boxed_Value &r)
       {
-        return f();
+        return r;
       }
     };
 
@@ -77,9 +77,9 @@ namespace chaiscript
   template<>
     struct Handle_Return<Boxed_Value &>
     {
-      static Boxed_Value call(const boost::function<Boxed_Value &()> &f)
+      static Boxed_Value handle(const Boxed_Value &r)
       {
-        return f();
+        return r;
       }
     };
 
@@ -89,9 +89,8 @@ namespace chaiscript
   template<>
     struct Handle_Return<void>
     {
-      static Boxed_Value call(const boost::function<void ()> &f)
+      static Boxed_Value handle()
       {
-        f();
         return Boxed_Value(Boxed_Value::Void_Type());
       }
     };
