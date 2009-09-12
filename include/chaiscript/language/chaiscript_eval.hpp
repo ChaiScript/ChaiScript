@@ -116,6 +116,15 @@ namespace chaiscript
     Boxed_Value eval_quoted_string(Eval_System &ss, const TokenPtr &node) {
         //return const_var(node->text);
 
+        /*
+        if ((node->text.size() > 0) && (node->text[0] == '$')) {
+            node->text.erase(0, 1);
+            Param_List_Builder plb;
+            plb << node->text;
+
+            return ss.call_function("eval", plb);
+        }
+        */
         if (!node->is_cached) {
             cache_const(ss, node, const_var(node->text));
         }
@@ -463,6 +472,43 @@ namespace chaiscript
         }
         catch(Eval_Error &ee) {
             ss.set_stack(prev_stack);
+            throw Eval_Error(ee.reason, node->children[0]);
+        }
+
+    }
+
+    /**
+     * Evaluates a function call, starting with its arguments.  Does NOT change scope.
+     */
+    template <typename Eval_System>
+    Boxed_Value eval_inplace_fun_call(Eval_System &ss, const TokenPtr &node) {
+        Param_List_Builder plb;
+        unsigned int i;
+
+        if ((node->children.size() > 1) && (node->children[1]->identifier == Token_Type::Arg_List)) {
+            for (i = 0; i < node->children[1]->children.size(); ++i) {
+                plb << eval_token(ss, node->children[1]->children[i]);
+            }
+        }
+
+        try {
+            Boxed_Value fn = eval_token(ss, node->children[0]);
+
+            try {
+                Boxed_Value retval = (*boxed_cast<Proxy_Function >(fn))(plb);
+                return retval;
+            }
+            catch(const dispatch_error &e){
+                throw Eval_Error(std::string(e.what()) + " with function '" + node->children[0]->text + "'", node->children[0]);
+            }
+            catch(Return_Value &rv) {
+                return rv.retval;
+            }
+            catch(...) {
+                throw;
+            }
+        }
+        catch(Eval_Error &ee) {
             throw Eval_Error(ee.reason, node->children[0]);
         }
 
@@ -868,6 +914,10 @@ namespace chaiscript
 
             case (Token_Type::Fun_Call) :
                 return eval_fun_call(ss, node);
+            break;
+
+            case (Token_Type::Inplace_Fun_Call) :
+                return eval_inplace_fun_call(ss, node);
             break;
 
             case (Token_Type::Dot_Access) :

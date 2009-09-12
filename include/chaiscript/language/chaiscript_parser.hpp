@@ -323,37 +323,132 @@ namespace chaiscript
                 if (Quoted_String_()) {
                     std::string match;
                     bool is_escaped = false;
-                    for (std::string::iterator s = start + 1, end = input_pos - 1; s != end; ++s) {
-                        if (*s == '\\') {
-                            if (is_escaped) {
-                                match.push_back('\\');
-                                is_escaped = false;
-                            }
-                            else {
-                                is_escaped = true;
-                            }
-                        }
-                        else {
-                            if (is_escaped) {
-                                switch (*s) {
-                                    case ('b') : match.push_back('\b'); break;
-                                    case ('f') : match.push_back('\f'); break;
-                                    case ('n') : match.push_back('\n'); break;
-                                    case ('r') : match.push_back('\r'); break;
-                                    case ('t') : match.push_back('\t'); break;
-                                    case ('\'') : match.push_back('\''); break;
-                                    case ('\"') : match.push_back('\"'); break;
-                                    default: throw Eval_Error("Unknown escaped sequence in string", File_Position(prev_line, prev_col), filename);
+                    bool is_interpolated = false;
+                    bool saw_interpolation_marker = false;
+                    int prev_stack_top = match_stack.size();
+
+                    //for (std::string::iterator s = start + 1, end = input_pos - 1; s != end; ++s) {
+                    std::string::iterator s = start + 1, end = input_pos - 1;
+
+                    while (s != end) {
+                        if (saw_interpolation_marker) {
+                            if (*s == '{') {
+                                //We've found an interpolation point
+
+                                if (is_interpolated) {
+                                    //If we've seen previous interpolation, add on instead of making a new one
+                                    TokenPtr plus(new Token("+", Token_Type::Str, filename, -1, -1, -1, -1));
+                                    match_stack.push_back(plus);
+
+                                    TokenPtr t(new Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
+                                    match_stack.push_back(t);
+
+                                    build_match(Token_Type::Additive, prev_stack_top);
+                                }
+                                else {
+                                    TokenPtr t(new Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
+                                    match_stack.push_back(t);
+                                }
+
+                                //We've finished with the part of the string up to this point, so clear it
+                                match = "";
+
+                                TokenPtr plus(new Token("+", Token_Type::Str, filename, prev_line, prev_col, line, col));
+                                match_stack.push_back(plus);
+
+                                std::string eval_match;
+
+                                ++s;
+                                while ((*s != '}') && (s != end)) {
+                                    eval_match.push_back(*s);
+                                    ++s;
+                                }
+                                if (*s == '}') {
+                                    is_interpolated = true;
+                                    ++s;
+
+                                    int tostr_stack_top = match_stack.size();
+
+                                    TokenPtr tostr(new Token("to_string", Token_Type::Id, filename, prev_line, prev_col, line, col));
+                                    match_stack.push_back(tostr);
+
+                                    int ev_stack_top = match_stack.size();
+
+                                    TokenPtr ev(new Token("eval", Token_Type::Id, filename, prev_line, prev_col, line, col));
+                                    match_stack.push_back(ev);
+
+                                    int arg_stack_top = match_stack.size();
+
+                                    TokenPtr t(new Token(eval_match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
+                                    match_stack.push_back(t);
+
+                                    build_match(Token_Type::Arg_List, arg_stack_top);
+
+                                    build_match(Token_Type::Inplace_Fun_Call, ev_stack_top);
+
+                                    build_match(Token_Type::Arg_List, ev_stack_top);
+
+                                    build_match(Token_Type::Fun_Call, tostr_stack_top);
+
+                                    build_match(Token_Type::Additive, prev_stack_top);
+                                }
+                                else {
+                                    throw Eval_Error("Unclosed in-string eval", File_Position(prev_line, prev_col), filename);
                                 }
                             }
                             else {
-                                match.push_back(*s);
+                                match.push_back('$');
                             }
-                            is_escaped = false;
+                            saw_interpolation_marker = false;
+                        }
+                        else {
+                            if (*s == '\\') {
+                                if (is_escaped) {
+                                    match.push_back('\\');
+                                    is_escaped = false;
+                                }
+                                else {
+                                    is_escaped = true;
+                                }
+                            }
+                            else {
+                                if (is_escaped) {
+                                    switch (*s) {
+                                        case ('b') : match.push_back('\b'); break;
+                                        case ('f') : match.push_back('\f'); break;
+                                        case ('n') : match.push_back('\n'); break;
+                                        case ('r') : match.push_back('\r'); break;
+                                        case ('t') : match.push_back('\t'); break;
+                                        case ('\'') : match.push_back('\''); break;
+                                        case ('\"') : match.push_back('\"'); break;
+                                        case ('$') : match.push_back('$'); break;
+                                        default: throw Eval_Error("Unknown escaped sequence in string", File_Position(prev_line, prev_col), filename);
+                                    }
+                                }
+                                else if (*s == '$') {
+                                    saw_interpolation_marker = true;
+                                }
+                                else {
+                                    match.push_back(*s);
+                                }
+                                is_escaped = false;
+                            }
+                            ++s;
                         }
                     }
-                    TokenPtr t(new Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
-                    match_stack.push_back(t);
+                    if (is_interpolated) {
+                        TokenPtr plus(new Token("+", Token_Type::Str, filename, -1, -1, -1, -1));
+                        match_stack.push_back(plus);
+
+                        TokenPtr t(new Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
+                        match_stack.push_back(t);
+
+                        build_match(Token_Type::Additive, prev_stack_top);
+                    }
+                    else {
+                        TokenPtr t(new Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
+                        match_stack.push_back(t);
+                    }
                     return true;
                 }
                 else {
