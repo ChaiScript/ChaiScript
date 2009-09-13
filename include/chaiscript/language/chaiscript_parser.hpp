@@ -337,7 +337,7 @@ namespace chaiscript
 
                                 if (is_interpolated) {
                                     //If we've seen previous interpolation, add on instead of making a new one
-                                    TokenPtr plus(new Token("+", Token_Type::Str, filename, -1, -1, -1, -1));
+                                    TokenPtr plus(new Token("+", Token_Type::Str, filename, prev_line, prev_col, line, col));
                                     match_stack.push_back(plus);
 
                                     TokenPtr t(new Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
@@ -437,7 +437,7 @@ namespace chaiscript
                         }
                     }
                     if (is_interpolated) {
-                        TokenPtr plus(new Token("+", Token_Type::Str, filename, -1, -1, -1, -1));
+                        TokenPtr plus(new Token("+", Token_Type::Str, filename, prev_line, prev_col, line, col));
                         match_stack.push_back(plus);
 
                         TokenPtr t(new Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
