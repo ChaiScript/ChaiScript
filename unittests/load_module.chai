@@ -1,2 +1,2 @@
-load_module("test", "./libtest.so")
+load_module("test")
 print(hello_world())

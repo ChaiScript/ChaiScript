@@ -13,14 +13,15 @@
 
 void do_work(chaiscript::ChaiScript &c)
 {
-  c("use(\"work.chai\"); do_chai_work(num_iterations);");
+//  c("use(\"work.chai\"); do_chai_work(num_iterations);");
+  c("use(\"work.chai\"); do_chai_work(10000);");
 }
 
 int main(int argc, char *argv[]) {
     std::string input;
     chaiscript::ChaiScript chai;
 
-    chai.add_shared_object(chaiscript::Boxed_Value(10000), "num_iterations");
+    //chai.add_shared_object(chaiscript::Boxed_Value(10000), "num_iterations");
 
     std::vector<boost::shared_ptr<boost::thread> > threads;
 

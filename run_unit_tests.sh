@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 successes=0
 failures=0
 
@@ -8,7 +9,7 @@ for file in unittests/*.chai
 do
   tstname=${file%.*}
 	tst="$tstname.txt"
-	./chaiscript_eval $file > /tmp/tstout.txt
+	LD_LIBRARY_PATH=. ./chaiscript_eval $file > /tmp/tstout.txt
 	diff $tst /tmp/tstout.txt
 	if [ "$?" -eq "0" ]
 	then

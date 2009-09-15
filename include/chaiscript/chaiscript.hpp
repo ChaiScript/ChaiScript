@@ -21,6 +21,16 @@
 #include "dispatchkit/bootstrap.hpp"
 #include "dispatchkit/bootstrap_stl.hpp"
 #include "dispatchkit/function_call.hpp"
+
+
+#ifdef  BOOST_HAS_DECLSPEC
+#define CHAISCRIPT_MODULE_EXPORT extern "C" __declspec(dllexport)
+#else
+#define CHAISCRIPT_MODULE_EXPORT extern "C" 
+#endif
+
+
+
 namespace chaiscript
 {
     typedef ModulePtr (*Create_Module_Func)();

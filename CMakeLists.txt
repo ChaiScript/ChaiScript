@@ -33,8 +33,11 @@ if (Boost_FOUND)
 	#add_executable(dispatchkit_test contrib/test/dispatchkit_test.cpp)
 	target_link_libraries(chaiscript_eval dl ${Boost_LIBRARIES} ${READLINE_LIB})
 
-  add_library(test MODULE src/test_module.cpp)
+        add_library(test MODULE src/test_module.cpp)
 	target_link_libraries(test ${Boost_LIBRARIES})
+
+        add_library(stl_extra MODULE src/stl_extra.cpp)
+	target_link_libraries(stl_extra ${Boost_LIBRARIES})
 
 	install(TARGETS chaiscript_eval DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/bin)
         
