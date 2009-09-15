@@ -16,7 +16,7 @@
 #include <chaiscript/chaiscript.hpp>
 
 void print_help() {
-    std::cout << "ChaiScript evaluator.  To evaluate and expression, type it and press <enter>." << std::endl;
+    std::cout << "ChaiScript evaluator.  To evaluate an expression, type it and press <enter>." << std::endl;
     std::cout << "Additionally, you can inspect the runtime system using:" << std::endl;
     std::cout << "  dump_system() - outputs all functions registered to the system" << std::endl;
     std::cout << "  dump_object(x) - dumps information about the given symbol" << std::endl;
