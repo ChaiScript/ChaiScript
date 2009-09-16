@@ -1,0 +1,15 @@
+var total = 0
+ 
+for (var i = 0.0; i < 10000.0; i += 0.1) {
+  total += int(double(i) + int(10));
+  if (i < 9000.0)
+  {
+    total += double(11);
+    if (i > double(4000.0))
+    {
+      total += double(10);
+    }
+  }
+}
+ 
+print(total)
