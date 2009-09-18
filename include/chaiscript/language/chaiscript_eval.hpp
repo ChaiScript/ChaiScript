@@ -583,6 +583,40 @@ namespace chaiscript
      * Evaluates an if/elseif/else block
      */
     template <typename Eval_System>
+    Boxed_Value eval_try(Eval_System &ss, const TokenPtr &node) {
+        Boxed_Value retval;        
+        retval = Boxed_Value();
+
+        ss.new_scope();
+        try {
+            retval = eval_token(ss, node->children[0]);
+        }
+        catch (std::exception &) {
+            // nothing
+            std::cout << "DEBUG: std::exception caught" << std::endl;
+        }
+        catch (Boxed_Value &bv) {
+            if (node->children.size() > 2) {
+                if (node->children[1]->text == "catch") {
+                    if (node->children.size() > 3) {
+                        ss.add_object(node->children[2]->text, bv);
+                        retval = eval_token(ss, node->children[3]);
+                    }
+                    else {
+                        retval = eval_token(ss, node->children[2]);
+                    }
+                }
+            }
+        }
+        ss.pop_scope();
+
+        return retval;
+    }
+
+    /**
+     * Evaluates an if/elseif/else block
+     */
+    template <typename Eval_System>
     Boxed_Value eval_if(Eval_System &ss, const TokenPtr &node) {
         unsigned int i;
 
@@ -922,6 +956,10 @@ namespace chaiscript
 
             case (Token_Type::Dot_Access) :
                 return eval_dot_access(ss, node);
+            break;
+
+            case(Token_Type::Try) :
+                return eval_try(ss, node);
             break;
 
             case(Token_Type::If) :

@@ -917,6 +917,60 @@ namespace chaiscript
         }
 
         /**
+         * Reads a function definition from input
+         */
+        bool Try() {
+            bool retval = false;
+            bool is_annotated = false;
+
+            TokenPtr annotation;
+
+            if (Annotation()) {
+                while (Eol_());
+                annotation = match_stack.back();
+                match_stack.pop_back();
+                is_annotated = true;
+            }
+
+            int prev_stack_top = match_stack.size();
+
+            if (Keyword("try")) {
+                retval = true;
+
+                while (Eol());
+
+                if (!Block()) {
+                    throw Eval_Error("Incomplete 'try' block", File_Position(line, col), filename);
+                }
+
+                bool has_matches = true;
+                while (has_matches) {
+                    while (Eol());
+                    has_matches = false;
+                    if (Keyword("catch", true)) {
+                        if (Char('(')) {
+                            if (!(Id(true) && Char(')'))) {
+                                throw Eval_Error("Incomplete 'catch' expression", File_Position(line, col), filename);
+                            }
+                        }
+
+                        while (Eol());
+
+                        if (!Block()) {
+                            throw Eval_Error("Incomplete 'catch' block", File_Position(line, col), filename);
+                        }
+                        
+                        has_matches = true;
+                    }
+                }
+
+                build_match(Token_Type::Try, prev_stack_top);
+            }
+
+            return retval;
+        }
+
+        /**
          * Reads an if/elseif/else block from input
          */
         bool If() {
@@ -1543,6 +1597,14 @@ namespace chaiscript
             while (has_more) {
                 has_more = false;
                 if (Def()) {
+                    if (!saw_eol) {
+                        throw Eval_Error("Two function definitions missing line separator", match_stack.back());
+                    }
+                    has_more = true;
+                    retval = true;
+                    saw_eol = true;
+                }
+                else if (Try()) {
                     if (!saw_eol) {
                         throw Eval_Error("Two function definitions missing line separator", match_stack.back());
                     }

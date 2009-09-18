@@ -638,10 +638,19 @@ namespace chaiscript
         return Boxed_Value(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end())));
       }
 
+      static void throw_exception(const Boxed_Value &bv) {
+        throw bv;
+      }
+      
       static boost::shared_ptr<Dispatch_Engine> bootstrap2(boost::shared_ptr<Dispatch_Engine> e = boost::shared_ptr<Dispatch_Engine> (new Dispatch_Engine()))
       {
         e->add(user_type<void>(), "void");
         return e;
+      }
+
+      static std::string what(const std::exception &e)
+      {
+        return e.what();
       }
 
     public:
@@ -655,6 +664,7 @@ namespace chaiscript
         m->add(user_type<Boxed_Value>(), "Object");
         m->add(user_type<Boxed_POD_Value>(), "PODObject");
         m->add(user_type<Proxy_Function>(), "function");
+        m->add(user_type<std::exception>(), "exception");
 
         basic_constructors<bool>("bool", m);
         oper_assign<std::string>(m);
@@ -663,6 +673,7 @@ namespace chaiscript
         m->add(fun(&to_string<const std::string &>), "internal_to_string");
         m->add(fun(&to_string<bool>), "internal_to_string");
         m->add(fun(&unknown_assign), "=");
+        m->add(fun(&throw_exception), "throw");
 
         bootstrap_pod_type<double>("double", m);
         bootstrap_pod_type<int>("int", m);
