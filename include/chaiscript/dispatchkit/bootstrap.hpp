@@ -674,6 +674,7 @@ namespace chaiscript
         m->add(fun(&to_string<bool>), "internal_to_string");
         m->add(fun(&unknown_assign), "=");
         m->add(fun(&throw_exception), "throw");
+        m->add(fun(&what), "what");
 
         bootstrap_pod_type<double>("double", m);
         bootstrap_pod_type<int>("int", m);

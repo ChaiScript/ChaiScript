@@ -591,9 +591,21 @@ namespace chaiscript
         try {
             retval = eval_token(ss, node->children[0]);
         }
-        catch (std::exception &) {
-            // nothing
-            std::cout << "DEBUG: std::exception caught" << std::endl;
+        catch (const Eval_Error &) {
+            throw;
+        }
+        catch (const std::exception &e) {
+            if (node->children.size() > 2) {
+                if (node->children[1]->text == "catch") {
+                    if (node->children.size() > 3) {
+                        ss.add_object(node->children[2]->text, Boxed_Value(boost::ref(e)));
+                        retval = eval_token(ss, node->children[3]);
+                    }
+                    else {
+                        retval = eval_token(ss, node->children[2]);
+                    }
+                }
+            }
         }
         catch (Boxed_Value &bv) {
             if (node->children.size() > 2) {
