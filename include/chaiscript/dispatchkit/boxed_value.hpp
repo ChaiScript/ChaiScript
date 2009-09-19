@@ -135,6 +135,8 @@ namespace chaiscript
         template<typename T>
           boost::shared_ptr<Data> get(const boost::shared_ptr<T> &obj)
           {
+            bool b_const = boost::is_const<T>::value; 
+
             boost::shared_ptr<Data> data(new Data(
                   detail::Get_Type_Info<T>::get(), 
                   boost::any(obj), 
@@ -142,14 +144,14 @@ namespace chaiscript
                   boost::shared_ptr<Data::Shared_Ptr_Proxy>(new Data::Shared_Ptr_Proxy_Impl<T>()))
                 );
 
-            std::map<const void *, Data>::iterator itr
-              = m_ptrs.find(obj.get());
+            std::map<std::pair<const void *, bool>, Data>::iterator itr
+              = m_ptrs.find(std::make_pair(obj.get(), b_const));
 
             if (itr != m_ptrs.end())
             {
               (*data) = (itr->second);
             } else {
-              m_ptrs.insert(std::make_pair(obj.get(), *data));
+              m_ptrs.insert(std::make_pair(std::make_pair(obj.get(), b_const), *data));
             }
 
             return data;
@@ -164,14 +166,16 @@ namespace chaiscript
         template<typename T>
           boost::shared_ptr<Data> get(boost::reference_wrapper<T> obj)
           {
+            bool b_const = boost::is_const<T>::value; 
+
             boost::shared_ptr<Data> data(new Data(
                   detail::Get_Type_Info<T>::get(),
                   boost::any(obj), 
                   true)
                 );
 
-            std::map<const void *, Data >::iterator itr
-              = m_ptrs.find(obj.get_pointer());
+            std::map<std::pair<const void *, bool>, Data >::iterator itr
+              = m_ptrs.find(std::make_pair(obj.get_pointer(), b_const) );
 
             // If the ptr is found in the cache and it is the correct type,
             // return it. It may be the incorrect type when two variables share the
@@ -201,7 +205,7 @@ namespace chaiscript
 
             boost::shared_ptr<T> *ptr = boost::any_cast<boost::shared_ptr<T> >(&data->m_obj);
 
-            m_ptrs.insert(std::make_pair(ptr->get(), *data));
+            m_ptrs.insert(std::make_pair(std::make_pair(ptr->get(), false), *data));
             return data;
           }
 
@@ -228,13 +232,13 @@ namespace chaiscript
           }
 
 
-          std::map<const void *, Data >::iterator itr = m_ptrs.begin();
+          std::map<std::pair<const void *, bool>, Data>::iterator itr = m_ptrs.begin();
 
           while (itr != m_ptrs.end())
           {
             if (itr->second.m_ptr_proxy->unique(&itr->second.m_obj) == 1)
             {
-              std::map<const void *, Data >::iterator todel = itr;
+              std::map<std::pair<const void *, bool>, Data >::iterator todel = itr;
               ++itr;
               m_ptrs.erase(todel);
             } else {
@@ -243,7 +247,7 @@ namespace chaiscript
           }
         }
 
-        std::map<const void *, Data > m_ptrs;
+        std::map<std::pair<const void *, bool>, Data > m_ptrs;
         int m_cullcount;
       };
 

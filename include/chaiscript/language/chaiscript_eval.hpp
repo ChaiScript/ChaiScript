@@ -470,7 +470,7 @@ namespace chaiscript
 
             try {
                 ss.set_stack(new_stack);
-                Boxed_Value retval = (*boxed_cast<Proxy_Function >(fn))(plb);
+                Boxed_Value retval = (*boxed_cast<Const_Proxy_Function>(fn))(plb);
                 ss.set_stack(prev_stack);
                 return retval;
             }
@@ -512,7 +512,7 @@ namespace chaiscript
             Boxed_Value fn = eval_token(ss, node->children[0]);
 
             try {
-                Boxed_Value retval = (*boxed_cast<Proxy_Function >(fn))(plb);
+                Boxed_Value retval = (*boxed_cast<Const_Proxy_Function >(fn))(plb);
                 return retval;
             }
             catch(const dispatch_error &e){
@@ -575,7 +575,7 @@ namespace chaiscript
                     //fn = ss.get_function(fun_name);
                     ss.set_stack(new_stack);
                     //retval = dispatch(fn, plb);
-                    retval = (*boxed_cast<Proxy_Function >(fn))(plb);
+                    retval = (*boxed_cast<Const_Proxy_Function >(fn))(plb);
                     ss.set_stack(prev_stack);
                 }
                 catch(const dispatch_error &e){

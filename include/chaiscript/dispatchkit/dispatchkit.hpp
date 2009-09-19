@@ -87,7 +87,7 @@ namespace chaiscript
 
       virtual ~Dispatch_Function() {}
 
-      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
+      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
       {
         return dispatch(m_funcs.begin(), m_funcs.end(), params);
       }
@@ -360,7 +360,7 @@ namespace chaiscript
         {
           throw std::range_error("Object not known: " + name);
         } else {
-          Boxed_Value f(Proxy_Function(new Dispatch_Function(funcs)));
+          Boxed_Value f(Const_Proxy_Function(new Dispatch_Function(funcs)));
           cache[name] = f;
           return f;
         }

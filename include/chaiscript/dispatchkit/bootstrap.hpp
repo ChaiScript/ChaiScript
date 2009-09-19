@@ -533,10 +533,22 @@ namespace chaiscript
     * function variables.
     */
     template<typename Type>
-    boost::shared_ptr<Type> shared_ptr_clone(boost::shared_ptr<Type> f)
+    boost::shared_ptr<Type> shared_ptr_clone(const boost::shared_ptr<Type> &p)
     {
-      return f;
+      return p;
     }
+
+    /**
+     * Specific version of shared_ptr_clone just for Proxy_Functions
+     * probably not necessary, probably could just use the version above,
+     * but here we are.
+     */
+    Proxy_Function proxy_function_clone(const Const_Proxy_Function &f)
+    {
+      return boost::const_pointer_cast<Proxy_Function_Base>(f);
+    }
+
+
 
     /**
     * Assignment function for shared_ptr objects, does not perform a copy of the
@@ -544,11 +556,16 @@ namespace chaiscript
     * Similar to shared_ptr_clone. Used for Proxy_Function.
     */
     template<typename Type>
-    Boxed_Value ptr_assign(Boxed_Value lhs, boost::shared_ptr<Type> rhs)
+    Boxed_Value ptr_assign(Boxed_Value lhs, const boost::shared_ptr<typename boost::add_const<Type>::type> &rhs)
     {
-      lhs.assign(Boxed_Value(rhs));
-
-      return lhs;
+      if (lhs.is_unknown() 
+          || (!lhs.get_type_info().is_const() && lhs.get_type_info().bare_equal(chaiscript::detail::Get_Type_Info<Type>::get())))
+      {
+        lhs.assign(Boxed_Value(rhs));
+        return lhs;
+      } else {
+        throw bad_boxed_cast("type mismatch in pointer assignment");
+      }
     }
 
     /**
@@ -617,9 +634,9 @@ namespace chaiscript
           throw arity_error(params.size(), 2);
         }
 
-        Proxy_Function f = boxed_cast<Proxy_Function >(params[0]);
+        Const_Proxy_Function f = boxed_cast<Const_Proxy_Function>(params[0]);
 
-        return Boxed_Value(Proxy_Function(new Bound_Function(f,
+        return Boxed_Value(Const_Proxy_Function(new Bound_Function(f,
           std::vector<Boxed_Value>(params.begin() + 1, params.end()))));
       }
 
@@ -634,7 +651,7 @@ namespace chaiscript
           throw arity_error(params.size(), 1);
         }
 
-        Proxy_Function f = boxed_cast<Proxy_Function >(params[0]);
+        Const_Proxy_Function f = boxed_cast<Const_Proxy_Function>(params[0]);
 
         return Boxed_Value(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end())));
       }
@@ -703,7 +720,7 @@ namespace chaiscript
         m->add(Proxy_Function(new Dynamic_Proxy_Function(boost::bind(&bind_function, _1))), 
           "bind");
 
-        m->add(fun(&shared_ptr_clone<Proxy_Function_Base>), "clone");
+        m->add(fun(&proxy_function_clone), "clone");
         m->add(fun(&ptr_assign<Proxy_Function_Base>), "=");
 
         m->add(Proxy_Function(new Dynamic_Proxy_Function(boost::bind(&call_exists, _1))), 

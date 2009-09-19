@@ -99,7 +99,7 @@ namespace chaiscript
         }
       }    
 
-      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
+      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
       {
         if (dynamic_object_typename_match(params, m_type_name))
         {
@@ -180,7 +180,7 @@ namespace chaiscript
         return m_func->call_match(new_vals);
       }    
 
-      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
+      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
       {
         std::vector<Boxed_Value> new_params;
         chaiscript::Boxed_Value bv = var(Dynamic_Object(m_type_name));

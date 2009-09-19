@@ -62,7 +62,7 @@ namespace chaiscript
   {
     public:
       virtual ~Proxy_Function_Base() {}
-      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) = 0;
+      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const = 0;
 
       std::vector<Type_Info> get_param_types() const { return m_types; }
 
@@ -139,6 +139,7 @@ namespace chaiscript
   };
 
   typedef boost::shared_ptr<Proxy_Function_Base> Proxy_Function;
+  typedef boost::shared_ptr<const Proxy_Function_Base> Const_Proxy_Function;
 
   /**
    * Exception thrown if a function's guard fails to execute
@@ -184,7 +185,7 @@ namespace chaiscript
 
       virtual ~Dynamic_Proxy_Function() {}
 
-      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
+      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
       {
         if (m_arity < 0 || params.size() == size_t(m_arity))
         {
@@ -270,7 +271,7 @@ namespace chaiscript
   class Bound_Function : public Proxy_Function_Base
   {
     public:
-      Bound_Function(const Proxy_Function &t_f, 
+      Bound_Function(const Const_Proxy_Function &t_f, 
                      const std::vector<Boxed_Value> &t_args)
         : Proxy_Function_Base(std::vector<Type_Info>()),
           m_f(t_f), m_args(t_args), m_arity(m_f->get_arity()<0?-1:(m_f->get_arity() - m_args.size()))
@@ -289,7 +290,7 @@ namespace chaiscript
         return m_f->call_match(build_param_list(vals));
       }
 
-      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
+      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
       {
         return (*m_f)(build_param_list(params));
       }
@@ -343,7 +344,7 @@ namespace chaiscript
       }
 
     private:
-      Proxy_Function m_f;
+      Const_Proxy_Function m_f;
       std::vector<Boxed_Value> m_args;
       int m_arity;
   };
@@ -375,7 +376,7 @@ namespace chaiscript
         }
       }
  
-      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params)
+      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
       {
         return Do_Call<typename boost::function<Func>::result_type>::go(m_f, params);
       }
