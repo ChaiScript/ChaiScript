@@ -983,6 +983,17 @@ namespace chaiscript
                         has_matches = true;
                     }
                 }
+                while (Eol());
+                if (Keyword("finally", false)) {
+                    int finally_stack_top = match_stack.size();
+
+                    while (Eol());
+
+                    if (!Block()) {
+                        throw Eval_Error("Incomplete 'finally' block", File_Position(line, col), filename);
+                    }
+                    build_match(Token_Type::Finally, finally_stack_top);
+                }
 
                 build_match(Token_Type::Try, prev_stack_top);
             }

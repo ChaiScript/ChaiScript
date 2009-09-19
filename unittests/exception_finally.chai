@@ -1,0 +1,19 @@
+try {
+  throw(3)
+}
+catch(x) { 
+  print(x)
+}
+finally {
+  print("Finally #1")
+}
+
+try {
+  print("Safe")
+}
+catch {
+  print("Caught")
+}
+finally {
+  print("Finally #2")
+}

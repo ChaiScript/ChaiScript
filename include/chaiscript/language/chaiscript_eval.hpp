@@ -609,12 +609,20 @@ namespace chaiscript
             retval = eval_token(ss, node->children[0]);
         }
         catch (const Eval_Error &) {
+            if (node->children.back()->identifier == Token_Type::Finally) {
+                eval_token(ss, node->children.back()->children[0]);
+            }
             ss.pop_scope();
             throw;
         }
         catch (const std::exception &e) {
             Boxed_Value except = Boxed_Value(boost::ref(e));
-            for (unsigned int i = 1; i < node->children.size(); ++i) {
+
+            unsigned int end_point = node->children.size();
+            if (node->children.back()->identifier == Token_Type::Finally) {
+                end_point = node->children.size() - 1;
+            }
+            for (unsigned int i = 1; i < end_point; ++i) {
                 TokenPtr catch_block = node->children[i];
 
                 if (catch_block->children.size() == 1) {
@@ -636,6 +644,9 @@ namespace chaiscript
                     try {
                         guard = boxed_cast<bool>(eval_token(ss, catch_block->children[1]));
                     } catch (const bad_boxed_cast &) {
+                        if (node->children.back()->identifier == Token_Type::Finally) {
+                            eval_token(ss, node->children.back()->children[0]);
+                        }
                         ss.pop_scope();
                         throw Eval_Error("Guard condition not boolean", catch_block->children[1]);
                     }
@@ -645,6 +656,9 @@ namespace chaiscript
                     }
                 }
                 else {
+                    if (node->children.back()->identifier == Token_Type::Finally) {
+                        eval_token(ss, node->children.back()->children[0]);
+                    }
                     ss.pop_scope();
                     throw Eval_Error("Internal error: catch block size unrecognized", catch_block);
                 }
@@ -674,6 +688,9 @@ namespace chaiscript
                     try {
                         guard = boxed_cast<bool>(eval_token(ss, catch_block->children[1]));
                     } catch (const bad_boxed_cast &) {
+                        if (node->children.back()->identifier == Token_Type::Finally) {
+                            eval_token(ss, node->children.back()->children[0]);
+                        }
                         ss.pop_scope();
                         throw Eval_Error("Guard condition not boolean", catch_block->children[1]);
                     }
@@ -683,14 +700,23 @@ namespace chaiscript
                     }
                 }
                 else {
+                    if (node->children.back()->identifier == Token_Type::Finally) {
+                        eval_token(ss, node->children.back()->children[0]);
+                    }
                     ss.pop_scope();
                     throw Eval_Error("Internal error: catch block size unrecognized", catch_block);
                 }
             }
         }
         catch (...) {
+            if (node->children.back()->identifier == Token_Type::Finally) {
+                eval_token(ss, node->children.back()->children[0]);
+            }
             ss.pop_scope();
             throw;
+        }
+        if (node->children.back()->identifier == Token_Type::Finally) {
+            retval = eval_token(ss, node->children.back()->children[0]);
         }
 
         ss.pop_scope();
