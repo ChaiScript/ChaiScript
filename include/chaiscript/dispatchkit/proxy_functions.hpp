@@ -251,7 +251,6 @@ namespace chaiscript
       int m_arity;
       std::string m_description;
       Proxy_Function m_guard;
-      std::vector<Type_Info> m_types;
   };
 
   /**

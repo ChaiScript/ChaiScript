@@ -22,6 +22,18 @@ void log(const std::string &module, const std::string &msg)
   std::cout << "[" << boost::posix_time::microsec_clock::local_time() << "] <" << module << "> " << msg << std::endl;
 }
 
+
+void hello_world(const chaiscript::Boxed_Value &o)
+{
+  std::cout << "Hello World" << std::endl;
+}
+
+void hello_constructor(const chaiscript::Boxed_Value &o)
+{
+  std::cout << "Hello Constructor" << std::endl;
+}
+
+
 struct System
 {
   std::map<std::string, boost::function<std::string (const std::string &) > > m_callbacks;
@@ -130,7 +142,18 @@ int main(int argc, char *argv[]) {
   chai.add(bootstrap::vector_type<std::vector<int> >("IntVector"));
 
 
-//  chai("dump_system()");
+  // Test ability to register a function that excepts a shared_ptr version of a type
   chai("take_shared_ptr(\"Hello World as a shared_ptr\");");
+
+
+  //Dynamic objects test
+  chai.add(chaiscript::Proxy_Function(new Dynamic_Object_Function("TestType", fun(&hello_world))), "hello_world");
+  chai.add(chaiscript::Proxy_Function(new Dynamic_Object_Constructor("TestType", fun(&hello_constructor))), "TestType");
+  chai.add(fun(boost::function<Boxed_Value (Dynamic_Object &)>(boost::bind(&dynamic_object_attribute, "TestType", "attr", _1))), "attr");
+
+  chai.eval("var x = TestType()");
+  chai.eval("x.attr = \"hi\"");
+  chai.eval("print(x.attr)");
+  chai.eval("x.hello_world()");
 }
 

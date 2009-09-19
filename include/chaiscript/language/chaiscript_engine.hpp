@@ -464,6 +464,13 @@ namespace chaiscript
             engine.add(Proxy_Function(
                   new Dynamic_Proxy_Function(boost::bind(&ChaiScript_System<Eval_Engine>::internal_eval, boost::ref(*this), _1), 1)), "eval");
 
+
+            engine.add(user_type<Dynamic_Object>(), "Dynamic_Object");
+            engine.add(chaiscript::bootstrap::copy_constructor<Dynamic_Object>("Dynamic_Object"));
+
+
+
+
             do_eval(chaiscript_prelude, "standard prelude");
         }
 
