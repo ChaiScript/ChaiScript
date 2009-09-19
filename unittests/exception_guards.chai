@@ -1,0 +1,28 @@
+for (var i = 2; i < 6; ++i) {
+  try {
+    throw(i)
+  }
+  catch(e) : e < 2 {
+    print("Catch 1: " + e.to_string())
+  }
+  catch(e) : e < 4 {
+    print("Catch 2: " + e.to_string())
+  }
+  catch(e) {
+    print("Catch 3: " + e.to_string())
+  }
+  catch {
+    print("This is never called")
+  }
+}
+
+try {
+  throw(3)
+}
+catch(e) : e < 3 
+{
+  print("Caught less than 3") 
+}
+catch {
+  print("Backup catch")
+}

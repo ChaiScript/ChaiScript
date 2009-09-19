@@ -947,10 +947,16 @@ namespace chaiscript
                 while (has_matches) {
                     while (Eol());
                     has_matches = false;
-                    if (Keyword("catch", true)) {
+                    if (Keyword("catch", false)) {
+                        int catch_stack_top = match_stack.size();
                         if (Char('(')) {
                             if (!(Id(true) && Char(')'))) {
                                 throw Eval_Error("Incomplete 'catch' expression", File_Position(line, col), filename);
+                            }
+                            if (Char(':')) {
+                                if (!Expression()) {
+                                    throw Eval_Error("Missing guard expression for catch", File_Position(line, col), filename);
+                                }
                             }
                         }
 
@@ -959,7 +965,7 @@ namespace chaiscript
                         if (!Block()) {
                             throw Eval_Error("Incomplete 'catch' block", File_Position(line, col), filename);
                         }
-                        
+                        build_match(Token_Type::Catch, catch_stack_top);
                         has_matches = true;
                     }
                 }
