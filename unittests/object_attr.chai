@@ -1,0 +1,5 @@
+attr bob::z
+def bob::bob() { this.z = 10 }
+var x = bob()
+def bob::fred(x) { this.z - x }
+print(x.fred(3))

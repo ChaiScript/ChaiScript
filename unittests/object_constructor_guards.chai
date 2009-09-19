@@ -1,0 +1,5 @@
+def bob::bob(x) : x < 10 { print("constructed less than 10: " + x.to_string()) }
+def bob::bob(x) { print("constructed any old: " + x.to_string()) }
+
+var b = bob(12)
+var c = bob(3)

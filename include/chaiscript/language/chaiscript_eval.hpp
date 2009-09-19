@@ -167,6 +167,7 @@ namespace chaiscript
             for (i = node->children.size()-3; ((int)i) >= 0; i -= 2) {
                 if (node->children[i+1]->text == "=") {
                     Boxed_Value lhs = eval_token(ss, node->children[i]);
+
                     try {
                         if (lhs.is_unknown())
                         {
@@ -223,6 +224,22 @@ namespace chaiscript
             throw Eval_Error("Reserved word used as variable '" + node->children[0]->text + "'", node);
         }
         return ss.get_object(node->children[0]->text);
+    }
+
+    /**
+     * Evaluates an attribute declaration
+     */
+    template <typename Eval_System>
+    Boxed_Value eval_attr_decl(Eval_System &ss, const TokenPtr &node) {
+        try {
+            ss.add(fun(boost::function<Boxed_Value (Dynamic_Object &)>(boost::bind(&dynamic_object_attribute, node->children[0]->text,
+                    node->children[1]->text, _1))), node->children[1]->text);
+
+        }
+        catch (reserved_word_error &) {
+            throw Eval_Error("Reserved word used as attribute '" + node->children[1]->text + "'", node);
+        }
+        return Boxed_Value();
     }
 
     /**
@@ -586,7 +603,6 @@ namespace chaiscript
     Boxed_Value eval_try(Eval_System &ss, const TokenPtr &node) {
         Boxed_Value retval;        
         retval = Boxed_Value();
-        
 
         ss.new_scope();
         try {
@@ -864,6 +880,75 @@ namespace chaiscript
     }
 
     /**
+     * Evaluates a function definition
+     */
+    template <typename Eval_System>
+    Boxed_Value eval_def_method(Eval_System &ss, const TokenPtr &node) {
+        //TODO: Merge with eval_def cleanly someday?
+        unsigned int i;
+
+        std::vector<std::string> param_names;
+        std::string annotation = node->annotation?node->annotation->text:"";
+        boost::shared_ptr<Dynamic_Proxy_Function> guard;
+        size_t numparams;
+        std::string class_name = node->children[0]->text;
+        std::string function_name = node->children[1]->text;
+        TokenPtr guardnode;
+
+        //The first param of a method is always the implied this ptr.
+        param_names.push_back("this");
+
+        if ((node->children.size() > 3) && (node->children[2]->identifier == Token_Type::Arg_List)) {
+            for (i = 0; i < node->children[2]->children.size(); ++i) {
+                param_names.push_back(node->children[2]->children[i]->text);
+            }
+
+            if (node->children.size() > 4) {
+                guardnode = node->children[3];
+            }
+        }
+        else {
+            //no parameters
+
+            if (node->children.size() > 3) {
+                guardnode = node->children[2];
+            }
+        }
+
+        numparams = param_names.size();
+
+        if (guardnode) {
+            guard = boost::shared_ptr<Dynamic_Proxy_Function>
+                (new Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>,
+                                                                     boost::ref(ss), guardnode,
+                                                                     param_names, _1), numparams));
+        }
+
+        try {
+            if (function_name == class_name) {
+                ss.add(Proxy_Function
+                    (new Dynamic_Object_Constructor(class_name, Proxy_Function(new Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>,
+                                                                 boost::ref(ss), node->children.back(),
+                                                                 param_names, _1), numparams,
+                                                     annotation, guard)))), function_name);
+
+            }
+            else {
+                ss.add(Proxy_Function
+                    (new Dynamic_Object_Function(class_name, Proxy_Function(new Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>,
+                                                                 boost::ref(ss), node->children.back(),
+                                                                 param_names, _1), numparams,
+                                                     annotation, guard)))), function_name);
+
+            }
+        }
+        catch (reserved_word_error &) {
+            throw Eval_Error("Reserved word used as method name '" + function_name + "'", node);
+        }
+        return Boxed_Value();
+    }
+
+    /**
      * Evaluates a lambda (anonymous function)
      */
     template <typename Eval_System>
@@ -1045,6 +1130,14 @@ namespace chaiscript
 
             case (Token_Type::Def) :
                 return eval_def(ss, node);
+            break;
+
+            case (Token_Type::Method) :
+                return eval_def_method(ss, node);
+            break;
+
+            case (Token_Type::Attr_Decl) :
+                return eval_attr_decl(ss, node);
             break;
 
             case (Token_Type::Lambda) :

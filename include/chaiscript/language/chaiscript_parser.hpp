@@ -867,7 +867,7 @@ namespace chaiscript
         bool Def() {
             bool retval = false;
             bool is_annotated = false;
-
+            bool is_method = false;
             TokenPtr annotation;
 
             if (Annotation()) {
@@ -884,6 +884,15 @@ namespace chaiscript
 
                 if (!Id(true)) {
                     throw Eval_Error("Missing function name in definition", File_Position(line, col), filename);
+                }
+
+                if (Symbol("::", false)) {
+                    //We're now a method
+                    is_method = true;
+
+                    if (!Id(true)) {
+                        throw Eval_Error("Missing method name in definition", File_Position(line, col), filename);
+                    }
                 }
 
                 if (Char('(')) {
@@ -906,7 +915,12 @@ namespace chaiscript
                     throw Eval_Error("Incomplete function definition", File_Position(line, col), filename);
                 }
 
-                build_match(Token_Type::Def, prev_stack_top);
+                if (is_method) {
+                    build_match(Token_Type::Method, prev_stack_top);
+                }
+                else {
+                    build_match(Token_Type::Def, prev_stack_top);
+                }
 
                 if (is_annotated) {
                     match_stack.back()->annotation = annotation;
@@ -1229,6 +1243,22 @@ namespace chaiscript
                 }
 
                 build_match(Token_Type::Var_Decl, prev_stack_top);
+            }
+            else if (Keyword("attr")) {
+                retval = true;
+
+                if (!Id(true)) {
+                    throw Eval_Error("Incomplete attribute declaration", File_Position(line, col), filename);
+                }
+                if (!Symbol("::", false)) {
+                    throw Eval_Error("Incomplete attribute declaration", File_Position(line, col), filename);
+                }
+                if (!Id(true)) {
+                    throw Eval_Error("Missing attribute name in definition", File_Position(line, col), filename);
+                }
+
+
+                build_match(Token_Type::Attr_Decl, prev_stack_top);
             }
 
             return retval;

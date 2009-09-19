@@ -1,0 +1,2 @@
+constructed any old: 12
+constructed less than 10: 3
