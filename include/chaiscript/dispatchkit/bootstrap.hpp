@@ -8,6 +8,7 @@
 #define __bootstrap_hpp__
 
 #include "dispatchkit.hpp"
+#include "dynamic_object.hpp"
 #include "register_function.hpp"
 
 namespace chaiscript 
@@ -665,6 +666,15 @@ namespace chaiscript
         m->add(user_type<Boxed_POD_Value>(), "PODObject");
         m->add(user_type<Proxy_Function>(), "function");
         m->add(user_type<std::exception>(), "exception");
+
+        m->add(user_type<std::runtime_error>(), "runtime_error");
+        m->add(constructor<std::runtime_error (const std::string &)>(), "runtime_error");
+        m->add(fun(boost::function<std::string (const std::runtime_error &)>(&what)), "what");     
+
+        m->add(user_type<Dynamic_Object>(), "Dynamic_Object");
+        copy_constructor<Dynamic_Object>("Dynamic_Object", m);
+
+
 
         basic_constructors<bool>("bool", m);
         oper_assign<std::string>(m);
