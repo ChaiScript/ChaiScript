@@ -586,57 +586,18 @@ namespace chaiscript
     Boxed_Value eval_try(Eval_System &ss, const TokenPtr &node) {
         Boxed_Value retval;        
         retval = Boxed_Value();
-        Boxed_Value except;
-        bool succeeded = false;
+        
 
         ss.new_scope();
         try {
             retval = eval_token(ss, node->children[0]);
-            succeeded = true;
         }
         catch (const Eval_Error &) {
             ss.pop_scope();
             throw;
         }
         catch (const std::exception &e) {
-            except = Boxed_Value(boost::ref(e));
-            /*
-            if (node->children.size() > 2) {
-                if (node->children[1]->text == "catch") {
-                    if (node->children.size() > 3) {
-                        ss.add_object(node->children[2]->text, );
-                        retval = eval_token(ss, node->children[3]);
-                    }
-                    else {
-                        retval = eval_token(ss, node->children[2]);
-                    }
-                }
-            }
-            */
-        }
-        catch (Boxed_Value &bv) {
-            except = bv;
-            /*
-            if (node->children.size() > 2) {
-                if (node->children[1]->text == "catch") {
-                    if (node->children.size() > 3) {
-                        ss.add_object(node->children[2]->text, bv);
-                        retval = eval_token(ss, node->children[3]);
-                    }
-                    else {
-                        retval = eval_token(ss, node->children[2]);
-                    }
-                }
-            }
-            */
-        }
-        catch (...) {
-            ss.pop_scope();
-            throw;
-        }
-
-        if (!succeeded) {
-
+            Boxed_Value except = Boxed_Value(boost::ref(e));
             for (unsigned int i = 1; i < node->children.size(); ++i) {
                 TokenPtr catch_block = node->children[i];
 
@@ -672,6 +633,48 @@ namespace chaiscript
                     throw Eval_Error("Internal error: catch block size unrecognized", catch_block);
                 }
             }
+        }
+        catch (Boxed_Value &bv) {
+            Boxed_Value except = bv;
+            for (unsigned int i = 1; i < node->children.size(); ++i) {
+                TokenPtr catch_block = node->children[i];
+
+                if (catch_block->children.size() == 1) {
+                    //No variable capture, no guards
+                    retval = eval_token(ss, catch_block->children[0]);
+                    break;
+                }
+                else if (catch_block->children.size() == 2) {
+                    //Variable capture, no guards
+                    ss.add_object(catch_block->children[0]->text, except);
+                    retval = eval_token(ss, catch_block->children[1]);
+                    break;
+                }
+                else if (catch_block->children.size() == 3) {
+                    //Variable capture, no guards
+                    ss.add_object(catch_block->children[0]->text, except);
+
+                    bool guard;
+                    try {
+                        guard = boxed_cast<bool>(eval_token(ss, catch_block->children[1]));
+                    } catch (const bad_boxed_cast &) {
+                        ss.pop_scope();
+                        throw Eval_Error("Guard condition not boolean", catch_block->children[1]);
+                    }
+                    if (guard) {
+                        retval = eval_token(ss, catch_block->children[2]);
+                        break;
+                    }
+                }
+                else {
+                    ss.pop_scope();
+                    throw Eval_Error("Internal error: catch block size unrecognized", catch_block);
+                }
+            }
+        }
+        catch (...) {
+            ss.pop_scope();
+            throw;
         }
 
         ss.pop_scope();
