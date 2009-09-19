@@ -1,0 +1,11 @@
+attr bob::z
+def bob::bob() { }
+
+var x = bob();
+x.z = 10;
+
+var y = clone(x);
+y.z = 20;
+
+print(x.z);
+print(y.z);

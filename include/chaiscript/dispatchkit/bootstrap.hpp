@@ -689,8 +689,10 @@ namespace chaiscript
         m->add(fun(boost::function<std::string (const std::runtime_error &)>(&what)), "what");     
 
         m->add(user_type<Dynamic_Object>(), "Dynamic_Object");
-        copy_constructor<Dynamic_Object>("Dynamic_Object", m);
-
+        m->add(constructor<Dynamic_Object (const std::string &)>(), "Dynamic_Object");
+        m->add(fun(&Dynamic_Object::get_type_name), "get_type_name");
+        m->add(fun(&Dynamic_Object::get_attrs), "get_attrs");
+        m->add(fun(&Dynamic_Object::get_attr), "get_attr");
 
 
         basic_constructors<bool>("bool", m);

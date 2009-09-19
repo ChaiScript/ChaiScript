@@ -21,6 +21,11 @@ namespace chaiscript
         return m_attrs[t_attr_name];
       }
 
+      std::map<std::string, Boxed_Value> get_attrs()
+      {
+        return m_attrs;
+      }
+
     private:
       std::string m_type_name;
 
