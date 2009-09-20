@@ -960,11 +960,17 @@ namespace chaiscript
 
             }
             else {
+                boost::optional<chaiscript::Type_Info> ti;
+                try {
+                    ti = ss.get_type(class_name);
+                } catch (const std::range_error &) {
+                    // No biggie, the type name is just not known
+                }
                 ss.add(Proxy_Function
                     (new Dynamic_Object_Function(class_name, Proxy_Function(new Dynamic_Proxy_Function(boost::bind(&eval_function<Eval_System>,
                                                                  boost::ref(ss), node->children.back(),
                                                                  param_names, _1), numparams,
-                                                     annotation, guard)))), function_name);
+                                                     annotation, guard)), ti)), function_name);
 
             }
         }

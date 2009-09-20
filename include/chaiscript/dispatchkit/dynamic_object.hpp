@@ -1,6 +1,8 @@
 #ifndef __DYNAMIC_OBJECT_HPP__
 #define __DYNAMIC_OBJECT_HPP__
 
+#include <boost/optional.hpp>
+
 namespace chaiscript
 {
   class Dynamic_Object
@@ -43,21 +45,22 @@ namespace chaiscript
     return t_do.get_attr(t_attr_name);
   }
 
-  bool dynamic_object_typename_match(const Boxed_Value &bv, const std::string &name)
-  {
-    try {
-      const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bv);
-      return d.get_type_name() == name;
-    } catch (const std::bad_cast &) {
-      return false;
-    }
-  }
-
-  bool dynamic_object_typename_match(const std::vector<Boxed_Value> &bvs, const std::string &name)
+  bool dynamic_object_typename_match(const std::vector<Boxed_Value> &bvs, const std::string &name,
+      const boost::optional<Type_Info> &ti)
   {
     if (bvs.size() > 0)
     {
-      return dynamic_object_typename_match(bvs.front(), name);
+      try {
+        const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bvs[0]);
+        return d.get_type_name() == name;
+      } catch (const std::bad_cast &) {
+        if (ti)
+        {
+          return bvs[0].get_type_info().bare_equal(*ti);
+        } else {
+          return false;
+        }
+      }
     } else {
       return false;
     }
@@ -73,9 +76,10 @@ namespace chaiscript
     public:
       Dynamic_Object_Function(
           const std::string &t_type_name,
-          const Proxy_Function &t_func)
+          const Proxy_Function &t_func,
+          const boost::optional<Type_Info> &t_ti = boost::optional<Type_Info>())
         : Proxy_Function_Base(t_func->get_param_types()),
-          m_type_name(t_type_name), m_func(t_func)
+          m_type_name(t_type_name), m_func(t_func), m_ti(t_ti)
       {
         assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
             && "Programming error, Dynamic_Object_Function must have at least one parameter (this)");
@@ -96,7 +100,7 @@ namespace chaiscript
 
       virtual bool call_match(const std::vector<Boxed_Value> &vals) const
       {
-        if (dynamic_object_typename_match(vals, m_type_name))
+        if (dynamic_object_typename_match(vals, m_type_name, m_ti))
         {
           return m_func->call_match(vals);
         } else {
@@ -106,7 +110,7 @@ namespace chaiscript
 
       virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
       {
-        if (dynamic_object_typename_match(params, m_type_name))
+        if (dynamic_object_typename_match(params, m_type_name, m_ti))
         {
           return (*m_func)(params);
         } else {
@@ -127,6 +131,7 @@ namespace chaiscript
     private:
       std::string m_type_name;
       Proxy_Function m_func;
+      boost::optional<Type_Info> m_ti;
 
   };
 
