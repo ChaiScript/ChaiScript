@@ -14,7 +14,7 @@
 #define chaiscript_prelude CODE_STRING(\
 def new(x) { eval(type_name(x))(); } \n\
 def clone(o) : is_type(o, "Dynamic_Object") { var new_o := Dynamic_Object(o.get_type_name()); for_each(o.get_attrs(), bind(fun(new_o, x) { new_o.get_attr(x.first) = x.second; }, new_o, _) ); return new_o; } \n\
-def clone(x) : function_exists(type_name(x))  { eval(type_name(x))(x); } \n\
+def clone(x) : function_exists(type_name(x)) && call_exists(eval(type_name(x)), x)  { eval(type_name(x))(x); } \n\
 # to_string for Pair()\n\
 def to_string(x) : call_exists(first, x) && call_exists(second, x) { \n\
   "<" + x.first.to_string() + ", " + x.second.to_string() + ">"; \n\
