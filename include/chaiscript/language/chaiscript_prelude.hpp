@@ -9,7 +9,7 @@
 
 //Note, the expression "[x,y]" in "collate" is parsed as two separate expressions
 //by C++, so CODE_STRING, takes two expressions and adds in the missing comma
-#define CODE_STRING(x, y, z) #x ", " #y ", " #z
+#define CODE_STRING(x, y) #x ", " #y 
 
 #define chaiscript_prelude CODE_STRING(\
 def new(x) { eval(type_name(x))(); } \n\
@@ -60,20 +60,20 @@ def reverse(container) {\n\
   } \n\
   retval; \n\
 } \
-# Returns true if the object is a retro object\n\
-def is_retro(r) { call_exists(count, r, "data_type") && r.count("data_type") == 1 && r["data_type"] == "retro" }\n\
+# The retro attribute that contains the underlying range \n\
+attr retro::range; \n\
 # Creates a retro from a retro by returning the original range\n\
-def retro(r) : is_retro(r) { clone(r["data"]) }\n\
+def retro(r) : call_exists(get_type_name, r) && get_type_name(r) == "retro" { clone(r.range) }\n\
 # Creates a retro range from a range\n\
-def retro(r) : call_exists(empty, r) && call_exists(pop_front, r) && call_exists(pop_back, r) && call_exists(back, r) && call_exists(front, r) { var m = ["data_type":"retro", "data":r]; }\n\
+def retro::retro(r) : call_exists(empty, r) && call_exists(pop_front, r) && call_exists(pop_back, r) && call_exists(back, r) && call_exists(front, r) { this.range = r; }\n\
 # Returns the first value of a retro\n\
-def front(r) : is_retro(r) { back(r["data"]) }\n\
+def retro::front()  { back(this.range) }\n\
 # Returns the last value of a retro\n\
-def back(r) : is_retro(r) { front(r["data"]) }\n\
+def retro::back()  { front(this.range) }\n\
 # Moves the back iterator of a retro towards the front by one \n\
-def pop_back(r) : is_retro(r) { pop_front(r["data"]) }\n\
+def retro::pop_back()  { pop_front(this.range) }\n\
 # Moves the front iterator of a retro towards the back by one \n\
-def pop_front(r) : is_retro(r) { pop_back(r["data"]) } \n\
+def retro::pop_front()  { pop_back(this.range) } \n\
 # Performs the second value function over the container first value\n\
 def for_each(container, func) : call_exists(range, container) { \n\
   var range = range(container); \n\
