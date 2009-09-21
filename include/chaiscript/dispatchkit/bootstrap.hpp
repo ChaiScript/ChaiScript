@@ -693,6 +693,7 @@ namespace chaiscript
         m->add(fun(&Dynamic_Object::get_type_name), "get_type_name");
         m->add(fun(&Dynamic_Object::get_attrs), "get_attrs");
         m->add(fun(&Dynamic_Object::get_attr), "get_attr");
+        m->eval("def Dynamic_Object::clone() { var new_o := Dynamic_Object(this.get_type_name()); for_each(this.get_attrs(), bind(fun(new_o, x) { new_o.get_attr(x.first) = x.second; }, new_o, _) ); return new_o; }");
 
 
         basic_constructors<bool>("bool", m);

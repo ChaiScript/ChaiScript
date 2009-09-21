@@ -42,16 +42,26 @@ namespace chaiscript
         return *this;
       }
 
-      template<typename T>
-        void apply(T &t) const
+      //Add a bit of chaiscript to eval during module implementation
+      Module &eval(const std::string &str)
+      {
+        m_evals.push_back(str);
+        return *this;
+      }
+
+
+      template<typename Eval, typename Engine>
+        void apply(Eval &t_eval, Engine &t_engine) const
         {
-          apply(m_typeinfos.begin(), m_typeinfos.end(), t);
-          apply(m_funcs.begin(), m_funcs.end(), t);
+          apply(m_typeinfos.begin(), m_typeinfos.end(), t_engine);
+          apply(m_funcs.begin(), m_funcs.end(), t_engine);
+          apply_eval(m_evals.begin(), m_evals.end(), t_eval);
         }
 
     private:
       std::vector<std::pair<Type_Info, std::string> > m_typeinfos;
       std::vector<std::pair<Proxy_Function, std::string> > m_funcs;
+      std::vector<std::string> m_evals;
 
       template<typename T, typename InItr>
         void apply(InItr begin, InItr end, T &t) const
@@ -62,6 +72,18 @@ namespace chaiscript
             ++begin;
           }
         }
+
+      template<typename T, typename InItr>
+        void apply_eval(InItr begin, InItr end, T &t) const
+        {
+          while (begin != end)
+          {
+            t.eval(*begin);
+            ++begin;
+          }
+        }
+
+
   };
 
   typedef boost::shared_ptr<Module> ModulePtr;
@@ -178,14 +200,6 @@ namespace chaiscript
         StackData &stack = get_stack_data();
         stack.get<0>().erase(name);
         return add_function(f, name);
-      }
-
-      /**
-       * Add a module's worth of registrations to the system
-       */
-      void add(const ModulePtr &m)
-      {
-        m->apply(*this);
       }
 
       /**

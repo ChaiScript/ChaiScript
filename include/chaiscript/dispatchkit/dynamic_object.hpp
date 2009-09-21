@@ -52,7 +52,7 @@ namespace chaiscript
     {
       try {
         const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bvs[0]);
-        return d.get_type_name() == name;
+        return name == "Dynamic_Object" || d.get_type_name() == name;
       } catch (const std::bad_cast &) {
         if (ti)
         {

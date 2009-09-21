@@ -292,8 +292,7 @@ namespace chaiscript
          */
         ChaiScript_System &add(const ModulePtr &p)
         {
-            engine.add(p);
-
+            p->apply(*this, this->get_eval_engine());
             return *this;
         }
 
@@ -431,7 +430,7 @@ namespace chaiscript
             engine.add_reserved_word("_");
 
 
-            engine.add(Bootstrap::bootstrap());
+            add(Bootstrap::bootstrap());
 
             engine.add(fun(boost::function<void ()>(boost::bind(&dump_system, boost::ref(engine)))), "dump_system");
             engine.add(fun(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1, boost::ref(engine)))), "dump_object");
@@ -454,10 +453,10 @@ namespace chaiscript
                         &ChaiScript_System<Eval_Engine>::load_module), boost::ref(*this), _1, _2))),
                 "load_module");
 
-            engine.add(vector_type<std::vector<Boxed_Value> >("Vector"));
-            engine.add(string_type<std::string>("string"));
-            engine.add(map_type<std::map<std::string, Boxed_Value> >("Map"));
-            engine.add(pair_type<std::pair<Boxed_Value, Boxed_Value > >("Pair"));
+            add(vector_type<std::vector<Boxed_Value> >("Vector"));
+            add(string_type<std::string>("string"));
+            add(map_type<std::map<std::string, Boxed_Value> >("Map"));
+            add(pair_type<std::pair<Boxed_Value, Boxed_Value > >("Pair"));
 
             engine.add(fun(boost::function<void (const std::string &)>(boost::bind(&ChaiScript_System<Eval_Engine>::use, this, _1))), "use");
 
