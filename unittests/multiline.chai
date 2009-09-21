@@ -1,0 +1,7 @@
+var x = [1, 2,
+ 3, 4]
+
+print(x)
+
+print(map(x, 
+ fun(x) { x + 1 }))
