@@ -73,6 +73,20 @@ namespace chaiscript
             }
             return node->cached_value;
         }
+        else if (node->text == "Infinity") {
+            //return const_var(false);
+            if (!node->is_cached) {
+                cache_const(ss, node, const_var(std::numeric_limits<double>::infinity()));
+            }
+            return node->cached_value;
+        }
+        else if (node->text == "NaN") {
+            //return const_var(false);
+            if (!node->is_cached) {
+                cache_const(ss, node, const_var(std::numeric_limits<double>::quiet_NaN()));
+            }
+            return node->cached_value;
+        }
         else {
             try {
                 return ss.get_object(node->text);
