@@ -201,10 +201,13 @@ namespace chaiscript
         /**
          * Evaluates the given string in by parsing it and running the results through the evaluator
          */
-        Boxed_Value do_eval(const std::string &input, const std::string &filename = "__EVAL__") {
+        Boxed_Value do_eval(const std::string &input, const std::string &filename = "__EVAL__", bool internal = false) {
             ChaiScript_Parser parser;
 
-            engine.sync_cache();
+            if (!internal)
+            {
+                engine.sync_cache();
+            }
 
             //debug_print(tokens);
             Boxed_Value value;
@@ -212,26 +215,41 @@ namespace chaiscript
             // Keep a cache of all loaded filenames and use the char * from this cache to pass 
             // to the parser. This is so that the parser does not have the overhead of passing 
             // around and copying strings
-            //
+            // 
+            if (filename != "__EVAL__")
+            {
 #ifndef CHAISCRIPT_NO_THREADS
-            boost::unique_lock<boost::shared_mutex> l(mutex);
+                boost::unique_lock<boost::shared_mutex> l(mutex);
 #endif
-            loaded_files.insert(filename);
-
-            try {
-                if (parser.parse(input, loaded_files.find(filename)->c_str())) {
+                loaded_files.insert(filename);
+                try {
+                    if (parser.parse(input, loaded_files.find(filename)->c_str())) {
 #ifndef CHAISCRIPT_NO_THREADS
-                    l.unlock();
+                        l.unlock();
 #endif
-                    //parser.show_match_stack();
-                    value = eval_token<Eval_Engine>(engine, parser.ast());
+                        //parser.show_match_stack();
+                        value = eval_token<Eval_Engine>(engine, parser.ast());
+                    }
+                }
+                catch (const Return_Value &rv) {
+                    value = rv.retval;
+                }
+            } else {
+                try {
+                    if (parser.parse(input, loaded_files.find(filename)->c_str())) {
+                        //parser.show_match_stack();
+                        value = eval_token<Eval_Engine>(engine, parser.ast());
+                    }
+                }
+                catch (const Return_Value &rv) {
+                    value = rv.retval;
                 }
             }
-            catch (const Return_Value &rv) {
-                value = rv.retval;
-            }
 
-            engine.sync_cache();
+            if (!internal)
+            {
+                engine.sync_cache();
+            }
 
             return value;
         }
@@ -240,7 +258,7 @@ namespace chaiscript
          * Evaluates the given boxed string, used during eval() inside of a script
          */
         const Boxed_Value internal_eval(const std::vector<Boxed_Value> &vals) {
-            return do_eval(boxed_cast<std::string>(vals.at(0)));
+            return do_eval(boxed_cast<std::string>(vals.at(0)), "__EVAL__", true);
         }
 
         void use(const std::string &filename)
