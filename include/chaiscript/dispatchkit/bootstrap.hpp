@@ -483,18 +483,6 @@ namespace chaiscript
       return boost::lexical_cast<std::string>(i);
     }
 
-    /**
-    * Boolean specialization of internal to_string function 
-    */
-    template<> std::string to_string(bool b)
-    {
-      if (b)
-      {
-        return "true";
-      } else {
-        return "false";
-      }
-    }
 
     /**
     * Internal function for converting from a string to a value
@@ -540,12 +528,12 @@ namespace chaiscript
 
     /**
      * Specific version of shared_ptr_clone just for Proxy_Functions
-     * probably not necessary, probably could just use the version above,
-     * but here we are.
      */
-    Proxy_Function proxy_function_clone(const Const_Proxy_Function &f)
+    template<typename Type>
+    boost::shared_ptr<typename boost::remove_const<Type>::type> 
+        shared_ptr_unconst_clone(const boost::shared_ptr<typename boost::add_const<Type>::type> &p)
     {
-      return boost::const_pointer_cast<Proxy_Function_Base>(f);
+      return boost::const_pointer_cast<typename boost::remove_const<Type>::type>(p);
     }
 
 
@@ -671,6 +659,19 @@ namespace chaiscript
         return e.what();
       }
 
+      /**
+       * Boolean specialization of internal to_string function 
+       */
+      static std::string bool_to_string(bool b)
+      {
+        if (b)
+        {
+          return "true";
+        } else {
+          return "false";
+        }
+      }
+
     public:
       /**
       * perform all common bootstrap functions for std::string, void and POD types
@@ -701,7 +702,7 @@ namespace chaiscript
         oper_assign<bool>(m);
 
         m->add(fun(&to_string<const std::string &>), "internal_to_string");
-        m->add(fun(&to_string<bool>), "internal_to_string");
+        m->add(fun(&Bootstrap::bool_to_string), "internal_to_string");
         m->add(fun(&unknown_assign), "=");
         m->add(fun(&throw_exception), "throw");
         m->add(fun(&what), "what");
@@ -723,7 +724,7 @@ namespace chaiscript
         m->add(Proxy_Function(new Dynamic_Proxy_Function(boost::bind(&bind_function, _1))), 
           "bind");
 
-        m->add(fun(&proxy_function_clone), "clone");
+        m->add(fun(&shared_ptr_unconst_clone<Proxy_Function_Base>), "clone");
         m->add(fun(&ptr_assign<Proxy_Function_Base>), "=");
 
         m->add(Proxy_Function(new Dynamic_Proxy_Function(boost::bind(&call_exists, _1))), 

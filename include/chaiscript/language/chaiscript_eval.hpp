@@ -246,7 +246,7 @@ namespace chaiscript
     template <typename Eval_System>
     Boxed_Value eval_attr_decl(Eval_System &ss, const TokenPtr &node) {
         try {
-            ss.add(fun(boost::function<Boxed_Value (Dynamic_Object &)>(boost::bind(&dynamic_object_attribute, node->children[0]->text,
+            ss.add(fun(boost::function<Boxed_Value (Dynamic_Object &)>(boost::bind(&Dynamic_Object_Attribute::func, node->children[0]->text,
                     node->children[1]->text, _1))), node->children[1]->text);
 
         }

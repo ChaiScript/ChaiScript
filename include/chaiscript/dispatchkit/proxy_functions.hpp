@@ -458,7 +458,8 @@ namespace chaiscript
    * each function against the set of parameters, in order, until a matching
    * function is found or throw dispatch_error if no matching function is found
    */
-  Boxed_Value dispatch(const std::vector<std::pair<std::string, Proxy_Function> > &funcs,
+  template<typename Funcs>
+  Boxed_Value dispatch(const Funcs &funcs,
       const std::vector<Boxed_Value> &plist)
   {
     return dispatch(funcs.begin(), funcs.end(), plist);

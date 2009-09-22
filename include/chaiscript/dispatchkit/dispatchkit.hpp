@@ -495,6 +495,100 @@ namespace chaiscript
         return  dispatch(range.first, range.second, params);
       }
 
+      /**
+       * Dump object info to stdout
+       */
+        void dump_object(Boxed_Value o) const
+        {
+          Type_Info ti = o.get_type_info();
+          std::cout << (ti.is_const()?"const ":"") << get_type_name(ti) << std::endl;
+        }
+
+      /**
+       * Dump type info to stdout
+       */
+        void dump_type(const Type_Info &type) const
+        {
+          std::cout << (type.is_const()?"const ":"") << get_type_name(type);
+        }
+
+      /**
+       * Dump function to stdout
+       */
+        void dump_function(const std::pair<const std::string, Proxy_Function > &f) const
+        {
+          std::vector<Type_Info> params = f.second->get_param_types();
+          std::string annotation = f.second->annotation();
+
+          if (annotation.size() > 0) {
+            std::cout << annotation;
+          }
+          dump_type(params.front());
+          std::cout << " " << f.first << "(";
+
+          for (std::vector<Type_Info>::const_iterator itr = params.begin() + 1;
+              itr != params.end();
+              )
+          {
+            dump_type(*itr);
+            ++itr;
+
+            if (itr != params.end())
+            {
+              std::cout << ", ";
+            }
+          }
+
+          std::cout << ") " << std::endl;
+        }
+
+      /**
+       * Dump all system info to stdout
+       */
+        void dump_system() const
+        {
+          std::cout << "Registered Types: " << std::endl;
+          std::vector<std::pair<std::string, Type_Info> > types = get_types();
+          for (std::vector<std::pair<std::string, Type_Info> >::const_iterator itr = types.begin();
+              itr != types.end();
+              ++itr)
+          {
+            std::cout << itr->first << ": ";
+            std::cout << itr->second.bare_name();
+            std::cout << std::endl;
+          }
+
+          std::cout << std::endl;  
+          std::vector<std::pair<std::string, Proxy_Function > > funcs = get_functions();
+
+          std::cout << "Functions: " << std::endl;
+          for (std::vector<std::pair<std::string, Proxy_Function > >::const_iterator itr = funcs.begin();
+              itr != funcs.end();
+              ++itr)
+          {
+            dump_function(*itr);
+          }
+          std::cout << std::endl;
+        }
+
+      /**
+       * return true if the Boxed_Value matches the registered type by name
+       */
+      bool is_type(const std::string &user_typename, Boxed_Value r) const
+      {
+        try {
+          return get_type(user_typename) == r.get_type_info();
+        } catch (const std::range_error &) {
+          return false;
+        }
+      }
+
+      std::string type_name(Boxed_Value obj) const
+      {
+        return get_type_name(obj.get_type_info());
+      }
+
+
     private:
       /**
        * Returns the current stack
@@ -584,99 +678,6 @@ namespace chaiscript
 
       std::set<std::string> m_reserved_words;
   };
-
-  /**
-   * Dump object info to stdout
-   */
-  void dump_object(Boxed_Value o, const Dispatch_Engine &e)
-  {
-    Type_Info ti = o.get_type_info();
-    std::cout << (ti.is_const()?"const ":"") << e.get_type_name(ti) << std::endl;
-  }
-
-  /**
-   * Dump type info to stdout
-   */
-  void dump_type(const Type_Info &type, const Dispatch_Engine &e)
-  {
-    std::cout << (type.is_const()?"const ":"") << e.get_type_name(type);
-  }
-
-  /**
-   * Dump function to stdout
-   */
-  void dump_function(const std::pair<const std::string, Proxy_Function > &f, const Dispatch_Engine &e)
-  {
-    std::vector<Type_Info> params = f.second->get_param_types();
-    std::string annotation = f.second->annotation();
-
-    if (annotation.size() > 0) {
-        std::cout << annotation;
-    }
-    dump_type(params.front(), e);
-    std::cout << " " << f.first << "(";
-
-    for (std::vector<Type_Info>::const_iterator itr = params.begin() + 1;
-         itr != params.end();
-         )
-    {
-      dump_type(*itr, e);
-      ++itr;
-
-      if (itr != params.end())
-      {
-        std::cout << ", ";
-      }
-    }
-
-    std::cout << ") " << std::endl;
-  }
-
-  /**
-   * Dump all system info to stdout
-   */
-  void dump_system(const Dispatch_Engine &s)
-  {
-    std::cout << "Registered Types: " << std::endl;
-    std::vector<std::pair<std::string, Type_Info> > types = s.get_types();
-    for (std::vector<std::pair<std::string, Type_Info> >::const_iterator itr = types.begin();
-         itr != types.end();
-         ++itr)
-    {
-      std::cout << itr->first << ": ";
-      std::cout << itr->second.bare_name();
-      std::cout << std::endl;
-    }
-
-    std::cout << std::endl;  
-    std::vector<std::pair<std::string, Proxy_Function > > funcs = s.get_functions();
-
-    std::cout << "Functions: " << std::endl;
-    for (std::vector<std::pair<std::string, Proxy_Function > >::const_iterator itr = funcs.begin();
-         itr != funcs.end();
-         ++itr)
-    {
-      dump_function(*itr, s);
-    }
-    std::cout << std::endl;
-  }
-
-  /**
-   * return true if the Boxed_Value matches the registered type by name
-   */
-  bool is_type(const Dispatch_Engine &e, const std::string &user_typename, Boxed_Value r)
-  {
-    try {
-      return e.get_type(user_typename) == r.get_type_info();
-    } catch (const std::range_error &) {
-      return false;
-    }
-  }
-
-  std::string type_name(const Dispatch_Engine &e, Boxed_Value obj)
-  {
-    return e.get_type_name(obj.get_type_info());
-  }
 
 }
 

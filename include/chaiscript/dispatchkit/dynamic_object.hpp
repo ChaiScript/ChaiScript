@@ -34,37 +34,19 @@ namespace chaiscript
       std::map<std::string, Boxed_Value> m_attrs;
   };
 
-  Boxed_Value dynamic_object_attribute(const std::string &t_type_name, const std::string &t_attr_name,
-      Dynamic_Object &t_do)
+  struct Dynamic_Object_Attribute
   {
-    if (t_do.get_type_name() != t_type_name) 
+    static Boxed_Value func(const std::string &t_type_name, const std::string &t_attr_name,
+        Dynamic_Object &t_do)
     {
-      throw bad_boxed_cast("Dynamic object type mismatch");
-    }
-
-    return t_do.get_attr(t_attr_name);
-  }
-
-  bool dynamic_object_typename_match(const std::vector<Boxed_Value> &bvs, const std::string &name,
-      const boost::optional<Type_Info> &ti)
-  {
-    if (bvs.size() > 0)
-    {
-      try {
-        const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bvs[0]);
-        return name == "Dynamic_Object" || d.get_type_name() == name;
-      } catch (const std::bad_cast &) {
-        if (ti)
-        {
-          return bvs[0].get_type_info().bare_equal(*ti);
-        } else {
-          return false;
-        }
+      if (t_do.get_type_name() != t_type_name) 
+      {
+        throw bad_boxed_cast("Dynamic object type mismatch");
       }
-    } else {
-      return false;
+
+      return t_do.get_attr(t_attr_name);
     }
-  }
+  };
 
   /**
    * A Proxy_Function implementation designed for calling a function
@@ -129,6 +111,27 @@ namespace chaiscript
       }
 
     private:
+      static bool dynamic_object_typename_match(const std::vector<Boxed_Value> &bvs, const std::string &name,
+          const boost::optional<Type_Info> &ti) 
+      {
+        if (bvs.size() > 0)
+        {
+          try {
+            const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bvs[0]);
+            return name == "Dynamic_Object" || d.get_type_name() == name;
+          } catch (const std::bad_cast &) {
+            if (ti)
+            {
+              return bvs[0].get_type_info().bare_equal(*ti);
+            } else {
+              return false;
+            }
+          }
+        } else {
+          return false;
+        }
+      }
+
       std::string m_type_name;
       Proxy_Function m_func;
       boost::optional<Type_Info> m_ti;

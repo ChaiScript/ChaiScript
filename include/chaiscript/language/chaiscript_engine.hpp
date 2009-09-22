@@ -450,12 +450,12 @@ namespace chaiscript
 
             add(Bootstrap::bootstrap());
 
-            engine.add(fun(boost::function<void ()>(boost::bind(&dump_system, boost::ref(engine)))), "dump_system");
-            engine.add(fun(boost::function<void (Boxed_Value)>(boost::bind(&dump_object, _1, boost::ref(engine)))), "dump_object");
-            engine.add(fun(boost::function<bool (Boxed_Value, const std::string &)>(boost::bind(&is_type, boost::ref(engine), _2, _1))),
+            engine.add(fun(boost::function<void ()>(boost::bind(&Eval_Engine::dump_system, boost::ref(engine)))), "dump_system");
+            engine.add(fun(boost::function<void (Boxed_Value)>(boost::bind(&Eval_Engine::dump_object, boost::ref(engine), _1))), "dump_object");
+            engine.add(fun(boost::function<bool (Boxed_Value, const std::string &)>(boost::bind(&Eval_Engine::is_type, boost::ref(engine), _2, _1))),
                 "is_type");
 
-            engine.add(fun(boost::function<std::string (Boxed_Value)>(boost::bind(&chaiscript::type_name, boost::ref(engine), _1))),
+            engine.add(fun(boost::function<std::string (Boxed_Value)>(boost::bind(&Eval_Engine::type_name, boost::ref(engine), _1))),
                 "type_name");
             engine.add(fun(boost::function<bool (const std::string &)>(boost::bind(&Eval_Engine::function_exists, boost::ref(engine), _1))),
                 "function_exists");
