@@ -236,7 +236,15 @@ namespace chaiscript
                 }
             } else {
                 try {
-                    if (parser.parse(input, loaded_files.find(filename)->c_str())) {
+#ifndef CHAISCRIPT_NO_THREADS
+                    boost::shared_lock<boost::shared_mutex> l(mutex);
+#endif
+                    const char *fname = loaded_files.find("__EVAL__")->c_str();
+#ifndef CHAISCRIPT_NO_THREADS
+                    l.unlock();
+#endif
+ 
+                    if (parser.parse(input, fname)) {
                         //parser.show_match_stack();
                         value = eval_token<Eval_Engine>(engine, parser.ast());
                     }
@@ -283,6 +291,7 @@ namespace chaiscript
 
     public:
         ChaiScript_System()  {
+            loaded_files.insert("__EVAL__"); // Make sure the default name is already registered
             build_eval_system();
         }
 
