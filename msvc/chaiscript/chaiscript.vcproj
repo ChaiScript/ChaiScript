@@ -23,7 +23,7 @@
 			ConfigurationType="1"
 			InheritedPropertySheets=".\Boost.vsprops"
 			UseOfMFC="2"
-			CharacterSet="0"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -100,7 +100,7 @@
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
 			InheritedPropertySheets=".\Boost.vsprops"
-			CharacterSet="0"
+			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
 			<Tool

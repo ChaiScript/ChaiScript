@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
   //Dynamic objects test
   chai.add(chaiscript::Proxy_Function(new Dynamic_Object_Function("TestType", fun(&hello_world))), "hello_world");
   chai.add(chaiscript::Proxy_Function(new Dynamic_Object_Constructor("TestType", fun(&hello_constructor))), "TestType");
-  chai.add(fun(boost::function<Boxed_Value (Dynamic_Object &)>(boost::bind(&dynamic_object_attribute, "TestType", "attr", _1))), "attr");
+  chai.add(fun(boost::function<Boxed_Value (Dynamic_Object &)>(boost::bind(&Dynamic_Object_Attribute::func, "TestType", "attr", _1))), "attr");
 
   chai.eval("var x = TestType()");
   chai.eval("x.attr = \"hi\"");

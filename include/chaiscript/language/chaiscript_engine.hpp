@@ -89,39 +89,69 @@ namespace chaiscript
 
 #ifdef WIN32
 
-    std::string GetErrorMessage(DWORD err)
-    {
-        LPSTR lpMsgBuf = 0;
-
-        FormatMessage(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-            FORMAT_MESSAGE_FROM_SYSTEM |
-            FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL,
-            err,
-            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            (LPSTR)&lpMsgBuf,
-            0, NULL );
-        
-        std::string retval;
-
-        if (lpMsgBuf)
-        {
-          retval = lpMsgBuf;
-        } else {
-          retval = "Unknown error occured";
-        }
-
-        LocalFree(lpMsgBuf);
-        return retval;
-    }
 
     struct Loadable_Module
     {
+        template<typename T>
+        static std::wstring towstring(const T &str) 
+        {
+            return std::wstring(str.begin(), str.end());
+        }
+
+        template<typename T>
+        static std::string tostring(const T &str)
+        {
+            return std::string(str.begin(), str.end());
+        }
+
+#ifdef _UNICODE
+        template<typename T>
+        static std::wstring toproperstring(const T &str)
+        {
+            return towstring(str);
+        }
+#else
+        template<typename T>
+        static std::string toproperstring(const T &str)
+        {
+            return tostring(str);
+        }
+#endif
+
+        static std::string GetErrorMessage(DWORD err)
+        {
+#ifdef _UNICODE
+            typedef LPWSTR StringType;
+            std::wstring retval = L"Unknown Error";
+#else
+            typedef LPSTR StringType;
+            std::string retval = "Unknown Error";
+#endif
+            StringType lpMsgBuf = 0;
+
+            FormatMessage(
+                FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+                FORMAT_MESSAGE_FROM_SYSTEM |
+                FORMAT_MESSAGE_IGNORE_INSERTS,
+                NULL,
+                err,
+                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                (StringType)&lpMsgBuf,
+                0, NULL );        
+
+            if (lpMsgBuf)
+            {
+              retval = lpMsgBuf;
+            }
+
+            LocalFree(lpMsgBuf);
+            return tostring(retval);
+        }
+
         struct DLModule
         {
            DLModule(const std::string &t_filename)
-             : m_data(LoadLibrary(t_filename.c_str()))
+             : m_data(LoadLibrary(toproperstring(t_filename).c_str()))
            {
               if (!m_data)
               {
