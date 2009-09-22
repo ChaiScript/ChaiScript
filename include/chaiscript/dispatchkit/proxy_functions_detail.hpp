@@ -50,7 +50,7 @@ namespace chaiscript
       template<typename Fun>
       static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
       {
-        return Handle_Return<Ret>::handle(call_func(fun, params, false));
+        return Handle_Return<Ret>::handle(call_func(fun, params));
       }
     };
 
@@ -60,7 +60,7 @@ namespace chaiscript
       template<typename Fun>
       static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
       {
-        call_func(fun, params, false);
+        call_func(fun, params);
         return Handle_Return<void>::handle();
       };
     };
@@ -100,7 +100,7 @@ namespace chaiscript
    */
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
     Ret call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f,
-        const std::vector<Boxed_Value> &params, bool t_test)
+        const std::vector<Boxed_Value> &params)
     {
       if (params.size() != n)
       {
@@ -117,7 +117,7 @@ namespace chaiscript
    */
   template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
     bool compare_types_cast(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)),
-        const std::vector<Boxed_Value> &params)
+        const std::vector<Boxed_Value> & BOOST_PP_IF(n, params, ))
     {
       try {
         BOOST_PP_REPEAT(n, trycast, ~);

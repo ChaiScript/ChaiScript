@@ -58,27 +58,31 @@ def reverse(container) {\n\
     r.pop_back(); \n\
   } \n\
   retval; \n\
-} \
+} \n\
+# Return a range from a range \n\
+def range(r) : call_exists(empty, r) && call_exists(pop_front, r) && call_exists(pop_back, r) && call_exists(back, r) && call_exists(front, r) { return clone(r); }\n\
 # The retro attribute that contains the underlying range \n\
-attr retro::range; \n\
+attr retro::m_range; \n\
 # Creates a retro from a retro by returning the original range\n\
-def retro(r) : call_exists(get_type_name, r) && get_type_name(r) == "retro" { clone(r.range) }\n\
+def retro(r) : call_exists(get_type_name, r) && get_type_name(r) == "retro" { clone(r.m_range) }\n\
 # Creates a retro range from a range\n\
-def retro::retro(r) : call_exists(empty, r) && call_exists(pop_front, r) && call_exists(pop_back, r) && call_exists(back, r) && call_exists(front, r) { this.range = r; }\n\
+def retro::retro(r) : call_exists(empty, r) && call_exists(pop_front, r) && call_exists(pop_back, r) && call_exists(back, r) && call_exists(front, r) { this.m_range = r; }\n\
 # Returns the first value of a retro\n\
-def retro::front()  { back(this.range) }\n\
+def retro::front()  { back(this.m_range) }\n\
 # Returns the last value of a retro\n\
-def retro::back()  { front(this.range) }\n\
+def retro::back()  { front(this.m_range) }\n\
 # Moves the back iterator of a retro towards the front by one \n\
-def retro::pop_back()  { pop_front(this.range) }\n\
+def retro::pop_back()  { pop_front(this.m_range) }\n\
 # Moves the front iterator of a retro towards the back by one \n\
-def retro::pop_front()  { pop_back(this.range) } \n\
+def retro::pop_front()  { pop_back(this.m_range) } \n\
+# returns true if the retro is out of elements \n\
+def retro::empty() { empty(this.m_range); } \n\
 # Performs the second value function over the container first value\n\
 def for_each(container, func) : call_exists(range, container) { \n\
-  var range = range(container); \n\
-  while (!range.empty()) { \n\
-    func(range.front()); \n\
-    range.pop_front(); \n\
+  var t_range = range(container); \n\
+  while (!t_range.empty()) { \n\
+    func(t_range.front()); \n\
+    t_range.pop_front(); \n\
   } \n\
 } \n\
 def back_inserter(container) { \n\

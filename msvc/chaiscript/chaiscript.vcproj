@@ -222,7 +222,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\include\chaiscript\chaiscript_threading.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\include\chaiscript\dispatchkit\dispatchkit.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\chaiscript\dispatchkit\dynamic_object.hpp"
 				>
 			</File>
 			<File
