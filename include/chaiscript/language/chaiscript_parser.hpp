@@ -244,9 +244,21 @@ namespace chaiscript
                     }
                     else {
                         std::string match(start, input_pos);
-                        TokenPtr t(new Token(match, Token_Type::Int, filename, prev_line, prev_col, line, col));
-                        match_stack.push_back(t);
-                        return true;
+                        if ((match.size() > 0) && (match[0] == '0')) {
+                            std::stringstream ss(match);
+                            int temp_int;
+                            ss >> std::oct >> temp_int;
+
+                            std::ostringstream out_int;
+                            out_int << temp_int;
+                            TokenPtr t(new Token(out_int.str(), Token_Type::Int, filename, prev_line, prev_col, line, col));
+                            match_stack.push_back(t);
+                        }
+                        else {
+                            TokenPtr t(new Token(match, Token_Type::Int, filename, prev_line, prev_col, line, col));
+                            match_stack.push_back(t);
+                            return true;
+                        }
                     }
                 }
                 else {
