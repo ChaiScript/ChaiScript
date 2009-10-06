@@ -9,6 +9,7 @@
 
 #include <exception>
 #include <fstream>
+#include <sstream>
 
 #include "chaiscript_prelude.hpp"
 
@@ -143,6 +144,10 @@ namespace chaiscript
          */
         bool Float_() {
             bool retval = false;
+            std::string::iterator start = input_pos;
+            int prev_col = col;
+            int prev_line = line;
+
             if ((input_pos != input_end) && (((*input_pos >= '0') && (*input_pos <= '9')) || (*input_pos == '.'))) {
                 while ((input_pos != input_end) && (*input_pos >= '0') && (*input_pos <= '9')) {
                     ++input_pos;
@@ -164,9 +169,46 @@ namespace chaiscript
                     }
                 }
             }
+            return retval;
+        }
+
+        /**
+         * Reads a floating point value from input, without skipping initial whitespace
+         */
+        bool Hex_() {
+            bool retval = false;
+            if ((input_pos != input_end) && (*input_pos == '0')) {
+                ++input_pos;
+                ++col;
+
+                if ((input_pos != input_end) && ((*input_pos == 'x') || (*input_pos == 'X'))) {
+                    ++input_pos;
+                    ++col;
+                    if ((input_pos != input_end) && (((*input_pos >= '0') && (*input_pos <= '9')) ||
+                            ((*input_pos >= 'a') && (*input_pos <= 'f')) ||
+                            ((*input_pos >= 'A') && (*input_pos <= 'F')))) {
+                        retval = true;
+                        while ((input_pos != input_end) && (((*input_pos >= '0') && (*input_pos <= '9')) ||
+                        ((*input_pos >= 'a') && (*input_pos <= 'f')) ||
+                        ((*input_pos >= 'A') && (*input_pos <= 'F')))) {
+                            ++input_pos;
+                            ++col;
+                        }
+                    }
+                    else {
+                        --input_pos;
+                        --col;
+                    }
+                }
+                else {
+                    --input_pos;
+                    --col;
+                }
+            }
 
             return retval;
         }
+
 
         /**
          * Reads a number from the input, detecting if it's an integer or floating point
@@ -175,13 +217,25 @@ namespace chaiscript
             SkipWS();
 
             if (!capture) {
-                return Float_();
+                return Hex_() || Float_();
             }
             else {
                 std::string::iterator start = input_pos;
                 int prev_col = col;
                 int prev_line = line;
                 if ((input_pos != input_end) && (((*input_pos >= '0') && (*input_pos <= '9')) || (*input_pos == '.')) ) {
+                    if (Hex_()) {
+                        std::string match(start, input_pos);
+                        std::stringstream ss(match);
+                        int temp_int;
+                        ss >> std::hex >> temp_int;
+
+                        std::ostringstream out_int;
+                        out_int << temp_int;
+                        TokenPtr t(new Token(out_int.str(), Token_Type::Int, filename, prev_line, prev_col, line, col));
+                        match_stack.push_back(t);
+                        return true;
+                    }
                     if (Float_()) {
                         std::string match(start, input_pos);
                         TokenPtr t(new Token(match, Token_Type::Float, filename, prev_line, prev_col, line, col));
