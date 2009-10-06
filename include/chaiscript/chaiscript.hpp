@@ -23,6 +23,12 @@
 #include "dispatchkit/function_call.hpp"
 #include "dispatchkit/dynamic_object.hpp"
 
+#ifdef  BOOST_HAS_DECLSPEC
+#define CHAISCRIPT_MODULE_EXPORT extern "C" __declspec(dllexport)
+#else
+#define CHAISCRIPT_MODULE_EXPORT extern "C" 
+#endif
+
 #include "language/chaiscript_eval.hpp"
 #include "language/chaiscript_engine.hpp"
 

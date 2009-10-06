@@ -344,11 +344,11 @@ namespace chaiscript
         // Is it in the stack?
         for (int i = stack.get<1>().size()-1; i >= 0; --i)
         {
-          std::map<std::string, Boxed_Value>::const_iterator itr = (stack.get<1>())[i].find(name);
-          if (itr != (stack.get<1>())[i].end())
+          std::map<std::string, Boxed_Value>::const_iterator stackitr = (stack.get<1>())[i].find(name);
+          if (stackitr != (stack.get<1>())[i].end())
           {
-            cache[name] = itr->second;
-            return itr->second;
+            cache[name] = stackitr->second;
+            return stackitr->second;
           }
         }
 

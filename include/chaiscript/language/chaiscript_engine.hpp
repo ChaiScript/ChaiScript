@@ -51,6 +51,9 @@ namespace chaiscript
               }
            }
 
+           DLModule(const DLModule &); // Explicitly unimplemented copy constructor
+           DLModule &operator=(const DLModule &); // Explicitly unimplemented assignment operator
+
            ~DLModule()
            {
               dlclose(m_data);

@@ -359,7 +359,7 @@ namespace chaiscript
   {
     public:
       Proxy_Function_Impl(const boost::function<Func> &f)
-        : Proxy_Function_Base(build_param_type_list((Func *)(0))),
+        : Proxy_Function_Base(build_param_type_list(static_cast<Func *>(0))),
           m_f(f), m_dummy_func(0)
       {
       }

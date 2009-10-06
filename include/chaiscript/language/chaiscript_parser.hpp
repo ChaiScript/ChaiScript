@@ -30,6 +30,9 @@ namespace chaiscript
             singleline_comment = "//";
         }
 
+        ChaiScript_Parser(const ChaiScript_Parser &); // explicitly unimplemented copy constructor
+        ChaiScript_Parser &operator=(const ChaiScript_Parser &); // explicitly unimplemented assignment operator
+
         /**
          * Prints the parsed tokens as a tree
          */
@@ -68,7 +71,7 @@ namespace chaiscript
          */
         void build_match(Token_Type::Type match_type, int match_start) {
             //so we want to take everything to the right of this and make them children
-            if (match_start != (int)match_stack.size()) {
+            if (match_start != int(match_stack.size())) {
                 TokenPtr t(new Token("", match_type, filename, match_stack[match_start]->start.line, match_stack[match_start]->start.column, line, col));
                 t->children.assign(match_stack.begin() + (match_start), match_stack.end());
                 match_stack.erase(match_stack.begin() + (match_start), match_stack.end());

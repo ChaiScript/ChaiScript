@@ -152,22 +152,8 @@ namespace chaiscript
      */
     template <typename Eval_System>
     Boxed_Value eval_single_quoted_string(Eval_System &ss, const TokenPtr &node) {
-        /*
-        if (node->text.size() == 1) {
-            //return Boxed_Value(char(node->text[0]));
-            return const_var(char(node->text[0]));
-        }
-        else {
-            //return Boxed_Value(char((int)node->text[0] * 0xff + (int)node->text[0]));
-            return const_var(char((int)node->text[0] * 0xff + (int)node->text[0]));
-        }
-        */
-
         if (!node->is_cached) {
-            cache_const(ss, node,
-                node->text.size() == 1 ?
-                        const_var(char(node->text[0])) :
-                        const_var(char((int)node->text[0] * 0xff + (int)node->text[0])));
+            cache_const(ss, node, const_var(char(node->text[0])));
         }
         return node->cached_value;
     }
@@ -177,10 +163,10 @@ namespace chaiscript
      */
     template <typename Eval_System>
     Boxed_Value eval_equation(Eval_System &ss, const TokenPtr &node) {
-        unsigned int i;
+        int i;
         Boxed_Value retval = eval_token(ss, node->children.back());
         if (node->children.size() > 1) {
-            for (i = node->children.size()-3; ((int)i) >= 0; i -= 2) {
+            for (i = node->children.size()-3; i >= 0; i -= 2) {
                 if (node->children[i+1]->text == "=") {
                     Boxed_Value lhs = eval_token(ss, node->children[i]);
 
@@ -552,7 +538,6 @@ namespace chaiscript
      */
     template <typename Eval_System>
     Boxed_Value eval_dot_access(Eval_System &ss, const TokenPtr &node) {
-        std::vector<std::pair<std::string, Proxy_Function > > fn;
         Dispatch_Engine::Stack prev_stack = ss.get_stack();
         Dispatch_Engine::Stack new_stack = ss.new_stack();
         unsigned int i, j;
@@ -588,9 +573,7 @@ namespace chaiscript
                     throw Eval_Error(ee.reason, node->children[i]);
                 }
                 try {
-                    //fn = ss.get_function(fun_name);
                     ss.set_stack(new_stack);
-                    //retval = dispatch(fn, plb);
                     retval = (*boxed_cast<Const_Proxy_Function >(fn))(plb);
                     ss.set_stack(prev_stack);
                 }
