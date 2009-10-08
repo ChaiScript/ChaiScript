@@ -145,8 +145,6 @@ namespace chaiscript
         bool Float_() {
             bool retval = false;
             std::string::iterator start = input_pos;
-            int prev_col = col;
-            int prev_line = line;
 
             if ((input_pos != input_end) && (((*input_pos >= '0') && (*input_pos <= '9')) || (*input_pos == '.'))) {
                 while ((input_pos != input_end) && (*input_pos >= '0') && (*input_pos <= '9')) {
@@ -257,8 +255,8 @@ namespace chaiscript
                         else {
                             TokenPtr t(new Token(match, Token_Type::Int, filename, prev_line, prev_col, line, col));
                             match_stack.push_back(t);
-                            return true;
                         }
+                        return true;
                     }
                 }
                 else {
@@ -1004,16 +1002,6 @@ namespace chaiscript
          */
         bool Try() {
             bool retval = false;
-            bool is_annotated = false;
-
-            TokenPtr annotation;
-
-            if (Annotation()) {
-                while (Eol_());
-                annotation = match_stack.back();
-                match_stack.pop_back();
-                is_annotated = true;
-            }
 
             int prev_stack_top = match_stack.size();
 
@@ -1777,6 +1765,11 @@ namespace chaiscript
                     saw_eol = false;
                 }
                 else if (Eol()) {
+                    has_more = true;
+                    retval = true;
+                    saw_eol = true;
+                }
+                else if (Block()) {
                     has_more = true;
                     retval = true;
                     saw_eol = true;
