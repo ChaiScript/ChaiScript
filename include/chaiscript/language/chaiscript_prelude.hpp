@@ -89,6 +89,14 @@ def back_inserter(container) { \n\
   bind(push_back, container, _);     \n\
 }\n\
 \n\
+def contains(container, item) : call_exists(range, container) { \n\
+  var t_range = range(container); \n\
+  while (!t_range.empty()) { \n\
+    if (t_range.front() == item) { return true; } \n\
+    t_range.pop_front(); \n\
+  } \n\
+  return false; \n\
+} \n\
 def map(container, func, inserter) : call_exists(range, container) { \n\
   var range = range(container); \n\
   while (!range.empty()) { \n\
