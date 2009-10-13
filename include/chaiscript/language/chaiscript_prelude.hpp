@@ -281,27 +281,27 @@ def zip(x, y) { \n\
   zip_with(collate, x, y); \n\
 }\n\
 # Returns the position of the second value string in the first value string\n\
-def string::find(substr) : type_name(substr) == "string" { \n\
+def string::find(substr) : is_type(substr, "string") { \n\
   int(find(this, substr, size_t(0))); \n\
 } \n\
 # Returns the position of last match of the second value string in the first value string\n\
-def string::rfind(substr) : type_name(substr) == "string" { \n\
+def string::rfind(substr) : is_type(substr, "string") { \n\
   int(rfind(this, substr, size_t(-1))); \n\
 } \n\
 # Returns the position of the first match of elements in the second value string in the first value string\n\
-def string::find_first_of(list) : type_name(list) == "string" { \n\
+def string::find_first_of(list) : is_type(list, "string") { \n\
   int(find_first_of(this, list, size_t(0))); \n\
 } \n\
 # Returns the position of the last match of elements in the second value string in the first value string\n\
-def string::find_last_of(list) : type_name(list) == "string" { \n\
+def string::find_last_of(list) : is_type(list, "string") { \n\
   int(find_last_of(this, list, size_t(-1))); \n\
 } \n\
 # Returns the position of the first non-matching element in the second value string in the first value string\n\
-def string::find_first_not_of(list) : type_name(list) == "string" { \n\
+def string::find_first_not_of(list) : is_type(list, "string") { \n\
   int(find_first_not_of(this, list, size_t(0))); \n\
 } \n\
 # Returns the position of the last non-matching element in the second value string in the first value string\n\
-def string::find_last_not_of(list) : type_name(list) == "string" { \n\
+def string::find_last_not_of(list) : is_type(list, "string") { \n\
   int(find_last_not_of(this, list, size_t(-1))); \n\
 } \n\
 def string::ltrim() { \n\
@@ -313,7 +313,7 @@ def string::rtrim() { \n\
 def string::trim() { \n\
   ltrim(rtrim(this)); \n\
 } \n\
-def find(container, value, compare_func) : call_exists(range, container) && type_name(compare_func) == "function" { \n\
+def find(container, value, compare_func) : call_exists(range, container) && is_type(compare_func, "function") { \n\
   var range = range(container); \n\
   while (!range.empty()) { \n\
     if (compare_func(range.front(), value)) { \n\

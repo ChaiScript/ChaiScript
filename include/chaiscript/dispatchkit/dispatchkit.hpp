@@ -23,6 +23,7 @@
 #include "type_info.hpp"
 #include "proxy_functions.hpp"
 #include "proxy_constructors.hpp"
+#include "dynamic_object.hpp"
 #include "../chaiscript_threading.hpp"
 
 namespace chaiscript
@@ -577,10 +578,20 @@ namespace chaiscript
       bool is_type(const std::string &user_typename, Boxed_Value r) const
       {
         try {
-          return get_type(user_typename) == r.get_type_info();
+          if (get_type(user_typename).bare_equal(r.get_type_info()))
+          {
+            return true;
+          }
         } catch (const std::range_error &) {
-          return false;
         }
+
+        try {
+          const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(r);
+          return d.get_type_name() == user_typename;
+        } catch (const std::bad_cast &) {
+        }
+
+        return false;
       }
 
       std::string type_name(Boxed_Value obj) const
