@@ -92,14 +92,15 @@ def back_inserter(container) { \n\
   bind(push_back, container, _);     \n\
 }\n\
 \n\
-def contains(container, item) : call_exists(range, container) { \n\
+def contains(container, item, compare_func) : call_exists(range, container) { \n\
   var t_range = range(container); \n\
   while (!t_range.empty()) { \n\
-    if ( eq(t_range.front(), item) ) { return true; } \n\
+    if ( compare_func(t_range.front(), item) ) { return true; } \n\
     t_range.pop_front(); \n\
   } \n\
   return false; \n\
 } \n\
+def contains(container, item) { return contains(container, item, eq) } \n\
 def map(container, func, inserter) : call_exists(range, container) { \n\
   var range = range(container); \n\
   while (!range.empty()) { \n\
@@ -280,37 +281,49 @@ def zip(x, y) { \n\
   zip_with(collate, x, y); \n\
 }\n\
 # Returns the position of the second value string in the first value string\n\
-def find(str, substr) { \n\
-  int(find(str, substr, size_t(0))); \n\
+def string::find(substr) : type_name(substr) == "string" { \n\
+  int(find(this, substr, size_t(0))); \n\
 } \n\
 # Returns the position of last match of the second value string in the first value string\n\
-def rfind(str, substr) { \n\
-  int(rfind(str, substr, size_t(-1))); \n\
+def string::rfind(substr) : type_name(substr) == "string" { \n\
+  int(rfind(this, substr, size_t(-1))); \n\
 } \n\
 # Returns the position of the first match of elements in the second value string in the first value string\n\
-def find_first_of(str, list) { \n\
-  int(find_first_of(str, list, size_t(0))); \n\
+def string::find_first_of(list) : type_name(list) == "string" { \n\
+  int(find_first_of(this, list, size_t(0))); \n\
 } \n\
 # Returns the position of the last match of elements in the second value string in the first value string\n\
-def find_last_of(str, list) { \n\
-  int(find_last_of(str, list, size_t(-1))); \n\
+def string::find_last_of(list) : type_name(list) == "string" { \n\
+  int(find_last_of(this, list, size_t(-1))); \n\
 } \n\
 # Returns the position of the first non-matching element in the second value string in the first value string\n\
-def find_first_not_of(str, list) { \n\
-  int(find_first_not_of(str, list, size_t(0))); \n\
+def string::find_first_not_of(list) : type_name(list) == "string" { \n\
+  int(find_first_not_of(this, list, size_t(0))); \n\
 } \n\
 # Returns the position of the last non-matching element in the second value string in the first value string\n\
-def find_last_not_of(str, list) { \n\
-  int(find_last_not_of(str, list, size_t(-1))); \n\
+def string::find_last_not_of(list) : type_name(list) == "string" { \n\
+  int(find_last_not_of(this, list, size_t(-1))); \n\
 } \n\
-def ltrim(str) { \n\
-  drop_while(str, fun(x) { x == ' ' || x == '\t' }); \n\
+def string::ltrim() { \n\
+  drop_while(this, fun(x) { x == ' ' || x == '\t' }); \n\
 } \n\
-def rtrim(str) { \n\
-  reverse(drop_while(reverse(str), fun(x) { x == ' ' || x == '\t' })); \n\
+def string::rtrim() { \n\
+  reverse(drop_while(reverse(this), fun(x) { x == ' ' || x == '\t' })); \n\
 } \n\
-def trim(str) { \n\
-  ltrim(rtrim(str)); \n\
-} \
+def string::trim() { \n\
+  ltrim(rtrim(this)); \n\
+} \n\
+def find(container, value, compare_func) : call_exists(range, container) && type_name(compare_func) == "function" { \n\
+  var range = range(container); \n\
+  while (!range.empty()) { \n\
+    if (compare_func(range.front(), value)) { \n\
+      return range; \n\
+    } else { \n\
+      range.pop_front(); \n\
+    } \n\
+  } \n\
+  return range; \n\
+} \n\
+def find(container, value) { return find(container, value, eq) } \
 )
 #endif /* CHAISCRIPT_PRELUDE_HPP_ */

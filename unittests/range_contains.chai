@@ -1,0 +1,5 @@
+var v = [1,2,"hi", "world", 5.5]
+print(v.contains(5.5));
+print(v.contains(0));
+print(v.contains(1, lt));
+print(v.contains(2, `==`));

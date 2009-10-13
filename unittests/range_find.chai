@@ -1,0 +1,5 @@
+var v = [2, 1, "Hi", 5.5]
+var r = v.find("Hi");
+print(r);
+var r2 = v.find(2, `<`);
+print(r2);
