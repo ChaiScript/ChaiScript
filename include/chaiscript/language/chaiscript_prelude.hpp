@@ -12,6 +12,9 @@
 #define CODE_STRING(x, y) #x ", " #y 
 
 #define chaiscript_prelude CODE_STRING(\
+def lt(l, r) { if (call_exists(`<`, l, r)) { l < r } else { type_name(l) < type_name(r) } } \n\
+def gt(l, r) { if (call_exists(`>`, l, r)) { l > r } else { type_name(l) > type_name(r) } } \n\
+def eq(l, r) { if (call_exists(`==`, l, r)) { l == r } else { false } } \n\
 def new(x) { eval(type_name(x))(); } \n\
 def clone(x) : function_exists(type_name(x)) && call_exists(eval(type_name(x)), x)  { eval(type_name(x))(x); } \n\
 # to_string for Pair()\n\
@@ -92,7 +95,7 @@ def back_inserter(container) { \n\
 def contains(container, item) : call_exists(range, container) { \n\
   var t_range = range(container); \n\
   while (!t_range.empty()) { \n\
-    if (t_range.front() == item) { return true; } \n\
+    if ( eq(t_range.front(), item) ) { return true; } \n\
     t_range.pop_front(); \n\
   } \n\
   return false; \n\
