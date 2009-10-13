@@ -1499,11 +1499,11 @@ namespace chaiscript
 
             int prev_stack_top = match_stack.size();
 
-            if (Additive()) {
+            if (Shift()) {
                 retval = true;
                 if (Symbol(">=", true) || Symbol(">", true) || Symbol("<=", true) || Symbol("<", true) || Symbol("==", true) || Symbol("!=", true)) {
                     do {
-                        if (!Additive()) {
+                        if (!Shift()) {
                             throw Eval_Error("Incomplete comparison expression", File_Position(line, col), filename);
                         }
                     } while (retval && (Symbol(">=", true) || Symbol(">", true) || Symbol("<=", true) || Symbol("<", true) || Symbol("==", true) || Symbol("!=", true)));
@@ -1581,6 +1581,30 @@ namespace chaiscript
                     } while (retval && Symbol("."));
 
                     build_match(Token_Type::Dot_Access, prev_stack_top);
+                }
+            }
+
+            return retval;
+        }
+
+        /**
+         * Top-level expression, parses a string of binary boolean operators from input
+         */
+        bool Shift() {
+            bool retval = false;
+
+            int prev_stack_top = match_stack.size();
+
+            if (Additive()) {
+                retval = true;
+                if (Symbol("<<", true) || Symbol(">>", true)) {
+                    do {
+                        if (!Additive()) {
+                            throw Eval_Error("Incomplete shift expression", File_Position(line, col), filename);
+                        }
+                    } while (retval && (Symbol("<<", true) || Symbol(">>", true)));
+
+                    build_match(Token_Type::Shift, prev_stack_top);
                 }
             }
 

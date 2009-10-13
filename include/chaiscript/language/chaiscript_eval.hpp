@@ -1100,6 +1100,7 @@ namespace chaiscript
             case (Token_Type::Comparison) :
             case (Token_Type::Additive) :
             case (Token_Type::Multiplicative) :
+            case (Token_Type::Shift) :
                 return eval_comp_add_mul(ss, node);
             break;
 

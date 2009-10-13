@@ -50,6 +50,18 @@ namespace chaiscript
         return p1 % p2;
       }
 
+      template<typename Ret, typename P1, typename P2>
+      Ret shift_left(P1 p1, P2 p2)
+      {
+        return p1 << p2;
+      }
+
+      template<typename Ret, typename P1, typename P2>
+      Ret shift_right(P1 p1, P2 p2)
+      {
+        return p1 >> p2;
+      }
+
       template<typename P1, typename P2>
       P1 &assign(P1 &p1, const P2 &p2)
       {
@@ -717,6 +729,8 @@ namespace chaiscript
         opers_arithmetic_pod(m);
 
         m->add(fun(&detail::modulus<int, int, int>), "%");
+        m->add(fun(&detail::shift_left<int, int, int>), "<<");
+        m->add(fun(&detail::shift_right<int, int, int>), ">>");
 
         m->add(fun(&print), "print_string");
         m->add(fun(&println), "println_string");
