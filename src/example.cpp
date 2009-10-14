@@ -22,6 +22,10 @@ void log(const std::string &module, const std::string &msg)
   std::cout << "[" << boost::posix_time::microsec_clock::local_time() << "] <" << module << "> " << msg << std::endl;
 }
 
+void bound_log(const std::string &msg)
+{
+  log(msg);
+}
 
 void hello_world(const chaiscript::Boxed_Value &o)
 {
@@ -148,6 +152,7 @@ int main(int argc, char *argv[]) {
   // Test ability to register a function that excepts a shared_ptr version of a type
   chai("take_shared_ptr(\"Hello World as a shared_ptr\");");
 
+  chai.add(bound_fun(&bound_log, std::string("Msg")), "BoundFun");
 
   //Dynamic objects test
   chai.add(chaiscript::Proxy_Function(new Dynamic_Object_Function("TestType", fun(&hello_world))), "hello_world");

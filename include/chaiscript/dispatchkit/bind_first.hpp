@@ -26,6 +26,7 @@
 # endif
 #else
 # define n BOOST_PP_ITERATION()
+# define m BOOST_PP_INC(n)
 
 namespace chaiscript
 {
@@ -44,9 +45,9 @@ namespace chaiscript
         return boost::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, ~));
       }
 
-  template<typename Ret,typename O BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-    boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> 
-      bind_first(Ret (*f)(BOOST_PP_ENUM_PARAMS(n, Param)), const O &o)
+  template<typename Ret,typename O BOOST_PP_COMMA_IF(m) BOOST_PP_ENUM_PARAMS(m, typename Param) >
+    boost::function<Ret (BOOST_PP_ENUM_PARAMS(m, Param))> 
+      bind_first(Ret (*f)(BOOST_PP_ENUM_PARAMS(m, Param)), const O &o)
       {
         return boost::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, ~));
       }
