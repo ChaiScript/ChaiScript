@@ -278,7 +278,32 @@ namespace chaiscript
                     ++col;
                 }
             }
+            else if ((input_pos != input_end) && (*input_pos == '`')) {
+                retval = true;
+                ++col;
+                ++input_pos;
+                std::string::iterator start = input_pos;
+                
+                while ((input_pos != input_end) && (*input_pos != '`')) {
+                    if (Eol()) {
+                        throw Eval_Error("Carriage return in identifier literal", File_Position(line, col), filename);
+                    }
+                    else {
+                        ++input_pos;
+                        ++col;
+                    }
+                }
 
+                if (start == input_pos) {
+                    throw Eval_Error("Missing contents of identifier literal", File_Position(line, col), filename);
+                }
+                else if (input_pos == input_end) {
+                    throw Eval_Error("Incomplete identifier literal", File_Position(line, col), filename);
+                }
+
+                ++col;
+                ++input_pos;
+            }
             return retval;
         }
 
@@ -296,10 +321,19 @@ namespace chaiscript
                 int prev_col = col;
                 int prev_line = line;
                 if (Id_()) {
-                    std::string match(start, input_pos);
-                    TokenPtr t(new Token(match, Token_Type::Id, filename, prev_line, prev_col, line, col));
-                    match_stack.push_back(t);
-                    return true;
+                    if (*start == '`') {
+                        //Id Literal
+                        std::string match(start+1, input_pos-1);
+                        TokenPtr t(new Token(match, Token_Type::Id, filename, prev_line, prev_col, line, col));
+                        match_stack.push_back(t);
+                        return true;
+                    }
+                    else {
+                        std::string match(start, input_pos);
+                        TokenPtr t(new Token(match, Token_Type::Id, filename, prev_line, prev_col, line, col));
+                        match_stack.push_back(t);
+                        return true;
+                    }
                 }
                 else {
                     return false;
@@ -1263,7 +1297,7 @@ namespace chaiscript
             std::string::iterator prev_pos = input_pos;
 
             unsigned int prev_stack_top = match_stack.size();
-            if (Id(true) || Id_Literal()) {
+            if (Id(true)) {
                 retval = true;
                 bool has_more = true;
 
@@ -1378,53 +1412,6 @@ namespace chaiscript
                 else {
                     build_match(Token_Type::Inline_Array, prev_stack_top);
                 }
-            }
-
-            return retval;
-        }
-
-        /**
-         * Reads an identifier literal of the special form `<name>` from input
-         */
-        bool Id_Literal() {
-            bool retval = false;
-
-            SkipWS();
-
-            if ((input_pos != input_end) && (*input_pos == '`')) {
-                retval = true;
-
-                int prev_col = col;
-                int prev_line = line;
-
-                ++col;
-                ++input_pos;
-
-                std::string::iterator start = input_pos;
-
-                while ((input_pos != input_end) && (*input_pos != '`')) {
-                    if (Eol()) {
-                        throw Eval_Error("Carriage return in identifier literal", File_Position(line, col), filename);
-                    }
-                    else {
-                        ++input_pos;
-                        ++col;
-                    }
-                }
-
-                if (start == input_pos) {
-                    throw Eval_Error("Missing contents of identifier literal", File_Position(line, col), filename);
-                }
-                else if (input_pos == input_end) {
-                    throw Eval_Error("Incomplete identifier literal", File_Position(line, col), filename);
-                }
-
-                ++col;
-                std::string match(start, input_pos);
-                TokenPtr t(new Token(match, Token_Type::Id, filename, prev_line, prev_col, line, col));
-                match_stack.push_back(t);
-                ++input_pos;
-
             }
 
             return retval;
