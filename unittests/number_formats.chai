@@ -1,0 +1,2 @@
+print(012)
+print(0x1f)
