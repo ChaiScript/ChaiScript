@@ -575,7 +575,7 @@ namespace chaiscript
       /**
        * return true if the Boxed_Value matches the registered type by name
        */
-      bool is_type(const std::string &user_typename, Boxed_Value r) const
+      bool is_type(Boxed_Value r, const std::string &user_typename) const
       {
         try {
           if (get_type(user_typename).bare_equal(r.get_type_info()))

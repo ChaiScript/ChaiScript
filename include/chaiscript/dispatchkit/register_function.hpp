@@ -11,6 +11,7 @@
 #define __register_function_hpp__
 
 #include "dispatchkit.hpp"
+#include "bind_first.hpp"
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 
@@ -56,6 +57,12 @@ namespace chaiscript
     Proxy_Function fun(T t)
     {
       return detail::fun_helper(t);
+    }
+
+  template<typename T, typename Q>
+    Proxy_Function bound_fun(T t, Q q)
+    {
+      return detail::fun_helper(bind_first(t, q));
     }
 }
 

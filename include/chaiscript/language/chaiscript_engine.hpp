@@ -300,8 +300,8 @@ namespace chaiscript
         /**
          * Evaluates the given boxed string, used during eval() inside of a script
          */
-        const Boxed_Value internal_eval(const std::vector<Boxed_Value> &vals) {
-            return do_eval(boxed_cast<std::string>(vals.at(0)), "__EVAL__", true);
+        const Boxed_Value internal_eval(const std::string &e) {
+            return do_eval(e, "__EVAL__", true);
         }
 
         void use(const std::string &filename)
@@ -491,18 +491,13 @@ namespace chaiscript
             engine.add_reserved_word("false");
             engine.add_reserved_word("_");
 
-
             add(Bootstrap::bootstrap());
 
-            engine.add(fun(boost::function<void ()>(boost::bind(&Eval_Engine::dump_system, boost::ref(engine)))), "dump_system");
-            engine.add(fun(boost::function<void (Boxed_Value)>(boost::bind(&Eval_Engine::dump_object, boost::ref(engine), _1))), "dump_object");
-            engine.add(fun(boost::function<bool (Boxed_Value, const std::string &)>(boost::bind(&Eval_Engine::is_type, boost::ref(engine), _2, _1))),
-                "is_type");
-
-            engine.add(fun(boost::function<std::string (Boxed_Value)>(boost::bind(&Eval_Engine::type_name, boost::ref(engine), _1))),
-                "type_name");
-            engine.add(fun(boost::function<bool (const std::string &)>(boost::bind(&Eval_Engine::function_exists, boost::ref(engine), _1))),
-                "function_exists");
+            engine.add(bound_fun(&Eval_Engine::dump_system, boost::ref(engine)), "dump_system");
+            engine.add(bound_fun(&Eval_Engine::dump_object, boost::ref(engine)), "dump_object");
+            engine.add(bound_fun(&Eval_Engine::is_type, boost::ref(engine)), "is_type");
+            engine.add(bound_fun(&Eval_Engine::type_name, boost::ref(engine)), "type_name");
+            engine.add(bound_fun(&Eval_Engine::function_exists, boost::ref(engine)), "function_exists");
 
 
             engine.add(fun(boost::function<void (const std::string &)>(
@@ -520,13 +515,8 @@ namespace chaiscript
             add(map_type<std::map<std::string, Boxed_Value> >("Map"));
             add(pair_type<std::pair<Boxed_Value, Boxed_Value > >("Pair"));
 
-            engine.add(fun(boost::function<void (const std::string &)>(boost::bind(&ChaiScript_System<Eval_Engine>::use, this, _1))), "use");
-
-            engine.add(Proxy_Function(
-                  new Dynamic_Proxy_Function(boost::bind(&ChaiScript_System<Eval_Engine>::internal_eval, boost::ref(*this), _1), 1)), "eval");
-
-
-
+            engine.add(bound_fun(&ChaiScript_System<Eval_Engine>::use, this), "use");
+            engine.add(bound_fun(&ChaiScript_System<Eval_Engine>::internal_eval, this), "eval");
 
 
             do_eval(chaiscript_prelude, "standard prelude");
