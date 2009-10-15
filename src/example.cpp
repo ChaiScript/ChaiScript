@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
   chai.add(var(&system), "system");
 
   //Add a bound callback method
-  chai.add(bound_fun(&System::add_callback, system), "add_callback_bound");
+  chai.add(fun(&System::add_callback, system), "add_callback_bound");
 
   //Register the two methods of the System structure.
   chai.add(fun(&System::add_callback), "add_callback");
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
 
   //Finally, it is possible to register any boost::function as a system function, in this 
   //way, we can, for instance add a bound member function to the system
-  chai.add(fun(boost::function<void ()>(boost::bind(&System::do_callbacks, boost::ref(system), "Bound Test"))), "do_callbacks");
+  chai.add(fun(&System::do_callbacks, boost::ref(system), "Bound Test"), "do_callbacks");
 
   //Call bound version of do_callbacks
   chai("do_callbacks()");
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]) {
   // Test ability to register a function that excepts a shared_ptr version of a type
   chai("take_shared_ptr(\"Hello World as a shared_ptr\");");
 
-  chai.add(bound_fun(&bound_log, std::string("Msg")), "BoundFun");
+  chai.add(fun(&bound_log, std::string("Msg")), "BoundFun");
 
   //Dynamic objects test
   chai.add(chaiscript::Proxy_Function(new Dynamic_Object_Function("TestType", fun(&hello_world))), "hello_world");
