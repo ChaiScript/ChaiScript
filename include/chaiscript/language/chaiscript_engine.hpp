@@ -493,30 +493,27 @@ namespace chaiscript
 
             add(Bootstrap::bootstrap());
 
-            engine.add(bound_fun(&Eval_Engine::dump_system, boost::ref(engine)), "dump_system");
-            engine.add(bound_fun(&Eval_Engine::dump_object, boost::ref(engine)), "dump_object");
-            engine.add(bound_fun(&Eval_Engine::is_type, boost::ref(engine)), "is_type");
-            engine.add(bound_fun(&Eval_Engine::type_name, boost::ref(engine)), "type_name");
-            engine.add(bound_fun(&Eval_Engine::function_exists, boost::ref(engine)), "function_exists");
+            engine.add(fun(&Eval_Engine::dump_system, boost::ref(engine)), "dump_system");
+            engine.add(fun(&Eval_Engine::dump_object, boost::ref(engine)), "dump_object");
+            engine.add(fun(&Eval_Engine::is_type, boost::ref(engine)), "is_type");
+            engine.add(fun(&Eval_Engine::type_name, boost::ref(engine)), "type_name");
+            engine.add(fun(&Eval_Engine::function_exists, boost::ref(engine)), "function_exists");
 
 
-            engine.add(fun(boost::function<void (const std::string &)>(
-                    boost::bind(static_cast<void (ChaiScript_System<Eval_Engine>::*)(const std::string&)>(
-                        &ChaiScript_System<Eval_Engine>::load_module), boost::ref(*this), _1))),
-                "load_module");
+            typedef void (ChaiScript_System<Eval_Engine>::*load_mod_1)(const std::string&);
+            typedef void (ChaiScript_System<Eval_Engine>::*load_mod_2)(const std::string&, const std::string&);
 
-            engine.add(fun(boost::function<void (const std::string &, const std::string &)>(
-                    boost::bind(static_cast<void (ChaiScript_System<Eval_Engine>::*)(const std::string&, const std::string&)>(
-                        &ChaiScript_System<Eval_Engine>::load_module), boost::ref(*this), _1, _2))),
-                "load_module");
+            engine.add(fun(static_cast<load_mod_1>(&ChaiScript_System<Eval_Engine>::load_module)), "load_module");
+            engine.add(fun(static_cast<load_mod_2>(&ChaiScript_System<Eval_Engine>::load_module)), "load_module");
+
 
             add(vector_type<std::vector<Boxed_Value> >("Vector"));
             add(string_type<std::string>("string"));
             add(map_type<std::map<std::string, Boxed_Value> >("Map"));
             add(pair_type<std::pair<Boxed_Value, Boxed_Value > >("Pair"));
 
-            engine.add(bound_fun(&ChaiScript_System<Eval_Engine>::use, this), "use");
-            engine.add(bound_fun(&ChaiScript_System<Eval_Engine>::internal_eval, this), "eval");
+            engine.add(fun(&ChaiScript_System<Eval_Engine>::use, this), "use");
+            engine.add(fun(&ChaiScript_System<Eval_Engine>::internal_eval, this), "eval");
 
 
             do_eval(chaiscript_prelude, "standard prelude");

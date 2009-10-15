@@ -4,9 +4,6 @@
 // and Jason Turner (lefticus@gmail.com)
 // http://www.chaiscript.com
 
-#include <boost/preprocessor.hpp>
-
-#ifndef  BOOST_PP_IS_ITERATING
 #ifndef __register_function_hpp__
 #define __register_function_hpp__
 
@@ -14,6 +11,8 @@
 #include "bind_first.hpp"
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <boost/function_types/components.hpp>
+#include <boost/function_types/function_type.hpp>
 
 namespace chaiscript
 {
@@ -29,81 +28,63 @@ namespace chaiscript
       }
 
     template<typename T>
-      Proxy_Function fun_helper(const boost::function<T> &f)
-      {
-        return Proxy_Function(new Proxy_Function_Impl<T>(f));
-      }
+    boost::function<T> mk_boost_fun(const boost::function<T> &f)
+    {
+      return f;
+    }
 
-    /**
-     * Automatically create a get_member helper function for an object 
-     * to allow for runtime dispatched access to public data members
-     * for example, the case of std::pair<>::first and std::pair<>::second
-     */
+    template<typename T>
+    boost::function< 
+             typename boost::function_types::function_type<boost::function_types::components<T> >::type 
+          >  mk_boost_fun(T t)
+    {
+      return 
+          boost::function< 
+             typename boost::function_types::function_type<boost::function_types::components<T> >::type 
+          >(t);
+    }
+
     template<typename T, typename Class>
       Proxy_Function fun_helper(T Class::* m)
       {
         return fun_helper(boost::function<T& (Class *)>(boost::bind(&detail::get_member<T, Class>, m, _1)));
       }
+
+
+    template<typename T>
+      Proxy_Function fun_helper(const boost::function<T> &f)
+      {
+        return Proxy_Function(new Proxy_Function_Impl<T>(f));
+      }
   }
-}
 
-#define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
-#define BOOST_PP_FILENAME_1 <chaiscript/dispatchkit/register_function.hpp>
-#include BOOST_PP_ITERATE()
+  template<typename T>
+    Proxy_Function fun(const boost::function<T> &f)
+    {
+      return detail::fun_helper(f);
+    }
 
-namespace chaiscript
-{
   template<typename T>
     Proxy_Function fun(T t)
     {
-      return detail::fun_helper(t);
+      return detail::fun_helper(detail::mk_boost_fun(t));
     }
 
+
   template<typename T, typename Q>
-    Proxy_Function bound_fun(T t, Q q)
+    Proxy_Function fun(T t, const Q &q)
     {
       return detail::fun_helper(bind_first(t, q));
     }
+
+  template<typename T, typename Q, typename R>
+    Proxy_Function fun(T t, const Q &q, const R &r)
+    {
+      return detail::fun_helper(bind_first(bind_first(t, q), r));
+    }
+   
 }
 
-
-# endif
-#else
-# define n BOOST_PP_ITERATION()
-
-namespace chaiscript
-{
-  namespace detail
-  {
-    /**
-     * Register a global function of n parameters with name 
-     */
-    template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-      Proxy_Function fun_helper(Ret (*f)(BOOST_PP_ENUM_PARAMS(n, Param)))
-      {
-        return fun_helper(boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))>(f));
-      }
-
-    /**
-     * Register a class method of n parameters with name 
-     */
-    template<typename Ret, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-      Proxy_Function fun_helper(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)))
-      {
-        return fun_helper(boost::function<Ret (Class* BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param))>(f));
-      }
-
-    /**
-     * Register a const class method of n parameters with name 
-     */
-    template<typename Ret, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-      Proxy_Function fun_helper(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param))const)
-      {
-        return fun_helper(boost::function<Ret (const Class* BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param))>(f));
-      }
-
-  }
-}
 
 #endif
 
