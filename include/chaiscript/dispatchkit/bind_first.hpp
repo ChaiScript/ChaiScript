@@ -46,7 +46,7 @@ namespace chaiscript
       }
 
   template<typename Ret,typename O BOOST_PP_COMMA_IF(m) BOOST_PP_ENUM_PARAMS(m, typename Param) >
-    boost::function<Ret (BOOST_PP_ENUM_PARAMS(m, Param))> 
+    boost::function<Ret (BOOST_PP_ENUM(n, param, Param))> 
       bind_first(Ret (*f)(BOOST_PP_ENUM_PARAMS(m, Param)), const O &o)
       {
         return boost::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
