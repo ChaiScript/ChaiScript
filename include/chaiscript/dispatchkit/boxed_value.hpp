@@ -42,49 +42,19 @@ namespace chaiscript
        */
       struct Data
       {
-        /** 
-         * used to provide type-erased access to the internal boost::shared_ptr
-         * reference count information 
-         */
-        struct Shared_Ptr_Proxy
-        {
-          virtual ~Shared_Ptr_Proxy()
-          {
-          }
-
-          virtual bool unique(boost::any *) = 0;
-          virtual long use_count(boost::any *) = 0;
-        };
-
-        /** 
-         * Typed implementation of the Shared_Ptr_Proxy
-         */
         template<typename T>
-          struct Shared_Ptr_Proxy_Impl : Shared_Ptr_Proxy
-        {
-          virtual ~Shared_Ptr_Proxy_Impl()
-          {
-          }
-
-          virtual bool unique(boost::any *a)
+          static bool unique(boost::any *a)
           {
             boost::shared_ptr<T> *ptr = boost::any_cast<boost::shared_ptr<T> >(a);
             return ptr->unique();
           }
 
-          virtual long use_count(boost::any *a)
-          {
-            boost::shared_ptr<T> *ptr = boost::any_cast<boost::shared_ptr<T> >(a);
-            return ptr->use_count();
-          }
-        };
-
         Data(const Type_Info &ti,
             const boost::any &to,
             bool tr,
-            const boost::shared_ptr<Shared_Ptr_Proxy> &t_proxy = boost::shared_ptr<Shared_Ptr_Proxy>())
+            const boost::function<bool (boost::any*)> &t_unique = boost::function<bool (boost::any*)>())
           : m_type_info(ti), m_obj(to), 
-          m_is_ref(tr), m_ptr_proxy(t_proxy)
+          m_is_ref(tr), m_unique(t_unique)
         {
         }
 
@@ -93,7 +63,7 @@ namespace chaiscript
           m_type_info = rhs.m_type_info;
           m_obj = rhs.m_obj;
           m_is_ref = rhs.m_is_ref;
-          m_ptr_proxy = rhs.m_ptr_proxy;
+          m_unique = rhs.m_unique;
 
           return *this;
         }
@@ -101,7 +71,7 @@ namespace chaiscript
         Type_Info m_type_info;
         boost::any m_obj;
         bool m_is_ref;
-        boost::shared_ptr<Shared_Ptr_Proxy> m_ptr_proxy;
+        boost::function<bool (boost::any*)> m_unique;
       };
 
       /**
@@ -141,7 +111,7 @@ namespace chaiscript
                   detail::Get_Type_Info<T>::get(), 
                   boost::any(obj), 
                   false,
-                  boost::shared_ptr<Data::Shared_Ptr_Proxy>(new Data::Shared_Ptr_Proxy_Impl<T>()))
+                  &Data::unique<T>)
                 );
 
             std::map<std::pair<const void *, bool>, Data>::iterator itr
@@ -200,7 +170,7 @@ namespace chaiscript
                   detail::Get_Type_Info<T>::get(), 
                   boost::any(boost::shared_ptr<T>(new T(t))), 
                   false,
-                  boost::shared_ptr<Data::Shared_Ptr_Proxy>(new Data::Shared_Ptr_Proxy_Impl<T>()))
+                  &Data::unique<T>)
                 );
 
             boost::shared_ptr<T> *ptr = boost::any_cast<boost::shared_ptr<T> >(&data->m_obj);
@@ -226,7 +196,7 @@ namespace chaiscript
         {
           
           ++m_cullcount;
-          if (force || m_cullcount % 10 != 0)
+          if (force || m_cullcount % 20 != 0)
           {
             return;
           }
@@ -236,7 +206,7 @@ namespace chaiscript
 
           while (itr != m_ptrs.end())
           {
-            if (itr->second.m_ptr_proxy->unique(&itr->second.m_obj) == 1)
+            if (itr->second.m_unique(&itr->second.m_obj))
             {
               std::map<std::pair<const void *, bool>, Data >::iterator todel = itr;
               ++itr;
