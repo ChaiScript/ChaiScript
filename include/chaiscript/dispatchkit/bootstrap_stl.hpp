@@ -123,23 +123,12 @@ namespace chaiscript
     } 
 
     /**
-    * Add reversible_container concept to the given ContainerType
-    * http://www.sgi.com/tech/stl/ReversibleContainer.html
-    */
-    template<typename ContainerType>
-    ModulePtr reversible_container_type(const std::string &, ModulePtr m = ModulePtr(new Module()))
-    {
-      return m;
-    }
-
-    /**
     * Add random_access_container concept to the given ContainerType
     * http://www.sgi.com/tech/stl/RandomAccessContainer.html
     */
     template<typename ContainerType>
     ModulePtr random_access_container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
-      reversible_container_type<ContainerType>(type, m);
       typedef typename ContainerType::reference(ContainerType::*indexoper)(size_t);
 
       //In the interest of runtime safety for the m, we prefer the at() method for [] access,
@@ -169,24 +158,9 @@ namespace chaiscript
     template<typename ContainerType>
     ModulePtr container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
-      assignable_type<ContainerType>(type, m);
-
       m->add(fun<size_t (ContainerType::*)() const>(&ContainerType::size), "size");
       m->add(fun<bool (ContainerType::*)() const>(&ContainerType::empty), "empty");
       m->add(fun<void (ContainerType::*)()>(&ContainerType::clear), "clear");
-
-      return m;
-    }
-
-    /**
-    * Add forward container concept to the given ContainerType
-    * http://www.sgi.com/tech/stl/ForwardContainer.html
-    */
-    template<typename ContainerType>
-    ModulePtr forward_container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
-    {
-      input_range_type<ContainerType>(type, m);
-      container_type<ContainerType>(type, m);
 
       return m;
     }
@@ -245,9 +219,6 @@ namespace chaiscript
     template<typename ContainerType>
     ModulePtr sequence_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
-      forward_container_type<ContainerType>(type, m);
-      default_constructible_type<ContainerType>(type, m);
-
       std::string insert_name;
       if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value))
       {
@@ -269,9 +240,6 @@ namespace chaiscript
     template<typename ContainerType>
     ModulePtr back_insertion_sequence_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
-      sequence_type<ContainerType>(type, m);
-
-
       typedef typename ContainerType::reference (ContainerType::*backptr)();
 
       m->add(fun(static_cast<backptr>(&ContainerType::back)), "back");
@@ -297,8 +265,6 @@ namespace chaiscript
     template<typename ContainerType>
     ModulePtr front_insertion_sequence_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
-      sequence_type<ContainerType>(type, m);
-
       typedef typename ContainerType::reference (ContainerType::*frontptr)();
 
       m->add(fun(static_cast<frontptr>(&ContainerType::front)), "front");
@@ -312,44 +278,6 @@ namespace chaiscript
       }
       m->add(fun(&ContainerType::push_front), push_front_name);
       m->add(fun(&ContainerType::pop_front), "pop_front");
-      return m;
-    }
-
-    /**
-     * hopefully working List type
-     * http://www.sgi.com/tech/stl/List.html
-     */
-    template<typename ListType>
-    ModulePtr list_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(user_type<ListType>(), type);
-      front_insertion_sequence_type<ListType>(type, m);
-      back_insertion_sequence_type<ListType>(type, m);
-      return m;
-    }
-
-    /**
-    * Create a vector type with associated concepts
-    * http://www.sgi.com/tech/stl/Vector.html
-    */
-    template<typename VectorType>
-    ModulePtr vector_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(user_type<VectorType>(), type);
-      random_access_container_type<VectorType>(type, m);
-      back_insertion_sequence_type<VectorType>(type, m);
-      return m;
-    }
-
-    /**
-    * Create a vector type with associated concepts
-    * http://www.sgi.com/tech/stl/Vector.html
-    */
-    template<typename ContainerType>
-    ModulePtr associative_container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
-    {
-      forward_container_type<ContainerType>(type, m);
-      default_constructible_type<ContainerType>(type, m);
       return m;
     }
 
@@ -379,7 +307,6 @@ namespace chaiscript
     template<typename ContainerType>
     ModulePtr pair_associative_container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
-      associative_container_type<ContainerType>(type, m);
       pair_type<typename ContainerType::value_type>(type + "_Pair", m);
 
       return m;
@@ -392,37 +319,7 @@ namespace chaiscript
     template<typename ContainerType>
     ModulePtr unique_associative_container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
-      associative_container_type<ContainerType>(type, m);
       m->add(fun<size_t (ContainerType::*)(const typename ContainerType::key_type &) const>(&ContainerType::count), "count");
-
-      return m;
-    }
-
-    /**
-    * Add sorted associative container concept to the given ContainerType
-    * http://www.sgi.com/tech/stl/SortedAssociativeContainer.html
-    */
-    template<typename ContainerType>
-    ModulePtr sorted_associative_container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
-    {
-      typedef std::pair<typename ContainerType::iterator, typename ContainerType::iterator> 
-        (ContainerType::*eq_range)(const typename ContainerType::key_type &);
-
-      reversible_container_type<ContainerType>(type, m);
-      associative_container_type<ContainerType>(type, m);
-
-      return m;
-    }
-
-    /**
-    * Add unique sorted associative container concept to the given ContainerType
-    * http://www.sgi.com/tech/stl/UniqueSortedAssociativeContainer.html
-    */
-    template<typename ContainerType>
-    ModulePtr unique_sorted_associative_container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
-    {
-      sorted_associative_container_type<ContainerType>(type, m);
-      unique_associative_container_type<ContainerType>(type, m);
 
       return m;
     }
@@ -436,11 +333,56 @@ namespace chaiscript
     {
       m->add(user_type<MapType>(), type);
       m->add(fun(&MapType::operator[]), "[]");
-      unique_sorted_associative_container_type<MapType>(type, m);
+
+      container_type<MapType>(type, m);
+      assignable_type<MapType>(type, m);
+      unique_associative_container_type<MapType>(type, m);
       pair_associative_container_type<MapType>(type, m);
+      input_range_type<MapType>(type, m);
 
       return m;
     }
+
+    /**
+     * hopefully working List type
+     * http://www.sgi.com/tech/stl/List.html
+     */
+    template<typename ListType>
+    ModulePtr list_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    {
+      m->add(user_type<ListType>(), type);
+
+      front_insertion_sequence_type<ListType>(type, m);
+      back_insertion_sequence_type<ListType>(type, m);
+      sequence_type<ListType>(type, m);
+      container_type<ListType>(type, m);
+      default_constructible_type<ListType>(type, m);
+      assignable_type<ListType>(type, m);
+      input_range_type<ListType>(type, m);
+
+      return m;
+    }
+
+    /**
+    * Create a vector type with associated concepts
+    * http://www.sgi.com/tech/stl/Vector.html
+    */
+    template<typename VectorType>
+    ModulePtr vector_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    {
+      m->add(user_type<VectorType>(), type);
+
+      back_insertion_sequence_type<VectorType>(type, m);
+      sequence_type<VectorType>(type, m);
+      random_access_container_type<VectorType>(type, m);
+      container_type<VectorType>(type, m);
+      default_constructible_type<VectorType>(type, m);
+      assignable_type<VectorType>(type, m);
+      input_range_type<VectorType>(type, m);
+
+      return m;
+    }
+
 
     /**
     * Add a String container
@@ -455,6 +397,10 @@ namespace chaiscript
       opers_comparison<String>(m);
       random_access_container_type<String>(type, m);
       sequence_type<String>(type, m);
+      default_constructible_type<String>(type, m);
+      container_type<String>(type, m);
+      assignable_type<String>(type, m);
+      input_range_type<String>(type, m);
 
       //Special case: add push_back to string (which doesn't support other back_insertion operations
       std::string push_back_name;
