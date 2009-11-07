@@ -248,7 +248,7 @@ namespace chaiscript
      * Evaluates binary boolean operators.  Respects short-circuiting rules.
      */
     template <typename Eval_System>
-    Boxed_Value eval_expression(Eval_System &ss, const TokenPtr &node) {
+    Boxed_Value eval_logical(Eval_System &ss, const TokenPtr &node) {
         unsigned int i;
 
         Boxed_Value retval = eval_token(ss, node->children[0]);
@@ -546,7 +546,7 @@ namespace chaiscript
 
         Boxed_Value retval = eval_token(ss, node->children[0]);
         if (node->children.size() > 1) {
-            for (i = 1; i < node->children.size(); ++i) {
+            for (i = 2; i < node->children.size(); i+=2) {
                 Param_List_Builder plb;
                 plb << retval;
 
@@ -1093,11 +1093,16 @@ namespace chaiscript
                 return eval_var_decl(ss, node);
             break;
 
-            case (Token_Type::Expression) :
-                return eval_expression(ss, node);
+            case (Token_Type::Logical_And) :
+            case (Token_Type::Logical_Or) :
+                return eval_logical(ss, node);
             break;
 
+            case (Token_Type::Bitwise_And) :
+            case (Token_Type::Bitwise_Xor) :
+            case (Token_Type::Bitwise_Or) :
             case (Token_Type::Comparison) :
+            case (Token_Type::Equality) :
             case (Token_Type::Additive) :
             case (Token_Type::Multiplicative) :
             case (Token_Type::Shift) :

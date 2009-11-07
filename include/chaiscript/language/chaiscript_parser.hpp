@@ -7,11 +7,14 @@
 #ifndef CHAISCRIPT_PARSER_HPP_
 #define CHAISCRIPT_PARSER_HPP_
 
+#include <boost/assign/std/vector.hpp>
+
 #include <exception>
 #include <fstream>
 #include <sstream>
 
 #include "chaiscript_prelude.hpp"
+#include "chaiscript_common.hpp"
 
 namespace chaiscript
 {
@@ -24,16 +27,79 @@ namespace chaiscript
         const char *filename;
         std::vector<TokenPtr> match_stack;
 
+        std::vector<std::vector<std::string> > operator_matches;
+        std::vector<Token_Type::Type> operators;
+
     public:
-        ChaiScript_Parser() {
+        ChaiScript_Parser() {           
             multiline_comment_begin = "/*";
             multiline_comment_end = "*/";
             singleline_comment = "//";
+
+            setup_operators();
         }
 
         ChaiScript_Parser(const ChaiScript_Parser &); // explicitly unimplemented copy constructor
         ChaiScript_Parser &operator=(const ChaiScript_Parser &); // explicitly unimplemented assignment operator
 
+        void setup_operators() {
+            using namespace boost::assign;
+                        
+            operators.push_back(Token_Type::Logical_Or);
+            std::vector<std::string> logical_or;
+            logical_or += "||";
+            operator_matches.push_back(logical_or);
+
+            operators.push_back(Token_Type::Logical_And);
+            std::vector<std::string> logical_and;
+            logical_and += "&&";
+            operator_matches.push_back(logical_and);
+
+            operators.push_back(Token_Type::Bitwise_Or);
+            std::vector<std::string> bitwise_or;
+            bitwise_or += "|";
+            operator_matches.push_back(bitwise_or);
+
+            operators.push_back(Token_Type::Bitwise_Xor);
+            std::vector<std::string> bitwise_xor;
+            bitwise_xor += "^";
+            operator_matches.push_back(bitwise_xor);           
+
+            operators.push_back(Token_Type::Bitwise_And);
+            std::vector<std::string> bitwise_and;
+            bitwise_and += "&";
+            operator_matches.push_back(bitwise_and);
+
+            operators.push_back(Token_Type::Equality);
+            std::vector<std::string> equality;
+            equality += "==", "!=";
+            operator_matches.push_back(equality);           
+
+            operators.push_back(Token_Type::Comparison);
+            std::vector<std::string> comparison;
+            comparison += "<", "<=", ">", ">=";
+            operator_matches.push_back(comparison);
+
+            operators.push_back(Token_Type::Shift);
+            std::vector<std::string> shift;
+            shift += "<<", ">>";
+            operator_matches.push_back(shift);           
+
+            operators.push_back(Token_Type::Additive);
+            std::vector<std::string> additive;
+            additive += "+", "-";
+            operator_matches.push_back(additive);
+
+            operators.push_back(Token_Type::Multiplicative);
+            std::vector<std::string> multiplicative;
+            multiplicative += "*", "/", "%";
+            operator_matches.push_back(multiplicative);
+
+            operators.push_back(Token_Type::Dot_Access);
+            std::vector<std::string> dot_access;
+            dot_access += ".";
+            operator_matches.push_back(dot_access);
+        }
         /**
          * Prints the parsed tokens as a tree
          */
@@ -797,7 +863,8 @@ namespace chaiscript
                 bool retval = Symbol_(s);
                 if (retval) {
                     //todo: fix this.  Hacky workaround for preventing substring matches
-                    if ((input_pos != input_end) && (disallow_prevention == false) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') || (*input_pos == '=') || (*input_pos == '.'))) {
+                    if ((input_pos != input_end) && (disallow_prevention == false) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') 
+                            || (*input_pos == '|') || (*input_pos == '&') || (*input_pos == '^') || (*input_pos == '=') || (*input_pos == '.'))) {
                         input_pos = start;
                         col = prev_col;
                         line = prev_line;
@@ -815,7 +882,8 @@ namespace chaiscript
                 int prev_line = line;
                 if (Symbol_(s)) {
                     //todo: fix this.  Hacky workaround for preventing substring matches
-                    if ((input_pos != input_end) && (disallow_prevention == false) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') || (*input_pos == '=') || (*input_pos == '.'))) {
+                    if ((input_pos != input_end) && (disallow_prevention == false) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/')
+                            || (*input_pos == '|') || (*input_pos == '&') || (*input_pos == '^') || (*input_pos == '=') || (*input_pos == '.'))) {
                         input_pos = start;
                         col = prev_col;
                         line = prev_line;
@@ -1006,7 +1074,7 @@ namespace chaiscript
                 while (Eol());
 
                 if (Char(':')) {
-                    if (!Expression()) {
+                    if (!Operator()) {
                         throw Eval_Error("Missing guard expression for function", File_Position(line, col), filename);
                     }
                 }
@@ -1059,7 +1127,7 @@ namespace chaiscript
                                 throw Eval_Error("Incomplete 'catch' expression", File_Position(line, col), filename);
                             }
                             if (Char(':')) {
-                                if (!Expression()) {
+                                if (!Operator()) {
                                     throw Eval_Error("Missing guard expression for catch", File_Position(line, col), filename);
                                 }
                             }
@@ -1107,7 +1175,7 @@ namespace chaiscript
                     throw Eval_Error("Incomplete 'if' expression", File_Position(line, col), filename);
                 }
 
-                if (!(Expression() && Char(')'))) {
+                if (!(Operator() && Char(')'))) {
                     throw Eval_Error("Incomplete 'if' expression", File_Position(line, col), filename);
                 }
 
@@ -1128,7 +1196,7 @@ namespace chaiscript
                                 throw Eval_Error("Incomplete 'else if' expression", File_Position(line, col), filename);
                             }
 
-                            if (!(Expression() && Char(')'))) {
+                            if (!(Operator() && Char(')'))) {
                                 throw Eval_Error("Incomplete 'else if' expression", File_Position(line, col), filename);
                             }
 
@@ -1171,7 +1239,7 @@ namespace chaiscript
                     throw Eval_Error("Incomplete 'while' expression", File_Position(line, col), filename);
                 }
 
-                if (!(Expression() && Char(')'))) {
+                if (!(Operator() && Char(')'))) {
                     throw Eval_Error("Incomplete 'while' expression", File_Position(line, col), filename);
                 }
 
@@ -1193,7 +1261,7 @@ namespace chaiscript
         bool For_Guards() {
             Equation();
 
-            if (Char(';') && Expression() && Char(';') && Equation()) {
+            if (Char(';') && Operator() && Char(';') && Equation()) {
                 return true;
             }
             else {
@@ -1265,7 +1333,7 @@ namespace chaiscript
             if (Keyword("return")) {
                 retval = true;
 
-                Expression();
+                Operator();
                 build_match(Token_Type::Return, prev_stack_top);
             }
 
@@ -1317,7 +1385,7 @@ namespace chaiscript
                     else if (Char('[')) {
                         has_more = true;
 
-                        if (!(Expression() && Char(']'))) {
+                        if (!(Operator() && Char(']'))) {
                             throw Eval_Error("Incomplete array access", File_Position(line, col), filename);
                         }
 
@@ -1374,7 +1442,7 @@ namespace chaiscript
 
             if (Char('(')) {
                 retval = true;
-                if (!Expression()) {
+                if (!Operator()) {
                     throw Eval_Error("Incomplete expression", File_Position(line, col), filename);
                 }
                 if (!Char(')')) {
@@ -1428,7 +1496,7 @@ namespace chaiscript
             if (Symbol("++", true)) {
                 retval = true;
 
-                if (!Dot_Access()) {
+                if (!Operator(operators.size()-1)) {
                     throw Eval_Error("Incomplete '++' expression", File_Position(line, col), filename);
                 }
 
@@ -1437,7 +1505,7 @@ namespace chaiscript
             else if (Symbol("--", true)) {
                 retval = true;
 
-                if (!Dot_Access()) {
+                if (!Operator(operators.size()-1)) {
                     throw Eval_Error("Incomplete '--' expression", File_Position(line, col), filename);
                 }
 
@@ -1446,7 +1514,7 @@ namespace chaiscript
             else if (Char('-')) {
                 retval = true;
 
-                if (!Dot_Access()) {
+                if (!Operator(operators.size()-1)) {
                     throw Eval_Error("Incomplete negation expression", File_Position(line, col), filename);
                 }
 
@@ -1455,7 +1523,7 @@ namespace chaiscript
             else if (Char('!')) {
                 retval = true;
 
-                if (!Dot_Access()) {
+                if (!Operator(operators.size()-1)) {
                     throw Eval_Error("Incomplete '!' expression", File_Position(line, col), filename);
                 }
 
@@ -1477,146 +1545,39 @@ namespace chaiscript
                 return false;
             }
         }
-
-        /**
-         * Reads a string of binary comparisons from input
-         */
-        bool Comparison() {
-            bool retval = false;
-
-            int prev_stack_top = match_stack.size();
-
-            if (Shift()) {
-                retval = true;
-                if (Symbol(">=", true) || Symbol(">", true) || Symbol("<=", true) || Symbol("<", true) || Symbol("==", true) || Symbol("!=", true)) {
-                    do {
-                        if (!Shift()) {
-                            throw Eval_Error("Incomplete comparison expression", File_Position(line, col), filename);
-                        }
-                    } while (retval && (Symbol(">=", true) || Symbol(">", true) || Symbol("<=", true) || Symbol("<", true) || Symbol("==", true) || Symbol("!=", true)));
-
-                    build_match(Token_Type::Comparison, prev_stack_top);
+        
+        bool Operator_Helper(int precedence) {
+            for (unsigned int i = 0; i < operator_matches[precedence].size(); ++i) {
+                if (Symbol(operator_matches[precedence][i].c_str(), true)) {
+                    return true;
                 }
             }
-
-            return retval;
+            return false;
         }
 
-        /**
-         * Reads a string of binary additions/subtractions from input
-         */
-        bool Additive() {
+        bool Operator(unsigned int precedence = 0) {
             bool retval = false;
 
             int prev_stack_top = match_stack.size();
 
-            if (Multiplicative()) {
-                retval = true;
-                if (Symbol("+", true) || Symbol("-", true)) {
-                    do {
-                        if (!Multiplicative()) {
-                            throw Eval_Error("Incomplete math expression", File_Position(line, col), filename);
-                        }
-                    } while (retval && (Symbol("+", true) || Symbol("-", true)));
+            if (precedence < operators.size()) {
+                if (Operator(precedence+1)) {
+                    retval = true;
+                    if (Operator_Helper(precedence)) {
+                        do {
+                            if (!Operator(precedence+1)) {
+                                std::cout << std::string(input_pos, input_end);
+                                throw Eval_Error("Incomplete " + std::string(token_type_to_string(operators[precedence])) + " expression",
+                                        File_Position(line, col), filename);
+                            }
+                        } while (Operator_Helper(precedence));
 
-                    build_match(Token_Type::Additive, prev_stack_top);
+                        build_match(operators[precedence], prev_stack_top);
+                    }
                 }
             }
-
-            return retval;
-        }
-
-        /**
-         * Reads a string of multiplication/division/modulus from input
-         */
-        bool Multiplicative() {
-            bool retval = false;
-
-            int prev_stack_top = match_stack.size();
-
-            if (Dot_Access()) {
-                retval = true;
-                if (Symbol("*", true) || Symbol("/", true) || Symbol("%", true)) {
-                    do {
-                        if (!Dot_Access()) {
-                            throw Eval_Error("Incomplete math expression", File_Position(line, col), filename);
-                        }
-                    } while (retval && (Symbol("*", true) || Symbol("/", true) || Symbol("%", true)));
-
-                    build_match(Token_Type::Multiplicative, prev_stack_top);
-                }
-            }
-
-            return retval;
-        }
-
-        /**
-         * Reads a string of dot-notation accesses from input
-         */
-        bool Dot_Access() {
-            bool retval = false;
-
-            int prev_stack_top = match_stack.size();
-
-            if (Value()) {
-                retval = true;
-                if (Symbol(".")) {
-                    do {
-                        if (!Value()) {
-                            throw Eval_Error("Incomplete dot notation", File_Position(line, col), filename);
-                        }
-                    } while (retval && Symbol("."));
-
-                    build_match(Token_Type::Dot_Access, prev_stack_top);
-                }
-            }
-
-            return retval;
-        }
-
-        /**
-         * Top-level expression, parses a string of binary boolean operators from input
-         */
-        bool Shift() {
-            bool retval = false;
-
-            int prev_stack_top = match_stack.size();
-
-            if (Additive()) {
-                retval = true;
-                if (Symbol("<<", true) || Symbol(">>", true)) {
-                    do {
-                        if (!Additive()) {
-                            throw Eval_Error("Incomplete shift expression", File_Position(line, col), filename);
-                        }
-                    } while (retval && (Symbol("<<", true) || Symbol(">>", true)));
-
-                    build_match(Token_Type::Shift, prev_stack_top);
-                }
-            }
-
-            return retval;
-        }
-
-        /**
-         * Top-level expression, parses a string of binary boolean operators from input
-         */
-        bool Expression() {
-            bool retval = false;
-
-            int prev_stack_top = match_stack.size();
-
-            if (Comparison()) {
-                retval = true;
-                if (Symbol("&&", true) || Symbol("||", true)) {
-                    do {
-                        if (!Comparison()) {
-                            throw Eval_Error("Incomplete expression", File_Position(line, col), filename);
-                        }
-                    } while (retval && (Symbol("&&", true) || Symbol("||", true)));
-
-                    build_match(Token_Type::Expression, prev_stack_top);
-                }
+            else {
+                return Value();
             }
 
             return retval;
@@ -1630,11 +1591,11 @@ namespace chaiscript
 
             int prev_stack_top = match_stack.size();
 
-            if (Expression()) {
+            if (Operator()) {
                 retval = true;
                 if (Symbol(":")) {
                     do {
-                        if (!Expression()) {
+                        if (!Operator()) {
                             throw Eval_Error("Incomplete map pair", File_Position(line, col), filename);
                         }
                     } while (retval && Symbol(":"));
@@ -1656,10 +1617,10 @@ namespace chaiscript
             std::string::iterator prev_pos = input_pos;
             int prev_col = col;
 
-            if (Expression()) {
+            if (Operator()) {
                 if (Symbol("..")) {
                     retval = true;
-                    if (!Expression()) {
+                    if (!Operator()) {
                         throw Eval_Error("Incomplete value range", File_Position(line, col), filename);
                     }
 
@@ -1685,10 +1646,12 @@ namespace chaiscript
 
             int prev_stack_top = match_stack.size();
 
-            if (Expression()) {
+            if (Operator()) {
                 retval = true;
                 if (Symbol("=", true, true) || Symbol(":=", true, true) || Symbol("+=", true, true) ||
-                        Symbol("-=", true, true) || Symbol("*=", true, true) || Symbol("/=", true, true)) {
+                        Symbol("-=", true, true) || Symbol("*=", true, true) || Symbol("/=", true, true) ||
+                        Symbol("%=", true, true) || Symbol("<<=", true, true) || Symbol(">>=", true, true) ||
+                        Symbol("&=", true, true) || Symbol("^=", true, true) || Symbol("|=", true, true)) {
                     if (!Equation()) {
                         throw Eval_Error("Incomplete equation", match_stack.back());
                     }
