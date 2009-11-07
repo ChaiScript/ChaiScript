@@ -256,7 +256,7 @@ namespace chaiscript
             for (i = 1; i < node->children.size(); i += 2) {
                 bool lhs;
                 try {
-                    lhs = boxed_cast<bool &>(retval);
+                    lhs = boxed_cast<bool >(retval);
                 }
                 catch (const bad_boxed_cast &) {
                     throw Eval_Error("Condition not boolean", node);
