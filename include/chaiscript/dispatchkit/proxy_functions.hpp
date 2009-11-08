@@ -92,7 +92,7 @@ namespace chaiscript
 
             const Type_Info &ti = types[1];
 
-            if (ti.is_unknown() || vals[0].get_type_info().is_unknown()
+            if (ti.is_undef() || vals[0].get_type_info().is_undef()
                 || ti.bare_equal(user_type<Boxed_Value>())
                 || ti.bare_equal(user_type<Boxed_POD_Value>())
                 || ti.bare_equal(vals[0].get_type_info()))

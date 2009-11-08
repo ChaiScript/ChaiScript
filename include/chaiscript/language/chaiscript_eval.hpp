@@ -171,7 +171,7 @@ namespace chaiscript
                     Boxed_Value lhs = eval_token(ss, node->children[i]);
 
                     try {
-                        if (lhs.is_unknown())
+                        if (lhs.is_undef())
                         {
                           retval = ss.call_function("clone", Param_List_Builder() << retval);
                         }
@@ -191,7 +191,7 @@ namespace chaiscript
                 }
                 else if (node->children[i+1]->text == ":=") {
                     Boxed_Value lhs = eval_token(ss, node->children[i]);
-                    if (lhs.is_unknown() || type_match(lhs, retval)) {
+                    if (lhs.is_undef() || type_match(lhs, retval)) {
                         lhs.assign(retval);
                     }
                     else {

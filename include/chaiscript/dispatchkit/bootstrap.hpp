@@ -558,7 +558,7 @@ namespace chaiscript
     template<typename Type>
     Boxed_Value ptr_assign(Boxed_Value lhs, const boost::shared_ptr<typename boost::add_const<Type>::type> &rhs)
     {
-      if (lhs.is_unknown() 
+      if (lhs.is_undef() 
           || (!lhs.get_type_info().is_const() && lhs.get_type_info().bare_equal(chaiscript::detail::Get_Type_Info<Type>::get())))
       {
         lhs.assign(Boxed_Value(rhs));
@@ -580,7 +580,7 @@ namespace chaiscript
       */
       static Boxed_Value unknown_assign(Boxed_Value lhs, Boxed_Value rhs)
       {
-        if (lhs.is_unknown())
+        if (lhs.is_undef())
         {
           return (lhs.assign(rhs));
         } else {
@@ -708,6 +708,7 @@ namespace chaiscript
         m->add(fun(&Dynamic_Object::get_attr), "get_attr");
         m->eval("def Dynamic_Object::clone() { var new_o := Dynamic_Object(this.get_type_name()); for_each(this.get_attrs(), bind(fun(new_o, x) { new_o.get_attr(x.first) = x.second; }, new_o, _) ); return new_o; }");
 
+        m->add(fun(&Boxed_Value::is_undef), "is_undef");
 
         basic_constructors<bool>("bool", m);
         oper_assign<std::string>(m);

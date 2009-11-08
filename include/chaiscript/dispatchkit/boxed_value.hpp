@@ -293,9 +293,9 @@ namespace chaiscript
       /**
        * return true if the object is uninitialized
        */
-      bool is_unknown() const
+      bool is_undef() const
       {
-        return m_data->m_type_info.is_unknown();
+        return m_data->m_type_info.is_undef();
       }
 
       boost::any get() const
@@ -594,7 +594,7 @@ namespace chaiscript
     Boxed_POD_Value(const Boxed_Value &v)
       : d(0), i(0), m_isfloat(false)
     {
-      if (v.get_type_info().is_unknown())
+      if (v.get_type_info().is_undef())
       {
         throw boost::bad_any_cast();
       }

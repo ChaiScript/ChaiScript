@@ -1,0 +1,4 @@
+var i;
+print(i.is_undef());
+i = 5;
+print(i.is_undef());

@@ -29,14 +29,14 @@ namespace chaiscript
         : m_is_const(t_is_const), m_is_reference(t_is_reference), m_is_pointer(t_is_pointer),
         m_is_void(t_is_void),
         m_type_info(t_ti), m_bare_type_info(t_bareti),
-        m_is_unknown(false)
+        m_is_undef(false)
       {
       }
 
       Type_Info()
         : m_is_const(false), m_is_reference(false), m_is_pointer(false),
         m_is_void(false), m_type_info(0), m_bare_type_info(0),
-        m_is_unknown(true)
+        m_is_undef(true)
       {
       }
 
@@ -45,7 +45,7 @@ namespace chaiscript
         m_is_pointer(ti.m_is_pointer),
         m_is_void(ti.m_is_void), m_type_info(ti.m_type_info), 
         m_bare_type_info(ti.m_bare_type_info),
-        m_is_unknown(ti.m_is_unknown)
+        m_is_undef(ti.m_is_undef)
       {
       }
 
@@ -57,7 +57,7 @@ namespace chaiscript
         m_is_void = ti.m_is_void;
         m_type_info = ti.m_type_info;
         m_bare_type_info = ti.m_bare_type_info;
-        m_is_unknown = ti.m_is_unknown;
+        m_is_undef = ti.m_is_undef;
         return *this;
       }
 
@@ -86,7 +86,7 @@ namespace chaiscript
       bool is_const() const { return m_is_const; }
       bool is_reference() const { return m_is_reference; }
       bool is_void() const { return m_is_void; }
-      bool is_unknown() const { return m_is_unknown || m_bare_type_info == 0; }
+      bool is_undef() const { return m_is_undef || m_bare_type_info == 0; }
 
       std::string bare_name() const
       {
@@ -105,7 +105,7 @@ namespace chaiscript
       bool m_is_void;
       const std::type_info *m_type_info;
       const std::type_info *m_bare_type_info;
-      bool m_is_unknown;
+      bool m_is_undef;
   };
 
   namespace detail
