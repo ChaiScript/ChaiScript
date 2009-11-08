@@ -1515,10 +1515,19 @@ namespace chaiscript
                 retval = true;
 
                 if (!Operator(operators.size()-1)) {
-                    throw Eval_Error("Incomplete negation expression", File_Position(line, col), filename);
+                    throw Eval_Error("Incomplete unary - expression", File_Position(line, col), filename);
                 }
 
-                build_match(Token_Type::Negate, prev_stack_top);
+                build_match(Token_Type::Unary_Minus, prev_stack_top);
+            }
+            else if (Char('+')) {
+                retval = true;
+
+                if (!Operator(operators.size()-1)) {
+                    throw Eval_Error("Incomplete unary + expression", File_Position(line, col), filename);
+                }
+
+                build_match(Token_Type::Unary_Plus, prev_stack_top);
             }
             else if (Char('!')) {
                 retval = true;
@@ -1528,6 +1537,15 @@ namespace chaiscript
                 }
 
                 build_match(Token_Type::Not, prev_stack_top);
+            }
+            else if (Char('~')) {
+                retval = true;
+
+                if (!Operator(operators.size()-1)) {
+                    throw Eval_Error("Incomplete '~' expression", File_Position(line, col), filename);
+                }
+
+                build_match(Token_Type::Bitwise_Not, prev_stack_top);
             }
 
             return retval;

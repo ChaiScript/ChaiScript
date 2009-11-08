@@ -338,7 +338,7 @@ namespace chaiscript
      * Evaluates a unary negation
      */
     template <typename Eval_System>
-    Boxed_Value eval_negate(Eval_System &ss, const TokenPtr &node) {
+    Boxed_Value eval_unary_minus(Eval_System &ss, const TokenPtr &node) {
         Boxed_Value retval = eval_token(ss, node->children[0]);
         Param_List_Builder plb;
         plb << retval;
@@ -348,8 +348,30 @@ namespace chaiscript
             return ss.call_function("*", plb);
         }
         catch(std::exception &){
-            throw Eval_Error("Can not find appropriate negation", node->children[0]);
+            throw Eval_Error("Can not find appropriate unary minus", node->children[0]);
         }
+
+        /*
+         * Should be unary minus
+         */
+    }
+
+    /**
+     * Evaluates a unary negation
+     */
+    template <typename Eval_System>
+    Boxed_Value eval_unary_plus(Eval_System &ss, const TokenPtr &node) {
+        Boxed_Value retval = eval_token(ss, node->children[0]);
+        Param_List_Builder plb;
+        plb << retval;
+
+        try {
+            return ss.call_function("+", plb);
+        }
+        catch(std::exception &){
+            throw Eval_Error("Can not find appropriate unary plus", node->children[0]);
+        }
+
     }
 
     /**
@@ -363,6 +385,25 @@ namespace chaiscript
         catch (const bad_boxed_cast &) {
             throw Eval_Error("Boolean not('!') condition not boolean", node->children[0]);
         }
+        /*
+         * Should be like above, but use !
+         */
+    }
+
+    /**
+     * Evaluates a unary boolean not
+     */
+    template <typename Eval_System>
+    Boxed_Value eval_bitwise_not(Eval_System &ss, const TokenPtr &node) {
+        try {
+            return Boxed_Value(~boxed_cast<int>(eval_token(ss, node->children[0])));
+        }
+        catch (const bad_boxed_cast &) {
+            throw Eval_Error("Bitwise not condition not integer", node->children[0]);
+        }
+        /*
+         * Should be like above, but use ~
+         */
     }
 
     /**
@@ -1113,12 +1154,20 @@ namespace chaiscript
                 return eval_array_call(ss, node);
             break;
 
-            case (Token_Type::Negate) :
-                return eval_negate(ss, node);
+            case (Token_Type::Unary_Minus) :
+                return eval_unary_minus(ss, node);
+            break;
+
+            case (Token_Type::Unary_Plus) :
+                return eval_unary_plus(ss, node);
             break;
 
             case (Token_Type::Not) :
                 return eval_not(ss, node);
+            break;
+
+            case (Token_Type::Bitwise_Not) :
+                return eval_bitwise_not(ss, node);
             break;
 
             case (Token_Type::Prefix) :

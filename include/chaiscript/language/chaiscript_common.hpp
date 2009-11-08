@@ -22,9 +22,9 @@ namespace chaiscript
      * Types of AST nodes available to the parser and eval
      */
     class Token_Type { public: enum Type { Error, Int, Float, Id, Char, Str, Eol, Fun_Call, Inplace_Fun_Call, Arg_List, Variable, Equation, Var_Decl,
-        Comparison, Additive, Multiplicative, Negate, Not, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
+        Comparison, Additive, Multiplicative, Unary_Minus, Unary_Plus, Not, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
         Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Map_Pair, Value_Range,
-        Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or,
+        Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, Bitwise_Not,
         Logical_And, Logical_Or}; };
 
     namespace
@@ -34,9 +34,9 @@ namespace chaiscript
        */
       const char *token_type_to_string(int tokentype) {
         const char *token_types[] = { "Internal Parser Error", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Inplace_Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
-          "Comparison", "Additive", "Multiplicative", "Negate", "Not", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
+          "Comparison", "Additive", "Multiplicative", "Unary_Minus", "Unary_Plus", "Not", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
           "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Map_Pair", "Value_Range",
-          "Inline_Range", "Annotation", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Shift", "Equality", "Bitwise_And", "Bitwise_Xor", "Bitwise_Or",
+          "Inline_Range", "Annotation", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Shift", "Equality", "Bitwise_And", "Bitwise_Xor", "Bitwise_Or", "Bitwise_Not",
           "Logical_And", "Logical_Or"};
 
         return token_types[tokentype];
