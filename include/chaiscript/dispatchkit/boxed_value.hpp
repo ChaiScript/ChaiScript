@@ -49,12 +49,20 @@ namespace chaiscript
             return ptr->unique();
           }
 
+        template<typename T>
+          static bool is_null(boost::any *a)
+          {
+            boost::shared_ptr<T> *ptr = boost::any_cast<boost::shared_ptr<T> >(a);
+            return ptr->get() == 0;
+          }
+
         Data(const Type_Info &ti,
             const boost::any &to,
             bool tr,
-            const boost::function<bool (boost::any*)> &t_unique = boost::function<bool (boost::any*)>())
+            const boost::function<bool (boost::any*)> &t_unique = boost::function<bool (boost::any*)>(),
+            const boost::function<bool (boost::any*)> &t_is_null = boost::function<bool (boost::any*)>())
           : m_type_info(ti), m_obj(to), 
-          m_is_ref(tr), m_unique(t_unique)
+          m_is_ref(tr), m_unique(t_unique), m_is_null(t_is_null)
         {
         }
 
@@ -64,6 +72,7 @@ namespace chaiscript
           m_obj = rhs.m_obj;
           m_is_ref = rhs.m_is_ref;
           m_unique = rhs.m_unique;
+          m_is_null = rhs.m_is_null;
 
           return *this;
         }
@@ -72,6 +81,7 @@ namespace chaiscript
         boost::any m_obj;
         bool m_is_ref;
         boost::function<bool (boost::any*)> m_unique;
+        boost::function<bool (boost::any*)> m_is_null;
       };
 
       /**
@@ -111,7 +121,8 @@ namespace chaiscript
                   detail::Get_Type_Info<T>::get(), 
                   boost::any(obj), 
                   false,
-                  &Data::unique<T>)
+                  &Data::unique<T>,
+                  &Data::is_null<T>)
                 );
 
             std::map<std::pair<const void *, bool>, Data>::iterator itr
@@ -170,7 +181,8 @@ namespace chaiscript
                   detail::Get_Type_Info<T>::get(), 
                   boost::any(boost::shared_ptr<T>(new T(t))), 
                   false,
-                  &Data::unique<T>)
+                  &Data::unique<T>,
+                  &Data::is_null<T>)
                 );
 
             boost::shared_ptr<T> *ptr = boost::any_cast<boost::shared_ptr<T> >(&data->m_obj);
@@ -217,7 +229,7 @@ namespace chaiscript
           }
         }
 
-        std::map<std::pair<const void *, bool>, Data > m_ptrs;
+        std::map<std::pair<const void *, bool>, Data> m_ptrs;
         int m_cullcount;
       };
 
@@ -296,6 +308,16 @@ namespace chaiscript
       bool is_undef() const
       {
         return m_data->m_type_info.is_undef();
+      }
+
+      bool is_null() const
+      {
+        if (m_data->m_is_null)
+        {
+          return m_data->m_is_null(&m_data->m_obj);
+        } else {
+          return false;
+        }
       }
 
       boost::any get() const

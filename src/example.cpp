@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
 
   //Finally, it is possible to register any boost::function as a system function, in this 
   //way, we can, for instance add a bound member function to the system
-  chai.add(fun(&System::do_callbacks, boost::ref(system), "Bound Test"), "do_callbacks");
+  chai.add(fun(&System::do_callbacks, boost::ref(system), std::string("Bound Test")), "do_callbacks");
 
   //Call bound version of do_callbacks
   chai("do_callbacks()");
@@ -143,6 +143,8 @@ int main(int argc, char *argv[]) {
 
   log("Functor test output", boost::lexical_cast<std::string>(x));
 
+  chai.add(var(boost::shared_ptr<int>()), "nullvar");
+  chai("print(\"This should be true.\"); print(nullvar.is_null())");
 
   //Ability to create our own container types when needed. std::vector and std::map are
   //mostly supported currently
