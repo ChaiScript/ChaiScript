@@ -16,66 +16,50 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/ref.hpp>
-#include <boost/function_types/result_type.hpp>
-#include <boost/function_types/function_type.hpp>
-#include <boost/function_types/parameter_types.hpp>
-#include <boost/function_types/function_arity.hpp>
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 8 )
 #define BOOST_PP_FILENAME_1 <chaiscript/dispatchkit/bind_first.hpp>
 
-namespace chaiscript
-{
-  namespace detail
-  {
-    template<int, typename T>
-      struct bind_helper 
-      {
-        template<typename F, typename V>
-          static boost::function<T> go(const F &f, const V &v)
-          {
-            return boost::function<T>();
-          }
-      };
-
 #include BOOST_PP_ITERATE()
 
-    template<typename T>
-      struct pop_front
-      {
-        typedef typename boost::function_types::function_type<
-          typename boost::mpl::push_front<
-          typename boost::mpl::pop_front<typename
-          boost::function_types::parameter_types<T> >::type,
-          typename boost::function_types::result_type<T>::type
-            >::type
-            >::type type;
-      };
-
-    template<typename T, typename U>
-      boost::function<typename pop_front<T>::type> bind_first(T t, const U &u)
-      {
-        return bind_helper<boost::function_types::function_arity<T>::value,
-               typename pop_front<T>::type>::go(t, u);
-      }
-  }
-}
 
 # endif
 #else
 # define n BOOST_PP_ITERATION()
 # define m BOOST_PP_INC(n)
 
-
-    template<typename T>
-      struct bind_helper<m, T>
+namespace chaiscript
+{
+ 
+  template<typename Ret, typename O, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
+    boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> 
+      bind_first(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)), const O &o)
       {
-        template<typename F, typename V>
-          static boost::function<T> go(const F &f, const V &v)
-          {
-            return boost::bind(f, v BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
-          }
-      };
+        return boost::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
+      }
 
+  template<typename Ret, typename O, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
+    boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> 
+      bind_first(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param))const, const O &o)
+      {
+        return boost::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
+      }
+
+  template<typename Ret,typename O BOOST_PP_COMMA_IF(m) BOOST_PP_ENUM_PARAMS(m, typename Param) >
+    boost::function<Ret (BOOST_PP_ENUM(n, param, Param))> 
+      bind_first(Ret (*f)(BOOST_PP_ENUM_PARAMS(m, Param)), const O &o)
+      {
+        return boost::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
+      }
+
+  template<typename Ret,typename O BOOST_PP_COMMA_IF(m) BOOST_PP_ENUM_PARAMS(m, typename Param) >
+    boost::function<Ret (BOOST_PP_ENUM(n, param, Param))> 
+      bind_first(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(m, Param))> &f, const O &o)
+      {
+        return boost::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
+      }
+
+
+}
 
 #endif

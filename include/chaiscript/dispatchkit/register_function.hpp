@@ -74,13 +74,13 @@ namespace chaiscript
   template<typename T, typename Q>
     Proxy_Function fun(T t, const Q &q)
     {
-      return detail::fun_helper(detail::bind_first(t, q));
+      return detail::fun_helper(bind_first(t, q));
     }
 
   template<typename T, typename Q, typename R>
     Proxy_Function fun(T t, const Q &q, const R &r)
     {
-      return detail::fun_helper(detail::bind_first(detail::bind_first(t, q), r));
+      return detail::fun_helper(bind_first(bind_first(t, q), r));
     }
    
 }

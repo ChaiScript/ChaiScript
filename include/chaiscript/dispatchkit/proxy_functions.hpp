@@ -378,7 +378,7 @@ namespace chaiscript
  
       virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
       {
-        return detail::Do_Call<typename boost::function<Func>::result_type>::go(m_f, params);
+        return Do_Call<typename boost::function<Func>::result_type>::go(m_f, params);
       }
 
       virtual int get_arity() const

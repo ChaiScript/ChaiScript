@@ -44,30 +44,26 @@ namespace chaiscript
     int expected;
   };
 
-  namespace detail
-  {
-
-    template<typename Ret>
-      struct Do_Call
+  template<typename Ret>
+    struct Do_Call
+    {
+      template<typename Fun>
+      static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
       {
-        template<typename Fun>
-          static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
-          {
-            return Handle_Return<Ret>::handle(call_func(fun, params));
-          }
-      };
+        return Handle_Return<Ret>::handle(call_func(fun, params));
+      }
+    };
 
-    template<>
-      struct Do_Call<void>
+  template<>
+    struct Do_Call<void>
+    {
+      template<typename Fun>
+      static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
       {
-        template<typename Fun>
-          static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
-          {
-            call_func(fun, params);
-            return Handle_Return<void>::handle();
-          };
+        call_func(fun, params);
+        return Handle_Return<void>::handle();
       };
-  }
+    };
 }
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
