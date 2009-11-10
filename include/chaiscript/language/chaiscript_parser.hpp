@@ -864,7 +864,7 @@ namespace chaiscript
                 if (retval) {
                     //todo: fix this.  Hacky workaround for preventing substring matches
                     if ((input_pos != input_end) && (disallow_prevention == false) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') 
-                            || (*input_pos == '|') || (*input_pos == '&') || (*input_pos == '^') || (*input_pos == '=') || (*input_pos == '.'))) {
+                            || (*input_pos == '|') || (*input_pos == '&') || (*input_pos == '^') || (*input_pos == '=') || (*input_pos == '.') || (*input_pos == '<') || (*input_pos == '>'))) {
                         input_pos = start;
                         col = prev_col;
                         line = prev_line;
@@ -883,7 +883,7 @@ namespace chaiscript
                 if (Symbol_(s)) {
                     //todo: fix this.  Hacky workaround for preventing substring matches
                     if ((input_pos != input_end) && (disallow_prevention == false) && ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/')
-                            || (*input_pos == '|') || (*input_pos == '&') || (*input_pos == '^') || (*input_pos == '=') || (*input_pos == '.'))) {
+                            || (*input_pos == '|') || (*input_pos == '&') || (*input_pos == '^') || (*input_pos == '=') || (*input_pos == '.') || (*input_pos == '<') || (*input_pos == '>'))) {
                         input_pos = start;
                         col = prev_col;
                         line = prev_line;
@@ -1511,41 +1511,41 @@ namespace chaiscript
 
                 build_match(Token_Type::Prefix, prev_stack_top);
             }
-            else if (Char('-')) {
+            else if (Char('-', true)) {
                 retval = true;
 
                 if (!Operator(operators.size()-1)) {
-                    throw Eval_Error("Incomplete unary - expression", File_Position(line, col), filename);
+                    throw Eval_Error("Incomplete unary '-' expression", File_Position(line, col), filename);
                 }
 
-                build_match(Token_Type::Unary_Minus, prev_stack_top);
+                build_match(Token_Type::Prefix, prev_stack_top);
             }
-            else if (Char('+')) {
+            else if (Char('+', true)) {
                 retval = true;
 
                 if (!Operator(operators.size()-1)) {
-                    throw Eval_Error("Incomplete unary + expression", File_Position(line, col), filename);
+                    throw Eval_Error("Incomplete unary '+' expression", File_Position(line, col), filename);
                 }
 
-                build_match(Token_Type::Unary_Plus, prev_stack_top);
+                build_match(Token_Type::Prefix, prev_stack_top);
             }
-            else if (Char('!')) {
+            else if (Char('!', true)) {
                 retval = true;
 
                 if (!Operator(operators.size()-1)) {
                     throw Eval_Error("Incomplete '!' expression", File_Position(line, col), filename);
                 }
 
-                build_match(Token_Type::Not, prev_stack_top);
+                build_match(Token_Type::Prefix, prev_stack_top);
             }
-            else if (Char('~')) {
+            else if (Char('~', true)) {
                 retval = true;
 
                 if (!Operator(operators.size()-1)) {
                     throw Eval_Error("Incomplete '~' expression", File_Position(line, col), filename);
                 }
 
-                build_match(Token_Type::Bitwise_Not, prev_stack_top);
+                build_match(Token_Type::Prefix, prev_stack_top);
             }
 
             return retval;

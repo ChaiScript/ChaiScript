@@ -335,78 +335,6 @@ namespace chaiscript
     }
 
     /**
-     * Evaluates a unary negation
-     */
-    template <typename Eval_System>
-    Boxed_Value eval_unary_minus(Eval_System &ss, const TokenPtr &node) {
-        Boxed_Value retval = eval_token(ss, node->children[0]);
-        Param_List_Builder plb;
-        plb << retval;
-        plb << Boxed_Value(-1.0);
-
-        try {
-            return ss.call_function("*", plb);
-        }
-        catch(std::exception &){
-            throw Eval_Error("Can not find appropriate unary minus", node->children[0]);
-        }
-
-        /*
-         * Should be unary minus
-         */
-    }
-
-    /**
-     * Evaluates a unary negation
-     */
-    template <typename Eval_System>
-    Boxed_Value eval_unary_plus(Eval_System &ss, const TokenPtr &node) {
-        Boxed_Value retval = eval_token(ss, node->children[0]);
-        Param_List_Builder plb;
-        plb << retval;
-
-        try {
-            return ss.call_function("+", plb);
-        }
-        catch(std::exception &){
-            throw Eval_Error("Can not find appropriate unary plus", node->children[0]);
-        }
-
-    }
-
-    /**
-     * Evaluates a unary boolean not
-     */
-    template <typename Eval_System>
-    Boxed_Value eval_not(Eval_System &ss, const TokenPtr &node) {
-        try {
-            return Boxed_Value(!boxed_cast<bool>(eval_token(ss, node->children[0])));
-        }
-        catch (const bad_boxed_cast &) {
-            throw Eval_Error("Boolean not('!') condition not boolean", node->children[0]);
-        }
-        /*
-         * Should be like above, but use !
-         */
-    }
-
-    /**
-     * Evaluates a unary boolean not
-     */
-    template <typename Eval_System>
-    Boxed_Value eval_bitwise_not(Eval_System &ss, const TokenPtr &node) {
-        try {
-            return Boxed_Value(~boxed_cast<int>(eval_token(ss, node->children[0])));
-        }
-        catch (const bad_boxed_cast &) {
-            throw Eval_Error("Bitwise not condition not integer", node->children[0]);
-        }
-        /*
-         * Should be like above, but use ~
-         */
-    }
-
-    /**
      * Evaluates any unary prefix
      */
     template <typename Eval_System>
@@ -418,7 +346,7 @@ namespace chaiscript
             return ss.call_function(node->children[0]->text, plb);
         }
         catch(std::exception &){
-            throw Eval_Error("Can not find appropriate prefix", node->children[0]);
+            throw Eval_Error("Can not find appropriate unary '" + node->children[0]->text + "'", node->children[0]);
         }
     }
 
@@ -1152,22 +1080,6 @@ namespace chaiscript
 
             case (Token_Type::Array_Call) :
                 return eval_array_call(ss, node);
-            break;
-
-            case (Token_Type::Unary_Minus) :
-                return eval_unary_minus(ss, node);
-            break;
-
-            case (Token_Type::Unary_Plus) :
-                return eval_unary_plus(ss, node);
-            break;
-
-            case (Token_Type::Not) :
-                return eval_not(ss, node);
-            break;
-
-            case (Token_Type::Bitwise_Not) :
-                return eval_bitwise_not(ss, node);
             break;
 
             case (Token_Type::Prefix) :
