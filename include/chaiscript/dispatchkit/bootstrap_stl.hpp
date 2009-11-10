@@ -147,7 +147,7 @@ namespace chaiscript
     ModulePtr assignable_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
       basic_constructors<ContainerType>(type, m);
-      oper_assign<ContainerType>(m);
+      operators::assign<ContainerType>(m);
       return m;
     }
 
@@ -392,8 +392,8 @@ namespace chaiscript
     ModulePtr string_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
       m->add(user_type<String>(), type);
-      oper_add<String>(m);
-      oper_add_equals<String>(m);
+      operators::addition<String>(m);
+      operators::assign_sum<String>(m);
       opers_comparison<String>(m);
       random_access_container_type<String>(type, m);
       sequence_type<String>(type, m);

@@ -701,14 +701,44 @@ namespace chaiscript
       return Boxed_Value(((m_isfloat)?d:i) + ((r.m_isfloat)?r.d:r.i));
     }
 
-    Boxed_Value operator*(const Boxed_POD_Value &r) const
+    Boxed_Value operator-(const Boxed_POD_Value &r) const
     {
       if (!m_isfloat && !r.m_isfloat)
       {
-        return Boxed_Value(i * r.i);
+        return Boxed_Value(i - r.i);
       }
 
-      return Boxed_Value(((m_isfloat)?d:i) * ((r.m_isfloat)?r.d:r.i));
+      return Boxed_Value(((m_isfloat)?d:i) - ((r.m_isfloat)?r.d:r.i));
+    }
+
+    Boxed_Value operator&(const Boxed_POD_Value &r) const
+    {
+      if (!m_isfloat && !r.m_isfloat)
+      {
+        return Boxed_Value(i & r.i);
+      }
+
+      throw bad_boxed_cast("& only valid for integer types");
+    }
+
+    Boxed_Value operator^(const Boxed_POD_Value &r) const
+    {
+      if (!m_isfloat && !r.m_isfloat)
+      {
+        return Boxed_Value(i ^ r.i);
+      }
+
+      throw bad_boxed_cast("^ only valid for integer types");
+    }
+
+    Boxed_Value operator|(const Boxed_POD_Value &r) const
+    {
+      if (!m_isfloat && !r.m_isfloat)
+      {
+        return Boxed_Value(i | r.i);
+      }
+
+      throw bad_boxed_cast("| only valid for integer types");
     }
 
     Boxed_Value operator/(const Boxed_POD_Value &r) const
@@ -721,15 +751,49 @@ namespace chaiscript
       return Boxed_Value(((m_isfloat)?d:i) / ((r.m_isfloat)?r.d:r.i));
     }
 
-    Boxed_Value operator-(const Boxed_POD_Value &r) const
+    Boxed_Value operator<<(const Boxed_POD_Value &r) const
     {
       if (!m_isfloat && !r.m_isfloat)
       {
-        return Boxed_Value(i - r.i);
+        return Boxed_Value(i << r.i);
       }
 
-      return Boxed_Value(((m_isfloat)?d:i) - ((r.m_isfloat)?r.d:r.i));
+      throw bad_boxed_cast("<< only valid for integer types");
     }
+
+
+    Boxed_Value operator*(const Boxed_POD_Value &r) const
+    {
+      if (!m_isfloat && !r.m_isfloat)
+      {
+        return Boxed_Value(i * r.i);
+      }
+
+      return Boxed_Value(((m_isfloat)?d:i) * ((r.m_isfloat)?r.d:r.i));
+    }
+
+
+    Boxed_Value operator%(const Boxed_POD_Value &r) const
+    {
+      if (!m_isfloat && !r.m_isfloat)
+      {
+        return Boxed_Value(i % r.i);
+      }
+
+      throw bad_boxed_cast("\% only valid for integer types");
+    }
+
+    Boxed_Value operator>>(const Boxed_POD_Value &r) const
+    {
+      if (!m_isfloat && !r.m_isfloat)
+      {
+        return Boxed_Value(i >> r.i);
+      }
+
+      throw bad_boxed_cast(">> only valid for integer types");
+    }
+
+
 
     double d;
     boost::int64_t i;
@@ -744,6 +808,20 @@ namespace chaiscript
      */
     template<>
       struct Cast_Helper<Boxed_POD_Value>
+      {
+        typedef Boxed_POD_Value Result_Type;
+
+        static Result_Type cast(const Boxed_Value &ob)
+        {
+          return Boxed_POD_Value(ob);
+        }
+      };
+
+    /**
+     * Cast_Helper for converting from Boxed_Value to Boxed_POD_Value
+     */
+    template<>
+      struct Cast_Helper<const Boxed_POD_Value &>
       {
         typedef Boxed_POD_Value Result_Type;
 

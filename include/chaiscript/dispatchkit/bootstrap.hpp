@@ -10,6 +10,7 @@
 #include "dispatchkit.hpp"
 #include "dynamic_object.hpp"
 #include "register_function.hpp"
+#include "operators.hpp"
 
 namespace chaiscript 
 {
@@ -17,141 +18,6 @@ namespace chaiscript
   {
     namespace detail
     {
-      /**
-      * Set of helper functions for common operators
-      */
-      template<typename Ret, typename P1, typename P2>
-      Ret add(P1 p1, P2 p2)
-      {
-        return p1 + p2;
-      }
-
-      template<typename Ret, typename P1, typename P2>
-      Ret subtract(P1 p1, P2 p2)
-      {
-        return p1 - p2;
-      }
-
-      template<typename Ret, typename P1, typename P2>
-      Ret divide(P1 p1, P2 p2)
-      {
-        return p1 / p2;
-      }
-
-      template<typename Ret, typename P1, typename P2>
-      Ret multiply(P1 p1, P2 p2)
-      {
-        return p1 * p2;
-      }
-
-      template<typename Ret, typename P1, typename P2>
-      Ret modulus(P1 p1, P2 p2)
-      {
-        return p1 % p2;
-      }
-
-      template<typename Ret, typename P1, typename P2>
-      Ret shift_left(P1 p1, P2 p2)
-      {
-        return p1 << p2;
-      }
-
-      template<typename Ret, typename P1, typename P2>
-      Ret shift_right(P1 p1, P2 p2)
-      {
-        return p1 >> p2;
-      }
-
-      template<typename P1, typename P2>
-      P1 &assign(P1 &p1, const P2 &p2)
-      {
-        return (p1 = p2);
-      }
-
-      template<typename P1, typename P2>
-      bool equals(P1 p1, P2 p2)
-      {
-        return p1 == p2;
-      }
-
-      template<typename P1, typename P2>
-      bool not_equals(P1 p1, P2 p2)
-      {
-        return p1 != p2;
-      }
-
-
-      template<typename P1, typename P2>
-      bool less_than(P1 p1, P2 p2)
-      {
-        return p1 < p2;
-      }
-
-      template<typename P1, typename P2>
-      bool greater_than(P1 p1, P2 p2)
-      {
-        return p1 > p2;
-      }
-
-      template<typename P1, typename P2>
-      bool less_than_equals(P1 p1, P2 p2)
-      {
-        return p1 <= p2;
-      }
-
-      template<typename P1, typename P2>
-      bool greater_than_equals(P1 p1, P2 p2)
-      {
-        return p1 >= p2;
-      }
-
-      template<typename P1, typename P2>
-      P1 &timesequal(P1 &p1, const P2 &p2)
-      {
-        return (p1 *= p2);
-      }
-
-      template<typename P1, typename P2>
-      P1 &dividesequal(P1 &p1, const P2 &p2)
-      {
-        return (p1 /= p2);
-      }
-
-      template<typename P1, typename P2>
-      P1 &addsequal(P1 &p1, const P2 &p2)
-      {
-        return (p1 += p2);
-      }
-
-      template<typename P1, typename P2>
-      P1 &subtractsequal(P1 &p1, const P2 &p2)
-      {
-        return (p1 -= p2);
-      }
-
-      template<typename P1>
-      P1 &prefixincrement(P1 &p1)
-      {
-        return (++p1);
-      }
-
-      template<typename P1>
-      P1 &prefixdecrement(P1 &p1)
-      {
-        return (--p1);
-      }
-
-      template<typename P1>
-      P1 &prefixnegate(P1 &p1)
-      {
-        return (p1);
-      }
-
-      template<typename P1>
-      P1 &prefixnot(P1 &p1)
-      {
-        return (p1);
-      }
 
       /* Special helpers for generating generic "POD" type operators
       * The POD operators are needed for general support of C++ POD
@@ -162,6 +28,7 @@ namespace chaiscript
       template<typename P1>
       P1 &assign_pod(P1 &p1, Boxed_POD_Value v)
       {
+
         if (v.m_isfloat)
         {
           return (p1 = P1(v.d));
@@ -182,7 +49,63 @@ namespace chaiscript
       }
 
       template<typename P1>
-      P1 &timesequal_pod(P1 &p1, Boxed_POD_Value r)
+      P1 &assign_bitwise_and_pod(P1 &p1, Boxed_POD_Value r)
+      {
+        if (!r.m_isfloat)
+        {
+          return p1 &= P1(r.i);
+        }
+
+        throw bad_boxed_cast("&= only valid for integer types");
+      }
+
+      template<typename P1>
+      P1 &assign_xor_pod(P1 &p1, Boxed_POD_Value r)
+      {
+        if (!r.m_isfloat)
+        {
+          return p1 ^= P1(r.i);
+        }
+
+        throw bad_boxed_cast("^= only valid for integer types");
+      }
+
+      template<typename P1>
+      P1 &assign_bitwise_or_pod(P1 &p1, Boxed_POD_Value r)
+      {
+        if (!r.m_isfloat)
+        {
+          return p1 |= P1(r.i);
+        }
+
+        throw bad_boxed_cast("&= only valid for integer types");
+      }
+
+      template<typename P1>
+      P1 &assign_difference_pod(P1 &p1, Boxed_POD_Value r)
+      {
+        if (r.m_isfloat)
+        {
+          return p1 -= P1(r.d);
+        } else {
+          return p1 -= P1(r.i);
+        }
+      }
+
+      template<typename P1>
+      P1 &assign_left_shift_pod(P1 &p1, Boxed_POD_Value r)
+      {
+        if (!r.m_isfloat)
+        {
+          return p1 <<= P1(r.i);
+        }
+
+        throw bad_boxed_cast("<<= only valid for integer types");
+      }
+
+
+      template<typename P1>
+      P1 &assign_product_pod(P1 &p1, Boxed_POD_Value r)
       {
         if (r.m_isfloat)
         {
@@ -193,7 +116,7 @@ namespace chaiscript
       }
 
       template<typename P1>
-      P1 &dividesequal_pod(P1 &p1, Boxed_POD_Value r)
+      P1 &assign_quotient_pod(P1 &p1, Boxed_POD_Value r)
       {
         if (r.m_isfloat)
         {
@@ -204,7 +127,31 @@ namespace chaiscript
       }
 
       template<typename P1>
-      P1 &addsequal_pod(P1 &p1, Boxed_POD_Value r)
+      P1 &assign_remainder_pod(P1 &p1, Boxed_POD_Value r)
+      {
+        if (!r.m_isfloat)
+        {
+          return p1 %= P1(r.i);
+        }
+
+        throw bad_boxed_cast("%= only valid for integer types");
+      }
+
+
+      template<typename P1>
+      P1 &assign_right_shift_pod(P1 &p1, Boxed_POD_Value r)
+      {
+        if (!r.m_isfloat)
+        {
+          return p1 >>= P1(r.i);
+        }
+
+        throw bad_boxed_cast(">>= only valid for integer types");
+      }
+
+
+      template<typename P1>
+      P1 &assign_sum_pod(P1 &p1, Boxed_POD_Value r)
       {
         if (r.m_isfloat)
         {
@@ -214,223 +161,66 @@ namespace chaiscript
         }
       }
 
-      template<typename P1>
-      P1 &subtractsequal_pod(P1 &p1, Boxed_POD_Value r)
-      {
-        if (r.m_isfloat)
-        {
-          return p1 -= P1(r.d);
-        } else {
-          return p1 -= P1(r.i);
-        }
-      }
     }
 
-    /**
-    * Add canonical form of "=" for type T
-    */
-    template<typename T>
-    ModulePtr oper_equals(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::equals<const T&, const T&>), "=");
-      return m;
-    }
-
-    /**
-    * Add canonical form of "+" for type T
-    */
-    template<typename T>
-    ModulePtr oper_add(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::add<T, const T&, const T&>), "+");
-      return m;
-    }
-
-    /**
-    * Add canonical form of "+=" for type T
-    */
-    template<typename T>
-    ModulePtr oper_add_equals(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::addsequal<T, T>), "+=");
-      return m;
-    }
-
-    /**
-    * Add canonical form of "-" for type T
-    */
-    template<typename T>
-    ModulePtr oper_subtract(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::subtract<T, const T&, const T&>), "-");
-      return m;
-    }
-
-    /**
-    * Add canonical form of "/" for type T
-    */
-    template<typename T>
-    ModulePtr oper_divide(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::divide<T, const T&, const T&>), "/");
-      return m;
-    }
-
-    /**
-    * Add canonical form of "*" for type T
-    */
-    template<typename T>
-    ModulePtr oper_multiply(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::multiply<T, const T&, const T&>), "*");
-      return m;
-    }
-
-    /**
-    * Add canonical form of "!=" for type T
-    */
-    template<typename T>
-    ModulePtr oper_not_equals(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::not_equals<const T&, const T&>), "!=");
-      return m;
-    }
-
-    /**
-    * Add user defined assignment operator for T = U
-    */
-    template<typename T, typename U>
-    ModulePtr oper_assign_overload(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::assign<T,U>), "=");
-      return m;
-    }
-
-
-    /**
-    * Add canonical form of "=" for type T
-    */
-    template<typename T>
-    ModulePtr oper_assign(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::assign<T,T>), "=");
-      return m;
-    }
-
-
-    /**
-    * Add assignment operator for T = POD.
-    */
-    template<typename T>
-    ModulePtr oper_assign_pod(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::assign_pod<T>), "=");
-      return m;
-    }
-
-
-    /**
-    * Add canonical form of "<" for type T
-    */
-    template<typename T>
-    ModulePtr oper_less_than(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::less_than<const T&, const T&>), "<");
-      return m;
-    }
-
-    /**
-    * Add canonical form of ">" for type T
-    */
-    template<typename T>
-    ModulePtr oper_greater_than(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::greater_than<const T&, const T&>), ">");
-      return m;
-    }
-
-    /**
-    * Add canonical form of "<=" for type T
-    */
-    template<typename T>
-    ModulePtr oper_less_than_equals(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::less_than_equals<const T&, const T&>), "<=");
-      return m;
-    }
-
-    /**
-    * Add canonical form of ">=" for type T
-    */
-    template<typename T>
-    ModulePtr oper_greater_than_equals(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::greater_than_equals<const T&, const T&>), ">=");
-      return m;
-    }
-
-    /**
-    * Add user defined comparison operators for T and R.
-    * Examples: T < R, T == R, etc.
-    */
-    template<typename T, typename R>
-    ModulePtr opers_comparison_overload(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::equals<const T&, const R&>), "==");
-      m->add(fun(&detail::not_equals<const T&, const R&>), "!=");
-      m->add(fun(&detail::less_than<const T&, const R&>), "<");
-      m->add(fun(&detail::greater_than<const T&, const R&>), ">");
-      m->add(fun(&detail::less_than_equals<const T&, const R&>), "<=");
-      m->add(fun(&detail::greater_than_equals<const T&, const R&>), ">=");
-      return m;
-    }
-
-    /**
-    * Add canonical forms of all comparison operators for type T
-    */
     template<typename T>
     ModulePtr opers_comparison(ModulePtr m = ModulePtr(new Module()))
     {
-      opers_comparison_overload<T, T>(m);
+      operators::equal<T>(m);
+      operators::greater_than<T>(m);
+      operators::greater_than_equal<T>(m);
+      operators::less_than<T>(m);
+      operators::less_than_equal<T>(m);
+      operators::not_equal<T>(m);
       return m;
     }
 
-    /**
-    * Add all arithmetic operators that return a type of Ret, taking
-    * a lhs of T and a rhs of R, when possible.
-    * examples: Ret = T + R;
-    * ++T
-    * T *= R;
-    */
-    template<typename Ret, typename T, typename R>
-    ModulePtr opers_arithmetic_overload(ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(fun(&detail::add<Ret, T, R>), "+");
-      m->add(fun(&detail::subtract<Ret, T, R>), "-");
-      m->add(fun(&detail::divide<Ret, T, R>), "/");
-      m->add(fun(&detail::multiply<Ret, T, R>), "*");
-      m->add(fun(&detail::timesequal<T, R>), "*=");
-      m->add(fun(&detail::dividesequal<T, R>), "/=");
-      m->add(fun(&detail::subtractsequal<T, R>), "-=");
-      m->add(fun(&detail::addsequal<T, R>), "+=");
-      m->add(fun(&detail::prefixincrement<T>), "++");
-      m->add(fun(&detail::prefixdecrement<T>), "--");
-      m->add(fun(&detail::prefixnegate<T>), "-");
-      m->add(fun(&detail::prefixnot<T>), "!");
-      return m;
-    }
-
-    /**
-    * Add arithmetic assign operators for POD types:
-    * example: POD *= T, POD /= T
-    */
     template<typename T>
-    ModulePtr opers_arithmetic_modify_pod(ModulePtr m = ModulePtr(new Module()))
+    ModulePtr opers_integer_arithmetic(ModulePtr m = ModulePtr(new Module()))
     {
-      m->add(fun(&detail::timesequal_pod<T>), "*=");
-      m->add(fun(&detail::dividesequal_pod<T>), "/=");
-      m->add(fun(&detail::subtractsequal_pod<T>), "-=");
-      m->add(fun(&detail::addsequal_pod<T>), "+=");
+      operators::assign_bitwise_and<T>(m);
+      operators::assign_xor<T>(m);
+      operators::assign_bitwise_or<T>(m);
+      operators::assign_difference<T>(m);
+      operators::assign_left_shift<T>(m);
+      operators::assign_product<T>(m);
+      operators::assign_quotient<T>(m);
+      operators::assign_remainder<T>(m);
+      operators::assign_right_shift<T>(m);
+      operators::assign_sum<T>(m);
+
+      operators::prefix_decrement<T>(m);
+      operators::prefix_increment<T>(m);
+      operators::addition<T>(m);
+      operators::unary_plus<T>(m);
+      operators::subtraction<T>(m);
+      operators::unary_minus<T>(m);
+      operators::bitwise_and<T>(m);
+      operators::bitwise_compliment<T>(m);
+      operators::bitwise_xor<T>(m);
+      operators::bitwise_or<T>(m);
+      operators::division<T>(m);
+      operators::left_shift<T>(m);
+      operators::multiplication<T>(m);
+      operators::remainder<T>(m);
+      operators::right_shift<T>(m);
+      return m;
+    }
+
+    template<typename T>
+    ModulePtr opers_float_arithmetic(ModulePtr m = ModulePtr(new Module()))
+    {
+      operators::assign_difference<T>(m);
+      operators::assign_product<T>(m);
+      operators::assign_quotient<T>(m);
+      operators::assign_sum<T>(m);
+
+      operators::addition<T>(m);
+      operators::unary_plus<T>(m);
+      operators::subtraction<T>(m);
+      operators::unary_minus<T>(m);
+      operators::division<T>(m);
+      operators::multiplication<T>(m);
       return m;
     }
 
@@ -477,16 +267,6 @@ namespace chaiscript
     }
 
     /**
-    * Add canonical forms of all arithmetic operators for type T
-    */
-    template<typename T>
-    ModulePtr opers_arithmetic(ModulePtr m = ModulePtr(new Module()))
-    {
-      opers_arithmetic_overload<T, T, T>(m);
-      return m;
-    }
-
-    /**
     * to_string function for internal use. Uses ostream operator<<
     */
     template<typename Input>
@@ -506,6 +286,17 @@ namespace chaiscript
       return boost::lexical_cast<Input>(i);
     }
 
+
+    /**
+     * Add assignment operator for T = POD.
+     */
+    template<typename T>
+      ModulePtr oper_assign_pod(ModulePtr m = ModulePtr(new Module()))
+      {
+        m->add(fun(&detail::assign_pod<T>), "=");
+        return m;
+      }
+
     /**
     * Add all common functions for a POD type. All operators, and
     * common conversions
@@ -515,13 +306,49 @@ namespace chaiscript
     {
       m->add(user_type<T>(), name);
       basic_constructors<T>(name, m);
-      oper_assign<T>(m);
+      operators::assign<T>(m);
       oper_assign_pod<T>(m);
       construct_pod<T>(name, m);
-      opers_arithmetic<T>(m);
-      opers_arithmetic_modify_pod<T>(m);
+
+      m->add(fun(&detail::assign_sum_pod<T>), "+=");
+      m->add(fun(&detail::assign_difference_pod<T>), "-=");
+      m->add(fun(&detail::assign_product_pod<T>), "*=");
+      m->add(fun(&detail::assign_quotient_pod<T>), "/=");
+
       m->add(fun(&to_string<T>), "to_string");
       m->add(fun(&parse_string<T>), "to_" + name);
+      return m;
+    }
+
+    /**
+    * Add all common functions for a POD type. All operators, and
+    * common conversions
+    */
+    template<typename T>
+    ModulePtr bootstrap_integer_type(const std::string &name, ModulePtr m = ModulePtr(new Module()))
+    {
+      bootstrap_pod_type<T>(name, m);
+
+      m->add(fun(&detail::assign_bitwise_and_pod<T>), "&=");
+      m->add(fun(&detail::assign_xor_pod<T>), "^=");
+      m->add(fun(&detail::assign_bitwise_or_pod<T>), "|=");
+      m->add(fun(&detail::assign_left_shift_pod<T>), "<<=");
+      m->add(fun(&detail::assign_remainder_pod<T>), "%=");
+      m->add(fun(&detail::assign_right_shift_pod<T>), ">>=");
+
+      opers_integer_arithmetic<T>(m);
+      return m;
+    }
+
+    /**
+    * Add all common functions for a POD type. All operators, and
+    * common conversions
+    */
+    template<typename T>
+    ModulePtr bootstrap_float_type(const std::string &name, ModulePtr m = ModulePtr(new Module()))
+    {
+      bootstrap_pod_type<T>(name, m);
+      opers_float_arithmetic<T>(m);
       return m;
     }
 
@@ -599,27 +426,20 @@ namespace chaiscript
       }
 
       /**
-      * Add all comparison operators for POD types
-      */
-      static void opers_comparison_pod(ModulePtr m = ModulePtr(new Module()))
-      {
-        m->add(fun(&detail::equals<Boxed_POD_Value, Boxed_POD_Value>), "==");
-        m->add(fun(&detail::not_equals<Boxed_POD_Value, Boxed_POD_Value>), "!=");
-        m->add(fun(&detail::less_than<Boxed_POD_Value, Boxed_POD_Value>), "<");
-        m->add(fun(&detail::greater_than<Boxed_POD_Value, Boxed_POD_Value>), ">");
-        m->add(fun(&detail::less_than_equals<Boxed_POD_Value, Boxed_POD_Value>), "<=");
-        m->add(fun(&detail::greater_than_equals<Boxed_POD_Value, Boxed_POD_Value>), ">=");
-      }
-
-      /**
       * Add all arithmetic operators for PODs
       */
       static void opers_arithmetic_pod(ModulePtr m = ModulePtr(new Module()))
       {
-        m->add(fun(&detail::add<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "+");
-        m->add(fun(&detail::subtract<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "-");
-        m->add(fun(&detail::divide<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "/");
-        m->add(fun(&detail::multiply<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "*");
+        m->add(fun(&operators::addition<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "+");
+        m->add(fun(&operators::subtraction<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "-");
+        m->add(fun(&operators::bitwise_and<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "&");
+        m->add(fun(&operators::bitwise_xor<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "^");
+        m->add(fun(&operators::bitwise_or<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "|");
+        m->add(fun(&operators::division<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "/");
+        m->add(fun(&operators::left_shift<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "<<");
+        m->add(fun(&operators::multiplication<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "*");
+        m->add(fun(&operators::remainder<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "%");
+        m->add(fun(&operators::right_shift<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), ">>");
       }
 
       /**
@@ -712,8 +532,7 @@ namespace chaiscript
         m->add(fun(&Boxed_Value::is_null), "is_null");
 
         basic_constructors<bool>("bool", m);
-        oper_assign<std::string>(m);
-        oper_assign<bool>(m);
+        operators::assign<bool>(m);
 
         m->add(fun(&to_string<const std::string &>), "internal_to_string");
         m->add(fun(&Bootstrap::bool_to_string), "internal_to_string");
@@ -721,18 +540,17 @@ namespace chaiscript
         m->add(fun(&throw_exception), "throw");
         m->add(fun(&what), "what");
 
-        bootstrap_pod_type<double>("double", m);
-        bootstrap_pod_type<int>("int", m);
-        bootstrap_pod_type<size_t>("size_t", m);
-        bootstrap_pod_type<char>("char", m);
-        bootstrap_pod_type<boost::int64_t>("int64_t", m);
+        bootstrap_float_type<double>("double", m);
+        bootstrap_integer_type<int>("int", m);
+        bootstrap_integer_type<size_t>("size_t", m);
+        bootstrap_integer_type<char>("char", m);
+        bootstrap_integer_type<boost::int64_t>("int64_t", m);
 
-        opers_comparison_pod(m);
+        operators::logical_compliment<bool>(m);
+
+        opers_comparison<Boxed_POD_Value>(m);
         opers_arithmetic_pod(m);
 
-        m->add(fun(&detail::modulus<int, int, int>), "%");
-        m->add(fun(&detail::shift_left<int, int, int>), "<<");
-        m->add(fun(&detail::shift_right<int, int, int>), ">>");
 
         m->add(fun(&print), "print_string");
         m->add(fun(&println), "println_string");
