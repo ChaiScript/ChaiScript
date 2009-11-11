@@ -310,6 +310,11 @@ namespace chaiscript
         return m_data->m_type_info.is_undef();
       }
 
+      bool is_const() const
+      {
+        return m_data->m_type_info.is_const();
+      }
+
       bool is_null() const
       {
         if (m_data->m_is_null)

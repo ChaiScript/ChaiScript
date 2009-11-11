@@ -146,6 +146,12 @@ int main(int argc, char *argv[]) {
   chai.add(var(boost::shared_ptr<int>()), "nullvar");
   chai("print(\"This should be true.\"); print(nullvar.is_null())");
 
+  // test the global const action
+  chai.add_global_const(const_var(1), "constvar");
+  chai("def getvar() { return constvar; }");
+  chai("print( getvar() )");
+
+
   //Ability to create our own container types when needed. std::vector and std::map are
   //mostly supported currently
   chai.add(bootstrap::vector_type<std::vector<int> >("IntVector"));

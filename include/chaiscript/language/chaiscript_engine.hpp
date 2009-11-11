@@ -333,9 +333,9 @@ namespace chaiscript
         /**
          * Adds a shared object, that can be used by all threads, to the system
          */
-        ChaiScript_System &add_shared_object(const Boxed_Value &bv, const std::string &name)
+        ChaiScript_System &add_global_const(const Boxed_Value &bv, const std::string &name)
         {
-            engine.add_shared_object(bv, name);
+            engine.add_global_const(bv, name);
             return *this;
         }
 

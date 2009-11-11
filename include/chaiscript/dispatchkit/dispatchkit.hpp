@@ -166,6 +166,19 @@ namespace chaiscript
     virtual ~reserved_word_error() throw() {}
   };
 
+  /**
+   * Exception thrown in the case that a non-const object was added as a shared object
+   */
+  struct global_non_const : std::runtime_error
+  {
+    global_non_const() throw()
+      : std::runtime_error("a global object must be const")
+    {
+    }
+
+    virtual ~global_non_const() throw() {}
+  };
+
 
   /**
    * Main class for the dispatchkit. Handles management
@@ -238,19 +251,24 @@ namespace chaiscript
       }
 
       /**
-       * Adds a new shared object, between all the threads
+       * Adds a new global shared object, between all the threads
        */
-      void add_shared_object(const Boxed_Value &obj, const std::string &name)
+      void add_global_const(const Boxed_Value &obj, const std::string &name)
       {
         StackData &stack = get_stack_data();
         validate_object_name(name);
+        if (!obj.is_const())
+        {
+          throw global_non_const();
+        }
+
         stack.get<0>().erase(name);
         
 #ifndef CHAISCRIPT_NO_THREADS
-        boost::unique_lock<boost::shared_mutex> l(m_shared_object_mutex);
+        boost::unique_lock<boost::shared_mutex> l(m_global_object_mutex);
 #endif
 
-        m_shared_objects[name] = obj;
+        m_global_objects[name] = obj;
       }
 
       /**
@@ -353,15 +371,14 @@ namespace chaiscript
           }
         }
 
-        // Are we in the 0th stack and should check the shared objects?
-        if (stack.get<2>())
+        // Is the value we are looking for a global?
         {
 #ifndef CHAISCRIPT_NO_THREADS
-          boost::shared_lock<boost::shared_mutex> l(m_shared_object_mutex);
+          boost::shared_lock<boost::shared_mutex> l(m_global_object_mutex);
 #endif
 
-          itr = m_shared_objects.find(name);
-          if (itr != m_shared_objects.end())
+          itr = m_global_objects.find(name);
+          if (itr != m_global_objects.end())
           {
             cache[name] = itr->second;
             return itr->second;
@@ -662,7 +679,7 @@ namespace chaiscript
 
 #ifndef CHAISCRIPT_NO_THREADS
       mutable boost::shared_mutex m_mutex;
-      mutable boost::shared_mutex m_shared_object_mutex;
+      mutable boost::shared_mutex m_global_object_mutex;
 #endif
 
       struct Stack_Holder
@@ -682,7 +699,7 @@ namespace chaiscript
 
 
       std::multimap<std::string, Proxy_Function> m_functions;
-      std::map<std::string, Boxed_Value> m_shared_objects;
+      std::map<std::string, Boxed_Value> m_global_objects;
 
       Type_Name_Map m_types;
       Boxed_Value m_place_holder;
