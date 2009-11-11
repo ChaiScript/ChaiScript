@@ -1,0 +1,32 @@
+var i = 1;
+var j = 2;
+var k = 3;
+
+print(i + j);
+print(+i);
+print(i - j);
+print(-i);
+print(j & k);
+print(~j);
+print(j ^ k);
+print(i | j);
+print(j / i);
+print(i << j);
+print(j * k);
+print(k % j);
+print(j >> i);
+
+print(i &= 2);
+print(j ^= 3);
+print(j |= 2);
+print(i -= 1);
+print(j <<= 1);
+print(j *= 2);
+print(j /= 2);
+print(j %= 4);
+print(j >>= 1);
+print(j += 1);
+print(--j);
+print(++j);
+
+
