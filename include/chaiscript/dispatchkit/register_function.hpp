@@ -13,74 +13,61 @@
 #include <boost/bind.hpp>
 #include <boost/function_types/components.hpp>
 #include <boost/function_types/function_type.hpp>
+#include <boost/function_types/is_member_object_pointer.hpp>
 
 namespace chaiscript
 {
   namespace detail
   {
-    /**
-     * Helper function for register_member function
-     */
-    template<typename T, typename Class>
-      T &get_member(T Class::* m, Class *obj)
+    template<bool Object>
+      struct Fun_Helper
       {
-        return (obj->*m);
-      }
+        template<typename T>
+        static Proxy_Function go(T t)
+        {
+          return Proxy_Function(
+              new Proxy_Function_Impl<
+                  typename boost::function_types::function_type<boost::function_types::components<T> >::type> (
+                    boost::function< 
+                      typename boost::function_types::function_type<boost::function_types::components<T> >::type 
+                      >(t)));
+        }
+    };
 
-    template<typename T>
-    boost::function<T> mk_boost_fun(const boost::function<T> &f)
-    {
-      return f;
-    }
-
-    template<typename T>
-    boost::function< 
-             typename boost::function_types::function_type<boost::function_types::components<T> >::type 
-          >  mk_boost_fun(T t)
-    {
-      return 
-          boost::function< 
-             typename boost::function_types::function_type<boost::function_types::components<T> >::type 
-          >(t);
-    }
-
-    template<typename T, typename Class>
-      Proxy_Function fun_helper(T Class::* m)
+    template<>
+      struct Fun_Helper<true>
       {
-        return fun_helper(boost::function<T& (Class *)>(boost::bind(&detail::get_member<T, Class>, m, _1)));
-      }
+        template<typename T, typename Class>
+          static Proxy_Function go(T Class::* m)
+          {
+            return Proxy_Function(new Attribute_Access<T, Class>(m));
+          }
+      };
 
-
-    template<typename T>
-      Proxy_Function fun_helper(const boost::function<T> &f)
-      {
-        return Proxy_Function(new Proxy_Function_Impl<T>(f));
-      }
   }
 
   template<typename T>
     Proxy_Function fun(const boost::function<T> &f)
     {
-      return detail::fun_helper(f);
+      return Proxy_Function(new Proxy_Function_Impl<T>(f));
     }
 
   template<typename T>
     Proxy_Function fun(T t)
     {
-      return detail::fun_helper(detail::mk_boost_fun(t));
+      return detail::Fun_Helper<boost::function_types::is_member_object_pointer<T>::value>::go(t);
     }
-
 
   template<typename T, typename Q>
     Proxy_Function fun(T t, const Q &q)
     {
-      return detail::fun_helper(bind_first(t, q));
+      return fun(bind_first(t, q));
     }
 
   template<typename T, typename Q, typename R>
     Proxy_Function fun(T t, const Q &q, const R &r)
     {
-      return detail::fun_helper(bind_first(bind_first(t, q), r));
+      return fun(bind_first(bind_first(t, q), r));
     }
    
 }

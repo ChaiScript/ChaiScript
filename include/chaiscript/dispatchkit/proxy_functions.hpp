@@ -92,6 +92,7 @@ namespace chaiscript
 
             const Type_Info &ti = types[1];
 
+
             if (ti.is_undef() || vals[0].get_type_info().is_undef()
                 || ti.bare_equal(user_type<Boxed_Value>())
                 || ti.bare_equal(user_type<Boxed_POD_Value>())
@@ -405,6 +406,81 @@ namespace chaiscript
     private:
       boost::function<Func> m_f;
       Func *m_dummy_func;
+  };
+
+  /**
+   * Attribute getter Proxy_Function implementation
+   */
+  template<typename T, typename Class>
+    class Attribute_Access : public Proxy_Function_Base
+  {
+    public:
+      Attribute_Access(T Class::* t_attr)
+        : Proxy_Function_Base(param_types()),
+          m_attr(t_attr)
+      {
+      }
+
+      virtual ~Attribute_Access() {}
+
+      virtual bool operator==(const Proxy_Function_Base &t_func) const
+      {
+        try {
+          const Attribute_Access<T, Class> &aa 
+            = dynamic_cast<const Attribute_Access<T, Class> &>(t_func);
+          return m_attr == aa.m_attr;
+        } catch (const std::bad_cast &) {
+          return false;
+        }
+      }
+ 
+      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
+      {
+        if (params.size() == 1)
+        {
+          const Boxed_Value &bv = params[0];
+          if (bv.is_const())
+          {
+            const Class *o = boxed_cast<const Class *>(bv);
+            return Boxed_Value( boost::ref(o->*m_attr) );
+          } else {
+            Class *o = boxed_cast<Class *>(bv);
+            return Boxed_Value( boost::ref(o->*m_attr) );
+          }
+        } else {
+          throw arity_error(params.size(), 1);
+        }       
+      }
+
+      virtual int get_arity() const
+      {
+        return 1;
+      }
+
+      virtual bool call_match(const std::vector<Boxed_Value> &vals) const
+      {
+        if (vals.size() != 1)
+        {
+          return false;
+        }
+
+        return vals[0].get_type_info().bare_equal(user_type<Class>());
+      }
+
+      virtual std::string annotation() const
+      {
+        return "";
+      }
+
+    private:
+      static std::vector<Type_Info> param_types()
+      {
+        std::vector<Type_Info> v;
+        v.push_back(user_type<T>());
+        v.push_back(user_type<Class>());
+        return v;
+      }
+      T Class::* m_attr;
   };
 
   /**
