@@ -87,6 +87,19 @@ namespace chaiscript
    * Used internally for handling a return value from a Proxy_Function call
    */
   template<>
+    struct Handle_Return<const Boxed_Value &>
+    {
+      static Boxed_Value handle(const Boxed_Value &r)
+      {
+        return r;
+      }
+    };
+
+
+  /**
+   * Used internally for handling a return value from a Proxy_Function call
+   */
+  template<>
     struct Handle_Return<void>
     {
       static Boxed_Value handle()
