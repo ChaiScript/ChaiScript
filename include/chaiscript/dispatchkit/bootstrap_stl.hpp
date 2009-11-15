@@ -127,7 +127,7 @@ namespace chaiscript
     * http://www.sgi.com/tech/stl/RandomAccessContainer.html
     */
     template<typename ContainerType>
-    ModulePtr random_access_container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    ModulePtr random_access_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
     {
       typedef typename ContainerType::reference(ContainerType::*indexoper)(size_t);
 
@@ -156,7 +156,7 @@ namespace chaiscript
     * http://www.sgi.com/tech/stl/Container.html
     */
     template<typename ContainerType>
-    ModulePtr container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    ModulePtr container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
     {
       m->add(fun<size_t (ContainerType::*)() const>(&ContainerType::size), "size");
       m->add(fun<bool (ContainerType::*)() const>(&ContainerType::empty), "empty");
@@ -217,7 +217,7 @@ namespace chaiscript
     * http://www.sgi.com/tech/stl/Sequence.html
     */
     template<typename ContainerType>
-    ModulePtr sequence_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    ModulePtr sequence_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
     {
       std::string insert_name;
       if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value))
@@ -238,7 +238,7 @@ namespace chaiscript
     * http://www.sgi.com/tech/stl/BackInsertionSequence.html
     */
     template<typename ContainerType>
-    ModulePtr back_insertion_sequence_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    ModulePtr back_insertion_sequence_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
     {
       typedef typename ContainerType::reference (ContainerType::*backptr)();
 
@@ -317,7 +317,7 @@ namespace chaiscript
     * http://www.sgi.com/tech/stl/UniqueAssociativeContainer.html
     */
     template<typename ContainerType>
-    ModulePtr unique_associative_container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    ModulePtr unique_associative_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
     {
       m->add(fun<size_t (ContainerType::*)(const typename ContainerType::key_type &) const>(&ContainerType::count), "count");
 

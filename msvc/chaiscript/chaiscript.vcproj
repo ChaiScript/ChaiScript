@@ -190,6 +190,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\..\include\chaiscript\dispatchkit\bind_first.hpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\include\chaiscript\dispatchkit\bootstrap.hpp"
 				>
 			</File>
@@ -243,6 +247,10 @@
 			</File>
 			<File
 				RelativePath="..\..\include\chaiscript\dispatchkit\handle_return.hpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\include\chaiscript\dispatchkit\operators.hpp"
 				>
 			</File>
 			<File
