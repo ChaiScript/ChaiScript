@@ -345,24 +345,32 @@ namespace chaiscript
             typename Eval_Engine::State engine_state;
         };
 
+        /**
+         * Returns a state object that represents the current
+         * set of loaded files, the set of global variables and
+         * the set of initialized functions
+         */
         State get_state()
         {
-          boost::lock_guard<boost::recursive_mutex> l(use_mutex);
-          boost::shared_lock<boost::shared_mutex> l2(mutex);
+            boost::lock_guard<boost::recursive_mutex> l(use_mutex);
+            boost::shared_lock<boost::shared_mutex> l2(mutex);
 
-          State s;
-          s.loaded_files = loaded_files;
-          s.engine_state = engine.get_state();
-          return s;
+            State s;
+            s.loaded_files = loaded_files;
+            s.engine_state = engine.get_state();
+            return s;
         }
 
+        /**
+         * Restores the state from a saved State object.
+         */
         void set_state(const State &t_state)
         {
-          boost::lock_guard<boost::recursive_mutex> l(use_mutex);
-          boost::shared_lock<boost::shared_mutex> l2(mutex);
+            boost::lock_guard<boost::recursive_mutex> l(use_mutex);
+            boost::shared_lock<boost::shared_mutex> l2(mutex);
 
-          loaded_files = t_state.loaded_files;
-          engine.set_state(t_state.engine_state);
+            loaded_files = t_state.loaded_files;
+            engine.set_state(t_state.engine_state);
         }
 
         /**
