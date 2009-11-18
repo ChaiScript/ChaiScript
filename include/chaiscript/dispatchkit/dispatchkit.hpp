@@ -192,6 +192,14 @@ namespace chaiscript
       typedef boost::tuples::tuple<std::map<std::string, Boxed_Value>, std::deque<Scope>, bool> StackData;
       typedef boost::shared_ptr<StackData> Stack;
 
+      struct State
+      {
+        std::multimap<std::string, Proxy_Function> m_functions;
+        std::map<std::string, Boxed_Value> m_global_objects;
+        Type_Name_Map m_types;
+        std::set<std::string> m_reserved_words;
+      };
+
       Dispatch_Engine()
         : m_place_holder(boost::shared_ptr<Placeholder_Object>(new Placeholder_Object()))
       {
@@ -268,7 +276,7 @@ namespace chaiscript
         boost::unique_lock<boost::shared_mutex> l(m_global_object_mutex);
 #endif
 
-        m_global_objects[name] = obj;
+        m_state.m_global_objects[name] = obj;
       }
 
       /**
@@ -334,7 +342,7 @@ namespace chaiscript
         boost::shared_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-        get_function_cache() = m_functions;
+        get_function_cache() = m_state.m_functions;
       }
 
       /**
@@ -377,8 +385,8 @@ namespace chaiscript
           boost::shared_lock<boost::shared_mutex> l(m_global_object_mutex);
 #endif
 
-          itr = m_global_objects.find(name);
-          if (itr != m_global_objects.end())
+          itr = m_state.m_global_objects.find(name);
+          if (itr != m_state.m_global_objects.end())
           {
             cache[name] = itr->second;
             return itr->second;
@@ -407,7 +415,7 @@ namespace chaiscript
         boost::unique_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-        m_types.insert(std::make_pair(name, ti));
+        m_state.m_types.insert(std::make_pair(name, ti));
       }
 
       /**
@@ -419,9 +427,9 @@ namespace chaiscript
         boost::shared_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-        Type_Name_Map::const_iterator itr = m_types.find(name);
+        Type_Name_Map::const_iterator itr = m_state.m_types.find(name);
 
-        if (itr != m_types.end())
+        if (itr != m_state.m_types.end())
         {
           return itr->second;
         }
@@ -440,8 +448,8 @@ namespace chaiscript
         boost::shared_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-        for (Type_Name_Map::const_iterator itr = m_types.begin();
-             itr != m_types.end();
+        for (Type_Name_Map::const_iterator itr = m_state.m_types.begin();
+             itr != m_state.m_types.end();
              ++itr)
         {
           if (itr->second.bare_equal(ti))
@@ -462,7 +470,7 @@ namespace chaiscript
         boost::shared_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-        return std::vector<std::pair<std::string, Type_Info> >(m_types.begin(), m_types.end());
+        return std::vector<std::pair<std::string, Type_Info> >(m_state.m_types.begin(), m_state.m_types.end());
       }
 
       /**
@@ -501,7 +509,7 @@ namespace chaiscript
         boost::unique_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-        m_reserved_words.insert(name);
+        m_state.m_reserved_words.insert(name);
       }
 
       Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params) const
@@ -616,6 +624,26 @@ namespace chaiscript
         return get_type_name(obj.get_type_info());
       }
 
+      State get_state()
+      {
+#ifndef CHAISCRIPT_NO_THREADS
+        boost::unique_lock<boost::shared_mutex> l(m_mutex);
+        boost::unique_lock<boost::shared_mutex> l2(m_global_object_mutex);
+#endif
+
+        return m_state;
+      }
+
+      void set_state(const State &t_state)
+      {
+#ifndef CHAISCRIPT_NO_THREADS
+        boost::unique_lock<boost::shared_mutex> l(m_mutex);
+        boost::unique_lock<boost::shared_mutex> l2(m_global_object_mutex);
+#endif
+
+        m_state = t_state;
+      }
+
 
     private:
       /**
@@ -642,7 +670,7 @@ namespace chaiscript
         boost::shared_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-        if (m_reserved_words.find(name) != m_reserved_words.end())
+        if (m_state.m_reserved_words.find(name) != m_state.m_reserved_words.end())
         {
           throw reserved_word_error(name);
         }
@@ -660,7 +688,7 @@ namespace chaiscript
 #endif
 
         std::pair<std::multimap<std::string, Proxy_Function >::const_iterator, std::multimap<std::string, Proxy_Function >::const_iterator> range
-          = m_functions.equal_range(t_name);
+          = m_state.m_functions.equal_range(t_name);
 
         while (range.first != range.second)
         {
@@ -671,7 +699,7 @@ namespace chaiscript
           ++range.first;
         }
 
-        m_functions.insert(std::make_pair(t_name, f));
+        m_state.m_functions.insert(std::make_pair(t_name, f));
         get_function_cache().insert(std::make_pair(t_name, f));
 
         return true;
@@ -698,13 +726,9 @@ namespace chaiscript
       chaiscript::threading::Thread_Storage<Stack_Holder> m_stack_holder;
 
 
-      std::multimap<std::string, Proxy_Function> m_functions;
-      std::map<std::string, Boxed_Value> m_global_objects;
+      State m_state;
 
-      Type_Name_Map m_types;
       Boxed_Value m_place_holder;
-
-      std::set<std::string> m_reserved_words;
   };
 
 }

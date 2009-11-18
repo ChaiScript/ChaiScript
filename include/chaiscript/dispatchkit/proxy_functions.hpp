@@ -442,11 +442,10 @@ namespace chaiscript
           if (bv.is_const())
           {
             const Class *o = boxed_cast<const Class *>(bv);
-            return Handle_Return<typename boost::add_const<typename boost::add_reference<T>::type>::type>::handle(o->*m_attr);
+            return Handle_Return<const typename boost::add_reference<T>::type>::handle(o->*m_attr);
           } else {
             Class *o = boxed_cast<Class *>(bv);
             return Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
-//            return Boxed_Value( boost::ref(o->*m_attr) );
           }
         } else {
           throw arity_error(params.size(), 1);
