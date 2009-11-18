@@ -46,6 +46,16 @@ namespace chaiscript
         return Boxed_Value(r);
       }
     };
+  
+  template<typename Ret>
+    struct Handle_Return<const Ret &>
+    {
+      static Boxed_Value handle(const Ret &r)
+      {
+        return Boxed_Value(boost::cref(r));
+      }
+    };
+
 
   /**
    * Used internally for handling a return value from a Proxy_Function call
@@ -56,6 +66,11 @@ namespace chaiscript
       static Boxed_Value handle(Ret &r)
       {
         return Boxed_Value(boost::ref(r));
+      }
+
+      static Boxed_Value handle(const Ret &r)
+      {
+        return Boxed_Value(boost::cref(r));
       }
     };
 
