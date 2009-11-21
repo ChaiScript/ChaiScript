@@ -78,17 +78,14 @@ namespace chaiscript
         };
 
         Loadable_Module(const std::string &t_module_name, const std::string &t_filename)
-          : m_dlmodule(t_filename), m_func(m_dlmodule, "create_chaiscript_module_" + t_module_name)
+          : m_dlmodule(t_filename), m_func(m_dlmodule, "create_chaiscript_module_" + t_module_name),
+            m_moduleptr(m_func.m_symbol())
         {
-        }
-
-        ModulePtr get()
-        {
-          return m_func.m_symbol();
         }
 
         DLModule m_dlmodule;
         DLSym<Create_Module_Func> m_func;
+        ModulePtr m_moduleptr;
     };
 #else
 
@@ -188,17 +185,14 @@ namespace chaiscript
         };
 
         Loadable_Module(const std::string &t_module_name, const std::string &t_filename)
-          : m_dlmodule(t_filename), m_func(m_dlmodule, "create_chaiscript_module_" + t_module_name)
+          : m_dlmodule(t_filename), m_func(m_dlmodule, "create_chaiscript_module_" + t_module_name),
+            m_moduleptr(m_func.m_symbol());
         {
-        }
-
-        ModulePtr get()
-        {
-          return m_func.m_symbol();
         }
 
         DLModule m_dlmodule;
         DLSym<Create_Module_Func> m_func;
+        ModulePtr m_moduleptr;
     };
 
 #else
@@ -229,6 +223,7 @@ namespace chaiscript
 
         std::set<std::string> loaded_files;
         std::map<std::string, Loadable_Module_Ptr> loaded_modules;
+        std::set<std::string> active_loaded_modules;
 
         Eval_Engine engine;
 
@@ -343,6 +338,7 @@ namespace chaiscript
         {
             std::set<std::string> loaded_files;
             typename Eval_Engine::State engine_state;
+            std::set<std::string> active_loaded_modules;
         };
 
         /**
@@ -358,6 +354,7 @@ namespace chaiscript
             State s;
             s.loaded_files = loaded_files;
             s.engine_state = engine.get_state();
+            s.active_loaded_modules = active_loaded_modules;
             return s;
         }
 
@@ -370,6 +367,7 @@ namespace chaiscript
             boost::shared_lock<boost::shared_mutex> l2(mutex);
 
             loaded_files = t_state.loaded_files;
+            active_loaded_modules = t_state.active_loaded_modules;
             engine.set_state(t_state.engine_state);
         }
 
@@ -436,7 +434,11 @@ namespace chaiscript
             {
                 Loadable_Module_Ptr lm(new Loadable_Module(t_module_name, t_filename));
                 loaded_modules[t_module_name] = lm;
-                add(lm->get());
+                active_loaded_modules.insert(t_module_name);
+                add(lm->m_moduleptr);
+            } else if (active_loaded_modules.count(t_module_name) == 0) {
+                active_loaded_modules.insert(t_module_name);
+                add(loaded_modules[t_module_name]->m_moduleptr);
             } else {
                 engine.sync_cache();
             }
