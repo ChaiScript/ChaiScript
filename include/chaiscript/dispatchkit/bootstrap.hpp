@@ -530,6 +530,9 @@ namespace chaiscript
 
         m->add(fun(&Boxed_Value::is_undef), "is_undef");
         m->add(fun(&Boxed_Value::is_null), "is_null");
+        m->add(fun(&Boxed_Value::is_const), "is_const");
+        m->add(fun(&Boxed_Value::is_ref), "is_reference");
+        m->add(fun(&Boxed_Value::is_pointer), "is_pointer");
 
         basic_constructors<bool>("bool", m);
         operators::assign<bool>(m);

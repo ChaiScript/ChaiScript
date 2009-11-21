@@ -1,0 +1,7 @@
+print(1.is_const());
+print(1.is_reference());
+print(1.is_pointer());
+print(1.is_null());
+print(1.is_undef());
+var i;
+print(i.is_undef());

@@ -335,6 +335,12 @@ namespace chaiscript
         return m_data->m_is_ref;
       }
 
+      bool is_pointer() const
+      {
+        return !is_ref();
+      }
+
+
     private:
       boost::shared_ptr<Data> m_data;
   };
