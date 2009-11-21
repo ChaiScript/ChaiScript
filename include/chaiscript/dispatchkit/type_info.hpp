@@ -87,6 +87,17 @@ namespace chaiscript
       bool is_reference() const { return m_is_reference; }
       bool is_void() const { return m_is_void; }
       bool is_undef() const { return m_is_undef || m_bare_type_info == 0; }
+      bool is_pointer() const { return m_is_pointer; }
+
+      std::string name() const
+      {
+        if (m_type_info)
+        {
+          return m_type_info->name();
+        } else {
+          return "";
+        }
+      }
 
       std::string bare_name() const
       {

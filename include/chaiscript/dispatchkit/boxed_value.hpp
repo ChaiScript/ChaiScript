@@ -315,6 +315,11 @@ namespace chaiscript
         return m_data->m_type_info.is_const();
       }
 
+      bool is_type(const Type_Info &ti) const
+      {
+        return m_data->m_type_info.bare_equal(ti);
+      }
+
       bool is_null() const
       {
         if (m_data->m_is_null)

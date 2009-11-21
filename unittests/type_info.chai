@@ -1,0 +1,10 @@
+print(string_type.name());
+print(string_type.is_type_const());
+print(string_type.is_type_reference());
+print(string_type.is_type_void());
+print(string_type.is_type_undef());
+print(string_type.is_type_pointer());
+print("string".get_type_info().name());
+print(string_type.bare_equal("string".get_type_info()));
+
+print("bob".is_type(string_type));

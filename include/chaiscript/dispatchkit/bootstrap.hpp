@@ -528,11 +528,28 @@ namespace chaiscript
         m->add(fun(&Dynamic_Object::get_attr), "get_attr");
         m->eval("def Dynamic_Object::clone() { var new_o := Dynamic_Object(this.get_type_name()); for_each(this.get_attrs(), bind(fun(new_o, x) { new_o.get_attr(x.first) = x.second; }, new_o, _) ); return new_o; }");
 
-        m->add(fun(&Boxed_Value::is_undef), "is_undef");
-        m->add(fun(&Boxed_Value::is_null), "is_null");
-        m->add(fun(&Boxed_Value::is_const), "is_const");
-        m->add(fun(&Boxed_Value::is_ref), "is_reference");
-        m->add(fun(&Boxed_Value::is_pointer), "is_pointer");
+        m->add(fun(&Boxed_Value::is_undef), "is_var_undef");
+        m->add(fun(&Boxed_Value::is_null), "is_var_null");
+        m->add(fun(&Boxed_Value::is_const), "is_var_const");
+        m->add(fun(&Boxed_Value::is_ref), "is_var_reference");
+        m->add(fun(&Boxed_Value::is_pointer), "is_var_pointer");
+        m->add(fun(&Boxed_Value::is_type), "is_type");
+
+        m->add(fun(&Boxed_Value::get_type_info), "get_type_info");
+        m->add(user_type<Type_Info>(), "Type_Info");
+
+
+        operators::equal<Type_Info>(m);
+
+        m->add(fun(&Type_Info::is_const), "is_type_const");
+        m->add(fun(&Type_Info::is_reference), "is_type_reference");
+        m->add(fun(&Type_Info::is_void), "is_type_void");
+        m->add(fun(&Type_Info::is_undef), "is_type_undef");
+        m->add(fun(&Type_Info::is_pointer), "is_type_pointer");
+        m->add(fun(&Type_Info::name), "cpp_name");
+        m->add(fun(&Type_Info::bare_name), "cpp_bare_name");
+        m->add(fun(&Type_Info::bare_equal), "bare_equal");
+
 
         basic_constructors<bool>("bool", m);
         operators::assign<bool>(m);

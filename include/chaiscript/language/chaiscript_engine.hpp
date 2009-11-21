@@ -535,6 +535,8 @@ namespace chaiscript
             engine.add(fun(&Eval_Engine::type_name, boost::ref(engine)), "type_name");
             engine.add(fun(&Eval_Engine::function_exists, boost::ref(engine)), "function_exists");
 
+            engine.add(fun(&Eval_Engine::get_type_name, boost::ref(engine)), "name");
+
 
             typedef void (ChaiScript_System<Eval_Engine>::*load_mod_1)(const std::string&);
             typedef void (ChaiScript_System<Eval_Engine>::*load_mod_2)(const std::string&, const std::string&);

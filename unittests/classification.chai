@@ -1,7 +1,7 @@
-print(1.is_const());
-print(1.is_reference());
-print(1.is_pointer());
-print(1.is_null());
-print(1.is_undef());
+print(1.is_var_const());
+print(1.is_var_reference());
+print(1.is_var_pointer());
+print(1.is_var_null());
+print(1.is_var_undef());
 var i;
-print(i.is_undef());
+print(i.is_var_undef());

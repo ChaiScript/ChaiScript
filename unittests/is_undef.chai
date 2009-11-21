@@ -1,4 +1,4 @@
 var i;
-print(i.is_undef());
+print(i.is_var_undef());
 i = 5;
-print(i.is_undef());
+print(i.is_var_undef());

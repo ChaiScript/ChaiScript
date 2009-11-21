@@ -43,6 +43,7 @@ namespace chaiscript
         return *this;
       }
 
+
       //Add a bit of chaiscript to eval during module implementation
       Module &eval(const std::string &str)
       {
@@ -50,6 +51,11 @@ namespace chaiscript
         return *this;
       }
 
+      Module &add(const boost::shared_ptr<Module> &m)
+      {
+        m->apply(*this, *this);
+        return *m;
+      }
 
       template<typename Eval, typename Engine>
         void apply(Eval &t_eval, Engine &t_engine) const
@@ -411,6 +417,8 @@ namespace chaiscript
        */
       void add(const Type_Info &ti, const std::string &name)
       {
+        add_global_const(const_var(ti), name + "_type");
+       
 #ifndef CHAISCRIPT_NO_THREADS
         boost::unique_lock<boost::shared_mutex> l(m_mutex);
 #endif
