@@ -182,7 +182,7 @@ namespace chaiscript
                             retval = ss.call_function(node->children[i+1]->text, plb);
                         }
                         catch(const dispatch_error &){
-                            throw Eval_Error("Mismatched types in equation", node->children[i+1]);
+                            throw Eval_Error(std::string("Mismatched types in equation") + (lhs.is_const()?", lhs is const.":"."), node->children[i+1]);
                         }
                     }
                     catch(const dispatch_error &){

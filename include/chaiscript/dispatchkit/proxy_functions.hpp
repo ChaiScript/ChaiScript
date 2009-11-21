@@ -496,6 +496,11 @@ namespace chaiscript
     {
     }
 
+    dispatch_error(bool is_const) throw()
+      : std::runtime_error(std::string("No matching function to dispatch to") + (is_const?", parameter is const":""))
+      {
+      }
+
     virtual ~dispatch_error() throw() {}
   };
 
@@ -526,7 +531,7 @@ namespace chaiscript
       ++begin;
     }
 
-    throw dispatch_error();
+    throw dispatch_error(plist.empty()?false:plist[0].is_const());
   }
 
   /**
