@@ -171,7 +171,9 @@ namespace chaiscript
             }
             else if (Symbol_(singleline_comment.c_str())) {
                 while (input_pos != input_end) {
-                    if (Eol_()) {
+                    if (Symbol_("\r\n") || Char_('\n')) {
+                        ++line;
+                        col = 1;
                         break;
                     }
                     else {
