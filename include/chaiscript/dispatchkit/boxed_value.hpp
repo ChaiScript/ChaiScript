@@ -711,7 +711,7 @@ namespace chaiscript
     {
       if (!m_isfloat && !r.m_isfloat)
       {
-        return Boxed_Value(i + r.i);
+        return smart_size(i + r.i);
       }
 
       return Boxed_Value(((m_isfloat)?d:i) + ((r.m_isfloat)?r.d:r.i));
@@ -721,7 +721,7 @@ namespace chaiscript
     {
       if (!m_isfloat && !r.m_isfloat)
       {
-        return Boxed_Value(i - r.i);
+        return smart_size(i - r.i);
       }
 
       return Boxed_Value(((m_isfloat)?d:i) - ((r.m_isfloat)?r.d:r.i));
@@ -761,7 +761,7 @@ namespace chaiscript
     {
       if (!m_isfloat && !r.m_isfloat)
       {
-        return Boxed_Value(i / r.i);
+        return smart_size(i / r.i);
       }
 
       return Boxed_Value(((m_isfloat)?d:i) / ((r.m_isfloat)?r.d:r.i));
@@ -771,7 +771,7 @@ namespace chaiscript
     {
       if (!m_isfloat && !r.m_isfloat)
       {
-        return Boxed_Value(i << r.i);
+        return smart_size(i << r.i);
       }
 
       throw bad_boxed_cast("<< only valid for integer types");
@@ -782,7 +782,7 @@ namespace chaiscript
     {
       if (!m_isfloat && !r.m_isfloat)
       {
-        return Boxed_Value(i * r.i);
+        return smart_size(i * r.i);
       }
 
       return Boxed_Value(((m_isfloat)?d:i) * ((r.m_isfloat)?r.d:r.i));
@@ -793,7 +793,7 @@ namespace chaiscript
     {
       if (!m_isfloat && !r.m_isfloat)
       {
-        return Boxed_Value(i % r.i);
+        return smart_size(i % r.i);
       }
 
       throw bad_boxed_cast("% only valid for integer types");
@@ -803,10 +803,21 @@ namespace chaiscript
     {
       if (!m_isfloat && !r.m_isfloat)
       {
-        return Boxed_Value(i >> r.i);
+        return smart_size(i >> r.i);
       }
 
       throw bad_boxed_cast(">> only valid for integer types");
+    }
+
+    Boxed_Value smart_size(boost::int64_t i) const
+    {
+      if (i < std::numeric_limits<int>::min()
+          || i > std::numeric_limits<int>::max())
+      {
+        return Boxed_Value(i);
+      } else {
+        return Boxed_Value(static_cast<int>(i));
+      }
     }
 
 
