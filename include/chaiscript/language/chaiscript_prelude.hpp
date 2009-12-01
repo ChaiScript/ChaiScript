@@ -282,27 +282,27 @@ def zip(x, y) { \n\
 }\n\
 # Returns the position of the second value string in the first value string\n\
 def string::find(substr) : is_type(substr, "string") { \n\
-  int(find(this, substr, size_t(0))); \n\
+  int(find(this, substr, 0)); \n\
 } \n\
 # Returns the position of last match of the second value string in the first value string\n\
 def string::rfind(substr) : is_type(substr, "string") { \n\
-  int(rfind(this, substr, size_t(-1))); \n\
+  int(rfind(this, substr, -1)); \n\
 } \n\
 # Returns the position of the first match of elements in the second value string in the first value string\n\
 def string::find_first_of(list) : is_type(list, "string") { \n\
-  int(find_first_of(this, list, size_t(0))); \n\
+  int(find_first_of(this, list, 0)); \n\
 } \n\
 # Returns the position of the last match of elements in the second value string in the first value string\n\
 def string::find_last_of(list) : is_type(list, "string") { \n\
-  int(find_last_of(this, list, size_t(-1))); \n\
+  int(find_last_of(this, list, -1)); \n\
 } \n\
 # Returns the position of the first non-matching element in the second value string in the first value string\n\
 def string::find_first_not_of(list) : is_type(list, "string") { \n\
-  int(find_first_not_of(this, list, size_t(0))); \n\
+  int(find_first_not_of(this, list, 0)); \n\
 } \n\
 # Returns the position of the last non-matching element in the second value string in the first value string\n\
 def string::find_last_not_of(list) : is_type(list, "string") { \n\
-  int(find_last_not_of(this, list, size_t(-1))); \n\
+  int(find_last_not_of(this, list, -1)); \n\
 } \n\
 def string::ltrim() { \n\
   drop_while(this, fun(x) { x == ' ' || x == '\t' }); \n\

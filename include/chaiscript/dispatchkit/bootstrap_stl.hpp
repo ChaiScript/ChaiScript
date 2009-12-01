@@ -158,7 +158,7 @@ namespace chaiscript
     template<typename ContainerType>
     ModulePtr container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
     {
-      m->add(fun<size_t (ContainerType::*)() const>(&ContainerType::size), "size");
+      m->add(fun(boost::function<int (const ContainerType *)>(&ContainerType::size)), "size");
       m->add(fun<bool (ContainerType::*)() const>(&ContainerType::empty), "empty");
       m->add(fun<void (ContainerType::*)()>(&ContainerType::clear), "clear");
 
@@ -319,7 +319,8 @@ namespace chaiscript
     template<typename ContainerType>
     ModulePtr unique_associative_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
     {
-      m->add(fun<size_t (ContainerType::*)(const typename ContainerType::key_type &) const>(&ContainerType::count), "count");
+//      m->add(fun<size_t (ContainerType::*)(const typename ContainerType::key_type &) const>(&ContainerType::count), "count");
+      m->add(fun(boost::function<int (const ContainerType *, const typename ContainerType::key_type &)>(&ContainerType::count)), "count");
 
       return m;
     }
@@ -412,13 +413,16 @@ namespace chaiscript
       }
       m->add(fun(&String::push_back), push_back_name);
 
-      typedef typename String::size_type (String::*find_func)(const String &, typename String::size_type) const;
-      m->add(fun(static_cast<find_func>(&String::find)), "find");
-      m->add(fun(static_cast<find_func>(&String::rfind)), "rfind");
-      m->add(fun(static_cast<find_func>(&String::find_first_of)), "find_first_of");
-      m->add(fun(static_cast<find_func>(&String::find_last_of)), "find_last_of");
-      m->add(fun(static_cast<find_func>(&String::find_first_not_of)), "find_first_not_of");
-      m->add(fun(static_cast<find_func>(&String::find_last_not_of)), "find_last_not_of");
+      typedef typename String::size_type (String::*find_func_ptr)(const String &, typename String::size_type) const;
+
+      typedef boost::function<int (const String *, const String &, int)> find_func;
+
+      m->add(fun(find_func(static_cast<find_func_ptr>(&String::find))), "find");
+      m->add(fun(find_func(static_cast<find_func_ptr>(&String::rfind))), "rfind");
+      m->add(fun(find_func(static_cast<find_func_ptr>(&String::find_first_of))), "find_first_of");
+      m->add(fun(find_func(static_cast<find_func_ptr>(&String::find_last_of))), "find_last_of");
+      m->add(fun(find_func(static_cast<find_func_ptr>(&String::find_first_not_of))), "find_first_not_of");
+      m->add(fun(find_func(static_cast<find_func_ptr>(&String::find_last_not_of))), "find_last_not_of");
 
       return m;
     }
