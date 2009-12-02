@@ -982,9 +982,10 @@ namespace chaiscript
     Boxed_Value eval_block(Eval_System &ss, const TokenPtr &node) {
         Boxed_Value retval;
         unsigned int i;
+        unsigned int num_children = node->children.size();
 
         ss.new_scope();
-        for (i = 0; i < node->children.size(); ++i) {
+        for (i = 0; i < num_children; ++i) {
             try {
                 retval = eval_token(ss, node->children[i]);
             }

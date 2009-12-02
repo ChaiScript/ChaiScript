@@ -1586,7 +1586,6 @@ namespace chaiscript
                     if (Operator_Helper(precedence)) {
                         do {
                             if (!Operator(precedence+1)) {
-                                std::cout << std::string(input_pos, input_end);
                                 throw Eval_Error("Incomplete " + std::string(token_type_to_string(operators[precedence])) + " expression",
                                         File_Position(line, col), filename);
                             }

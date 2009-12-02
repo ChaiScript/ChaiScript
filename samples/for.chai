@@ -2,11 +2,11 @@ for (var i = 0; i < 10; ++i) {
 	print(i)
 }
 
-for (i = 10; i >= 0; i -= 2) {
+for (var i = 10; i >= 0; i -= 2) {
 	print(i)
 }
 
-i = 0
+var i = 0
 
 for (; i < 5; ++i) {
 	print(i)
