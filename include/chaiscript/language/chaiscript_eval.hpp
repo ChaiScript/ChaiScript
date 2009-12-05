@@ -42,12 +42,15 @@ namespace chaiscript
      */
     template <typename Eval_System>
     Boxed_Value eval_file(Eval_System &ss, const TokenPtr &node) {
-        Boxed_Value retval;
-        unsigned int i;
-        for (i = 0; i < node->children.size(); ++i) {
-            retval = eval_token(ss, node->children[i]);
+        const unsigned int size = node->children.size(); 
+        for (unsigned int i = 0; i < size; ++i) {
+            const Boxed_Value &retval = eval_token(ss, node->children[i]);
+            if (i + 1 == size)
+            {
+                return retval;
+            }
         }
-        return retval;
+        return Boxed_Value();
     }
 
     template <typename Eval_System>
@@ -251,12 +254,12 @@ namespace chaiscript
     Boxed_Value eval_logical(Eval_System &ss, const TokenPtr &node) {
         unsigned int i;
 
-        Boxed_Value retval = eval_token(ss, node->children[0]);
+        Boxed_Value retval(eval_token(ss, node->children[0]));
         if (node->children.size() > 1) {
             for (i = 1; i < node->children.size(); i += 2) {
                 bool lhs;
                 try {
-                    lhs = boxed_cast<bool >(retval);
+                    lhs = boxed_cast<bool>(retval);
                 }
                 catch (const bad_boxed_cast &) {
                     throw Eval_Error("Condition not boolean", node);
@@ -441,7 +444,7 @@ namespace chaiscript
 
             try {
                 ss.set_stack(new_stack);
-                Boxed_Value retval = (*boxed_cast<Const_Proxy_Function>(fn))(plb);
+                const Boxed_Value &retval = (*boxed_cast<Const_Proxy_Function>(fn))(plb);
                 ss.set_stack(prev_stack);
                 return retval;
             }
@@ -483,8 +486,7 @@ namespace chaiscript
             Boxed_Value fn = eval_token(ss, node->children[0]);
 
             try {
-                Boxed_Value retval = (*boxed_cast<Const_Proxy_Function >(fn))(plb);
-                return retval;
+                return (*boxed_cast<Const_Proxy_Function >(fn))(plb);
             }
             catch(const dispatch_error &e){
                 throw Eval_Error(std::string(e.what()) + " with function '" + node->children[0]->text + "'", node->children[0]);
@@ -513,7 +515,7 @@ namespace chaiscript
 
         //todo: Please extract a single way of doing function calls between this and eval_fun_call
 
-        Boxed_Value retval = eval_token(ss, node->children[0]);
+        Boxed_Value retval(eval_token(ss, node->children[0]));
         if (node->children.size() > 1) {
             for (i = 2; i < node->children.size(); i+=2) {
                 Param_List_Builder plb;
@@ -570,7 +572,6 @@ namespace chaiscript
     template <typename Eval_System>
     Boxed_Value eval_try(Eval_System &ss, const TokenPtr &node) {
         Boxed_Value retval;        
-        retval = Boxed_Value();
 
         ss.new_scope();
         try {
@@ -683,6 +684,7 @@ namespace chaiscript
             ss.pop_scope();
             throw;
         }
+
         if (node->children.back()->identifier == Token_Type::Finally) {
             retval = eval_token(ss, node->children.back()->children[0]);
         }
@@ -699,35 +701,32 @@ namespace chaiscript
     Boxed_Value eval_if(Eval_System &ss, const TokenPtr &node) {
         unsigned int i;
 
-        Boxed_Value retval = eval_token(ss, node->children[0]);
         bool cond;
         try {
-            cond = boxed_cast<bool>(retval);
+            cond = boxed_cast<bool>(eval_token(ss, node->children[0]));
         }
         catch (const bad_boxed_cast &) {
             throw Eval_Error("If condition not boolean", node->children[0]);
         }
         if (cond) {
-            retval = eval_token(ss, node->children[1]);
+            return eval_token(ss, node->children[1]);
         }
         else {
             if (node->children.size() > 2) {
                 i = 2;
                 while ((!cond) && (i < node->children.size())) {
                     if (node->children[i]->text == "else") {
-                        retval = eval_token(ss, node->children[i+1]);
-                        cond = true;
+                        return eval_token(ss, node->children[i+1]);
                     }
                     else if (node->children[i]->text == "else if") {
-                        retval = eval_token(ss, node->children[i+1]);
                         try {
-                            cond = boxed_cast<bool>(retval);
+                            cond = boxed_cast<bool>(eval_token(ss, node->children[i+1]));
                         }
                         catch (const bad_boxed_cast &) {
                             throw Eval_Error("'else if' condition not boolean", node->children[i+1]);
                         }
                         if (cond) {
-                            retval = eval_token(ss, node->children[i+2]);
+                            return eval_token(ss, node->children[i+2]);
                         }
                     }
                     i = i + 3;
@@ -735,7 +734,7 @@ namespace chaiscript
             }
         }
 
-        return retval;
+        return Boxed_Value(false);
     }
 
     /**
@@ -980,18 +979,22 @@ namespace chaiscript
      */
     template <typename Eval_System>
     Boxed_Value eval_block(Eval_System &ss, const TokenPtr &node) {
-        Boxed_Value retval;
         unsigned int i;
         unsigned int num_children = node->children.size();
 
         ss.new_scope();
         for (i = 0; i < num_children; ++i) {
             try {
-                retval = eval_token(ss, node->children[i]);
+                const Boxed_Value &retval = eval_token(ss, node->children[i]);
+
+                if (i + 1 == num_children)
+                {
+                    ss.pop_scope();
+                    return retval;
+                }
             }
             catch (const chaiscript::Return_Value &rv) {
                 ss.pop_scope();
-                retval = rv.retval;
                 throw;
             }
             catch (...) {
@@ -999,9 +1002,9 @@ namespace chaiscript
                 throw;
             }
         }
-        ss.pop_scope();
 
-        return retval;
+        ss.pop_scope();
+        return Boxed_Value();
     }
 
     /**
