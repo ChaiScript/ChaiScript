@@ -264,6 +264,11 @@ namespace chaiscript
       {
       }
 
+      void swap(Boxed_Value &rhs)
+      {
+        std::swap(m_data, rhs.m_data);
+      }
+
       /**
        * Return a reference to the static global Object_Cache
        */
@@ -293,7 +298,8 @@ namespace chaiscript
        */
       Boxed_Value &operator=(const Boxed_Value &rhs)
       {
-        m_data = rhs.m_data;
+        Boxed_Value temp(rhs);
+        swap(temp);
         return *this;
       }
 
@@ -896,7 +902,14 @@ namespace chaiscript
   {
     return l.get_type_info() == r.get_type_info();
   }
+}
 
+namespace std
+{
+  template<> void swap(chaiscript::Boxed_Value &lhs, chaiscript::Boxed_Value &rhs)
+  {
+    lhs.swap(rhs);
+  }
 }
 
 #endif
