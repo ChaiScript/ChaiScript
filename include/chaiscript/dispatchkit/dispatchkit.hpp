@@ -526,7 +526,27 @@ namespace chaiscript
         std::pair<std::multimap<std::string, Proxy_Function >::const_iterator, std::multimap<std::string, Proxy_Function >::const_iterator> range
           = functions.equal_range(t_name);
 
-        return  dispatch(range.first, range.second, params);
+        return dispatch(range.first, range.second, params);
+      }
+
+      Boxed_Value call_function(const std::string &t_name) const
+      {
+        return call_function(t_name, std::vector<Boxed_Value>());
+      }
+
+      Boxed_Value call_function(const std::string &t_name, const Boxed_Value &p1) const
+      {
+        std::vector<Boxed_Value> params;
+        params.push_back(p1);
+        return call_function(t_name, params);
+      }
+
+      Boxed_Value call_function(const std::string &t_name, const Boxed_Value &p1, const Boxed_Value &p2) const
+      {
+        std::vector<Boxed_Value> params;
+        params.push_back(p1);
+        params.push_back(p2);
+        return call_function(t_name, params);
       }
 
       /**

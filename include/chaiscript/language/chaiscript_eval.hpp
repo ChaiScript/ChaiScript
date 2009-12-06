@@ -176,13 +176,11 @@ namespace chaiscript
                     try {
                         if (lhs.is_undef())
                         {
-                          retval = ss.call_function("clone", Param_List_Builder() << retval);
+                          retval = ss.call_function("clone", retval);
                         }
-                        Param_List_Builder plb;
-                        plb << lhs;
-                        plb << retval;
+
                         try {
-                            retval = ss.call_function(node->children[i+1]->text, plb);
+                            retval = ss.call_function(node->children[i+1]->text, lhs, retval);
                         }
                         catch(const dispatch_error &){
                             throw Eval_Error(std::string("Mismatched types in equation") + (lhs.is_const()?", lhs is const.":"."), node->children[i+1]);
@@ -202,11 +200,8 @@ namespace chaiscript
                     }
                 }
                 else {
-                    Param_List_Builder plb;
-                    plb << eval_token(ss, node->children[i]);
-                    plb << retval;
                     try {
-                        retval = ss.call_function(node->children[i+1]->text, plb);
+                        retval = ss.call_function(node->children[i+1]->text, eval_token(ss, node->children[i]), retval);
                     }
                     catch(const dispatch_error &){
                         throw Eval_Error("Can not find appropriate '" + node->children[i+1]->text + "'", node->children[i+1]);
@@ -293,18 +288,12 @@ namespace chaiscript
         unsigned int i;
 
         Boxed_Value retval = eval_token(ss, node->children[0]);
-        if (node->children.size() > 1) {
-            for (i = 1; i < node->children.size(); i += 2) {
-                Param_List_Builder plb;
-                plb << retval;
-                plb << eval_token(ss, node->children[i + 1]);
-
-                try {
-                    retval = ss.call_function(node->children[i]->text, plb);
-                }
-                catch(const dispatch_error &){
-                    throw Eval_Error("Can not find appropriate '" + node->children[i]->text + "'", node->children[i]);
-                }
+        for (i = 1; i < node->children.size(); i += 2) {
+            try {
+                retval = ss.call_function(node->children[i]->text, retval, eval_token(ss, node->children[i + 1]));
+            }
+            catch(const dispatch_error &){
+                throw Eval_Error("Can not find appropriate '" + node->children[i]->text + "'", node->children[i]);
             }
         }
 
@@ -320,11 +309,8 @@ namespace chaiscript
 
         Boxed_Value retval = eval_token(ss, node->children[0]);
         for (i = 1; i < node->children.size(); ++i) {
-            Param_List_Builder plb;
-            plb << retval;
-            plb << eval_token(ss, node->children[i]);
             try {
-                retval = ss.call_function("[]", plb);
+                retval = ss.call_function("[]", retval, eval_token(ss, node->children[i]));
             }
             catch(std::out_of_range &) {
                 throw Eval_Error("Out of bounds exception", node);
@@ -342,11 +328,8 @@ namespace chaiscript
      */
     template <typename Eval_System>
     Boxed_Value eval_prefix(Eval_System &ss, const TokenPtr &node) {
-        Param_List_Builder plb;
-        plb << eval_token(ss, node->children[1]);
-
         try {
-            return ss.call_function(node->children[0]->text, plb);
+            return ss.call_function(node->children[0]->text, eval_token(ss, node->children[1]));
         }
         catch(std::exception &){
             throw Eval_Error("Can not find appropriate unary '" + node->children[0]->text + "'", node->children[0]);
@@ -361,16 +344,13 @@ namespace chaiscript
         unsigned int i;
 
         try {
-            Boxed_Value retval = ss.call_function("Vector", Param_List_Builder());
-            if (node->children.size() > 0) {
-                for (i = 0; i < node->children[0]->children.size(); ++i) {
-                    try {
-                        Boxed_Value tmp = eval_token(ss, node->children[0]->children[i]);
-                        ss.call_function("push_back", Param_List_Builder() << retval << tmp);
-                    }
-                    catch (const dispatch_error &) {
-                        throw Eval_Error("Can not find appropriate 'push_back'", node->children[0]->children[i]);
-                    }
+            Boxed_Value retval = ss.call_function("Vector");
+            for (i = 0; i < node->children[0]->children.size(); ++i) {
+                try {
+                    ss.call_function("push_back", retval, eval_token(ss, node->children[0]->children[i]));
+                }
+                catch (const dispatch_error &) {
+                    throw Eval_Error("Can not find appropriate 'push_back'", node->children[0]->children[i]);
                 }
             }
 
@@ -388,9 +368,9 @@ namespace chaiscript
     template <typename Eval_System>
     Boxed_Value eval_inline_range(Eval_System &ss, const TokenPtr &node) {
         try {
-            return ss.call_function("generate_range", Param_List_Builder()
-                << eval_token(ss, node->children[0]->children[0]->children[0])
-                << eval_token(ss, node->children[0]->children[0]->children[1]));
+            return ss.call_function("generate_range", 
+                eval_token(ss, node->children[0]->children[0]->children[0]),
+                eval_token(ss, node->children[0]->children[0]->children[1]));
         }
         catch (const dispatch_error &) {
             throw Eval_Error("Unable to generate range vector", node);
@@ -405,12 +385,12 @@ namespace chaiscript
         unsigned int i;
 
         try {
-            Boxed_Value retval = ss.call_function("Map", Param_List_Builder());
+            Boxed_Value retval = ss.call_function("Map");
             for (i = 0; i < node->children[0]->children.size(); ++i) {
                 try {
-                    Boxed_Value key = eval_token(ss, node->children[0]->children[i]->children[0]);
-                    Boxed_Value slot = ss.call_function("[]", Param_List_Builder() << retval << key);
-                    ss.call_function("=", Param_List_Builder() << slot << eval_token(ss, node->children[0]->children[i]->children[1]));
+                    Boxed_Value slot 
+                      = ss.call_function("[]", retval, eval_token(ss, node->children[0]->children[i]->children[0]));
+                    ss.call_function("=", slot, eval_token(ss, node->children[0]->children[i]->children[1]));
                 }
                 catch (const dispatch_error &) {
                     throw Eval_Error("Can not find appropriate '=' for map init", node->children[0]->children[i]);
