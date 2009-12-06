@@ -348,8 +348,10 @@ namespace chaiscript
          */
         State get_state()
         {
+#ifndef CHAISCRIPT_NO_THREADS
             boost::lock_guard<boost::recursive_mutex> l(use_mutex);
             boost::shared_lock<boost::shared_mutex> l2(mutex);
+#endif
 
             State s;
             s.loaded_files = loaded_files;
@@ -363,8 +365,10 @@ namespace chaiscript
          */
         void set_state(const State &t_state)
         {
+#ifndef CHAISCRIPT_NO_THREADS
             boost::lock_guard<boost::recursive_mutex> l(use_mutex);
             boost::shared_lock<boost::shared_mutex> l2(mutex);
+#endif
 
             loaded_files = t_state.loaded_files;
             active_loaded_modules = t_state.active_loaded_modules;

@@ -13,6 +13,7 @@
 #include "type_info.hpp"
 #include <string>
 #include <boost/function.hpp>
+#include <boost/type_traits/add_reference.hpp>
 #include <stdexcept>
 #include <vector>
 #include "proxy_functions_detail.hpp"
