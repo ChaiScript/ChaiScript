@@ -973,7 +973,7 @@ namespace chaiscript
                     return retval;
                 }
             }
-            catch (const chaiscript::Return_Value &rv) {
+            catch (const chaiscript::Return_Value &/*rv*/) {
                 ss.pop_scope();
                 throw;
             }

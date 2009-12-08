@@ -186,7 +186,7 @@ namespace chaiscript
 
         Loadable_Module(const std::string &t_module_name, const std::string &t_filename)
           : m_dlmodule(t_filename), m_func(m_dlmodule, "create_chaiscript_module_" + t_module_name),
-            m_moduleptr(m_func.m_symbol());
+            m_moduleptr(m_func.m_symbol())
         {
         }
 

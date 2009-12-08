@@ -17,6 +17,7 @@
 #include <boost/bind.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/type_traits/add_const.hpp>
+#include <limits>
 
 namespace chaiscript 
 {
