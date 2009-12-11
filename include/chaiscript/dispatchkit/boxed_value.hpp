@@ -17,7 +17,7 @@
 #include <boost/bind.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/type_traits/add_const.hpp>
-#include <limits>
+#include <boost/integer_traits.hpp>
 
 namespace chaiscript 
 {
@@ -818,8 +818,8 @@ namespace chaiscript
 
     Boxed_Value smart_size(boost::int64_t i) const
     {
-      if (i < std::numeric_limits<int>::min()
-          || i > std::numeric_limits<int>::max())
+      if (i < boost::integer_traits<int>::const_min
+        || i > boost::integer_traits<int>::const_max)
       {
         return Boxed_Value(i);
       } else {
