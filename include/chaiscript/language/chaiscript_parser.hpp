@@ -275,6 +275,38 @@ namespace chaiscript
             return retval;
         }
 
+        /**
+         * Reads a floating point value from input, without skipping initial whitespace
+         */
+        bool Binary_() {
+            bool retval = false;
+            if ((input_pos != input_end) && (*input_pos == '0')) {
+                ++input_pos;
+                ++col;
+
+                if ((input_pos != input_end) && ((*input_pos == 'b') || (*input_pos == 'B'))) {
+                    ++input_pos;
+                    ++col;
+                    if ((input_pos != input_end) && ((*input_pos >= '0') && (*input_pos <= '1'))) {
+                        retval = true;
+                        while ((input_pos != input_end) && ((*input_pos >= '0') && (*input_pos <= '1'))) {
+                            ++input_pos;
+                            ++col;
+                        }
+                    }
+                    else {
+                        --input_pos;
+                        --col;
+                    }
+                }
+                else {
+                    --input_pos;
+                    --col;
+                }
+            }
+
+            return retval;
+        }
 
         /**
          * Reads a number from the input, detecting if it's an integer or floating point
@@ -293,8 +325,27 @@ namespace chaiscript
                     if (Hex_()) {
                         std::string match(start, input_pos);
                         std::stringstream ss(match);
-                        int temp_int;
+                        unsigned int temp_int;
                         ss >> std::hex >> temp_int;
+
+                        std::ostringstream out_int;
+                        out_int << int(temp_int);
+                        TokenPtr t(new Token(out_int.str(), Token_Type::Int, filename, prev_line, prev_col, line, col));
+                        match_stack.push_back(t);
+                        return true;
+                    }
+                    if (Binary_()) {
+                        std::string match(start, input_pos);
+                        int temp_int = 0;
+                        unsigned int pos = 0, end = match.length();
+
+                        while ((pos < end) && (pos < (2 + sizeof(int) * 8))) {
+                            temp_int <<= 1;
+                            if (match[pos] == '1') {
+                                temp_int += 1;
+                            }
+                            ++pos;
+                        }
 
                         std::ostringstream out_int;
                         out_int << temp_int;
@@ -312,11 +363,11 @@ namespace chaiscript
                         std::string match(start, input_pos);
                         if ((match.size() > 0) && (match[0] == '0')) {
                             std::stringstream ss(match);
-                            int temp_int;
+                            unsigned int temp_int;
                             ss >> std::oct >> temp_int;
 
                             std::ostringstream out_int;
-                            out_int << temp_int;
+                            out_int << int(temp_int);
                             TokenPtr t(new Token(out_int.str(), Token_Type::Int, filename, prev_line, prev_col, line, col));
                             match_stack.push_back(t);
                         }
