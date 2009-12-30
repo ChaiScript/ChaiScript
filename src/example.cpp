@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
   log("Functor test output", boost::lexical_cast<std::string>(x));
 
   chai.add(var(boost::shared_ptr<int>()), "nullvar");
-  chai("print(\"This should be true.\"); print(nullvar.is_null())");
+  chai("print(\"This should be true.\"); print(nullvar.is_var_null())");
 
   // test the global const action
   chai.add_global_const(const_var(1), "constvar");
@@ -168,8 +168,8 @@ int main(int argc, char *argv[]) {
   chai.add(fun(boost::function<Boxed_Value (Dynamic_Object &)>(boost::bind(&Dynamic_Object_Attribute::func, "TestType", "attr", _1))), "attr");
 
   chai.eval("var x = TestType()");
-  chai.eval("x.attr = \"hi\"");
-  chai.eval("print(x.attr)");
+//  chai.eval("x.attr = \"hi\"");
+//  chai.eval("print(x.attr)");
   chai.eval("x.hello_world()");
 }
 
