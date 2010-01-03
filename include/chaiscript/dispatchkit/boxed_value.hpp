@@ -905,13 +905,7 @@ namespace chaiscript
   }
 }
 
-namespace std
-{
-  template<> void swap(chaiscript::Boxed_Value &lhs, chaiscript::Boxed_Value &rhs)
-  {
-    lhs.swap(rhs);
-  }
-}
+
 
 #endif
 
