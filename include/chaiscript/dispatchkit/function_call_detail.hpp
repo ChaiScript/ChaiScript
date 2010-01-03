@@ -93,6 +93,7 @@ namespace chaiscript
 
   }
 }
+#undef n
 
 #endif
 

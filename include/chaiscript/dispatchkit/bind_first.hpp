@@ -58,8 +58,9 @@ namespace chaiscript
       {
         return boost::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
       }
-
-
 }
+
+#undef n
+#undef m
 
 #endif
