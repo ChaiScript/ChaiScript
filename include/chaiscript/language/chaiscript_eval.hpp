@@ -345,12 +345,14 @@ namespace chaiscript
 
         try {
             Boxed_Value retval = ss.call_function("Vector");
-            for (i = 0; i < node->children[0]->children.size(); ++i) {
-                try {
-                    ss.call_function("push_back", retval, eval_token(ss, node->children[0]->children[i]));
-                }
-                catch (const dispatch_error &) {
-                    throw Eval_Error("Can not find appropriate 'push_back'", node->children[0]->children[i]);
+	    if (node->children.size() > 0) {
+                for (i = 0; i < node->children[0]->children.size(); ++i) {
+                    try {
+                        ss.call_function("push_back", retval, eval_token(ss, node->children[0]->children[i]));
+                    }
+                    catch (const dispatch_error &) {
+                        throw Eval_Error("Can not find appropriate 'push_back'", node->children[0]->children[i]);
+                    }
                 }
             }
 
