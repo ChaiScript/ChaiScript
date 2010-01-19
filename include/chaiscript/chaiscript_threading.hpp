@@ -4,7 +4,7 @@
 #ifndef CHAISCRIPT_NO_THREADS
 #include <boost/thread.hpp>
 #else
-#warning "ChaiScript is compiling without thread safety."
+#pragma message ("ChaiScript is compiling without thread safety.")
 #endif
 
 namespace chaiscript
