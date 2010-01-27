@@ -1,3 +1,0 @@
-var addit = fun(x, y) { return x+y }
-
-print(3.addit(4))

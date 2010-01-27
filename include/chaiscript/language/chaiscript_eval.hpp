@@ -509,25 +509,18 @@ namespace chaiscript
                     }
                 }
 
-                //std::string fun_name;
-                Boxed_Value fn;
-                try {
-                    if (node->children[i]->identifier == Token_Type::Fun_Call) {
-                        //fun_name = node->children[i]->children[0]->text;
-                        fn = eval_token(ss, node->children[i]->children[0]);
-                    }
-                    else {
-                        //fun_name = node->children[i]->text;
-                        fn = eval_token(ss, node->children[i]);
-                    }
+                std::string fun_name;
+                std::vector<std::pair<std::string, Proxy_Function > > funs;
+                if (node->children[i]->identifier == Token_Type::Fun_Call) {
+                    fun_name = node->children[i]->children[0]->text;
                 }
-                catch(Eval_Error &ee) {
-                    ss.set_stack(prev_stack);
-                    throw Eval_Error(ee.reason, node->children[i]);
+                else {
+                    fun_name = node->children[i]->text;
                 }
+
                 try {
                     ss.set_stack(new_stack);
-                    retval = (*boxed_cast<Const_Proxy_Function >(fn))(plb);
+                    retval = ss.call_function(fun_name, plb);
                     ss.set_stack(prev_stack);
                 }
                 catch(const dispatch_error &e){
