@@ -342,13 +342,10 @@ namespace chaiscript
 
       void sync_cache()
       {
-        m_stack_holder->stack->get<0>().clear();
-
 #ifndef CHAISCRIPT_NO_THREADS
         boost::shared_lock<boost::shared_mutex> l(m_mutex);
 #endif
-
-        get_function_cache() = m_state.m_functions;
+        sync_cache_no_lock();
       }
 
       /**
@@ -670,6 +667,7 @@ namespace chaiscript
 #endif
 
         m_state = t_state;
+        sync_cache_no_lock();
       }
 
 
@@ -686,6 +684,13 @@ namespace chaiscript
       std::multimap<std::string, Proxy_Function> &get_function_cache() const
       {
         return m_stack_holder->function_cache;
+      }
+
+      void sync_cache_no_lock()
+      {
+        m_stack_holder->stack->get<0>().clear();
+
+        get_function_cache() = m_state.m_functions;
       }
 
 
