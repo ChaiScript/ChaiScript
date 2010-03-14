@@ -1,2 +1,0 @@
-e less than 10
-e is some value

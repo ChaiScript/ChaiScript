@@ -1,6 +1,6 @@
 def bob::bob() { }
-def bob::fred(e) : e < 10 { print("e less than 10") }
-def bob::fred(e) { print("e is some value") }
+def bob::fred(e) : e < 10 { assert_equal(true, e<10) }
+def bob::fred(e) { assert_equal(true, e >= 10) }
 
 var b = bob()
 b.fred(3)

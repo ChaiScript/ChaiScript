@@ -1,1 +1,1 @@
-print(!true)
+assert_equal(false, !true)

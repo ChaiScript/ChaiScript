@@ -1,1 +1,1 @@
-print(11 % 3)
+assert_equal(2, 11 % 3)

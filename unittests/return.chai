@@ -2,4 +2,4 @@ def sam() {
 	return 5
 }
 
-print(sam())
+assert_equal(5, sam())

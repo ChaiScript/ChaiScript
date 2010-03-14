@@ -1,2 +1,2 @@
 var x = [1, 2, 3]
-print(x[2])
+assert_equal(3, x[2])

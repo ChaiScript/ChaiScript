@@ -1,1 +1,1 @@
-clone = `-`
+assert_throws("Illegal const function assignment", fun() { clone = `-` } );

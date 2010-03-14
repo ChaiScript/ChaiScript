@@ -5,4 +5,5 @@ var b = Bob()
 var c = Bob()
 b.x = 4
 c.x = 5
-print(b-c)
+
+assert_equal(-1, b-c)

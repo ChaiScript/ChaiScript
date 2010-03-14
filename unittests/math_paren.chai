@@ -1,1 +1,1 @@
-print(3*(4+5))
+assert_equal(27, 3*(4+5))

@@ -1,1 +1,1 @@
-print(rfind("123abab", "ab"))
+assert_equal(5, rfind("123abab", "ab"))

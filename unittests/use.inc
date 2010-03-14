@@ -1,3 +1,3 @@
 def greet {
-	print("hello")
+	return("hello")
 }

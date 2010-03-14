@@ -6,4 +6,4 @@ try {
 catch(e) {
   x = e + 3
 }
-print(x)
+assert_equal(4, x);

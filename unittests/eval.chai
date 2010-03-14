@@ -1,1 +1,1 @@
-print(eval("3 + 4"))
+assert_equal(7, eval("3 + 4"))

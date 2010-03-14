@@ -1,1 +1,1 @@
-print(1 > 2)
+assert_equal(false, 1 > 2);

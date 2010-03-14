@@ -1,1 +1,1 @@
-print(find_first_of("abab", "bec"))
+assert_equal(1, find_first_of("abab", "bec"))

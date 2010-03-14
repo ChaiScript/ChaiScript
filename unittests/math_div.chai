@@ -1,1 +1,1 @@
-print(10 / 5)
+assert_equal(2, 10/5)

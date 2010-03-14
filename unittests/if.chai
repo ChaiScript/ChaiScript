@@ -1,4 +1,7 @@
+var t = false;
+
 if (true) {
-	print("true")
+  t = true;
 }
-print("done")
+
+assert_equal(true, t);

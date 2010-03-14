@@ -4,4 +4,4 @@ while (i < 10) {
 		break
 	}
 }
-print(i)
+assert_equal(5, i);

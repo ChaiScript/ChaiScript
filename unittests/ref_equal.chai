@@ -1,4 +1,5 @@
 var i = 3
 var j := i
 j = 4
-print(i)
+
+assert_equal(4, i)

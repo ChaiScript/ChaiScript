@@ -1,1 +1,1 @@
-print(odd(4))
+assert_equal(false, odd(4))

@@ -9,4 +9,4 @@ def Vector3::Vector3(x, y, z) {
 }
 
 var v = Vector3(1,2,3);
-print(v.x); 
+assert_equal(1, v.x);

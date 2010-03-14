@@ -1,10 +1,11 @@
-print(string_type.name());
-print(string_type.is_type_const());
-print(string_type.is_type_reference());
-print(string_type.is_type_void());
-print(string_type.is_type_undef());
-print(string_type.is_type_pointer());
-print("string".get_type_info().name());
-print(string_type.bare_equal("string".get_type_info()));
+assert_equal("string", string_type.name());
+assert_equal(false, string_type.is_type_const());
+assert_equal(false, string_type.is_type_reference());
+assert_equal(false, string_type.is_type_void());
+assert_equal(false, string_type.is_type_undef());
+assert_equal(false, string_type.is_type_pointer());
+assert_equal("string", "string".get_type_info().name());
+assert_equal(true, string_type.bare_equal("string".get_type_info()));
 
-print("bob".is_type(string_type));
+assert_equal(true, "bob".is_type(string_type));
+

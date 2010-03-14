@@ -1,1 +1,1 @@
-print(3.5.to_string() + "bob")
+assert_equal("3.5bob", 3.5.to_string() + "bob");

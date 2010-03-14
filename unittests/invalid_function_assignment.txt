@@ -1,1 +1,0 @@
-Error: "Mismatched types in equation, lhs is const." in 'unittests/invalid_function_assignment.chai' at (1, 7)

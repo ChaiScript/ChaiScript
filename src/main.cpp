@@ -15,12 +15,26 @@
 
 #include <chaiscript/chaiscript.hpp>
 
+
 void print_help() {
     std::cout << "ChaiScript evaluator.  To evaluate an expression, type it and press <enter>." << std::endl;
     std::cout << "Additionally, you can inspect the runtime system using:" << std::endl;
     std::cout << "  dump_system() - outputs all functions registered to the system" << std::endl;
     std::cout << "  dump_object(x) - dumps information about the given symbol" << std::endl;
 }
+
+
+bool throws_exception(const chaiscript::Proxy_Function &f)
+{
+  try {
+    chaiscript::functor<void ()>(f)();
+  } catch (...) {
+    return true;
+  }
+
+  return false;
+}
+
 
 std::string get_next_command() {
 #ifdef READLINE_AVAILABLE
@@ -40,10 +54,10 @@ int main(int argc, char *argv[]) {
     std::string input;
     chaiscript::ChaiScript chai;
 
+    chai.add(chaiscript::fun(&exit), "exit");
+    chai.add(chaiscript::fun(&throws_exception), "throws_exception");
 
     if (argc < 2) {
-        //std::cout << "eval> ";
-        //std::getline(std::cin, input);
 #ifdef READLINE_AVAILABLE
         using_history();
 #endif
@@ -80,14 +94,16 @@ int main(int argc, char *argv[]) {
     }
     else {
         for (int i = 1; i < argc; ++i) {
-            std::string filename(argv[i]);
             try {
               chaiscript::Boxed_Value val = chai.eval_file(argv[i]);
             }
             catch (std::exception &e) {
                 std::cout << e.what() << std::endl;
+                return EXIT_FAILURE;
             }
         }
     }
+
+    return EXIT_SUCCESS;
 }
 

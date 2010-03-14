@@ -1,2 +1,2 @@
 var prod = bind(foldl, _, `*`, 1.0)
-print(prod([3, 4, 5]))
+assert_equal(60, prod([3, 4, 5]))

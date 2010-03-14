@@ -14,7 +14,7 @@ def bob() {
 	10
 }
 
-print(bob())
-print(bob(5))
-print(bob(5,6))
-print(bob(5,6,7))
+assert_equal(10, bob())
+assert_equal(-5, bob(5))
+assert_equal(-1, bob(5,6))
+assert_equal(18, bob(5,6,7))

@@ -252,8 +252,8 @@ namespace chaiscript
         push_back_name = "push_back";
       }
 
- 	  typedef void (ContainerType::*pushback)(const typename ContainerType::value_type &);
-	  m->add(fun(static_cast<pushback>(&ContainerType::push_back)), push_back_name);
+      typedef void (ContainerType::*pushback)(const typename ContainerType::value_type &);
+      m->add(fun(static_cast<pushback>(&ContainerType::push_back)), push_back_name);
       m->add(fun(&ContainerType::pop_back), "pop_back");
       return m;
     }
@@ -267,7 +267,6 @@ namespace chaiscript
     ModulePtr front_insertion_sequence_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
       typedef typename ContainerType::reference (ContainerType::*frontptr)();
-
       m->add(fun(static_cast<frontptr>(&ContainerType::front)), "front");
 
       std::string push_front_name;
@@ -334,7 +333,7 @@ namespace chaiscript
     {
       m->add(user_type<MapType>(), type);
 
-	  typedef typename MapType::mapped_type &(MapType::*elemaccess)(const typename MapType::key_type &);
+      typedef typename MapType::mapped_type &(MapType::*elemaccess)(const typename MapType::key_type &);
       m->add(fun(static_cast<elemaccess>(&MapType::operator[])), "[]");
 
       container_type<MapType>(type, m);
@@ -375,6 +374,10 @@ namespace chaiscript
     {
       m->add(user_type<VectorType>(), type);
 
+      typedef typename VectorType::reference (VectorType::*frontptr)();
+      m->add(fun(static_cast<frontptr>(&VectorType::front)), "front");
+
+
       back_insertion_sequence_type<VectorType>(type, m);
       sequence_type<VectorType>(type, m);
       random_access_container_type<VectorType>(type, m);
@@ -382,6 +385,27 @@ namespace chaiscript
       default_constructible_type<VectorType>(type, m);
       assignable_type<VectorType>(type, m);
       input_range_type<VectorType>(type, m);
+
+
+      m->eval("def Vector::`==`(rhs) : type_match(rhs, this) { \
+               if ( rhs.size() != this.size() ) {    \
+                 return false;  \
+               } else {  \
+                 var r1 = range(this); \
+                 var r2 = range(rhs);  \
+                 while (!r1.empty()) \
+                 {  \
+                   if (!eq(r1.front(), r2.front())) \
+                   {  \
+                     return false; \
+                   } \
+                   r1.pop_front(); \
+                   r2.pop_front(); \
+                 } \
+                 return true; \
+              } \
+            }");
+
 
       return m;
     }

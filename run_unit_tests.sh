@@ -8,15 +8,13 @@ echo -n "Running unit tests"
 for file in unittests/*.chai
 do
   tstname=${file%.*}
-	tst="$tstname.txt"
-	LD_LIBRARY_PATH=. ./chaiscript_eval $file > /tmp/tstout.txt
-	diff $tst /tmp/tstout.txt
+	OUTPUT=`LD_LIBRARY_PATH=. ./chaiscript_eval unittests/unit_test.inc $file`
 	if [ "$?" -eq "0" ]
 	then
 		echo -n "."
 		successes=$((successes+1))
 	else
-		echo "[from failed test $file]"
+		echo "[from failed test $file] $OUTPUT"
 		failures=$((failures+1))
 	fi
 done

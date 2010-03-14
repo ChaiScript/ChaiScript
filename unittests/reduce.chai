@@ -1,1 +1,1 @@
-print(reduce([1, 2, 3, 4], `+`))
+assert_equal(10, reduce([1, 2, 3, 4], `+`))

@@ -1,7 +1,9 @@
 var x = [1, 2,
  3, 4]
 
-print(x)
+assert_equal(1, x[0])
 
-print(map(x, 
- fun(x) { x + 1 }))
+var y = map(x, 
+ fun(x) { x + 1 })
+
+assert_equal(2, y[0])

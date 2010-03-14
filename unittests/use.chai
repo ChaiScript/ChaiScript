@@ -1,3 +1,4 @@
 use("unittests/use.inc")
 
-greet()
+assert_equal("hello", greet())
+

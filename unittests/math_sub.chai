@@ -1,1 +1,1 @@
-print(5 - 3)
+assert_equal(2, 5 - 3)

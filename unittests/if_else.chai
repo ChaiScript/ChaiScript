@@ -1,8 +1,13 @@
 var i = 3
+var b1 = false;
+var b2 = false;
+
 if (i == 2) {
-	print("2")
+  b1 = true;
 }
 else {
-	print("other")
+  b2 = true;
 }
-print("done")
+
+assert_equal(false, b1);
+assert_equal(true, b2);

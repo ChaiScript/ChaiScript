@@ -1,6 +1,11 @@
+var caught = false
+
 try {
   throw(runtime_error("error"))
 }
 catch(e) {
-  print(e.what())
+  caught = true
+  assert_equal("error", e.what())
 }
+
+assert_equal(true, caught)

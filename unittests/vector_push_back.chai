@@ -1,3 +1,5 @@
 var x = [1, 2]
 x.push_back(3)
-print(x)
+assert_equal(3, x.size())
+assert_equal(3, x.back())
+assert_equal(1, x.front())

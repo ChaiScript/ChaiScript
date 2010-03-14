@@ -1,19 +1,32 @@
+var finallyone = false;
+
 try {
   throw(3)
 }
 catch(x) { 
-  print(x)
+  assert_equal(3, x)
 }
 finally {
-  print("Finally #1")
+  finallyone = true;
 }
 
+assert_equal(true, finallyone);
+
+var try2 = false;
+var catch2 = false;
+var finally2 = false;
+
+
 try {
-  print("Safe")
+  try2 = true;
 }
 catch {
-  print("Caught")
+  catch2 = true;
 }
 finally {
-  print("Finally #2")
+  finally2 = true;
 }
+
+assert_equal(true, try2);
+assert_equal(false, catch2);
+assert_equal(true, finally2);

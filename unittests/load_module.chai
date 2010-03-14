@@ -1,2 +1,2 @@
 load_module("test")
-print(hello_world())
+assert_equal("Hello World", hello_world());
