@@ -4,6 +4,8 @@ project(chaiscript)
 
 FIND_LIBRARY(READLINE_LIBRARY NAMES readline PATH /usr/lib /usr/local/lib /opt/local/lib)
 
+enable_testing()
+
 MESSAGE(STATUS "Detecting readline support")
 if (READLINE_LIBRARY)
     MESSAGE(STATUS "Found: ${READLINE_LIBRARY}")
@@ -25,21 +27,33 @@ include_directories(include)
  
 find_package(Boost 1.36.0 COMPONENTS thread)
 
-if (Boost_FOUND)
-	include_directories(${Boost_INCLUDE_DIRS})
-	add_executable(chaiscript_eval src/main.cpp)
-	#add_executable(dispatchkit_test contrib/test/dispatchkit_test.cpp)
-	target_link_libraries(chaiscript_eval dl ${Boost_LIBRARIES} ${READLINE_LIB})
+if (NOT Boost_FOUND)
+  message(FATAL_ERROR "Can not find Boost")
+endif(NOT Boost_FOUND)
 
-        add_library(test MODULE src/test_module.cpp)
-	target_link_libraries(test ${Boost_LIBRARIES})
 
-        add_library(stl_extra MODULE src/stl_extra.cpp)
-	target_link_libraries(stl_extra ${Boost_LIBRARIES})
 
-	install(TARGETS chaiscript_eval DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+include_directories(${Boost_INCLUDE_DIRS})
+add_executable(chaiscript_eval src/main.cpp)
+#add_executable(dispatchkit_test contrib/test/dispatchkit_test.cpp)
+target_link_libraries(chaiscript_eval dl ${Boost_LIBRARIES} ${READLINE_LIB})
+
+add_library(test MODULE src/test_module.cpp)
+target_link_libraries(test ${Boost_LIBRARIES})
+
+add_library(stl_extra MODULE src/stl_extra.cpp)
+target_link_libraries(stl_extra ${Boost_LIBRARIES})
+
+file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.chai)
+
+
+
+foreach(filename ${UNIT_TESTS})
+  message(STATUS "Adding test ${filename}")
+  add_test(${filename} chaiscript_eval ${CMAKE_CURRENT_SOURCE_DIR}/unittests/unit_test.inc ${CMAKE_CURRENT_SOURCE_DIR}/unittests/${filename})
+endforeach(filename)
+
+
+install(TARGETS chaiscript_eval DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/bin)
         
-else(Boost_FOUND)
-        message(FATAL_ERROR "Can not find Boost")
-endif(Boost_FOUND)
 
