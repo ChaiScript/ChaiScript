@@ -225,6 +225,9 @@ namespace chaiscript
         std::map<std::string, Loadable_Module_Ptr> loaded_modules;
         std::set<std::string> active_loaded_modules;
 
+        std::vector<std::string> modulepaths;
+        std::vector<std::string> usepaths;
+
         Eval_Engine engine;
 
 
@@ -301,26 +304,55 @@ namespace chaiscript
 
         void use(const std::string &filename)
         {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::lock_guard<boost::recursive_mutex> l(use_mutex);
-          boost::shared_lock<boost::shared_mutex> l2(mutex);
-#endif
-
-          if (loaded_files.count(filename) == 0)
+          for (size_t i = 0; i < usepaths.size(); ++i)
           {
-#ifndef CHAISCRIPT_NO_THREADS
-            l2.unlock();
-#endif
-            eval_file(filename);
-          } else {
-            engine.sync_cache();
-          }
 
+            try {
+
+              const std::string appendedpath = usepaths[i] + filename;
+
+#ifndef CHAISCRIPT_NO_THREADS
+              boost::lock_guard<boost::recursive_mutex> l(use_mutex);
+              boost::shared_lock<boost::shared_mutex> l2(mutex);
+#endif
+
+              if (loaded_files.count(appendedpath) == 0)
+              {
+#ifndef CHAISCRIPT_NO_THREADS
+                l2.unlock();
+#endif
+                eval_file(appendedpath);
+              } else {
+                engine.sync_cache();
+              }
+            } catch (const File_Not_Found_Error &) {
+              if (i == usepaths.size() - 1)
+              {
+                throw File_Not_Found_Error(filename);
+              }
+
+              // failed to load, try the next path
+            }
+
+          }
+          
         }
 
 
     public:
-        ChaiScript_System()  {
+        ChaiScript_System(const std::vector<std::string> &t_modulepaths = std::vector<std::string>(),
+                          const std::vector<std::string> &t_usepaths = std::vector<std::string>())
+          : modulepaths(t_modulepaths), usepaths(t_usepaths) {
+            if (modulepaths.empty())
+            {
+              modulepaths.push_back("");
+            }
+
+            if (usepaths.empty())
+            {
+              usepaths.push_back("");
+            }
+
             loaded_files.insert("__EVAL__"); // Make sure the default name is already registered
             build_eval_system();
         }
@@ -408,18 +440,21 @@ namespace chaiscript
             postfixes.push_back(".so");
             postfixes.push_back("");
 
-            for (size_t i = 0; i < prefixes.size(); ++i)
+            for (size_t i = 0; i < modulepaths.size(); ++i)
             {
-                for (size_t j = 0; j < postfixes.size(); ++j)
+              for (size_t j = 0; j < prefixes.size(); ++j)
+              {
+                for (size_t k = 0; k < postfixes.size(); ++k)
                 {
-                    try {
-                        std::string name = prefixes[i] + t_module_name + postfixes[j];
-                        load_module(t_module_name, name);
-                        return;
-                    } catch (const load_module_error &) {
-                        // Try next set
-                    }
+                  try {
+                    std::string name = modulepaths[i] + prefixes[j] + t_module_name + postfixes[k];
+                    load_module(t_module_name, name);
+                    return;
+                  } catch (const load_module_error &) {
+                    // Try next set
+                  }
                 }
+              }
             }
 
             throw load_module_error("Unable to find module: " + t_module_name);
@@ -495,7 +530,7 @@ namespace chaiscript
             std::ifstream infile (filename.c_str(), std::ios::in | std::ios::ate);
 
             if (!infile.is_open()) {
-                throw std::runtime_error("Can not open: " + filename);
+                throw File_Not_Found_Error(filename);
             }
 
             std::streampos size = infile.tellg();

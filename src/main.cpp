@@ -52,7 +52,29 @@ std::string get_next_command() {
 
 int main(int argc, char *argv[]) {
     std::string input;
-    chaiscript::ChaiScript chai;
+
+    std::vector<std::string> usepaths;
+    std::vector<std::string> modulepaths;
+
+    const char *usepath = getenv("CHAI_USE_PATH");
+    const char *modulepath = getenv("CHAI_MODULE_PATH");
+   
+    usepaths.push_back("");
+
+    if (usepath)
+    {
+      usepaths.push_back(usepath);
+    }
+
+    modulepaths.push_back("");
+
+    if (modulepath)
+    {
+      modulepaths.push_back(modulepath);
+    }
+
+
+    chaiscript::ChaiScript chai(modulepaths,usepaths);
 
     chai.add(chaiscript::fun(&exit), "exit");
     chai.add(chaiscript::fun(&throws_exception), "throws_exception");

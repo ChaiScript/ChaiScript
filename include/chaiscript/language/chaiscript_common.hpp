@@ -114,6 +114,18 @@ namespace chaiscript
     };
 
     /**
+     * Errors generated when loading a file
+     */
+    struct File_Not_Found_Error : public std::runtime_error {
+        File_Not_Found_Error(const std::string &filename)
+           : std::runtime_error("File Not Found: " + filename)
+        { }
+
+        virtual ~File_Not_Found_Error() throw() {}
+    };
+
+
+    /**
      * Special type for returned values
      */
     struct Return_Value {
