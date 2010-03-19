@@ -1,6 +1,8 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
 project(chaiscript)
+
+include(CTest)
 
 FIND_LIBRARY(READLINE_LIBRARY NAMES readline PATH /usr/lib /usr/local/lib /opt/local/lib)
 
@@ -46,13 +48,19 @@ target_link_libraries(stl_extra ${Boost_LIBRARIES})
 
 file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.chai)
 
+IF(BUILD_TESTING)
 
+  foreach(filename ${UNIT_TESTS})
+    message(STATUS "Adding test ${filename}")
+    add_test(${filename} chaiscript_eval ${CMAKE_CURRENT_SOURCE_DIR}/unittests/unit_test.inc ${CMAKE_CURRENT_SOURCE_DIR}/unittests/${filename})
+  endforeach(filename)
 
-foreach(filename ${UNIT_TESTS})
-  message(STATUS "Adding test ${filename}")
-  add_test(${filename} chaiscript_eval ${CMAKE_CURRENT_SOURCE_DIR}/unittests/unit_test.inc ${CMAKE_CURRENT_SOURCE_DIR}/unittests/${filename})
-endforeach(filename)
-
+  SET_PROPERTY(TEST ${UNIT_TESTS}
+   PROPERTY ENVIRONMENT
+    "CHAI_USE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/unittests/"
+    "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
+  )
+ENDIF(BUILD_TESTING)
 
 install(TARGETS chaiscript_eval DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/bin)
         
