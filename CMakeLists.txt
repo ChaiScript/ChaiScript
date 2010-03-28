@@ -19,26 +19,34 @@ else(READLINE_LIBRARY)
     SET (READLINE_FLAG )
 endif(READLINE_LIBRARY)
 
-SET (CMAKE_C_FLAGS_REL " -Wall -O3 ${READLINE_FLAG}")
-SET (CMAKE_CXX_FLAGS_REL " -Wall -O3 ${READLINE_FLAG}")
+#SET (CMAKE_C_FLAGS_REL " -Wall -O3 ${READLINE_FLAG}")
+#SET (CMAKE_CXX_FLAGS_REL " -Wall -O3 ${READLINE_FLAG}")
 
-SET (CMAKE_C_FLAGS " -Wall -ggdb ${READLINE_FLAG}")
-SET (CMAKE_CXX_FLAGS " -Wall -ggdb ${READLINE_FLAG}")
+#SET (CMAKE_C_FLAGS " -Wall -ggdb ${READLINE_FLAG}")
+#SET (CMAKE_CXX_FLAGS " -Wall -ggdb ${READLINE_FLAG}")
 
 include_directories(include)
  
+SET(Boost_ADDITIONAL_VERSIONS "1.42" "1.42.0" "1.41")
+SET(Boost_USE_MULTITHREADED ON)
+
 find_package(Boost 1.36.0 COMPONENTS thread)
 
-if (NOT Boost_FOUND)
+if (Boost_FOUND)
+  link_directories( ${Boost_LIBRARY_DIRS} )
+else()
   message(FATAL_ERROR "Can not find Boost")
-endif(NOT Boost_FOUND)
+endif(Boost_FOUND)
 
+if (CMAKE_HOST_UNIX)
+  SET(DYNAMIC_LOADER "dl")
+endif(CMAKE_HOST_UNIX)
 
 
 include_directories(${Boost_INCLUDE_DIRS})
 add_executable(chaiscript_eval src/main.cpp)
 #add_executable(dispatchkit_test contrib/test/dispatchkit_test.cpp)
-target_link_libraries(chaiscript_eval dl ${Boost_LIBRARIES} ${READLINE_LIB})
+target_link_libraries(chaiscript_eval ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
 
 add_library(test MODULE src/test_module.cpp)
 target_link_libraries(test ${Boost_LIBRARIES})

@@ -8,6 +8,8 @@
 
 #include <list>
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #ifdef READLINE_AVAILABLE
 #include <readline/readline.h>
 #include <readline/history.h>
