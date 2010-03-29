@@ -7,7 +7,7 @@ std::string hello_world()
   return "Hello World";
 }
 
-CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test()
+CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_module()
 {
   chaiscript::ModulePtr m(new chaiscript::Module());
 

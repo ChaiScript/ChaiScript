@@ -1,0 +1,1 @@
+ChaiScript is a header-only C++ embedded scripting language loosely based on ECMA script. It is designed for ease of use and tight integration with C++. See http://www.chaiscript.com for more details.

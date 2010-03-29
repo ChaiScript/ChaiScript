@@ -2,11 +2,35 @@ cmake_minimum_required(VERSION 2.8)
 
 project(chaiscript)
 
+list(APPEND CPACK_SOURCE_IGNORE_FILES "${CMAKE_CURRENT_BINARY_DIR}")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.svn")
+list(APPEND CPACK_SOURCE_IGNORE_FILES ".swp")
+list(APPEND CPACK_SOURCE_IGNORE_FILES ".*~")
+
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/license.txt")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/readme.txt")
+set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/description.txt")
+
+set(CPACK_PACKAGE_VERSION_MAJOR 2)
+set(CPACK_PACKAGE_VERSION_MINOR 4)
+set(CPACK_PACKAGE_VERSION_PATCH 0)
+set(CPACK_PACKAGE_EXECUTABLES "chai;ChaiScript Eval")
+set(CPACK_PACKAGE_VENDOR "ChaiScript.com")
+set(CPACK_PACKAGE_CONTACT "contact@chaiscript.com")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "An embedded scripting language for C++")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libboost-dev (>=1.36.0)")
+set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
+set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+
+
+
 include(CTest)
+include(CPack)
 
 FIND_LIBRARY(READLINE_LIBRARY NAMES readline PATH /usr/lib /usr/local/lib /opt/local/lib)
 
 enable_testing()
+
 
 MESSAGE(STATUS "Detecting readline support")
 if (READLINE_LIBRARY)
@@ -44,12 +68,12 @@ endif(CMAKE_HOST_UNIX)
 
 
 include_directories(${Boost_INCLUDE_DIRS})
-add_executable(chaiscript_eval src/main.cpp)
+add_executable(chai src/main.cpp)
 #add_executable(dispatchkit_test contrib/test/dispatchkit_test.cpp)
-target_link_libraries(chaiscript_eval ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
+target_link_libraries(chai ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
 
-add_library(test MODULE src/test_module.cpp)
-target_link_libraries(test ${Boost_LIBRARIES})
+add_library(test_module MODULE src/test_module.cpp)
+target_link_libraries(test_module ${Boost_LIBRARIES})
 
 add_library(stl_extra MODULE src/stl_extra.cpp)
 target_link_libraries(stl_extra ${Boost_LIBRARIES})
@@ -60,7 +84,7 @@ IF(BUILD_TESTING)
 
   foreach(filename ${UNIT_TESTS})
     message(STATUS "Adding test ${filename}")
-    add_test(${filename} chaiscript_eval ${CMAKE_CURRENT_SOURCE_DIR}/unittests/unit_test.inc ${CMAKE_CURRENT_SOURCE_DIR}/unittests/${filename})
+    add_test(${filename} chai ${CMAKE_CURRENT_SOURCE_DIR}/unittests/unit_test.inc ${CMAKE_CURRENT_SOURCE_DIR}/unittests/${filename})
   endforeach(filename)
 
   SET_PROPERTY(TEST ${UNIT_TESTS}
@@ -70,6 +94,16 @@ IF(BUILD_TESTING)
   )
 ENDIF(BUILD_TESTING)
 
-install(TARGETS chaiscript_eval DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+install(TARGETS chai stl_extra test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript )
+install(DIRECTORY include/chaiscript DESTINATION include 
+   PATTERN "*.hpp"
+   PATTERN "*/.svn*" EXCLUDE)
+install(DIRECTORY unittests DESTINATION share/chaiscript 
+   PATTERN "*.chai" 
+   PATTERN "*.inc"
+   PATTERN "*/.svn*" EXCLUDE)
+install(DIRECTORY samples DESTINATION share/chaiscript 
+   PATTERN "*.chai"
+   PATTERN "*/.svn*" EXCLUDE)
         
 
