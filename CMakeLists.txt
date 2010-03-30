@@ -18,10 +18,14 @@ set(CPACK_PACKAGE_EXECUTABLES "chai;ChaiScript Eval")
 set(CPACK_PACKAGE_VENDOR "ChaiScript.com")
 set(CPACK_PACKAGE_CONTACT "contact@chaiscript.com")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "An embedded scripting language for C++")
+
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libboost-dev (>=1.36.0)")
 set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 
+set(CPACK_RPM_PACKAGE_LICENSE "BSD")
+set(CPACK_RPM_PACKAGE_GROUP "Programming")
+set(CPACK_RPM_PACKAGE_REQUIRES "boost-devel >= 1.36.0, boost-thread >= 1.36.0")
 
 
 include(CTest)
