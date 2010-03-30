@@ -35,7 +35,7 @@ syn keyword chaiscriptKeyword def true false attr
 syn keyword chaiscriptType fun var
 
 "Built in funcs
-syn keyword chaiscriptFunc eval
+syn keyword chaiscriptFunc eval throw
 
 "Let's treat all backtick operator function lookups as built in too
 syn match chaiscriptFunc  "`.*`"
