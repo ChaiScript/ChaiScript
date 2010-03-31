@@ -1,6 +1,6 @@
 " Vim syntax file
 " Language:	ChaiScript
-" Maintainer:	Jason Turner <jason 'at' emptycrate com>
+" Maintainer:	Jason Turner <lefticus 'at' gmail com>
 
 syn case match
 
