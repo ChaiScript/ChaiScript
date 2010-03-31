@@ -38,7 +38,9 @@ syn keyword chaiscriptType fun var
 syn keyword chaiscriptFunc eval throw
 
 "Let's treat all backtick operator function lookups as built in too
-syn match chaiscriptFunc  "`.*`"
+syn region chaiscriptFunc  matchgroup=chaiscriptFunc start="`" end="`"
+
+syn match chaiscriptOperator "\.\."
 
 " Comments
 syn match   chaiscriptComment          "//.*$" contains=@Spell
