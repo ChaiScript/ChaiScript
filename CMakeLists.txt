@@ -96,6 +96,11 @@ IF(BUILD_TESTING)
     "CHAI_USE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/unittests/"
     "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
   )
+
+  add_executable(utility_test unittests/utility_test.cpp)
+  target_link_libraries(utility_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
+  add_test(NAME Utility_Test COMMAND utility_test)
+
 ENDIF(BUILD_TESTING)
 
 install(TARGETS chai stl_extra test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript )
