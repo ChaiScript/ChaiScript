@@ -171,6 +171,46 @@ namespace chaiscript
 
     return Type_Conversion(boost::shared_ptr<detail::Type_Conversion_Impl>(new detail::Dynamic_Cast_Conversion<Cleaned_From, Cleaned_To>()));
   }
+
+  class Type_Converter
+  {
+    public:
+      bool add(const Type_Conversion &t_tc)
+      {
+        return m_conversions.insert(std::make_pair(std::make_pair(t_tc.from(), t_tc.to()), t_tc)).second;
+      }
+      
+      bool empty()
+      {
+        return m_conversions.empty();
+      }
+
+      Boxed_Value convert(const Boxed_Value &t_bv, const Type_Info &t_to) const
+      {
+        if (t_bv.get_type_info().bare_equal(t_to))
+        {
+          return t_bv;
+        } else {
+          std::map<std::pair<Type_Info, Type_Info>, Type_Conversion>::const_iterator itr = m_conversions.begin(), 
+            end = m_conversions.end();
+
+          while (itr != end)
+          {
+            if (itr->first.first.bare_equal(t_bv.get_type_info())
+                && itr->first.second.bare_equal(t_to))
+            {
+              return itr->second.convert(t_bv);
+            }
+            ++itr;
+          }
+
+          throw bad_boxed_cast("Unable to convert boxed_value");
+        }
+      }
+
+    private:
+      std::map<std::pair<Type_Info, Type_Info>, Type_Conversion> m_conversions;
+  };
 }
 
 

@@ -220,7 +220,7 @@ namespace chaiscript
       {
         std::multimap<std::string, Proxy_Function> m_functions;
         std::map<std::string, Boxed_Value> m_global_objects;
-        std::map<std::pair<Type_Info, Type_Info>, Type_Conversion> m_type_conversions;
+        Type_Converter m_type_converter;
         Type_Name_Map m_types;
         std::set<std::string> m_reserved_words;
       };
@@ -259,7 +259,7 @@ namespace chaiscript
         boost::unique_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-        m_state.m_type_conversions.insert(std::make_pair(std::make_pair(tc.from(), tc.to()), tc));
+        m_state.m_type_converter.add(tc);
       }
 
       /**
