@@ -21,7 +21,6 @@
 
 #include "boxed_value.hpp"
 #include "type_info.hpp"
-#include "type_conversion.hpp"
 #include "proxy_functions.hpp"
 #include "proxy_constructors.hpp"
 #include "dynamic_object.hpp"
@@ -44,11 +43,6 @@ namespace chaiscript
         return *this;
       }
 
-      Module &add(const Type_Conversion &tc)
-      {
-        m_conversions.push_back(tc);
-        return *this;
-      }
 
       //Add a bit of chaiscript to eval during module implementation
       Module &eval(const std::string &str)
@@ -68,14 +62,12 @@ namespace chaiscript
         {
           apply(m_typeinfos.begin(), m_typeinfos.end(), t_engine);
           apply(m_funcs.begin(), m_funcs.end(), t_engine);
-          apply_nameless(m_conversions.begin(), m_conversions.end(), t_engine);
           apply_eval(m_evals.begin(), m_evals.end(), t_eval);
         }
 
     private:
       std::vector<std::pair<Type_Info, std::string> > m_typeinfos;
       std::vector<std::pair<Proxy_Function, std::string> > m_funcs;
-      std::vector<Type_Conversion> m_conversions;
       std::vector<std::string> m_evals;
 
       template<typename T, typename InItr>
@@ -84,16 +76,6 @@ namespace chaiscript
           while (begin != end)
           {
             t.add(begin->first, begin->second);
-            ++begin;
-          }
-        }
-
-      template<typename T, typename InItr>
-        void apply_nameless(InItr begin, InItr end, T &t) const
-        {
-          while (begin != end)
-          {
-            t.add(*begin);
             ++begin;
           }
         }
@@ -220,7 +202,6 @@ namespace chaiscript
       {
         std::multimap<std::string, Proxy_Function> m_functions;
         std::map<std::string, Boxed_Value> m_global_objects;
-        Type_Converter m_type_converter;
         Type_Name_Map m_types;
         std::set<std::string> m_reserved_words;
       };
@@ -247,19 +228,6 @@ namespace chaiscript
         StackData &stack = get_stack_data();
         stack.get<0>().erase(name);
         return add_function(f, name);
-      }
-
-      /**
-       * Add a new type converter to the system
-       */
-      void add(const Type_Conversion &tc)
-      {
-
-#ifndef CHAISCRIPT_NO_THREADS
-        boost::unique_lock<boost::shared_mutex> l(m_mutex);
-#endif
-
-        m_state.m_type_converter.add(tc);
       }
 
       /**

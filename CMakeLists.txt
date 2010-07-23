@@ -101,11 +101,6 @@ IF(BUILD_TESTING)
   target_link_libraries(utility_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
   add_test(NAME Utility_Test COMMAND utility_test)
 
-
-  add_executable(inheritance_test unittests/inheritance_test.cpp)
-  target_link_libraries(inheritance_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
-  add_test(NAME Inheritance_Test COMMAND inheritance_test)
-
 ENDIF(BUILD_TESTING)
 
 install(TARGETS chai stl_extra test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript )
