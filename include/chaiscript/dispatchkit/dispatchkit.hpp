@@ -209,8 +209,6 @@ namespace chaiscript
       Dispatch_Engine()
         : m_place_holder(boost::shared_ptr<Placeholder_Object>(new Placeholder_Object()))
       {
-        StackData &stack = get_stack_data();
-        stack.get<1>().push_back(Scope());
       }
 
       ~Dispatch_Engine()
@@ -748,6 +746,7 @@ namespace chaiscript
         Stack_Holder()
           : stack(new StackData())
         {
+          stack->get<1>().push_back(Scope());
           stack->get<2>() = true;
         }
 

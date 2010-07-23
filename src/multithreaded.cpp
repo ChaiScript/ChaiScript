@@ -13,7 +13,9 @@
 
 void do_work(chaiscript::ChaiScript &c)
 {
-//  c("use(\"work.chai\"); do_chai_work(num_iterations);");
+//  c("use(\"work.chai\"); do_chai_work(num_iterations);"); 
+  std::string name = "MyVar" + boost::lexical_cast<std::string>(rand());
+  c.add(chaiscript::var(5), name);
   c("use(\"work.chai\"); do_chai_work(10000);");
 }
 
