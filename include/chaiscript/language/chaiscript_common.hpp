@@ -7,13 +7,6 @@
 #ifndef _CHAISCRIPT_COMMON_HPP
 #define	_CHAISCRIPT_COMMON_HPP
 
-
-#ifdef  BOOST_HAS_DECLSPEC
-#define CHAISCRIPT_MODULE_EXPORT extern "C" __declspec(dllexport)
-#else
-#define CHAISCRIPT_MODULE_EXPORT extern "C"
-#endif
-
 namespace chaiscript
 {
     typedef ModulePtr (*Create_Module_Func)();

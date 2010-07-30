@@ -17,7 +17,6 @@
 
 #include <chaiscript/chaiscript.hpp>
 
-
 void print_help() {
     std::cout << "ChaiScript evaluator.  To evaluate an expression, type it and press <enter>." << std::endl;
     std::cout << "Additionally, you can inspect the runtime system using:" << std::endl;
@@ -58,8 +57,19 @@ int main(int argc, char *argv[]) {
     std::vector<std::string> usepaths;
     std::vector<std::string> modulepaths;
 
+
+    // Disable deprecation warning for getenv call.
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
+
     const char *usepath = getenv("CHAI_USE_PATH");
     const char *modulepath = getenv("CHAI_MODULE_PATH");
+
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
    
     usepaths.push_back("");
 

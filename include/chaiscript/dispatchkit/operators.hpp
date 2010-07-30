@@ -146,7 +146,14 @@ namespace chaiscript
     template<typename Ret, typename L>
       Ret unary_minus(L l)
       {
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4146)
         return (-l);
+#pragma warning(pop)
+#else
+        return (-1);
+#endif
       }
 
     template<typename Ret, typename L, typename R>

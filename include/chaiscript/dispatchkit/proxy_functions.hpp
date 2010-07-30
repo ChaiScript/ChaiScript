@@ -306,7 +306,7 @@ namespace chaiscript
 
         std::vector<Boxed_Value> args;
 
-        while (true)
+        while (!(parg == params.end() && barg == m_args.end()))
         {
           while (barg != m_args.end() 
                  && !(barg->get_type_info() == detail::Get_Type_Info<Placeholder_Object>::get()))
@@ -326,11 +326,6 @@ namespace chaiscript
           {
             ++barg;
           } 
-
-          if (parg == params.end() && barg == m_args.end())
-          {
-            break;
-          }
         }
         return args;
       }

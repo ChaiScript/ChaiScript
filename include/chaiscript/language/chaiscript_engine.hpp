@@ -15,7 +15,9 @@
 #ifdef _POSIX_VERSION
 #include <dlfcn.h>
 #else
-#ifdef WIN32
+#ifdef BOOST_WINDOWS
+#define VC_EXTRA_LEAN
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #endif
 #endif
