@@ -264,7 +264,7 @@ namespace chaiscript
      *http://www.sgi.com/tech/stl/FrontInsertionSequence.html
      */
     template<typename ContainerType>
-    ModulePtr front_insertion_sequence_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    ModulePtr front_insertion_sequence_type(const std::string &, ModulePtr m = ModulePtr(new Module()))
     {
       typedef typename ContainerType::reference (ContainerType::*frontptr)();
       m->add(fun(static_cast<frontptr>(&ContainerType::front)), "front");
