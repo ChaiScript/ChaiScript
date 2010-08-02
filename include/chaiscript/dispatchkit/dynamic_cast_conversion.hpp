@@ -132,9 +132,12 @@ namespace chaiscript
             boost::unique_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-            m_conversions.push_back(
-                boost::shared_ptr<Dynamic_Conversion>(new Dynamic_Conversion_Impl<Base, Derived>())
-              );
+            if (find(user_type<Base>(), user_type<Derived>()) == m_conversions.end())
+            {
+              m_conversions.push_back(
+                  boost::shared_ptr<Dynamic_Conversion>(new Dynamic_Conversion_Impl<Base, Derived>())
+                  );
+            }
           }
 
         bool has_conversion(const Type_Info &base, const Type_Info &derived)
@@ -143,18 +146,9 @@ namespace chaiscript
           boost::shared_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-          for (std::vector<boost::shared_ptr<Dynamic_Conversion> >::const_iterator itr = m_conversions.begin();
-               itr != m_conversions.end();
-               ++itr)
-          {
-            if ((*itr)->base().bare_equal(base) && (*itr)->derived().bare_equal(derived))
-            {
-              return true;
-            }
-          }
-
-          return false;
+          return find(base, derived) != m_conversions.end();
         }
+
 
         boost::shared_ptr<Dynamic_Conversion> get_conversion(const Type_Info &base, const Type_Info &derived)
         {
@@ -162,21 +156,35 @@ namespace chaiscript
           boost::shared_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
+          std::vector<boost::shared_ptr<Dynamic_Conversion> >::const_iterator itr =
+            find(base, derived);
+
+          if (itr != m_conversions.end())
+          {
+            return *itr;
+          } else {
+            throw std::out_of_range("No such conversion exists from " + derived.bare_name() + " to " + base.bare_name());
+          }
+        }
+
+      private:
+        Dynamic_Conversions() {}
+
+        std::vector<boost::shared_ptr<Dynamic_Conversion> >::const_iterator find(
+            const Type_Info &base, const Type_Info &derived)
+        {
           for (std::vector<boost::shared_ptr<Dynamic_Conversion> >::const_iterator itr = m_conversions.begin();
                itr != m_conversions.end();
                ++itr)
           {
             if ((*itr)->base().bare_equal(base) && (*itr)->derived().bare_equal(derived))
             {
-              return *itr; 
+              return itr;
             }
           }
 
-          throw std::out_of_range("No such conversion exists from " + derived.bare_name() + " to " + base.bare_name());
+          return m_conversions.end();
         }
-
-      private:
-        Dynamic_Conversions() {}
 #ifndef CHAISCRIPT_NO_THREADS
         boost::shared_mutex m_mutex;
 #endif
