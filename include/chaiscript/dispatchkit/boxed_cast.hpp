@@ -1,0 +1,53 @@
+// This file is distributed under the BSD License.
+// See "license.txt" for details.
+// Copyright 2009-2010, Jonathan Turner (jturner@minnow-lang.org)
+// and Jason Turner (lefticus@gmail.com)
+// http://www.chaiscript.com
+
+#ifndef __boxed_cast_hpp__
+#define __boxed_cast_hpp__
+
+#include "type_info.hpp"
+#include "boxed_value.hpp"
+#include "boxed_cast_helper.hpp"
+#include "dynamic_cast_conversion.hpp"
+
+#include "../chaiscript_threading.hpp"
+#include <boost/shared_ptr.hpp>
+#include <boost/any.hpp>
+#include <boost/function.hpp>
+#include <boost/ref.hpp>
+#include <boost/cstdint.hpp>
+#include <boost/type_traits/add_const.hpp>
+#include <boost/integer_traits.hpp>
+
+namespace chaiscript 
+{
+  
+  /**
+   * boxed_cast function for casting a Boxed_Value into a given type
+   * example:
+   * int &i = boxed_cast<int &>(boxedvalue);
+   */
+  template<typename Type>
+  typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv)
+  {
+    try {
+      return detail::Cast_Helper<Type>::cast(bv);
+    } catch (const boost::bad_any_cast &) {
+      try {
+        // We will not catch any bad_boxed_dynamic_cast that is thrown, let the user get it
+        // either way, we are not responsible if it doesn't work
+        return detail::Cast_Helper<Type>::cast(boxed_dynamic_cast<Type>(bv));
+      } catch (const boost::bad_any_cast &) {
+        throw bad_boxed_cast(bv.get_type_info(), typeid(Type));
+      }
+    } 
+  }
+
+}
+
+
+
+#endif
+

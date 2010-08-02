@@ -15,6 +15,7 @@
 #define __proxy_functions_detail_hpp__
 
 #include "boxed_value.hpp"
+#include "boxed_cast.hpp"
 #include "type_info.hpp"
 #include "handle_return.hpp"
 #include <string>

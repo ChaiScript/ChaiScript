@@ -11,6 +11,7 @@
 #include "dynamic_object.hpp"
 #include "register_function.hpp"
 #include "operators.hpp"
+#include "boxed_pod_value.hpp"
 
 namespace chaiscript 
 {

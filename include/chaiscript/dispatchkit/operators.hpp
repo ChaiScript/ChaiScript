@@ -152,7 +152,7 @@ namespace chaiscript
         return (-l);
 #pragma warning(pop)
 #else
-        return (-1);
+        return (-l);
 #endif
       }
 

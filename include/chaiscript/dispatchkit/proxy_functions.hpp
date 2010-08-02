@@ -20,6 +20,8 @@
 
 namespace chaiscript
 {
+  class Boxed_POD_Value;
+
   /**
    * Helper for building a list of parameters for calling a Proxy_Function
    * it does automatic conversion to Boxed_Value types via operator<<
@@ -97,7 +99,8 @@ namespace chaiscript
             if (ti.is_undef() || vals[0].get_type_info().is_undef()
                 || ti.bare_equal(user_type<Boxed_Value>())
                 || ti.bare_equal(user_type<Boxed_POD_Value>())
-                || ti.bare_equal(vals[0].get_type_info()))
+                || ti.bare_equal(vals[0].get_type_info())
+                || dynamic_cast_converts(ti, vals[0].get_type_info()) )
             {
               return true;
             } else {

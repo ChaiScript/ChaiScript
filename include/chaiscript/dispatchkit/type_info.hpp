@@ -18,6 +18,14 @@
 
 namespace chaiscript
 {
+
+  template<typename T>
+    struct Bare_Type
+    {
+      typedef typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type type;
+    };
+
+
   /**
    * compile time deduced information about a type
    */
@@ -132,7 +140,7 @@ namespace chaiscript
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
               &typeid(T), 
-              &typeid(typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type));
+              &typeid(typename Bare_Type<T>::type));
         }
       };
 
@@ -144,7 +152,7 @@ namespace chaiscript
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
               &typeid(boost::shared_ptr<T> ), 
-              &typeid(typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type));
+              &typeid(typename Bare_Type<T>::type));
         }
       };
 
@@ -156,7 +164,7 @@ namespace chaiscript
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
               &typeid(const boost::shared_ptr<T> &), 
-              &typeid(typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type));
+              &typeid(typename Bare_Type<T>::type));
         }
       };
 
@@ -168,7 +176,7 @@ namespace chaiscript
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
               &typeid(boost::reference_wrapper<T> ), 
-              &typeid(typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type));
+              &typeid(Bare_Type<T>::type));
         }
       };
   }
