@@ -19,8 +19,6 @@
 #include <boost/cstdint.hpp>
 #include <boost/type_traits/add_const.hpp>
 #include <boost/integer_traits.hpp>
-#include <boost/tuple/tuple.hpp>
-#include <boost/tuple/tuple_comparison.hpp>
 
 namespace chaiscript 
 {
@@ -96,6 +94,38 @@ namespace chaiscript
        */
       struct Object_Cache
       {
+        struct Object_Cache_Key
+        {
+          Object_Cache_Key(const void *t_obj, bool t_const, const std::type_info *t_objtype)
+            : m_obj(t_obj), m_const(t_const), m_objtype(t_objtype)
+          {
+          }
+
+          bool operator<(const Object_Cache_Key &rhs) const
+          {
+            //Take into account the fact that sometimes there are equiv type_info objects
+            //that have different pointer values, so we have to dereference to use the built in
+            //comparison operator
+            return m_obj < rhs.m_obj
+                   || (m_obj == rhs.m_obj && m_const < rhs.m_const)
+                   || (m_obj == rhs.m_obj && m_const == rhs.m_const 
+                       && m_objtype < rhs.m_objtype && !((*m_objtype) == (*rhs.m_objtype)));
+          }
+
+          bool operator==(const Object_Cache_Key &rhs) const
+          {
+            return m_obj == rhs.m_obj
+              && m_const == rhs.m_const 
+              && (m_objtype == rhs.m_objtype || (*m_objtype) == (*rhs.m_objtype) );
+          }
+
+
+
+          const void *m_obj;
+          bool m_const;
+          const std::type_info *m_objtype;
+        };
+
         Object_Cache()
           : m_cullcount(0)
         {
@@ -130,14 +160,14 @@ namespace chaiscript
                   &Data::is_null<T>)
                 );
 
-            std::map<boost::tuple<const void *, bool, const std::type_info *>, Data>::iterator itr
-              = m_ptrs.find(boost::make_tuple(obj.get(), b_const, ti));
+            std::map<Object_Cache_Key, Data>::iterator itr
+              = m_ptrs.find(Object_Cache_Key(obj.get(), b_const, ti));
 
             if (itr != m_ptrs.end())
             {
               (*data) = (itr->second);
             } else {
-              m_ptrs.insert(std::make_pair(boost::make_tuple(obj.get(), b_const, ti), *data));
+              m_ptrs.insert(std::make_pair(Object_Cache_Key(obj.get(), b_const, ti), *data));
             }
 
             return data;
@@ -161,8 +191,8 @@ namespace chaiscript
                   true)
                 );
 
-            std::map<boost::tuple<const void *, bool, const std::type_info *>, Data >::iterator itr
-              = m_ptrs.find(boost::make_tuple(obj.get_pointer(), b_const, ti) );
+            std::map<Object_Cache_Key, Data >::iterator itr
+              = m_ptrs.find(Object_Cache_Key(obj.get_pointer(), b_const, ti) );
 
             // If the ptr is found in the cache and it is the correct type,
             // return it. It may be the incorrect type when two variables share the
@@ -195,9 +225,7 @@ namespace chaiscript
 
             boost::shared_ptr<T> *ptr = boost::any_cast<boost::shared_ptr<T> >(&data->m_obj);
 
-            boost::tuple<const void *, bool, const std::type_info *> key(ptr->get(), false, ti);
-
-            m_ptrs.insert(std::make_pair(key, *data));
+            m_ptrs.insert(std::make_pair(Object_Cache_Key(ptr->get(), false, ti), *data));
             return data;
           }
 
@@ -223,14 +251,13 @@ namespace chaiscript
             return;
           }
 
-
-          std::map<boost::tuple<const void *, bool, const std::type_info *>, Data>::iterator itr = m_ptrs.begin();
+          std::map<Object_Cache_Key, Data>::iterator itr = m_ptrs.begin();
 
           while (itr != m_ptrs.end())
           {
             if (itr->second.m_unique(&itr->second.m_obj))
             {
-              std::map<boost::tuple<const void *, bool, const std::type_info *>, Data >::iterator todel = itr;
+              std::map<Object_Cache_Key, Data >::iterator todel = itr;
               ++itr;
               m_ptrs.erase(todel);
             } else {
@@ -239,7 +266,7 @@ namespace chaiscript
           }
         }
 
-        std::map<boost::tuple<const void *, bool, const std::type_info *>, Data> m_ptrs;
+        std::map<Object_Cache_Key, Data> m_ptrs;
         int m_cullcount;
       };
 
