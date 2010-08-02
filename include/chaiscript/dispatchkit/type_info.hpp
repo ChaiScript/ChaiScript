@@ -135,6 +135,8 @@ namespace chaiscript
     template<typename T>
       struct Get_Type_Info
       {
+        typedef T type;
+
         static Type_Info get()
         {
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
@@ -147,6 +149,8 @@ namespace chaiscript
     template<typename T>
       struct Get_Type_Info<boost::shared_ptr<T> >
       {
+        typedef T type;
+
         static Type_Info get()
         {
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
@@ -159,6 +163,8 @@ namespace chaiscript
     template<typename T>
       struct Get_Type_Info<const boost::shared_ptr<T> &>
       {
+        typedef T type;
+
         static Type_Info get()
         {
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
@@ -180,6 +186,12 @@ namespace chaiscript
         }
       };
   }
+
+  template<typename T>
+    struct Stripped_Type
+    {
+      typedef typename Bare_Type<typename detail::Get_Type_Info<T>::type>::type type;
+    };
   
   template<typename T>
   Type_Info user_type(T)

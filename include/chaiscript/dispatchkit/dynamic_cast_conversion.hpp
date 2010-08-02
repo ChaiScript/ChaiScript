@@ -5,6 +5,8 @@
 #include "boxed_value.hpp"
 #include "boxed_cast_helper.hpp"
 #include "bad_boxed_cast.hpp"
+#include <boost/static_assert.hpp>
+#include <boost/type_traits/is_polymorphic.hpp>
 
 namespace chaiscript
 {
@@ -83,7 +85,6 @@ namespace chaiscript
 
                 return Boxed_Value(data);
               } else {
-                std::cout << "performing boxed_dynamic_cast" << std::endl;
                 boost::shared_ptr<Base> data 
                   = boost::dynamic_pointer_cast<Base>(detail::Cast_Helper<boost::shared_ptr<Derived> >::cast(derived));
 
@@ -92,11 +93,7 @@ namespace chaiscript
                   throw std::bad_cast();
                 }
 
-                std::cout << "typeinfo " << typeid(data).name() << std::endl;
-                Boxed_Value ret(data);
-                std::cout << " It worked " << ret.get_type_info().name() << std::endl;
-
-                return ret;
+                return Boxed_Value(data);
               }
             } else {
               // Pull the reference out of the contained boxed value, which we know is the type we want
@@ -177,6 +174,12 @@ namespace chaiscript
   template<typename Base, typename Derived>
   void register_base_class()
   {
+    //Can only be used with related polymorphic types
+    //may be expanded some day to support conversions other than child -> parent
+    BOOST_STATIC_ASSERT((boost::is_base_of<Base,Derived>::value));
+    BOOST_STATIC_ASSERT(boost::is_polymorphic<Base>::value);
+    BOOST_STATIC_ASSERT(boost::is_polymorphic<Derived>::value);
+
     detail::Dynamic_Conversions::add_conversion<Base, Derived>();
   }
 
@@ -194,8 +197,6 @@ namespace chaiscript
   template<typename Base>
   Boxed_Value boxed_dynamic_cast(const Boxed_Value &derived)
   {
-    std::cout << " Attempting conversion from " << derived.get_type_info().bare_name() << " to "<< typeid(Base).name()  
-      << std::endl;
     try {
       return detail::Dynamic_Conversions::get_conversion(user_type<Base>(), derived.get_type_info())->convert(derived);
     } catch (const std::out_of_range &) {
