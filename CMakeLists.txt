@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(chaiscript)
 
+option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" TRUE)
+
 list(APPEND CPACK_SOURCE_IGNORE_FILES "${CMAKE_CURRENT_BINARY_DIR}")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.svn")
 list(APPEND CPACK_SOURCE_IGNORE_FILES ".swp")
@@ -58,13 +60,17 @@ include_directories(include)
 SET(Boost_ADDITIONAL_VERSIONS "1.43" "1.43.0" "1.42" "1.42.0" "1.41")
 SET(Boost_USE_MULTITHREADED ON)
 
-find_package(Boost 1.36.0 COMPONENTS thread)
+if (MULTITHREAD_SUPPORT_ENABLED)
+  find_package(Boost 1.36.0 COMPONENTS thread)
 
-if (Boost_FOUND)
-  link_directories( ${Boost_LIBRARY_DIRS} )
+  if (Boost_FOUND)
+    link_directories( ${Boost_LIBRARY_DIRS} )
+  else()
+    message(FATAL_ERROR "Can not find Boost")
+  endif(Boost_FOUND)
 else()
-  message(FATAL_ERROR "Can not find Boost")
-endif(Boost_FOUND)
+  ADD_DEFINITIONS(-DCHAISCRIPT_NO_THREADS)
+endif()
 
 if (CMAKE_HOST_UNIX)
   SET(DYNAMIC_LOADER "dl")
