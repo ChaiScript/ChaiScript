@@ -108,6 +108,10 @@ IF(BUILD_TESTING)
   target_link_libraries(dynamic_object_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
   add_test(NAME Dynamic_Object_Test COMMAND dynamic_object_test)
 
+  add_executable(functor_creation_test unittests/functor_creation_test.cpp)
+  target_link_libraries(functor_creation_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
+  add_test(NAME Functor_Creation_Test COMMAND functor_creation_test)
+
   add_library(test_module MODULE src/test_module.cpp)
   target_link_libraries(test_module ${Boost_LIBRARIES})
 

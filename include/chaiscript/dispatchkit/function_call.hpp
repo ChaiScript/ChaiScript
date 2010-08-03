@@ -27,7 +27,7 @@ namespace chaiscript
    */
   template<typename FunctionType>
     boost::function<FunctionType>
-      functor(const std::vector<std::pair<std::string, Proxy_Function > > &funcs)
+      functor(const std::vector<std::pair<std::string, Const_Proxy_Function > > &funcs)
       {
         FunctionType *p=0;
         return detail::build_function_caller_helper(p, funcs);
@@ -48,9 +48,9 @@ namespace chaiscript
    */
   template<typename FunctionType>
     boost::function<FunctionType>
-      functor(Proxy_Function func)
+      functor(Const_Proxy_Function func)
       {
-        std::vector<std::pair<std::string, Proxy_Function > > funcs;
+        std::vector<std::pair<std::string, Const_Proxy_Function > > funcs;
         funcs.push_back(std::make_pair(std::string(), func));
         return functor<FunctionType>(funcs);
       }
@@ -63,7 +63,7 @@ namespace chaiscript
     boost::function<FunctionType>
       functor(const Boxed_Value &bv)
       {
-        return functor<FunctionType>(boxed_cast<Proxy_Function >(bv));
+        return functor<FunctionType>(boxed_cast<Const_Proxy_Function >(bv));
       }
 
 }
