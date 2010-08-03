@@ -120,7 +120,7 @@ namespace chaiscript
     class Dynamic_Conversions
     {
       public:
-        static Dynamic_Conversions &get()
+        static inline Dynamic_Conversions &get()
         {
           static Dynamic_Conversions obj;
           return obj;
@@ -129,8 +129,15 @@ namespace chaiscript
         template<typename Base, typename Derived>
         static boost::shared_ptr<Dynamic_Conversion> create()
         {
-          return boost::shared_ptr<Dynamic_Conversion>(new Dynamic_Conversion_Impl<Base, Derived>());
+          boost::shared_ptr<Dynamic_Conversion> conversion(new Dynamic_Conversion_Impl<Base, Derived>());
 
+          /// \todo this is a hack and a kludge. The idea is to make sure that
+          ///       the conversion is registered both in the module's notion of the static conversion object
+          ///       and in the global notion of the static conversion object
+          ///       someday this will almost certainly have to change. Maybe it is time for ChaiScript
+          ///       to become a library?
+          Dynamic_Conversions::get().add_conversion(conversion);
+          return conversion;
         }
 
         template<typename InItr>

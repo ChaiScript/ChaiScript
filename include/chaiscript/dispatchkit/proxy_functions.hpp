@@ -20,7 +20,7 @@
 
 namespace chaiscript
 {
-  class Boxed_POD_Value;
+  struct Boxed_POD_Value;
 
   /**
    * Helper for building a list of parameters for calling a Proxy_Function

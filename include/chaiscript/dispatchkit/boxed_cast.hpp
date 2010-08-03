@@ -36,6 +36,14 @@ namespace chaiscript
     try {
       return detail::Cast_Helper<Type>::cast(bv);
     } catch (const boost::bad_any_cast &) {
+
+#ifdef BOOST_MSVC
+      //Thank you MSVC, yes we know that a constant value is being used in the if
+      // statment in THIS VERSION of the template instantiation
+#pragma warning(push)
+#pragma warning(disable : 4127)
+#endif
+
       if (boost::is_polymorphic<typename Stripped_Type<Type>::type>::value)
       {
         try {
@@ -50,6 +58,12 @@ namespace chaiscript
         // attempted dynamic_cast
         throw bad_boxed_cast(bv.get_type_info(), typeid(Type));
       }
+
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
+
+
     } 
   }
 
