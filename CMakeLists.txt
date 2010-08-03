@@ -76,9 +76,6 @@ add_executable(chai src/main.cpp)
 #add_executable(dispatchkit_test contrib/test/dispatchkit_test.cpp)
 target_link_libraries(chai ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
 
-add_library(test_module MODULE src/test_module.cpp)
-target_link_libraries(test_module ${Boost_LIBRARIES})
-
 add_library(stl_extra MODULE src/stl_extra.cpp)
 target_link_libraries(stl_extra ${Boost_LIBRARIES})
 
@@ -105,6 +102,10 @@ IF(BUILD_TESTING)
   target_link_libraries(dynamic_object_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
   add_test(NAME Dynamic_Object_Test COMMAND dynamic_object_test)
 
+  add_library(test_module MODULE src/test_module.cpp)
+  target_link_libraries(test_module ${Boost_LIBRARIES})
+
+  install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript)
 ENDIF(BUILD_TESTING)
 
 install(TARGETS chai stl_extra test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript )

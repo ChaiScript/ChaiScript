@@ -37,6 +37,12 @@ namespace chaiscript
         return *this;
       }
 
+      Module &add(const Dynamic_Cast_Conversion &d)
+      {
+        m_conversions.push_back(d);
+        return *this;
+      }
+
       Module &add(const Proxy_Function &f, const std::string &name)
       {
         m_funcs.push_back(std::make_pair(f, name));
@@ -63,12 +69,14 @@ namespace chaiscript
           apply(m_typeinfos.begin(), m_typeinfos.end(), t_engine);
           apply(m_funcs.begin(), m_funcs.end(), t_engine);
           apply_eval(m_evals.begin(), m_evals.end(), t_eval);
+          apply_single(m_conversions.begin(), m_conversions.end(), t_engine);
         }
 
     private:
       std::vector<std::pair<Type_Info, std::string> > m_typeinfos;
       std::vector<std::pair<Proxy_Function, std::string> > m_funcs;
       std::vector<std::string> m_evals;
+      std::vector<Dynamic_Cast_Conversion> m_conversions;
 
       template<typename T, typename InItr>
         void apply(InItr begin, InItr end, T &t) const
@@ -76,6 +84,16 @@ namespace chaiscript
           while (begin != end)
           {
             t.add(begin->first, begin->second);
+            ++begin;
+          }
+        }
+
+      template<typename T, typename InItr>
+        void apply_single(InItr begin, InItr end, T &t) const
+        {
+          while (begin != end)
+          {
+            t.add(*begin);
             ++begin;
           }
         }
@@ -89,8 +107,6 @@ namespace chaiscript
             ++begin;
           }
         }
-
-
   };
 
   typedef boost::shared_ptr<Module> ModulePtr;
@@ -213,7 +229,17 @@ namespace chaiscript
 
       ~Dispatch_Engine()
       {
+        detail::Dynamic_Conversions::get().cleanup(m_conversions.begin(), m_conversions.end());
         Boxed_Value::clear_cache();
+      }
+
+      /**
+       * Add a new conversion for upcasting to a base class
+       */
+      void add(const Dynamic_Cast_Conversion &d)
+      {
+        m_conversions.push_back(d);
+        return detail::Dynamic_Conversions::get().add_conversion(d);
       }
 
       /**
@@ -755,6 +781,7 @@ namespace chaiscript
         std::multimap<std::string, Proxy_Function> function_cache;
       };  
 
+      std::vector<Dynamic_Cast_Conversion> m_conversions;
       chaiscript::threading::Thread_Storage<Stack_Holder> m_stack_holder;
 
 

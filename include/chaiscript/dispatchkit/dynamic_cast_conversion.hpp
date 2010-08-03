@@ -116,6 +116,7 @@ namespace chaiscript
         }
     };
 
+
     class Dynamic_Conversions
     {
       public:
@@ -126,19 +127,38 @@ namespace chaiscript
         }
 
         template<typename Base, typename Derived>
-          void add_conversion()
-          {
+        static boost::shared_ptr<Dynamic_Conversion> create()
+        {
+          return boost::shared_ptr<Dynamic_Conversion>(new Dynamic_Conversion_Impl<Base, Derived>());
+
+        }
+
+        template<typename InItr>
+        void cleanup(InItr begin, const InItr &end)
+        {
 #ifndef CHAISCRIPT_NO_THREADS
-            boost::unique_lock<boost::shared_mutex> l(m_mutex);
+          boost::unique_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-            if (find(user_type<Base>(), user_type<Derived>()) == m_conversions.end())
+          while (begin != end)
+          {
+            if (begin->unique())
             {
-              m_conversions.push_back(
-                  boost::shared_ptr<Dynamic_Conversion>(new Dynamic_Conversion_Impl<Base, Derived>())
-                  );
+              m_conversions.erase(begin->get());
             }
+
+            ++begin;
           }
+        }
+
+        void add_conversion(const boost::shared_ptr<Dynamic_Conversion> &conversion)
+        {
+#ifndef CHAISCRIPT_NO_THREADS
+          boost::unique_lock<boost::shared_mutex> l(m_mutex);
+#endif
+
+          m_conversions.insert(conversion.get());
+        }
 
         bool has_conversion(const Type_Info &base, const Type_Info &derived)
         {
@@ -150,13 +170,13 @@ namespace chaiscript
         }
 
 
-        boost::shared_ptr<Dynamic_Conversion> get_conversion(const Type_Info &base, const Type_Info &derived)
+        Dynamic_Conversion *get_conversion(const Type_Info &base, const Type_Info &derived)
         {
 #ifndef CHAISCRIPT_NO_THREADS
           boost::shared_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-          std::vector<boost::shared_ptr<Dynamic_Conversion> >::const_iterator itr =
+          std::set<Dynamic_Conversion *>::const_iterator itr =
             find(base, derived);
 
           if (itr != m_conversions.end())
@@ -170,10 +190,10 @@ namespace chaiscript
       private:
         Dynamic_Conversions() {}
 
-        std::vector<boost::shared_ptr<Dynamic_Conversion> >::const_iterator find(
+        std::set<Dynamic_Conversion *>::const_iterator find(
             const Type_Info &base, const Type_Info &derived)
         {
-          for (std::vector<boost::shared_ptr<Dynamic_Conversion> >::const_iterator itr = m_conversions.begin();
+          for (std::set<Dynamic_Conversion *>::const_iterator itr = m_conversions.begin();
                itr != m_conversions.end();
                ++itr)
           {
@@ -188,12 +208,14 @@ namespace chaiscript
 #ifndef CHAISCRIPT_NO_THREADS
         boost::shared_mutex m_mutex;
 #endif
-        std::vector<boost::shared_ptr<Dynamic_Conversion> > m_conversions;
+        std::set<Dynamic_Conversion *> m_conversions;
     };
   }
 
+  typedef boost::shared_ptr<chaiscript::detail::Dynamic_Conversion> Dynamic_Cast_Conversion;
+
   template<typename Base, typename Derived>
-  void register_base_class()
+  Dynamic_Cast_Conversion base_class()
   {
     //Can only be used with related polymorphic types
     //may be expanded some day to support conversions other than child -> parent
@@ -201,7 +223,7 @@ namespace chaiscript
     BOOST_STATIC_ASSERT(boost::is_polymorphic<Base>::value);
     BOOST_STATIC_ASSERT(boost::is_polymorphic<Derived>::value);
 
-    detail::Dynamic_Conversions::get().add_conversion<Base, Derived>();
+    return detail::Dynamic_Conversions::create<Base, Derived>();
   }
 
   template<typename Base, typename Derived>
