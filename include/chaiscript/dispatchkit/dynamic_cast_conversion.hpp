@@ -7,7 +7,11 @@
 #include "bad_boxed_cast.hpp"
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_polymorphic.hpp>
+#include <boost/type_traits/is_base_of.hpp>
+
+#ifndef CHAISCRIPT_NO_THREADS
 #include <boost/thread/shared_mutex.hpp>
+#endif
 
 namespace chaiscript
 {
@@ -221,6 +225,14 @@ namespace chaiscript
 
   typedef boost::shared_ptr<chaiscript::detail::Dynamic_Conversion> Dynamic_Cast_Conversion;
 
+  /// Create a new base class registration for applying to a module or to the chaiscript engine
+  /// Currently, due to limitations in module loading on Windows, and for the sake of portability,
+  /// if you have a type that is introduced in a loadable module and is used by multiple modules
+  /// (through a tertiary dll that is shared between the modules, static linking the new type
+  /// into both loadable modules would not be portable), you need to register the base type
+  /// relationship in all modules that use the newly added type in a polymorphic way.
+  /// \todo Move share static type registration code into a mechanism that allows it to be properly
+  ///       shared by all modules
   template<typename Base, typename Derived>
   Dynamic_Cast_Conversion base_class()
   {

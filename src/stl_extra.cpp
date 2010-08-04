@@ -1,5 +1,6 @@
 
 #include <chaiscript/chaiscript.hpp>
+#include <list>
 #include <string>
 
 
