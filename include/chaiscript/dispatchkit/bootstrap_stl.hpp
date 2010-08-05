@@ -449,6 +449,10 @@ namespace chaiscript
       m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::find_first_not_of)))), "find_first_not_of");
       m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::find_last_not_of)))), "find_last_not_of");
 
+      m->add(fun(&String::c_str), "c_str");
+      m->add(fun(&String::data), "data");
+
+
       return m;
     }
   }
