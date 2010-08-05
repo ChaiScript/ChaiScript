@@ -88,6 +88,7 @@ target_link_libraries(stl_extra ${Boost_LIBRARIES})
 file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.chai)
 
 IF(BUILD_TESTING)
+  option(UNIT_TEST_LIGHT "Unit tests light (expect module loading failures)" FALSE)
 
   foreach(filename ${UNIT_TESTS})
     message(STATUS "Adding test ${filename}")
@@ -100,25 +101,27 @@ IF(BUILD_TESTING)
     "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
   )
 
-  add_executable(utility_test unittests/utility_test.cpp)
-  target_link_libraries(utility_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
-  add_test(NAME Utility_Test COMMAND utility_test)
+  IF (NOT UNIT_TEST_LIGHT)
+    add_executable(utility_test unittests/utility_test.cpp)
+    target_link_libraries(utility_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
+    add_test(NAME Utility_Test COMMAND utility_test)
 
-  add_executable(dynamic_object_test unittests/dynamic_object_test.cpp)
-  target_link_libraries(dynamic_object_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
-  add_test(NAME Dynamic_Object_Test COMMAND dynamic_object_test)
+    add_executable(dynamic_object_test unittests/dynamic_object_test.cpp)
+    target_link_libraries(dynamic_object_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
+    add_test(NAME Dynamic_Object_Test COMMAND dynamic_object_test)
 
-  add_executable(functor_creation_test unittests/functor_creation_test.cpp)
-  target_link_libraries(functor_creation_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
-  add_test(NAME Functor_Creation_Test COMMAND functor_creation_test)
+    add_executable(functor_creation_test unittests/functor_creation_test.cpp)
+    target_link_libraries(functor_creation_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
+    add_test(NAME Functor_Creation_Test COMMAND functor_creation_test)
 
-  add_library(test_module MODULE src/test_module.cpp)
-  target_link_libraries(test_module ${Boost_LIBRARIES})
+    add_library(test_module MODULE src/test_module.cpp)
+    target_link_libraries(test_module ${Boost_LIBRARIES})
 
-  install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript)
+    install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript)
+  ENDIF()
 ENDIF(BUILD_TESTING)
 
-install(TARGETS chai stl_extra test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript )
+install(TARGETS chai stl_extra RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript )
 install(DIRECTORY include/chaiscript DESTINATION include 
    PATTERN "*.hpp"
    PATTERN "*/.svn*" EXCLUDE)
