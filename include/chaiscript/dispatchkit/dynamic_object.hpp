@@ -71,11 +71,11 @@ namespace chaiscript
 
       virtual bool operator==(const Proxy_Function_Base &f) const
       {
-        try
+        const Dynamic_Object_Function *df = dynamic_cast<const Dynamic_Object_Function *>(&f);
+        if (df)
         {
-          const Dynamic_Object_Function &df = dynamic_cast<const Dynamic_Object_Function &>(f);
-          return df.m_type_name == m_type_name && (*df.m_func) == (*m_func);
-        } catch (const std::bad_cast &) {
+          return df->m_type_name == m_type_name && (*df->m_func) == (*m_func);
+        } else {
           return false;
         }
       }
@@ -102,7 +102,7 @@ namespace chaiscript
 
       virtual int get_arity() const
       {
-	return m_func->get_arity();
+        return m_func->get_arity();
       }
 
       virtual std::string annotation() const
@@ -110,23 +110,42 @@ namespace chaiscript
         return m_func->annotation();
       }
 
+    protected:
+      virtual bool compare_first_type(const Boxed_Value &bv) const
+      {
+        return dynamic_object_typename_match(bv, m_type_name, m_ti);
+      }
+
     private:
+      static bool dynamic_object_typename_match(const Boxed_Value &bv, const std::string &name,
+        const boost::optional<Type_Info> &ti)
+      {
+        static Type_Info doti = user_type<Dynamic_Object>();
+        if (bv.get_type_info().bare_equal(doti))
+        {
+          try {
+            const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bv);
+            return name == "Dynamic_Object" || d.get_type_name() == name;
+          } catch (const std::bad_cast &) {
+            return false;
+          } 
+        } else {
+          if (ti)
+          {
+            return bv.get_type_info().bare_equal(*ti);
+          } else {
+            return false;
+          }
+        }
+
+      }
+
       static bool dynamic_object_typename_match(const std::vector<Boxed_Value> &bvs, const std::string &name,
           const boost::optional<Type_Info> &ti) 
       {
         if (bvs.size() > 0)
         {
-          try {
-            const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bvs[0]);
-            return name == "Dynamic_Object" || d.get_type_name() == name;
-          } catch (const std::bad_cast &) {
-            if (ti)
-            {
-              return bvs[0].get_type_info().bare_equal(*ti);
-            } else {
-              return false;
-            }
-          }
+          return dynamic_object_typename_match(bvs[0], name, ti);
         } else {
           return false;
         }
@@ -175,11 +194,11 @@ namespace chaiscript
 
       virtual bool operator==(const Proxy_Function_Base &f) const
       {
-        try
+        const Dynamic_Object_Constructor *dc = dynamic_cast<const Dynamic_Object_Constructor*>(&f);
+        if (dc)
         {
-          const Dynamic_Object_Constructor &dc = dynamic_cast<const Dynamic_Object_Constructor&>(f);
-          return dc.m_type_name == m_type_name && (*dc.m_func) == (*m_func);
-        } catch (const std::bad_cast &) {
+          return dc->m_type_name == m_type_name && (*dc->m_func) == (*m_func);
+        } else {
           return false;
         }
       }

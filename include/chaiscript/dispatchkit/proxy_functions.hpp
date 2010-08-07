@@ -72,6 +72,7 @@ namespace chaiscript
       virtual bool operator==(const Proxy_Function_Base &) const = 0;
       virtual bool call_match(const std::vector<Boxed_Value> &vals) const = 0;
 
+
       //! Return true if the function is a possible match
       //! to the passed in values
       bool filter(const std::vector<Boxed_Value> &vals) const
@@ -86,26 +87,7 @@ namespace chaiscript
           {
             return true;
           } else {
-            const std::vector<Type_Info> &types = get_param_types();
-
-            if (types.size() < 2)
-            {
-              return true;
-            }
-
-            const Type_Info &ti = types[1];
-
-
-            if (ti.is_undef() || vals[0].get_type_info().is_undef()
-                || ti.bare_equal(user_type<Boxed_Value>())
-                || ti.bare_equal(user_type<Boxed_POD_Value>())
-                || ti.bare_equal(vals[0].get_type_info())
-                || dynamic_cast_converts(ti, vals[0].get_type_info()) )
-            {
-              return true;
-            } else {
-              return false;
-            }
+            return compare_first_type(vals[0]);
           }
         } else {
           return false;
@@ -120,6 +102,31 @@ namespace chaiscript
       Proxy_Function_Base(const std::vector<Type_Info> &t_types)
         : m_types(t_types)
       {
+      }
+
+      virtual bool compare_first_type(const Boxed_Value &bv) const
+      {
+        const std::vector<Type_Info> &types = get_param_types();
+
+        if (types.size() < 2)
+        {
+          return true;
+        }
+        const Type_Info &ti = types[1];
+        if (ti.is_undef() 
+          || ti.bare_equal(user_type<Boxed_Value>())
+          || (!bv.get_type_info().is_undef()
+            && (ti.bare_equal(user_type<Boxed_POD_Value>())
+                || ti.bare_equal(bv.get_type_info())
+                || dynamic_cast_converts(ti, bv.get_type_info()) 
+                )
+              )
+            )
+        {
+          return true;
+        } else {
+          return false;
+        }
       }
 
       bool compare_types(const std::vector<Type_Info> &tis, const std::vector<Boxed_Value> &bvs) const
@@ -368,12 +375,8 @@ namespace chaiscript
 
       virtual bool operator==(const Proxy_Function_Base &t_func) const
       {
-        try {
-          dynamic_cast<const Proxy_Function_Impl<Func> &>(t_func);
-          return true; 
-        } catch (const std::bad_cast &) {
-          return false;
-        }
+        const Proxy_Function_Impl *pimpl = dynamic_cast<const Proxy_Function_Impl<Func> *>(&t_func);
+        return pimpl != 0;
       }
  
       virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
@@ -424,11 +427,11 @@ namespace chaiscript
 
       virtual bool operator==(const Proxy_Function_Base &t_func) const
       {
-        try {
-          const Attribute_Access<T, Class> &aa 
-            = dynamic_cast<const Attribute_Access<T, Class> &>(t_func);
-          return m_attr == aa.m_attr;
-        } catch (const std::bad_cast &) {
+        const Attribute_Access<T, Class> * aa 
+          = dynamic_cast<const Attribute_Access<T, Class> *>(&t_func);
+        if (aa) {
+          return m_attr == aa->m_attr;
+        } else {
           return false;
         }
       }
