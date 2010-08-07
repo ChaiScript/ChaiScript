@@ -145,7 +145,7 @@ namespace chaiscript
         match_stack.push_back(t);
       }
       else {
-        //todo: fix the fact that a successful match that captured no tokens does't have any real start position
+        //todo: fix the fact that a successful match that captured no tokens doesn't have any real start position
         TokenPtr t(new Token("", match_type, filename, line, col, line, col));
         match_stack.push_back(t);
       }
@@ -154,7 +154,7 @@ namespace chaiscript
     /**
      * Does ranged char check
      */
-    inline bool charBetween(char start, char end) {
+    inline bool char_between(char start, char end) {
       if ((*input_pos >= start) && (*input_pos <= end)) {
         return true;
       }
@@ -162,7 +162,14 @@ namespace chaiscript
         return false;
       }
     }
-      
+
+    /**
+     * Check to see if there is more text parse
+     */
+    inline bool has_more_input() {
+      return (input_pos != input_end);
+    }
+                                
     /**
      * Skips any multi-line or single-line comment
      */
@@ -203,7 +210,7 @@ namespace chaiscript
      */
     bool SkipWS() {
       bool retval = false;
-      while (input_pos != input_end) {
+      while (has_more_input()) {
         if ((*input_pos == ' ') || (*input_pos == '\t')) {
           ++input_pos;
           ++col;
@@ -226,17 +233,17 @@ namespace chaiscript
       bool retval = false;
       std::string::iterator start = input_pos;
 
-      if ((input_pos != input_end) && (charBetween('0', '9') || (*input_pos == '.'))) {
-        while ((input_pos != input_end) && charBetween('0', '9')) {
+      if (has_more_input() && (char_between('0', '9') || (*input_pos == '.'))) {
+        while (has_more_input() && char_between('0', '9')) {
           ++input_pos;
           ++col;
         }
-        if ((input_pos != input_end) && (*input_pos == '.')) {
+        if (has_more_input() && (*input_pos == '.')) {
           ++input_pos;
           ++col;
-          if ((input_pos != input_end) && charBetween('0', '9')) {
+          if (has_more_input() && char_between('0', '9')) {
             retval = true;
-            while ((input_pos != input_end) && charBetween('0', '9')) {
+            while (has_more_input() && char_between('0', '9')) {
               ++input_pos;
               ++col;
             }
@@ -255,20 +262,20 @@ namespace chaiscript
      */
     bool Hex_() {
       bool retval = false;
-      if ((input_pos != input_end) && (*input_pos == '0')) {
+      if (has_more_input() && (*input_pos == '0')) {
         ++input_pos;
         ++col;
 
-        if ((input_pos != input_end) && ((*input_pos == 'x') || (*input_pos == 'X'))) {
+        if (has_more_input() && ((*input_pos == 'x') || (*input_pos == 'X'))) {
           ++input_pos;
           ++col;
-          if ((input_pos != input_end) && (charBetween('0', '9') ||
-                                           charBetween('a', 'f') ||
-                                           charBetween('A', 'F'))) {
+          if (has_more_input() && (char_between('0', '9') ||
+                                   char_between('a', 'f') ||
+                                   char_between('A', 'F'))) {
             retval = true;
-            while ((input_pos != input_end) && (charBetween('0', '9') ||
-                                                charBetween('a', 'f') ||
-                                                charBetween('A', 'F'))) {
+            while (has_more_input() && (char_between('0', '9') ||
+                                        char_between('a', 'f') ||
+                                        char_between('A', 'F'))) {
               ++input_pos;
               ++col;
             }
@@ -292,16 +299,16 @@ namespace chaiscript
      */
     bool Binary_() {
       bool retval = false;
-      if ((input_pos != input_end) && (*input_pos == '0')) {
+      if (has_more_input() && (*input_pos == '0')) {
         ++input_pos;
         ++col;
 
-        if ((input_pos != input_end) && ((*input_pos == 'b') || (*input_pos == 'B'))) {
+        if (has_more_input() && ((*input_pos == 'b') || (*input_pos == 'B'))) {
           ++input_pos;
           ++col;
-          if ((input_pos != input_end) && charBetween('0', '1')) {
+          if (has_more_input() && char_between('0', '1')) {
             retval = true;
-            while ((input_pos != input_end) && charBetween('0', '1')) {
+            while (has_more_input() && char_between('0', '1')) {
               ++input_pos;
               ++col;
             }
@@ -333,7 +340,7 @@ namespace chaiscript
         std::string::iterator start = input_pos;
         int prev_col = col;
         int prev_line = line;
-        if ((input_pos != input_end) && (charBetween('0', '9') || (*input_pos == '.')) ) {
+        if (has_more_input() && (char_between('0', '9') || (*input_pos == '.')) ) {
           if (Hex_()) {
             std::string match(start, input_pos);
             std::stringstream ss(match);
@@ -401,21 +408,21 @@ namespace chaiscript
      */
     bool Id_() {
       bool retval = false;
-      if ((input_pos != input_end) && (charBetween('A', 'Z') || (*input_pos == '_') || charBetween('a', 'z'))) {
+      if (has_more_input() && (char_between('A', 'Z') || (*input_pos == '_') || char_between('a', 'z'))) {
         retval = true;
-        while ((input_pos != input_end) && (charBetween('A', 'Z') || (*input_pos == '_') ||
-                                            charBetween('a', 'z') || charBetween('0', '9'))) {
+        while (has_more_input() && (char_between('A', 'Z') || (*input_pos == '_') ||
+                                    char_between('a', 'z') || char_between('0', '9'))) {
           ++input_pos;
           ++col;
         }
       }
-      else if ((input_pos != input_end) && (*input_pos == '`')) {
+      else if (has_more_input() && (*input_pos == '`')) {
         retval = true;
         ++col;
         ++input_pos;
         std::string::iterator start = input_pos;
                 
-        while ((input_pos != input_end) && (*input_pos != '`')) {
+        while (has_more_input() && (*input_pos != '`')) {
           if (Eol()) {
             throw Eval_Error("Carriage return in identifier literal", File_Position(line, col), filename);
           }
@@ -509,13 +516,13 @@ namespace chaiscript
     bool Quoted_String_() {
       bool retval = false;
       char prev_char = 0;
-      if ((input_pos != input_end) && (*input_pos == '\"')) {
+      if (has_more_input() && (*input_pos == '\"')) {
         retval = true;
         prev_char = *input_pos;
         ++input_pos;
         ++col;
 
-        while ((input_pos != input_end) && ((*input_pos != '\"') || ((*input_pos == '\"') && (prev_char == '\\')))) {
+        while (has_more_input() && ((*input_pos != '\"') || ((*input_pos == '\"') && (prev_char == '\\')))) {
           if (!Eol_()) {
             if (prev_char == '\\') {
               prev_char = 0;
@@ -528,7 +535,7 @@ namespace chaiscript
           }
         }
 
-        if (input_pos != input_end) {
+        if (has_more_input()) {
           ++input_pos;
           ++col;
         }
@@ -695,13 +702,13 @@ namespace chaiscript
     bool Single_Quoted_String_() {
       bool retval = false;
       char prev_char = 0;
-      if ((input_pos != input_end) && (*input_pos == '\'')) {
+      if (has_more_input() && (*input_pos == '\'')) {
         retval = true;
         prev_char = *input_pos;
         ++input_pos;
         ++col;
 
-        while ((input_pos != input_end) && ((*input_pos != '\'') || ((*input_pos == '\'') && (prev_char == '\\')))) {
+        while (has_more_input() && ((*input_pos != '\'') || ((*input_pos == '\'') && (prev_char == '\\')))) {
           if (!Eol_()) {
             if (prev_char == '\\') {
               prev_char = 0;
@@ -785,7 +792,7 @@ namespace chaiscript
      */
     bool Char_(char c) {
       bool retval = false;
-      if ((input_pos != input_end) && (*input_pos == c)) {
+      if (has_more_input() && (*input_pos == c)) {
         ++input_pos;
         ++col;
         retval = true;
@@ -855,8 +862,8 @@ namespace chaiscript
         bool retval = Keyword_(s);
         if (retval) {
           //todo: fix this.  Hacky workaround for preventing substring matches
-          if ((input_pos != input_end) && (charBetween('A', 'Z') || (*input_pos == '_') || charBetween('a', 'z')
-                                           || charBetween('0', '9'))) {
+          if (has_more_input() && (char_between('A', 'Z') || (*input_pos == '_') ||
+                                   char_between('a', 'z') || char_between('0', '9'))) {
             input_pos = start;
             col = prev_col;
             line = prev_line;
@@ -874,8 +881,8 @@ namespace chaiscript
         int prev_line = line;
         if (Keyword_(s)) {
           //todo: fix this.  Hacky workaround for preventing substring matches
-          if ((input_pos != input_end) && (charBetween('A', 'Z') || (*input_pos == '_') ||
-                                           charBetween('a', 'z') || charBetween('0', '9'))) {
+          if (has_more_input() && (char_between('A', 'Z') || (*input_pos == '_') ||
+                                   char_between('a', 'z') || char_between('0', '9'))) {
             input_pos = start;
             col = prev_col;
             line = prev_line;
@@ -928,7 +935,7 @@ namespace chaiscript
         bool retval = Symbol_(s);
         if (retval) {
           //todo: fix this.  Hacky workaround for preventing substring matches
-          if ((input_pos != input_end) && (disallow_prevention == false) &&
+          if (has_more_input() && (disallow_prevention == false) &&
               ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') ||
                (*input_pos == '|') || (*input_pos == '&') || (*input_pos == '^') || (*input_pos == '=') ||
                (*input_pos == '.') || (*input_pos == '<') || (*input_pos == '>'))) {
@@ -949,7 +956,7 @@ namespace chaiscript
         int prev_line = line;
         if (Symbol_(s)) {
           //todo: fix this.  Hacky workaround for preventing substring matches
-          if ((input_pos != input_end) && (disallow_prevention == false) &&
+          if (has_more_input() && (disallow_prevention == false) &&
               ((*input_pos == '+') || (*input_pos == '-') || (*input_pos == '*') || (*input_pos == '/') ||
                (*input_pos == '|') || (*input_pos == '&') || (*input_pos == '^') || (*input_pos == '=') ||
                (*input_pos == '.') || (*input_pos == '<') || (*input_pos == '>'))) {
@@ -977,12 +984,12 @@ namespace chaiscript
     bool Eol_() {
       bool retval = false;
 
-      if ((input_pos != input_end) && (Symbol_("\r\n") || Char_('\n'))) {
+      if (has_more_input() && (Symbol_("\r\n") || Char_('\n'))) {
         retval = true;
         ++line;
         col = 1;
       }
-      else if ((input_pos != input_end) && Char_(';')) {
+      else if (has_more_input() && Char_(';')) {
         retval = true;
       }
 
