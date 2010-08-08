@@ -137,17 +137,183 @@ namespace chaiscript
      * Helper function that collects tokens from a starting position to the top of the stack into a new AST node
      */
     void build_match(Token_Type::Type match_type, int match_start) {
+      int pos_line_start, pos_col_start, pos_line_stop, pos_col_stop;
+      int is_deep = false;
+      
       //so we want to take everything to the right of this and make them children
       if (match_start != int(match_stack.size())) {
-        TokenPtr t(new Token("", match_type, filename, match_stack[match_start]->start.line, match_stack[match_start]->start.column, line, col));
+        pos_line_start = match_stack[match_start]->start.line;
+        pos_col_start = match_stack[match_start]->start.column;
+        pos_line_stop = line;
+        pos_col_stop = col;
+        is_deep = true;
+      }
+      else {
+        pos_line_start = line;
+        pos_col_start = col;
+        pos_line_stop = line;
+        pos_col_stop = col;
+      }
+
+      Token *t;
+
+      switch (match_type) {
+      case(Token_Type::Error) :
+        t = new Error_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Int) :
+        t = new Int_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Float) :
+        t = new Float_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Id) :
+        t = new Id_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Char) :
+        t = new Char_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Str) :
+        t = new Str_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Eol) :
+        t = new Eol_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Fun_Call) :
+        t = new Fun_Call_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Inplace_Fun_Call) :
+        t = new Inplace_Fun_Call_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Arg_List) :
+        t = new Arg_List_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Variable) :
+        t = new Variable_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Equation) :
+        t = new Equation_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Var_Decl) :
+        t = new Var_Decl_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Comparison) :
+        t = new Comparison_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Additive) :
+        t = new Additive_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Multiplicative) :
+        t = new Multiplicative_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Array_Call) :
+        t = new Array_Call_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Dot_Access) :
+        t = new Dot_Access_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Quoted_String) :
+        t = new Quoted_String_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Single_Quoted_String) :
+        t = new Single_Quoted_String_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Lambda) :
+        t = new Lambda_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Block) :
+        t = new Block_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Def) :
+        t = new Def_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::While) :
+        t = new While_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::If) :
+        t = new If_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::For) :
+        t = new For_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Inline_Array) :
+        t = new Inline_Array_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Inline_Map) :
+        t = new Inline_Map_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Return) :
+        t = new Return_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::File) :
+        t = new File_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Prefix) :
+        t = new Prefix_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Break) :
+        t = new Break_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Map_Pair) :
+        t = new Map_Pair_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Value_Range) :
+        t = new Value_Range_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Inline_Range) :
+        t = new Inline_Range_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Annotation) :
+        t = new Annotation_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Try) :
+        t = new Try_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Catch) :
+        t = new Catch_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Finally) :
+        t = new Finally_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Method) :
+        t = new Method_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Attr_Decl) :
+        t = new Attr_Decl_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Shift) :
+        t = new Shift_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Equality) :
+        t = new Equality_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Bitwise_And) :
+        t = new Bitwise_And_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Bitwise_Xor) :
+        t = new Bitwise_Xor_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Bitwise_Or) :
+        t = new Bitwise_Or_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Logical_And) :
+        t = new Logical_And_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      case(Token_Type::Logical_Or) :
+        t = new Logical_Or_Token("", match_type, filename, pos_line_start, pos_col_start, pos_line_stop, pos_col_stop);
+        break;
+      }
+       
+      TokenPtr tp(t);
+      
+      if (is_deep) {
         t->children.assign(match_stack.begin() + (match_start), match_stack.end());
         match_stack.erase(match_stack.begin() + (match_start), match_stack.end());
-        match_stack.push_back(t);
+        match_stack.push_back(tp);
       }
       else {
         //todo: fix the fact that a successful match that captured no tokens doesn't have any real start position
-        TokenPtr t(new Token("", match_type, filename, line, col, line, col));
-        match_stack.push_back(t);
+        match_stack.push_back(tp);
       }
     }
 
@@ -349,7 +515,7 @@ namespace chaiscript
 
             std::ostringstream out_int;
             out_int << int(temp_int);
-            TokenPtr t(new Token(out_int.str(), Token_Type::Int, filename, prev_line, prev_col, line, col));
+            TokenPtr t(new Int_Token(out_int.str(), Token_Type::Int, filename, prev_line, prev_col, line, col));
             match_stack.push_back(t);
             return true;
           }
@@ -368,13 +534,13 @@ namespace chaiscript
 
             std::ostringstream out_int;
             out_int << temp_int;
-            TokenPtr t(new Token(out_int.str(), Token_Type::Int, filename, prev_line, prev_col, line, col));
+            TokenPtr t(new Int_Token(out_int.str(), Token_Type::Int, filename, prev_line, prev_col, line, col));
             match_stack.push_back(t);
             return true;
           }
           if (Float_()) {
             std::string match(start, input_pos);
-            TokenPtr t(new Token(match, Token_Type::Float, filename, prev_line, prev_col, line, col));
+            TokenPtr t(new Float_Token(match, Token_Type::Float, filename, prev_line, prev_col, line, col));
             match_stack.push_back(t);
             return true;
           }
@@ -387,11 +553,11 @@ namespace chaiscript
 
               std::ostringstream out_int;
               out_int << int(temp_int);
-              TokenPtr t(new Token(out_int.str(), Token_Type::Int, filename, prev_line, prev_col, line, col));
+              TokenPtr t(new Int_Token(out_int.str(), Token_Type::Int, filename, prev_line, prev_col, line, col));
               match_stack.push_back(t);
             }
             else {
-              TokenPtr t(new Token(match, Token_Type::Int, filename, prev_line, prev_col, line, col));
+              TokenPtr t(new Int_Token(match, Token_Type::Int, filename, prev_line, prev_col, line, col));
               match_stack.push_back(t);
             }
             return true;
@@ -462,13 +628,13 @@ namespace chaiscript
           if (*start == '`') {
             //Id Literal
             std::string match(start+1, input_pos-1);
-            TokenPtr t(new Token(match, Token_Type::Id, filename, prev_line, prev_col, line, col));
+            TokenPtr t(new Id_Token(match, Token_Type::Id, filename, prev_line, prev_col, line, col));
             match_stack.push_back(t);
             return true;
           }
           else {
             std::string match(start, input_pos);
-            TokenPtr t(new Token(match, Token_Type::Id, filename, prev_line, prev_col, line, col));
+            TokenPtr t(new Id_Token(match, Token_Type::Id, filename, prev_line, prev_col, line, col));
             match_stack.push_back(t);
             return true;
           }
@@ -501,7 +667,7 @@ namespace chaiscript
         } while (Symbol("#"));
 
         std::string match(start, input_pos);
-        TokenPtr t(new Token(match, Token_Type::Annotation, filename, prev_line, prev_col, line, col));
+        TokenPtr t(new Annotation_Token(match, Token_Type::Annotation, filename, prev_line, prev_col, line, col));
         match_stack.push_back(t);
         return true;
       }
@@ -576,23 +742,23 @@ namespace chaiscript
 
                 if (is_interpolated) {
                   //If we've seen previous interpolation, add on instead of making a new one
-                  TokenPtr plus(new Token("+", Token_Type::Str, filename, prev_line, prev_col, line, col));
+                  TokenPtr plus(new Str_Token("+", Token_Type::Str, filename, prev_line, prev_col, line, col));
                   match_stack.push_back(plus);
 
-                  TokenPtr t(new Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
+                  TokenPtr t(new Quoted_String_Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
                   match_stack.push_back(t);
 
                   build_match(Token_Type::Additive, prev_stack_top);
                 }
                 else {
-                  TokenPtr t(new Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
+                  TokenPtr t(new Quoted_String_Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
                   match_stack.push_back(t);
                 }
 
                 //We've finished with the part of the string up to this point, so clear it
                 match = "";
 
-                TokenPtr plus(new Token("+", Token_Type::Str, filename, prev_line, prev_col, line, col));
+                TokenPtr plus(new Str_Token("+", Token_Type::Str, filename, prev_line, prev_col, line, col));
                 match_stack.push_back(plus);
 
                 std::string eval_match;
@@ -608,17 +774,17 @@ namespace chaiscript
 
                   int tostr_stack_top = match_stack.size();
 
-                  TokenPtr tostr(new Token("to_string", Token_Type::Id, filename, prev_line, prev_col, line, col));
+                  TokenPtr tostr(new Id_Token("to_string", Token_Type::Id, filename, prev_line, prev_col, line, col));
                   match_stack.push_back(tostr);
 
                   int ev_stack_top = match_stack.size();
 
-                  TokenPtr ev(new Token("eval", Token_Type::Id, filename, prev_line, prev_col, line, col));
+                  TokenPtr ev(new Id_Token("eval", Token_Type::Id, filename, prev_line, prev_col, line, col));
                   match_stack.push_back(ev);
 
                   int arg_stack_top = match_stack.size();
 
-                  TokenPtr t(new Token(eval_match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
+                  TokenPtr t(new Quoted_String_Token(eval_match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
                   match_stack.push_back(t);
 
                   build_match(Token_Type::Arg_List, arg_stack_top);
@@ -676,16 +842,16 @@ namespace chaiscript
             }
           }
           if (is_interpolated) {
-            TokenPtr plus(new Token("+", Token_Type::Str, filename, prev_line, prev_col, line, col));
+            TokenPtr plus(new Str_Token("+", Token_Type::Str, filename, prev_line, prev_col, line, col));
             match_stack.push_back(plus);
 
-            TokenPtr t(new Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
+            TokenPtr t(new Quoted_String_Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
             match_stack.push_back(t);
 
             build_match(Token_Type::Additive, prev_stack_top);
           }
           else {
-            TokenPtr t(new Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
+            TokenPtr t(new Quoted_String_Token(match, Token_Type::Quoted_String, filename, prev_line, prev_col, line, col));
             match_stack.push_back(t);
           }
           return true;
@@ -777,7 +943,7 @@ namespace chaiscript
               is_escaped = false;
             }
           }
-          TokenPtr t(new Token(match, Token_Type::Single_Quoted_String, filename, prev_line, prev_col, line, col));
+          TokenPtr t(new Single_Quoted_String_Token(match, Token_Type::Single_Quoted_String, filename, prev_line, prev_col, line, col));
           match_stack.push_back(t);
           return true;
         }
@@ -816,7 +982,7 @@ namespace chaiscript
         int prev_line = line;
         if (Char_(c)) {
           std::string match(start, input_pos);
-          TokenPtr t(new Token(match, Token_Type::Char, filename, prev_line, prev_col, line, col));
+          TokenPtr t(new Char_Token(match, Token_Type::Char, filename, prev_line, prev_col, line, col));
           match_stack.push_back(t);
           return true;
         }
@@ -889,7 +1055,7 @@ namespace chaiscript
             return false;
           }
           std::string match(start, input_pos);
-          TokenPtr t(new Token(match, Token_Type::Str, filename, prev_line, prev_col, line, col));
+          TokenPtr t(new Str_Token(match, Token_Type::Str, filename, prev_line, prev_col, line, col));
           match_stack.push_back(t);
           return true;
         }
@@ -967,7 +1133,7 @@ namespace chaiscript
           }
           else {
             std::string match(start, input_pos);
-            TokenPtr t(new Token(match, Token_Type::Str, filename, prev_line, prev_col, line, col));
+            TokenPtr t(new Str_Token(match, Token_Type::Str, filename, prev_line, prev_col, line, col));
             match_stack.push_back(t);
             return true;
           }
@@ -1011,7 +1177,7 @@ namespace chaiscript
         int prev_line = line;
         if (Eol_()) {
           std::string match(start, input_pos);
-          TokenPtr t(new Token(match, Token_Type::Eol, filename, prev_line, prev_col, line, col));
+          TokenPtr t(new Eol_Token(match, Token_Type::Eol, filename, prev_line, prev_col, line, col));
           match_stack.push_back(t);
           return true;
         }
@@ -1036,7 +1202,7 @@ namespace chaiscript
           do {
             while (Eol());
             if (!Equation()) {
-              throw Eval_Error("Unexpected value in parameter list", match_stack.back());
+              throw Eval_Error("Unexpected value in parameter list", File_Position(line, col), filename);
             }
           } while (retval && Char(','));
         }
@@ -1065,7 +1231,7 @@ namespace chaiscript
           do {
             while (Eol());
             if (!Map_Pair()) {
-              throw Eval_Error("Unexpected value in container", match_stack.back());
+              throw Eval_Error("Unexpected value in container", File_Position(line, col), filename);
             }
           } while (retval && Char(','));
         }
@@ -1746,7 +1912,7 @@ namespace chaiscript
             Symbol("%=", true, true) || Symbol("<<=", true, true) || Symbol(">>=", true, true) ||
             Symbol("&=", true, true) || Symbol("^=", true, true) || Symbol("|=", true, true)) {
           if (!Equation()) {
-            throw Eval_Error("Incomplete equation", match_stack.back());
+            throw Eval_Error("Incomplete equation", File_Position(line, col), filename);
           }
 
           build_match(Token_Type::Equation, prev_stack_top);
@@ -1767,9 +1933,11 @@ namespace chaiscript
 
       while (has_more) {
         has_more = false;
+        int prev_line = line;
+        int prev_col = col;
         if (Def()) {
           if (!saw_eol) {
-            throw Eval_Error("Two function definitions missing line separator", match_stack.back());
+            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), filename);
           }
           has_more = true;
           retval = true;
@@ -1777,7 +1945,7 @@ namespace chaiscript
         }
         else if (Try()) {
           if (!saw_eol) {
-            throw Eval_Error("Two function definitions missing line separator", match_stack.back());
+            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), filename);
           }
           has_more = true;
           retval = true;
@@ -1785,7 +1953,7 @@ namespace chaiscript
         }
         else if (If()) {
           if (!saw_eol) {
-            throw Eval_Error("Two function definitions missing line separator", match_stack.back());
+            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), filename);
           }
           has_more = true;
           retval = true;
@@ -1793,7 +1961,7 @@ namespace chaiscript
         }
         else if (While()) {
           if (!saw_eol) {
-            throw Eval_Error("Two function definitions missing line separator", match_stack.back());
+            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), filename);
           }
           has_more = true;
           retval = true;
@@ -1801,7 +1969,7 @@ namespace chaiscript
         }
         else if (For()) {
           if (!saw_eol) {
-            throw Eval_Error("Two function definitions missing line separator", match_stack.back());
+            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), filename);
           }
           has_more = true;
           retval = true;
@@ -1809,7 +1977,7 @@ namespace chaiscript
         }
         else if (Return()) {
           if (!saw_eol) {
-            throw Eval_Error("Two expressions missing line separator", match_stack.back());
+            throw Eval_Error("Two expressions missing line separator", File_Position(prev_line, prev_col), filename);
           }
           has_more = true;
           retval = true;
@@ -1817,7 +1985,7 @@ namespace chaiscript
         }
         else if (Break()) {
           if (!saw_eol) {
-            throw Eval_Error("Two expressions missing line separator", match_stack.back());
+            throw Eval_Error("Two expressions missing line separator", File_Position(prev_line, prev_col), filename);
           }
           has_more = true;
           retval = true;
@@ -1825,7 +1993,7 @@ namespace chaiscript
         }
         else if (Equation()) {
           if (!saw_eol) {
-            throw Eval_Error("Two expressions missing line separator", match_stack.back());
+            throw Eval_Error("Two expressions missing line separator", File_Position(prev_line, prev_col), filename);
           }
           has_more = true;
           retval = true;

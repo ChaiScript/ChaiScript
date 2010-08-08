@@ -118,8 +118,16 @@ int main(int argc, char *argv[]) {
                         }
                     }
                 }
+                catch (chaiscript::Eval_Error &ee) {
+                  std::cout << ee.what();
+                  if (ee.call_stack.size() > 0) {
+                    std::cout << "during evaluation at (" << ee.call_stack[0]->start.line << ", " << ee.call_stack[0]->start.column << ")";
+                  }
+                  std::cout << std::endl;
+                }
                 catch (std::exception &e) {
-                    std::cout << e.what() << std::endl;
+                  std::cout << e.what();
+                  std::cout << std::endl;
                 }
             }
 
@@ -130,6 +138,13 @@ int main(int argc, char *argv[]) {
         for (int i = 1; i < argc; ++i) {
             try {
               chaiscript::Boxed_Value val = chai.eval_file(argv[i]);
+            }
+            catch (chaiscript::Eval_Error &ee) {
+              std::cout << ee.what();
+              if (ee.call_stack.size() > 0) {
+                std::cout << "during evaluation at (" << ee.call_stack[0]->start.line << ", " << ee.call_stack[0]->start.column << ")";
+              }
+              std::cout << std::endl;
             }
             catch (std::exception &e) {
                 std::cout << e.what() << std::endl;

@@ -263,7 +263,7 @@ namespace chaiscript
               l.unlock();
 #endif
               //parser.show_match_stack();
-              value = eval_token<Eval_Engine>(engine, parser.ast());
+              value = parser.ast()->eval(engine);//eval_token<Eval_Engine>(engine, parser.ast());
             }
           }
           catch (const Return_Value &rv) {
@@ -281,7 +281,7 @@ namespace chaiscript
  
           if (parser.parse(input, fname)) {
             //parser.show_match_stack();
-            value = eval_token<Eval_Engine>(engine, parser.ast());
+            value = parser.ast()->eval(engine);
           }
         }
         catch (const Return_Value &rv) {
