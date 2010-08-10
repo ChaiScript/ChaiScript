@@ -3,7 +3,7 @@
  * chaiscript.php
  * --------------
  * Author: Jason Turner & Jonathan Turner (based on JavaScript by Ben Keen (ben.keen@gmail.com))
- * Copyright: (c) 2010 Jason Turner (lefticus@gmail.com) (c) 2009 Jonathan Turner 
+ * Copyright: (c) 2010 Jason Turner (jason@emptycrate.com) (c) 2009 Jonathan Turner 
  *            (c) 2004 Ben Keen (ben.keen@gmail.com), Nigel McNie (http://qbnz.com/highlighter)
  * Release Version: 1.0
  * Date Started: 2009/07/03
