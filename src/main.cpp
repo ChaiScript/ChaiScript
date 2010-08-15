@@ -143,7 +143,7 @@ int main(int argc, char *argv[]) {
               std::cout << ee.what();
               if (ee.call_stack.size() > 0) {
                 std::cout << "during evaluation at (" << ee.call_stack[0]->filename << " " << ee.call_stack[0]->start.line << ", " << ee.call_stack[0]->start.column << ")";
-                for (int j = 1; j < ee.call_stack.size(); ++j) {
+                for (unsigned int j = 1; j < ee.call_stack.size(); ++j) {
                   std::cout << std::endl;
                   std::cout << "  > " << ee.call_stack[j]->filename << " (" << ee.call_stack[j]->start.line << ", " << ee.call_stack[j]->start.column << ")";
                 }

@@ -258,7 +258,7 @@ namespace chaiscript
 #endif
           loaded_files.insert(filename);
           try {
-            if (parser.parse(input, loaded_files.find(filename)->c_str())) {
+            if (parser.parse(input, (char *)loaded_files.find(filename)->c_str())) {
 #ifndef CHAISCRIPT_NO_THREADS
               l.unlock();
 #endif
@@ -274,7 +274,7 @@ namespace chaiscript
 #ifndef CHAISCRIPT_NO_THREADS
           boost::shared_lock<boost::shared_mutex> l(mutex);
 #endif
-          const char *fname = loaded_files.find("__EVAL__")->c_str();
+          char *fname = (char *)loaded_files.find("__EVAL__")->c_str();
 #ifndef CHAISCRIPT_NO_THREADS
           l.unlock();
 #endif

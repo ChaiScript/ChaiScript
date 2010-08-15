@@ -16,11 +16,15 @@ namespace chaiscript
   /**
    * Types of AST nodes available to the parser and eval
    */
-  class Token_Type { public: enum Type { Error, Int, Float, Id, Char, Str, Eol, Fun_Call, Inplace_Fun_Call, Arg_List, Variable, Equation, Var_Decl,
-                                         Comparison, Additive, Multiplicative, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
-                                         Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Map_Pair, Value_Range,
-                                         Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, 
-                                         Logical_And, Logical_Or}; };
+  class Token_Type {
+  public:
+    enum Type { Error, Int, Float, Id, Char, Str, Eol, Fun_Call, Inplace_Fun_Call, Arg_List, Variable, Equation, Var_Decl,
+                Comparison, Additive, Multiplicative, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
+                Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Map_Pair, Value_Range,
+                Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, 
+                Logical_And, Logical_Or
+    };
+  };
 
   namespace
   {
@@ -59,7 +63,7 @@ namespace chaiscript
   struct Token {
     std::string text;
     int identifier;
-    const char *filename;
+    char *filename;
     File_Position start, end;
     bool is_cached;
     Boxed_Value cached_value;
@@ -67,7 +71,7 @@ namespace chaiscript
     std::vector<TokenPtr> children;
     TokenPtr annotation;
 
-    Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Token(const std::string &token_text, int id, char *fname, int start_line, int start_col, int end_line, int end_col) :
       text(token_text), identifier(id), filename(fname), is_cached(false) {
 
       start.line = start_line;
@@ -75,7 +79,7 @@ namespace chaiscript
       end.line = end_line;
       end.column = end_col;
     }
-    Token(const std::string &token_text, int id, const char *fname) :
+    Token(const std::string &token_text, int id, char *fname) :
       text(token_text), identifier(id), filename(fname), is_cached(false) { }
 
 
@@ -93,278 +97,278 @@ namespace chaiscript
 
   struct Error_Token : public Token {
   public:
-    Error_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Error_Token(const std::string &token_text = "", int id = Token_Type::Error, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
   struct Int_Token : public Token {
   public:
-    Int_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Int_Token(const std::string &token_text = "", int id = Token_Type::Int, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Float_Token : public Token {
   public:
-    Float_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Float_Token(const std::string &token_text = "", int id = Token_Type::Float, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Id_Token : public Token {
   public:
-    Id_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Id_Token(const std::string &token_text = "", int id = Token_Type::Id, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Char_Token : public Token {
   public:
-    Char_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Char_Token(const std::string &token_text = "", int id = Token_Type::Char, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
   struct Str_Token : public Token {
   public:
-    Str_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Str_Token(const std::string &token_text = "", int id = Token_Type::Str, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
   struct Eol_Token : public Token {
   public:
-    Eol_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Eol_Token(const std::string &token_text = "", int id = Token_Type::Eol, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
   struct Fun_Call_Token : public Token {
   public:
-    Fun_Call_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Fun_Call_Token(const std::string &token_text = "", int id = Token_Type::Fun_Call, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Inplace_Fun_Call_Token : public Token {
   public:
-    Inplace_Fun_Call_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Inplace_Fun_Call_Token(const std::string &token_text = "", int id = Token_Type::Inplace_Fun_Call, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Arg_List_Token : public Token {
   public:
-    Arg_List_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Arg_List_Token(const std::string &token_text = "", int id = Token_Type::Arg_List, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
   struct Variable_Token : public Token {
   public:
-    Variable_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Variable_Token(const std::string &token_text = "", int id = Token_Type::Variable, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
   struct Equation_Token : public Token {
   public:
-    Equation_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Equation_Token(const std::string &token_text = "", int id = Token_Type::Equation, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Var_Decl_Token : public Token {
   public:
-    Var_Decl_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Var_Decl_Token(const std::string &token_text = "", int id = Token_Type::Var_Decl, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Comparison_Token : public Token {
   public:
-    Comparison_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Comparison_Token(const std::string &token_text = "", int id = Token_Type::Comparison, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Additive_Token : public Token {
   public:
-    Additive_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Additive_Token(const std::string &token_text = "", int id = Token_Type::Additive, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Multiplicative_Token : public Token {
   public:
-   Multiplicative_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Multiplicative_Token(const std::string &token_text = "", int id = Token_Type::Multiplicative, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Array_Call_Token : public Token {
   public:
-    Array_Call_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Array_Call_Token(const std::string &token_text = "", int id = Token_Type::Array_Call, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Dot_Access_Token : public Token {
   public:
-    Dot_Access_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Dot_Access_Token(const std::string &token_text = "", int id = Token_Type::Dot_Access, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Quoted_String_Token : public Token {
   public:
-    Quoted_String_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Quoted_String_Token(const std::string &token_text = "", int id = Token_Type::Quoted_String, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Single_Quoted_String_Token : public Token {
   public:
-    Single_Quoted_String_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Single_Quoted_String_Token(const std::string &token_text = "", int id = Token_Type::Single_Quoted_String, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Lambda_Token : public Token {
   public:
-    Lambda_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Lambda_Token(const std::string &token_text = "", int id = Token_Type::Lambda, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Block_Token : public Token {
   public:
-    Block_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Block_Token(const std::string &token_text = "", int id = Token_Type::Block, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Def_Token : public Token {
   public:
-    Def_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Def_Token(const std::string &token_text = "", int id = Token_Type::Def, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct While_Token : public Token {
   public:
-    While_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    While_Token(const std::string &token_text = "", int id = Token_Type::While, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct If_Token : public Token {
   public:
-    If_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    If_Token(const std::string &token_text = "", int id = Token_Type::If, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct For_Token : public Token {
   public:
-    For_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    For_Token(const std::string &token_text = "", int id = Token_Type::For, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Inline_Array_Token : public Token {
   public:
-    Inline_Array_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Inline_Array_Token(const std::string &token_text = "", int id = Token_Type::Inline_Array, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Inline_Map_Token : public Token {
   public:
-    Inline_Map_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Inline_Map_Token(const std::string &token_text = "", int id = Token_Type::Inline_Map, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Return_Token : public Token {
   public:
-    Return_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Return_Token(const std::string &token_text = "", int id = Token_Type::Return, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct File_Token : public Token {
   public:
-    File_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    File_Token(const std::string &token_text = "", int id = Token_Type::File, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Prefix_Token : public Token {
   public:
-    Prefix_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Prefix_Token(const std::string &token_text = "", int id = Token_Type::Prefix, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Break_Token : public Token {
   public:
-    Break_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Break_Token(const std::string &token_text = "", int id = Token_Type::Break, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Map_Pair_Token : public Token {
   public:
-    Map_Pair_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Map_Pair_Token(const std::string &token_text = "", int id = Token_Type::Map_Pair, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
   struct Value_Range_Token : public Token {
   public:
-    Value_Range_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Value_Range_Token(const std::string &token_text = "", int id = Token_Type::Value_Range, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
   struct Inline_Range_Token : public Token {
   public:
-    Inline_Range_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Inline_Range_Token(const std::string &token_text = "", int id = Token_Type::Inline_Range, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Annotation_Token : public Token {
   public:
-    Annotation_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Annotation_Token(const std::string &token_text = "", int id = Token_Type::Annotation, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
   struct Try_Token : public Token {
   public:
-    Try_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Try_Token(const std::string &token_text = "", int id = Token_Type::Try, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Catch_Token : public Token {
   public:
-    Catch_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Catch_Token(const std::string &token_text = "", int id = Token_Type::Catch, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
   struct Finally_Token : public Token {
   public:
-    Finally_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Finally_Token(const std::string &token_text = "", int id = Token_Type::Finally, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
   struct Method_Token : public Token {
   public:
-    Method_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Method_Token(const std::string &token_text = "", int id = Token_Type::Method, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Attr_Decl_Token : public Token {
   public:
-    Attr_Decl_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Attr_Decl_Token(const std::string &token_text = "", int id = Token_Type::Attr_Decl, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Shift_Token : public Token {
   public:
-    Shift_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Shift_Token(const std::string &token_text = "", int id = Token_Type::Shift, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Equality_Token : public Token {
   public:
-    Equality_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Equality_Token(const std::string &token_text = "", int id = Token_Type::Equality, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Bitwise_And_Token : public Token {
   public:
-    Bitwise_And_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Bitwise_And_Token(const std::string &token_text = "", int id = Token_Type::Bitwise_And, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Bitwise_Xor_Token : public Token {
   public:
-    Bitwise_Xor_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Bitwise_Xor_Token(const std::string &token_text = "", int id = Token_Type::Bitwise_Xor, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Bitwise_Or_Token : public Token {
   public:
-    Bitwise_Or_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Bitwise_Or_Token(const std::string &token_text = "", int id = Token_Type::Bitwise_Or, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Logical_And_Token : public Token {
   public:
-    Logical_And_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Logical_And_Token(const std::string &token_text = "", int id = Token_Type::Logical_And, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
   struct Logical_Or_Token : public Token {
   public:
-    Logical_Or_Token(const std::string &token_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
+    Logical_Or_Token(const std::string &token_text = "", int id = Token_Type::Logical_Or, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
       Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
