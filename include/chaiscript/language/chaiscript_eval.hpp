@@ -276,33 +276,17 @@ namespace chaiscript
         catch (const bad_boxed_cast &) {
           throw Eval_Error("Condition not boolean");
         }
-        if (this->children[i]->text == "&&") {
-          if (lhs) {
-            try {
-              retval = this->children[i+1]->eval(ss);
-            }
-            catch (Eval_Error &ee) {
-              ee.call_stack.push_back(this->children[i+1]);
-              throw;
-            }
+        if (lhs) {
+          try {
+            retval = this->children[i+1]->eval(ss);
           }
-          else {
-            retval = Boxed_Value(false);
+          catch (Eval_Error &ee) {
+            ee.call_stack.push_back(this->children[i+1]);
+            throw;
           }
         }
-        else if (this->children[i]->text == "||") {
-          if (lhs) {
-            retval = Boxed_Value(true);
-          }
-          else {
-            try {
-              retval = this->children[i+1]->eval(ss);
-            }
-            catch (Eval_Error &ee) {
-              ee.call_stack.push_back(this->children[i+1]);
-              throw;
-            }
-          }
+        else {
+          retval = Boxed_Value(false);
         }
       }
     }
@@ -330,32 +314,16 @@ namespace chaiscript
         catch (const bad_boxed_cast &) {
           throw Eval_Error("Condition not boolean");
         }
-        if (this->children[i]->text == "&&") {
-          if (lhs) {
-            try {
-              retval = this->children[i+1]->eval(ss);
-            }
-            catch (Eval_Error &ee) {
-              ee.call_stack.push_back(this->children[i+1]);
-              throw;
-            }
-          }
-          else {
-            retval = Boxed_Value(false);
-          }
+        if (lhs) {
+          retval = Boxed_Value(true);
         }
-        else if (this->children[i]->text == "||") {
-          if (lhs) {
-            retval = Boxed_Value(true);
-          }
-          else {
-            try {
-              retval = this->children[i+1]->eval(ss);
+        else {
+          try {
+            retval = this->children[i+1]->eval(ss);
             }
-            catch (Eval_Error &ee) {
-              ee.call_stack.push_back(this->children[i+1]);
-              throw;
-            }
+          catch (Eval_Error &ee) {
+            ee.call_stack.push_back(this->children[i+1]);
+            throw;
           }
         }
       }
