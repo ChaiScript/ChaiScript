@@ -16,7 +16,7 @@ namespace chaiscript
   /**
    * Types of AST nodes available to the parser and eval
    */
-  class Token_Type {
+  class AST_Node_Type {
   public:
     enum Type { Error, Int, Float, Id, Char, Str, Eol, Fun_Call, Inplace_Fun_Call, Arg_List, Variable, Equation, Var_Decl,
                 Comparison, Additive, Multiplicative, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
@@ -31,14 +31,14 @@ namespace chaiscript
     /**
      * Helper lookup to get the name of each node type
      */
-    const char *token_type_to_string(int tokentype) {
-      const char *token_types[] = { "Internal Parser Error", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Inplace_Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
+    const char *ast_node_type_to_string(int ast_node_type) {
+      const char *ast_node_types[] = { "Internal Parser Error", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Inplace_Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
                                     "Comparison", "Additive", "Multiplicative", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
                                     "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Map_Pair", "Value_Range",
                                     "Inline_Range", "Annotation", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Shift", "Equality", "Bitwise_And", "Bitwise_Xor", "Bitwise_Or", 
                                     "Logical_And", "Logical_Or"};
 
-      return token_types[tokentype];
+      return ast_node_types[ast_node_type];
     }
   }
 
@@ -55,12 +55,12 @@ namespace chaiscript
     File_Position() : line(0), column(0) { }
   };
 
-  typedef boost::shared_ptr<struct Token> TokenPtr;
+  typedef boost::shared_ptr<struct AST_Node> AST_NodePtr;
 
   /**
-   * The struct that doubles as both a parser token and an AST node
+   * The struct that doubles as both a parser ast_node and an AST node
    */
-  struct Token {
+  struct AST_Node {
     std::string text;
     int identifier;
     char *filename;
@@ -68,19 +68,19 @@ namespace chaiscript
     bool is_cached;
     Boxed_Value cached_value;
 
-    std::vector<TokenPtr> children;
-    TokenPtr annotation;
+    std::vector<AST_NodePtr> children;
+    AST_NodePtr annotation;
 
-    Token(const std::string &token_text, int id, char *fname, int start_line, int start_col, int end_line, int end_col) :
-      text(token_text), identifier(id), filename(fname), is_cached(false) {
+    AST_Node(const std::string &ast_node_text, int id, char *fname, int start_line, int start_col, int end_line, int end_col) :
+      text(ast_node_text), identifier(id), filename(fname), is_cached(false) {
 
       start.line = start_line;
       start.column = start_col;
       end.line = end_line;
       end.column = end_col;
     }
-    Token(const std::string &token_text, int id, char *fname) :
-      text(token_text), identifier(id), filename(fname), is_cached(false) { }
+    AST_Node(const std::string &ast_node_text, int id, char *fname) :
+      text(ast_node_text), identifier(id), filename(fname), is_cached(false) { }
 
 
     void cache_const(const Boxed_Value &value) {
@@ -90,286 +90,286 @@ namespace chaiscript
 
     virtual Boxed_Value eval(Dispatch_Engine &) {
       Boxed_Value bv;
-      throw std::runtime_error("Undispatched token (internal error)");
+      throw std::runtime_error("Undispatched ast_node (internal error)");
       return bv;
     }
   };
 
-  struct Error_Token : public Token {
+  struct Error_AST_Node : public AST_Node {
   public:
-    Error_Token(const std::string &token_text = "", int id = Token_Type::Error, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Error_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Error, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
-  struct Int_Token : public Token {
+  struct Int_AST_Node : public AST_Node {
   public:
-    Int_Token(const std::string &token_text = "", int id = Token_Type::Int, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Int_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Int, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Float_Token : public Token {
+  struct Float_AST_Node : public AST_Node {
   public:
-    Float_Token(const std::string &token_text = "", int id = Token_Type::Float, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Float_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Float, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Id_Token : public Token {
+  struct Id_AST_Node : public AST_Node {
   public:
-    Id_Token(const std::string &token_text = "", int id = Token_Type::Id, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Id_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Id, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Char_Token : public Token {
+  struct Char_AST_Node : public AST_Node {
   public:
-    Char_Token(const std::string &token_text = "", int id = Token_Type::Char, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Char_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Char, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
-  struct Str_Token : public Token {
+  struct Str_AST_Node : public AST_Node {
   public:
-    Str_Token(const std::string &token_text = "", int id = Token_Type::Str, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Str_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Str, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
-  struct Eol_Token : public Token {
+  struct Eol_AST_Node : public AST_Node {
   public:
-    Eol_Token(const std::string &token_text = "", int id = Token_Type::Eol, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Eol_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Eol, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
-  struct Fun_Call_Token : public Token {
+  struct Fun_Call_AST_Node : public AST_Node {
   public:
-    Fun_Call_Token(const std::string &token_text = "", int id = Token_Type::Fun_Call, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Fun_Call_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Fun_Call, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Inplace_Fun_Call_Token : public Token {
+  struct Inplace_Fun_Call_AST_Node : public AST_Node {
   public:
-    Inplace_Fun_Call_Token(const std::string &token_text = "", int id = Token_Type::Inplace_Fun_Call, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Inplace_Fun_Call_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Inplace_Fun_Call, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Arg_List_Token : public Token {
+  struct Arg_List_AST_Node : public AST_Node {
   public:
-    Arg_List_Token(const std::string &token_text = "", int id = Token_Type::Arg_List, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Arg_List_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Arg_List, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
-  struct Variable_Token : public Token {
+  struct Variable_AST_Node : public AST_Node {
   public:
-    Variable_Token(const std::string &token_text = "", int id = Token_Type::Variable, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Variable_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Variable, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
-  struct Equation_Token : public Token {
+  struct Equation_AST_Node : public AST_Node {
   public:
-    Equation_Token(const std::string &token_text = "", int id = Token_Type::Equation, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Equation_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Equation, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Var_Decl_Token : public Token {
+  struct Var_Decl_AST_Node : public AST_Node {
   public:
-    Var_Decl_Token(const std::string &token_text = "", int id = Token_Type::Var_Decl, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Var_Decl_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Var_Decl, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Comparison_Token : public Token {
+  struct Comparison_AST_Node : public AST_Node {
   public:
-    Comparison_Token(const std::string &token_text = "", int id = Token_Type::Comparison, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Comparison_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Comparison, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Additive_Token : public Token {
+  struct Additive_AST_Node : public AST_Node {
   public:
-    Additive_Token(const std::string &token_text = "", int id = Token_Type::Additive, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Additive_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Additive, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Multiplicative_Token : public Token {
+  struct Multiplicative_AST_Node : public AST_Node {
   public:
-    Multiplicative_Token(const std::string &token_text = "", int id = Token_Type::Multiplicative, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Multiplicative_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Multiplicative, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Array_Call_Token : public Token {
+  struct Array_Call_AST_Node : public AST_Node {
   public:
-    Array_Call_Token(const std::string &token_text = "", int id = Token_Type::Array_Call, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Array_Call_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Array_Call, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Dot_Access_Token : public Token {
+  struct Dot_Access_AST_Node : public AST_Node {
   public:
-    Dot_Access_Token(const std::string &token_text = "", int id = Token_Type::Dot_Access, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Dot_Access_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Dot_Access, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Quoted_String_Token : public Token {
+  struct Quoted_String_AST_Node : public AST_Node {
   public:
-    Quoted_String_Token(const std::string &token_text = "", int id = Token_Type::Quoted_String, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Quoted_String_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Quoted_String, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Single_Quoted_String_Token : public Token {
+  struct Single_Quoted_String_AST_Node : public AST_Node {
   public:
-    Single_Quoted_String_Token(const std::string &token_text = "", int id = Token_Type::Single_Quoted_String, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Single_Quoted_String_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Single_Quoted_String, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Lambda_Token : public Token {
+  struct Lambda_AST_Node : public AST_Node {
   public:
-    Lambda_Token(const std::string &token_text = "", int id = Token_Type::Lambda, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Lambda_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Lambda, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Block_Token : public Token {
+  struct Block_AST_Node : public AST_Node {
   public:
-    Block_Token(const std::string &token_text = "", int id = Token_Type::Block, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Block_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Block, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Def_Token : public Token {
+  struct Def_AST_Node : public AST_Node {
   public:
-    Def_Token(const std::string &token_text = "", int id = Token_Type::Def, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Def_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Def, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct While_Token : public Token {
+  struct While_AST_Node : public AST_Node {
   public:
-    While_Token(const std::string &token_text = "", int id = Token_Type::While, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    While_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::While, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct If_Token : public Token {
+  struct If_AST_Node : public AST_Node {
   public:
-    If_Token(const std::string &token_text = "", int id = Token_Type::If, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    If_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::If, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct For_Token : public Token {
+  struct For_AST_Node : public AST_Node {
   public:
-    For_Token(const std::string &token_text = "", int id = Token_Type::For, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    For_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::For, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Inline_Array_Token : public Token {
+  struct Inline_Array_AST_Node : public AST_Node {
   public:
-    Inline_Array_Token(const std::string &token_text = "", int id = Token_Type::Inline_Array, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Inline_Array_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Inline_Array, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Inline_Map_Token : public Token {
+  struct Inline_Map_AST_Node : public AST_Node {
   public:
-    Inline_Map_Token(const std::string &token_text = "", int id = Token_Type::Inline_Map, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Inline_Map_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Inline_Map, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Return_Token : public Token {
+  struct Return_AST_Node : public AST_Node {
   public:
-    Return_Token(const std::string &token_text = "", int id = Token_Type::Return, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Return_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Return, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct File_Token : public Token {
+  struct File_AST_Node : public AST_Node {
   public:
-    File_Token(const std::string &token_text = "", int id = Token_Type::File, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    File_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::File, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Prefix_Token : public Token {
+  struct Prefix_AST_Node : public AST_Node {
   public:
-    Prefix_Token(const std::string &token_text = "", int id = Token_Type::Prefix, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Prefix_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Prefix, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Break_Token : public Token {
+  struct Break_AST_Node : public AST_Node {
   public:
-    Break_Token(const std::string &token_text = "", int id = Token_Type::Break, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Break_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Break, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Map_Pair_Token : public Token {
+  struct Map_Pair_AST_Node : public AST_Node {
   public:
-    Map_Pair_Token(const std::string &token_text = "", int id = Token_Type::Map_Pair, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Map_Pair_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Map_Pair, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
-  struct Value_Range_Token : public Token {
+  struct Value_Range_AST_Node : public AST_Node {
   public:
-    Value_Range_Token(const std::string &token_text = "", int id = Token_Type::Value_Range, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Value_Range_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Value_Range, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
-  struct Inline_Range_Token : public Token {
+  struct Inline_Range_AST_Node : public AST_Node {
   public:
-    Inline_Range_Token(const std::string &token_text = "", int id = Token_Type::Inline_Range, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Inline_Range_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Inline_Range, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Annotation_Token : public Token {
+  struct Annotation_AST_Node : public AST_Node {
   public:
-    Annotation_Token(const std::string &token_text = "", int id = Token_Type::Annotation, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Annotation_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Annotation, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
-  struct Try_Token : public Token {
+  struct Try_AST_Node : public AST_Node {
   public:
-    Try_Token(const std::string &token_text = "", int id = Token_Type::Try, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Try_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Try, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Catch_Token : public Token {
+  struct Catch_AST_Node : public AST_Node {
   public:
-    Catch_Token(const std::string &token_text = "", int id = Token_Type::Catch, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Catch_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Catch, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
-  struct Finally_Token : public Token {
+  struct Finally_AST_Node : public AST_Node {
   public:
-    Finally_Token(const std::string &token_text = "", int id = Token_Type::Finally, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Finally_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Finally, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
   };
-  struct Method_Token : public Token {
+  struct Method_AST_Node : public AST_Node {
   public:
-    Method_Token(const std::string &token_text = "", int id = Token_Type::Method, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Method_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Method, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Attr_Decl_Token : public Token {
+  struct Attr_Decl_AST_Node : public AST_Node {
   public:
-    Attr_Decl_Token(const std::string &token_text = "", int id = Token_Type::Attr_Decl, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Attr_Decl_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Attr_Decl, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Shift_Token : public Token {
+  struct Shift_AST_Node : public AST_Node {
   public:
-    Shift_Token(const std::string &token_text = "", int id = Token_Type::Shift, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Shift_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Shift, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Equality_Token : public Token {
+  struct Equality_AST_Node : public AST_Node {
   public:
-    Equality_Token(const std::string &token_text = "", int id = Token_Type::Equality, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Equality_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Equality, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Bitwise_And_Token : public Token {
+  struct Bitwise_And_AST_Node : public AST_Node {
   public:
-    Bitwise_And_Token(const std::string &token_text = "", int id = Token_Type::Bitwise_And, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Bitwise_And_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Bitwise_And, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Bitwise_Xor_Token : public Token {
+  struct Bitwise_Xor_AST_Node : public AST_Node {
   public:
-    Bitwise_Xor_Token(const std::string &token_text = "", int id = Token_Type::Bitwise_Xor, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Bitwise_Xor_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Bitwise_Xor, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Bitwise_Or_Token : public Token {
+  struct Bitwise_Or_AST_Node : public AST_Node {
   public:
-    Bitwise_Or_Token(const std::string &token_text = "", int id = Token_Type::Bitwise_Or, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Bitwise_Or_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Bitwise_Or, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Logical_And_Token : public Token {
+  struct Logical_And_AST_Node : public AST_Node {
   public:
-    Logical_And_Token(const std::string &token_text = "", int id = Token_Type::Logical_And, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Logical_And_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Logical_And, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
-  struct Logical_Or_Token : public Token {
+  struct Logical_Or_AST_Node : public AST_Node {
   public:
-    Logical_Or_Token(const std::string &token_text = "", int id = Token_Type::Logical_Or, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
-      Token(token_text, id, fname, start_line, start_col, end_line, end_col) { }
+    Logical_Or_AST_Node(const std::string &ast_node_text = "", int id = AST_Node_Type::Logical_Or, char *fname = NULL, int start_line = 0, int start_col = 0, int end_line = 0, int end_col = 0) :
+      AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
     Boxed_Value eval(Dispatch_Engine &ss);
   };
 
@@ -381,7 +381,7 @@ namespace chaiscript
     File_Position start_position;
     File_Position end_position;
     const char *filename;
-    std::vector<TokenPtr> call_stack;
+    std::vector<AST_NodePtr> call_stack;
 
     Eval_Error(const std::string &why, const File_Position &where, const char *fname) :
       std::runtime_error("Error: \"" + why + "\" " +

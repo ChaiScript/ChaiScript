@@ -244,7 +244,7 @@ namespace chaiscript
           engine.sync_cache();
         }
 
-      //debug_print(tokens);
+      //debug_print(ast_nodes);
       Boxed_Value value;
 
       // Keep a cache of all loaded filenames and use the char * from this cache to pass 
@@ -263,7 +263,7 @@ namespace chaiscript
               l.unlock();
 #endif
               //parser.show_match_stack();
-              value = parser.ast()->eval(engine);//eval_token<Eval_Engine>(engine, parser.ast());
+              value = parser.ast()->eval(engine);//eval_ast_node<Eval_Engine>(engine, parser.ast());
             }
           }
           catch (const Return_Value &rv) {
@@ -518,8 +518,8 @@ namespace chaiscript
     /**
      * Prints the contents of an AST node, including its children, recursively
      */
-    void debug_print(TokenPtr t, std::string prepend = "") {
-      std::cout << prepend << "(" << token_type_to_string(t->identifier) << ") "
+    void debug_print(AST_NodePtr t, std::string prepend = "") {
+      std::cout << prepend << "(" << ast_node_type_to_string(t->identifier) << ") "
                 << t->text << " : " << t->start.line << ", " << t->start.column << std::endl;
       for (unsigned int j = 0; j < t->children.size(); ++j) {
         debug_print(t->children[j], prepend + "  ");

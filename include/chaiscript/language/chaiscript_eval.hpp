@@ -17,7 +17,7 @@ namespace chaiscript
    * Helper function that will set up the scope around a function call, including handling the named function parameters
    */
   template <typename Eval_System>
-  const Boxed_Value eval_function (Eval_System &ss, const TokenPtr &node, const std::vector<std::string> &param_names, const std::vector<Boxed_Value> &vals) {
+  const Boxed_Value eval_function (Eval_System &ss, const AST_NodePtr &node, const std::vector<std::string> &param_names, const std::vector<Boxed_Value> &vals) {
     ss.new_scope();
 
     for (unsigned int i = 0; i < param_names.size(); ++i) {
@@ -44,7 +44,7 @@ namespace chaiscript
   /**
    * Evaluates the top-level file node
    */
-  Boxed_Value File_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value File_AST_Node::eval(Dispatch_Engine &ss) {
     const unsigned int size = this->children.size(); 
     for (unsigned int i = 0; i < size; ++i) {
       try {
@@ -64,7 +64,7 @@ namespace chaiscript
   /**
    * Evaluates a variable or function name identifier
    */
-  Boxed_Value Id_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Id_AST_Node::eval(Dispatch_Engine &ss) {
     if (this->text == "true") {
       if (!this->is_cached) {
         cache_const(const_var(true));
@@ -102,7 +102,7 @@ namespace chaiscript
   /**
    * Evaluates a floating point number
    */
-  Boxed_Value Float_Token::eval(Dispatch_Engine &) {
+  Boxed_Value Float_AST_Node::eval(Dispatch_Engine &) {
     if (!this->is_cached) {
       cache_const(const_var(double(atof(this->text.c_str()))));
     }
@@ -112,7 +112,7 @@ namespace chaiscript
   /**
    * Evaluates an integer
    */
-  Boxed_Value Int_Token::eval(Dispatch_Engine &) {
+  Boxed_Value Int_AST_Node::eval(Dispatch_Engine &) {
     if (!this->is_cached) {
       cache_const(const_var(int(atoi(this->text.c_str()))));
     }
@@ -122,7 +122,7 @@ namespace chaiscript
   /**
    * Evaluates a quoted string
    */
-  Boxed_Value Quoted_String_Token::eval(Dispatch_Engine &) {
+  Boxed_Value Quoted_String_AST_Node::eval(Dispatch_Engine &) {
     //return const_var(node->text);
 
     /*
@@ -144,7 +144,7 @@ namespace chaiscript
    * Evaluates a char group
    */
 
-  Boxed_Value Single_Quoted_String_Token::eval(Dispatch_Engine &) {
+  Boxed_Value Single_Quoted_String_AST_Node::eval(Dispatch_Engine &) {
     if (!this->is_cached) {
       cache_const(const_var(char(this->text[0])));
     }
@@ -154,7 +154,7 @@ namespace chaiscript
   /**
    * Evaluates a string of equations in reverse order so that the right-most side has precedence
    */
-  Boxed_Value Equation_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Equation_AST_Node::eval(Dispatch_Engine &ss) {
     int i;
     Boxed_Value retval;
     try {
@@ -227,7 +227,7 @@ namespace chaiscript
   /**
    * Evaluates a variable declaration
    */
-  Boxed_Value Var_Decl_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Var_Decl_AST_Node::eval(Dispatch_Engine &ss) {
     try {
       ss.add_object(this->children[0]->text, Boxed_Value());
     }
@@ -240,7 +240,7 @@ namespace chaiscript
   /**
    * Evaluates an attribute declaration
    */
-  Boxed_Value Attr_Decl_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Attr_Decl_AST_Node::eval(Dispatch_Engine &ss) {
     try {
       ss.add(fun(boost::function<Boxed_Value (Dynamic_Object &)>(boost::bind(&Dynamic_Object_Attribute::func, this->children[0]->text,
                                                                              this->children[1]->text, _1))), this->children[1]->text);
@@ -255,7 +255,7 @@ namespace chaiscript
   /**
    * Evaluates binary boolean operators.  Respects short-circuiting rules.
    */
-  Boxed_Value Logical_And_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Logical_And_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
 
     Boxed_Value retval;
@@ -293,7 +293,7 @@ namespace chaiscript
     return retval;
   }
 
-  Boxed_Value Logical_Or_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Logical_Or_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
     Boxed_Value retval;
 
@@ -334,7 +334,7 @@ namespace chaiscript
   /**
    * Evaluates comparison, additions, and multiplications and their relatives
    */
-  Boxed_Value Bitwise_And_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Bitwise_And_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
     Boxed_Value retval;
 
@@ -361,7 +361,7 @@ namespace chaiscript
 
     return retval;
   }
-  Boxed_Value Bitwise_Xor_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Bitwise_Xor_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
     Boxed_Value retval;
 
@@ -388,7 +388,7 @@ namespace chaiscript
 
     return retval;
   }
-  Boxed_Value Bitwise_Or_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Bitwise_Or_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
     Boxed_Value retval;
 
@@ -415,7 +415,7 @@ namespace chaiscript
 
     return retval;
   }
-  Boxed_Value Additive_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Additive_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
     Boxed_Value retval;
 
@@ -442,7 +442,7 @@ namespace chaiscript
 
     return retval;
   }
-  Boxed_Value Multiplicative_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Multiplicative_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
     Boxed_Value retval;
 
@@ -469,7 +469,7 @@ namespace chaiscript
 
     return retval;
   }
-  Boxed_Value Comparison_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Comparison_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
     Boxed_Value retval;
 
@@ -496,7 +496,7 @@ namespace chaiscript
 
     return retval;
   }
-  Boxed_Value Equality_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Equality_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
     Boxed_Value retval;
 
@@ -523,7 +523,7 @@ namespace chaiscript
 
     return retval;
   }
-  Boxed_Value Shift_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Shift_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
     Boxed_Value retval;
 
@@ -554,7 +554,7 @@ namespace chaiscript
   /**
    * Evaluates an array lookup
    */
-  Boxed_Value Array_Call_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Array_Call_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
     Boxed_Value retval;
 
@@ -588,7 +588,7 @@ namespace chaiscript
   /**
    * Evaluates any unary prefix
    */
-  Boxed_Value Prefix_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Prefix_AST_Node::eval(Dispatch_Engine &ss) {
     try {
       return ss.call_function(this->children[0]->text, this->children[1]->eval(ss));
     }
@@ -600,7 +600,7 @@ namespace chaiscript
   /**
    * Evaluates (and generates) an inline array initialization
    */
-  Boxed_Value Inline_Array_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Inline_Array_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
 
     try {
@@ -631,7 +631,7 @@ namespace chaiscript
   /**
    * Evaluates (and generates) an inline range initialization
    */
-  Boxed_Value Inline_Range_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Inline_Range_AST_Node::eval(Dispatch_Engine &ss) {
     try {
       return ss.call_function("generate_range",
                               this->children[0]->children[0]->children[0]->eval(ss),
@@ -649,7 +649,7 @@ namespace chaiscript
   /**
    * Evaluates (and generates) an inline map initialization
    */
-  Boxed_Value Inline_Map_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Inline_Map_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
 
     try {
@@ -678,13 +678,13 @@ namespace chaiscript
   /**
    * Evaluates a function call, starting with its arguments.  Handles resetting the scope to the previous one after the call.
    */
-  Boxed_Value Fun_Call_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Fun_Call_AST_Node::eval(Dispatch_Engine &ss) {
     Param_List_Builder plb;
     Dispatch_Engine::Stack prev_stack = ss.get_stack();
     Dispatch_Engine::Stack new_stack = ss.new_stack();
     unsigned int i;
 
-    if ((this->children.size() > 1) && (this->children[1]->identifier == Token_Type::Arg_List)) {
+    if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
       for (i = 0; i < this->children[1]->children.size(); ++i) {
         try {
           plb << this->children[1]->children[i]->eval(ss);
@@ -729,11 +729,11 @@ namespace chaiscript
   /**
    * Evaluates a function call, starting with its arguments.  Does NOT change scope.
    */
-  Boxed_Value Inplace_Fun_Call_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Inplace_Fun_Call_AST_Node::eval(Dispatch_Engine &ss) {
     Param_List_Builder plb;
     unsigned int i;
 
-    if ((this->children.size() > 1) && (this->children[1]->identifier == Token_Type::Arg_List)) {
+    if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
       for (i = 0; i < this->children[1]->children.size(); ++i) {
         try {
           plb << this->children[1]->children[i]->eval(ss);
@@ -771,7 +771,7 @@ namespace chaiscript
   /**
    * Evaluates a method/attributes invocation
    */
-  Boxed_Value Dot_Access_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Dot_Access_AST_Node::eval(Dispatch_Engine &ss) {
     Dispatch_Engine::Stack prev_stack = ss.get_stack();
     Dispatch_Engine::Stack new_stack = ss.new_stack();
     unsigned int i, j;
@@ -804,7 +804,7 @@ namespace chaiscript
 
         std::string fun_name;
         std::vector<std::pair<std::string, Proxy_Function > > funs;
-        if (this->children[i]->identifier == Token_Type::Fun_Call) {
+        if (this->children[i]->identifier == AST_Node_Type::Fun_Call) {
           fun_name = this->children[i]->children[0]->text;
         }
         else {
@@ -837,7 +837,7 @@ namespace chaiscript
   /**
    * Evaluates an if/elseif/else block
    */
-  Boxed_Value Try_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Try_AST_Node::eval(Dispatch_Engine &ss) {
     Boxed_Value retval;        
 
     ss.new_scope();
@@ -846,7 +846,7 @@ namespace chaiscript
     }
     catch (Eval_Error &ee) {
       ee.call_stack.push_back(this->children[0]);
-      if (this->children.back()->identifier == Token_Type::Finally) {
+      if (this->children.back()->identifier == AST_Node_Type::Finally) {
         try {
           this->children.back()->children[0]->eval(ss);
         }
@@ -863,11 +863,11 @@ namespace chaiscript
       Boxed_Value except = Boxed_Value(boost::ref(e));
 
       unsigned int end_point = this->children.size();
-      if (this->children.back()->identifier == Token_Type::Finally) {
+      if (this->children.back()->identifier == AST_Node_Type::Finally) {
         end_point = this->children.size() - 1;
       }
       for (unsigned int i = 1; i < end_point; ++i) {
-        TokenPtr catch_block = this->children[i];
+        AST_NodePtr catch_block = this->children[i];
 
         if (catch_block->children.size() == 1) {
           //No variable capture, no guards
@@ -901,7 +901,7 @@ namespace chaiscript
           try {
             guard = boxed_cast<bool>(catch_block->children[1]->eval(ss));
           } catch (const bad_boxed_cast &) {
-            if (this->children.back()->identifier == Token_Type::Finally) {
+            if (this->children.back()->identifier == AST_Node_Type::Finally) {
               try {
                 this->children.back()->children[0]->eval(ss);
               }
@@ -927,7 +927,7 @@ namespace chaiscript
           }
         }
         else {
-          if (this->children.back()->identifier == Token_Type::Finally) {
+          if (this->children.back()->identifier == AST_Node_Type::Finally) {
             try {
               this->children.back()->children[0]->eval(ss);
             }
@@ -945,7 +945,7 @@ namespace chaiscript
     catch (Boxed_Value &bv) {
       Boxed_Value except = bv;
       for (unsigned int i = 1; i < this->children.size(); ++i) {
-        TokenPtr catch_block = this->children[i];
+        AST_NodePtr catch_block = this->children[i];
 
         if (catch_block->children.size() == 1) {
           //No variable capture, no guards
@@ -981,7 +981,7 @@ namespace chaiscript
             guard = boxed_cast<bool>(catch_block->children[1]->eval(ss));
           }
           catch (const bad_boxed_cast &) {
-            if (this->children.back()->identifier == Token_Type::Finally) {
+            if (this->children.back()->identifier == AST_Node_Type::Finally) {
               try {
                 this->children.back()->children[0]->eval(ss);
               }
@@ -1011,7 +1011,7 @@ namespace chaiscript
           }
         }
         else {
-          if (this->children.back()->identifier == Token_Type::Finally) {
+          if (this->children.back()->identifier == AST_Node_Type::Finally) {
             try {
               this->children.back()->children[0]->eval(ss);
             }
@@ -1027,7 +1027,7 @@ namespace chaiscript
       }
     }
     catch (...) {
-      if (this->children.back()->identifier == Token_Type::Finally) {
+      if (this->children.back()->identifier == AST_Node_Type::Finally) {
         try {
           this->children.back()->children[0]->eval(ss);
         }
@@ -1041,7 +1041,7 @@ namespace chaiscript
       throw;
     }
 
-    if (this->children.back()->identifier == Token_Type::Finally) {
+    if (this->children.back()->identifier == AST_Node_Type::Finally) {
       try {
         retval = this->children.back()->children[0]->eval(ss);
       }
@@ -1060,7 +1060,7 @@ namespace chaiscript
   /**
    * Evaluates an if/elseif/else block
    */
-  Boxed_Value If_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value If_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
 
     bool cond;
@@ -1129,7 +1129,7 @@ namespace chaiscript
   /**
    * Evaluates a while block
    */
-  Boxed_Value While_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value While_AST_Node::eval(Dispatch_Engine &ss) {
     bool cond;
 
     ss.new_scope();
@@ -1180,7 +1180,7 @@ namespace chaiscript
   /**
    * Evaluates a for block, including the for's conditions, from left to right
    */
-  Boxed_Value For_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value For_AST_Node::eval(Dispatch_Engine &ss) {
     bool cond;
 
     ss.new_scope();
@@ -1287,7 +1287,7 @@ namespace chaiscript
   /**
    * Evaluates a function definition
    */
-  Boxed_Value Def_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Def_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
 
     std::vector<std::string> param_names;
@@ -1295,9 +1295,9 @@ namespace chaiscript
     boost::shared_ptr<Dynamic_Proxy_Function> guard;
     size_t numparams = 0;
     std::string function_name = this->children[0]->text;
-    TokenPtr guardnode;
+    AST_NodePtr guardnode;
 
-    if ((this->children.size() > 2) && (this->children[1]->identifier == Token_Type::Arg_List)) {
+    if ((this->children.size() > 2) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
       numparams = this->children[1]->children.size();
       for (i = 0; i < numparams; ++i) {
         param_names.push_back(this->children[1]->children[i]->text);
@@ -1339,7 +1339,7 @@ namespace chaiscript
   /**
    * Evaluates a function definition
    */
-  Boxed_Value Method_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Method_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
 
     std::vector<std::string> param_names;
@@ -1348,12 +1348,12 @@ namespace chaiscript
     size_t numparams;
     std::string class_name = this->children[0]->text;
     std::string function_name = this->children[1]->text;
-    TokenPtr guardnode;
+    AST_NodePtr guardnode;
 
     //The first param of a method is always the implied this ptr.
     param_names.push_back("this");
 
-    if ((this->children.size() > 3) && (this->children[2]->identifier == Token_Type::Arg_List)) {
+    if ((this->children.size() > 3) && (this->children[2]->identifier == AST_Node_Type::Arg_List)) {
       for (i = 0; i < this->children[2]->children.size(); ++i) {
         param_names.push_back(this->children[2]->children[i]->text);
       }
@@ -1414,13 +1414,13 @@ namespace chaiscript
   /**
    * Evaluates a lambda (anonymous function)
    */
-  Boxed_Value Lambda_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Lambda_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
 
     std::vector<std::string> param_names;
     size_t numparams = 0;
 
-    if ((this->children.size() > 0) && (this->children[0]->identifier == Token_Type::Arg_List)) {
+    if ((this->children.size() > 0) && (this->children[0]->identifier == AST_Node_Type::Arg_List)) {
       numparams = this->children[0]->children.size();
       for (i = 0; i < numparams; ++i) {
         param_names.push_back(this->children[0]->children[i]->text);
@@ -1440,7 +1440,7 @@ namespace chaiscript
   /**
    * Evaluates a scoped block.  Handles resetting the scope after the block has completed.
    */
-  Boxed_Value Block_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Block_AST_Node::eval(Dispatch_Engine &ss) {
     unsigned int i;
     unsigned int num_children = this->children.size();
 
@@ -1477,7 +1477,7 @@ namespace chaiscript
   /**
    * Evaluates a return statement
    */
-  Boxed_Value Return_Token::eval(Dispatch_Engine &ss) {
+  Boxed_Value Return_AST_Node::eval(Dispatch_Engine &ss) {
     if (this->children.size() > 0) {
       try {
         throw Return_Value(this->children[0]->eval(ss));
@@ -1495,7 +1495,7 @@ namespace chaiscript
   /**
    * Evaluates a break statement
    */
-  Boxed_Value Break_Token::eval(Dispatch_Engine &) {
+  Boxed_Value Break_AST_Node::eval(Dispatch_Engine &) {
     throw Break_Loop();
   }
 }
