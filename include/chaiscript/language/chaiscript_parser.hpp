@@ -20,11 +20,11 @@ namespace chaiscript
 {
   class ChaiScript_Parser {
 
-    std::string::iterator input_pos, input_end;
+    std::string::const_iterator input_pos, input_end;
     int line, col;
     std::string multiline_comment_begin, multiline_comment_end;
     std::string singleline_comment;
-    char *filename;
+    const char *filename;
     std::vector<AST_NodePtr> match_stack;
 
     std::vector<std::vector<std::string> > operator_matches;
@@ -252,7 +252,7 @@ namespace chaiscript
      */
     bool Float_() {
       bool retval = false;
-      std::string::iterator start = input_pos;
+      std::string::const_iterator start = input_pos;
 
       if (has_more_input() && (char_between('0', '9') || (*input_pos == '.'))) {
         while (has_more_input() && char_between('0', '9')) {
@@ -358,7 +358,7 @@ namespace chaiscript
         return Hex_() || Float_();
       }
       else {
-        std::string::iterator start = input_pos;
+        std::string::const_iterator start = input_pos;
         int prev_col = col;
         int prev_line = line;
         if (has_more_input() && (char_between('0', '9') || (*input_pos == '.')) ) {
@@ -441,7 +441,7 @@ namespace chaiscript
         retval = true;
         ++col;
         ++input_pos;
-        std::string::iterator start = input_pos;
+        std::string::const_iterator start = input_pos;
                 
         while (has_more_input() && (*input_pos != '`')) {
           if (Eol()) {
@@ -476,7 +476,7 @@ namespace chaiscript
         return Id_();
       }
       else {
-        std::string::iterator start = input_pos;
+        std::string::const_iterator start = input_pos;
         int prev_col = col;
         int prev_line = line;
         if (Id_()) {
@@ -505,7 +505,7 @@ namespace chaiscript
      */
     bool Annotation() {
       SkipWS();
-      std::string::iterator start = input_pos;
+      std::string::const_iterator start = input_pos;
       int prev_col = col;
       int prev_line = line;
       if (Symbol_("#")) {
@@ -577,7 +577,7 @@ namespace chaiscript
         return Quoted_String_();
       }
       else {
-        std::string::iterator start = input_pos;
+        std::string::const_iterator start = input_pos;
         int prev_col = col;
         int prev_line = line;
         if (Quoted_String_()) {
@@ -588,7 +588,7 @@ namespace chaiscript
           int prev_stack_top = match_stack.size();
 
           //for (std::string::iterator s = start + 1, end = input_pos - 1; s != end; ++s) {
-          std::string::iterator s = start + 1, end = input_pos - 1;
+          std::string::const_iterator s = start + 1, end = input_pos - 1;
 
           while (s != end) {
             if (saw_interpolation_marker) {
@@ -763,13 +763,13 @@ namespace chaiscript
         return Single_Quoted_String_();
       }
       else {
-        std::string::iterator start = input_pos;
+        std::string::const_iterator start = input_pos;
         int prev_col = col;
         int prev_line = line;
         if (Single_Quoted_String_()) {
           std::string match;
           bool is_escaped = false;
-          for (std::string::iterator s = start + 1, end = input_pos - 1; s != end; ++s) {
+          for (std::string::const_iterator s = start + 1, end = input_pos - 1; s != end; ++s) {
             if (*s == '\\') {
               if (is_escaped) {
                 match.push_back('\\');
@@ -832,7 +832,7 @@ namespace chaiscript
         return Char_(c);
       }
       else {
-        std::string::iterator start = input_pos;
+        std::string::const_iterator start = input_pos;
         int prev_col = col;
         int prev_line = line;
         if (Char_(c)) {
@@ -855,7 +855,7 @@ namespace chaiscript
       int len = strlen(s);
 
       if ((input_end - input_pos) >= len) {
-        std::string::iterator tmp = input_pos;
+        std::string::const_iterator tmp = input_pos;
         for (int i = 0; i < len; ++i) {
           if (*tmp != s[i]) {
             return false;
@@ -877,7 +877,7 @@ namespace chaiscript
       SkipWS();
 
       if (!capture) {
-        std::string::iterator start = input_pos;
+        std::string::const_iterator start = input_pos;
         int prev_col = col;
         int prev_line = line;
         bool retval = Keyword_(s);
@@ -897,7 +897,7 @@ namespace chaiscript
         }
       }
       else {
-        std::string::iterator start = input_pos;
+        std::string::const_iterator start = input_pos;
         int prev_col = col;
         int prev_line = line;
         if (Keyword_(s)) {
@@ -928,7 +928,7 @@ namespace chaiscript
       int len = strlen(s);
 
       if ((input_end - input_pos) >= len) {
-        std::string::iterator tmp = input_pos;
+        std::string::const_iterator tmp = input_pos;
         for (int i = 0; i < len; ++i) {
           if (*tmp != s[i]) {
             return false;
@@ -950,7 +950,7 @@ namespace chaiscript
       SkipWS();
 
       if (!capture) {
-        std::string::iterator start = input_pos;
+        std::string::const_iterator start = input_pos;
         int prev_col = col;
         int prev_line = line;
         bool retval = Symbol_(s);
@@ -972,7 +972,7 @@ namespace chaiscript
         }
       }
       else {
-        std::string::iterator start = input_pos;
+        std::string::const_iterator start = input_pos;
         int prev_col = col;
         int prev_line = line;
         if (Symbol_(s)) {
@@ -1027,7 +1027,7 @@ namespace chaiscript
         return Eol_();
       }
       else {
-        std::string::iterator start = input_pos;
+        std::string::const_iterator start = input_pos;
         int prev_col = col;
         int prev_line = line;
         if (Eol_()) {
@@ -1459,7 +1459,7 @@ namespace chaiscript
      */
     bool Id_Fun_Array() {
       bool retval = false;
-      std::string::iterator prev_pos = input_pos;
+      std::string::const_iterator prev_pos = input_pos;
 
       unsigned int prev_stack_top = match_stack.size();
       if (Id(true)) {
@@ -1764,7 +1764,7 @@ namespace chaiscript
       bool retval = false;
 
       unsigned int prev_stack_top = match_stack.size();
-      std::string::iterator prev_pos = input_pos;
+      std::string::const_iterator prev_pos = input_pos;
       int prev_col = col;
 
       if (Operator()) {
@@ -1911,7 +1911,7 @@ namespace chaiscript
     /**
      * Parses the given input string, tagging parsed ast_nodes with the given filename.
      */
-    bool parse(std::string input, char *fname) {
+    bool parse(const std::string &input, const char *fname) {
       input_pos = input.begin();
       input_end = input.end();
       line = 1; col = 1;

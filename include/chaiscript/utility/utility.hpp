@@ -15,7 +15,7 @@
   BOOST_PP_SEQ_ELEM(3, _info) (BOOST_PP_STRINGIZE(BOOST_PP_SEQ_ELEM(0, _method ) ) )
 
 #define CHAISCRIPT_CLASS_NAME(_info) \
-  BOOST_PP_STRINGIZE(CHAISCRIPT_CLASS_ELEM(_info))
+  BOOST_PP_SEQ_ELEM(2, _info) (BOOST_PP_STRINGIZE(CHAISCRIPT_CLASS_ELEM(_info) ) )
 
 #define CHAISCRIPT_METHOD_SIGNATURE_PART(_r, _info, _i, _method_part) \
   BOOST_PP_EXPR_IF(BOOST_PP_EQUAL(_i, 1), < _method_part > )
@@ -39,7 +39,7 @@
 #define CHAISCRIPT_CLASS_EX(_module, _class_name, _class_name_translator, _method_name_translator, _constructors, _methods) \
   { \
     _module->add(chaiscript::user_type<_class_name>(), _class_name_translator (BOOST_PP_STRINGIZE(_class_name))); \
-    CHAISCRIPT_CLASS_CONSTRUCTORS((_module)(_class_name), _constructors) \
+    CHAISCRIPT_CLASS_CONSTRUCTORS((_module)(_class_name)(_class_name_translator), _constructors) \
     CHAISCRIPT_CLASS_METHODS((_module)(_class_name)(_class_name_translator)(_method_name_translator), _methods) \
   }
 
@@ -53,12 +53,24 @@ namespace chaiscript
   {
     inline std::string class_name_translator(const std::string &t_name)
     {
-      return t_name;
+      size_t colon = t_name.find_last_of("::");
+      if (colon != std::string::npos)
+      {
+        return t_name.substr(colon+1, std::string::npos);
+      } else {
+        return t_name;
+      }
     }
 
     inline std::string method_name_translator(const std::string &t_name)
     {
-      return t_name;
+      size_t colon = t_name.find_last_of("::");
+      if (colon != std::string::npos)
+      {
+        return t_name.substr(colon+1, std::string::npos);
+      } else {
+        return t_name;
+      }
     }
   }
 }

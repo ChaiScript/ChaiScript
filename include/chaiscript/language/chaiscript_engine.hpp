@@ -258,7 +258,7 @@ namespace chaiscript
 #endif
           loaded_files.insert(filename);
           try {
-            if (parser.parse(input, (char *)loaded_files.find(filename)->c_str())) {
+            if (parser.parse(input, loaded_files.find(filename)->c_str())) {
 #ifndef CHAISCRIPT_NO_THREADS
               l.unlock();
 #endif
@@ -274,7 +274,7 @@ namespace chaiscript
 #ifndef CHAISCRIPT_NO_THREADS
           boost::shared_lock<boost::shared_mutex> l(mutex);
 #endif
-          char *fname = (char *)loaded_files.find("__EVAL__")->c_str();
+          const char *fname = loaded_files.find("__EVAL__")->c_str();
 #ifndef CHAISCRIPT_NO_THREADS
           l.unlock();
 #endif
@@ -295,6 +295,12 @@ namespace chaiscript
         }
 
       return value;
+    }
+
+
+    const Boxed_Value internal_eval_ast(const AST_NodePtr &ast)
+    {
+      return ast->eval(engine);
     }
 
     /**
@@ -433,6 +439,8 @@ namespace chaiscript
      */
     void load_module(const std::string &t_module_name)
     {
+      std::vector<load_module_error> errors;
+
       std::vector<std::string> prefixes;
       prefixes.push_back("lib");
       prefixes.push_back("");
@@ -452,14 +460,29 @@ namespace chaiscript
                     std::string name = modulepaths[i] + prefixes[j] + t_module_name + postfixes[k];
                     load_module(t_module_name, name);
                     return;
-                  } catch (const load_module_error &) {
+                  } catch (const load_module_error &e) {
+                    errors.push_back(e);
                     // Try next set
                   }
                 }
             }
         }
 
-      throw load_module_error("Unable to find module: " + t_module_name);
+      std::string errstring;
+
+      for (std::vector<load_module_error>::const_iterator itr = errors.begin();
+           itr != errors.end();
+           ++itr)
+      {
+        if (!errstring.empty())
+        {
+          errstring += "; ";
+        }
+
+        errstring += itr->what();
+      }
+
+      throw load_module_error("Unable to find module: " + t_module_name + " Errors: " + errstring);
     }
 
     /**
@@ -594,6 +617,8 @@ namespace chaiscript
 
       engine.add(fun(&ChaiScript_System<Eval_Engine>::use, this), "use");
       engine.add(fun(&ChaiScript_System<Eval_Engine>::internal_eval, this), "eval");
+      engine.add(fun(&ChaiScript_System<Eval_Engine>::internal_eval_ast, this), "eval");
+
 
 
       do_eval(chaiscript_prelude, "standard prelude");
