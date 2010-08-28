@@ -211,9 +211,12 @@ namespace chaiscript
       }
       else if (Symbol_(singleline_comment.c_str())) {
         while (input_pos != input_end) {
-          if (Symbol_("\r\n") || Char_('\n')) {
-            ++line;
-            col = 1;
+          if (Symbol_("\r\n")) {
+            input_pos -= 2;
+            break;
+          }
+          else if (Char_('\n')) {
+            --input_pos;
             break;
           }
           else {
