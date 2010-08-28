@@ -86,6 +86,9 @@ target_link_libraries(chai ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
 add_library(stl_extra MODULE src/stl_extra.cpp)
 target_link_libraries(stl_extra ${Boost_LIBRARIES})
 
+add_library(reflection MODULE src/reflection.cpp)
+target_link_libraries(reflection ${Boost_LIBRARIES})
+
 file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.chai)
 
 IF(BUILD_TESTING)
