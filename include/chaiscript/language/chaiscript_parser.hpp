@@ -1052,10 +1052,10 @@ namespace chaiscript
 
       if (Equation()) {
         retval = true;
-        while (Eol());
+        while (Eol()) {}
         if (Char(',')) {
           do {
-            while (Eol());
+            while (Eol()) {}
             if (!Equation()) {
               throw Eval_Error("Unexpected value in parameter list", File_Position(line, col), filename);
             }
@@ -1081,10 +1081,10 @@ namespace chaiscript
       }
       else if (Map_Pair()) {
         retval = true;
-        while (Eol());
+        while (Eol()) {}
         if (Char(',')) {
           do {
-            while (Eol());
+            while (Eol()) {}
             if (!Map_Pair()) {
               throw Eval_Error("Unexpected value in container", File_Position(line, col), filename);
             }
@@ -1115,7 +1115,7 @@ namespace chaiscript
           }
         }
 
-        while (Eol());
+        while (Eol()) {}
 
         if (!Block()) {
           throw Eval_Error("Incomplete anonymous function", File_Position(line, col), filename);
@@ -1137,7 +1137,7 @@ namespace chaiscript
       TokenPtr annotation;
 
       if (Annotation()) {
-        while (Eol_());
+        while (Eol_()) {}
         annotation = match_stack.back();
         match_stack.pop_back();
         is_annotated = true;
@@ -1168,7 +1168,7 @@ namespace chaiscript
           }
         }
 
-        while (Eol());
+        while (Eol()) {}
 
         if (Char(':')) {
           if (!Operator()) {
@@ -1176,7 +1176,7 @@ namespace chaiscript
           }
         }
 
-        while (Eol());
+        while (Eol()) {}
         if (!Block()) {
           throw Eval_Error("Incomplete function definition", File_Position(line, col), filename);
         }
@@ -1207,7 +1207,7 @@ namespace chaiscript
       if (Keyword("try")) {
         retval = true;
 
-        while (Eol());
+        while (Eol()) {}
 
         if (!Block()) {
           throw Eval_Error("Incomplete 'try' block", File_Position(line, col), filename);
@@ -1215,7 +1215,7 @@ namespace chaiscript
 
         bool has_matches = true;
         while (has_matches) {
-          while (Eol());
+          while (Eol()) {}
           has_matches = false;
           if (Keyword("catch", false)) {
             int catch_stack_top = match_stack.size();
@@ -1230,7 +1230,7 @@ namespace chaiscript
               }
             }
 
-            while (Eol());
+            while (Eol()) {}
 
             if (!Block()) {
               throw Eval_Error("Incomplete 'catch' block", File_Position(line, col), filename);
@@ -1239,11 +1239,11 @@ namespace chaiscript
             has_matches = true;
           }
         }
-        while (Eol());
+        while (Eol()) {}
         if (Keyword("finally", false)) {
           int finally_stack_top = match_stack.size();
 
-          while (Eol());
+          while (Eol()) {}
 
           if (!Block()) {
             throw Eval_Error("Incomplete 'finally' block", File_Position(line, col), filename);
@@ -1276,7 +1276,7 @@ namespace chaiscript
           throw Eval_Error("Incomplete 'if' expression", File_Position(line, col), filename);
         }
 
-        while (Eol());
+        while (Eol()) {}
 
         if (!Block()) {
           throw Eval_Error("Incomplete 'if' block", File_Position(line, col), filename);
@@ -1284,7 +1284,7 @@ namespace chaiscript
 
         bool has_matches = true;
         while (has_matches) {
-          while (Eol());
+          while (Eol()) {}
           has_matches = false;
           if (Keyword("else", true)) {
             if (Keyword("if")) {
@@ -1297,7 +1297,7 @@ namespace chaiscript
                 throw Eval_Error("Incomplete 'else if' expression", File_Position(line, col), filename);
               }
 
-              while (Eol());
+              while (Eol()) {}
 
               if (!Block()) {
                 throw Eval_Error("Incomplete 'else if' block", File_Position(line, col), filename);
@@ -1305,7 +1305,7 @@ namespace chaiscript
               has_matches = true;
             }
             else {
-              while (Eol());
+              while (Eol()) {}
 
               if (!Block()) {
                 throw Eval_Error("Incomplete 'else' block", File_Position(line, col), filename);
@@ -1340,7 +1340,7 @@ namespace chaiscript
           throw Eval_Error("Incomplete 'while' expression", File_Position(line, col), filename);
         }
 
-        while (Eol());
+        while (Eol()) {}
 
         if (!Block()) {
           throw Eval_Error("Incomplete 'while' block", File_Position(line, col), filename);
@@ -1385,7 +1385,7 @@ namespace chaiscript
           throw Eval_Error("Incomplete 'for' expression", File_Position(line, col), filename);
         }
 
-        while (Eol());
+        while (Eol()) {}
 
         if (!Block()) {
           throw Eval_Error("Incomplete 'for' block", File_Position(line, col), filename);

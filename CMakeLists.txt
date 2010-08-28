@@ -52,7 +52,8 @@ endif(READLINE_LIBRARY)
 IF(MSVC)
   ADD_DEFINITIONS(/W4)
 ELSE()
-  ADD_DEFINITIONS(-Wall -Wextra)
+  # -Wno-missing-field-initializers is for boost on macos
+  ADD_DEFINITIONS(-Wall -Wextra -Wno-missing-field-initializers)
 ENDIF()
 
 include_directories(include)
