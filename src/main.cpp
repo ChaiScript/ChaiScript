@@ -149,10 +149,11 @@ int main(int argc, char *argv[]) {
                 }
               }
               std::cout << std::endl;
+              return EXIT_FAILURE;
             }
             catch (std::exception &e) {
-                std::cout << e.what() << std::endl;
-                return EXIT_FAILURE;
+              std::cout << e.what() << std::endl;
+              return EXIT_FAILURE;
             }
         }
     }

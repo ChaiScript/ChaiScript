@@ -1,0 +1,14 @@
+load_module("reflection")
+var fname = "INPUT"
+var parser := ChaiScript_Parser()
+var parse_success = parser.parse("3 + 4", fname.c_str())
+var a := parser.ast()
+
+assert_equal(eval(a), 7)
+
+var childs := a.children.front().children
+var node := childs[0]
+
+node.text = "9"
+
+assert_equal(eval(a), 13)
