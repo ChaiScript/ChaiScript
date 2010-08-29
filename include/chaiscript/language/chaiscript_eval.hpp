@@ -804,13 +804,13 @@ namespace chaiscript
 
         std::string fun_name;
         std::vector<std::pair<std::string, Proxy_Function > > funs;
-        if (this->children[i]->identifier == AST_Node_Type::Fun_Call) {
+        if ((this->children[i]->identifier == AST_Node_Type::Fun_Call) || (this->children[i]->identifier == AST_Node_Type::Array_Call)) {
           fun_name = this->children[i]->children[0]->text;
         }
         else {
           fun_name = this->children[i]->text;
         }
-
+        
         try {
           ss.set_stack(new_stack);
           retval = ss.call_function(fun_name, plb);
@@ -827,6 +827,23 @@ namespace chaiscript
         catch(...) {
           ss.set_stack(prev_stack);
           throw;
+        }
+        if (this->children[i]->identifier == AST_Node_Type::Array_Call) {
+          for (unsigned int j = 1; j < this->children[i]->children.size(); ++j) {
+            try {
+              retval = ss.call_function("[]", retval, this->children[i]->children[j]->eval(ss));
+            }
+            catch(std::out_of_range &) {
+              throw Eval_Error("Out of bounds exception");
+            }
+            catch(const dispatch_error &){
+              throw Eval_Error("Can not find appropriate array lookup '[]' ");
+            }
+            catch(Eval_Error &ee) {
+              ee.call_stack.push_back(this->children[i]->children[j]);
+              throw;
+            }
+          }
         }
       }
     }
