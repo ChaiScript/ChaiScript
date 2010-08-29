@@ -65,14 +65,15 @@ namespace chaiscript
     int identifier;
     const char *filename;
     File_Position start, end;
+    /*
     bool is_cached;
     Boxed_Value cached_value;
-
+    */
     std::vector<AST_NodePtr> children;
     AST_NodePtr annotation;
 
     AST_Node(const std::string &ast_node_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
-      text(ast_node_text), identifier(id), filename(fname), is_cached(false) {
+      text(ast_node_text), identifier(id), filename(fname)/*, is_cached(false)*/ {
 
       start.line = start_line;
       start.column = start_col;
@@ -80,13 +81,14 @@ namespace chaiscript
       end.column = end_col;
     }
     AST_Node(const std::string &ast_node_text, int id, const char *fname) :
-      text(ast_node_text), identifier(id), filename(fname), is_cached(false) { }
+      text(ast_node_text), identifier(id), filename(fname)/*, is_cached(false)*/ { }
 
-
+    /*
     void cache_const(const Boxed_Value &value) {
       this->cached_value = value;
       this->is_cached = true;
     }
+    */
 
     virtual Boxed_Value eval(Dispatch_Engine &) {
       Boxed_Value bv;

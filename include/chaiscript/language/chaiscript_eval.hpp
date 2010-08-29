@@ -66,28 +66,40 @@ namespace chaiscript
    */
   Boxed_Value Id_AST_Node::eval(Dispatch_Engine &ss) {
     if (this->text == "true") {
+      /*
       if (!this->is_cached) {
         cache_const(const_var(true));
       }
       return this->cached_value;
+      */
+      return const_var(true);
     }
     else if (this->text == "false") {
+      /*
       if (!this->is_cached) {
         cache_const(const_var(false));
       }
       return this->cached_value;
+      */
+      return const_var(false);
     }
     else if (this->text == "Infinity") {
+      /*
       if (!this->is_cached) {
         cache_const(const_var(std::numeric_limits<double>::infinity()));
       }
       return this->cached_value;
+      */
+      return const_var(std::numeric_limits<double>::infinity());
     }
     else if (this->text == "NaN") {
+      /*
       if (!this->is_cached) {
         cache_const(const_var(std::numeric_limits<double>::quiet_NaN()));
       }
       return this->cached_value;
+      */
+      return const_var(std::numeric_limits<double>::quiet_NaN());
     }
     else {
       try {
@@ -103,41 +115,39 @@ namespace chaiscript
    * Evaluates a floating point number
    */
   Boxed_Value Float_AST_Node::eval(Dispatch_Engine &) {
+    /*
     if (!this->is_cached) {
       cache_const(const_var(double(atof(this->text.c_str()))));
     }
     return this->cached_value;
+    */
+    return const_var(double(atof(this->text.c_str())));
   }
 
   /**
    * Evaluates an integer
    */
   Boxed_Value Int_AST_Node::eval(Dispatch_Engine &) {
+    /*
     if (!this->is_cached) {
       cache_const(const_var(int(atoi(this->text.c_str()))));
     }
     return this->cached_value;
+    */
+    return const_var(int(atoi(this->text.c_str())));
   }
 
   /**
    * Evaluates a quoted string
    */
   Boxed_Value Quoted_String_AST_Node::eval(Dispatch_Engine &) {
-    //return const_var(node->text);
-
     /*
-      if ((node->text.size() > 0) && (node->text[0] == '$')) {
-      node->text.erase(0, 1);
-      Param_List_Builder plb;
-      plb << node->text;
-
-      return ss.call_function("eval", plb);
-      }
-    */
     if (!this->is_cached) {
       cache_const(const_var(this->text));
     }
     return this->cached_value;
+    */
+    return const_var(this->text);
   }
 
   /**
@@ -145,10 +155,13 @@ namespace chaiscript
    */
 
   Boxed_Value Single_Quoted_String_AST_Node::eval(Dispatch_Engine &) {
+    /*
     if (!this->is_cached) {
-      cache_const(const_var(char(this->text[0])));
+      cache_const(const_var);
     }
     return this->cached_value;
+    */
+    return const_var(char(this->text[0]));
   }
 
   /**
