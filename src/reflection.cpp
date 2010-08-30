@@ -25,6 +25,7 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflect
       ((filename))
       ((start))
       ((end))
+      ((internal_to_string))
       ((children))
     );
 
@@ -33,7 +34,6 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflect
       (chaiscript::ChaiScript_Parser ()),
       ((parse))
       ((ast))
-      ((show_match_stack))
     );
 
 

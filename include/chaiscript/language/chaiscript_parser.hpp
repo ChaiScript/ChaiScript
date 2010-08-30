@@ -103,19 +103,22 @@ namespace chaiscript
     /**
      * Prints the parsed ast_nodes as a tree
      */
+    /*
     void debug_print(AST_NodePtr t, std::string prepend = "") {
       std::cout << prepend << "(" << ast_node_type_to_string(t->identifier) << ") " << t->text << " : " << t->start.line << ", " << t->start.column << std::endl;
       for (unsigned int j = 0; j < t->children.size(); ++j) {
         debug_print(t->children[j], prepend + "  ");
       }
     }
+    */
 
     /**
      * Shows the current stack of matched ast_nodes
      */
     void show_match_stack() {
       for (unsigned int i = 0; i < match_stack.size(); ++i) {
-        debug_print(match_stack[i]);
+        //debug_print(match_stack[i]);
+        std::cout << match_stack[i]->to_string();
       }
     }
 

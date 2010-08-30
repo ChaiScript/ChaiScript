@@ -90,6 +90,25 @@ namespace chaiscript
     }
     */
 
+    /**
+     * Prints the contents of an AST node, including its children, recursively
+     */
+    std::string to_string(std::string prepend = "") {
+      std::ostringstream oss;
+
+      oss << prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
+          << this->text << " : " << this->start.line << ", " << this->start.column << std::endl;
+      
+      for (unsigned int j = 0; j < this->children.size(); ++j) {
+        oss << this->children[j]->to_string(prepend + "  ");
+      }
+      return oss.str();
+    }
+
+    std::string internal_to_string() {
+      return to_string();
+    }
+
     virtual Boxed_Value eval(Dispatch_Engine &) {
       Boxed_Value bv;
       throw std::runtime_error("Undispatched ast_node (internal error)");

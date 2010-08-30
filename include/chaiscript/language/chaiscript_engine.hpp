@@ -539,17 +539,6 @@ namespace chaiscript
     }
 
     /**
-     * Prints the contents of an AST node, including its children, recursively
-     */
-    void debug_print(AST_NodePtr t, std::string prepend = "") {
-      std::cout << prepend << "(" << ast_node_type_to_string(t->identifier) << ") "
-                << t->text << " : " << t->start.line << ", " << t->start.column << std::endl;
-      for (unsigned int j = 0; j < t->children.size(); ++j) {
-        debug_print(t->children[j], prepend + "  ");
-      }
-    }
-
-    /**
      * Helper function for loading a file
      */
     std::string load_file(const std::string &filename) {
