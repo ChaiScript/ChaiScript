@@ -15,6 +15,9 @@
 #include "proxy_functions.hpp"
 #include "function_call_detail.hpp"
 
+
+#include <iostream>
+
 namespace chaiscript
 {
   /**
@@ -66,6 +69,65 @@ namespace chaiscript
         return functor<FunctionType>(boxed_cast<Const_Proxy_Function >(bv));
       }
 
+  namespace detail{
+    /**
+    * Cast helper to handle automatic casting to const boost::function &
+    */
+    template<typename Signature>
+      struct Cast_Helper<const boost::function<Signature> &>
+      {
+        typedef boost::function<Signature> Result_Type;
+        
+        static Result_Type cast(const Boxed_Value &ob)
+        {
+          if (ob.get_type_info().bare_equal(user_type<Const_Proxy_Function>()))
+          {
+            return functor<Signature>(ob);
+          } else {
+            return Cast_Helper_Inner<const boost::function<Signature> &>::cast(ob);
+          }
+        }
+      };
+      
+    /**
+    * Cast helper to handle automatic casting to boost::function
+    */
+    template<typename Signature>
+      struct Cast_Helper<boost::function<Signature> >
+      {
+        typedef boost::function<Signature> Result_Type;
+        
+        static Result_Type cast(const Boxed_Value &ob)
+        {
+          if (ob.get_type_info().bare_equal(user_type<Const_Proxy_Function>()))
+          {
+            return functor<Signature>(ob);
+          } else {
+            return Cast_Helper_Inner<boost::function<Signature> >::cast(ob);
+          }
+        }
+      };
+    
+    /**
+    * Cast helper to handle automatic casting to const boost::function
+    */
+    template<typename Signature>
+      struct Cast_Helper<const boost::function<Signature> >
+      {
+        typedef boost::function<Signature> Result_Type;
+        
+        static Result_Type cast(const Boxed_Value &ob)
+        {
+          if (ob.get_type_info().bare_equal(user_type<Const_Proxy_Function>()))
+          {
+            return functor<Signature>(ob);
+          } else {
+            return Cast_Helper_Inner<const boost::function<Signature> >::cast(ob);
+          }
+        }
+      };
+  }
+  
 }
 
 #endif

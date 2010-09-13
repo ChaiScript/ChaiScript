@@ -119,6 +119,7 @@ namespace chaiscript
             && (ti.bare_equal(user_type<Boxed_POD_Value>())
                 || ti.bare_equal(bv.get_type_info())
                 || dynamic_cast_converts(ti, bv.get_type_info()) 
+                || bv.get_type_info().bare_equal(user_type<boost::shared_ptr<const Proxy_Function_Base> >())
                 )
               )
             )

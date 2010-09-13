@@ -19,13 +19,13 @@ namespace chaiscript
 {
   namespace detail
   {
-    // Cast_Helper helper classes
+    // Cast_Helper_Inner helper classes
 
     /**
-     * Generic Cast_Helper, for casting to any type
+     * Generic Cast_Helper_Inner, for casting to any type
      */
     template<typename Result>
-      struct Cast_Helper
+      struct Cast_Helper_Inner
       {
         typedef typename boost::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
 
@@ -51,10 +51,10 @@ namespace chaiscript
       };
 
     /**
-     * Cast_Helper for casting to a const & type
+     * Cast_Helper_Inner for casting to a const & type
      */
     template<typename Result>
-      struct Cast_Helper<const Result &>
+      struct Cast_Helper_Inner<const Result &>
       {
         typedef typename boost::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
 
@@ -80,10 +80,10 @@ namespace chaiscript
       };
 
     /**
-     * Cast_Helper for casting to a const * type
+     * Cast_Helper_Inner for casting to a const * type
      */
     template<typename Result>
-      struct Cast_Helper<const Result *>
+      struct Cast_Helper_Inner<const Result *>
       {
         typedef const Result * Result_Type;
 
@@ -109,10 +109,10 @@ namespace chaiscript
       };
 
     /**
-     * Cast_Helper for casting to a * type
+     * Cast_Helper_Inner for casting to a * type
      */
     template<typename Result>
-      struct Cast_Helper<Result *>
+      struct Cast_Helper_Inner<Result *>
       {
         typedef Result * Result_Type;
 
@@ -128,10 +128,10 @@ namespace chaiscript
       };
 
     /**
-     * Cast_Helper for casting to a & type
+     * Cast_Helper_Inner for casting to a & type
      */
     template<typename Result>
-      struct Cast_Helper<Result &>
+      struct Cast_Helper_Inner<Result &>
       {
         typedef typename boost::reference_wrapper<Result> Result_Type;
 
@@ -147,10 +147,10 @@ namespace chaiscript
       };
 
     /**
-     * Cast_Helper for casting to a boost::shared_ptr<> type
+     * Cast_Helper_Inner for casting to a boost::shared_ptr<> type
      */
     template<typename Result>
-      struct Cast_Helper<typename boost::shared_ptr<Result> >
+      struct Cast_Helper_Inner<typename boost::shared_ptr<Result> >
       {
         typedef typename boost::shared_ptr<Result> Result_Type;
 
@@ -161,10 +161,10 @@ namespace chaiscript
       };
 
     /**
-     * Cast_Helper for casting to a boost::shared_ptr<const> type
+     * Cast_Helper_Inner for casting to a boost::shared_ptr<const> type
      */
     template<typename Result>
-      struct Cast_Helper<typename boost::shared_ptr<const Result> >
+      struct Cast_Helper_Inner<typename boost::shared_ptr<const Result> >
       {
         typedef typename boost::shared_ptr<const Result> Result_Type;
 
@@ -180,10 +180,10 @@ namespace chaiscript
       };
 
     /**
-     * Cast_Helper for casting to a const boost::shared_ptr<> & type
+     * Cast_Helper_Inner for casting to a const boost::shared_ptr<> & type
      */
     template<typename Result>
-      struct Cast_Helper<const boost::shared_ptr<Result> &>
+      struct Cast_Helper_Inner<const boost::shared_ptr<Result> &>
       {
         typedef typename boost::shared_ptr<Result> Result_Type;
 
@@ -194,10 +194,10 @@ namespace chaiscript
       };
 
     /**
-     * Cast_Helper for casting to a const boost::shared_ptr<const> & type
+     * Cast_Helper_Inner for casting to a const boost::shared_ptr<const> & type
      */
     template<typename Result>
-      struct Cast_Helper<const boost::shared_ptr<const Result> &>
+      struct Cast_Helper_Inner<const boost::shared_ptr<const Result> &>
       {
         typedef typename boost::shared_ptr<const Result> Result_Type;
 
@@ -215,10 +215,10 @@ namespace chaiscript
 
 
     /**
-     * Cast_Helper for casting to a Boxed_Value type
+     * Cast_Helper_Inner for casting to a Boxed_Value type
      */
     template<>
-      struct Cast_Helper<Boxed_Value>
+      struct Cast_Helper_Inner<Boxed_Value>
       {
         typedef const Boxed_Value & Result_Type;
 
@@ -229,24 +229,34 @@ namespace chaiscript
       };
 
     /**
-     * Cast_Helper for casting to a const Boxed_Value & type
+     * Cast_Helper_Inner for casting to a const Boxed_Value & type
      */
     template<>
-      struct Cast_Helper<const Boxed_Value &>
+      struct Cast_Helper_Inner<const Boxed_Value &>
       {
         typedef const Boxed_Value & Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob)
         {
           return ob;    
+        }
+      };
+    
+    /**
+     * The exposed Cast_Helper object that by default just calls the Cast_Helper_Inner
+     */
+    template<typename T>
+      struct Cast_Helper
+      {
+        typedef typename Cast_Helper_Inner<T>::Result_Type Result_Type;
+        
+        static Result_Type cast(const Boxed_Value &ob)
+        {
+          return Cast_Helper_Inner<T>::cast(ob);
         }
       };
   }
-
   
 }
 
-
-
 #endif
-
