@@ -236,13 +236,9 @@ namespace chaiscript
     /**
      * Evaluates the given string in by parsing it and running the results through the evaluator
      */
-    Boxed_Value do_eval(const std::string &input, const std::string &filename = "__EVAL__", bool internal = false) {
+    Boxed_Value do_eval(const std::string &input, const std::string &filename = "__EVAL__", bool /* internal*/  = false) {
       ChaiScript_Parser parser;
 
-      if (!internal)
-        {
-          engine.sync_cache();
-        }
 
       //debug_print(ast_nodes);
       Boxed_Value value;
@@ -289,11 +285,6 @@ namespace chaiscript
         }
       }
 
-      if (!internal)
-        {
-          engine.sync_cache();
-        }
-
       return value;
     }
 
@@ -325,25 +316,23 @@ namespace chaiscript
 #endif
 
             if (loaded_files.count(appendedpath) == 0)
-              {
+            {
 #ifndef CHAISCRIPT_NO_THREADS
-                l2.unlock();
+              l2.unlock();
 #endif
-                eval_file(appendedpath);
-              } else {
-              engine.sync_cache();
+              eval_file(appendedpath);
             }
           } catch (const File_Not_Found_Error &) {
             if (i == usepaths.size() - 1)
-              {
-                throw File_Not_Found_Error(filename);
-              }
+            {
+              throw File_Not_Found_Error(filename);
+            }
 
             // failed to load, try the next path
           }
 
         }
-          
+
     }
 
 
@@ -495,17 +484,15 @@ namespace chaiscript
 #endif
 
       if (loaded_modules.count(t_module_name) == 0)
-        {
-          Loadable_Module_Ptr lm(new Loadable_Module(t_module_name, t_filename));
-          loaded_modules[t_module_name] = lm;
-          active_loaded_modules.insert(t_module_name);
-          add(lm->m_moduleptr);
-        } else if (active_loaded_modules.count(t_module_name) == 0) {
+      {
+        Loadable_Module_Ptr lm(new Loadable_Module(t_module_name, t_filename));
+        loaded_modules[t_module_name] = lm;
+        active_loaded_modules.insert(t_module_name);
+        add(lm->m_moduleptr);
+      } else if (active_loaded_modules.count(t_module_name) == 0) {
         active_loaded_modules.insert(t_module_name);
         add(loaded_modules[t_module_name]->m_moduleptr);
-      } else {
-        engine.sync_cache();
-      }
+      } 
     }
 
 
