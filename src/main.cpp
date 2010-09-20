@@ -51,6 +51,8 @@ std::string get_next_command() {
 #endif
 }
 
+// We have to wrap exit with our own because Clang has a hard time with
+// function pointers to functions with special attributes (system exit being marked NORETURN)
 void myexit(int return_val) {
   exit(return_val);
 }
