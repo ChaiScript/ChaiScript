@@ -156,8 +156,8 @@ namespace chaiscript
                   detail::Get_Type_Info<T>::get(), 
                   boost::any(obj), 
                   false,
-                  &Data::unique<T>,
-                  &Data::is_null<T>)
+                  boost::function<bool (boost::any *)>(&Data::unique<T>),
+                  boost::function<bool (boost::any *)>(&Data::is_null<T>))
                 );
 
             std::map<Object_Cache_Key, Data>::iterator itr
@@ -219,8 +219,8 @@ namespace chaiscript
                   detail::Get_Type_Info<T>::get(), 
                   boost::any(boost::shared_ptr<T>(new T(t))), 
                   false,
-                  &Data::unique<T>,
-                  &Data::is_null<T>)
+                  boost::function<bool (boost::any *)>(&Data::unique<T>),
+                  boost::function<bool (boost::any *)>(&Data::is_null<T>))
                 );
 
             boost::shared_ptr<T> *ptr = boost::any_cast<boost::shared_ptr<T> >(&data->m_obj);
