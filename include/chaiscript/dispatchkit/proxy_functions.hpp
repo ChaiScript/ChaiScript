@@ -289,7 +289,7 @@ namespace chaiscript
         : Proxy_Function_Base(std::vector<Type_Info>()),
           m_f(t_f), m_args(t_args), m_arity(m_f->get_arity()<0?-1:(m_f->get_arity() - static_cast<int>(m_args.size())))
       {
-        assert(m_f->get_arity() >= static_cast<int>(m_args.size()));
+        assert(m_f->get_arity() < 0 || m_f->get_arity() >= static_cast<int>(m_args.size()));
       }
 
       virtual bool operator==(const Proxy_Function_Base &) const
