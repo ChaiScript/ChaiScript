@@ -180,10 +180,12 @@ namespace chaiscript
    */
   struct reserved_word_error : std::runtime_error
   {
-    reserved_word_error(const std::string &word) throw()
-      : std::runtime_error("Reserved word not allowed in object name: " + word)
+    reserved_word_error(const std::string &t_word) throw()
+      : std::runtime_error("Reserved word not allowed in object name: " + word), word(t_word)
     {
     }
+
+    std::string word;
 
     virtual ~reserved_word_error() throw() {}
   };
