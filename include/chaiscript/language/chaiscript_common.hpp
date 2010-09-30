@@ -112,7 +112,6 @@ namespace chaiscript
     virtual Boxed_Value eval(Dispatch_Engine &) {
       Boxed_Value bv;
       throw std::runtime_error("Undispatched ast_node (internal error)");
-      return bv;
     }
   };
 

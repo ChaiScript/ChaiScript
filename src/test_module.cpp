@@ -22,6 +22,14 @@ std::string hello_world()
   return "Hello World";
 }
 
+// MSVC doesn't like that we are using C++ return types from our C declared module
+// but this is the best way to do it for cross platform compatibility
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4190)
+#endif
+
+
 CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_module()
 {
   chaiscript::ModulePtr m(new chaiscript::Module());
@@ -43,3 +51,8 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
 
   return m;
 }
+
+
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif

@@ -58,7 +58,7 @@ ENDIF()
 
 include_directories(include)
  
-SET(Boost_ADDITIONAL_VERSIONS "1.43" "1.43.0" "1.42" "1.42.0" "1.41")
+SET(Boost_ADDITIONAL_VERSIONS "1.44" "1.44.0" "1.43" "1.43.0" "1.42" "1.42.0" "1.41")
 SET(Boost_USE_MULTITHREADED ON)
 
 if (MULTITHREAD_SUPPORT_ENABLED)
@@ -77,17 +77,27 @@ if (CMAKE_HOST_UNIX)
   SET(DYNAMIC_LOADER "dl")
 endif(CMAKE_HOST_UNIX)
 
+if (MSVC)
+  # Boost on MSVC does automatic linking
+  SET(LIBS ${DYNAMIC_LOADER} ${READLINE_LIB})
+else()
+  SET(LIBS ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
+endif()
+
+if (CMAKE_COMPILER_2005)
+  # vs2005 is a bit too loud about possible loss of data warnings
+  ADD_DEFINITIONS(/wd4244)
+endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
 add_executable(chai src/main.cpp)
-#add_executable(dispatchkit_test contrib/test/dispatchkit_test.cpp)
-target_link_libraries(chai ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
+target_link_libraries(chai ${LIBS})
 
 add_library(stl_extra MODULE src/stl_extra.cpp)
-target_link_libraries(stl_extra ${Boost_LIBRARIES})
+target_link_libraries(stl_extra ${LIBS})
 
 add_library(reflection MODULE src/reflection.cpp)
-target_link_libraries(reflection ${Boost_LIBRARIES})
+target_link_libraries(reflection ${LIBS})
 
 file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.chai)
 
@@ -107,23 +117,23 @@ IF(BUILD_TESTING)
 
   IF (NOT UNIT_TEST_LIGHT)
     add_executable(utility_test unittests/utility_test.cpp)
-    target_link_libraries(utility_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
+    target_link_libraries(utility_test ${LIBS})
     add_test(NAME Utility_Test COMMAND utility_test)
 
     add_executable(dynamic_object_test unittests/dynamic_object_test.cpp)
-    target_link_libraries(dynamic_object_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
+    target_link_libraries(dynamic_object_test ${LIBS})
     add_test(NAME Dynamic_Object_Test COMMAND dynamic_object_test)
 
     add_executable(functor_creation_test unittests/functor_creation_test.cpp)
-    target_link_libraries(functor_creation_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
+    target_link_libraries(functor_creation_test ${LIBS})
     add_test(NAME Functor_Creation_Test COMMAND functor_creation_test)
 
     add_executable(functor_cast_test unittests/functor_cast_test.cpp)
-    target_link_libraries(functor_cast_test ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
+    target_link_libraries(functor_cast_test ${LIBS})
     add_test(NAME Functor_Cast_Test COMMAND functor_cast_test)
     
     add_library(test_module MODULE src/test_module.cpp)
-    target_link_libraries(test_module ${Boost_LIBRARIES})
+    target_link_libraries(test_module ${LIBS})
 
     install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript)
   ENDIF()
