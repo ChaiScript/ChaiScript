@@ -267,8 +267,8 @@ namespace chaiscript
     ModulePtr front_insertion_sequence_type(const std::string &, ModulePtr m = ModulePtr(new Module()))
     {
       typedef typename ContainerType::reference (ContainerType::*frontptr)();
-	  typedef typename void (ContainerType::*pushptr)(ContainerType::const_reference);
-	  typedef typename void (ContainerType::*popptr)();
+      typedef void (ContainerType::*pushptr)(typename ContainerType::const_reference);
+      typedef void (ContainerType::*popptr)();
 
       m->add(fun(static_cast<frontptr>(&ContainerType::front)), "front");
 
