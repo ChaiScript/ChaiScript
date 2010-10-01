@@ -232,9 +232,6 @@ namespace chaiscript
       ~Dispatch_Engine()
       {
         detail::Dynamic_Conversions::get().cleanup(m_conversions.begin(), m_conversions.end());
-  
-        Boxed_Value::clear_cache(); 
-   
       }
 
       /**
