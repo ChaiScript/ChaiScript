@@ -29,6 +29,7 @@ namespace chaiscript
     template<typename Container>
     struct Bidir_Range
     {
+      typedef Container container_type;
       typedef typename std::iterator_traits<typename Container::iterator>::reference reference_type;
 
       Bidir_Range(Container &c)
@@ -83,44 +84,94 @@ namespace chaiscript
       typename Container::iterator m_end;
     };
 
-    template<typename Range>
-    struct Retro
+    template<typename Container>
+    struct Const_Bidir_Range
     {
-      Retro(const Range &r)
-        : m_r(r)
-      {}
+      typedef const Container container_type;
+      typedef typename std::iterator_traits<typename Container::const_iterator>::reference const_reference_type;
 
-      bool empty() { return m_r.empty(); }
-      void pop_front() { m_r.pop_back(); }
-      void pop_back() { m_r.pop_front(); }
-      typename Range::reference_type front() { return m_r.back(); }
-      typename Range::reference_type back() { return m_r.front(); }
+      Const_Bidir_Range(const Container &c)
+        : m_begin(c.begin()), m_end(c.end())
+      {
+      }
 
-    private:
-      Range m_r;
+      bool empty() const
+      {
+        return m_begin == m_end;
+      }
+
+      void pop_front()
+      {
+        if (empty())
+        {
+          throw std::range_error("Range empty");
+        }
+        ++m_begin;
+      }
+
+      void pop_back()
+      {
+        if (empty())
+        {
+          throw std::range_error("Range empty");
+        }
+        --m_end;
+      }
+
+      const_reference_type front() const
+      {
+        if (empty())
+        {
+          throw std::range_error("Range empty");
+        }
+        return *m_begin;
+      }
+
+      const_reference_type back() const
+      {
+        if (empty())
+        {
+          throw std::range_error("Range empty");
+        }
+        typename Container::const_iterator pos = m_end;
+        --pos;
+        return *(pos);
+      }
+
+      typename Container::const_iterator m_begin;
+      typename Container::const_iterator m_end;
     };
 
-
+namespace detail {
     /**
     * Add Bidir_Range support for the given ContainerType
     */
-    template<typename ContainerType>
-    ModulePtr input_range_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    template<typename Bidir_Type>
+    ModulePtr input_range_type_impl(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
-      m->add(user_type<Bidir_Range<ContainerType> >(), type + "_Range");
+      m->add(user_type<Bidir_Type>(), type + "_Range");
 
-      copy_constructor<Bidir_Range<ContainerType> >(type + "_Range", m);
+      copy_constructor<Bidir_Type>(type + "_Range", m);
 
-      m->add(constructor<Bidir_Range<ContainerType> (ContainerType &)>(), "range");
+      m->add(constructor<Bidir_Type (typename Bidir_Type::container_type &)>(), "range");
 
-      m->add(fun(&Bidir_Range<ContainerType>::empty), "empty");
-      m->add(fun(&Bidir_Range<ContainerType>::pop_front), "pop_front");
-      m->add(fun(&Bidir_Range<ContainerType>::front), "front");
-      m->add(fun(&Bidir_Range<ContainerType>::pop_back), "pop_back");
-      m->add(fun(&Bidir_Range<ContainerType>::back), "back");
+      m->add(fun(&Bidir_Type::empty), "empty");
+      m->add(fun(&Bidir_Type::pop_front), "pop_front");
+      m->add(fun(&Bidir_Type::front), "front");
+      m->add(fun(&Bidir_Type::pop_back), "pop_back");
+      m->add(fun(&Bidir_Type::back), "back");
 
       return m;
     } 
+}
+
+    template<typename ContainerType>
+    ModulePtr input_range_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    {
+      detail::input_range_type_impl<Bidir_Range<ContainerType> >(type,m);
+      detail::input_range_type_impl<Const_Bidir_Range<ContainerType> >("Const_" + type, m);
+      return m;
+    }
 
     /**
     * Add random_access_container concept to the given ContainerType
