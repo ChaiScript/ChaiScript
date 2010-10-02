@@ -1098,6 +1098,19 @@ namespace chaiscript
         }
         build_match(AST_NodePtr(new Arg_List_AST_Node()), prev_stack_top);
       }
+      else if (Operator()) {
+        retval = true;
+        while (Eol()) {}
+        if (Char(',')) {
+          do {
+            while (Eol()) {}
+            if (!Operator()) {
+              throw Eval_Error("Unexpected value in container", File_Position(line, col), filename);
+            }
+          } while (retval && Char(','));
+        }
+        build_match(AST_NodePtr(new Arg_List_AST_Node()), prev_stack_top);
+      }
 
       return retval;
 
@@ -1745,18 +1758,25 @@ namespace chaiscript
     bool Map_Pair() {
       bool retval = false;
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
+      std::string::const_iterator prev_pos = input_pos;
+      int prev_col = col;
 
       if (Operator()) {
-        retval = true;
         if (Symbol(":")) {
-          do {
-            if (!Operator()) {
-              throw Eval_Error("Incomplete map pair", File_Position(line, col), filename);
-            }
-          } while (retval && Symbol(":"));
+          retval = true;
+          if (!Operator()) {
+            throw Eval_Error("Incomplete map pair", File_Position(line, col), filename);
+          }
 
           build_match(AST_NodePtr(new Map_Pair_AST_Node()), prev_stack_top);
+        }
+        else {
+          input_pos = prev_pos;
+          col = prev_col;
+          while (prev_stack_top != match_stack.size()) {
+            match_stack.pop_back();
+          }
         }
       }
 
