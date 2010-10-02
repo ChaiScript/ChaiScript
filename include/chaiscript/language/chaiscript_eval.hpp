@@ -138,6 +138,7 @@ namespace chaiscript
             try {
               if (lhs.is_undef()) {
                 retval = ss.call_function("clone", retval);
+                retval.clear_dependencies();
               }
 
               try {

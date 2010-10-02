@@ -65,7 +65,12 @@ namespace chaiscript
   {
     public:
       virtual ~Proxy_Function_Base() {}
-      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const = 0;
+      Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
+      {
+        Boxed_Value bv = do_call(params);
+        bv.add_dependencies(params.begin(), params.end());
+        return bv;
+      }
 
       std::vector<Type_Info> get_param_types() const { return m_types; }
 
@@ -99,6 +104,8 @@ namespace chaiscript
       virtual std::string annotation() const = 0;
 
     protected:
+      virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const = 0;
+
       Proxy_Function_Base(const std::vector<Type_Info> &t_types)
         : m_types(t_types)
       {
@@ -198,7 +205,19 @@ namespace chaiscript
 
       virtual ~Dynamic_Proxy_Function() {}
 
-      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
+
+      virtual int get_arity() const
+      {
+        return m_arity;
+      }
+
+      virtual std::string annotation() const
+      {
+        return m_description;
+      }
+
+    protected:
+      virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
       {
         if (m_arity < 0 || params.size() == size_t(m_arity))
         {
@@ -213,16 +232,6 @@ namespace chaiscript
         } else {
           throw arity_error(params.size(), m_arity);
         } 
-      }
-
-      virtual int get_arity() const
-      {
-	return m_arity;
-      }
-
-      virtual std::string annotation() const
-      {
-        return m_description;
       }
 
     private:
@@ -352,6 +361,12 @@ namespace chaiscript
         return "";
       }
 
+    protected:
+      virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
+      {
+        return (*m_f)(build_param_list(params));
+      }
+
     private:
       Const_Proxy_Function m_f;
       std::vector<Boxed_Value> m_args;
@@ -381,10 +396,6 @@ namespace chaiscript
         return pimpl != 0;
       }
  
-      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
-      {
-        return Do_Call<typename boost::function<Func>::result_type>::go(m_f, params);
-      }
 
       virtual int get_arity() const
       {
@@ -405,6 +416,12 @@ namespace chaiscript
       virtual std::string annotation() const
       {
         return "";
+      }
+
+    protected:
+      virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
+      {
+        return Do_Call<typename boost::function<Func>::result_type>::go(m_f, params);
       }
 
     private:
@@ -438,23 +455,6 @@ namespace chaiscript
         }
       }
  
-      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
-      {
-        if (params.size() == 1)
-        {
-          const Boxed_Value &bv = params[0];
-          if (bv.is_const())
-          {
-            const Class *o = boxed_cast<const Class *>(bv);
-            return Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
-          } else {
-            Class *o = boxed_cast<Class *>(bv);
-            return Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
-          }
-        } else {
-          throw arity_error(params.size(), 1);
-        }       
-      }
 
       virtual int get_arity() const
       {
@@ -474,6 +474,25 @@ namespace chaiscript
       virtual std::string annotation() const
       {
         return "";
+      }
+
+    protected:
+      virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
+      {
+        if (params.size() == 1)
+        {
+          const Boxed_Value &bv = params[0];
+          if (bv.is_const())
+          {
+            const Class *o = boxed_cast<const Class *>(bv);
+            return Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
+          } else {
+            Class *o = boxed_cast<Class *>(bv);
+            return Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
+          }
+        } else {
+          throw arity_error(params.size(), 1);
+        }       
       }
 
     private:

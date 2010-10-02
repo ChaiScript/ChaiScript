@@ -70,10 +70,15 @@ namespace chaiscript
           return *this;
         }
 
+        ~Data()
+        {
+        }
+
         Type_Info m_type_info;
         boost::any m_obj;
         bool m_is_ref;
         boost::function<bool (boost::any*)> m_is_null;
+        std::vector<boost::shared_ptr<Data> > m_dependencies;
       };
 
       struct Object_Data
@@ -244,6 +249,24 @@ namespace chaiscript
       {
         return !is_ref();
       }
+
+      void clear_dependencies()
+      {
+        m_data->m_dependencies.clear();
+      }
+
+      template<typename InItr>
+        void add_dependencies(InItr begin, const InItr &end)
+        {
+          while (begin != end)
+          {
+            if (begin->m_data != m_data)
+            {
+              m_data->m_dependencies.push_back(begin->m_data);
+            }
+            ++begin;
+          }
+        }
 
 
     private:

@@ -132,10 +132,6 @@ namespace chaiscript
 
       virtual ~Dispatch_Function() {}
 
-      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
-      {
-        return dispatch(m_funcs.begin(), m_funcs.end(), params);
-      }
 
       virtual int get_arity() const
       {
@@ -165,6 +161,12 @@ namespace chaiscript
       virtual std::string annotation() const
       {
         return "";
+      }
+
+    protected:
+      virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
+      {
+        return dispatch(m_funcs.begin(), m_funcs.end(), params);
       }
 
     private:

@@ -90,15 +90,6 @@ namespace chaiscript
         }
       }    
 
-      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
-      {
-        if (dynamic_object_typename_match(params, m_type_name, m_ti))
-        {
-          return (*m_func)(params);
-        } else {
-          throw guard_error();
-        } 
-      }
 
       virtual int get_arity() const
       {
@@ -111,6 +102,16 @@ namespace chaiscript
       }
 
     protected:
+      virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
+      {
+        if (dynamic_object_typename_match(params, m_type_name, m_ti))
+        {
+          return (*m_func)(params);
+        } else {
+          throw guard_error();
+        } 
+      }
+
       virtual bool compare_first_type(const Boxed_Value &bv) const
       {
         return dynamic_object_typename_match(bv, m_type_name, m_ti);
@@ -212,7 +213,20 @@ namespace chaiscript
         return m_func->call_match(new_vals);
       }    
 
-      virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
+
+      virtual int get_arity() const
+      {
+        // "this" is not considered part of the arity
+        return m_func->get_arity() - 1; 
+      }
+
+      virtual std::string annotation() const
+      {
+        return m_func->annotation();
+      }
+
+    protected:
+      virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
       {
         std::vector<Boxed_Value> new_params;
         chaiscript::Boxed_Value bv = var(Dynamic_Object(m_type_name));
@@ -222,17 +236,6 @@ namespace chaiscript
         (*m_func)(new_params);
 
         return bv;
-      }
-
-      virtual int get_arity() const
-      {
-        // "this" is not considered part of the arity
-	return m_func->get_arity() - 1; 
-      }
-
-      virtual std::string annotation() const
-      {
-        return m_func->annotation();
       }
 
     private:
