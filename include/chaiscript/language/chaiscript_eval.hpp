@@ -411,22 +411,18 @@ namespace chaiscript
    */
   Boxed_Value Inline_Map_AST_Node::eval(Dispatch_Engine &ss) {
     try {
-      Boxed_Value retval = ss.call_function("Map");
+      std::map<std::string, Boxed_Value> retval;
       for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
         try {
-          Boxed_Value slot 
-            = ss.call_function("[]", retval, this->children[0]->children[i]->children[0]->eval(ss));
-          ss.call_function("=", slot, this->children[0]->children[i]->children[1]->eval(ss));
-        }
-        catch (const dispatch_error &) {
-          throw Eval_Error("Can not find appropriate '=' for map init");
+          retval[boxed_cast<std::string>(this->children[0]->children[i]->children[0]->eval(ss))] 
+             = ss.call_function("clone", this->children[0]->children[i]->children[1]->eval(ss));
         }
         catch(Eval_Error &ee) {
           ee.call_stack.push_back(this->children[0]->children[i]);
           throw;
         }
       }
-      return retval;
+      return const_var(retval);
     }
     catch (const dispatch_error &) {
       throw Eval_Error("Can not find appropriate 'Map()'");

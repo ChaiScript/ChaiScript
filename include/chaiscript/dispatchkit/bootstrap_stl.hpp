@@ -396,6 +396,7 @@ namespace detail {
       m->add(user_type<MapType>(), type);
 
       typedef typename MapType::mapped_type &(MapType::*elemaccess)(const typename MapType::key_type &);
+
       m->add(fun(static_cast<elemaccess>(&MapType::operator[])), "[]");
 
       container_type<MapType>(type, m);
