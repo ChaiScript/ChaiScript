@@ -538,7 +538,8 @@ namespace chaiscript
       std::streampos size = infile.tellg();
       infile.seekg(0, std::ios::beg);
 
-      std::vector<char> v(size);
+	  assert(size >= 0);
+      std::vector<char> v(static_cast<unsigned int>(size));
       infile.read(&v[0], size);
 
       std::string ret_val (v.empty() ? std::string() : std::string (v.begin(), v.end()).c_str());

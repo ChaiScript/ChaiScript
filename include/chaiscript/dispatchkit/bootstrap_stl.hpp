@@ -294,8 +294,12 @@ namespace chaiscript
     {
       m->add(user_type<PairType>(), type);
 
-      m->add(fun(&PairType::first), "first");
-      m->add(fun(&PairType::second), "second");
+	  
+	  typename PairType::first_type PairType::* f = &PairType::first;
+	  typename PairType::second_type PairType::* s = &PairType::second;
+
+      m->add(fun(f), "first");
+      m->add(fun(s), "second");
 
       basic_constructors<PairType>(type, m);
       m->add(constructor<PairType (const typename PairType::first_type &, const typename PairType::second_type &)>(), type);
