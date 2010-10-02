@@ -372,29 +372,20 @@ namespace chaiscript
    * Evaluates (and generates) an inline array initialization
    */
   Boxed_Value Inline_Array_AST_Node::eval(Dispatch_Engine &ss) {
-    try {
-      Boxed_Value retval = ss.call_function("Vector");
-      if (this->children.size() > 0) {
-        for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
-          try {
-            ss.call_function("push_back", retval, this->children[0]->children[i]->eval(ss));
-          }
-          catch (const dispatch_error &) {
-            throw Eval_Error("Can not find appropriate 'push_back'");
-          }
-          catch(Eval_Error &ee) {
-            ee.call_stack.push_back(this->children[0]->children[i]);
-            throw;
-          }
+    std::vector<Boxed_Value> vec;
+    if (this->children.size() > 0) {
+      for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
+        try {
+          vec.push_back(this->children[0]->children[i]->eval(ss));
+        }
+        catch(Eval_Error &ee) {
+          ee.call_stack.push_back(this->children[0]->children[i]);
+          throw;
         }
       }
-
-      return retval;
-    }
-    catch (const dispatch_error &) {
-      throw Eval_Error("Can not find appropriate 'Vector()'");
     }
 
+    return const_var(vec);
   }
 
   /**

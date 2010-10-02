@@ -181,11 +181,14 @@ namespace detail {
     ModulePtr random_access_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
     {
       typedef typename ContainerType::reference(ContainerType::*indexoper)(size_t);
+      typedef typename ContainerType::const_reference(ContainerType::*constindexoper)(size_t) const;
 
       //In the interest of runtime safety for the m, we prefer the at() method for [] access,
       //to throw an exception in an out of bounds condition.
       m->add(
         fun(boost::function<typename ContainerType::reference (ContainerType *, int)>(boost::mem_fn(static_cast<indexoper>(&ContainerType::at)))), "[]");
+      m->add(
+        fun(boost::function<typename ContainerType::const_reference (const ContainerType *, int)>(boost::mem_fn(static_cast<constindexoper>(&ContainerType::at)))), "[]");
 
       return m;
     }
