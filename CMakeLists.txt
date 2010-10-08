@@ -132,6 +132,10 @@ IF(BUILD_TESTING)
     target_link_libraries(functor_cast_test ${LIBS})
     add_test(NAME Functor_Cast_Test COMMAND functor_cast_test)
     
+    add_executable(boxed_cast_test unittests/boxed_cast_test.cpp)
+    target_link_libraries(boxed_cast_test ${LIBS})
+    add_test(NAME Boxed_Cast_Test COMMAND boxed_cast_test)
+
     add_library(test_module MODULE src/test_module.cpp)
     target_link_libraries(test_module ${LIBS})
 

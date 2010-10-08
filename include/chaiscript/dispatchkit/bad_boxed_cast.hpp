@@ -37,7 +37,7 @@ namespace chaiscript
 
       virtual ~bad_boxed_cast() throw() {}
 
-      virtual const char * what () throw()
+      virtual const char * what() const throw()
       {
         return m_what.c_str();
       }
