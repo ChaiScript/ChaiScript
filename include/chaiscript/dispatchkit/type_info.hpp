@@ -184,7 +184,7 @@ namespace chaiscript
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
               &typeid(boost::reference_wrapper<T> ), 
-              &typeid(Bare_Type<T>::type));
+              &typeid(typename Bare_Type<T>::type));
         }
       };
 
@@ -198,7 +198,7 @@ namespace chaiscript
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
               &typeid(const boost::reference_wrapper<T> &), 
-              &typeid(Bare_Type<T>::type));
+              &typeid(typename Bare_Type<T>::type));
         }
       };
   }
