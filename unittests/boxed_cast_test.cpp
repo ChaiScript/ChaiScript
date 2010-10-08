@@ -144,6 +144,18 @@ int main()
                                  true, false, true, false, true,
                                  true, true, true, false, true);
 
+  passed &= do_test<int>(var(boost::ref(i)), true, true, true, true, true, 
+                                 true, true, true, false, false,
+                                 false, false, false, false, true,
+                                 true, true, true, true, true,
+                                 true, true, true, true, true);
+
+  passed &= do_test<int>(var(boost::cref(i)), true, true, false, true, false, 
+                                 true, false, true, false, false,
+                                 false, false, false, false, false,
+                                 true, false, true, false, true,
+                                 true, true, true, false, true);
+
   if (passed)
   {
     return EXIT_SUCCESS;
