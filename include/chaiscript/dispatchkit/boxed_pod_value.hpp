@@ -242,28 +242,16 @@ namespace chaiscript
      * Cast_Helper for converting from Boxed_Value to Boxed_POD_Value
      */
     template<>
-      struct Cast_Helper<const Boxed_POD_Value &>
+      struct Cast_Helper<const Boxed_POD_Value &> : Cast_Helper<Boxed_POD_Value>
       {
-        typedef Boxed_POD_Value Result_Type;
-
-        static Result_Type cast(const Boxed_Value &ob)
-        {
-          return Boxed_POD_Value(ob);
-        }
       };
       
     /**
      * Cast_Helper for converting from Boxed_Value to Boxed_POD_Value
      */
     template<>
-      struct Cast_Helper<const Boxed_POD_Value>
+      struct Cast_Helper<const Boxed_POD_Value> : Cast_Helper<Boxed_POD_Value>
       {
-        typedef Boxed_POD_Value Result_Type;
-
-        static Result_Type cast(const Boxed_Value &ob)
-        {
-          return Boxed_POD_Value(ob);
-        }
       };  
   }
   

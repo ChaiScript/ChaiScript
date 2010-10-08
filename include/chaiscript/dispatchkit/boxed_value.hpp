@@ -235,7 +235,7 @@ namespace chaiscript
         }
       }
 
-      boost::any get() const
+      const boost::any & get() const
       {
         return m_data->m_obj;
       }
@@ -282,7 +282,7 @@ namespace chaiscript
   template<typename T>
     Boxed_Value const_var(T *t)
     {
-      return Boxed_Value( const_cast<typename boost::add_const<T>::type>(t) );
+      return Boxed_Value( const_cast<typename boost::add_const<T>::type *>(t) );
     }
 
   template<typename T>

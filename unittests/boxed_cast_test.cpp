@@ -13,9 +13,9 @@ bool run_test_type_conversion(const Boxed_Value &bv, bool expectedpass)
   try {
     To ret = chaiscript::boxed_cast<To>(bv);
     use(ret);
-  } catch (const chaiscript::bad_boxed_cast &e) {
+  } catch (const chaiscript::bad_boxed_cast &/*e*/) {
     if (expectedpass) {
-      std::cerr << "Failure in run_test_type_conversion: " << e.what() << std::endl;
+//      std::cerr << "Failure in run_test_type_conversion: " << e.what() << std::endl;
       return false;
     } else {
       return true;
@@ -43,7 +43,10 @@ bool test_type_conversion(const Boxed_Value &bv, bool expectedpass)
 
   if (!ret)
   {
-    std::cerr << "Error with type conversion test. From: " << bv.get_type_info().name() << " To: " << typeid(To).name() 
+    std::cerr << "Error with type conversion test. From: " 
+		<< (bv.is_const()?(std::string("const ")):(std::string())) << bv.get_type_info().name() 
+		<< " To: "  
+		<< (boost::is_const<To>::value?(std::string("const ")):(std::string())) << typeid(To).name() 
       << " test was expected to " << ((expectedpass)?(std::string("succeed")):(std::string("fail"))) << " but did not" << std::endl;
   }
 
@@ -56,7 +59,7 @@ bool do_test(const Boxed_Value &bv, bool T, bool ConstT, bool TRef, bool ConstTR
     bool ConstSharedPtrT, bool ConstSharedConstPtrT, bool ConstSharedPtrTRef, bool ConstSharedPtrTConstRef,
     bool BoostRef, bool BoostConstRef, bool ConstBoostRef, bool ConstBoostConstRef,
     bool ConstBoostRefRef, bool ConstBoostConstRefRef, bool PODValue,
-    bool ConstPODValue, bool PODValueRef, bool ConstPODValueRef)
+    bool ConstPODValue, bool ConstPODValueRef, bool TPtrConstRef, bool ConstTPtrConstRef)
 {
   bool passed = true;
   passed &= test_type_conversion<Type>(bv, T);
@@ -75,8 +78,8 @@ bool do_test(const Boxed_Value &bv, bool T, bool ConstT, bool TRef, bool ConstTR
   passed &= test_type_conversion<const boost::shared_ptr<const Type> >(bv, ConstSharedConstPtrT);
   passed &= test_type_conversion<const boost::shared_ptr<Type> &>(bv, ConstSharedPtrTRef);
   passed &= test_type_conversion<const boost::shared_ptr<const Type> &>(bv, ConstSharedPtrTConstRef);
-//  passed &= test_type_conversion<boost::reference_wrapper<Type> >(bv, BoostRef);
-//  passed &= test_type_conversion<boost::reference_wrapper<const Type> >(bv, BoostConstRef);
+  passed &= test_type_conversion<boost::reference_wrapper<Type> >(bv, BoostRef);
+  passed &= test_type_conversion<boost::reference_wrapper<const Type> >(bv, BoostConstRef);
   passed &= test_type_conversion<boost::reference_wrapper<Type> &>(bv, false);
   passed &= test_type_conversion<boost::reference_wrapper<const Type> &>(bv, false);
   passed &= test_type_conversion<const boost::reference_wrapper<Type> >(bv, ConstBoostRef);
@@ -85,7 +88,7 @@ bool do_test(const Boxed_Value &bv, bool T, bool ConstT, bool TRef, bool ConstTR
   passed &= test_type_conversion<const boost::reference_wrapper<const Type> &>(bv, ConstBoostConstRefRef);
   passed &= test_type_conversion<Boxed_POD_Value>(bv, PODValue);
   passed &= test_type_conversion<const Boxed_POD_Value>(bv, ConstPODValue);
-  passed &= test_type_conversion<Boxed_POD_Value &>(bv, PODValueRef);
+  passed &= test_type_conversion<Boxed_POD_Value &>(bv, false);
   passed &= test_type_conversion<const Boxed_POD_Value &>(bv, ConstPODValueRef);
   passed &= test_type_conversion<Boxed_POD_Value *>(bv, false);
   passed &= test_type_conversion<const Boxed_POD_Value *>(bv, false);
@@ -93,8 +96,11 @@ bool do_test(const Boxed_Value &bv, bool T, bool ConstT, bool TRef, bool ConstTR
   passed &= test_type_conversion<const Boxed_POD_Value *const>(bv, false);
   passed &= test_type_conversion<Type *&>(bv, false);
   passed &= test_type_conversion<const Type *&>(bv, false);
-  passed &= test_type_conversion<Type * const&>(bv, false);
-  passed &= test_type_conversion<const Type * const&>(bv, false);
+  passed &= test_type_conversion<Type * const&>(bv, TPtrConstRef);
+  passed &= test_type_conversion<const Type * const&>(bv, ConstTPtrConstRef);
+  passed &= test_type_conversion<Boxed_Value>(bv, true);
+  passed &= test_type_conversion<const Boxed_Value>(bv, true);
+  passed &= test_type_conversion<const Boxed_Value &>(bv, true);
 
   return passed;
 }
@@ -105,21 +111,38 @@ int main()
 {
   bool passed = true;
 
-  int i;
   /*
   bool T, bool ConstT, bool TRef, bool ConstTRef, bool TPtr, 
   bool ConstTPtr, bool TPtrConst, bool ConstTPtrConst, bool SharedPtrT, bool SharedConstPtrT,
     bool ConstSharedPtrT, bool ConstSharedConstPtrT, bool ConstSharedPtrTRef, bool ConstSharedPtrTConstRef, bool BoostRef, 
     bool BoostConstRef, bool ConstBoostRef, bool ConstBoostConstRef, bool ConstBoostRefRef, bool ConstBoostConstRefRef, 
-    bool PODValue, bool ConstPODValue, bool PODValueRef, bool ConstPODValueRef
+    bool PODValue, bool ConstPODValue, bool ConstPODValueRef
     */
 
+  int i = 5;
   passed &= do_test<int>(var(i), true, true, true, true, true, 
                                  true, true, true, true, true,
                                  true, true, true, true, true,
                                  true, true, true, true, true,
-                                 true, true, true, true);
+                                 true, true, true, true, true);
 
+  passed &= do_test<int>(const_var(i), true, true, false, true, false, 
+                                       true, false, true, false, true,
+                                       false, true, false, true, false,
+                                       true, false, true, false, true,
+                                       true, true, true, false, true);
+
+  passed &= do_test<int>(var(&i), true, true, true, true, true, 
+                                 true, true, true, false, false,
+                                 false, false, false, false, true,
+                                 true, true, true, true, true,
+                                 true, true, true, true, true);
+
+  passed &= do_test<int>(const_var(&i), true, true, false, true, false, 
+                                 true, false, true, false, false,
+                                 false, false, false, false, false,
+                                 true, false, true, false, true,
+                                 true, true, true, false, true);
 
   if (passed)
   {

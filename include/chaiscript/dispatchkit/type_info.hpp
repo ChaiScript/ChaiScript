@@ -177,11 +177,27 @@ namespace chaiscript
     template<typename T>
       struct Get_Type_Info<boost::reference_wrapper<T> >
       {
+        typedef T type;
+
         static Type_Info get()
         {
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
               &typeid(boost::reference_wrapper<T> ), 
+              &typeid(Bare_Type<T>::type));
+        }
+      };
+
+    template<typename T>
+      struct Get_Type_Info<const boost::reference_wrapper<T> &>
+      {
+        typedef T type;
+
+        static Type_Info get()
+        {
+          return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
+              boost::is_void<T>::value,
+              &typeid(const boost::reference_wrapper<T> &), 
               &typeid(Bare_Type<T>::type));
         }
       };

@@ -50,33 +50,17 @@ namespace chaiscript
         }
       };
 
+	template<typename Result>
+	  struct Cast_Helper_Inner<const Result> : Cast_Helper_Inner<Result>
+	  {
+	  };
+
     /**
      * Cast_Helper_Inner for casting to a const & type
      */
     template<typename Result>
-      struct Cast_Helper_Inner<const Result &>
+      struct Cast_Helper_Inner<const Result &> : Cast_Helper_Inner<Result>
       {
-        typedef typename boost::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
-
-        static Result_Type cast(const Boxed_Value &ob)
-        {
-          if (ob.is_ref())
-          {
-            if (!ob.get_type_info().is_const())
-            {
-              return boost::cref((boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get());
-            } else {
-              return boost::any_cast<boost::reference_wrapper<const Result> >(ob.get());
-            }
-          } else {
-            if (!ob.get_type_info().is_const())
-            {
-              return boost::cref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));   
-            } else {
-              return boost::cref(*(boost::any_cast<boost::shared_ptr<const Result> >(ob.get())));   
-            }
-          }
-        }
       };
 
     /**
@@ -183,33 +167,27 @@ namespace chaiscript
      * Cast_Helper_Inner for casting to a const boost::shared_ptr<> & type
      */
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::shared_ptr<Result> &>
+      struct Cast_Helper_Inner<const boost::shared_ptr<Result> > : Cast_Helper_Inner<boost::shared_ptr<Result> >
       {
-        typedef typename boost::shared_ptr<Result> Result_Type;
-
-        static Result_Type cast(const Boxed_Value &ob)
-        {
-          return boost::any_cast<boost::shared_ptr<Result> >(ob.get());
-        }
       };
+
+    template<typename Result>
+      struct Cast_Helper_Inner<const boost::shared_ptr<Result> &> : Cast_Helper_Inner<boost::shared_ptr<Result> >
+      {
+      };
+
 
     /**
      * Cast_Helper_Inner for casting to a const boost::shared_ptr<const> & type
      */
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::shared_ptr<const Result> &>
+      struct Cast_Helper_Inner<const boost::shared_ptr<const Result> > : Cast_Helper_Inner<boost::shared_ptr<const Result> >
       {
-        typedef typename boost::shared_ptr<const Result> Result_Type;
+      };
 
-        static Result_Type cast(const Boxed_Value &ob)
-        {
-          if (!ob.get_type_info().is_const())
-          {
-            return boost::const_pointer_cast<const Result>(boost::any_cast<boost::shared_ptr<Result> >(ob.get()));
-          } else {
-            return boost::any_cast<boost::shared_ptr<const Result> >(ob.get());
-          }
-        }
+    template<typename Result>
+      struct Cast_Helper_Inner<const boost::shared_ptr<const Result> &> : Cast_Helper_Inner<boost::shared_ptr<const Result> >
+      {
       };
 
 
@@ -232,16 +210,49 @@ namespace chaiscript
      * Cast_Helper_Inner for casting to a const Boxed_Value & type
      */
     template<>
-      struct Cast_Helper_Inner<const Boxed_Value &>
+      struct Cast_Helper_Inner<const Boxed_Value> : Cast_Helper_Inner<Boxed_Value>
       {
-        typedef const Boxed_Value & Result_Type;
+      };
 
-        static Result_Type cast(const Boxed_Value &ob)
-        {
-          return ob;    
-        }
+    template<>
+      struct Cast_Helper_Inner<const Boxed_Value &> : Cast_Helper_Inner<Boxed_Value>
+      {
       };
     
+
+	/**
+     * Cast_Helper_Inner for casting to a boost::reference_wrapper type
+     */
+    template<typename Result>
+      struct Cast_Helper_Inner<boost::reference_wrapper<Result> > : Cast_Helper_Inner<Result &>
+      {
+      };
+
+    template<typename Result>
+      struct Cast_Helper_Inner<const boost::reference_wrapper<Result> > : Cast_Helper_Inner<Result &>
+      {
+      };
+
+    template<typename Result>
+      struct Cast_Helper_Inner<const boost::reference_wrapper<Result> &> : Cast_Helper_Inner<Result &>
+      {
+      };
+
+    template<typename Result>
+      struct Cast_Helper_Inner<boost::reference_wrapper<const Result> > : Cast_Helper_Inner<const Result &>
+      {
+      };
+
+    template<typename Result>
+      struct Cast_Helper_Inner<const boost::reference_wrapper<const Result> > : Cast_Helper_Inner<const Result &>
+      {
+      };
+
+    template<typename Result>
+      struct Cast_Helper_Inner<const boost::reference_wrapper<const Result> & > : Cast_Helper_Inner<const Result &>
+      {
+      };
+
     /**
      * The exposed Cast_Helper object that by default just calls the Cast_Helper_Inner
      */
