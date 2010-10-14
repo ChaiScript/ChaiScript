@@ -72,6 +72,10 @@ namespace chaiscript
         return bv;
       }
 
+      /// Returns a vector containing all of the types of the parameters the function returns/takes
+      /// if the function is variadic or takes no arguments (arity of 0 or -1), the returned
+      /// value containes exactly 1 Type_Info object: the return type
+      /// \returns the types of all parameters. 
       std::vector<Type_Info> get_param_types() const { return m_types; }
 
       virtual bool operator==(const Proxy_Function_Base &) const = 0;
@@ -104,6 +108,7 @@ namespace chaiscript
         }
       }
 
+      /// \returns the number of arguments the function takes or -1 if it is variadic
       virtual int get_arity() const = 0;
 
       virtual std::string annotation() const = 0;
