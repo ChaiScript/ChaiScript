@@ -12,6 +12,7 @@
 #include "register_function.hpp"
 #include "operators.hpp"
 #include "boxed_pod_value.hpp"
+#include <boost/function_types/result_type.hpp>
 
 namespace chaiscript 
 {
@@ -505,6 +506,32 @@ namespace chaiscript
         }
       }
 
+      template<typename FunctionType>
+        static std::vector<Boxed_Value> do_return_boxed_value_vector(const boost::function<FunctionType> &f,
+            const Proxy_Function_Base *b)
+        {
+          typedef typename boost::function_types::result_type<FunctionType>::type Vector;
+          Vector v = f(b);
+ 
+          std::vector<Boxed_Value> vbv;
+          for (typename Vector::const_iterator itr = v.begin();
+               itr != v.end();
+               ++itr)
+          {
+            vbv.push_back(const_var(*itr));
+          }
+
+          return vbv;
+        }
+
+      template<typename Function>
+      static boost::function<std::vector<Boxed_Value> (const Proxy_Function_Base*)> return_boxed_value_vector(const Function &f)
+      {
+        typedef typename boost::function_types::result_type<Function>::type Vector;
+        boost::function<Vector (const Proxy_Function_Base *)> func(f);
+        return boost::bind(&do_return_boxed_value_vector<Vector (const Proxy_Function_Base *)>, func, _1);
+      }
+
     public:
       /**
       * perform all common bootstrap functions for std::string, void and POD types
@@ -517,6 +544,16 @@ namespace chaiscript
         m->add(user_type<Boxed_POD_Value>(), "PODObject");
         m->add(user_type<Proxy_Function>(), "function");
         m->add(user_type<std::exception>(), "exception");
+
+        m->add(fun(&Proxy_Function_Base::get_arity), "get_arity");
+        m->add(fun(&Proxy_Function_Base::annotation), "get_annotation");
+        m->add(fun(&Proxy_Function_Base::operator()), "call");
+        m->add(fun(&Proxy_Function_Base::operator==), "==");
+
+        
+        m->add(fun(return_boxed_value_vector(&Proxy_Function_Base::get_param_types)), "get_param_types");
+        m->add(fun(return_boxed_value_vector(&Proxy_Function_Base::get_contained_functions)), "get_contained_functions");
+
 
         m->add(user_type<std::runtime_error>(), "runtime_error");
         m->add(constructor<std::runtime_error (const std::string &)>(), "runtime_error");
@@ -549,6 +586,9 @@ namespace chaiscript
         m->add(fun(&Type_Info::is_pointer), "is_type_pointer");
         m->add(fun(&Type_Info::name), "cpp_name");
         m->add(fun(&Type_Info::bare_name), "cpp_bare_name");
+        m->add(fun(&Type_Info::bare_equal), "bare_equal");
+        typedef bool (Type_Info::*typeinfocompare)(const Type_Info &) const;
+        m->add(fun(typeinfocompare(&Type_Info::operator==)), "==");
         m->add(fun(&Type_Info::bare_equal), "bare_equal");
 
 

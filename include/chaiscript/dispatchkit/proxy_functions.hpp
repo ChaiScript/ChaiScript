@@ -77,6 +77,11 @@ namespace chaiscript
       virtual bool operator==(const Proxy_Function_Base &) const = 0;
       virtual bool call_match(const std::vector<Boxed_Value> &vals) const = 0;
 
+      virtual std::vector<boost::shared_ptr<const Proxy_Function_Base> > get_contained_functions() const
+      {
+        return std::vector<boost::shared_ptr<const Proxy_Function_Base> >();
+      }
+
 
       //! Return true if the function is a possible match
       //! to the passed in values
@@ -192,9 +197,9 @@ namespace chaiscript
       {
       }
 
-      virtual bool operator==(const Proxy_Function_Base &) const
+      virtual bool operator==(const Proxy_Function_Base &rhs) const
       {
-        return false;
+        return this == &rhs;
       }
 
       virtual bool call_match(const std::vector<Boxed_Value> &vals) const
@@ -255,6 +260,7 @@ namespace chaiscript
       {
         std::vector<Type_Info> types;
 
+        // For the return type
         types.push_back(detail::Get_Type_Info<Boxed_Value>::get());
 
         if (arity >= 0)
@@ -263,8 +269,6 @@ namespace chaiscript
           {
             types.push_back(detail::Get_Type_Info<Boxed_Value>::get());
           }
-        } else {
-          types.push_back(detail::Get_Type_Info<std::vector<Boxed_Value> >::get());
         }
 
         return types;
@@ -317,6 +321,14 @@ namespace chaiscript
       {
         return (*m_f)(build_param_list(params));
       }
+
+      virtual std::vector<Const_Proxy_Function> get_contained_functions() const
+      {
+        std::vector<Const_Proxy_Function> fs;
+        fs.push_back(m_f);
+        return fs;
+      }
+
 
       std::vector<Boxed_Value> build_param_list(const std::vector<Boxed_Value> &params) const
       {

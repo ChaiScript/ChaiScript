@@ -10,6 +10,18 @@ def assert_equal(x, y)
   }
 }
 
+def assert_not_equal(x, y)
+{
+  if (!(x == y))
+  {
+    // Passes
+  } else {
+    // Fails
+    print("assert_not_equal failure: got " + to_string(y) + " which was not expected.");
+    exit(-1);
+  }
+}
+
 def assert_throws(desc, x)
 {
   if (throws_exception(x))

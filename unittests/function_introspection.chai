@@ -1,0 +1,28 @@
+
+#Test Function Description
+def test_function(a)
+{
+  return a;
+}
+
+assert_equal(test_function.get_arity(), 1);
+assert_equal(test_function.get_annotation(), "#Test Function Description\n");
+assert_equal(test_function.get_contained_functions().size(), 0);
+assert_equal(test_function.get_param_types().size(), 2);
+
+assert_equal(test_function, test_function);
+
+assert_not_equal(test_function, `+`);
+
+assert_equal(test_function.call([1]), 1);
+
+assert_equal(2, `==`.get_arity());
+
+// < should be the merging of two functions bool <(PODObject, PODObject) and bool <(string, string)
+// we want to peel it apart and make sure that's true
+var types = `<`.get_param_types();
+assert_equal(3, types.size());
+assert_equal(true, types[0].bare_equal(bool_type));
+assert_equal(true, types[1].bare_equal(Object_type));
+assert_equal(true, types[2].bare_equal(Object_type));
+assert_equal(2, `<`.get_contained_functions().size());

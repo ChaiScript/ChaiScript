@@ -449,26 +449,27 @@ namespace detail {
       assignable_type<VectorType>(type, m);
       input_range_type<VectorType>(type, m);
 
-
-      m->eval("def Vector::`==`(rhs) : type_match(rhs, this) { \
-               if ( rhs.size() != this.size() ) {    \
-                 return false;  \
-               } else {  \
-                 var r1 = range(this); \
-                 var r2 = range(rhs);  \
-                 while (!r1.empty()) \
-                 {  \
-                   if (!eq(r1.front(), r2.front())) \
+      if (typeid(VectorType) == typeid(std::vector<Boxed_Value>))
+      {
+        m->eval("def Vector::`==`(rhs) : type_match(rhs, this) { \
+                 if ( rhs.size() != this.size() ) {    \
+                   return false;  \
+                 } else {  \
+                   var r1 = range(this); \
+                   var r2 = range(rhs);  \
+                   while (!r1.empty()) \
                    {  \
-                     return false; \
+                     if (!eq(r1.front(), r2.front())) \
+                     {  \
+                       return false; \
+                     } \
+                     r1.pop_front(); \
+                     r2.pop_front(); \
                    } \
-                   r1.pop_front(); \
-                   r2.pop_front(); \
-                 } \
-                 return true; \
-              } \
-            }");
-
+                   return true; \
+                } \
+              }");
+      } 
 
       return m;
     }

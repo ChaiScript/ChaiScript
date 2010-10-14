@@ -120,22 +120,70 @@ namespace chaiscript
   {
     public:
       Dispatch_Function(const std::vector<std::pair<std::string, Proxy_Function > > &t_funcs)
-        : Proxy_Function_Base(std::vector<Type_Info>()),
+        : Proxy_Function_Base(build_type_infos(t_funcs)),
           m_funcs(t_funcs)
       {
       }
 
-      virtual bool operator==(const Proxy_Function_Base &) const
+      virtual bool operator==(const Proxy_Function_Base &rhs) const
       {
-        return false;
+        try {
+          const Dispatch_Function &dispatchfun = dynamic_cast<const Dispatch_Function &>(rhs);
+          return m_funcs == dispatchfun.m_funcs;
+        } catch (const std::bad_cast &) {
+          return false;
+        }
       }
 
       virtual ~Dispatch_Function() {}
 
+      virtual std::vector<Const_Proxy_Function> get_contained_functions() const
+      {
+        typedef std::vector<std::pair<std::string, Proxy_Function > > function_vec;
+
+        function_vec::const_iterator begin = m_funcs.begin();
+        const function_vec::const_iterator end = m_funcs.end();
+
+        std::vector<Const_Proxy_Function> fs;
+
+        while (begin != end)
+        {
+          fs.push_back(begin->second);
+          ++begin;
+        }
+
+        return fs;
+      }
+
 
       virtual int get_arity() const
       {
-        return -1;
+        typedef std::vector<std::pair<std::string, Proxy_Function > > function_vec;
+
+        function_vec::const_iterator begin = m_funcs.begin();
+        const function_vec::const_iterator end = m_funcs.end();
+
+        if (begin != end)
+        {
+          int arity = begin->second->get_arity();
+
+          ++begin;
+
+          while (begin != end)
+          {
+            if (arity != begin->second->get_arity())
+            {
+              // The arities in the list do not match, so it's unspecified
+              return -1;
+            }
+
+            ++begin;
+          }
+
+          return arity;
+        }
+
+        return -1; // unknown arity
       }
 
       virtual bool call_match(const std::vector<Boxed_Value> &vals) const
@@ -160,7 +208,7 @@ namespace chaiscript
 
       virtual std::string annotation() const
       {
-        return "";
+        return "Multiple method dispatch function wrapper.";
       }
 
     protected:
@@ -171,6 +219,54 @@ namespace chaiscript
 
     private:
       std::vector<std::pair<std::string, Proxy_Function > > m_funcs;
+
+      static std::vector<Type_Info> build_type_infos(const std::vector<std::pair<std::string, Proxy_Function > > &t_funcs)
+      {
+        typedef std::vector<std::pair<std::string, Proxy_Function > > function_vec;
+
+        function_vec::const_iterator begin = t_funcs.begin();
+        const function_vec::const_iterator end = t_funcs.end();
+
+        if (begin != end)
+        {
+          std::vector<Type_Info> type_infos = begin->second->get_param_types();
+
+          ++begin;
+
+          bool sizemismatch = false;
+
+          while (begin != end)
+          {
+            std::vector<Type_Info> param_types = begin->second->get_param_types();
+
+            if (param_types.size() != type_infos.size())
+            {
+              sizemismatch = true;
+            }
+
+            for (size_t i = 0; i < type_infos.size() && i < param_types.size(); ++i)
+            {
+              if (!(type_infos[i] == param_types[i]))
+              {
+                type_infos[i] = detail::Get_Type_Info<Boxed_Value>::get();
+              }
+            }
+
+            ++begin;
+          }
+
+          assert(type_infos.size() > 0 && " type_info vector size is < 0, this is only possible if something else is broken");
+
+          if (sizemismatch)
+          {
+            type_infos.resize(1);
+          }
+
+          return type_infos;
+        }
+
+        return std::vector<Type_Info>();
+      }
   };  
 
 
@@ -412,6 +508,15 @@ namespace chaiscript
         {
           throw std::range_error("Object not known: " + name);
         } else {
+          
+          if (funcs.size() == 1)
+          {
+            // Return the first item if there is only one,
+            // no reason to take the cast of the extra level of dispatch
+            return const_var(funcs.begin()->second);
+          }
+          
+
           Boxed_Value f(Const_Proxy_Function(new Dispatch_Function(funcs)));
           return f;
         }
