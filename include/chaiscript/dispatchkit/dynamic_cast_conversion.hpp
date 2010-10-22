@@ -251,7 +251,7 @@ namespace chaiscript
     return dynamic_cast_converts(user_type<Base>(), user_type<Derived>());
   }
 
-  bool dynamic_cast_converts(const Type_Info &base, const Type_Info &derived)
+  static bool dynamic_cast_converts(const Type_Info &base, const Type_Info &derived)
   {
     return detail::Dynamic_Conversions::get().has_conversion(base, derived);
   }
