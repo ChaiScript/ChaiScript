@@ -90,6 +90,7 @@ if (CMAKE_COMPILER_2005)
 endif()
 
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${Boost_INCLUDE_DIR})
 add_executable(chai src/main.cpp)
 target_link_libraries(chai ${LIBS})
 
