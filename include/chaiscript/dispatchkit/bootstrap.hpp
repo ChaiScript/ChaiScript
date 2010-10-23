@@ -507,11 +507,11 @@ namespace chaiscript
       }
 
       template<typename FunctionType>
-        static std::vector<Boxed_Value> do_return_boxed_value_vector(const boost::function<FunctionType> &f,
+        static std::vector<Boxed_Value> do_return_boxed_value_vector(FunctionType f,
             const Proxy_Function_Base *b)
         {
           typedef typename boost::function_types::result_type<FunctionType>::type Vector;
-          Vector v = f(b);
+          Vector v = (b->*f)();
  
           std::vector<Boxed_Value> vbv;
           for (typename Vector::const_iterator itr = v.begin();
@@ -527,9 +527,7 @@ namespace chaiscript
       template<typename Function>
       static boost::function<std::vector<Boxed_Value> (const Proxy_Function_Base*)> return_boxed_value_vector(const Function &f)
       {
-        typedef typename boost::function_types::result_type<Function>::type Vector;
-        boost::function<Vector (const Proxy_Function_Base *)> func(f);
-        return boost::bind(&do_return_boxed_value_vector<Vector (const Proxy_Function_Base *)>, func, _1);
+        return boost::bind(&do_return_boxed_value_vector<Function>, f, _1);
       }
 
     public:
