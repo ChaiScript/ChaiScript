@@ -586,7 +586,6 @@ namespace chaiscript
       engine.add(fun(static_cast<load_mod_1>(&ChaiScript_System<Eval_Engine>::load_module), this), "load_module");
       engine.add(fun(static_cast<load_mod_2>(&ChaiScript_System<Eval_Engine>::load_module), this), "load_module");
 
-
       add(vector_type<std::vector<Boxed_Value> >("Vector"));
       add(string_type<std::string>("string"));
       add(map_type<std::map<std::string, Boxed_Value> >("Map"));

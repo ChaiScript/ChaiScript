@@ -630,7 +630,7 @@ namespace chaiscript
           guard = boost::shared_ptr<Dynamic_Proxy_Function>
             (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
                                                     boost::ref(ss), guardnode,
-                                                    param_names, _1), numparams));
+                                                    param_names, _1), static_cast<int>(numparams)));
         }
 
         try {
@@ -639,7 +639,7 @@ namespace chaiscript
           ss.add(Proxy_Function
               (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
                                                       boost::ref(ss), this->children.back(),
-                                                      param_names, _1), numparams,
+                                                      param_names, _1), static_cast<int>(numparams),
                                           annotation, guard)), function_name);
         }
         catch (reserved_word_error &e) {
@@ -966,8 +966,8 @@ namespace chaiscript
         AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
       virtual ~File_AST_Node() {}
       virtual Boxed_Value eval(Dispatch_Engine &ss) {
-        const unsigned int size = this->children.size(); 
-        for (unsigned int i = 0; i < size; ++i) {
+        const size_t size = this->children.size(); 
+        for (size_t i = 0; i < size; ++i) {
           try {
             const Boxed_Value &retval = this->children[i]->eval(ss);
             if (i + 1 == size) {
@@ -1082,8 +1082,9 @@ namespace chaiscript
         catch (const std::exception &e) {
           Boxed_Value except = Boxed_Value(boost::ref(e));
 
-          unsigned int end_point = this->children.size();
+          size_t end_point = this->children.size();
           if (this->children.back()->identifier == AST_Node_Type::Finally) {
+            assert(end_point > 0);
             end_point = this->children.size() - 1;
           }
           for (unsigned int i = 1; i < end_point; ++i) {
@@ -1330,7 +1331,7 @@ namespace chaiscript
           guard = boost::shared_ptr<Dynamic_Proxy_Function>
             (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
                                                     boost::ref(ss), guardnode,
-                                                    param_names, _1), numparams));
+                                                    param_names, _1), static_cast<int>(numparams)));
         }
 
         try {
@@ -1342,7 +1343,7 @@ namespace chaiscript
                 (new Dynamic_Object_Constructor(class_name, Proxy_Function
                                                 (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
                                                                                         boost::ref(ss), this->children.back(),
-                                                                                        param_names, _1), numparams,
+                                                                                        param_names, _1), static_cast<int>(numparams),
                                                                             annotation, guard)))), function_name);
 
           }
@@ -1357,7 +1358,7 @@ namespace chaiscript
                 (new Dynamic_Object_Function(class_name, Proxy_Function
                                              (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
                                                                                      boost::ref(ss), this->children.back(),
-                                                                                     param_names, _1), numparams,
+                                                                                     param_names, _1), static_cast<int>(numparams),
                                                                          annotation, guard)), ti)), function_name);
 
           }

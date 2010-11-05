@@ -16,7 +16,6 @@
 #include "dispatchkit.hpp"
 #include "register_function.hpp"
 
-
 namespace chaiscript 
 {
   namespace bootstrap
@@ -521,5 +520,6 @@ namespace detail {
     }
   }
 }
+
 
 #endif

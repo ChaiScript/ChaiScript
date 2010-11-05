@@ -89,7 +89,7 @@ endif()
 
 if (CMAKE_COMPILER_2005)
   # vs2005 is a bit too loud about possible loss of data warnings
-  ADD_DEFINITIONS(/wd4244)
+#  ADD_DEFINITIONS(/wd4244)
 endif()
 
 include_directories(${Boost_INCLUDE_DIRS})

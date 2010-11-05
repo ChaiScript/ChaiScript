@@ -7,7 +7,6 @@
 #ifndef CHAISCRIPT_PARSER_HPP_
 #define CHAISCRIPT_PARSER_HPP_
 
-#include <boost/assign/std/vector.hpp>
 
 #include <exception>
 #include <fstream>
@@ -43,61 +42,68 @@ namespace chaiscript
     ChaiScript_Parser &operator=(const ChaiScript_Parser &); // explicitly unimplemented assignment operator
 
     void setup_operators() {
-      using namespace boost::assign;
                         
       operators.push_back(AST_Node_Type::Logical_Or);
       std::vector<std::string> logical_or;
-      logical_or += "||";
+      logical_or.push_back("||");
       operator_matches.push_back(logical_or);
 
       operators.push_back(AST_Node_Type::Logical_And);
       std::vector<std::string> logical_and;
-      logical_and += "&&";
+      logical_and.push_back("&&");
       operator_matches.push_back(logical_and);
 
       operators.push_back(AST_Node_Type::Bitwise_Or);
       std::vector<std::string> bitwise_or;
-      bitwise_or += "|";
+      bitwise_or.push_back("|");
       operator_matches.push_back(bitwise_or);
 
       operators.push_back(AST_Node_Type::Bitwise_Xor);
       std::vector<std::string> bitwise_xor;
-      bitwise_xor += "^";
+      bitwise_xor.push_back("^");
       operator_matches.push_back(bitwise_xor);           
 
       operators.push_back(AST_Node_Type::Bitwise_And);
       std::vector<std::string> bitwise_and;
-      bitwise_and += "&";
+      bitwise_and.push_back("&");
       operator_matches.push_back(bitwise_and);
 
       operators.push_back(AST_Node_Type::Equality);
       std::vector<std::string> equality;
-      equality += "==", "!=";
+      equality.push_back("==");
+      equality.push_back("!=");
       operator_matches.push_back(equality);           
 
       operators.push_back(AST_Node_Type::Comparison);
       std::vector<std::string> comparison;
-      comparison += "<", "<=", ">", ">=";
+      comparison.push_back("<");
+      comparison.push_back("<=");
+      comparison.push_back(">");
+      comparison.push_back(">=");
       operator_matches.push_back(comparison);
 
       operators.push_back(AST_Node_Type::Shift);
       std::vector<std::string> shift;
-      shift += "<<", ">>";
+      shift.push_back("<<");
+      shift.push_back(">>");
       operator_matches.push_back(shift);           
 
       operators.push_back(AST_Node_Type::Additive);
       std::vector<std::string> additive;
-      additive += "+", "-";
+      additive.push_back("+");
+      additive.push_back("-");
       operator_matches.push_back(additive);
 
       operators.push_back(AST_Node_Type::Multiplicative);
       std::vector<std::string> multiplicative;
-      multiplicative += "*", "/", "%";
+      multiplicative.push_back("*");
+      multiplicative.push_back("/");
+      multiplicative.push_back("%");
       operator_matches.push_back(multiplicative);
 
       operators.push_back(AST_Node_Type::Dot_Access);
       std::vector<std::string> dot_access;
-      dot_access += ".";
+      dot_access.push_back(".");
       operator_matches.push_back(dot_access);
     }
     /**
@@ -139,12 +145,12 @@ namespace chaiscript
     /**
      * Helper function that collects ast_nodes from a starting position to the top of the stack into a new AST node
      */
-    void build_match(AST_NodePtr t, int match_start) {
+    void build_match(AST_NodePtr t, size_t match_start) {
       int pos_line_start, pos_col_start, pos_line_stop, pos_col_stop;
       int is_deep = false;
       
       //so we want to take everything to the right of this and make them children
-      if (match_start != int(match_stack.size())) {
+      if (match_start != match_stack.size()) {
         pos_line_start = match_stack[match_start]->start.line;
         pos_col_start = match_stack[match_start]->start.column;
         pos_line_stop = line;
@@ -165,8 +171,8 @@ namespace chaiscript
       t->end.column = pos_col_stop;
       
       if (is_deep) {
-        t->children.assign(match_stack.begin() + (match_start), match_stack.end());
-        match_stack.erase(match_stack.begin() + (match_start), match_stack.end());
+        t->children.assign(match_stack.begin() + match_start, match_stack.end());
+        match_stack.erase(match_stack.begin() + match_start, match_stack.end());
         match_stack.push_back(t);
       }
       else {
@@ -591,7 +597,7 @@ namespace chaiscript
           bool is_escaped = false;
           bool is_interpolated = false;
           bool saw_interpolation_marker = false;
-          int prev_stack_top = match_stack.size();
+          size_t prev_stack_top = match_stack.size();
 
           //for (std::string::iterator s = start + 1, end = input_pos - 1; s != end; ++s) {
           std::string::const_iterator s = start + 1, end = input_pos - 1;
@@ -633,17 +639,17 @@ namespace chaiscript
                   is_interpolated = true;
                   ++s;
 
-                  int tostr_stack_top = match_stack.size();
+                  size_t tostr_stack_top = match_stack.size();
 
                   AST_NodePtr tostr(new Id_AST_Node("to_string", AST_Node_Type::Id, filename, prev_line, prev_col, line, col));
                   match_stack.push_back(tostr);
 
-                  int ev_stack_top = match_stack.size();
+                  size_t ev_stack_top = match_stack.size();
 
                   AST_NodePtr ev(new Id_AST_Node("eval", AST_Node_Type::Id, filename, prev_line, prev_col, line, col));
                   match_stack.push_back(ev);
 
-                  int arg_stack_top = match_stack.size();
+                  size_t arg_stack_top = match_stack.size();
 
                   AST_NodePtr t(new Quoted_String_AST_Node(eval_match, AST_Node_Type::Quoted_String, filename, prev_line, prev_col, line, col));
                   match_stack.push_back(t);
@@ -858,11 +864,11 @@ namespace chaiscript
      */
     bool Keyword_(const char *s) {
       bool retval = false;
-      int len = strlen(s);
+      int len = static_cast<int>(strlen(s));
 
       if ((input_end - input_pos) >= len) {
         std::string::const_iterator tmp = input_pos;
-        for (int i = 0; i < len; ++i) {
+        for (size_t i = 0; i < len; ++i) {
           if (*tmp != s[i]) {
             return false;
           }
@@ -931,7 +937,7 @@ namespace chaiscript
      */
     bool Symbol_(const char *s) {
       bool retval = false;
-      int len = strlen(s);
+      int len = static_cast<int>(strlen(s));
 
       if ((input_end - input_pos) >= len) {
         std::string::const_iterator tmp = input_pos;
@@ -1054,7 +1060,7 @@ namespace chaiscript
     bool Arg_List() {
       bool retval = false;
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (Equation()) {
         retval = true;
@@ -1079,7 +1085,7 @@ namespace chaiscript
     bool Container_Arg_List() {
       bool retval = false;
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (Value_Range()) {
         retval = true;
@@ -1122,7 +1128,7 @@ namespace chaiscript
     bool Lambda() {
       bool retval = false;
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (Keyword("fun")) {
         retval = true;
@@ -1162,7 +1168,7 @@ namespace chaiscript
         is_annotated = true;
       }
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (Keyword("def")) {
         retval = true;
@@ -1221,7 +1227,7 @@ namespace chaiscript
     bool Try() {
       bool retval = false;
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (Keyword("try")) {
         retval = true;
@@ -1237,7 +1243,7 @@ namespace chaiscript
           while (Eol()) {}
           has_matches = false;
           if (Keyword("catch", false)) {
-            int catch_stack_top = match_stack.size();
+            size_t catch_stack_top = match_stack.size();
             if (Char('(')) {
               if (!(Id(true) && Char(')'))) {
                 throw Eval_Error("Incomplete 'catch' expression", File_Position(line, col), filename);
@@ -1260,7 +1266,7 @@ namespace chaiscript
         }
         while (Eol()) {}
         if (Keyword("finally", false)) {
-          int finally_stack_top = match_stack.size();
+          size_t finally_stack_top = match_stack.size();
 
           while (Eol()) {}
 
@@ -1282,7 +1288,7 @@ namespace chaiscript
     bool If() {
       bool retval = false;
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (Keyword("if")) {
         retval = true;
@@ -1346,7 +1352,7 @@ namespace chaiscript
     bool While() {
       bool retval = false;
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (Keyword("while")) {
         retval = true;
@@ -1391,7 +1397,7 @@ namespace chaiscript
     bool For() {
       bool retval = false;
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (Keyword("for")) {
         retval = true;
@@ -1422,7 +1428,7 @@ namespace chaiscript
     bool Block() {
       bool retval = false;
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (Char('{')) {
         retval = true;
@@ -1444,7 +1450,7 @@ namespace chaiscript
     bool Return() {
       bool retval = false;
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (Keyword("return")) {
         retval = true;
@@ -1462,7 +1468,7 @@ namespace chaiscript
     bool Break() {
       bool retval = false;
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (Keyword("break")) {
         retval = true;
@@ -1480,7 +1486,7 @@ namespace chaiscript
       bool retval = false;
       std::string::const_iterator prev_pos = input_pos;
 
-      unsigned int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
       if (Id(true)) {
         retval = true;
         bool has_more = true;
@@ -1519,7 +1525,7 @@ namespace chaiscript
     bool Var_Decl() {
       bool retval = false;
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (Keyword("var")) {
         retval = true;
@@ -1574,7 +1580,7 @@ namespace chaiscript
     bool Inline_Container() {
       bool retval = false;
 
-      unsigned int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (Char('[')) {
         retval = true;
@@ -1607,7 +1613,7 @@ namespace chaiscript
     bool Prefix() {
       bool retval = false;
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (Symbol("++", true)) {
         retval = true;
@@ -1680,8 +1686,8 @@ namespace chaiscript
       }
     }
         
-    bool Operator_Helper(int precedence) {
-      for (unsigned int i = 0; i < operator_matches[precedence].size(); ++i) {
+    bool Operator_Helper(size_t precedence) {
+      for (size_t i = 0; i < operator_matches[precedence].size(); ++i) {
         if (Symbol(operator_matches[precedence][i].c_str(), true)) {
           return true;
         }
@@ -1689,10 +1695,10 @@ namespace chaiscript
       return false;
     }
 
-    bool Operator(unsigned int precedence = 0) {
+    bool Operator(size_t precedence = 0) {
       bool retval = false;
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (precedence < operators.size()) {
         if (Operator(precedence+1)) {
@@ -1789,7 +1795,7 @@ namespace chaiscript
     bool Value_Range() {
       bool retval = false;
 
-      unsigned int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
       std::string::const_iterator prev_pos = input_pos;
       int prev_col = col;
 
@@ -1820,7 +1826,7 @@ namespace chaiscript
     bool Equation() {
       bool retval = false;
 
-      int prev_stack_top = match_stack.size();
+      size_t prev_stack_top = match_stack.size();
 
       if (Operator()) {
         retval = true;
