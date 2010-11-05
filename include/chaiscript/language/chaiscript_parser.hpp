@@ -383,7 +383,7 @@ namespace chaiscript
           if (Binary_()) {
             std::string match(start, input_pos);
             int temp_int = 0;
-            unsigned int pos = 0, end = match.length();
+            size_t pos = 0, end = match.length();
 
             while ((pos < end) && (pos < (2 + sizeof(int) * 8))) {
               temp_int <<= 1;

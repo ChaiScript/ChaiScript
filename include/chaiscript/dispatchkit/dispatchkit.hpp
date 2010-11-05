@@ -362,7 +362,7 @@ namespace chaiscript
         validate_object_name(name);
         StackData &stack = get_stack_data();
 
-        for (int i = stack.get<1>().size()-1; i >= 0; --i)
+        for (int i = static_cast<int>(stack.get<1>().size())-1; i >= 0; --i)
         {
           std::map<std::string, Boxed_Value>::const_iterator itr = (stack.get<1>())[i].find(name);
           if (itr != (stack.get<1>())[i].end())
@@ -479,7 +479,7 @@ namespace chaiscript
         StackData &stack = get_stack_data();
 
         // Is it in the stack?
-        for (int i = stack.get<1>().size()-1; i >= 0; --i)
+        for (int i = static_cast<int>(stack.get<1>().size())-1; i >= 0; --i)
         {
           std::map<std::string, Boxed_Value>::const_iterator stackitr = (stack.get<1>())[i].find(name);
           if (stackitr != (stack.get<1>())[i].end())

@@ -286,7 +286,7 @@ namespace chaiscript
         }
 
         if (this->children.size() > 1) {
-          for (int i = this->children.size()-3; i >= 0; i -= 2) {
+          for (int i = static_cast<int>(this->children.size())-3; i >= 0; i -= 2) {
             if (this->children[i+1]->text == "=") {
               try {
                 Boxed_Value lhs = this->children[i]->eval(ss);
@@ -551,7 +551,7 @@ namespace chaiscript
 
         return Boxed_Value(Proxy_Function(new Dynamic_Proxy_Function
               (boost::bind(&eval_function<Dispatch_Engine>, boost::ref(ss), this->children.back(), param_names, _1),
-               numparams)));
+               static_cast<int>(numparams))));
       }
 
   };
@@ -562,7 +562,7 @@ namespace chaiscript
         AST_Node(ast_node_text, id, fname, start_line, start_col, end_line, end_col) { }
       virtual ~Block_AST_Node() {}
       virtual Boxed_Value eval(Dispatch_Engine &ss){
-        unsigned int num_children = this->children.size();
+        size_t num_children = this->children.size();
 
         ss.new_scope();
         for (size_t i = 0; i < num_children; ++i) {

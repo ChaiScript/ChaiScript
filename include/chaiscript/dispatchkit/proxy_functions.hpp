@@ -153,8 +153,8 @@ namespace chaiscript
         {
           return false;
         } else {
-          const int size = bvs.size();
-          for (int i = 0; i < size; ++i)
+          size_t size = bvs.size();
+          for (size_t i = 0; i < size; ++i)
           {
             if (!(tis[i+1].bare_equal(bvs[i].get_type_info()) && tis[i+1].is_const() >= bvs[i].get_type_info().is_const() ))
             {
@@ -240,7 +240,7 @@ namespace chaiscript
           }
 
         } else {
-          throw arity_error(params.size(), m_arity);
+          throw arity_error(static_cast<int>(params.size()), m_arity);
         } 
       }
 
@@ -508,7 +508,7 @@ namespace chaiscript
             return Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
           }
         } else {
-          throw arity_error(params.size(), 1);
+          throw arity_error(static_cast<int>(params.size()), 1);
         }       
       }
 
