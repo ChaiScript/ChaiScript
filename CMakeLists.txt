@@ -105,6 +105,8 @@ target_link_libraries(reflection ${LIBS})
 
 file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.chai)
 
+list(SORT UNIT_TESTS)
+
 IF(BUILD_TESTING)
   option(UNIT_TEST_LIGHT "Unit tests light (expect module loading failures)" FALSE)
 

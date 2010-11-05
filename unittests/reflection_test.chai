@@ -1,7 +1,6 @@
 load_module("reflection")
-var fname = "INPUT"
 var parser := ChaiScript_Parser()
-var parse_success = parser.parse("3 + 4", fname.c_str())
+var parse_success = parser.parse("3 + 4", "INPUT")
 var a := parser.ast()
 
 assert_equal(eval(a), 7)
@@ -12,3 +11,4 @@ var node := childs[0]
 node.text = "9"
 
 assert_equal(eval(a), 13)
+assert_equal(node.filename, "INPUT")

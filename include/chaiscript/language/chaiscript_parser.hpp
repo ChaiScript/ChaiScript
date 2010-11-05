@@ -23,7 +23,7 @@ namespace chaiscript
     int line, col;
     std::string multiline_comment_begin, multiline_comment_end;
     std::string singleline_comment;
-    const char *filename;
+    boost::shared_ptr<std::string> filename;
     std::vector<AST_NodePtr> match_stack;
 
     std::vector<std::vector<std::string> > operator_matches;
@@ -457,7 +457,7 @@ namespace chaiscript
                 
         while (has_more_input() && (*input_pos != '`')) {
           if (Eol()) {
-            throw Eval_Error("Carriage return in identifier literal", File_Position(line, col), filename);
+            throw Eval_Error("Carriage return in identifier literal", File_Position(line, col), *filename);
           }
           else {
             ++input_pos;
@@ -466,10 +466,10 @@ namespace chaiscript
         }
 
         if (start == input_pos) {
-          throw Eval_Error("Missing contents of identifier literal", File_Position(line, col), filename);
+          throw Eval_Error("Missing contents of identifier literal", File_Position(line, col), *filename);
         }
         else if (input_pos == input_end) {
-          throw Eval_Error("Incomplete identifier literal", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete identifier literal", File_Position(line, col), *filename);
         }
 
         ++col;
@@ -573,7 +573,7 @@ namespace chaiscript
           ++col;
         }
         else {
-          throw Eval_Error("Unclosed quoted string", File_Position(line, col), filename);
+          throw Eval_Error("Unclosed quoted string", File_Position(line, col), *filename);
         }
       }
       return retval;
@@ -665,7 +665,7 @@ namespace chaiscript
                   build_match(AST_NodePtr(new Additive_AST_Node()), prev_stack_top);
                 }
                 else {
-                  throw Eval_Error("Unclosed in-string eval", File_Position(prev_line, prev_col), filename);
+                  throw Eval_Error("Unclosed in-string eval", File_Position(prev_line, prev_col), *filename);
                 }
               }
               else {
@@ -694,7 +694,7 @@ namespace chaiscript
                   case ('\'') : match.push_back('\''); break;
                   case ('\"') : match.push_back('\"'); break;
                   case ('$') : match.push_back('$'); break;
-                  default: throw Eval_Error("Unknown escaped sequence in string", File_Position(prev_line, prev_col), filename);
+                  default: throw Eval_Error("Unknown escaped sequence in string", File_Position(prev_line, prev_col), *filename);
                   }
                 }
                 else if (*s == '$') {
@@ -759,7 +759,7 @@ namespace chaiscript
           ++col;
         }
         else {
-          throw Eval_Error("Unclosed single-quoted string", File_Position(line, col), filename);
+          throw Eval_Error("Unclosed single-quoted string", File_Position(line, col), *filename);
         }
       }
       return retval;
@@ -801,7 +801,7 @@ namespace chaiscript
                 case ('t') : match.push_back('\t'); break;
                 case ('\'') : match.push_back('\''); break;
                 case ('\"') : match.push_back('\"'); break;
-                default: throw Eval_Error("Unknown escaped sequence in string", File_Position(prev_line, prev_col), filename);
+                default: throw Eval_Error("Unknown escaped sequence in string", File_Position(prev_line, prev_col), *filename);
                 }
               }
               else {
@@ -868,7 +868,7 @@ namespace chaiscript
 
       if ((input_end - input_pos) >= len) {
         std::string::const_iterator tmp = input_pos;
-        for (size_t i = 0; i < len; ++i) {
+        for (int i = 0; i < len; ++i) {
           if (*tmp != s[i]) {
             return false;
           }
@@ -1069,7 +1069,7 @@ namespace chaiscript
           do {
             while (Eol()) {}
             if (!Equation()) {
-              throw Eval_Error("Unexpected value in parameter list", File_Position(line, col), filename);
+              throw Eval_Error("Unexpected value in parameter list", File_Position(line, col), *filename);
             }
           } while (retval && Char(','));
         }
@@ -1098,7 +1098,7 @@ namespace chaiscript
           do {
             while (Eol()) {}
             if (!Map_Pair()) {
-              throw Eval_Error("Unexpected value in container", File_Position(line, col), filename);
+              throw Eval_Error("Unexpected value in container", File_Position(line, col), *filename);
             }
           } while (retval && Char(','));
         }
@@ -1111,7 +1111,7 @@ namespace chaiscript
           do {
             while (Eol()) {}
             if (!Operator()) {
-              throw Eval_Error("Unexpected value in container", File_Position(line, col), filename);
+              throw Eval_Error("Unexpected value in container", File_Position(line, col), *filename);
             }
           } while (retval && Char(','));
         }
@@ -1136,14 +1136,14 @@ namespace chaiscript
         if (Char('(')) {
           Arg_List();
           if (!Char(')')) {
-            throw Eval_Error("Incomplete anonymous function", File_Position(line, col), filename);
+            throw Eval_Error("Incomplete anonymous function", File_Position(line, col), *filename);
           }
         }
 
         while (Eol()) {}
 
         if (!Block()) {
-          throw Eval_Error("Incomplete anonymous function", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete anonymous function", File_Position(line, col), *filename);
         }
 
         build_match(AST_NodePtr(new Lambda_AST_Node()), prev_stack_top);
@@ -1174,7 +1174,7 @@ namespace chaiscript
         retval = true;
 
         if (!Id(true)) {
-          throw Eval_Error("Missing function name in definition", File_Position(line, col), filename);
+          throw Eval_Error("Missing function name in definition", File_Position(line, col), *filename);
         }
 
         if (Symbol("::", false)) {
@@ -1182,14 +1182,14 @@ namespace chaiscript
           is_method = true;
 
           if (!Id(true)) {
-            throw Eval_Error("Missing method name in definition", File_Position(line, col), filename);
+            throw Eval_Error("Missing method name in definition", File_Position(line, col), *filename);
           }
         }
 
         if (Char('(')) {
           Arg_List();
           if (!Char(')')) {
-            throw Eval_Error("Incomplete function definition", File_Position(line, col), filename);
+            throw Eval_Error("Incomplete function definition", File_Position(line, col), *filename);
           }
         }
 
@@ -1197,13 +1197,13 @@ namespace chaiscript
 
         if (Char(':')) {
           if (!Operator()) {
-            throw Eval_Error("Missing guard expression for function", File_Position(line, col), filename);
+            throw Eval_Error("Missing guard expression for function", File_Position(line, col), *filename);
           }
         }
 
         while (Eol()) {}
         if (!Block()) {
-          throw Eval_Error("Incomplete function definition", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete function definition", File_Position(line, col), *filename);
         }
 
         if (is_method) {
@@ -1235,7 +1235,7 @@ namespace chaiscript
         while (Eol()) {}
 
         if (!Block()) {
-          throw Eval_Error("Incomplete 'try' block", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete 'try' block", File_Position(line, col), *filename);
         }
 
         bool has_matches = true;
@@ -1246,11 +1246,11 @@ namespace chaiscript
             size_t catch_stack_top = match_stack.size();
             if (Char('(')) {
               if (!(Id(true) && Char(')'))) {
-                throw Eval_Error("Incomplete 'catch' expression", File_Position(line, col), filename);
+                throw Eval_Error("Incomplete 'catch' expression", File_Position(line, col), *filename);
               }
               if (Char(':')) {
                 if (!Operator()) {
-                  throw Eval_Error("Missing guard expression for catch", File_Position(line, col), filename);
+                  throw Eval_Error("Missing guard expression for catch", File_Position(line, col), *filename);
                 }
               }
             }
@@ -1258,7 +1258,7 @@ namespace chaiscript
             while (Eol()) {}
 
             if (!Block()) {
-              throw Eval_Error("Incomplete 'catch' block", File_Position(line, col), filename);
+              throw Eval_Error("Incomplete 'catch' block", File_Position(line, col), *filename);
             }
             build_match(AST_NodePtr(new Catch_AST_Node()), catch_stack_top);
             has_matches = true;
@@ -1271,7 +1271,7 @@ namespace chaiscript
           while (Eol()) {}
 
           if (!Block()) {
-            throw Eval_Error("Incomplete 'finally' block", File_Position(line, col), filename);
+            throw Eval_Error("Incomplete 'finally' block", File_Position(line, col), *filename);
           }
           build_match(AST_NodePtr(new Finally_AST_Node()), finally_stack_top);
         }
@@ -1294,17 +1294,17 @@ namespace chaiscript
         retval = true;
 
         if (!Char('(')) {
-          throw Eval_Error("Incomplete 'if' expression", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete 'if' expression", File_Position(line, col), *filename);
         }
 
         if (!(Operator() && Char(')'))) {
-          throw Eval_Error("Incomplete 'if' expression", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete 'if' expression", File_Position(line, col), *filename);
         }
 
         while (Eol()) {}
 
         if (!Block()) {
-          throw Eval_Error("Incomplete 'if' block", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete 'if' block", File_Position(line, col), *filename);
         }
 
         bool has_matches = true;
@@ -1315,17 +1315,17 @@ namespace chaiscript
             if (Keyword("if")) {
               match_stack.back()->text = "else if";
               if (!Char('(')) {
-                throw Eval_Error("Incomplete 'else if' expression", File_Position(line, col), filename);
+                throw Eval_Error("Incomplete 'else if' expression", File_Position(line, col), *filename);
               }
 
               if (!(Operator() && Char(')'))) {
-                throw Eval_Error("Incomplete 'else if' expression", File_Position(line, col), filename);
+                throw Eval_Error("Incomplete 'else if' expression", File_Position(line, col), *filename);
               }
 
               while (Eol()) {}
 
               if (!Block()) {
-                throw Eval_Error("Incomplete 'else if' block", File_Position(line, col), filename);
+                throw Eval_Error("Incomplete 'else if' block", File_Position(line, col), *filename);
               }
               has_matches = true;
             }
@@ -1333,7 +1333,7 @@ namespace chaiscript
               while (Eol()) {}
 
               if (!Block()) {
-                throw Eval_Error("Incomplete 'else' block", File_Position(line, col), filename);
+                throw Eval_Error("Incomplete 'else' block", File_Position(line, col), *filename);
               }
               has_matches = true;
             }
@@ -1358,17 +1358,17 @@ namespace chaiscript
         retval = true;
 
         if (!Char('(')) {
-          throw Eval_Error("Incomplete 'while' expression", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete 'while' expression", File_Position(line, col), *filename);
         }
 
         if (!(Operator() && Char(')'))) {
-          throw Eval_Error("Incomplete 'while' expression", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete 'while' expression", File_Position(line, col), *filename);
         }
 
         while (Eol()) {}
 
         if (!Block()) {
-          throw Eval_Error("Incomplete 'while' block", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete 'while' block", File_Position(line, col), *filename);
         }
 
         build_match(AST_NodePtr(new While_AST_Node()), prev_stack_top);
@@ -1387,7 +1387,7 @@ namespace chaiscript
         return true;
       }
       else {
-        throw Eval_Error("Incomplete conditions in 'for' loop", File_Position(line, col), filename);
+        throw Eval_Error("Incomplete conditions in 'for' loop", File_Position(line, col), *filename);
       }
     }
 
@@ -1403,17 +1403,17 @@ namespace chaiscript
         retval = true;
 
         if (!Char('(')) {
-          throw Eval_Error("Incomplete 'for' expression", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete 'for' expression", File_Position(line, col), *filename);
         }
 
         if (!(For_Guards() && Char(')'))) {
-          throw Eval_Error("Incomplete 'for' expression", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete 'for' expression", File_Position(line, col), *filename);
         }
 
         while (Eol()) {}
 
         if (!Block()) {
-          throw Eval_Error("Incomplete 'for' block", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete 'for' block", File_Position(line, col), *filename);
         }
 
         build_match(AST_NodePtr(new For_AST_Node()), prev_stack_top);
@@ -1435,7 +1435,7 @@ namespace chaiscript
 
         Statements();
         if (!Char('}')) {
-          throw Eval_Error("Incomplete block", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete block", File_Position(line, col), *filename);
         }
 
         build_match(AST_NodePtr(new Block_AST_Node()), prev_stack_top);
@@ -1499,7 +1499,7 @@ namespace chaiscript
 
             Arg_List();
             if (!Char(')')) {
-              throw Eval_Error("Incomplete function call", File_Position(line, col), filename);
+              throw Eval_Error("Incomplete function call", File_Position(line, col), *filename);
             }
 
             build_match(AST_NodePtr(new Fun_Call_AST_Node()), prev_stack_top);
@@ -1508,7 +1508,7 @@ namespace chaiscript
             has_more = true;
 
             if (!(Operator() && Char(']'))) {
-              throw Eval_Error("Incomplete array access", File_Position(line, col), filename);
+              throw Eval_Error("Incomplete array access", File_Position(line, col), *filename);
             }
 
             build_match(AST_NodePtr(new Array_Call_AST_Node()), prev_stack_top);
@@ -1531,7 +1531,7 @@ namespace chaiscript
         retval = true;
 
         if (!Id(true)) {
-          throw Eval_Error("Incomplete variable declaration", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete variable declaration", File_Position(line, col), *filename);
         }
 
         build_match(AST_NodePtr(new Var_Decl_AST_Node()), prev_stack_top);
@@ -1540,13 +1540,13 @@ namespace chaiscript
         retval = true;
 
         if (!Id(true)) {
-          throw Eval_Error("Incomplete attribute declaration", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete attribute declaration", File_Position(line, col), *filename);
         }
         if (!Symbol("::", false)) {
-          throw Eval_Error("Incomplete attribute declaration", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete attribute declaration", File_Position(line, col), *filename);
         }
         if (!Id(true)) {
-          throw Eval_Error("Missing attribute name in definition", File_Position(line, col), filename);
+          throw Eval_Error("Missing attribute name in definition", File_Position(line, col), *filename);
         }
 
 
@@ -1565,10 +1565,10 @@ namespace chaiscript
       if (Char('(')) {
         retval = true;
         if (!Operator()) {
-          throw Eval_Error("Incomplete expression", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete expression", File_Position(line, col), *filename);
         }
         if (!Char(')')) {
-          throw Eval_Error("Missing closing parenthesis", File_Position(line, col), filename);
+          throw Eval_Error("Missing closing parenthesis", File_Position(line, col), *filename);
         }
       }
       return retval;
@@ -1586,7 +1586,7 @@ namespace chaiscript
         retval = true;
         Container_Arg_List();
         if (!Char(']')) {
-          throw Eval_Error("Missing closing square bracket", File_Position(line, col), filename);
+          throw Eval_Error("Missing closing square bracket", File_Position(line, col), *filename);
         }
         if ((prev_stack_top != match_stack.size()) && (match_stack.back()->children.size() > 0)) {
           if (match_stack.back()->children[0]->identifier == AST_Node_Type::Value_Range) {
@@ -1619,7 +1619,7 @@ namespace chaiscript
         retval = true;
 
         if (!Operator(operators.size()-1)) {
-          throw Eval_Error("Incomplete '++' expression", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete '++' expression", File_Position(line, col), *filename);
         }
 
         build_match(AST_NodePtr(new Prefix_AST_Node()), prev_stack_top);
@@ -1628,7 +1628,7 @@ namespace chaiscript
         retval = true;
 
         if (!Operator(operators.size()-1)) {
-          throw Eval_Error("Incomplete '--' expression", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete '--' expression", File_Position(line, col), *filename);
         }
 
         build_match(AST_NodePtr(new Prefix_AST_Node()), prev_stack_top);
@@ -1637,7 +1637,7 @@ namespace chaiscript
         retval = true;
 
         if (!Operator(operators.size()-1)) {
-          throw Eval_Error("Incomplete unary '-' expression", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete unary '-' expression", File_Position(line, col), *filename);
         }
 
         build_match(AST_NodePtr(new Prefix_AST_Node()), prev_stack_top);
@@ -1646,7 +1646,7 @@ namespace chaiscript
         retval = true;
 
         if (!Operator(operators.size()-1)) {
-          throw Eval_Error("Incomplete unary '+' expression", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete unary '+' expression", File_Position(line, col), *filename);
         }
 
         build_match(AST_NodePtr(new Prefix_AST_Node()), prev_stack_top);
@@ -1655,7 +1655,7 @@ namespace chaiscript
         retval = true;
 
         if (!Operator(operators.size()-1)) {
-          throw Eval_Error("Incomplete '!' expression", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete '!' expression", File_Position(line, col), *filename);
         }
 
         build_match(AST_NodePtr(new Prefix_AST_Node()), prev_stack_top);
@@ -1664,7 +1664,7 @@ namespace chaiscript
         retval = true;
 
         if (!Operator(operators.size()-1)) {
-          throw Eval_Error("Incomplete '~' expression", File_Position(line, col), filename);
+          throw Eval_Error("Incomplete '~' expression", File_Position(line, col), *filename);
         }
 
         build_match(AST_NodePtr(new Prefix_AST_Node()), prev_stack_top);
@@ -1707,7 +1707,7 @@ namespace chaiscript
             do {
               if (!Operator(precedence+1)) {
                 throw Eval_Error("Incomplete " + std::string(ast_node_type_to_string(operators[precedence])) + " expression",
-                                 File_Position(line, col), filename);
+                                 File_Position(line, col), *filename);
               }
             } while (Operator_Helper(precedence));
 
@@ -1746,7 +1746,7 @@ namespace chaiscript
               build_match(AST_NodePtr(new Logical_Or_AST_Node()), prev_stack_top);
               break;
             default:
-              throw Eval_Error("Internal error: unhandled ast_node", File_Position(line, col), filename); 
+              throw Eval_Error("Internal error: unhandled ast_node", File_Position(line, col), *filename); 
             }
           }
         }
@@ -1772,7 +1772,7 @@ namespace chaiscript
         if (Symbol(":")) {
           retval = true;
           if (!Operator()) {
-            throw Eval_Error("Incomplete map pair", File_Position(line, col), filename);
+            throw Eval_Error("Incomplete map pair", File_Position(line, col), *filename);
           }
 
           build_match(AST_NodePtr(new Map_Pair_AST_Node()), prev_stack_top);
@@ -1803,7 +1803,7 @@ namespace chaiscript
         if (Symbol("..")) {
           retval = true;
           if (!Operator()) {
-            throw Eval_Error("Incomplete value range", File_Position(line, col), filename);
+            throw Eval_Error("Incomplete value range", File_Position(line, col), *filename);
           }
 
           build_match(AST_NodePtr(new Value_Range_AST_Node()), prev_stack_top);
@@ -1835,7 +1835,7 @@ namespace chaiscript
             Symbol("%=", true, true) || Symbol("<<=", true, true) || Symbol(">>=", true, true) ||
             Symbol("&=", true, true) || Symbol("^=", true, true) || Symbol("|=", true, true)) {
           if (!Equation()) {
-            throw Eval_Error("Incomplete equation", File_Position(line, col), filename);
+            throw Eval_Error("Incomplete equation", File_Position(line, col), *filename);
           }
 
           build_match(AST_NodePtr(new Equation_AST_Node()), prev_stack_top);
@@ -1860,7 +1860,7 @@ namespace chaiscript
         int prev_col = col;
         if (Def()) {
           if (!saw_eol) {
-            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), filename);
+            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *filename);
           }
           has_more = true;
           retval = true;
@@ -1868,7 +1868,7 @@ namespace chaiscript
         }
         else if (Try()) {
           if (!saw_eol) {
-            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), filename);
+            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *filename);
           }
           has_more = true;
           retval = true;
@@ -1876,7 +1876,7 @@ namespace chaiscript
         }
         else if (If()) {
           if (!saw_eol) {
-            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), filename);
+            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *filename);
           }
           has_more = true;
           retval = true;
@@ -1884,7 +1884,7 @@ namespace chaiscript
         }
         else if (While()) {
           if (!saw_eol) {
-            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), filename);
+            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *filename);
           }
           has_more = true;
           retval = true;
@@ -1892,7 +1892,7 @@ namespace chaiscript
         }
         else if (For()) {
           if (!saw_eol) {
-            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), filename);
+            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *filename);
           }
           has_more = true;
           retval = true;
@@ -1900,7 +1900,7 @@ namespace chaiscript
         }
         else if (Return()) {
           if (!saw_eol) {
-            throw Eval_Error("Two expressions missing line separator", File_Position(prev_line, prev_col), filename);
+            throw Eval_Error("Two expressions missing line separator", File_Position(prev_line, prev_col), *filename);
           }
           has_more = true;
           retval = true;
@@ -1908,7 +1908,7 @@ namespace chaiscript
         }
         else if (Break()) {
           if (!saw_eol) {
-            throw Eval_Error("Two expressions missing line separator", File_Position(prev_line, prev_col), filename);
+            throw Eval_Error("Two expressions missing line separator", File_Position(prev_line, prev_col), *filename);
           }
           has_more = true;
           retval = true;
@@ -1916,7 +1916,7 @@ namespace chaiscript
         }
         else if (Equation()) {
           if (!saw_eol) {
-            throw Eval_Error("Two expressions missing line separator", File_Position(prev_line, prev_col), filename);
+            throw Eval_Error("Two expressions missing line separator", File_Position(prev_line, prev_col), *filename);
           }
           has_more = true;
           retval = true;
@@ -1943,11 +1943,12 @@ namespace chaiscript
     /**
      * Parses the given input string, tagging parsed ast_nodes with the given filename.
      */
-    bool parse(const std::string &input, const char *fname) {
+    bool parse(const std::string &input, const std::string &fname) {
       input_pos = input.begin();
       input_end = input.end();
-      line = 1; col = 1;
-      filename = fname;
+      line = 1; 
+      col = 1;
+      filename = boost::shared_ptr<std::string>(new std::string(fname));
 
       if ((input.size() > 1) && (input[0] == '#') && (input[1] == '!')) {
         while ((input_pos != input_end) && (!Eol())) {

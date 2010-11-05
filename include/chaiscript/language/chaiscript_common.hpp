@@ -63,34 +63,21 @@ namespace chaiscript
   struct AST_Node {
     std::string text;
     int identifier;
-    const char *filename;
+    boost::shared_ptr<std::string> filename;
     File_Position start, end;
-    /*
-    bool is_cached;
-    Boxed_Value cached_value;
-    */
     std::vector<AST_NodePtr> children;
     AST_NodePtr annotation;
 
-    AST_Node(const std::string &ast_node_text, int id, const char *fname, int start_line, int start_col, int end_line, int end_col) :
-      text(ast_node_text), identifier(id), filename(fname)/*, is_cached(false)*/ {
-
-      start.line = start_line;
-      start.column = start_col;
-      end.line = end_line;
-      end.column = end_col;
+    AST_Node(const std::string &ast_node_text, int id, const boost::shared_ptr<std::string> &fname, int start_line, int start_col, int end_line, int end_col) :
+      text(ast_node_text), identifier(id), filename(fname),
+      start(start_line, start_col), end(end_line, end_col)
+    {
     }
-    AST_Node(const std::string &ast_node_text, int id, const char *fname) :
-      text(ast_node_text), identifier(id), filename(fname)/*, is_cached(false)*/ { }
+
+    AST_Node(const std::string &ast_node_text, int id, const boost::shared_ptr<std::string> &fname) :
+      text(ast_node_text), identifier(id), filename(fname) {}
 
     virtual ~AST_Node() {}
-
-    /*
-    void cache_const(const Boxed_Value &value) {
-      this->cached_value = value;
-      this->is_cached = true;
-    }
-    */
 
     /**
      * Prints the contents of an AST node, including its children, recursively
@@ -127,12 +114,12 @@ namespace chaiscript
     std::string reason;
     File_Position start_position;
     File_Position end_position;
-    const char *filename;
+    std::string filename;
     std::vector<AST_NodePtr> call_stack;
 
-    Eval_Error(const std::string &why, const File_Position &where, const char *fname) :
+    Eval_Error(const std::string &why, const File_Position &where, const std::string &fname) :
       std::runtime_error("Error: \"" + why + "\" " +
-                         (std::string(fname) != "__EVAL__" ? ("in '" + std::string(fname) + "' ") : "during evaluation ") +
+                         (std::string(fname) != "__EVAL__" ? ("in '" + fname + "' ") : "during evaluation ") +
                          + "at (" + boost::lexical_cast<std::string>(where.line) + ", " +
                          boost::lexical_cast<std::string>(where.column) + ")"),
       reason(why), start_position(where), end_position(where), filename(fname)

@@ -236,9 +236,9 @@ namespace chaiscript
     /**
      * Evaluates the given string in by parsing it and running the results through the evaluator
      */
-    Boxed_Value do_eval(const std::string &input, const std::string &filename = "__EVAL__", bool /* internal*/  = false) {
+    Boxed_Value do_eval(const std::string &input, const std::string &filename = "__EVAL__", bool /* internal*/  = false) 
+    {
       ChaiScript_Parser parser;
-
 
       //debug_print(ast_nodes);
       Boxed_Value value;
@@ -248,29 +248,29 @@ namespace chaiscript
       // around and copying strings
       // 
       if (filename != "__EVAL__")
-        {
+      {
 #ifndef CHAISCRIPT_NO_THREADS
-          boost::unique_lock<boost::shared_mutex> l(mutex);
+        boost::unique_lock<boost::shared_mutex> l(mutex);
 #endif
-          loaded_files.insert(filename);
-          try {
-            if (parser.parse(input, loaded_files.find(filename)->c_str())) {
+        loaded_files.insert(filename);
+        try {
+          if (parser.parse(input, *(loaded_files.find(filename)))) {
 #ifndef CHAISCRIPT_NO_THREADS
-              l.unlock();
+            l.unlock();
 #endif
-              //parser.show_match_stack();
-              value = parser.ast()->eval(engine);//eval_ast_node<Eval_Engine>(engine, parser.ast());
-            }
+            //parser.show_match_stack();
+            value = parser.ast()->eval(engine);//eval_ast_node<Eval_Engine>(engine, parser.ast());
           }
-          catch (const Return_Value &rv) {
-            value = rv.retval;
-          }
-        } else {
+        }
+        catch (const Return_Value &rv) {
+          value = rv.retval;
+        }
+      } else {
         try {
 #ifndef CHAISCRIPT_NO_THREADS
           boost::shared_lock<boost::shared_mutex> l(mutex);
 #endif
-          const char *fname = loaded_files.find("__EVAL__")->c_str();
+          std::string fname = *(loaded_files.find("__EVAL__"));
 #ifndef CHAISCRIPT_NO_THREADS
           l.unlock();
 #endif
@@ -339,16 +339,17 @@ namespace chaiscript
   public:
     ChaiScript_System(const std::vector<std::string> &t_modulepaths = std::vector<std::string>(),
                       const std::vector<std::string> &t_usepaths = std::vector<std::string>())
-      : modulepaths(t_modulepaths), usepaths(t_usepaths) {
+      : modulepaths(t_modulepaths), usepaths(t_usepaths) 
+    {
       if (modulepaths.empty())
-        {
-          modulepaths.push_back("");
-        }
+      {
+        modulepaths.push_back("");
+      }
 
       if (usepaths.empty())
-        {
-          usepaths.push_back("");
-        }
+      {
+        usepaths.push_back("");
+      }
 
       loaded_files.insert("__EVAL__"); // Make sure the default name is already registered
       build_eval_system();
@@ -538,13 +539,11 @@ namespace chaiscript
       std::streampos size = infile.tellg();
       infile.seekg(0, std::ios::beg);
 
-	  assert(size >= 0);
+      assert(size >= 0);
       std::vector<char> v(static_cast<unsigned int>(size));
       infile.read(&v[0], size);
 
-      std::string ret_val (v.empty() ? std::string() : std::string (v.begin(), v.end()).c_str());
-
-      return ret_val;
+      return std::string(v.begin(), v.end());
     }
 
     /**
