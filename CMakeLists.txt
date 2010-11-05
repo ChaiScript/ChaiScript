@@ -51,6 +51,9 @@ endif(READLINE_LIBRARY)
 
 IF(MSVC)
   ADD_DEFINITIONS(/W4)
+  IF(CMAKE_CL_64)
+    ADD_DEFINITIONS(/bigobj)
+   ENDIF()
 ELSE()
   # -Wno-missing-field-initializers is for boost on macos
   ADD_DEFINITIONS(-Wall -Wextra -Wno-missing-field-initializers)
