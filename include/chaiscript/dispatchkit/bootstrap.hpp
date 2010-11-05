@@ -453,7 +453,7 @@ namespace chaiscript
       {
         if (params.size() < 2)
         {
-          throw arity_error(params.size(), 2);
+          throw arity_error(static_cast<int>(params.size()), 2);
         }
 
         Const_Proxy_Function f = boxed_cast<Const_Proxy_Function>(params[0]);
@@ -470,7 +470,7 @@ namespace chaiscript
       {
         if (params.size() < 1)
         {
-          throw arity_error(params.size(), 1);
+          throw arity_error(static_cast<int>(params.size()), 1);
         }
 
         Const_Proxy_Function f = boxed_cast<Const_Proxy_Function>(params[0]);

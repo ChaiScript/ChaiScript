@@ -416,7 +416,7 @@ namespace chaiscript
 
       virtual int get_arity() const
       {
-        return m_types.size() - 1;
+        return static_cast<int>(m_types.size()) - 1;
       }
 
 

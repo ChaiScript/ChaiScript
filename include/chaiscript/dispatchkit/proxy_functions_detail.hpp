@@ -105,7 +105,7 @@ namespace chaiscript
     {
       if (params.size() != n)
       {
-        throw arity_error(params.size(), n);
+        throw arity_error(static_cast<int>(params.size()), n);
       } else {
         return f(BOOST_PP_REPEAT(n, casthelper, ~));
       }
