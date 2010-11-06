@@ -29,8 +29,8 @@ namespace chaiscript
 {
   struct load_module_error : std::runtime_error
   {
-    load_module_error(const std::string &reason) throw()
-      : std::runtime_error(reason)
+    load_module_error(const std::string &t_reason) throw()
+      : std::runtime_error(t_reason)
     {
     }
 
@@ -97,32 +97,32 @@ namespace chaiscript
   struct Loadable_Module
   {
     template<typename T>
-    static std::wstring towstring(const T &str) 
+    static std::wstring towstring(const T &t_str) 
     {
-      return std::wstring(str.begin(), str.end());
+      return std::wstring(t_str.begin(), t_str.end());
     }
 
     template<typename T>
-    static std::string tostring(const T &str)
+    static std::string tostring(const T &t_str)
     {
-      return std::string(str.begin(), str.end());
+      return std::string(t_str.begin(), t_str.end());
     }
 
 #ifdef _UNICODE
     template<typename T>
-    static std::wstring toproperstring(const T &str)
+    static std::wstring toproperstring(const T &t_str)
     {
-      return towstring(str);
+      return towstring(t_str);
     }
 #else
     template<typename T>
-    static std::string toproperstring(const T &str)
+    static std::string toproperstring(const T &t_str)
     {
-      return tostring(str);
+      return tostring(t_str);
     }
 #endif
 
-    static std::string GetErrorMessage(DWORD err)
+    static std::string GetErrorMessage(DWORD t_err)
     {
 #ifdef _UNICODE
       typedef LPWSTR StringType;
@@ -134,19 +134,19 @@ namespace chaiscript
       StringType lpMsgBuf = 0;
 
       FormatMessage(
-                    FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-                    FORMAT_MESSAGE_FROM_SYSTEM |
-                    FORMAT_MESSAGE_IGNORE_INSERTS,
-                    NULL,
-                    err,
-                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                    (StringType)&lpMsgBuf,
-                    0, NULL );        
+          FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+          FORMAT_MESSAGE_FROM_SYSTEM |
+          FORMAT_MESSAGE_IGNORE_INSERTS,
+          NULL,
+          t_err,
+          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+          (StringType)&lpMsgBuf,
+          0, NULL );        
 
       if (lpMsgBuf)
-        {
-          retval = lpMsgBuf;
-        }
+      {
+        retval = lpMsgBuf;
+      }
 
       LocalFree(lpMsgBuf);
       return tostring(retval);
@@ -215,159 +215,118 @@ namespace chaiscript
 
   typedef boost::shared_ptr<Loadable_Module> Loadable_Module_Ptr;
 
-
-  template <typename Eval_Engine>
-  class ChaiScript_System {
+  class ChaiScript {
 #ifndef CHAISCRIPT_NO_THREADS
-    mutable boost::shared_mutex mutex;
-    mutable boost::recursive_mutex use_mutex;
+    mutable boost::shared_mutex m_mutex;
+    mutable boost::recursive_mutex m_use_mutex;
 #endif
 
-    std::set<std::string> loaded_files;
-    std::map<std::string, Loadable_Module_Ptr> loaded_modules;
-    std::set<std::string> active_loaded_modules;
+    std::set<std::string> m_used_files;
+    std::map<std::string, Loadable_Module_Ptr> m_loaded_modules;
+    std::set<std::string> m_active_loaded_modules;
 
-    std::vector<std::string> modulepaths;
-    std::vector<std::string> usepaths;
+    std::vector<std::string> m_modulepaths;
+    std::vector<std::string> m_usepaths;
 
-    Eval_Engine engine;
+    Dispatch_Engine m_engine;
 
 
     /**
      * Evaluates the given string in by parsing it and running the results through the evaluator
      */
-    Boxed_Value do_eval(const std::string &input, const std::string &filename = "__EVAL__", bool /* internal*/  = false) 
+    Boxed_Value do_eval(const std::string &t_input, const std::string &t_filename = "__EVAL__", bool /* t_internal*/  = false) 
     {
-      ChaiScript_Parser parser;
-
-      //debug_print(ast_nodes);
-      Boxed_Value value;
-
-      // Keep a cache of all loaded filenames and use the char * from this cache to pass 
-      // to the parser. This is so that the parser does not have the overhead of passing 
-      // around and copying strings
-      // 
-      if (filename != "__EVAL__")
-      {
-#ifndef CHAISCRIPT_NO_THREADS
-        boost::unique_lock<boost::shared_mutex> l(mutex);
-#endif
-        loaded_files.insert(filename);
-        try {
-          if (parser.parse(input, *(loaded_files.find(filename)))) {
-#ifndef CHAISCRIPT_NO_THREADS
-            l.unlock();
-#endif
-            //parser.show_match_stack();
-            value = parser.ast()->eval(engine);//eval_ast_node<Eval_Engine>(engine, parser.ast());
-          }
-        }
-        catch (const Return_Value &rv) {
-          value = rv.retval;
-        }
-      } else {
-        try {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::shared_lock<boost::shared_mutex> l(mutex);
-#endif
-          std::string fname = *(loaded_files.find("__EVAL__"));
-#ifndef CHAISCRIPT_NO_THREADS
-          l.unlock();
-#endif
- 
-          if (parser.parse(input, fname)) {
-            //parser.show_match_stack();
-            value = parser.ast()->eval(engine);
-          }
-        }
-        catch (const Return_Value &rv) {
-          value = rv.retval;
+      try {
+        ChaiScript_Parser parser;
+        if (parser.parse(t_input, t_filename)) {
+          //parser.show_match_stack();
+          return parser.ast()->eval(m_engine);
+        } else {
+          return Boxed_Value();
         }
       }
-
-      return value;
+      catch (const Return_Value &rv) {
+        return rv.retval;
+      }
     }
 
 
-    const Boxed_Value internal_eval_ast(const AST_NodePtr &ast)
+    const Boxed_Value internal_eval_ast(const AST_NodePtr &t_ast)
     {
-      return ast->eval(engine);
+      return t_ast->eval(m_engine);
     }
 
     /**
      * Evaluates the given boxed string, used during eval() inside of a script
      */
-    const Boxed_Value internal_eval(const std::string &e) {
-      return do_eval(e, "__EVAL__", true);
+    const Boxed_Value internal_eval(const std::string &t_e) {
+      return do_eval(t_e, "__EVAL__", true);
     }
 
-    void use(const std::string &filename)
+    void use(const std::string &t_filename)
     {
-      for (size_t i = 0; i < usepaths.size(); ++i)
-        {
+      for (size_t i = 0; i < m_usepaths.size(); ++i)
+      {
 
-          try {
-
-            const std::string appendedpath = usepaths[i] + filename;
+        try {
+          const std::string appendedpath = m_usepaths[i] + t_filename;
 
 #ifndef CHAISCRIPT_NO_THREADS
-            boost::lock_guard<boost::recursive_mutex> l(use_mutex);
-            boost::shared_lock<boost::shared_mutex> l2(mutex);
+          boost::lock_guard<boost::recursive_mutex> l(m_use_mutex);
+          boost::shared_lock<boost::shared_mutex> l2(m_mutex);
 #endif
 
-            if (loaded_files.count(appendedpath) == 0)
-            {
+          if (m_used_files.count(appendedpath) == 0)
+          {
 #ifndef CHAISCRIPT_NO_THREADS
-              l2.unlock();
+            m_used_files.insert(appendedpath);
+            l2.unlock();
 #endif
-              eval_file(appendedpath);
-            }
-          } catch (const File_Not_Found_Error &) {
-            if (i == usepaths.size() - 1)
-            {
-              throw File_Not_Found_Error(filename);
-            }
-
-            // failed to load, try the next path
+            eval_file(appendedpath);
+          }
+        } catch (const File_Not_Found_Error &) {
+          if (i == m_usepaths.size() - 1)
+          {
+            throw File_Not_Found_Error(t_filename);
           }
 
+          // failed to load, try the next path
         }
-
+      }
     }
 
 
   public:
-    ChaiScript_System(const std::vector<std::string> &t_modulepaths = std::vector<std::string>(),
+    ChaiScript(const std::vector<std::string> &t_modulepaths = std::vector<std::string>(),
                       const std::vector<std::string> &t_usepaths = std::vector<std::string>())
-      : modulepaths(t_modulepaths), usepaths(t_usepaths) 
+      : m_modulepaths(t_modulepaths), m_usepaths(t_usepaths) 
     {
-      if (modulepaths.empty())
+      if (m_modulepaths.empty())
       {
-        modulepaths.push_back("");
+        m_modulepaths.push_back("");
       }
 
-      if (usepaths.empty())
+      if (m_usepaths.empty())
       {
-        usepaths.push_back("");
+        m_usepaths.push_back("");
       }
 
-      loaded_files.insert("__EVAL__"); // Make sure the default name is already registered
       build_eval_system();
     }
 
     /**
      * Adds a shared object, that can be used by all threads, to the system
      */
-    ChaiScript_System &add_global_const(const Boxed_Value &bv, const std::string &name)
+    ChaiScript &add_global_const(const Boxed_Value &t_bv, const std::string &t_name)
     {
-      engine.add_global_const(bv, name);
+      m_engine.add_global_const(t_bv, t_name);
       return *this;
     }
 
     struct State
     {
-      std::set<std::string> loaded_files;
-      typename Eval_Engine::State engine_state;
+      std::set<std::string> used_files;
+      Dispatch_Engine::State engine_state;
       std::set<std::string> active_loaded_modules;
     };
 
@@ -379,14 +338,14 @@ namespace chaiscript
     State get_state()
     {
 #ifndef CHAISCRIPT_NO_THREADS
-      boost::lock_guard<boost::recursive_mutex> l(use_mutex);
-      boost::shared_lock<boost::shared_mutex> l2(mutex);
+      boost::lock_guard<boost::recursive_mutex> l(m_use_mutex);
+      boost::shared_lock<boost::shared_mutex> l2(m_mutex);
 #endif
 
       State s;
-      s.loaded_files = loaded_files;
-      s.engine_state = engine.get_state();
-      s.active_loaded_modules = active_loaded_modules;
+      s.used_files = m_used_files;
+      s.engine_state = m_engine.get_state();
+      s.active_loaded_modules = m_active_loaded_modules;
       return s;
     }
 
@@ -396,31 +355,31 @@ namespace chaiscript
     void set_state(const State &t_state)
     {
 #ifndef CHAISCRIPT_NO_THREADS
-      boost::lock_guard<boost::recursive_mutex> l(use_mutex);
-      boost::shared_lock<boost::shared_mutex> l2(mutex);
+      boost::lock_guard<boost::recursive_mutex> l(m_use_mutex);
+      boost::shared_lock<boost::shared_mutex> l2(m_mutex);
 #endif
 
-      loaded_files = t_state.loaded_files;
-      active_loaded_modules = t_state.active_loaded_modules;
-      engine.set_state(t_state.engine_state);
+      m_used_files = t_state.used_files;
+      m_active_loaded_modules = t_state.active_loaded_modules;
+      m_engine.set_state(t_state.engine_state);
     }
 
     /**
      * Adds an object to the system: type, function, object
      */
     template<typename T>
-    ChaiScript_System &add(const T &t, const std::string &name)
+    ChaiScript &add(const T &t_t, const std::string &t_name)
     {
-      engine.add(t, name);
+      m_engine.add(t_t, t_name);
       return *this;
     }
 
     /**
      * Adds a module object to the system
      */
-    ChaiScript_System &add(const ModulePtr &p)
+    ChaiScript &add(const ModulePtr &t_p)
     {
-      p->apply(*this, this->get_eval_engine());
+      t_p->apply(*this, this->get_eval_engine());
       return *this;
     }
 
@@ -440,14 +399,14 @@ namespace chaiscript
       postfixes.push_back(".so");
       postfixes.push_back("");
 
-      for (size_t i = 0; i < modulepaths.size(); ++i)
+      for (size_t i = 0; i < m_modulepaths.size(); ++i)
         {
           for (size_t j = 0; j < prefixes.size(); ++j)
             {
               for (size_t k = 0; k < postfixes.size(); ++k)
                 {
                   try {
-                    std::string name = modulepaths[i] + prefixes[j] + t_module_name + postfixes[k];
+                    std::string name = m_modulepaths[i] + prefixes[j] + t_module_name + postfixes[k];
                     load_module(t_module_name, name);
                     return;
                   } catch (const load_module_error &e) {
@@ -481,18 +440,18 @@ namespace chaiscript
     void load_module(const std::string &t_module_name, const std::string &t_filename)
     {
 #ifndef CHAISCRIPT_NO_THREADS
-      boost::lock_guard<boost::recursive_mutex> l(use_mutex);
+      boost::lock_guard<boost::recursive_mutex> l(m_use_mutex);
 #endif
 
-      if (loaded_modules.count(t_module_name) == 0)
+      if (m_loaded_modules.count(t_module_name) == 0)
       {
         Loadable_Module_Ptr lm(new Loadable_Module(t_module_name, t_filename));
-        loaded_modules[t_module_name] = lm;
-        active_loaded_modules.insert(t_module_name);
+        m_loaded_modules[t_module_name] = lm;
+        m_active_loaded_modules.insert(t_module_name);
         add(lm->m_moduleptr);
-      } else if (active_loaded_modules.count(t_module_name) == 0) {
-        active_loaded_modules.insert(t_module_name);
-        add(loaded_modules[t_module_name]->m_moduleptr);
+      } else if (m_active_loaded_modules.count(t_module_name) == 0) {
+        m_active_loaded_modules.insert(t_module_name);
+        add(m_loaded_modules[t_module_name]->m_moduleptr);
       } 
     }
 
@@ -505,35 +464,35 @@ namespace chaiscript
      * \param[in] script Script code to build a function from
      */
     template<typename FunctionType>
-    boost::function<FunctionType> functor(const std::string &script)
+    boost::function<FunctionType> functor(const std::string &t_script)
     {
-      return chaiscript::functor<FunctionType>(eval(script));
+      return chaiscript::functor<FunctionType>(eval(t_script));
     }
 
     /**
      * Evaluate a string via eval method
      */
-    Boxed_Value operator()(const std::string &script)
+    Boxed_Value operator()(const std::string &t_script)
     {
-      return do_eval(script);
+      return do_eval(t_script);
     }
 
 
     /**
-     * Returns the current evaluation engine
+     * Returns the current evaluation m_engine
      */
-    Eval_Engine &get_eval_engine() {
-      return engine;
+    Dispatch_Engine &get_eval_engine() {
+      return m_engine;
     }
 
     /**
      * Helper function for loading a file
      */
-    std::string load_file(const std::string &filename) {
-      std::ifstream infile (filename.c_str(), std::ios::in | std::ios::ate);
+    std::string load_file(const std::string &t_filename) {
+      std::ifstream infile(t_filename.c_str(), std::ios::in | std::ios::ate);
 
       if (!infile.is_open()) {
-        throw File_Not_Found_Error(filename);
+        throw File_Not_Found_Error(t_filename);
       }
 
       std::streampos size = infile.tellg();
@@ -551,82 +510,79 @@ namespace chaiscript
      */
     void build_eval_system() {
       using namespace bootstrap;
-      engine.add_reserved_word("def");
-      engine.add_reserved_word("fun");
-      engine.add_reserved_word("while");
-      engine.add_reserved_word("for");
-      engine.add_reserved_word("if");
-      engine.add_reserved_word("else");
-      engine.add_reserved_word("&&");
-      engine.add_reserved_word("||");
-      engine.add_reserved_word(",");
-      engine.add_reserved_word(":=");
-      engine.add_reserved_word("var");
-      engine.add_reserved_word("return");
-      engine.add_reserved_word("break");
-      engine.add_reserved_word("true");
-      engine.add_reserved_word("false");
-      engine.add_reserved_word("_");
+      m_engine.add_reserved_word("def");
+      m_engine.add_reserved_word("fun");
+      m_engine.add_reserved_word("while");
+      m_engine.add_reserved_word("for");
+      m_engine.add_reserved_word("if");
+      m_engine.add_reserved_word("else");
+      m_engine.add_reserved_word("&&");
+      m_engine.add_reserved_word("||");
+      m_engine.add_reserved_word(",");
+      m_engine.add_reserved_word(":=");
+      m_engine.add_reserved_word("var");
+      m_engine.add_reserved_word("return");
+      m_engine.add_reserved_word("break");
+      m_engine.add_reserved_word("true");
+      m_engine.add_reserved_word("false");
+      m_engine.add_reserved_word("_");
 
       add(Bootstrap::bootstrap());
 
-      engine.add(fun(&Eval_Engine::dump_system, boost::ref(engine)), "dump_system");
-      engine.add(fun(&Eval_Engine::dump_object, boost::ref(engine)), "dump_object");
-      engine.add(fun(&Eval_Engine::is_type, boost::ref(engine)), "is_type");
-      engine.add(fun(&Eval_Engine::type_name, boost::ref(engine)), "type_name");
-      engine.add(fun(&Eval_Engine::function_exists, boost::ref(engine)), "function_exists");
+      m_engine.add(fun(&Dispatch_Engine::dump_system, boost::ref(m_engine)), "dump_system");
+      m_engine.add(fun(&Dispatch_Engine::dump_object, boost::ref(m_engine)), "dump_object");
+      m_engine.add(fun(&Dispatch_Engine::is_type, boost::ref(m_engine)), "is_type");
+      m_engine.add(fun(&Dispatch_Engine::type_name, boost::ref(m_engine)), "type_name");
+      m_engine.add(fun(&Dispatch_Engine::function_exists, boost::ref(m_engine)), "function_exists");
 
-      engine.add(fun(&Eval_Engine::get_type_name, boost::ref(engine)), "name");
+      m_engine.add(fun(&Dispatch_Engine::get_type_name, boost::ref(m_engine)), "name");
 
 
-      typedef void (ChaiScript_System<Eval_Engine>::*load_mod_1)(const std::string&);
-      typedef void (ChaiScript_System<Eval_Engine>::*load_mod_2)(const std::string&, const std::string&);
+      typedef void (ChaiScript::*load_mod_1)(const std::string&);
+      typedef void (ChaiScript::*load_mod_2)(const std::string&, const std::string&);
 
-      engine.add(fun(static_cast<load_mod_1>(&ChaiScript_System<Eval_Engine>::load_module), this), "load_module");
-      engine.add(fun(static_cast<load_mod_2>(&ChaiScript_System<Eval_Engine>::load_module), this), "load_module");
+      m_engine.add(fun(static_cast<load_mod_1>(&ChaiScript::load_module), this), "load_module");
+      m_engine.add(fun(static_cast<load_mod_2>(&ChaiScript::load_module), this), "load_module");
 
       add(vector_type<std::vector<Boxed_Value> >("Vector"));
       add(string_type<std::string>("string"));
       add(map_type<std::map<std::string, Boxed_Value> >("Map"));
       add(pair_type<std::pair<Boxed_Value, Boxed_Value > >("Pair"));
 
-      engine.add(fun(&ChaiScript_System<Eval_Engine>::use, this), "use");
-      engine.add(fun(&ChaiScript_System<Eval_Engine>::internal_eval, this), "eval");
-      engine.add(fun(&ChaiScript_System<Eval_Engine>::internal_eval_ast, this), "eval");
-
-
+      m_engine.add(fun(&ChaiScript::use, this), "use");
+      m_engine.add(fun(&ChaiScript::internal_eval, this), "eval");
+      m_engine.add(fun(&ChaiScript::internal_eval_ast, this), "eval");
 
       do_eval(chaiscript_prelude, "standard prelude");
     }
 
     template<typename T>
-    T eval(const std::string &input)
+    T eval(const std::string &t_input)
     {
-      return boxed_cast<T>(do_eval(input));
+      return boxed_cast<T>(do_eval(t_input));
     }
 
-    Boxed_Value eval(const std::string &input)
+    Boxed_Value eval(const std::string &t_input)
     {
-      return do_eval(input);
+      return do_eval(t_input);
     }
 
     /**
      * Loads the file specified by filename, evaluates it, and returns the result
      */
-    Boxed_Value eval_file(const std::string &filename) {
-      return do_eval(load_file(filename), filename);
+    Boxed_Value eval_file(const std::string &t_filename) {
+      return do_eval(load_file(t_filename), t_filename);
     }
 
     /**
      * Loads the file specified by filename, evaluates it, and returns the as the specified type
      */
     template<typename T>
-    T eval_file(const std::string &filename) {
-      return boxed_cast<T>(do_eval(load_file(filename), filename));
+    T eval_file(const std::string &t_filename) {
+      return boxed_cast<T>(do_eval(load_file(t_filename), t_filename));
     }
   };
 
-  typedef ChaiScript_System<Dispatch_Engine> ChaiScript;
 }
 #endif /* CHAISCRIPT_ENGINE_HPP_ */
 

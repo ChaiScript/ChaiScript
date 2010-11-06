@@ -49,8 +49,8 @@ namespace chaiscript
     int line;
     int column;
 
-    File_Position(int file_line, int file_column)
-      : line(file_line), column(file_column) { }
+    File_Position(int t_file_line, int t_file_column)
+      : line(t_file_line), column(t_file_column) { }
 
     File_Position() : line(0), column(0) { }
   };
@@ -68,28 +68,29 @@ namespace chaiscript
     std::vector<AST_NodePtr> children;
     AST_NodePtr annotation;
 
-    AST_Node(const std::string &ast_node_text, int id, const boost::shared_ptr<std::string> &fname, int start_line, int start_col, int end_line, int end_col) :
-      text(ast_node_text), identifier(id), filename(fname),
-      start(start_line, start_col), end(end_line, end_col)
+    AST_Node(const std::string &t_ast_node_text, int t_id, const boost::shared_ptr<std::string> &t_fname, 
+             int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
+      text(t_ast_node_text), identifier(t_id), filename(t_fname),
+      start(t_start_line, t_start_col), end(t_end_line, t_end_col)
     {
     }
 
-    AST_Node(const std::string &ast_node_text, int id, const boost::shared_ptr<std::string> &fname) :
-      text(ast_node_text), identifier(id), filename(fname) {}
+    AST_Node(const std::string &t_ast_node_text, int t_id, const boost::shared_ptr<std::string> &t_fname) :
+      text(t_ast_node_text), identifier(t_id), filename(t_fname) {}
 
     virtual ~AST_Node() {}
 
     /**
      * Prints the contents of an AST node, including its children, recursively
      */
-    std::string to_string(std::string prepend = "") {
+    std::string to_string(std::string t_prepend = "") {
       std::ostringstream oss;
 
-      oss << prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
+      oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
           << this->text << " : " << this->start.line << ", " << this->start.column << std::endl;
       
       for (unsigned int j = 0; j < this->children.size(); ++j) {
-        oss << this->children[j]->to_string(prepend + "  ");
+        oss << this->children[j]->to_string(t_prepend + "  ");
       }
       return oss.str();
     }
@@ -117,17 +118,18 @@ namespace chaiscript
     std::string filename;
     std::vector<AST_NodePtr> call_stack;
 
-    Eval_Error(const std::string &why, const File_Position &where, const std::string &fname) :
-      std::runtime_error("Error: \"" + why + "\" " +
-                         (std::string(fname) != "__EVAL__" ? ("in '" + fname + "' ") : "during evaluation ") +
-                         + "at (" + boost::lexical_cast<std::string>(where.line) + ", " +
-                         boost::lexical_cast<std::string>(where.column) + ")"),
-      reason(why), start_position(where), end_position(where), filename(fname)
+    Eval_Error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) :
+      std::runtime_error("Error: \"" + t_why + "\" " +
+                         (t_fname != "__EVAL__" ? ("in '" + t_fname + "' ") : "during evaluation ") +
+                         + "at (" + boost::lexical_cast<std::string>(t_where.line) + ", " +
+                         boost::lexical_cast<std::string>(t_where.column) + ")"),
+      reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname)
     { }
 
-    Eval_Error(const std::string &why)
-      : std::runtime_error("Error: \"" + why + "\" "),
-        reason(why) {}
+    Eval_Error(const std::string &t_why)
+      : std::runtime_error("Error: \"" + t_why + "\" "),
+        reason(t_why) 
+    {}
 
     virtual ~Eval_Error() throw() {}
   };
@@ -136,8 +138,8 @@ namespace chaiscript
    * Errors generated when loading a file
    */
   struct File_Not_Found_Error : public std::runtime_error {
-    File_Not_Found_Error(const std::string &filename)
-      : std::runtime_error("File Not Found: " + filename)
+    File_Not_Found_Error(const std::string &t_filename)
+      : std::runtime_error("File Not Found: " + t_filename)
     { }
 
     virtual ~File_Not_Found_Error() throw() {}
@@ -150,7 +152,7 @@ namespace chaiscript
   struct Return_Value {
     Boxed_Value retval;
 
-    Return_Value(const Boxed_Value &return_value) : retval(return_value) { }
+    Return_Value(const Boxed_Value &t_return_value) : retval(t_return_value) { }
   };
 
   /**
