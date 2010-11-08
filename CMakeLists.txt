@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(chaiscript)
 
 option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" TRUE)
+option(BUILD_SAMPLES "Build Samples Folder" FALSE)
 
 list(APPEND CPACK_SOURCE_IGNORE_FILES "${CMAKE_CURRENT_BINARY_DIR}")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.svn")
@@ -96,6 +97,14 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIR})
 add_executable(chai src/main.cpp)
 target_link_libraries(chai ${LIBS})
+
+if (BUILD_SAMPLES)
+  add_executable(example samples/example.cpp)
+  target_link_libraries(example ${LIBS})
+  add_executable(memory_leak_test samples/memory_leak_test.cpp)
+  target_link_libraries(memory_leak_test ${LIBS})
+endif()
+
 
 add_library(stl_extra MODULE src/stl_extra.cpp)
 target_link_libraries(stl_extra ${LIBS})

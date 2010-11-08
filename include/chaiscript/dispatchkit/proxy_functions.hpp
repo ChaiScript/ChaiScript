@@ -304,15 +304,15 @@ namespace chaiscript
     public:
       Bound_Function(const Const_Proxy_Function &t_f, 
                      const std::vector<Boxed_Value> &t_args)
-        : Proxy_Function_Base(std::vector<Type_Info>()),
-          m_f(t_f), m_args(t_args), m_arity(m_f->get_arity()<0?-1:(m_f->get_arity() - static_cast<int>(m_args.size())))
+        : Proxy_Function_Base(build_param_type_info(t_f, t_args)),
+          m_f(t_f), m_args(t_args), m_arity(t_f->get_arity()<0?-1:get_param_types().size()-1)
       {
-        assert(m_f->get_arity() < 0 || m_f->get_arity() >= static_cast<int>(m_args.size()));
+        assert(m_f->get_arity() < 0 || m_f->get_arity() == static_cast<int>(m_args.size()));
       }
 
-      virtual bool operator==(const Proxy_Function_Base &) const
+      virtual bool operator==(const Proxy_Function_Base &t_f) const
       {
-        return false;
+        return &t_f == this;
       }
 
       virtual ~Bound_Function() {}
@@ -375,10 +375,32 @@ namespace chaiscript
 
       virtual std::string annotation() const
       {
-        return "";
+        return "Bound: " + m_f->annotation();
       }
 
     protected:
+      static std::vector<Type_Info> build_param_type_info(const Const_Proxy_Function &t_f, 
+          const std::vector<Boxed_Value> &t_args)
+      {
+        assert(t_f->get_arity() < 0 || t_f->get_arity() == static_cast<int>(t_args.size()));
+        if (t_f->get_arity() < 0) { return std::vector<Type_Info>(); }
+
+        std::vector<Type_Info> types = t_f->get_param_types();
+        assert(types.size() == t_args.size() + 1);
+
+        std::vector<Type_Info> retval;
+        retval.push_back(types[0]);
+        for (size_t i = 0; i < types.size()-1; ++i)
+        {
+          if (t_args[i].get_type_info() == detail::Get_Type_Info<Placeholder_Object>::get())
+          {
+            retval.push_back(types[i+1]);
+          }
+        }
+
+        return retval;
+      }
+
       virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
       {
         return (*m_f)(build_param_list(params));

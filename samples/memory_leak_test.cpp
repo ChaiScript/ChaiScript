@@ -1,6 +1,11 @@
 #include <iostream>
 
 #include "chaiscript/chaiscript.hpp"
+#ifdef READLINE_AVAILABLE
+#include <readline/readline.h>
+#include <readline/history.h>
+#endif
+
 
 using namespace chaiscript;
 
@@ -54,7 +59,7 @@ public:
 
 
 
-int main(int argc, char *argv[]) {
+int main(int /*argc*/, char * /*argv*/[]) {
 
 	test myChai;
 
