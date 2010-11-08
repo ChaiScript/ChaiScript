@@ -176,3 +176,7 @@ install(DIRECTORY samples DESTINATION share/chaiscript
    PATTERN "*/.svn*" EXCLUDE)
         
 
+configure_file(contrib/pkgconfig/chaiscript.pc.in lib/pkgconfig/chaiscript.pc @ONLY)
+install(FILES "${chaiscript_BINARY_DIR}/lib/pkgconfig/chaiscript.pc" 
+	DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
+
