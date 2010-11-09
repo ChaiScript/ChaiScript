@@ -27,12 +27,12 @@ void bound_log(const std::string &msg)
   log(msg);
 }
 
-void hello_world(const chaiscript::Boxed_Value &o)
+void hello_world(const chaiscript::Boxed_Value & /*o*/)
 {
   std::cout << "Hello World" << std::endl;
 }
 
-void hello_constructor(const chaiscript::Boxed_Value &o)
+void hello_constructor(const chaiscript::Boxed_Value & /*o*/)
 {
   std::cout << "Hello Constructor" << std::endl;
 }
@@ -66,7 +66,7 @@ void take_shared_ptr(const boost::shared_ptr<const std::string> &p)
   std::cout << *p << std::endl;
 }
 
-int main(int argc, char *argv[]) {
+int main(int /*argc*/, char * /*argv*/[]) {
   using namespace chaiscript;
 
   ChaiScript chai;
