@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(chaiscript)
 
 option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" TRUE)
+option(BUILD_MODULES "Build Extra Modules (stl, reflection)" TRUE)
 option(BUILD_SAMPLES "Build Samples Folder" FALSE)
 
 list(APPEND CPACK_SOURCE_IGNORE_FILES "${CMAKE_CURRENT_BINARY_DIR}")
@@ -106,11 +107,14 @@ if (BUILD_SAMPLES)
 endif()
 
 
-add_library(stl_extra MODULE src/stl_extra.cpp)
-target_link_libraries(stl_extra ${LIBS})
+if (BUILD_MODULES)
+  add_library(stl_extra MODULE src/stl_extra.cpp)
+  target_link_libraries(stl_extra ${LIBS})
 
-add_library(reflection MODULE src/reflection.cpp)
-target_link_libraries(reflection ${LIBS})
+  add_library(reflection MODULE src/reflection.cpp)
+  target_link_libraries(reflection ${LIBS})
+  set(MODULES stl_extra reflection)
+endif()
 
 file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.chai)
 
@@ -163,7 +167,7 @@ IF(BUILD_TESTING)
   ENDIF()
 ENDIF(BUILD_TESTING)
 
-install(TARGETS chai stl_extra RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript )
+install(TARGETS chai ${MODULES} RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript )
 install(DIRECTORY include/chaiscript DESTINATION include 
    PATTERN "*.hpp"
    PATTERN "*/.svn*" EXCLUDE)
