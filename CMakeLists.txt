@@ -155,6 +155,10 @@ IF(BUILD_TESTING)
     target_link_libraries(boxed_cast_test ${LIBS})
     add_test(NAME Boxed_Cast_Test COMMAND boxed_cast_test)
 
+    add_executable(object_lifetime_test unittests/object_lifetime_test.cpp)
+    target_link_libraries(object_lifetime_test ${LIBS})
+    add_test(NAME Object_Lifetime_Test COMMAND object_lifetime_test)
+
     add_executable(multifile_test unittests/multifile_test_main.cpp unittests/multifile_test_chai.cpp
       unittests/multifile_test_module.cpp)
     target_link_libraries(multifile_test ${LIBS})
