@@ -382,7 +382,7 @@ namespace chaiscript
             ss >> std::hex >> temp_int;
 
             std::ostringstream out_int;
-            out_int << int(temp_int);
+            out_int << static_cast<int>(temp_int);
             AST_NodePtr t(new Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
             m_match_stack.push_back(t);
             return true;
