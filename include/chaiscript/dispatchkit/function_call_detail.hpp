@@ -87,6 +87,19 @@ namespace chaiscript
       boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param)) > 
       build_function_caller_helper(Ret (BOOST_PP_ENUM_PARAMS(n, Param)), const std::vector<std::pair<std::string, Const_Proxy_Function> > &funcs)
       {
+        if (funcs.size() == 1)
+        {
+          boost::shared_ptr<const Proxy_Function_Impl<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> > pfi = 
+            boost::dynamic_pointer_cast<const Proxy_Function_Impl<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> >
+            (funcs[0].second);
+          if (pfi)
+          {
+            return pfi->internal_function();
+          } 
+          // looks like this either wasn't a Proxy_Function_Impl or the types didn't match
+          // we cannot make any other guesses or assumptions really, so continuing
+        }
+
         return boost::bind(&function_caller<Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>, funcs
             BOOST_PP_ENUM_TRAILING(n, curry, ~));
       }

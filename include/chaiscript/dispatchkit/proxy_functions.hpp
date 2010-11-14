@@ -457,6 +457,11 @@ namespace chaiscript
         return "";
       }
 
+      boost::function<Func> internal_function() const
+      {
+        return m_f;
+      }
+
     protected:
       virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
       {
