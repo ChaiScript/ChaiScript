@@ -311,7 +311,7 @@ namespace chaiscript
     public:
       typedef std::map<std::string, chaiscript::Type_Info> Type_Name_Map;
       typedef std::map<std::string, Boxed_Value> Scope;
-      typedef boost::tuples::tuple<std::map<std::string, Boxed_Value>, std::deque<Scope>, bool> StackData;
+      typedef std::deque<Scope> StackData;
       typedef boost::shared_ptr<StackData> Stack;
 
       struct State
@@ -347,9 +347,6 @@ namespace chaiscript
       bool add(const Proxy_Function &f, const std::string &name)
       {
         validate_object_name(name);
-
-        StackData &stack = get_stack_data();
-        stack.get<0>().erase(name);
         return add_function(f, name);
       }
 
@@ -362,13 +359,12 @@ namespace chaiscript
         validate_object_name(name);
         StackData &stack = get_stack_data();
 
-        for (int i = static_cast<int>(stack.get<1>().size())-1; i >= 0; --i)
+        for (int i = static_cast<int>(stack.size())-1; i >= 0; --i)
         {
-          std::map<std::string, Boxed_Value>::const_iterator itr = (stack.get<1>())[i].find(name);
-          if (itr != (stack.get<1>())[i].end())
+          std::map<std::string, Boxed_Value>::const_iterator itr = stack[i].find(name);
+          if (itr != stack[i].end())
           {
-            stack.get<0>().erase(name);
-            (stack.get<1>())[i][name] = obj;
+            stack[i][name] = obj;
             return;
           }
         }
@@ -383,8 +379,7 @@ namespace chaiscript
       {
         StackData &stack = get_stack_data();
         validate_object_name(name);
-        stack.get<0>().erase(name);
-        stack.get<1>().back()[name] = obj;
+        stack.back()[name] = obj;
       }
 
       /**
@@ -392,15 +387,12 @@ namespace chaiscript
        */
       void add_global_const(const Boxed_Value &obj, const std::string &name)
       {
-        StackData &stack = get_stack_data();
         validate_object_name(name);
         if (!obj.is_const())
         {
           throw global_non_const();
         }
 
-        stack.get<0>().erase(name);
-        
 #ifndef CHAISCRIPT_NO_THREADS
         boost::unique_lock<boost::shared_mutex> l(m_global_object_mutex);
 #endif
@@ -414,7 +406,7 @@ namespace chaiscript
       void new_scope()
       {
         StackData &stack = get_stack_data();
-        stack.get<1>().push_back(Scope());
+        stack.push_back(Scope());
       }
 
       /**
@@ -423,16 +415,9 @@ namespace chaiscript
       void pop_scope()
       {
         StackData &stack = get_stack_data();
-        if (stack.get<1>().size() > 1)
+        if (stack.size() > 1)
         {
-          Scope &scope(stack.get<1>().back());
-          for (Scope::const_iterator itr = scope.begin();
-               itr != scope.end();
-               ++itr)
-          {
-            stack.get<0>().erase(itr->first);
-          }
-          stack.get<1>().pop_back();
+          stack.pop_back();
         } else {
           throw std::range_error("Unable to pop global stack");
         }
@@ -453,8 +438,7 @@ namespace chaiscript
       Stack new_stack() const
       {
         Stack s(new Stack::element_type());
-        s->get<1>().push_back(Scope());
-        s->get<2>() = false;
+        s->push_back(Scope());
         return s;
       }
 
@@ -479,10 +463,10 @@ namespace chaiscript
         StackData &stack = get_stack_data();
 
         // Is it in the stack?
-        for (int i = static_cast<int>(stack.get<1>().size())-1; i >= 0; --i)
+        for (int i = static_cast<int>(stack.size())-1; i >= 0; --i)
         {
-          std::map<std::string, Boxed_Value>::const_iterator stackitr = (stack.get<1>())[i].find(name);
-          if (stackitr != (stack.get<1>())[i].end())
+          std::map<std::string, Boxed_Value>::const_iterator stackitr = stack[i].find(name);
+          if (stackitr != stack[i].end())
           {
             return stackitr->second;
           }
@@ -867,8 +851,7 @@ namespace chaiscript
         Stack_Holder()
           : stack(new StackData())
         {
-          stack->get<1>().push_back(Scope());
-          stack->get<2>() = true;
+          stack->push_back(Scope());
         }
 
         Stack stack;
