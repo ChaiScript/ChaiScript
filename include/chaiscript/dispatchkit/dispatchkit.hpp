@@ -119,7 +119,7 @@ namespace chaiscript
   class Dispatch_Function : public Proxy_Function_Base
   {
     public:
-      Dispatch_Function(const std::vector<std::pair<std::string, Proxy_Function > > &t_funcs)
+      Dispatch_Function(const std::vector<Proxy_Function> &t_funcs)
         : Proxy_Function_Base(build_type_infos(t_funcs)),
           m_funcs(t_funcs)
       {
@@ -139,39 +139,26 @@ namespace chaiscript
 
       virtual std::vector<Const_Proxy_Function> get_contained_functions() const
       {
-        typedef std::vector<std::pair<std::string, Proxy_Function > > function_vec;
-
-        function_vec::const_iterator begin = m_funcs.begin();
-        const function_vec::const_iterator end = m_funcs.end();
-
-        std::vector<Const_Proxy_Function> fs;
-
-        while (begin != end)
-        {
-          fs.push_back(begin->second);
-          ++begin;
-        }
-
-        return fs;
+        return std::vector<Const_Proxy_Function>(m_funcs.begin(), m_funcs.end());
       }
 
 
       virtual int get_arity() const
       {
-        typedef std::vector<std::pair<std::string, Proxy_Function > > function_vec;
+        typedef std::vector<Proxy_Function> function_vec;
 
         function_vec::const_iterator begin = m_funcs.begin();
         const function_vec::const_iterator end = m_funcs.end();
 
         if (begin != end)
         {
-          int arity = begin->second->get_arity();
+          int arity = (*begin)->get_arity();
 
           ++begin;
 
           while (begin != end)
           {
-            if (arity != begin->second->get_arity())
+            if (arity != (*begin)->get_arity())
             {
               // The arities in the list do not match, so it's unspecified
               return -1;
@@ -188,14 +175,14 @@ namespace chaiscript
 
       virtual bool call_match(const std::vector<Boxed_Value> &vals) const
       {
-        typedef std::vector<std::pair<std::string, Proxy_Function > > function_vec;
+        typedef std::vector<Proxy_Function> function_vec;
 
         function_vec::const_iterator begin = m_funcs.begin();
         function_vec::const_iterator end = m_funcs.end();
 
         while (begin != end)
         {
-          if (begin->second->call_match(vals))
+          if ((*begin)->call_match(vals))
           {
             return true;
           } else {
@@ -218,18 +205,18 @@ namespace chaiscript
       }
 
     private:
-      std::vector<std::pair<std::string, Proxy_Function > > m_funcs;
+      std::vector<Proxy_Function> m_funcs;
 
-      static std::vector<Type_Info> build_type_infos(const std::vector<std::pair<std::string, Proxy_Function > > &t_funcs)
+      static std::vector<Type_Info> build_type_infos(const std::vector<Proxy_Function> &t_funcs)
       {
-        typedef std::vector<std::pair<std::string, Proxy_Function > > function_vec;
+        typedef std::vector<Proxy_Function> function_vec;
 
         function_vec::const_iterator begin = t_funcs.begin();
         const function_vec::const_iterator end = t_funcs.end();
 
         if (begin != end)
         {
-          std::vector<Type_Info> type_infos = begin->second->get_param_types();
+          std::vector<Type_Info> type_infos = (*begin)->get_param_types();
 
           ++begin;
 
@@ -237,7 +224,7 @@ namespace chaiscript
 
           while (begin != end)
           {
-            std::vector<Type_Info> param_types = begin->second->get_param_types();
+            std::vector<Type_Info> param_types = (*begin)->get_param_types();
 
             if (param_types.size() != type_infos.size())
             {
@@ -316,7 +303,7 @@ namespace chaiscript
 
       struct State
       {
-        std::multimap<std::string, Proxy_Function> m_functions;
+        std::map<std::string, std::vector<Proxy_Function> > m_functions;
         std::map<std::string, Boxed_Value> m_global_objects;
         Type_Name_Map m_types;
         std::set<std::string> m_reserved_words;
@@ -486,23 +473,20 @@ namespace chaiscript
         }
 
         // If all that failed, then check to see if it's a function
-        std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> > funcs = get_function(name);
+        std::vector<Proxy_Function> funcs = get_function(name);
 
         if (funcs.empty())
         {
           throw std::range_error("Object not known: " + name);
         } else {
-          
           if (funcs.size() == 1)
           {
             // Return the first item if there is only one,
             // no reason to take the cast of the extra level of dispatch
-            return const_var(funcs.begin()->second);
+            return const_var(*funcs.begin());
+          } else {
+            return Boxed_Value(Const_Proxy_Function(new Dispatch_Function(funcs)));
           }
-          
-
-          Boxed_Value f(Const_Proxy_Function(new Dispatch_Function(funcs)));
-          return f;
         }
       }
 
@@ -578,17 +562,25 @@ namespace chaiscript
       /**
        * Return a function by name
        */
-      std::vector<std::pair<std::string, Proxy_Function > >
+      std::vector< Proxy_Function >
         get_function(const std::string &t_name) const
       {
 #ifndef CHAISCRIPT_NO_THREADS
         boost::shared_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-        std::pair<std::multimap<std::string, Proxy_Function >::const_iterator, std::multimap<std::string, Proxy_Function >::const_iterator> range
-          = get_functions_int().equal_range(t_name);
+        const std::map<std::string, std::vector<Proxy_Function> > &funs = get_functions_int();
 
-        return  std::vector<std::pair<std::string, std::multimap<std::string, Proxy_Function >::mapped_type> >(range.first, range.second);
+        std::map<std::string, std::vector<Proxy_Function> >::const_iterator itr 
+          = funs.find(t_name);
+
+        if (itr != funs.end())
+        {
+          return itr->second;
+        } else {
+          return std::vector<Proxy_Function>();
+        }
+
       }
 
       /**
@@ -600,7 +592,7 @@ namespace chaiscript
         boost::shared_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-        const std::multimap<std::string, Proxy_Function> &functions = get_functions_int();
+        const std::map<std::string, std::vector<Proxy_Function> > &functions = get_functions_int();
         return functions.find(name) != functions.end();
       }
 
@@ -612,9 +604,23 @@ namespace chaiscript
 #ifndef CHAISCRIPT_NO_THREADS
         boost::shared_lock<boost::shared_mutex> l(m_mutex);
 #endif
+        std::vector<std::pair<std::string, Proxy_Function> > rets;
 
-        const std::multimap<std::string, Proxy_Function> &functions = get_functions_int();
-        return std::vector<std::pair<std::string, Proxy_Function > >(functions.begin(), functions.end());
+        const std::map<std::string, std::vector<Proxy_Function> > &functions = get_functions_int();
+
+        for (std::map<std::string, std::vector<Proxy_Function> >::const_iterator itr = functions.begin();
+             itr != functions.end();
+             ++itr)
+        {
+          for (std::vector<Proxy_Function>::const_iterator itr2 = itr->second.begin();
+               itr2 != itr->second.end();
+               ++itr2)
+          {
+            rets.push_back(std::make_pair(itr->first, *itr2));
+          }
+        }
+
+        return rets;
       }
 
       void add_reserved_word(const std::string &name)
@@ -628,7 +634,7 @@ namespace chaiscript
 
       Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params) const
       {
-        std::vector<std::pair<std::string, Proxy_Function> > functions = get_function(t_name);
+        std::vector<Proxy_Function> functions = get_function(t_name);
 
         return dispatch(functions.begin(), functions.end(), params);
       }
@@ -787,12 +793,12 @@ namespace chaiscript
         return *(m_stack_holder->stack);
       }
 
-      const std::multimap<std::string, Proxy_Function> &get_functions_int() const
+      const std::map<std::string, std::vector<Proxy_Function> > &get_functions_int() const
       {
         return m_state.m_functions;
       }
 
-      std::multimap<std::string, Proxy_Function> &get_functions_int() 
+      std::map<std::string, std::vector<Proxy_Function> > &get_functions_int() 
       {
         return m_state.m_functions;
       }
@@ -818,25 +824,36 @@ namespace chaiscript
        * true if the function was added, false if a function with the
        * same signature and name already exists.
        */
-      bool add_function(const Proxy_Function &f, const std::string &t_name)
+      bool add_function(const Proxy_Function &t_f, const std::string &t_name)
       {
 #ifndef CHAISCRIPT_NO_THREADS
         boost::unique_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-        std::pair<std::multimap<std::string, Proxy_Function >::const_iterator, std::multimap<std::string, Proxy_Function >::const_iterator> range
-          = m_state.m_functions.equal_range(t_name);
+        std::map<std::string, std::vector<Proxy_Function> > &funcs = get_functions_int();
+        
+        std::map<std::string, std::vector<Proxy_Function> >::iterator itr
+          = funcs.find(t_name);
 
-        while (range.first != range.second)
+        if (itr != funcs.end())
         {
-          if ((*f) == *(range.first->second))
+          std::vector<Proxy_Function> &vec = itr->second;
+          for (std::vector<Proxy_Function>::const_iterator itr2 = vec.begin();
+               itr2 != vec.end();
+               ++itr2)
           {
-            return false;
+            if ((*t_f) == *(*itr2))
+            {
+              return false;
+            }
           }
-          ++range.first;
-        }
 
-        m_state.m_functions.insert(std::make_pair(t_name, f));
+          vec.push_back(t_f);
+        } else {
+          std::vector<Proxy_Function> vec;
+          vec.push_back(t_f);
+          funcs.insert(std::make_pair(t_name, vec));
+        }
 
         return true;
       }

@@ -583,9 +583,9 @@ namespace chaiscript
     while (begin != end)
     {
       try {
-        if (begin->second->filter(plist))
+        if ((*begin)->filter(plist))
         {
-          return (*begin->second)(plist);
+          return (*(*begin))(plist);
         }
       } catch (const bad_boxed_cast &) {
         //parameter failed to cast, try again
