@@ -453,7 +453,6 @@ namespace chaiscript
             }
 
             std::string fun_name;
-            std::vector<std::pair<std::string, Proxy_Function > > funs;
             if ((this->children[i]->identifier == AST_Node_Type::Fun_Call) || (this->children[i]->identifier == AST_Node_Type::Array_Call)) {
               fun_name = this->children[i]->children[0]->text;
             }
