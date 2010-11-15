@@ -22,6 +22,7 @@
 #endif
 #endif
 
+
 #include <chaiscript/language/chaiscript_prelude.hpp>
 #include <chaiscript/language/chaiscript_parser.hpp>
 
@@ -499,10 +500,15 @@ namespace chaiscript
       infile.seekg(0, std::ios::beg);
 
       assert(size >= 0);
-      std::vector<char> v(static_cast<unsigned int>(size));
-      infile.read(&v[0], size);
 
-      return std::string(v.begin(), v.end());
+      if (size == std::streampos(0))
+      {
+        return std::string();
+      } else {
+        std::vector<char> v(static_cast<unsigned int>(size));
+        infile.read(&v[0], size);
+        return std::string(v.begin(), v.end());
+      }
     }
 
     /**
