@@ -385,7 +385,7 @@ namespace chaiscript
     * Similar to shared_ptr_clone. Used for Proxy_Function.
     */
     template<typename Type>
-    Boxed_Value ptr_assign(Boxed_Value lhs, const boost::shared_ptr<typename boost::add_const<Type>::type> &rhs)
+    Boxed_Value ptr_assign(Boxed_Value lhs, const boost::shared_ptr<Type> &rhs)
     {
       if (lhs.is_undef() 
           || (!lhs.get_type_info().is_const() && lhs.get_type_info().bare_equal(chaiscript::detail::Get_Type_Info<Type>::get())))
@@ -618,7 +618,8 @@ namespace chaiscript
           "bind");
 
         m->add(fun(&shared_ptr_unconst_clone<Proxy_Function_Base>), "clone");
-        m->add(fun(&ptr_assign<Proxy_Function_Base>), "=");
+        m->add(fun(&ptr_assign<boost::remove_const<Proxy_Function_Base>::type>), "=");
+        m->add(fun(&ptr_assign<boost::add_const<Proxy_Function_Base>::type>), "=");
 
         m->add(Proxy_Function(new Dynamic_Proxy_Function(boost::bind(&call_exists, _1))), 
           "call_exists");

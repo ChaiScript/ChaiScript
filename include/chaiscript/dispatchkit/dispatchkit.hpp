@@ -811,6 +811,10 @@ namespace chaiscript
         const int lhssize = lhsparamtypes.size();
         const int rhssize = rhsparamtypes.size();
 
+        const Type_Info boxed_type = user_type<Boxed_Value>();
+        const Type_Info boxed_pod_type = user_type<Boxed_POD_Value>();
+
+
         for (int i = 1; i < lhssize && i < rhssize; ++i)
         {
           const Type_Info lt = lhsparamtypes[i];
@@ -824,15 +828,13 @@ namespace chaiscript
           // const is after non-const for the same type
           if (lt.bare_equal(rt) && lt.is_const() && !rt.is_const())
           {
-            return true;
+            return false;
           }
 
           if (lt.bare_equal(rt) && !lt.is_const())
           {
-            return false;
+            return true;
           }
-
-          const Type_Info boxed_type = user_type<Boxed_Value>();
 
           // boxed_values are sorted last
           if (lt.bare_equal(boxed_type))
@@ -841,6 +843,20 @@ namespace chaiscript
           }
 
           if (rt.bare_equal(boxed_type))
+          {
+            if (lt.bare_equal(boxed_pod_type))
+            {
+              return true;
+            }
+            return true;
+          }
+
+          if (lt.bare_equal(boxed_pod_type))
+          {
+            return false;
+          }
+
+          if (rt.bare_equal(boxed_pod_type))
           {
             return true;
           }
