@@ -803,6 +803,55 @@ namespace chaiscript
         return m_state.m_functions;
       }
 
+      static bool function_less_than(const Proxy_Function &lhs, const Proxy_Function &rhs)
+      {
+        const std::vector<Type_Info> lhsparamtypes = lhs->get_param_types();
+        const std::vector<Type_Info> rhsparamtypes = rhs->get_param_types();
+
+        const int lhssize = lhsparamtypes.size();
+        const int rhssize = rhsparamtypes.size();
+
+        for (int i = 1; i < lhssize && i < rhssize; ++i)
+        {
+          const Type_Info lt = lhsparamtypes[i];
+          const Type_Info rt = rhsparamtypes[i];
+
+          if (lt.bare_equal(rt) && lt.is_const() == rt.is_const())
+          {
+            continue; // The first two types are essentially the same, next iteration
+          }
+
+          // const is after non-const for the same type
+          if (lt.bare_equal(rt) && lt.is_const() && !rt.is_const())
+          {
+            return true;
+          }
+
+          if (lt.bare_equal(rt) && !lt.is_const())
+          {
+            return false;
+          }
+
+          const Type_Info boxed_type = user_type<Boxed_Value>();
+
+          // boxed_values are sorted last
+          if (lt.bare_equal(boxed_type))
+          {
+            return false;
+          }
+
+          if (rt.bare_equal(boxed_type))
+          {
+            return true;
+          }
+
+          // otherwise, we want to sort by typeid
+          return lt < rt;
+        }
+
+        return false;
+      }
+
 
       /**
        * Throw a reserved_word exception if the name is not allowed
@@ -849,6 +898,7 @@ namespace chaiscript
           }
 
           vec.push_back(t_f);
+          std::stable_sort(vec.begin(), vec.end(), &function_less_than);
         } else {
           std::vector<Proxy_Function> vec;
           vec.push_back(t_f);
