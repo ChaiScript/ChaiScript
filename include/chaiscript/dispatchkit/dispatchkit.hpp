@@ -814,6 +814,35 @@ namespace chaiscript
         const Type_Info boxed_type = user_type<Boxed_Value>();
         const Type_Info boxed_pod_type = user_type<Boxed_POD_Value>();
 
+        boost::shared_ptr<const Dynamic_Proxy_Function> dynamic_lhs(boost::dynamic_pointer_cast<const Dynamic_Proxy_Function>(lhs));
+        boost::shared_ptr<const Dynamic_Proxy_Function> dynamic_rhs(boost::dynamic_pointer_cast<const Dynamic_Proxy_Function>(rhs));
+
+        if (dynamic_lhs && dynamic_rhs)
+        {
+          if (dynamic_lhs->get_guard())
+          {
+            if (dynamic_rhs->get_guard())
+            {
+              return false;
+            } else {
+              return true;
+            }
+          } else {
+            return false;
+          }
+        }
+
+        if (dynamic_lhs && !dynamic_rhs)
+        {
+          return false;
+        }
+
+        if (!dynamic_lhs && dynamic_rhs)
+        {
+          return true;
+        }
+
+
 
         for (int i = 1; i < lhssize && i < rhssize; ++i)
         {

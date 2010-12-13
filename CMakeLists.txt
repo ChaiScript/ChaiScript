@@ -159,6 +159,14 @@ IF(BUILD_TESTING)
     target_link_libraries(object_lifetime_test ${LIBS})
     add_test(NAME Object_Lifetime_Test COMMAND object_lifetime_test)
 
+    add_executable(function_ordering_test unittests/function_ordering_test.cpp)
+    target_link_libraries(function_ordering_test ${LIBS})
+    add_test(NAME Function_Ordering_Test COMMAND function_ordering_test)
+
+    add_executable(type_info_test unittests/type_info_test.cpp)
+    target_link_libraries(type_info_test ${LIBS})
+    add_test(NAME Type_Info_Test COMMAND type_info_test)
+
     add_executable(multifile_test unittests/multifile_test_main.cpp unittests/multifile_test_chai.cpp
       unittests/multifile_test_module.cpp)
     target_link_libraries(multifile_test ${LIBS})

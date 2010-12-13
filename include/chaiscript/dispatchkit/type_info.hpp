@@ -7,6 +7,9 @@
 #ifndef __type_info_hpp__
 #define __type_info_hpp__
 
+#include <string>
+#include <typeinfo>
+#include <boost/shared_ptr.hpp>
 #include <boost/type_traits/is_const.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/type_traits/is_reference.hpp>
@@ -139,7 +142,7 @@ namespace chaiscript
 
         static Type_Info get()
         {
-          return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
+          return Type_Info(boost::is_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
               &typeid(T), 
               &typeid(typename Bare_Type<T>::type));

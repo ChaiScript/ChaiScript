@@ -221,6 +221,11 @@ namespace chaiscript
         return m_arity;
       }
 
+      Proxy_Function get_guard() const
+      {
+        return m_guard;
+      }
+
       virtual std::string annotation() const
       {
         return m_description;
