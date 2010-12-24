@@ -60,7 +60,7 @@ namespace chaiscript
           const std::string &t_type_name,
           const Proxy_Function &t_func,
           const boost::optional<Type_Info> &t_ti = boost::optional<Type_Info>())
-        : Proxy_Function_Base(t_func->get_param_types()),
+        : Proxy_Function_Base(build_param_types(t_func->get_param_types(), t_ti)),
           m_type_name(t_type_name), m_func(t_func), m_ti(t_ti)
       {
         assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
@@ -125,6 +125,22 @@ namespace chaiscript
       }
 
     private:
+      static std::vector<Type_Info> build_param_types(
+          const std::vector<Type_Info> &t_inner_types, boost::optional<Type_Info> t_objectti)
+      {
+        if (t_objectti)
+        {
+          std::vector<Type_Info> types(t_inner_types);
+
+          assert(types.size() > 1);
+          assert(types[1].bare_equal(user_type<Boxed_Value>()));
+          types[1] = *t_objectti;
+          return types;
+        } else {
+          return t_inner_types;
+        }
+      }
+
       static bool dynamic_object_typename_match(const Boxed_Value &bv, const std::string &name,
         const boost::optional<Type_Info> &ti)
       {
