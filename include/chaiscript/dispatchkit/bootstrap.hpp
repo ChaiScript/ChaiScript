@@ -478,6 +478,33 @@ namespace chaiscript
         return Boxed_Value(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end())));
       }
 
+      static bool has_guard(const Const_Proxy_Function &t_pf)
+      {
+        boost::shared_ptr<const Dynamic_Proxy_Function> pf = boost::dynamic_pointer_cast<const Dynamic_Proxy_Function>(t_pf);
+        if (pf)
+        {
+          return pf->get_guard();
+        } else {
+          return false;
+        }
+      }
+
+      static Const_Proxy_Function get_guard(const Const_Proxy_Function &t_pf)
+      {
+        boost::shared_ptr<const Dynamic_Proxy_Function> pf = boost::dynamic_pointer_cast<const Dynamic_Proxy_Function>(t_pf);
+        if (pf)
+        {
+          if (pf->get_guard())
+          {
+            return pf->get_guard();
+          } else {
+            throw std::runtime_error("Function does not have a guard");
+          }
+        } else {
+          throw std::runtime_error("Function does not have a guard");
+        }
+      }
+
       static void throw_exception(const Boxed_Value &bv) {
         throw bv;
       }
@@ -562,7 +589,11 @@ namespace chaiscript
         m->add(fun(&Dynamic_Object::get_type_name), "get_type_name");
         m->add(fun(&Dynamic_Object::get_attrs), "get_attrs");
         m->add(fun(&Dynamic_Object::get_attr), "get_attr");
+
         m->eval("def Dynamic_Object::clone() { var new_o := Dynamic_Object(this.get_type_name()); for_each(this.get_attrs(), bind(fun(new_o, x) { new_o.get_attr(x.first) = x.second; }, new_o, _) ); return new_o; }");
+
+        m->add(fun(&has_guard), "has_guard");
+        m->add(fun(&get_guard), "get_guard");
 
         m->add(fun(&Boxed_Value::is_undef), "is_var_undef");
         m->add(fun(&Boxed_Value::is_null), "is_var_null");

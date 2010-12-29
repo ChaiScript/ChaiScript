@@ -108,6 +108,7 @@ namespace chaiscript
         return m_func->annotation();
       }
 
+
     protected:
       virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
       {

@@ -252,13 +252,15 @@ namespace chaiscript
     }
 
 
+
     const Boxed_Value internal_eval_ast(const AST_NodePtr &t_ast)
     {
       return t_ast->eval(m_engine);
     }
 
+
     /**
-     * Evaluates the given boxed string, used during eval() inside of a script
+     * Evaluates the given string, used during eval() inside of a script
      */
     const Boxed_Value internal_eval(const std::string &t_e) {
       return do_eval(t_e, "__EVAL__", true);

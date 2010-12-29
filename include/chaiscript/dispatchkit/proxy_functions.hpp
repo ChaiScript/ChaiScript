@@ -21,6 +21,10 @@
 namespace chaiscript
 {
   struct Boxed_POD_Value;
+  struct AST_Node;
+
+  typedef boost::shared_ptr<struct AST_Node> AST_NodePtr;
+
 
   /**
    * Helper for building a list of parameters for calling a Proxy_Function
@@ -195,10 +199,11 @@ namespace chaiscript
       Dynamic_Proxy_Function(
           const boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> &t_f, 
           int t_arity=-1,
+          const AST_NodePtr &t_parsenode = AST_NodePtr(),
           const std::string &t_description = "",
           const Proxy_Function &t_guard = Proxy_Function())
         : Proxy_Function_Base(build_param_type_list(t_arity)),
-          m_f(t_f), m_arity(t_arity), m_description(t_description), m_guard(t_guard)
+          m_f(t_f), m_arity(t_arity), m_description(t_description), m_guard(t_guard), m_parsenode(t_parsenode)
       {
       }
 
@@ -224,6 +229,11 @@ namespace chaiscript
       Proxy_Function get_guard() const
       {
         return m_guard;
+      }
+
+      AST_NodePtr get_parse_tree() const
+      {
+        return m_parsenode;
       }
 
       virtual std::string annotation() const
@@ -288,6 +298,7 @@ namespace chaiscript
       int m_arity;
       std::string m_description;
       Proxy_Function m_guard;
+      AST_NodePtr m_parsenode;
   };
 
   /**

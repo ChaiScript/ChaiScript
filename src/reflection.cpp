@@ -11,9 +11,42 @@
 #pragma warning(disable : 4190)
 #endif
 
+
+bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
+{
+  boost::shared_ptr<const chaiscript::Dynamic_Proxy_Function> pf = boost::dynamic_pointer_cast<const chaiscript::Dynamic_Proxy_Function>(t_pf);
+  if (pf)
+  {
+    return pf->get_parse_tree();
+  } else {
+    return false;
+  }
+}
+
+chaiscript::AST_NodePtr get_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
+{
+  boost::shared_ptr<const chaiscript::Dynamic_Proxy_Function> pf = boost::dynamic_pointer_cast<const chaiscript::Dynamic_Proxy_Function>(t_pf);
+  if (pf)
+  {
+    if (pf->get_parse_tree())
+    {
+      return pf->get_parse_tree();
+    } else {
+      throw std::runtime_error("Function does not have a parse tree");
+    }
+  } else {
+    throw std::runtime_error("Function does not have a parse tree");
+  }
+}
+
+
 CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflection()
 {
   chaiscript::ModulePtr m(new chaiscript::Module());
+
+  m->add(chaiscript::fun(&has_parse_tree), "has_parse_tree");
+  m->add(chaiscript::fun(&get_parse_tree), "get_parse_tree");
+
 
   chaiscript::bootstrap::vector_type<std::vector<boost::shared_ptr<chaiscript::AST_Node> > >("AST_NodeVector", m);
 

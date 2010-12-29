@@ -550,7 +550,7 @@ namespace chaiscript
 
         return Boxed_Value(Proxy_Function(new Dynamic_Proxy_Function
               (boost::bind(&eval_function<Dispatch_Engine>, boost::ref(t_ss), this->children.back(), t_param_names, _1),
-               static_cast<int>(numparams))));
+               static_cast<int>(numparams), this->children.back())));
       }
 
   };
@@ -629,7 +629,7 @@ namespace chaiscript
           guard = boost::shared_ptr<Dynamic_Proxy_Function>
             (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
                                                     boost::ref(t_ss), guardnode,
-                                                    t_param_names, _1), static_cast<int>(numparams)));
+                                                    t_param_names, _1), static_cast<int>(numparams), guardnode));
         }
 
         try {
@@ -638,7 +638,7 @@ namespace chaiscript
           t_ss.add(Proxy_Function
               (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
                                                       boost::ref(t_ss), this->children.back(),
-                                                      t_param_names, _1), static_cast<int>(numparams),
+                                                      t_param_names, _1), static_cast<int>(numparams), this->children.back(),
                                           annotation, guard)), function_name);
         }
         catch (reserved_word_error &e) {
@@ -1330,7 +1330,7 @@ namespace chaiscript
           guard = boost::shared_ptr<Dynamic_Proxy_Function>
             (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
                                                     boost::ref(t_ss), guardnode,
-                                                    t_param_names, _1), static_cast<int>(numparams)));
+                                                    t_param_names, _1), static_cast<int>(numparams), guardnode));
         }
 
         try {
@@ -1342,7 +1342,7 @@ namespace chaiscript
                 (new Dynamic_Object_Constructor(class_name, Proxy_Function
                                                 (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
                                                                                         boost::ref(t_ss), this->children.back(),
-                                                                                        t_param_names, _1), static_cast<int>(numparams),
+                                                                                        t_param_names, _1), static_cast<int>(numparams), this->children.back(),
                                                                             annotation, guard)))), function_name);
 
           }
@@ -1357,7 +1357,7 @@ namespace chaiscript
                 (new Dynamic_Object_Function(class_name, Proxy_Function
                                              (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
                                                                                      boost::ref(t_ss), this->children.back(),
-                                                                                     t_param_names, _1), static_cast<int>(numparams),
+                                                                                     t_param_names, _1), static_cast<int>(numparams), this->children.back(),
                                                                          annotation, guard)), ti)), function_name);
 
           }
