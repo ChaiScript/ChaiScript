@@ -15,8 +15,25 @@
 #include "chaiscript_prelude.hpp"
 #include "chaiscript_common.hpp"
 
+#define lengthof(x) (((int)sizeof(x))/((int)sizeof(x[0])))
+
+
 namespace chaiscript
 {
+  enum Alphabet
+  {   symbol_alphabet = 0
+  ,   keyword_alphabet
+  ,   int_alphabet
+  ,   float_alphabet
+  ,   x_alphabet
+  ,   hex_alphabet
+  ,   b_alphabet
+  ,   bin_alphabet
+  ,   id_alphabet
+  ,   white_alphabet
+  ,   max_alphabet
+  };
+
   class ChaiScript_Parser {
 
     std::string::const_iterator m_input_pos, m_input_end;
@@ -26,6 +43,7 @@ namespace chaiscript
     std::string m_singleline_comment;
     boost::shared_ptr<std::string> m_filename;
     std::vector<AST_NodePtr> m_match_stack;
+	bool alphabet[max_alphabet][256];
 
     std::vector<std::vector<std::string> > m_operator_matches;
     std::vector<AST_Node_Type::Type> m_operators;
@@ -42,7 +60,7 @@ namespace chaiscript
     ChaiScript_Parser(const ChaiScript_Parser &); // explicitly unimplemented copy constructor
     ChaiScript_Parser &operator=(const ChaiScript_Parser &); // explicitly unimplemented assignment operator
 
-    void setup_operators() 
+	void setup_operators() 
     {
       m_operators.push_back(AST_Node_Type::Logical_Or);
       std::vector<std::string> logical_or;
@@ -106,7 +124,58 @@ namespace chaiscript
       std::vector<std::string> dot_access;
       dot_access.push_back(".");
       m_operator_matches.push_back(dot_access);
+		
+	  int c;
+	  for ( c = 0 ; c < lengthof(alphabet[0]) ; c++ ) {
+        for ( int a = 0 ; a < max_alphabet ; a ++ ) {
+          alphabet[a][c]=false;
+        }
+	  }
+	  alphabet[symbol_alphabet]['+']=true;
+	  alphabet[symbol_alphabet]['-']=true; 
+	  alphabet[symbol_alphabet]['*']=true; 
+	  alphabet[symbol_alphabet]['/']=true;
+	  alphabet[symbol_alphabet]['|']=true; 
+	  alphabet[symbol_alphabet]['&']=true; 
+	  alphabet[symbol_alphabet]['^']=true; 
+	  alphabet[symbol_alphabet]['=']=true;
+	  alphabet[symbol_alphabet]['.']=true;
+	  alphabet[symbol_alphabet]['<']=true; 
+	  alphabet[symbol_alphabet]['>']=true;
+		
+      for ( c = 'a' ; c <= 'z' ; c++ ) alphabet[keyword_alphabet][c]=true;
+	  for ( c = 'A' ; c <= 'Z' ; c++ ) alphabet[keyword_alphabet][c]=true;
+	  for ( c = '0' ; c <= '9' ; c++ ) alphabet[keyword_alphabet][c]=true;
+	  alphabet[keyword_alphabet]['_']=true;
+
+      for ( c = '0' ; c <= '9' ; c++ ) alphabet[int_alphabet][c]=true;
+      for ( c = '0' ; c <= '9' ; c++ ) alphabet[float_alphabet][c]=true;
+      alphabet[float_alphabet]['.']=true;
+
+      for ( c = '0' ; c <= '9' ; c++ ) alphabet[hex_alphabet][c]=true;
+      for ( c = 'a' ; c <= 'f' ; c++ ) alphabet[hex_alphabet][c]=true;
+      for ( c = 'A' ; c <= 'F' ; c++ ) alphabet[hex_alphabet][c]=true;
+
+      alphabet[x_alphabet]['x']=true;
+      alphabet[x_alphabet]['X']=true;
+
+      for ( c = '0' ; c <= '1' ; c++ ) alphabet[bin_alphabet][c]=true;
+      alphabet[b_alphabet]['b']=true;
+      alphabet[b_alphabet]['B']=true;
+
+      for ( c = 'a' ; c <= 'z' ; c++ ) alphabet[id_alphabet][c]=true;
+      for ( c = 'A' ; c <= 'Z' ; c++ ) alphabet[id_alphabet][c]=true;
+      alphabet[id_alphabet]['_'] = true;
+
+      alphabet[white_alphabet][' ']=true;
+      alphabet[white_alphabet]['\t']=true;
     }
+
+	/**
+	 * test a char in an alphabet
+	 */
+	bool char_in_alphabet(unsigned char c,Alphabet a) { return alphabet[a][c]; } 
+
     /**
      * Prints the parsed ast_nodes as a tree
      */
@@ -185,6 +254,7 @@ namespace chaiscript
     /**
      * Does ranged char check
      */
+/*
     inline bool char_between(char t_start, char t_end) {
       if ((*m_input_pos >= t_start) && (*m_input_pos <= t_end)) {
         return true;
@@ -193,7 +263,7 @@ namespace chaiscript
         return false;
       }
     }
-
+*/
     /**
      * Check to see if there is more text parse
      */
@@ -245,7 +315,7 @@ namespace chaiscript
     bool SkipWS() {
       bool retval = false;
       while (has_more_input()) {
-        if ((*m_input_pos == ' ') || (*m_input_pos == '\t')) {
+        if ( char_in_alphabet(*m_input_pos,white_alphabet) ) { // (*m_input_pos == ' ') || (*m_input_pos == '\t')) {
           ++m_input_pos;
           ++m_col;
           retval = true;
@@ -267,17 +337,17 @@ namespace chaiscript
       bool retval = false;
       std::string::const_iterator start = m_input_pos;
 
-      if (has_more_input() && (char_between('0', '9') || (*m_input_pos == '.'))) {
-        while (has_more_input() && char_between('0', '9')) {
+      if (has_more_input() && char_in_alphabet(*m_input_pos,float_alphabet) ) { // (char_between('0', '9') || (*m_input_pos == '.'))) {
+        while (has_more_input() && char_in_alphabet(*m_input_pos,int_alphabet) ) { // char_between('0', '9')) {
           ++m_input_pos;
           ++m_col;
         }
         if (has_more_input() && (*m_input_pos == '.')) {
           ++m_input_pos;
           ++m_col;
-          if (has_more_input() && char_between('0', '9')) {
+          if (has_more_input() && char_in_alphabet(*m_input_pos,int_alphabet)) { // char_between('0', '9')) {
             retval = true;
-            while (has_more_input() && char_between('0', '9')) {
+            while (has_more_input() && char_in_alphabet(*m_input_pos,int_alphabet) ) { //char_between('0', '9')) {
               ++m_input_pos;
               ++m_col;
             }
@@ -300,16 +370,16 @@ namespace chaiscript
         ++m_input_pos;
         ++m_col;
 
-        if (has_more_input() && ((*m_input_pos == 'x') || (*m_input_pos == 'X'))) {
+        if (has_more_input() && char_in_alphabet(*m_input_pos,x_alphabet) ) { // ((*m_input_pos == 'x') || (*m_input_pos == 'X'))) {
           ++m_input_pos;
           ++m_col;
-          if (has_more_input() && (char_between('0', '9') ||
-                                   char_between('a', 'f') ||
-                                   char_between('A', 'F'))) {
+          if (has_more_input() && char_in_alphabet(*m_input_pos,hex_alphabet)) { // (char_between('0', '9') ||
+                                 //  char_between('a', 'f') ||
+                                 //  char_between('A', 'F'))) {
             retval = true;
-            while (has_more_input() && (char_between('0', '9') ||
-                                        char_between('a', 'f') ||
-                                        char_between('A', 'F'))) {
+            while (has_more_input() && char_in_alphabet(*m_input_pos,hex_alphabet) ) { // (char_between('0', '9') ||
+                                     //   char_between('a', 'f') ||
+                                     //   char_between('A', 'F'))) {
               ++m_input_pos;
               ++m_col;
             }
@@ -337,12 +407,12 @@ namespace chaiscript
         ++m_input_pos;
         ++m_col;
 
-        if (has_more_input() && ((*m_input_pos == 'b') || (*m_input_pos == 'B'))) {
+        if (has_more_input() && char_in_alphabet(*m_input_pos,b_alphabet) ) { //  ((*m_input_pos == 'b') || (*m_input_pos == 'B'))) {
           ++m_input_pos;
           ++m_col;
-          if (has_more_input() && char_between('0', '1')) {
+          if (has_more_input() && char_in_alphabet(*m_input_pos,bin_alphabet) ) { // char_between('0', '1')) {
             retval = true;
-            while (has_more_input() && char_between('0', '1')) {
+            while (has_more_input() && char_in_alphabet(*m_input_pos,bin_alphabet) ) { // char_between('0', '1')) {
               ++m_input_pos;
               ++m_col;
             }
@@ -374,7 +444,7 @@ namespace chaiscript
         std::string::const_iterator start = m_input_pos;
         int prev_col = m_col;
         int prev_line = m_line;
-        if (has_more_input() && (char_between('0', '9') || (*m_input_pos == '.')) ) {
+        if (has_more_input() && char_in_alphabet(*m_input_pos,float_alphabet) ) { // (char_between('0', '9') || (*m_input_pos == '.')) ) {
           if (Hex_()) {
             std::string match(start, m_input_pos);
             std::stringstream ss(match);
@@ -442,10 +512,11 @@ namespace chaiscript
      */
     bool Id_() {
       bool retval = false;
-      if (has_more_input() && (char_between('A', 'Z') || (*m_input_pos == '_') || char_between('a', 'z'))) {
+      if (has_more_input() && char_in_alphabet(*m_input_pos,id_alphabet)) { //  (char_between('A', 'Z') || (*m_input_pos == '_') || char_between('a', 'z'))) {
         retval = true;
-        while (has_more_input() && (char_between('A', 'Z') || (*m_input_pos == '_') ||
-                                    char_between('a', 'z') || char_between('0', '9'))) {
+        while (has_more_input() && char_in_alphabet(*m_input_pos,keyword_alphabet) ) {
+                                  // (char_between('A', 'Z') || (*m_input_pos == '_') ||
+                                  //  char_between('a', 'z') || char_between('0', '9'))) {
           ++m_input_pos;
           ++m_col;
         }
@@ -888,49 +959,24 @@ namespace chaiscript
      */
     bool Keyword(const char *t_s, bool t_capture = false) {
       SkipWS();
-
-      if (!t_capture) {
-        std::string::const_iterator start = m_input_pos;
-        int prev_col = m_col;
-        int prev_line = m_line;
-        bool retval = Keyword_(t_s);
-        if (retval) {
-          //todo: fix this.  Hacky workaround for preventing substring matches
-          if (has_more_input() && (char_between('A', 'Z') || (*m_input_pos == '_') ||
-                                   char_between('a', 'z') || char_between('0', '9'))) {
+      std::string::const_iterator start = m_input_pos;
+      int prev_col = m_col;
+      int prev_line = m_line;
+      bool retval = Keyword_(t_s);
+      // ignore substring matches
+      if ( retval && has_more_input() && char_in_alphabet(*m_input_pos,keyword_alphabet) ) {
             m_input_pos = start;
             m_col = prev_col;
             m_line = prev_line;
-            return false;
-          }
-          return true;
-        }
-        else {
-          return retval;
-        }
+            retval = false;
       }
-      else {
-        std::string::const_iterator start = m_input_pos;
-        int prev_col = m_col;
-        int prev_line = m_line;
-        if (Keyword_(t_s)) {
-          //todo: fix this.  Hacky workaround for preventing substring matches
-          if (has_more_input() && (char_between('A', 'Z') || (*m_input_pos == '_') ||
-                                   char_between('a', 'z') || char_between('0', '9'))) {
-            m_input_pos = start;
-            m_col = prev_col;
-            m_line = prev_line;
-            return false;
-          }
+
+      if ( t_capture && retval ) {
           std::string match(start, m_input_pos);
           AST_NodePtr t(new Str_AST_Node(match, AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
           m_match_stack.push_back(t);
-          return true;
-        }
-        else {
-          return false;
-        }
       }
+      return retval;
     }
 
     /**
@@ -961,55 +1007,25 @@ namespace chaiscript
      */
     bool Symbol(const char *t_s, bool t_capture = false, bool t_disallow_prevention=false) {
       SkipWS();
+      std::string::const_iterator start = m_input_pos;
+      int prev_col = m_col;
+      int prev_line = m_line;
+      bool retval = Symbol_(t_s);
+      // ignore substring matches
+      if (retval && has_more_input() && (t_disallow_prevention == false) && char_in_alphabet(*m_input_pos,symbol_alphabet)) {
+          m_input_pos = start;
+          m_col = prev_col;
+          m_line = prev_line;
+          retval = false;
+      }
 
-      if (!t_capture) {
-        std::string::const_iterator start = m_input_pos;
-        int prev_col = m_col;
-        int prev_line = m_line;
-        bool retval = Symbol_(t_s);
-        if (retval) {
-          //todo: fix this.  Hacky workaround for preventing substring matches
-          if (has_more_input() && (t_disallow_prevention == false) &&
-              ((*m_input_pos == '+') || (*m_input_pos == '-') || (*m_input_pos == '*') || (*m_input_pos == '/') ||
-               (*m_input_pos == '|') || (*m_input_pos == '&') || (*m_input_pos == '^') || (*m_input_pos == '=') ||
-               (*m_input_pos == '.') || (*m_input_pos == '<') || (*m_input_pos == '>'))) {
-            m_input_pos = start;
-            m_col = prev_col;
-            m_line = prev_line;
-            return false;
-          }
-          return true;
-        }
-        else {
-          return retval;
-        }
+      if ( t_capture && retval ) {
+          std::string match(start, m_input_pos);
+          AST_NodePtr t(new Str_AST_Node(match, AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
+          m_match_stack.push_back(t);
       }
-      else {
-        std::string::const_iterator start = m_input_pos;
-        int prev_col = m_col;
-        int prev_line = m_line;
-        if (Symbol_(t_s)) {
-          //todo: fix this.  Hacky workaround for preventing substring matches
-          if (has_more_input() && (t_disallow_prevention == false) &&
-              ((*m_input_pos == '+') || (*m_input_pos == '-') || (*m_input_pos == '*') || (*m_input_pos == '/') ||
-               (*m_input_pos == '|') || (*m_input_pos == '&') || (*m_input_pos == '^') || (*m_input_pos == '=') ||
-               (*m_input_pos == '.') || (*m_input_pos == '<') || (*m_input_pos == '>'))) {
-            m_input_pos = start;
-            m_col = prev_col;
-            m_line = prev_line;
-            return false;
-          }
-          else {
-            std::string match(start, m_input_pos);
-            AST_NodePtr t(new Str_AST_Node(match, AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
-            m_match_stack.push_back(t);
-            return true;
-          }
-        }
-        else {
-          return false;
-        }
-      }
+
+      return retval;
     }
 
     /**
@@ -1971,7 +1987,6 @@ namespace chaiscript
         return false;
       }
     }
-
   };
 }
 
