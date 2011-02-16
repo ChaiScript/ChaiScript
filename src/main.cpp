@@ -24,14 +24,27 @@ static void add_history(const char*){}
 static void using_history(){}
 #endif
 
-void print_help() {
-  std::cout << "ChaiScript evaluator.  To evaluate an expression, type it and press <enter>." << std::endl;
-  std::cout << "Additionally, you can inspect the runtime system using:" << std::endl;
-  std::cout << "  dump_system() - outputs all functions registered to the system" << std::endl;
-  std::cout << "  dump_object(x) - dumps information about the given symbol" << std::endl;
+static void help(int n) {
+  if ( n >= 0 ) {
+    std::cout << "ChaiScript evaluator.  To evaluate an expression, type it and press <enter>." << std::endl;
+    std::cout << "Additionally, you can inspect the runtime system using:" << std::endl;
+    std::cout << "  dump_system() - outputs all functions registered to the system" << std::endl;
+    std::cout << "  dump_object(x) - dumps information about the given symbol" << std::endl;
+  } else {
+    std::cout << "usage: chai [option]+" << std::endl;
+    std::cout << "  -h | --help"         << std::endl;
+    std::cout << "  -i | --interactive"  << std::endl;
+    std::cout << "  -c | --command cmd"  << std::endl;
+    std::cout << "  -v | --version"      << std::endl;
+    std::cout << "  -    --stdin"        << std::endl;
+  }
 }
 
-bool throws_exception(const chaiscript::Proxy_Function &f)
+static void version(int){
+  std::cout << "chai: compiled " << __TIME__ << " " << __DATE__ << std::endl;
+}
+
+static bool throws_exception(const chaiscript::Proxy_Function &f)
 {
   try {
     chaiscript::functor<void ()>(f)();
@@ -42,34 +55,41 @@ bool throws_exception(const chaiscript::Proxy_Function &f)
   return false;
 }
 
-std::string get_next_command() {
+static std::string trim(std::string source,const std::string& t)
+{
+  std::string result = source ;
+  result.erase(result.find_last_not_of(t)+1);
+  result.erase(0, result.find_first_not_of(t));
+  return result ;
+}
+
+static std::string get_next_command() {
   std::string retval("quit");
   if ( ! std::cin.eof() ) {
     char *input_raw = readline("eval> ");
     if ( input_raw ) {
       add_history(input_raw);
-      retval = input_raw;
+      retval = trim(std::string(input_raw),std::string(" \t"));
       ::free(input_raw);
-      if ( retval == "help" ) {
-         print_help();
-         retval="";
-      }
-      if ( retval == "quit" || retval == "exit" ) {
-        retval="exit(0)";
-      }
     }
+  }
+  if(retval == "quit"
+  || retval == "exit"
+  || retval == "help"
+  || retval == "version"
+  ){
+    retval += "(0)";
   }
   return retval;
 }
 
 // We have to wrap exit with our own because Clang has a hard time with
 // function pointers to functions with special attributes (system exit being marked NORETURN)
-void myexit(int return_val) {
-  std::cout << "thanks for using ChaiScript" << std::endl ;
+static void myexit(int return_val) {
   exit(return_val);
 }
 
-void interactive(chaiscript::ChaiScript& chai)
+static void interactive(chaiscript::ChaiScript& chai)
 {
   using_history();
 
@@ -103,23 +123,21 @@ void interactive(chaiscript::ChaiScript& chai)
 
 int main(int argc, char *argv[])
 {
-  int error = EXIT_SUCCESS;
-
   std::vector<std::string> usepaths;
   std::vector<std::string> modulepaths;
 
   // Disable deprecation warning for getenv call.
-  #ifdef BOOST_MSVC
-  #pragma warning(push)
-  #pragma warning(disable : 4996)
-  #endif
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
 
   const char *usepath = getenv("CHAI_USE_PATH");
   const char *modulepath = getenv("CHAI_MODULE_PATH");
 
-  #ifdef BOOST_MSVC
-  #pragma warning(pop)
-  #endif
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
 
   usepaths.push_back("");
   if (usepath)
@@ -136,34 +154,70 @@ int main(int argc, char *argv[])
   chaiscript::ChaiScript chai(modulepaths,usepaths);
 
   chai.add(chaiscript::fun(&myexit), "exit");
+  chai.add(chaiscript::fun(&myexit), "quit");
+  chai.add(chaiscript::fun(&help), "help");
+  chai.add(chaiscript::fun(&version), "version");
   chai.add(chaiscript::fun(&throws_exception), "throws_exception");
 
-  if (argc < 2) {
-    interactive(chai);
-  } else {
-    for (int i = 1; !error && (i < argc); ++i) {
-      try {
-        chaiscript::Boxed_Value val = chai.eval_file(argv[i]);
+  for (int i = 0; i < argc; ++i) {
+    if ( i == 0 && argc > 1 ) i++ ;
+    std::string arg( i ? argv[i] : "--interactive" );
+    enum 
+    { eInteractive
+    , eCommand
+    , eFile
+    } mode = eCommand ;
+    if  ( arg == "-c" || arg == "--command" ) {
+      if ( (i+1) >= argc ) {
+        std::cout << "insufficient input following " << arg << std::endl;
+        return EXIT_FAILURE;
+      } else {
+        arg = argv[++i];
       }
-      catch (chaiscript::Eval_Error &ee) {
-        std::cout << ee.what();
-        if (ee.call_stack.size() > 0) {
-          std::cout << "during evaluation at (" << *(ee.call_stack[0]->filename) << " " << ee.call_stack[0]->start.line << ", " << ee.call_stack[0]->start.column << ")";
-          for (unsigned int j = 1; j < ee.call_stack.size(); ++j) {
-            std::cout << std::endl;
-            std::cout << "  from " << *(ee.call_stack[j]->filename) << " (" << ee.call_stack[j]->start.line << ", " << ee.call_stack[j]->start.column << ")";
-          }
+    } else if ( arg == "-" || arg == "--stdin" ) {
+      arg = "" ;
+      std::string line;
+      while ( std::getline(std::cin, line) ) {
+        arg += line ;
+      }
+    } else if ( arg == "-v" || arg == "--version" ) {
+      arg = "version(0)" ;
+    } else if ( arg == "-h" || arg == "--help" ) {
+      arg = "help(-1)";
+    } else if ( arg == "-i" || arg == "--interactive" ) {
+      mode = eInteractive ;
+    } else if ( (arg.length() ? arg[0] : ' ') == '-' ) {
+      std::cout << "unrecognised argument " << arg << std::endl;
+      return EXIT_FAILURE;
+    } else {
+      mode = eFile;
+    }
+
+    chaiscript::Boxed_Value val ;
+    try {
+      switch ( mode ) {
+        case eInteractive : interactive(chai); break;
+        case eCommand     : val = chai.eval(arg); break;
+        case eFile        : val = chai.eval_file(arg); break;
+      }
+    }
+    catch (chaiscript::Eval_Error &ee) {
+      std::cout << ee.what();
+      if (ee.call_stack.size() > 0) {
+        std::cout << "during evaluation at (" << *(ee.call_stack[0]->filename) << " " << ee.call_stack[0]->start.line << ", " << ee.call_stack[0]->start.column << ")";
+        for (unsigned int j = 1; j < ee.call_stack.size(); ++j) {
+          std::cout << std::endl;
+          std::cout << "  from " << *(ee.call_stack[j]->filename) << " (" << ee.call_stack[j]->start.line << ", " << ee.call_stack[j]->start.column << ")";
         }
-        std::cout << std::endl;
-        error = EXIT_FAILURE;
       }
-      catch (std::exception &e) {
-        std::cout << e.what() << std::endl;
-        error = EXIT_FAILURE;
-      }
+      std::cout << std::endl;
+      return EXIT_FAILURE;
+    }
+    catch (std::exception &e) {
+      std::cout << e.what() << std::endl;
+      return EXIT_FAILURE;
     }
   }
 
-  return error ;
+  return EXIT_SUCCESS;
 }
-

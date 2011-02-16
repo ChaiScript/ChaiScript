@@ -7,16 +7,12 @@
 #ifndef CHAISCRIPT_PARSER_HPP_
 #define CHAISCRIPT_PARSER_HPP_
 
-
 #include <exception>
 #include <fstream>
 #include <sstream>
 
 #include "chaiscript_prelude.hpp"
 #include "chaiscript_common.hpp"
-
-#define lengthof(x) (((int)sizeof(x))/((int)sizeof(x[0])))
-
 
 namespace chaiscript
 {
@@ -32,6 +28,7 @@ namespace chaiscript
   ,   id_alphabet
   ,   white_alphabet
   ,   max_alphabet
+  ,   lengthof_alphabet = 256
   };
 
   class ChaiScript_Parser {
@@ -43,13 +40,13 @@ namespace chaiscript
     std::string m_singleline_comment;
     boost::shared_ptr<std::string> m_filename;
     std::vector<AST_NodePtr> m_match_stack;
-	bool alphabet[max_alphabet][256];
+    bool alphabet[max_alphabet][lengthof_alphabet];
 
     std::vector<std::vector<std::string> > m_operator_matches;
     std::vector<AST_Node_Type::Type> m_operators;
 
   public:
-    ChaiScript_Parser()            
+    ChaiScript_Parser()
       : m_multiline_comment_begin("/*"),
         m_multiline_comment_end("*/"),
         m_singleline_comment("//")
@@ -60,7 +57,7 @@ namespace chaiscript
     ChaiScript_Parser(const ChaiScript_Parser &); // explicitly unimplemented copy constructor
     ChaiScript_Parser &operator=(const ChaiScript_Parser &); // explicitly unimplemented assignment operator
 
-	void setup_operators() 
+    void setup_operators()
     {
       m_operators.push_back(AST_Node_Type::Logical_Or);
       std::vector<std::string> logical_or;
@@ -80,7 +77,7 @@ namespace chaiscript
       m_operators.push_back(AST_Node_Type::Bitwise_Xor);
       std::vector<std::string> bitwise_xor;
       bitwise_xor.push_back("^");
-      m_operator_matches.push_back(bitwise_xor);           
+      m_operator_matches.push_back(bitwise_xor);
 
       m_operators.push_back(AST_Node_Type::Bitwise_And);
       std::vector<std::string> bitwise_and;
@@ -91,7 +88,7 @@ namespace chaiscript
       std::vector<std::string> equality;
       equality.push_back("==");
       equality.push_back("!=");
-      m_operator_matches.push_back(equality);           
+      m_operator_matches.push_back(equality);
 
       m_operators.push_back(AST_Node_Type::Comparison);
       std::vector<std::string> comparison;
@@ -105,7 +102,7 @@ namespace chaiscript
       std::vector<std::string> shift;
       shift.push_back("<<");
       shift.push_back(">>");
-      m_operator_matches.push_back(shift);           
+      m_operator_matches.push_back(shift);
 
       m_operators.push_back(AST_Node_Type::Additive);
       std::vector<std::string> additive;
@@ -124,29 +121,29 @@ namespace chaiscript
       std::vector<std::string> dot_access;
       dot_access.push_back(".");
       m_operator_matches.push_back(dot_access);
-		
-	  int c;
-	  for ( c = 0 ; c < lengthof(alphabet[0]) ; c++ ) {
+
+      int c;
+      for ( c = 0 ; c < lengthof_alphabet ; c++ ) {
         for ( int a = 0 ; a < max_alphabet ; a ++ ) {
           alphabet[a][c]=false;
         }
-	  }
-	  alphabet[symbol_alphabet]['+']=true;
-	  alphabet[symbol_alphabet]['-']=true; 
-	  alphabet[symbol_alphabet]['*']=true; 
-	  alphabet[symbol_alphabet]['/']=true;
-	  alphabet[symbol_alphabet]['|']=true; 
-	  alphabet[symbol_alphabet]['&']=true; 
-	  alphabet[symbol_alphabet]['^']=true; 
-	  alphabet[symbol_alphabet]['=']=true;
-	  alphabet[symbol_alphabet]['.']=true;
-	  alphabet[symbol_alphabet]['<']=true; 
-	  alphabet[symbol_alphabet]['>']=true;
-		
+      }
+      alphabet[symbol_alphabet]['+']=true;
+      alphabet[symbol_alphabet]['-']=true;
+      alphabet[symbol_alphabet]['*']=true;
+      alphabet[symbol_alphabet]['/']=true;
+      alphabet[symbol_alphabet]['|']=true;
+      alphabet[symbol_alphabet]['&']=true;
+      alphabet[symbol_alphabet]['^']=true;
+      alphabet[symbol_alphabet]['=']=true;
+      alphabet[symbol_alphabet]['.']=true;
+      alphabet[symbol_alphabet]['<']=true;
+      alphabet[symbol_alphabet]['>']=true;
+
       for ( c = 'a' ; c <= 'z' ; c++ ) alphabet[keyword_alphabet][c]=true;
-	  for ( c = 'A' ; c <= 'Z' ; c++ ) alphabet[keyword_alphabet][c]=true;
-	  for ( c = '0' ; c <= '9' ; c++ ) alphabet[keyword_alphabet][c]=true;
-	  alphabet[keyword_alphabet]['_']=true;
+      for ( c = 'A' ; c <= 'Z' ; c++ ) alphabet[keyword_alphabet][c]=true;
+      for ( c = '0' ; c <= '9' ; c++ ) alphabet[keyword_alphabet][c]=true;
+      alphabet[keyword_alphabet]['_']=true;
 
       for ( c = '0' ; c <= '9' ; c++ ) alphabet[int_alphabet][c]=true;
       for ( c = '0' ; c <= '9' ; c++ ) alphabet[float_alphabet][c]=true;
@@ -171,10 +168,10 @@ namespace chaiscript
       alphabet[white_alphabet]['\t']=true;
     }
 
-	/**
-	 * test a char in an alphabet
-	 */
-	bool char_in_alphabet(unsigned char c,Alphabet a) { return alphabet[a][c]; } 
+    /**
+     * test a char in an alphabet
+     */
+    bool char_in_alphabet(unsigned char c,Alphabet a) { return alphabet[a][c]; }
 
     /**
      * Prints the parsed ast_nodes as a tree
@@ -218,7 +215,7 @@ namespace chaiscript
     void build_match(AST_NodePtr t_t, size_t t_match_start) {
       int pos_line_start, pos_col_start, pos_line_stop, pos_col_stop;
       int is_deep = false;
-      
+
       //so we want to take everything to the right of this and make them children
       if (t_match_start != m_match_stack.size()) {
         pos_line_start = m_match_stack[t_match_start]->start.line;
@@ -239,7 +236,7 @@ namespace chaiscript
       t_t->start.column = pos_col_start;
       t_t->end.line = pos_line_stop;
       t_t->end.column = pos_col_stop;
-      
+
       if (is_deep) {
         t_t->children.assign(m_match_stack.begin() + t_match_start, m_match_stack.end());
         m_match_stack.erase(m_match_stack.begin() + t_match_start, m_match_stack.end());
@@ -252,25 +249,12 @@ namespace chaiscript
     }
 
     /**
-     * Does ranged char check
-     */
-/*
-    inline bool char_between(char t_start, char t_end) {
-      if ((*m_input_pos >= t_start) && (*m_input_pos <= t_end)) {
-        return true;
-      }
-      else {
-        return false;
-      }
-    }
-*/
-    /**
      * Check to see if there is more text parse
      */
     inline bool has_more_input() {
       return (m_input_pos != m_input_end);
     }
-                                
+
     /**
      * Skips any multi-line or single-line comment
      */
@@ -315,7 +299,7 @@ namespace chaiscript
     bool SkipWS() {
       bool retval = false;
       while (has_more_input()) {
-        if ( char_in_alphabet(*m_input_pos,white_alphabet) ) { // (*m_input_pos == ' ') || (*m_input_pos == '\t')) {
+        if ( char_in_alphabet(*m_input_pos,white_alphabet) ) {
           ++m_input_pos;
           ++m_col;
           retval = true;
@@ -337,17 +321,17 @@ namespace chaiscript
       bool retval = false;
       std::string::const_iterator start = m_input_pos;
 
-      if (has_more_input() && char_in_alphabet(*m_input_pos,float_alphabet) ) { // (char_between('0', '9') || (*m_input_pos == '.'))) {
-        while (has_more_input() && char_in_alphabet(*m_input_pos,int_alphabet) ) { // char_between('0', '9')) {
+      if (has_more_input() && char_in_alphabet(*m_input_pos,float_alphabet) ) {
+        while (has_more_input() && char_in_alphabet(*m_input_pos,int_alphabet) ) {
           ++m_input_pos;
           ++m_col;
         }
         if (has_more_input() && (*m_input_pos == '.')) {
           ++m_input_pos;
           ++m_col;
-          if (has_more_input() && char_in_alphabet(*m_input_pos,int_alphabet)) { // char_between('0', '9')) {
+          if (has_more_input() && char_in_alphabet(*m_input_pos,int_alphabet)) {
             retval = true;
-            while (has_more_input() && char_in_alphabet(*m_input_pos,int_alphabet) ) { //char_between('0', '9')) {
+            while (has_more_input() && char_in_alphabet(*m_input_pos,int_alphabet) ) {
               ++m_input_pos;
               ++m_col;
             }
@@ -370,16 +354,12 @@ namespace chaiscript
         ++m_input_pos;
         ++m_col;
 
-        if (has_more_input() && char_in_alphabet(*m_input_pos,x_alphabet) ) { // ((*m_input_pos == 'x') || (*m_input_pos == 'X'))) {
+        if (has_more_input() && char_in_alphabet(*m_input_pos,x_alphabet) ) {
           ++m_input_pos;
           ++m_col;
-          if (has_more_input() && char_in_alphabet(*m_input_pos,hex_alphabet)) { // (char_between('0', '9') ||
-                                 //  char_between('a', 'f') ||
-                                 //  char_between('A', 'F'))) {
+          if (has_more_input() && char_in_alphabet(*m_input_pos,hex_alphabet)) {
             retval = true;
-            while (has_more_input() && char_in_alphabet(*m_input_pos,hex_alphabet) ) { // (char_between('0', '9') ||
-                                     //   char_between('a', 'f') ||
-                                     //   char_between('A', 'F'))) {
+            while (has_more_input() && char_in_alphabet(*m_input_pos,hex_alphabet) ) {
               ++m_input_pos;
               ++m_col;
             }
@@ -407,12 +387,12 @@ namespace chaiscript
         ++m_input_pos;
         ++m_col;
 
-        if (has_more_input() && char_in_alphabet(*m_input_pos,b_alphabet) ) { //  ((*m_input_pos == 'b') || (*m_input_pos == 'B'))) {
+        if (has_more_input() && char_in_alphabet(*m_input_pos,b_alphabet) ) {
           ++m_input_pos;
           ++m_col;
-          if (has_more_input() && char_in_alphabet(*m_input_pos,bin_alphabet) ) { // char_between('0', '1')) {
+          if (has_more_input() && char_in_alphabet(*m_input_pos,bin_alphabet) ) {
             retval = true;
-            while (has_more_input() && char_in_alphabet(*m_input_pos,bin_alphabet) ) { // char_between('0', '1')) {
+            while (has_more_input() && char_in_alphabet(*m_input_pos,bin_alphabet) ) {
               ++m_input_pos;
               ++m_col;
             }
@@ -444,7 +424,7 @@ namespace chaiscript
         std::string::const_iterator start = m_input_pos;
         int prev_col = m_col;
         int prev_line = m_line;
-        if (has_more_input() && char_in_alphabet(*m_input_pos,float_alphabet) ) { // (char_between('0', '9') || (*m_input_pos == '.')) ) {
+        if (has_more_input() && char_in_alphabet(*m_input_pos,float_alphabet) ) {
           if (Hex_()) {
             std::string match(start, m_input_pos);
             std::stringstream ss(match);
@@ -512,11 +492,9 @@ namespace chaiscript
      */
     bool Id_() {
       bool retval = false;
-      if (has_more_input() && char_in_alphabet(*m_input_pos,id_alphabet)) { //  (char_between('A', 'Z') || (*m_input_pos == '_') || char_between('a', 'z'))) {
+      if (has_more_input() && char_in_alphabet(*m_input_pos,id_alphabet)) {
         retval = true;
         while (has_more_input() && char_in_alphabet(*m_input_pos,keyword_alphabet) ) {
-                                  // (char_between('A', 'Z') || (*m_input_pos == '_') ||
-                                  //  char_between('a', 'z') || char_between('0', '9'))) {
           ++m_input_pos;
           ++m_col;
         }
@@ -526,7 +504,7 @@ namespace chaiscript
         ++m_col;
         ++m_input_pos;
         std::string::const_iterator start = m_input_pos;
-                
+
         while (has_more_input() && (*m_input_pos != '`')) {
           if (Eol()) {
             throw Eval_Error("Carriage return in identifier literal", File_Position(m_line, m_col), *m_filename);
@@ -1702,7 +1680,7 @@ namespace chaiscript
         return false;
       }
     }
-        
+
     bool Operator_Helper(size_t t_precedence) {
       for (size_t i = 0; i < m_operator_matches[t_precedence].size(); ++i) {
         if (Symbol(m_operator_matches[t_precedence][i].c_str(), true)) {
@@ -1723,7 +1701,7 @@ namespace chaiscript
           if (Operator_Helper(t_precedence)) {
             do {
               if (!Operator(t_precedence+1)) {
-                throw Eval_Error("Incomplete " 
+                throw Eval_Error("Incomplete "
                     + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
                                  File_Position(m_line, m_col), *m_filename);
               }
@@ -1764,7 +1742,7 @@ namespace chaiscript
               build_match(AST_NodePtr(new Logical_Or_AST_Node()), prev_stack_top);
               break;
             default:
-              throw Eval_Error("Internal error: unhandled ast_node", File_Position(m_line, m_col), *m_filename); 
+              throw Eval_Error("Internal error: unhandled ast_node", File_Position(m_line, m_col), *m_filename);
             }
           }
         }
@@ -1964,7 +1942,7 @@ namespace chaiscript
     bool parse(const std::string &t_input, const std::string &t_fname) {
       m_input_pos = t_input.begin();
       m_input_end = t_input.end();
-      m_line = 1; 
+      m_line = 1;
       m_col = 1;
       m_filename = boost::shared_ptr<std::string>(new std::string(t_fname));
 
@@ -1972,6 +1950,7 @@ namespace chaiscript
         while ((m_input_pos != m_input_end) && (!Eol())) {
           ++m_input_pos;
         }
+        // TODO: respect // -*- coding: utf-8 -*- on line 1 or 2 see: http://evanjones.ca/python-utf8.html)
       }
 
       if (Statements()) {
