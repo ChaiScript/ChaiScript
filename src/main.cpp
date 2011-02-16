@@ -31,12 +31,14 @@ static void help(int n) {
     std::cout << "  dump_system() - outputs all functions registered to the system" << std::endl;
     std::cout << "  dump_object(x) - dumps information about the given symbol" << std::endl;
   } else {
-    std::cout << "usage: chai [option]+" << std::endl;
-    std::cout << "  -h | --help"         << std::endl;
-    std::cout << "  -i | --interactive"  << std::endl;
-    std::cout << "  -c | --command cmd"  << std::endl;
-    std::cout << "  -v | --version"      << std::endl;
-    std::cout << "  -    --stdin"        << std::endl;
+    std::cout << "usage : chai [option]+" << std::endl;
+    std::cout << "option:"                << std::endl;
+    std::cout << "   -h | --help"         << std::endl;
+    std::cout << "   -i | --interactive"  << std::endl;
+    std::cout << "   -c | --command cmd"  << std::endl;
+    std::cout << "   -v | --version"      << std::endl;
+    std::cout << "   -    --stdin"        << std::endl;
+    std::cout << "   filepath"            << std::endl;
   }
 }
 
