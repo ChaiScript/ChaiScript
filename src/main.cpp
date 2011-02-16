@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
       arg = "" ;
       std::string line;
       while ( std::getline(std::cin, line) ) {
-        arg += line ;
+        arg += line + '\n' ;
       }
     } else if ( arg == "-v" || arg == "--version" ) {
       arg = "version(0)" ;
