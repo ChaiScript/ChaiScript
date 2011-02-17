@@ -13,6 +13,9 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #else
+#ifndef _MSC_VER
+#define _strdup strdup
+#endif
 static char* readline(const char* p)
 {
   std::string retval;
