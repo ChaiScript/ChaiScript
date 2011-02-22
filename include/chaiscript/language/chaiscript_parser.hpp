@@ -122,8 +122,7 @@ namespace chaiscript
       dot_access.push_back(".");
       m_operator_matches.push_back(dot_access);
 
-      int c;
-      for ( c = 0 ; c < lengthof_alphabet ; c++ ) {
+      for ( int c = 0 ; c < lengthof_alphabet ; ++c ) {
         for ( int a = 0 ; a < max_alphabet ; a ++ ) {
           m_alphabet[a][c]=false;
         }
@@ -140,28 +139,28 @@ namespace chaiscript
       m_alphabet[symbol_alphabet]['<']=true;
       m_alphabet[symbol_alphabet]['>']=true;
 
-      for ( c = 'a' ; c <= 'z' ; c++ ) m_alphabet[keyword_alphabet][c]=true;
-      for ( c = 'A' ; c <= 'Z' ; c++ ) m_alphabet[keyword_alphabet][c]=true;
-      for ( c = '0' ; c <= '9' ; c++ ) m_alphabet[keyword_alphabet][c]=true;
+      for ( int c = 'a' ; c <= 'z' ; ++c ) { m_alphabet[keyword_alphabet][c]=true; }
+      for ( int c = 'A' ; c <= 'Z' ; ++c ) { m_alphabet[keyword_alphabet][c]=true; }
+      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[keyword_alphabet][c]=true; }
       m_alphabet[keyword_alphabet]['_']=true;
 
-      for ( c = '0' ; c <= '9' ; c++ ) m_alphabet[int_alphabet][c]=true;
-      for ( c = '0' ; c <= '9' ; c++ ) m_alphabet[float_alphabet][c]=true;
+      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[int_alphabet][c]=true; }
+      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[float_alphabet][c]=true; }
       m_alphabet[float_alphabet]['.']=true;
 
-      for ( c = '0' ; c <= '9' ; c++ ) m_alphabet[hex_alphabet][c]=true;
-      for ( c = 'a' ; c <= 'f' ; c++ ) m_alphabet[hex_alphabet][c]=true;
-      for ( c = 'A' ; c <= 'F' ; c++ ) m_alphabet[hex_alphabet][c]=true;
+      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[hex_alphabet][c]=true; }
+      for ( int c = 'a' ; c <= 'f' ; ++c ) { m_alphabet[hex_alphabet][c]=true; }
+      for ( int c = 'A' ; c <= 'F' ; ++c ) { m_alphabet[hex_alphabet][c]=true; }
 
       m_alphabet[x_alphabet]['x']=true;
       m_alphabet[x_alphabet]['X']=true;
 
-      for ( c = '0' ; c <= '1' ; c++ ) m_alphabet[bin_alphabet][c]=true;
+      for ( int c = '0' ; c <= '1' ; ++c ) { m_alphabet[bin_alphabet][c]=true; }
       m_alphabet[b_alphabet]['b']=true;
       m_alphabet[b_alphabet]['B']=true;
 
-      for ( c = 'a' ; c <= 'z' ; c++ ) m_alphabet[id_alphabet][c]=true;
-      for ( c = 'A' ; c <= 'Z' ; c++ ) m_alphabet[id_alphabet][c]=true;
+      for ( int c = 'a' ; c <= 'z' ; ++c ) { m_alphabet[id_alphabet][c]=true; }
+      for ( int c = 'A' ; c <= 'Z' ; ++c ) { m_alphabet[id_alphabet][c]=true; }
       m_alphabet[id_alphabet]['_'] = true;
 
       m_alphabet[white_alphabet][' ']=true;
