@@ -40,7 +40,7 @@ namespace chaiscript
     std::string m_singleline_comment;
     boost::shared_ptr<std::string> m_filename;
     std::vector<AST_NodePtr> m_match_stack;
-    bool alphabet[max_alphabet][lengthof_alphabet];
+    bool m_alphabet[max_alphabet][lengthof_alphabet];
 
     std::vector<std::vector<std::string> > m_operator_matches;
     std::vector<AST_Node_Type::Type> m_operators;
@@ -125,53 +125,53 @@ namespace chaiscript
       int c;
       for ( c = 0 ; c < lengthof_alphabet ; c++ ) {
         for ( int a = 0 ; a < max_alphabet ; a ++ ) {
-          alphabet[a][c]=false;
+          m_alphabet[a][c]=false;
         }
       }
-      alphabet[symbol_alphabet]['+']=true;
-      alphabet[symbol_alphabet]['-']=true;
-      alphabet[symbol_alphabet]['*']=true;
-      alphabet[symbol_alphabet]['/']=true;
-      alphabet[symbol_alphabet]['|']=true;
-      alphabet[symbol_alphabet]['&']=true;
-      alphabet[symbol_alphabet]['^']=true;
-      alphabet[symbol_alphabet]['=']=true;
-      alphabet[symbol_alphabet]['.']=true;
-      alphabet[symbol_alphabet]['<']=true;
-      alphabet[symbol_alphabet]['>']=true;
+      m_alphabet[symbol_alphabet]['+']=true;
+      m_alphabet[symbol_alphabet]['-']=true;
+      m_alphabet[symbol_alphabet]['*']=true;
+      m_alphabet[symbol_alphabet]['/']=true;
+      m_alphabet[symbol_alphabet]['|']=true;
+      m_alphabet[symbol_alphabet]['&']=true;
+      m_alphabet[symbol_alphabet]['^']=true;
+      m_alphabet[symbol_alphabet]['=']=true;
+      m_alphabet[symbol_alphabet]['.']=true;
+      m_alphabet[symbol_alphabet]['<']=true;
+      m_alphabet[symbol_alphabet]['>']=true;
 
-      for ( c = 'a' ; c <= 'z' ; c++ ) alphabet[keyword_alphabet][c]=true;
-      for ( c = 'A' ; c <= 'Z' ; c++ ) alphabet[keyword_alphabet][c]=true;
-      for ( c = '0' ; c <= '9' ; c++ ) alphabet[keyword_alphabet][c]=true;
-      alphabet[keyword_alphabet]['_']=true;
+      for ( c = 'a' ; c <= 'z' ; c++ ) m_alphabet[keyword_alphabet][c]=true;
+      for ( c = 'A' ; c <= 'Z' ; c++ ) m_alphabet[keyword_alphabet][c]=true;
+      for ( c = '0' ; c <= '9' ; c++ ) m_alphabet[keyword_alphabet][c]=true;
+      m_alphabet[keyword_alphabet]['_']=true;
 
-      for ( c = '0' ; c <= '9' ; c++ ) alphabet[int_alphabet][c]=true;
-      for ( c = '0' ; c <= '9' ; c++ ) alphabet[float_alphabet][c]=true;
-      alphabet[float_alphabet]['.']=true;
+      for ( c = '0' ; c <= '9' ; c++ ) m_alphabet[int_alphabet][c]=true;
+      for ( c = '0' ; c <= '9' ; c++ ) m_alphabet[float_alphabet][c]=true;
+      m_alphabet[float_alphabet]['.']=true;
 
-      for ( c = '0' ; c <= '9' ; c++ ) alphabet[hex_alphabet][c]=true;
-      for ( c = 'a' ; c <= 'f' ; c++ ) alphabet[hex_alphabet][c]=true;
-      for ( c = 'A' ; c <= 'F' ; c++ ) alphabet[hex_alphabet][c]=true;
+      for ( c = '0' ; c <= '9' ; c++ ) m_alphabet[hex_alphabet][c]=true;
+      for ( c = 'a' ; c <= 'f' ; c++ ) m_alphabet[hex_alphabet][c]=true;
+      for ( c = 'A' ; c <= 'F' ; c++ ) m_alphabet[hex_alphabet][c]=true;
 
-      alphabet[x_alphabet]['x']=true;
-      alphabet[x_alphabet]['X']=true;
+      m_alphabet[x_alphabet]['x']=true;
+      m_alphabet[x_alphabet]['X']=true;
 
-      for ( c = '0' ; c <= '1' ; c++ ) alphabet[bin_alphabet][c]=true;
-      alphabet[b_alphabet]['b']=true;
-      alphabet[b_alphabet]['B']=true;
+      for ( c = '0' ; c <= '1' ; c++ ) m_alphabet[bin_alphabet][c]=true;
+      m_alphabet[b_alphabet]['b']=true;
+      m_alphabet[b_alphabet]['B']=true;
 
-      for ( c = 'a' ; c <= 'z' ; c++ ) alphabet[id_alphabet][c]=true;
-      for ( c = 'A' ; c <= 'Z' ; c++ ) alphabet[id_alphabet][c]=true;
-      alphabet[id_alphabet]['_'] = true;
+      for ( c = 'a' ; c <= 'z' ; c++ ) m_alphabet[id_alphabet][c]=true;
+      for ( c = 'A' ; c <= 'Z' ; c++ ) m_alphabet[id_alphabet][c]=true;
+      m_alphabet[id_alphabet]['_'] = true;
 
-      alphabet[white_alphabet][' ']=true;
-      alphabet[white_alphabet]['\t']=true;
+      m_alphabet[white_alphabet][' ']=true;
+      m_alphabet[white_alphabet]['\t']=true;
     }
 
     /**
-     * test a char in an alphabet
+     * test a char in an m_alphabet
      */
-    bool char_in_alphabet(unsigned char c,Alphabet a) { return alphabet[a][c]; }
+    bool char_in_alphabet(unsigned char c,Alphabet a) { return m_alphabet[a][c]; }
 
     /**
      * Prints the parsed ast_nodes as a tree
