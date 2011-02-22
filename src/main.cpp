@@ -6,6 +6,8 @@
 
 #include <iostream>
 #include <list>
+#include <boost/algorithm/string/trim.hpp>
+
 #define _CRT_SECURE_NO_WARNINGS
 #include <chaiscript/chaiscript.hpp>
 
@@ -61,21 +63,13 @@ bool throws_exception(const chaiscript::Proxy_Function &f)
   return false;
 }
 
-std::string trim(std::string source,const std::string& t)
-{
-  std::string result = source ;
-  result.erase(result.find_last_not_of(t)+1);
-  result.erase(0, result.find_first_not_of(t));
-  return result ;
-}
-
 std::string get_next_command() {
   std::string retval("quit");
   if ( ! std::cin.eof() ) {
     char *input_raw = readline("eval> ");
     if ( input_raw ) {
       add_history(input_raw);
-      retval = trim(std::string(input_raw),std::string(" \t"));
+      retval = boost::trim_copy_if(std::string(input_raw),boost::is_any_of(" \t"));
       ::free(input_raw);
     }
   }
