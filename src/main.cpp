@@ -13,21 +13,22 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #else
-#ifndef _MSC_VER
-#define _strdup strdup
-#endif
-static char* readline(const char* p)
+char* readline(const char* p)
 {
   std::string retval;
   std::cout << p ;
   std::getline(std::cin, retval);
+#ifdef BOOST_MSVC
   return std::cin.eof() ? NULL : _strdup(retval.c_str());
+#else
+  return std::cin.eof() ? NULL : strdup(retval.c_str());
+#endif
 }
-static void add_history(const char*){}
-static void using_history(){}
+void add_history(const char*){}
+void using_history(){}
 #endif
 
-static void help(int n) {
+void help(int n) {
   if ( n >= 0 ) {
     std::cout << "ChaiScript evaluator.  To evaluate an expression, type it and press <enter>." << std::endl;
     std::cout << "Additionally, you can inspect the runtime system using:" << std::endl;
@@ -45,11 +46,11 @@ static void help(int n) {
   }
 }
 
-static void version(int){
+void version(int){
   std::cout << "chai: compiled " << __TIME__ << " " << __DATE__ << std::endl;
 }
 
-static bool throws_exception(const chaiscript::Proxy_Function &f)
+bool throws_exception(const chaiscript::Proxy_Function &f)
 {
   try {
     chaiscript::functor<void ()>(f)();
@@ -60,7 +61,7 @@ static bool throws_exception(const chaiscript::Proxy_Function &f)
   return false;
 }
 
-static std::string trim(std::string source,const std::string& t)
+std::string trim(std::string source,const std::string& t)
 {
   std::string result = source ;
   result.erase(result.find_last_not_of(t)+1);
@@ -68,7 +69,7 @@ static std::string trim(std::string source,const std::string& t)
   return result ;
 }
 
-static std::string get_next_command() {
+std::string get_next_command() {
   std::string retval("quit");
   if ( ! std::cin.eof() ) {
     char *input_raw = readline("eval> ");
@@ -78,11 +79,11 @@ static std::string get_next_command() {
       ::free(input_raw);
     }
   }
-  if(retval == "quit"
-  || retval == "exit"
-  || retval == "help"
-  || retval == "version"
-  ){
+  if(   retval == "quit"
+     || retval == "exit"
+     || retval == "help"
+     || retval == "version") 
+  {
     retval += "(0)";
   }
   return retval;
@@ -90,11 +91,11 @@ static std::string get_next_command() {
 
 // We have to wrap exit with our own because Clang has a hard time with
 // function pointers to functions with special attributes (system exit being marked NORETURN)
-static void myexit(int return_val) {
+void myexit(int return_val) {
   exit(return_val);
 }
 
-static void interactive(chaiscript::ChaiScript& chai)
+void interactive(chaiscript::ChaiScript& chai)
 {
   using_history();
 
@@ -165,13 +166,17 @@ int main(int argc, char *argv[])
   chai.add(chaiscript::fun(&throws_exception), "throws_exception");
 
   for (int i = 0; i < argc; ++i) {
-    if ( i == 0 && argc > 1 ) i++ ;
+    if ( i == 0 && argc > 1 ) {
+      ++i;
+    }
+
     std::string arg( i ? argv[i] : "--interactive" );
-    enum 
-    { eInteractive
-    , eCommand
-    , eFile
+
+    enum { eInteractive
+         , eCommand
+         , eFile
     } mode = eCommand ;
+
     if  ( arg == "-c" || arg == "--command" ) {
       if ( (i+1) >= argc ) {
         std::cout << "insufficient input following " << arg << std::endl;
@@ -191,7 +196,7 @@ int main(int argc, char *argv[])
       arg = "help(-1)";
     } else if ( arg == "-i" || arg == "--interactive" ) {
       mode = eInteractive ;
-    } else if ( (arg.length() ? arg[0] : ' ') == '-' ) {
+    } else if ( arg.find('-') == 0 ) {
       std::cout << "unrecognised argument " << arg << std::endl;
       return EXIT_FAILURE;
     } else {
