@@ -30,34 +30,38 @@
 
 namespace chaiscript
 {
- 
-  template<typename Ret, typename O, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-    boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> 
+
+  namespace detail
+  { 
+    template<typename Ret, typename O, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
+      boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> 
       bind_first(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)), const O &o)
       {
         return boost::bind(boost::mem_fn(f), o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
       }
 
-  template<typename Ret, typename O, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-    boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> 
+    template<typename Ret, typename O, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
+      boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> 
       bind_first(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param))const, const O &o)
       {
         return boost::bind(boost::mem_fn(f), o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
       }
 
-  template<typename Ret,typename O BOOST_PP_COMMA_IF(m) BOOST_PP_ENUM_PARAMS(m, typename Param) >
-    boost::function<Ret (BOOST_PP_ENUM(n, param, Param))> 
+    template<typename Ret,typename O BOOST_PP_COMMA_IF(m) BOOST_PP_ENUM_PARAMS(m, typename Param) >
+      boost::function<Ret (BOOST_PP_ENUM(n, param, Param))> 
       bind_first(Ret (*f)(BOOST_PP_ENUM_PARAMS(m, Param)), const O &o)
       {
         return boost::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
       }
 
-  template<typename Ret,typename O BOOST_PP_COMMA_IF(m) BOOST_PP_ENUM_PARAMS(m, typename Param) >
-    boost::function<Ret (BOOST_PP_ENUM(n, param, Param))> 
+    template<typename Ret,typename O BOOST_PP_COMMA_IF(m) BOOST_PP_ENUM_PARAMS(m, typename Param) >
+      boost::function<Ret (BOOST_PP_ENUM(n, param, Param))> 
       bind_first(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(m, Param))> &f, const O &o)
       {
         return boost::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
       }
+
+  }
 }
 
 #undef n

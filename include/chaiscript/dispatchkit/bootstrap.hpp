@@ -58,7 +58,7 @@ namespace chaiscript
           return p1 &= P1(r.i);
         }
 
-        throw bad_boxed_cast("&= only valid for integer types");
+        throw exception::bad_boxed_cast("&= only valid for integer types");
       }
 
       template<typename P1>
@@ -69,7 +69,7 @@ namespace chaiscript
           return p1 ^= P1(r.i);
         }
 
-        throw bad_boxed_cast("^= only valid for integer types");
+        throw exception::bad_boxed_cast("^= only valid for integer types");
       }
 
       template<typename P1>
@@ -80,7 +80,7 @@ namespace chaiscript
           return p1 |= P1(r.i);
         }
 
-        throw bad_boxed_cast("&= only valid for integer types");
+        throw exception::bad_boxed_cast("&= only valid for integer types");
       }
 
       template<typename P1>
@@ -102,7 +102,7 @@ namespace chaiscript
           return p1 <<= P1(r.i);
         }
 
-        throw bad_boxed_cast("<<= only valid for integer types");
+        throw exception::bad_boxed_cast("<<= only valid for integer types");
       }
 
 
@@ -136,7 +136,7 @@ namespace chaiscript
           return p1 %= P1(r.i);
         }
 
-        throw bad_boxed_cast("%= only valid for integer types");
+        throw exception::bad_boxed_cast("%= only valid for integer types");
       }
 
 
@@ -148,7 +148,7 @@ namespace chaiscript
           return p1 >>= P1(r.i);
         }
 
-        throw bad_boxed_cast(">>= only valid for integer types");
+        throw exception::bad_boxed_cast(">>= only valid for integer types");
       }
 
 
@@ -393,7 +393,7 @@ namespace chaiscript
         lhs.assign(Boxed_Value(rhs));
         return lhs;
       } else {
-        throw bad_boxed_cast("type mismatch in pointer assignment");
+        throw exception::bad_boxed_cast("type mismatch in pointer assignment");
       }
     }
 
@@ -413,7 +413,7 @@ namespace chaiscript
         {
           return (lhs.assign(rhs));
         } else {
-          throw bad_boxed_cast("boxed_value has a set type already");
+          throw exception::bad_boxed_cast("boxed_value has a set type already");
         }
       }
 
@@ -453,7 +453,7 @@ namespace chaiscript
       {
         if (params.size() < 2)
         {
-          throw arity_error(static_cast<int>(params.size()), 2);
+          throw exception::arity_error(static_cast<int>(params.size()), 2);
         }
 
         Const_Proxy_Function f = boxed_cast<Const_Proxy_Function>(params[0]);
@@ -470,7 +470,7 @@ namespace chaiscript
       {
         if (params.size() < 1)
         {
-          throw arity_error(static_cast<int>(params.size()), 1);
+          throw exception::arity_error(static_cast<int>(params.size()), 1);
         }
 
         Const_Proxy_Function f = boxed_cast<Const_Proxy_Function>(params[0]);

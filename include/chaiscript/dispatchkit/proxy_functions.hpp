@@ -175,19 +175,22 @@ namespace chaiscript
   typedef boost::shared_ptr<Proxy_Function_Base> Proxy_Function;
   typedef boost::shared_ptr<const Proxy_Function_Base> Const_Proxy_Function;
 
-  /**
-   * Exception thrown if a function's guard fails to execute
-   */
-  class guard_error : public std::runtime_error
+  namespace exception
   {
-    public:
-      guard_error() throw()
-        : std::runtime_error("Guard evaluation failed")
-      { }
+    /**
+     * Exception thrown if a function's guard fails to execute
+     */
+    class guard_error : public std::runtime_error
+    {
+      public:
+        guard_error() throw()
+          : std::runtime_error("Guard evaluation failed")
+        { }
 
-      virtual ~guard_error() throw()
-      { }
-  };
+        virtual ~guard_error() throw()
+        { }
+    };
+  }
 
   /**
    * A Proxy_Function implementation that is not type safe, the called function
@@ -251,11 +254,11 @@ namespace chaiscript
           {
             return m_f(params);
           } else {
-            throw guard_error();
+            throw exception::guard_error();
           }
 
         } else {
-          throw arity_error(static_cast<int>(params.size()), m_arity);
+          throw exception::arity_error(static_cast<int>(params.size()), m_arity);
         } 
       }
 
@@ -266,9 +269,9 @@ namespace chaiscript
         {
           try {
             return boxed_cast<bool>((*m_guard)(params));
-          } catch (const arity_error &) {
+          } catch (const exception::arity_error &) {
             return false;
-          } catch (const bad_boxed_cast &) {
+          } catch (const exception::bad_boxed_cast &) {
             return false;
           }
         } else {
@@ -438,7 +441,7 @@ namespace chaiscript
   {
     public:
       Proxy_Function_Impl(const boost::function<Func> &f)
-        : Proxy_Function_Base(build_param_type_list(static_cast<Func *>(0))),
+        : Proxy_Function_Base(detail::build_param_type_list(static_cast<Func *>(0))),
           m_f(f), m_dummy_func(0)
       {
       }
@@ -465,7 +468,7 @@ namespace chaiscript
           return false;
         }
 
-        return compare_types(m_types, vals) || compare_types_cast(m_dummy_func, vals);
+        return compare_types(m_types, vals) || detail::compare_types_cast(m_dummy_func, vals);
       }
 
       virtual std::string annotation() const
@@ -481,7 +484,7 @@ namespace chaiscript
     protected:
       virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
       {
-        return Do_Call<typename boost::function<Func>::result_type>::go(m_f, params);
+        return detail::Do_Call<typename boost::function<Func>::result_type>::go(m_f, params);
       }
 
     private:
@@ -545,13 +548,13 @@ namespace chaiscript
           if (bv.is_const())
           {
             const Class *o = boxed_cast<const Class *>(bv);
-            return Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
+            return detail::Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
           } else {
             Class *o = boxed_cast<Class *>(bv);
-            return Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
+            return detail::Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
           }
         } else {
-          throw arity_error(static_cast<int>(params.size()), 1);
+          throw exception::arity_error(static_cast<int>(params.size()), 1);
         }       
       }
 
@@ -603,11 +606,11 @@ namespace chaiscript
         {
           return (*(*begin))(plist);
         }
-      } catch (const bad_boxed_cast &) {
+      } catch (const exception::bad_boxed_cast &) {
         //parameter failed to cast, try again
-      } catch (const arity_error &) {
+      } catch (const exception::arity_error &) {
         //invalid num params, try again
-      } catch (const guard_error &) {
+      } catch (const exception::guard_error &) {
         //guard failed to allow the function to execute,
         //try again
       }

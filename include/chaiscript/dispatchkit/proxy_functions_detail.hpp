@@ -28,43 +28,50 @@
 
 namespace chaiscript
 {
-  /**
-   * Exception thrown when there is a mismatch in number of
-   * parameters during Proxy_Function execution
-   */
-  struct arity_error : std::range_error
+  namespace exception
   {
-    arity_error(int t_got, int t_expected)
-      : std::range_error("Function dispatch arity mismatch"),
-      got(t_got), expected(t_expected)
+    /**
+     * Exception thrown when there is a mismatch in number of
+     * parameters during Proxy_Function execution
+     */
+    struct arity_error : std::range_error
     {
-    }
-
-    virtual ~arity_error() throw() {}
-    int got;
-    int expected;
-  };
-
-  template<typename Ret>
-    struct Do_Call
-    {
-      template<typename Fun>
-      static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
+      arity_error(int t_got, int t_expected)
+        : std::range_error("Function dispatch arity mismatch"),
+        got(t_got), expected(t_expected)
       {
-        return Handle_Return<Ret>::handle(call_func(fun, params));
       }
-    };
 
-  template<>
-    struct Do_Call<void>
-    {
-      template<typename Fun>
-      static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
-      {
-        call_func(fun, params);
-        return Handle_Return<void>::handle();
-      };
+      virtual ~arity_error() throw() {}
+
+      int got;
+      int expected;
     };
+  }
+
+  namespace detail
+  {
+    template<typename Ret>
+      struct Do_Call
+      {
+        template<typename Fun>
+          static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
+          {
+            return Handle_Return<Ret>::handle(call_func(fun, params));
+          }
+      };
+
+    template<>
+      struct Do_Call<void>
+      {
+        template<typename Fun>
+          static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
+          {
+            call_func(fun, params);
+            return Handle_Return<void>::handle();
+          };
+      };
+  }
 }
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
@@ -78,57 +85,59 @@ namespace chaiscript
 
 namespace chaiscript
 {
-  /**
-   * Used by Proxy_Function_Impl to return a list of all param types
-   * it contains.
-   */
-  template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-    std::vector<Type_Info> build_param_type_list(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)))
-    {
-      std::vector<Type_Info> ti;
-      ti.push_back(detail::Get_Type_Info<Ret>::get());
-
-      BOOST_PP_REPEAT(n, gettypeinfo, ~) 
-
-      return ti;
-    }
-
-  /**
-   * Used by Proxy_Function_Impl to perform typesafe execution of a function.
-   * The function attempts to unbox each paramter to the expected type.
-   * if any unboxing fails the execution of the function fails and
-   * the bad_boxed_cast is passed up to the caller.
-   */
-  template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-    Ret call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f,
-        const std::vector<Boxed_Value> &params)
-    {
-      if (params.size() != n)
+  namespace detail
+  {
+    /**
+     * Used by Proxy_Function_Impl to return a list of all param types
+     * it contains.
+     */
+    template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
+      std::vector<Type_Info> build_param_type_list(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)))
       {
-        throw arity_error(static_cast<int>(params.size()), n);
-      } else {
-        return f(BOOST_PP_REPEAT(n, casthelper, ~));
-      }
-    }
+        std::vector<Type_Info> ti;
+        ti.push_back(detail::Get_Type_Info<Ret>::get());
 
-  /**
-   * Used by Proxy_Function_Impl to determine if it is equivalent to another
-   * Proxy_Function_Impl object. This function is primarly used to prevent
-   * registration of two functions with the exact same signatures
-   */
-  template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-    bool compare_types_cast(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)),
-        const std::vector<Boxed_Value> & BOOST_PP_IF(n, params, ))
-    {
-      try {
-        BOOST_PP_REPEAT(n, trycast, ~);
-      } catch (const bad_boxed_cast &) {
-        return false;
+        BOOST_PP_REPEAT(n, gettypeinfo, ~) 
+
+        return ti;
       }
 
-      return true;
-    }
+    /**
+     * Used by Proxy_Function_Impl to perform typesafe execution of a function.
+     * The function attempts to unbox each paramter to the expected type.
+     * if any unboxing fails the execution of the function fails and
+     * the bad_boxed_cast is passed up to the caller.
+     */
+    template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
+      Ret call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f,
+          const std::vector<Boxed_Value> &params)
+      {
+        if (params.size() != n)
+        {
+          throw exception::arity_error(static_cast<int>(params.size()), n);
+        } else {
+          return f(BOOST_PP_REPEAT(n, casthelper, ~));
+        }
+      }
 
+    /**
+     * Used by Proxy_Function_Impl to determine if it is equivalent to another
+     * Proxy_Function_Impl object. This function is primarly used to prevent
+     * registration of two functions with the exact same signatures
+     */
+    template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
+      bool compare_types_cast(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)),
+          const std::vector<Boxed_Value> & BOOST_PP_IF(n, params, ))
+      {
+        try {
+          BOOST_PP_REPEAT(n, trycast, ~);
+        } catch (const exception::bad_boxed_cast &) {
+          return false;
+        }
+
+        return true;
+      }
+  }
 }
 
 #undef n

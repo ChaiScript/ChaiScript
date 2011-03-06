@@ -44,19 +44,19 @@ namespace chaiscript
 #pragma warning(disable : 4127)
 #endif
 
-      if (boost::is_polymorphic<typename Stripped_Type<Type>::type>::value)
+      if (boost::is_polymorphic<typename detail::Stripped_Type<Type>::type>::value)
       {
         try {
           // We will not catch any bad_boxed_dynamic_cast that is thrown, let the user get it
           // either way, we are not responsible if it doesn't work
           return detail::Cast_Helper<Type>::cast(boxed_dynamic_cast<Type>(bv));
         } catch (const boost::bad_any_cast &) {
-          throw bad_boxed_cast(bv.get_type_info(), typeid(Type));
+          throw exception::bad_boxed_cast(bv.get_type_info(), typeid(Type));
         }
       } else {
         // If it's not polymorphic, just throw the error, don't waste the time on the 
         // attempted dynamic_cast
-        throw bad_boxed_cast(bv.get_type_info(), typeid(Type));
+        throw exception::bad_boxed_cast(bv.get_type_info(), typeid(Type));
       }
 
 #ifdef BOOST_MSVC

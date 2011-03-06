@@ -154,7 +154,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
 
   //Ability to create our own container types when needed. std::vector and std::map are
   //mostly supported currently
-  chai.add(bootstrap::vector_type<std::vector<int> >("IntVector"));
+  chai.add(bootstrap::standard_library::vector_type<std::vector<int> >("IntVector"));
 
 
   // Test ability to register a function that excepts a shared_ptr version of a type
@@ -163,9 +163,9 @@ int main(int /*argc*/, char * /*argv*/[]) {
   chai.add(fun(&bound_log, std::string("Msg")), "BoundFun");
 
   //Dynamic objects test
-  chai.add(chaiscript::Proxy_Function(new Dynamic_Object_Function("TestType", fun(&hello_world))), "hello_world");
-  chai.add(chaiscript::Proxy_Function(new Dynamic_Object_Constructor("TestType", fun(&hello_constructor))), "TestType");
-  chai.add(fun(boost::function<Boxed_Value (Dynamic_Object &)>(boost::bind(&Dynamic_Object_Attribute::func, "TestType", "attr", _1))), "attr");
+  chai.add(chaiscript::Proxy_Function(new detail::Dynamic_Object_Function("TestType", fun(&hello_world))), "hello_world");
+  chai.add(chaiscript::Proxy_Function(new detail::Dynamic_Object_Constructor("TestType", fun(&hello_constructor))), "TestType");
+  chai.add(fun(boost::function<Boxed_Value (Dynamic_Object &)>(boost::bind(&detail::Dynamic_Object_Attribute::func, "TestType", "attr", _1))), "attr");
 
   chai.eval("var x = TestType()");
 //  chai.eval("x.attr = \"hi\"");

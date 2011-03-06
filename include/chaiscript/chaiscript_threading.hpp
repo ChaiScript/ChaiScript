@@ -9,61 +9,63 @@
 
 namespace chaiscript
 {
-  namespace threading
+  namespace detail
   {
+    namespace threading
+    {
 
 #ifndef CHAISCRIPT_NO_THREADS
 
-    template<typename T>
-      class Thread_Storage
-      {
-        public:
-          ~Thread_Storage()
-          {
-            m_thread_storage.reset();
-          }
-
-          inline T *operator->() const
-          {
-            if (!m_thread_storage.get())
+      template<typename T>
+        class Thread_Storage
+        {
+          public:
+            ~Thread_Storage()
             {
-              m_thread_storage.reset(new T());
+              m_thread_storage.reset();
             }
 
-            return m_thread_storage.get();
-          }
+            inline T *operator->() const
+            {
+              if (!m_thread_storage.get())
+              {
+                m_thread_storage.reset(new T());
+              }
 
-          inline T &operator*() const
-          {
-            return *(this->operator->());
-          }
+              return m_thread_storage.get();
+            }
 
-        private:
-          mutable boost::thread_specific_ptr<T> m_thread_storage;
-      };
+            inline T &operator*() const
+            {
+              return *(this->operator->());
+            }
+
+          private:
+            mutable boost::thread_specific_ptr<T> m_thread_storage;
+        };
 
 #else
 
-    template<typename T>
-      class Thread_Storage
-      {
-        public:
-          inline T *operator->() const
-          {
-            return &obj;
-          }
+      template<typename T>
+        class Thread_Storage
+        {
+          public:
+            inline T *operator->() const
+            {
+              return &obj;
+            }
 
-          inline T &operator*() const
-          {
-            return obj;
-          }
+            inline T &operator*() const
+            {
+              return obj;
+            }
 
-        private:
-          mutable T obj;
-      };
+          private:
+            mutable T obj;
+        };
 
 #endif
-
+    }
   }
 }
 

@@ -128,7 +128,7 @@ namespace chaiscript
         return Boxed_Value(i & r.i);
       }
 
-      throw bad_boxed_cast("& only valid for integer types");
+      throw exception::bad_boxed_cast("& only valid for integer types");
     }
 
     Boxed_Value operator^(const Boxed_POD_Value &r) const
@@ -138,7 +138,7 @@ namespace chaiscript
         return Boxed_Value(i ^ r.i);
       }
 
-      throw bad_boxed_cast("^ only valid for integer types");
+      throw exception::bad_boxed_cast("^ only valid for integer types");
     }
 
     Boxed_Value operator|(const Boxed_POD_Value &r) const
@@ -148,7 +148,7 @@ namespace chaiscript
         return Boxed_Value(i | r.i);
       }
 
-      throw bad_boxed_cast("| only valid for integer types");
+      throw exception::bad_boxed_cast("| only valid for integer types");
     }
 
     Boxed_Value operator/(const Boxed_POD_Value &r) const
@@ -168,7 +168,7 @@ namespace chaiscript
         return smart_size(i << r.i);
       }
 
-      throw bad_boxed_cast("<< only valid for integer types");
+      throw exception::bad_boxed_cast("<< only valid for integer types");
     }
 
 
@@ -190,7 +190,7 @@ namespace chaiscript
         return smart_size(i % r.i);
       }
 
-      throw bad_boxed_cast("% only valid for integer types");
+      throw exception::bad_boxed_cast("% only valid for integer types");
     }
 
     Boxed_Value operator>>(const Boxed_POD_Value &r) const
@@ -200,7 +200,7 @@ namespace chaiscript
         return smart_size(i >> r.i);
       }
 
-      throw bad_boxed_cast(">> only valid for integer types");
+      throw exception::bad_boxed_cast(">> only valid for integer types");
     }
 
     Boxed_Value smart_size(boost::int64_t i) const

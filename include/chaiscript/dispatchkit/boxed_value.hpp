@@ -10,6 +10,7 @@
 #include "type_info.hpp"
 
 #include "../chaiscript_threading.hpp"
+
 #include <map>
 #include <boost/shared_ptr.hpp>
 #include <boost/any.hpp>
@@ -273,30 +274,40 @@ namespace chaiscript
       boost::shared_ptr<Data> m_data;
   };
 
+  /// Clean wrapper for providing the user with a Boxed_Value
+  /// Suggested use: chai.add(var(myvariable), "myvariable");
+  /// \param t The value to box
   template<typename T>
     Boxed_Value var(T t)
     {
       return Boxed_Value(t);
     }
 
+  /// Wrapper for providing the user with a Boxed_Value that is const inside
+  /// of the ChaiScript engine.
+  /// Suggested use: chai.add(const_var(myvariable), "myvariable");
+  /// \param t The value to box
   template<typename T>
     Boxed_Value const_var(T *t)
     {
       return Boxed_Value( const_cast<typename boost::add_const<T>::type *>(t) );
     }
 
+  /// boost::shared_ptr<T> overload for const_var
   template<typename T>
     Boxed_Value const_var(const boost::shared_ptr<T> &t)
     {
       return Boxed_Value( boost::const_pointer_cast<typename boost::add_const<T>::type>(t) );
     }
 
+  /// boost::reference_wrapper<T> overload for const_var
   template<typename T>
     Boxed_Value const_var(const boost::reference_wrapper<T> &t)
     {
       return Boxed_Value( boost::cref(t.get()) );
     }
 
+  /// Generic overload for const_var
   template<typename T>
     Boxed_Value const_var(const T &t)
     {

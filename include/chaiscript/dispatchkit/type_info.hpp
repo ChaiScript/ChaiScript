@@ -204,14 +204,14 @@ namespace chaiscript
               &typeid(typename Bare_Type<T>::type));
         }
       };
+
+    template<typename T>
+      struct Stripped_Type
+      {
+        typedef typename Bare_Type<typename detail::Get_Type_Info<T>::type>::type type;
+      };
   }
 
-  template<typename T>
-    struct Stripped_Type
-    {
-      typedef typename Bare_Type<typename detail::Get_Type_Info<T>::type>::type type;
-    };
-  
   template<typename T>
   Type_Info user_type(T)
   {

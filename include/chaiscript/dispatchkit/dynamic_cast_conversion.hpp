@@ -15,26 +15,28 @@
 
 namespace chaiscript
 {
-  class bad_boxed_dynamic_cast : public bad_boxed_cast
+  namespace exception
   {
-    public:
-      bad_boxed_dynamic_cast(const Type_Info &t_from, const std::type_info &t_to,
-          const std::string &t_what)
-        : bad_boxed_cast(t_from, t_to, t_what)
-      {
-      }
+    class bad_boxed_dynamic_cast : public bad_boxed_cast
+    {
+      public:
+        bad_boxed_dynamic_cast(const Type_Info &t_from, const std::type_info &t_to,
+            const std::string &t_what)
+          : bad_boxed_cast(t_from, t_to, t_what)
+        {
+        }
 
-      bad_boxed_dynamic_cast(const Type_Info &t_from, const std::type_info &t_to) throw()
-        : bad_boxed_cast(t_from, t_to)
-      {
-      }
+        bad_boxed_dynamic_cast(const Type_Info &t_from, const std::type_info &t_to) throw()
+          : bad_boxed_cast(t_from, t_to)
+        {
+        }
 
-      bad_boxed_dynamic_cast(const std::string &w) throw()
-        : bad_boxed_cast(w)
-      {
-      }
-  };
-
+        bad_boxed_dynamic_cast(const std::string &w) throw()
+          : bad_boxed_cast(w)
+        {
+        }
+    };
+  }
 
   namespace detail
   {
@@ -114,9 +116,8 @@ namespace chaiscript
               }
             }
           } else {
-            throw bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "Unknown dynamic_cast_conversion");
+            throw exception::bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "Unknown dynamic_cast_conversion");
           }
-
         }
     };
 
@@ -262,9 +263,9 @@ namespace chaiscript
     try {
       return detail::Dynamic_Conversions::get().get_conversion(user_type<Base>(), derived.get_type_info())->convert(derived);
     } catch (const std::out_of_range &) {
-      throw bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "No known conversion");
+      throw exception::bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "No known conversion");
     } catch (const std::bad_cast &) {
-      throw bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "Unable to perform dynamic_cast operation");
+      throw exception::bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "Unable to perform dynamic_cast operation");
     }
   }
 

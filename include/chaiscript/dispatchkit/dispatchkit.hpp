@@ -970,7 +970,7 @@ namespace chaiscript
       };  
 
       std::vector<Dynamic_Cast_Conversion> m_conversions;
-      chaiscript::threading::Thread_Storage<Stack_Holder> m_stack_holder;
+      chaiscript::detail::threading::Thread_Storage<Stack_Holder> m_stack_holder;
 
 
       State m_state;

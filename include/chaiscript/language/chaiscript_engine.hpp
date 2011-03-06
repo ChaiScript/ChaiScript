@@ -552,10 +552,10 @@ namespace chaiscript
       m_engine.add(fun(static_cast<load_mod_1>(&ChaiScript::load_module), this), "load_module");
       m_engine.add(fun(static_cast<load_mod_2>(&ChaiScript::load_module), this), "load_module");
 
-      add(vector_type<std::vector<Boxed_Value> >("Vector"));
-      add(string_type<std::string>("string"));
-      add(map_type<std::map<std::string, Boxed_Value> >("Map"));
-      add(pair_type<std::pair<Boxed_Value, Boxed_Value > >("Pair"));
+      add(standard_library::vector_type<std::vector<Boxed_Value> >("Vector"));
+      add(standard_library::string_type<std::string>("string"));
+      add(standard_library::map_type<std::map<std::string, Boxed_Value> >("Map"));
+      add(standard_library::pair_type<std::pair<Boxed_Value, Boxed_Value > >("Pair"));
 
       m_engine.add(fun(&ChaiScript::use, this), "use");
       m_engine.add(fun(&ChaiScript::internal_eval, this), "eval");

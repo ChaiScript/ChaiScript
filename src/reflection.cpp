@@ -48,7 +48,7 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflect
   m->add(chaiscript::fun(&get_parse_tree), "get_parse_tree");
 
 
-  chaiscript::bootstrap::vector_type<std::vector<boost::shared_ptr<chaiscript::AST_Node> > >("AST_NodeVector", m);
+  chaiscript::bootstrap::standard_library::vector_type<std::vector<boost::shared_ptr<chaiscript::AST_Node> > >("AST_NodeVector", m);
 
   CHAISCRIPT_CLASS( m,
       chaiscript::File_Position,

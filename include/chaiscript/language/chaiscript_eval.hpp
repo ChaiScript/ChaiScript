@@ -662,7 +662,7 @@ namespace chaiscript
         try {
           cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
         }
-        catch (const bad_boxed_cast &) {
+        catch (const exception::bad_boxed_cast &) {
           t_ss.pop_scope();
           throw Eval_Error("While condition not boolean");
         }
@@ -684,7 +684,7 @@ namespace chaiscript
             try {
               cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
             }
-            catch (const bad_boxed_cast &) {
+            catch (const exception::bad_boxed_cast &) {
               t_ss.pop_scope();
               throw Eval_Error("While condition not boolean");
             }
@@ -714,7 +714,7 @@ namespace chaiscript
         try {
           cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
         }
-        catch (const bad_boxed_cast &) {
+        catch (const exception::bad_boxed_cast &) {
           throw Eval_Error("If condition not boolean");
         }
         catch (Eval_Error &ee) {
@@ -748,7 +748,7 @@ namespace chaiscript
                 try {
                   cond = boxed_cast<bool>(this->children[i+1]->eval(t_ss));
                 }
-                catch (const bad_boxed_cast &) {
+                catch (const exception::bad_boxed_cast &) {
                   throw Eval_Error("'else if' condition not boolean");
                 }
                 catch (Eval_Error &ee) {
@@ -814,7 +814,7 @@ namespace chaiscript
             }
           }
         }
-        catch (const bad_boxed_cast &) {
+        catch (const exception::bad_boxed_cast &) {
           t_ss.pop_scope();
           throw Eval_Error("For condition not boolean");
         }
@@ -872,7 +872,7 @@ namespace chaiscript
               }
             }
           }
-          catch (const bad_boxed_cast &) {
+          catch (const exception::bad_boxed_cast &) {
             t_ss.pop_scope();
             throw Eval_Error("For condition not boolean");
           }
@@ -1120,7 +1120,7 @@ namespace chaiscript
               bool guard;
               try {
                 guard = boxed_cast<bool>(catch_block->children[1]->eval(t_ss));
-              } catch (const bad_boxed_cast &) {
+              } catch (const exception::bad_boxed_cast &) {
                 if (this->children.back()->identifier == AST_Node_Type::Finally) {
                   try {
                     this->children.back()->children[0]->eval(t_ss);
@@ -1200,7 +1200,7 @@ namespace chaiscript
               try {
                 guard = boxed_cast<bool>(catch_block->children[1]->eval(t_ss));
               }
-              catch (const bad_boxed_cast &) {
+              catch (const exception::bad_boxed_cast &) {
                 if (this->children.back()->identifier == AST_Node_Type::Finally) {
                   try {
                     this->children.back()->children[0]->eval(t_ss);
@@ -1339,7 +1339,7 @@ namespace chaiscript
           const std::string & function_name = this->children[1]->text;
           if (function_name == class_name) {
             t_ss.add(Proxy_Function
-                (new Dynamic_Object_Constructor(class_name, Proxy_Function
+                (new detail::Dynamic_Object_Constructor(class_name, Proxy_Function
                                                 (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
                                                                                         boost::ref(t_ss), this->children.back(),
                                                                                         t_param_names, _1), static_cast<int>(numparams), this->children.back(),
@@ -1354,7 +1354,7 @@ namespace chaiscript
               // No biggie, the type name is just not known
             }
             t_ss.add(Proxy_Function
-                (new Dynamic_Object_Function(class_name, Proxy_Function
+                (new detail::Dynamic_Object_Function(class_name, Proxy_Function
                                              (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
                                                                                      boost::ref(t_ss), this->children.back(),
                                                                                      t_param_names, _1), static_cast<int>(numparams), this->children.back(),
@@ -1377,7 +1377,7 @@ namespace chaiscript
       virtual ~Attr_Decl_AST_Node() {}
       virtual Boxed_Value eval(Dispatch_Engine &t_ss){
         try {
-          t_ss.add(fun(boost::function<Boxed_Value (Dynamic_Object &)>(boost::bind(&Dynamic_Object_Attribute::func, this->children[0]->text,
+          t_ss.add(fun(boost::function<Boxed_Value (Dynamic_Object &)>(boost::bind(&detail::Dynamic_Object_Attribute::func, this->children[0]->text,
                     this->children[1]->text, _1))), this->children[1]->text);
 
         }
@@ -1445,7 +1445,7 @@ namespace chaiscript
             try {
               lhs = boxed_cast<bool>(retval);
             }
-            catch (const bad_boxed_cast &) {
+            catch (const exception::bad_boxed_cast &) {
               throw Eval_Error("Condition not boolean");
             }
             if (lhs) {
@@ -1488,7 +1488,7 @@ namespace chaiscript
             try {
               lhs = boxed_cast<bool>(retval);
             }
-            catch (const bad_boxed_cast &) {
+            catch (const exception::bad_boxed_cast &) {
               throw Eval_Error("Condition not boolean");
             }
             if (lhs) {
