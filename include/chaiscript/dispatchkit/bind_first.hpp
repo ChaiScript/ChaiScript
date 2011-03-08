@@ -10,8 +10,8 @@
 #define param(z,n,text) BOOST_PP_CAT(text, BOOST_PP_INC(n)) 
 
 #ifndef  BOOST_PP_IS_ITERATING
-#ifndef __bind_first_hpp__
-#define __bind_first_hpp__
+#ifndef CHAISCRIPT_BIND_FIRST_HPP_
+#define CHAISCRIPT_BIND_FIRST_HPP_
 
 #include <boost/function.hpp>
 #include <boost/bind.hpp>

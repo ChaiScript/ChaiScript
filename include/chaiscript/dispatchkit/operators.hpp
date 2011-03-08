@@ -1,5 +1,5 @@
-#ifndef __CHAISCRIPT_OPERATORS_HPP__
-#define __CHAISCRIPT_OPERATORS_HPP__
+#ifndef CHAISCRIPT_OPERATORS_HPP_
+#define CHAISCRIPT_OPERATORS_HPP_
 
 namespace chaiscript 
 {

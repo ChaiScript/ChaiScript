@@ -1,5 +1,5 @@
-#ifndef __chaiscript_threading_hpp__
-#define __chaiscript_threading_hpp__
+#ifndef CHAISCRIPT_THREADING_HPP_
+#define CHAISCRIPT_THREADING_HPP_
 
 #ifndef CHAISCRIPT_NO_THREADS
 #include <boost/thread.hpp>

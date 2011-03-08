@@ -4,8 +4,8 @@
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
-#ifndef __bootstrap_hpp
-#define __bootstrap_hpp__
+#ifndef CHAISCRIPT_BOOTSTRAP_HPP_
+#define CHAISCRIPT_BOOTSTRAP_HPP_
 
 #include "dispatchkit.hpp"
 #include "dynamic_object.hpp"

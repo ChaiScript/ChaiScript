@@ -4,8 +4,8 @@
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
-#ifndef _CHAISCRIPT_COMMON_HPP
-#define	_CHAISCRIPT_COMMON_HPP
+#ifndef CHAISCRIPT_COMMON_HPP_
+#define	CHAISCRIPT_COMMON_HPP_
 
 #include <chaiscript/dispatchkit/dispatchkit.hpp>
 

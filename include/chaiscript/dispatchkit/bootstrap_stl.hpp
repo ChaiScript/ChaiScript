@@ -10,8 +10,8 @@
 * http://www.sgi.com/tech/stl/table_of_contents.html
 */
 
-#ifndef __bootstrap_stl_hpp__
-#define __bootstrap_stl_hpp__
+#ifndef CHAISCRIPT_BOOTSTRAP_STL_HPP_
+#define CHAISCRIPT_BOOTSTRAP_STL_HPP_
 
 #include "dispatchkit.hpp"
 #include "register_function.hpp"

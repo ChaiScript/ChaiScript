@@ -1,5 +1,5 @@
-#ifndef __DYNAMIC_OBJECT_HPP__
-#define __DYNAMIC_OBJECT_HPP__
+#ifndef CHAISCRIPT_DYNAMIC_OBJECT_HPP_
+#define CHAISCRIPT_DYNAMIC_OBJECT_HPP_
 
 #include <boost/optional.hpp>
 

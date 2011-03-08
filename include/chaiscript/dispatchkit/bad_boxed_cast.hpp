@@ -4,8 +4,8 @@
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
-#ifndef __bad_boxed_cast_hpp__
-#define __bad_boxed_cast_hpp__
+#ifndef CHAISCRIPT_BAD_BOXED_CAST_HPP_
+#define CHAISCRIPT_BAD_BOXED_CAST_HPP_
 
 #include "type_info.hpp"
 

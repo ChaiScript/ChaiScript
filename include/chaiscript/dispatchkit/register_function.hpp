@@ -4,8 +4,8 @@
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
-#ifndef __register_function_hpp__
-#define __register_function_hpp__
+#ifndef CHAISCRIPT_REGISTER_FUNCTION_HPP_
+#define CHAISCRIPT_REGISTER_FUNCTION_HPP_
 
 #include "dispatchkit.hpp"
 #include "bind_first.hpp"

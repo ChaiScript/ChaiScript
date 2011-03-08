@@ -1,5 +1,5 @@
-#ifndef __chaiscriptdispatchkit_dynamic_cast_conversion_hpp__
-#define __chaiscriptdispatchkit_dynamic_cast_conversion_hpp__
+#ifndef CHAISCRIPT_DYNAMIC_CAST_CONVERSION_HPP_
+#define CHAISCRIPT_DYNAMIC_CAST_CONVERSION_HPP_
 
 #include "type_info.hpp"
 #include "boxed_value.hpp"

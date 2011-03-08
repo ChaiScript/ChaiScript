@@ -11,8 +11,8 @@
 
 
 #ifndef  BOOST_PP_IS_ITERATING
-#ifndef __function_call_detail_hpp__
-#define __function_call_detail_hpp__
+#ifndef CHAISCRIPT_FUNCTION_CALL_DETAIL_HPP_
+#define CHAISCRIPT_FUNCTION_CALL_DETAIL_HPP_
 
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>

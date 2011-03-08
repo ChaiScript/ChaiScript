@@ -11,8 +11,8 @@
 #define trycast(z,n,text) chaiscript::boxed_cast<Param ## n>(params[n]);
 
 #ifndef  BOOST_PP_IS_ITERATING
-#ifndef __proxy_functions_detail_hpp__
-#define __proxy_functions_detail_hpp__
+#ifndef CHAISCRIPT_PROXY_FUNCTIONS_DETAIL_HPP_
+#define CHAISCRIPT_PROXY_FUNCTIONS_DETAIL_HPP_
 
 #include "boxed_value.hpp"
 #include "boxed_cast.hpp"

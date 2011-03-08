@@ -5,8 +5,8 @@
 // http://www.chaiscript.com
 
 
-#ifndef __proxy_functions_hpp__
-#define __proxy_functions_hpp__
+#ifndef CHAISCRIPT_PROXY_FUNCTIONS_HPP_
+#define CHAISCRIPT_PROXY_FUNCTIONS_HPP_
 
 
 #include "boxed_value.hpp"

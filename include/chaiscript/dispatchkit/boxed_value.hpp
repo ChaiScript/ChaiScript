@@ -4,8 +4,8 @@
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
-#ifndef __boxed_value_hpp__
-#define __boxed_value_hpp__
+#ifndef CHAISCRIPT_BOXED_VALUE_HPP_
+#define CHAISCRIPT_BOXED_VALUE_HPP_
 
 #include "type_info.hpp"
 

@@ -7,8 +7,8 @@
 #include <boost/preprocessor.hpp>
 
 #ifndef  BOOST_PP_IS_ITERATING
-#ifndef __proxy_constructors_hpp__
-#define __proxy_constructors_hpp__
+#ifndef CHAISCRIPT_PROXY_CONSTRUCTORS_HPP_
+#define CHAISCRIPT_PROXY_CONSTRUCTORS_HPP_
 
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>

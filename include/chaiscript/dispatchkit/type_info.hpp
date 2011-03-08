@@ -4,8 +4,8 @@
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
-#ifndef __type_info_hpp__
-#define __type_info_hpp__
+#ifndef CHAISCRIPT_TYPE_INFO_HPP_
+#define CHAISCRIPT_TYPE_INFO_HPP_
 
 #include <string>
 #include <typeinfo>
