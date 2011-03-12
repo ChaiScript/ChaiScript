@@ -76,17 +76,17 @@ namespace chaiscript
         {
         }
 
-        virtual Boxed_Value convert(const Boxed_Value &derived)
+        virtual Boxed_Value convert(const Boxed_Value &t_derived)
         {
-          if (derived.get_type_info().bare_equal(user_type<Derived>()))
+          if (t_derived.get_type_info().bare_equal(user_type<Derived>()))
           {
-            if (derived.is_pointer())
+            if (t_derived.is_pointer())
             {
               // Dynamic cast out the contained boxed value, which we know is the type we want
-              if (derived.is_const())
+              if (t_derived.is_const())
               {
                 boost::shared_ptr<const Base> data 
-                  = boost::dynamic_pointer_cast<const Base>(detail::Cast_Helper<boost::shared_ptr<const Derived> >::cast(derived));
+                  = boost::dynamic_pointer_cast<const Base>(detail::Cast_Helper<boost::shared_ptr<const Derived> >::cast(t_derived));
                 if (!data)
                 {
                   throw std::bad_cast();
@@ -95,7 +95,7 @@ namespace chaiscript
                 return Boxed_Value(data);
               } else {
                 boost::shared_ptr<Base> data 
-                  = boost::dynamic_pointer_cast<Base>(detail::Cast_Helper<boost::shared_ptr<Derived> >::cast(derived));
+                  = boost::dynamic_pointer_cast<Base>(detail::Cast_Helper<boost::shared_ptr<Derived> >::cast(t_derived));
 
                 if (!data)
                 {
@@ -106,19 +106,19 @@ namespace chaiscript
               }
             } else {
               // Pull the reference out of the contained boxed value, which we know is the type we want
-              if (derived.is_const())
+              if (t_derived.is_const())
               {
-                const Derived &d = detail::Cast_Helper<const Derived &>::cast(derived);
+                const Derived &d = detail::Cast_Helper<const Derived &>::cast(t_derived);
                 const Base &data = dynamic_cast<const Base &>(d);
                 return Boxed_Value(boost::cref(data));
               } else {
-                Derived &d = detail::Cast_Helper<Derived &>::cast(derived);
+                Derived &d = detail::Cast_Helper<Derived &>::cast(t_derived);
                 Base &data = dynamic_cast<Base &>(d);
                 return Boxed_Value(boost::ref(data));
               }
             }
           } else {
-            throw exception::bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "Unknown dynamic_cast_conversion");
+            throw exception::bad_boxed_dynamic_cast(t_derived.get_type_info(), typeid(Base), "Unknown dynamic_cast_conversion");
           }
         }
     };

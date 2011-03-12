@@ -61,7 +61,7 @@ IF(MSVC)
    ENDIF()
 ELSE()
   # -Wno-missing-field-initializers is for boost on macos
-  ADD_DEFINITIONS(-Wall -Wextra -Wno-missing-field-initializers)
+  ADD_DEFINITIONS(-Wall -Wextra -Wno-missing-field-initializers -Wshadow) 
 ENDIF()
 
 include_directories(include)

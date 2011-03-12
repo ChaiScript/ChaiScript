@@ -203,14 +203,14 @@ namespace chaiscript
       throw exception::bad_boxed_cast(">> only valid for integer types");
     }
 
-    Boxed_Value smart_size(boost::int64_t i) const
+    Boxed_Value smart_size(boost::int64_t t_i) const
     {
-      if (i < boost::integer_traits<int>::const_min
-        || i > boost::integer_traits<int>::const_max)
+      if (t_i < boost::integer_traits<int>::const_min
+        || t_i > boost::integer_traits<int>::const_max)
       {
-        return Boxed_Value(i);
+        return Boxed_Value(t_i);
       } else {
-        return Boxed_Value(static_cast<int>(i));
+        return Boxed_Value(static_cast<int>(t_i));
       }
     }
 

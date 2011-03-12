@@ -21,8 +21,8 @@ namespace chaiscript
     {
       public:
         bad_boxed_cast(const Type_Info &t_from, const std::type_info &t_to,
-            const std::string &what) throw()
-          : from(t_from), to(&t_to), m_what(what)
+            const std::string &t_what) throw()
+          : from(t_from), to(&t_to), m_what(t_what)
         {
         }
 
@@ -31,8 +31,8 @@ namespace chaiscript
         {
         }
 
-        bad_boxed_cast(const std::string &w) throw()
-          : m_what(w)
+        bad_boxed_cast(const std::string &t_what) throw()
+          : m_what(t_what)
         {
         }
 
