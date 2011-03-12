@@ -1,6 +1,6 @@
 load_module("test_module")
 
-var t0 = TestBaseType();
+var t0 = TestBaseType()
 var t = TestDerivedType();
 
 assert_equal(t0.func(), 0);

@@ -21,7 +21,7 @@ namespace chaiscript
     {
       public:
         bad_boxed_cast(const Type_Info &t_from, const std::type_info &t_to,
-            const std::string &what)
+            const std::string &what) throw()
           : from(t_from), to(&t_to), m_what(what)
         {
         }

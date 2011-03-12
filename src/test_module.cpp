@@ -5,6 +5,8 @@
 class TestBaseType
 {
   public:
+    TestBaseType() {}
+    TestBaseType(int) {}
     virtual ~TestBaseType() {}
     virtual int func() { return 0; }
 
@@ -40,6 +42,7 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::user_type<TestDerivedType>(), "TestDerivedType");
 
   m->add(chaiscript::constructor<TestBaseType ()>(), "TestBaseType");
+//  m->add(chaiscript::constructor<TestBaseType (int)>(), "TestBaseType");
   m->add(chaiscript::constructor<TestBaseType (const TestBaseType &)>(), "TestBaseType");
 
   m->add(chaiscript::constructor<TestDerivedType ()>(), "TestDerivedType");

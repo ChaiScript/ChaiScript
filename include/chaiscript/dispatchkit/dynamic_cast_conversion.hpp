@@ -21,7 +21,7 @@ namespace chaiscript
     {
       public:
         bad_boxed_dynamic_cast(const Type_Info &t_from, const std::type_info &t_to,
-            const std::string &t_what)
+            const std::string &t_what) throw()
           : bad_boxed_cast(t_from, t_to, t_what)
         {
         }
@@ -35,6 +35,8 @@ namespace chaiscript
           : bad_boxed_cast(w)
         {
         }
+
+        virtual ~bad_boxed_dynamic_cast() throw() {}
     };
   }
 
