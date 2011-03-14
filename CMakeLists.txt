@@ -8,6 +8,7 @@ option(BUILD_SAMPLES "Build Samples Folder" FALSE)
 
 list(APPEND CPACK_SOURCE_IGNORE_FILES "${CMAKE_CURRENT_BINARY_DIR}")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.svn")
+list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.git")
 list(APPEND CPACK_SOURCE_IGNORE_FILES ".swp")
 list(APPEND CPACK_SOURCE_IGNORE_FILES ".*~")
 
@@ -61,7 +62,7 @@ IF(MSVC)
    ENDIF()
 ELSE()
   # -Wno-missing-field-initializers is for boost on macos
-  ADD_DEFINITIONS(-Wall -Wextra -Wno-missing-field-initializers)
+  ADD_DEFINITIONS(-Wall -Wextra -Wno-missing-field-initializers -Wshadow) 
 ENDIF()
 
 include_directories(include)
@@ -169,6 +170,10 @@ IF(BUILD_TESTING)
     add_executable(type_info_test unittests/type_info_test.cpp)
     target_link_libraries(type_info_test ${LIBS})
     add_test(NAME Type_Info_Test COMMAND type_info_test)
+
+    add_executable(eval_catch_exception_test unittests/eval_catch_exception_test.cpp)
+    target_link_libraries(eval_catch_exception_test ${LIBS})
+    add_test(NAME Eval_Catch_Exception_Test COMMAND eval_catch_exception_test)
 
     add_executable(multifile_test unittests/multifile_test_main.cpp unittests/multifile_test_chai.cpp
       unittests/multifile_test_module.cpp)

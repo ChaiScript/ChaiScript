@@ -24,6 +24,7 @@ int main()
       ((function3))
       ((functionOverload)(std::string (Test::*)(double)))
       ((functionOverload)(std::string (Test::*)(int)))
+      ((operator=))
     );
 
   chaiscript::ChaiScript chai;
@@ -32,6 +33,7 @@ int main()
       && chai.eval<std::string>("var t = Test(); t.functionOverload(1); ") == "int"
       && chai.eval<std::string>("var t = Test(); t.functionOverload(1.1); ") == "double")
   {
+    chai.eval("t = Test();");
     return EXIT_SUCCESS;
   } else {
     return EXIT_FAILURE;

@@ -633,13 +633,13 @@ namespace chaiscript
         }
 
         try {
-          const std::string & function_name = this->children[0]->text;
-          const std::string & annotation = this->annotation?this->annotation->text:"";
+          const std::string & l_function_name = this->children[0]->text;
+          const std::string & l_annotation = this->annotation?this->annotation->text:"";
           t_ss.add(Proxy_Function
               (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
                                                       boost::ref(t_ss), this->children.back(),
                                                       t_param_names, _1), static_cast<int>(numparams), this->children.back(),
-                                          annotation, guard)), function_name);
+                                          l_annotation, guard)), l_function_name);
         }
         catch (reserved_word_error &e) {
           throw Eval_Error("Reserved word used as function name '" + e.word + "'");
@@ -1069,8 +1069,8 @@ namespace chaiscript
             try {
               this->children.back()->children[0]->eval(t_ss);
             }
-            catch (Eval_Error &ee) {
-              ee.call_stack.push_back(this->children.back()->children[0]);
+            catch (Eval_Error &ee2) {
+              ee2.call_stack.push_back(this->children.back()->children[0]);
               t_ss.pop_scope();
               throw;
             }
@@ -1334,7 +1334,7 @@ namespace chaiscript
         }
 
         try {
-          const std::string & annotation = this->annotation?this->annotation->text:"";
+          const std::string & l_annotation = this->annotation?this->annotation->text:"";
           const std::string & class_name = this->children[0]->text;
           const std::string & function_name = this->children[1]->text;
           if (function_name == class_name) {
@@ -1343,7 +1343,7 @@ namespace chaiscript
                                                 (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
                                                                                         boost::ref(t_ss), this->children.back(),
                                                                                         t_param_names, _1), static_cast<int>(numparams), this->children.back(),
-                                                                            annotation, guard)))), function_name);
+                                                                            l_annotation, guard)))), function_name);
 
           }
           else {
@@ -1358,7 +1358,7 @@ namespace chaiscript
                                              (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
                                                                                      boost::ref(t_ss), this->children.back(),
                                                                                      t_param_names, _1), static_cast<int>(numparams), this->children.back(),
-                                                                         annotation, guard)), ti)), function_name);
+                                                                         l_annotation, guard)), ti)), function_name);
 
           }
         }

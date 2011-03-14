@@ -69,7 +69,7 @@ namespace chaiscript
           {
             call_func(fun, params);
             return Handle_Return<void>::handle();
-          };
+          }
       };
   }
 }

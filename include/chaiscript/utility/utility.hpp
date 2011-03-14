@@ -53,10 +53,10 @@ namespace chaiscript
   {
     inline std::string class_name_translator(const std::string &t_name)
     {
-      size_t colon = t_name.find_last_of("::");
+      size_t colon = t_name.rfind("::");
       if (colon != std::string::npos)
       {
-        return t_name.substr(colon+1, std::string::npos);
+        return t_name.substr(colon+2, std::string::npos);
       } else {
         return t_name;
       }
@@ -64,13 +64,16 @@ namespace chaiscript
 
     inline std::string method_name_translator(const std::string &t_name)
     {
-      size_t colon = t_name.find_last_of("::");
-      if (colon != std::string::npos)
+      size_t namestart = t_name.rfind("operator");
+      namestart = (namestart == std::string::npos)?0:namestart+strlen("operator");
+
+      if (namestart == 0)
       {
-        return t_name.substr(colon+1, std::string::npos);
-      } else {
-        return t_name;
-      }
+        namestart = t_name.rfind("::");
+        namestart = (namestart == std::string::npos)?0:namestart+strlen("::");
+      } 
+
+      return t_name.substr(namestart, std::string::npos);
     }
   }
 }

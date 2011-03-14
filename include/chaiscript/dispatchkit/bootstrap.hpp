@@ -581,6 +581,9 @@ namespace chaiscript
 
 
         m->add(user_type<std::runtime_error>(), "runtime_error");
+        m->add(chaiscript::base_class<std::exception, std::runtime_error>());
+ 
+
         m->add(constructor<std::runtime_error (const std::string &)>(), "runtime_error");
         m->add(fun(boost::function<std::string (const std::runtime_error &)>(&what)), "what");     
 
