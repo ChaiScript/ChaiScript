@@ -257,37 +257,48 @@ namespace chaiscript
   };  
 
 
-  /**
-   * Exception thrown in the case that a multi method dispatch fails
-   * because no matching function was found
-   * at runtime due to either an arity_error, a guard_error or a bad_boxed_cast
-   * exception
-   */
-  struct reserved_word_error : std::runtime_error
+  namespace exception
   {
-    reserved_word_error(const std::string &t_word) throw()
-      : std::runtime_error("Reserved word not allowed in object name: " + word), word(t_word)
+    /**
+     * Exception thrown in the case that a multi method dispatch fails
+     * because no matching function was found
+     * at runtime due to either an arity_error, a guard_error or a bad_boxed_cast
+     * exception
+     */
+    class reserved_word_error : public std::runtime_error
     {
-    }
+      public:
+        reserved_word_error(const std::string &t_word) throw()
+          : std::runtime_error("Reserved word not allowed in object name: " + t_word), m_word(t_word)
+        {
+        }
 
-    std::string word;
+        virtual ~reserved_word_error() throw() {}
 
-    virtual ~reserved_word_error() throw() {}
-  };
+        std::string word() const
+        {
+          return m_word;
+        }
 
-  /**
-   * Exception thrown in the case that a non-const object was added as a shared object
-   */
-  struct global_non_const : std::runtime_error
-  {
-    global_non_const() throw()
-      : std::runtime_error("a global object must be const")
+      private:
+        std::string m_word;
+
+    };
+
+    /**
+     * Exception thrown in the case that a non-const object was added as a shared object
+     */
+    class global_non_const : public std::runtime_error
     {
-    }
+      public:
+        global_non_const() throw()
+          : std::runtime_error("a global object must be const")
+        {
+        }
 
-    virtual ~global_non_const() throw() {}
-  };
-
+        virtual ~global_non_const() throw() {}
+    };
+  }
 
   /**
    * Main class for the dispatchkit. Handles management
@@ -377,7 +388,7 @@ namespace chaiscript
         validate_object_name(name);
         if (!obj.is_const())
         {
-          throw global_non_const();
+          throw exception::global_non_const();
         }
 
 #ifndef CHAISCRIPT_NO_THREADS
@@ -909,7 +920,7 @@ namespace chaiscript
 
         if (m_state.m_reserved_words.find(name) != m_state.m_reserved_words.end())
         {
-          throw reserved_word_error(name);
+          throw exception::reserved_word_error(name);
         }
       }
 

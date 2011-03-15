@@ -16,20 +16,23 @@
 
 namespace chaiscript
 {
-  enum Alphabet
-  {   symbol_alphabet = 0
-  ,   keyword_alphabet
-  ,   int_alphabet
-  ,   float_alphabet
-  ,   x_alphabet
-  ,   hex_alphabet
-  ,   b_alphabet
-  ,   bin_alphabet
-  ,   id_alphabet
-  ,   white_alphabet
-  ,   max_alphabet
-  ,   lengthof_alphabet = 256
-  };
+  namespace detail 
+  {
+    enum Alphabet
+    {   symbol_alphabet = 0
+        ,   keyword_alphabet
+        ,   int_alphabet
+        ,   float_alphabet
+        ,   x_alphabet
+        ,   hex_alphabet
+        ,   b_alphabet
+        ,   bin_alphabet
+        ,   id_alphabet
+        ,   white_alphabet
+        ,   max_alphabet
+        ,   lengthof_alphabet = 256
+    };
+  }
 
   class ChaiScript_Parser {
 
@@ -40,7 +43,7 @@ namespace chaiscript
     std::string m_singleline_comment;
     boost::shared_ptr<std::string> m_filename;
     std::vector<AST_NodePtr> m_match_stack;
-    bool m_alphabet[max_alphabet][lengthof_alphabet];
+    bool m_alphabet[detail::max_alphabet][detail::lengthof_alphabet];
 
     std::vector<std::vector<std::string> > m_operator_matches;
     std::vector<AST_Node_Type::Type> m_operators;
@@ -122,55 +125,55 @@ namespace chaiscript
       dot_access.push_back(".");
       m_operator_matches.push_back(dot_access);
 
-      for ( int c = 0 ; c < lengthof_alphabet ; ++c ) {
-        for ( int a = 0 ; a < max_alphabet ; a ++ ) {
+      for ( int c = 0 ; c < detail::lengthof_alphabet ; ++c ) {
+        for ( int a = 0 ; a < detail::max_alphabet ; a ++ ) {
           m_alphabet[a][c]=false;
         }
       }
-      m_alphabet[symbol_alphabet]['+']=true;
-      m_alphabet[symbol_alphabet]['-']=true;
-      m_alphabet[symbol_alphabet]['*']=true;
-      m_alphabet[symbol_alphabet]['/']=true;
-      m_alphabet[symbol_alphabet]['|']=true;
-      m_alphabet[symbol_alphabet]['&']=true;
-      m_alphabet[symbol_alphabet]['^']=true;
-      m_alphabet[symbol_alphabet]['=']=true;
-      m_alphabet[symbol_alphabet]['.']=true;
-      m_alphabet[symbol_alphabet]['<']=true;
-      m_alphabet[symbol_alphabet]['>']=true;
+      m_alphabet[detail::symbol_alphabet][static_cast<int>('+')]=true;
+      m_alphabet[detail::symbol_alphabet][static_cast<int>('-')]=true;
+      m_alphabet[detail::symbol_alphabet][static_cast<int>('*')]=true;
+      m_alphabet[detail::symbol_alphabet][static_cast<int>('/')]=true;
+      m_alphabet[detail::symbol_alphabet][static_cast<int>('|')]=true;
+      m_alphabet[detail::symbol_alphabet][static_cast<int>('&')]=true;
+      m_alphabet[detail::symbol_alphabet][static_cast<int>('^')]=true;
+      m_alphabet[detail::symbol_alphabet][static_cast<int>('=')]=true;
+      m_alphabet[detail::symbol_alphabet][static_cast<int>('.')]=true;
+      m_alphabet[detail::symbol_alphabet][static_cast<int>('<')]=true;
+      m_alphabet[detail::symbol_alphabet][static_cast<int>('>')]=true;
 
-      for ( int c = 'a' ; c <= 'z' ; ++c ) { m_alphabet[keyword_alphabet][c]=true; }
-      for ( int c = 'A' ; c <= 'Z' ; ++c ) { m_alphabet[keyword_alphabet][c]=true; }
-      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[keyword_alphabet][c]=true; }
-      m_alphabet[keyword_alphabet]['_']=true;
+      for ( int c = 'a' ; c <= 'z' ; ++c ) { m_alphabet[detail::keyword_alphabet][c]=true; }
+      for ( int c = 'A' ; c <= 'Z' ; ++c ) { m_alphabet[detail::keyword_alphabet][c]=true; }
+      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::keyword_alphabet][c]=true; }
+      m_alphabet[detail::keyword_alphabet][static_cast<int>('_')]=true;
 
-      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[int_alphabet][c]=true; }
-      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[float_alphabet][c]=true; }
-      m_alphabet[float_alphabet]['.']=true;
+      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::int_alphabet][c]=true; }
+      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::float_alphabet][c]=true; }
+      m_alphabet[detail::float_alphabet][static_cast<int>('.')]=true;
 
-      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[hex_alphabet][c]=true; }
-      for ( int c = 'a' ; c <= 'f' ; ++c ) { m_alphabet[hex_alphabet][c]=true; }
-      for ( int c = 'A' ; c <= 'F' ; ++c ) { m_alphabet[hex_alphabet][c]=true; }
+      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::hex_alphabet][c]=true; }
+      for ( int c = 'a' ; c <= 'f' ; ++c ) { m_alphabet[detail::hex_alphabet][c]=true; }
+      for ( int c = 'A' ; c <= 'F' ; ++c ) { m_alphabet[detail::hex_alphabet][c]=true; }
 
-      m_alphabet[x_alphabet]['x']=true;
-      m_alphabet[x_alphabet]['X']=true;
+      m_alphabet[detail::x_alphabet][static_cast<int>('x')]=true;
+      m_alphabet[detail::x_alphabet][static_cast<int>('X')]=true;
 
-      for ( int c = '0' ; c <= '1' ; ++c ) { m_alphabet[bin_alphabet][c]=true; }
-      m_alphabet[b_alphabet]['b']=true;
-      m_alphabet[b_alphabet]['B']=true;
+      for ( int c = '0' ; c <= '1' ; ++c ) { m_alphabet[detail::bin_alphabet][c]=true; }
+      m_alphabet[detail::b_alphabet][static_cast<int>('b')]=true;
+      m_alphabet[detail::b_alphabet][static_cast<int>('B')]=true;
 
-      for ( int c = 'a' ; c <= 'z' ; ++c ) { m_alphabet[id_alphabet][c]=true; }
-      for ( int c = 'A' ; c <= 'Z' ; ++c ) { m_alphabet[id_alphabet][c]=true; }
-      m_alphabet[id_alphabet]['_'] = true;
+      for ( int c = 'a' ; c <= 'z' ; ++c ) { m_alphabet[detail::id_alphabet][c]=true; }
+      for ( int c = 'A' ; c <= 'Z' ; ++c ) { m_alphabet[detail::id_alphabet][c]=true; }
+      m_alphabet[detail::id_alphabet][static_cast<int>('_')] = true;
 
-      m_alphabet[white_alphabet][' ']=true;
-      m_alphabet[white_alphabet]['\t']=true;
+      m_alphabet[detail::white_alphabet][static_cast<int>(' ')]=true;
+      m_alphabet[detail::white_alphabet][static_cast<int>('\t')]=true;
     }
 
     /**
      * test a char in an m_alphabet
      */
-    bool char_in_alphabet(unsigned char c,Alphabet a) { return m_alphabet[a][c]; }
+    bool char_in_alphabet(unsigned char c, detail::Alphabet a) { return m_alphabet[a][c]; }
 
     /**
      * Prints the parsed ast_nodes as a tree
@@ -298,7 +301,7 @@ namespace chaiscript
     bool SkipWS() {
       bool retval = false;
       while (has_more_input()) {
-        if ( char_in_alphabet(*m_input_pos,white_alphabet) ) {
+        if ( char_in_alphabet(*m_input_pos,detail::white_alphabet) ) {
           ++m_input_pos;
           ++m_col;
           retval = true;
@@ -320,17 +323,17 @@ namespace chaiscript
       bool retval = false;
       std::string::const_iterator start = m_input_pos;
 
-      if (has_more_input() && char_in_alphabet(*m_input_pos,float_alphabet) ) {
-        while (has_more_input() && char_in_alphabet(*m_input_pos,int_alphabet) ) {
+      if (has_more_input() && char_in_alphabet(*m_input_pos,detail::float_alphabet) ) {
+        while (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet) ) {
           ++m_input_pos;
           ++m_col;
         }
         if (has_more_input() && (*m_input_pos == '.')) {
           ++m_input_pos;
           ++m_col;
-          if (has_more_input() && char_in_alphabet(*m_input_pos,int_alphabet)) {
+          if (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet)) {
             retval = true;
-            while (has_more_input() && char_in_alphabet(*m_input_pos,int_alphabet) ) {
+            while (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet) ) {
               ++m_input_pos;
               ++m_col;
             }
@@ -353,12 +356,12 @@ namespace chaiscript
         ++m_input_pos;
         ++m_col;
 
-        if (has_more_input() && char_in_alphabet(*m_input_pos,x_alphabet) ) {
+        if (has_more_input() && char_in_alphabet(*m_input_pos, detail::x_alphabet) ) {
           ++m_input_pos;
           ++m_col;
-          if (has_more_input() && char_in_alphabet(*m_input_pos,hex_alphabet)) {
+          if (has_more_input() && char_in_alphabet(*m_input_pos, detail::hex_alphabet)) {
             retval = true;
-            while (has_more_input() && char_in_alphabet(*m_input_pos,hex_alphabet) ) {
+            while (has_more_input() && char_in_alphabet(*m_input_pos, detail::hex_alphabet) ) {
               ++m_input_pos;
               ++m_col;
             }
@@ -386,12 +389,12 @@ namespace chaiscript
         ++m_input_pos;
         ++m_col;
 
-        if (has_more_input() && char_in_alphabet(*m_input_pos,b_alphabet) ) {
+        if (has_more_input() && char_in_alphabet(*m_input_pos, detail::b_alphabet) ) {
           ++m_input_pos;
           ++m_col;
-          if (has_more_input() && char_in_alphabet(*m_input_pos,bin_alphabet) ) {
+          if (has_more_input() && char_in_alphabet(*m_input_pos, detail::bin_alphabet) ) {
             retval = true;
-            while (has_more_input() && char_in_alphabet(*m_input_pos,bin_alphabet) ) {
+            while (has_more_input() && char_in_alphabet(*m_input_pos, detail::bin_alphabet) ) {
               ++m_input_pos;
               ++m_col;
             }
@@ -423,7 +426,7 @@ namespace chaiscript
         std::string::const_iterator start = m_input_pos;
         int prev_col = m_col;
         int prev_line = m_line;
-        if (has_more_input() && char_in_alphabet(*m_input_pos,float_alphabet) ) {
+        if (has_more_input() && char_in_alphabet(*m_input_pos, detail::float_alphabet) ) {
           if (Hex_()) {
             std::string match(start, m_input_pos);
             std::stringstream ss(match);
@@ -432,7 +435,7 @@ namespace chaiscript
 
             std::ostringstream out_int;
             out_int << static_cast<int>(temp_int);
-            AST_NodePtr t(new Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+            AST_NodePtr t(new eval::Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
             m_match_stack.push_back(t);
             return true;
           }
@@ -451,13 +454,13 @@ namespace chaiscript
 
             std::ostringstream out_int;
             out_int << temp_int;
-            AST_NodePtr t(new Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+            AST_NodePtr t(new eval::Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
             m_match_stack.push_back(t);
             return true;
           }
           if (Float_()) {
             std::string match(start, m_input_pos);
-            AST_NodePtr t(new Float_AST_Node(match, AST_Node_Type::Float, m_filename, prev_line, prev_col, m_line, m_col));
+            AST_NodePtr t(new eval::Float_AST_Node(match, AST_Node_Type::Float, m_filename, prev_line, prev_col, m_line, m_col));
             m_match_stack.push_back(t);
             return true;
           }
@@ -470,11 +473,11 @@ namespace chaiscript
 
               std::ostringstream out_int;
               out_int << int(temp_int);
-              AST_NodePtr t(new Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+              AST_NodePtr t(new eval::Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
             }
             else {
-              AST_NodePtr t(new Int_AST_Node(match, AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+              AST_NodePtr t(new eval::Int_AST_Node(match, AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
             }
             return true;
@@ -491,9 +494,9 @@ namespace chaiscript
      */
     bool Id_() {
       bool retval = false;
-      if (has_more_input() && char_in_alphabet(*m_input_pos,id_alphabet)) {
+      if (has_more_input() && char_in_alphabet(*m_input_pos, detail::id_alphabet)) {
         retval = true;
-        while (has_more_input() && char_in_alphabet(*m_input_pos,keyword_alphabet) ) {
+        while (has_more_input() && char_in_alphabet(*m_input_pos, detail::keyword_alphabet) ) {
           ++m_input_pos;
           ++m_col;
         }
@@ -544,13 +547,13 @@ namespace chaiscript
           if (*start == '`') {
             //Id Literal
             std::string match(start+1, m_input_pos-1);
-            AST_NodePtr t(new Id_AST_Node(match, AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
+            AST_NodePtr t(new eval::Id_AST_Node(match, AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
             m_match_stack.push_back(t);
             return true;
           }
           else {
             std::string match(start, m_input_pos);
-            AST_NodePtr t(new Id_AST_Node(match, AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
+            AST_NodePtr t(new eval::Id_AST_Node(match, AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
             m_match_stack.push_back(t);
             return true;
           }
@@ -583,7 +586,7 @@ namespace chaiscript
         } while (Symbol("#"));
 
         std::string match(start, m_input_pos);
-        AST_NodePtr t(new Annotation_AST_Node(match, AST_Node_Type::Annotation, m_filename, prev_line, prev_col, m_line, m_col));
+        AST_NodePtr t(new eval::Annotation_AST_Node(match, AST_Node_Type::Annotation, m_filename, prev_line, prev_col, m_line, m_col));
         m_match_stack.push_back(t);
         return true;
       }
@@ -658,23 +661,23 @@ namespace chaiscript
 
                 if (is_interpolated) {
                   //If we've seen previous interpolation, add on instead of making a new one
-                  AST_NodePtr plus(new Str_AST_Node("+", AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
+                  AST_NodePtr plus(new eval::Str_AST_Node("+", AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
                   m_match_stack.push_back(plus);
 
-                  AST_NodePtr t(new Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+                  AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
                   m_match_stack.push_back(t);
 
-                  build_match(AST_NodePtr(new Additive_AST_Node()), prev_stack_top);
+                  build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
                 }
                 else {
-                  AST_NodePtr t(new Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+                  AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
                   m_match_stack.push_back(t);
                 }
 
                 //We've finished with the part of the string up to this point, so clear it
                 match = "";
 
-                AST_NodePtr plus(new Str_AST_Node("+", AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
+                AST_NodePtr plus(new eval::Str_AST_Node("+", AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
                 m_match_stack.push_back(plus);
 
                 std::string eval_match;
@@ -690,28 +693,28 @@ namespace chaiscript
 
                   size_t tostr_stack_top = m_match_stack.size();
 
-                  AST_NodePtr tostr(new Id_AST_Node("to_string", AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
+                  AST_NodePtr tostr(new eval::Id_AST_Node("to_string", AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
                   m_match_stack.push_back(tostr);
 
                   size_t ev_stack_top = m_match_stack.size();
 
-                  AST_NodePtr ev(new Id_AST_Node("eval", AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
+                  AST_NodePtr ev(new eval::Id_AST_Node("eval", AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
                   m_match_stack.push_back(ev);
 
                   size_t arg_stack_top = m_match_stack.size();
 
-                  AST_NodePtr t(new Quoted_String_AST_Node(eval_match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+                  AST_NodePtr t(new eval::Quoted_String_AST_Node(eval_match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
                   m_match_stack.push_back(t);
 
-                  build_match(AST_NodePtr(new Arg_List_AST_Node()), arg_stack_top);
+                  build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), arg_stack_top);
 
-                  build_match(AST_NodePtr(new Inplace_Fun_Call_AST_Node()), ev_stack_top);
+                  build_match(AST_NodePtr(new eval::Inplace_Fun_Call_AST_Node()), ev_stack_top);
 
-                  build_match(AST_NodePtr(new Arg_List_AST_Node()), ev_stack_top);
+                  build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), ev_stack_top);
 
-                  build_match(AST_NodePtr(new Fun_Call_AST_Node()), tostr_stack_top);
+                  build_match(AST_NodePtr(new eval::Fun_Call_AST_Node()), tostr_stack_top);
 
-                  build_match(AST_NodePtr(new Additive_AST_Node()), prev_stack_top);
+                  build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
                 }
                 else {
                   throw Eval_Error("Unclosed in-string eval", File_Position(prev_line, prev_col), *m_filename);
@@ -758,16 +761,16 @@ namespace chaiscript
             }
           }
           if (is_interpolated) {
-            AST_NodePtr plus(new Str_AST_Node("+", AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
+            AST_NodePtr plus(new eval::Str_AST_Node("+", AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
             m_match_stack.push_back(plus);
 
-            AST_NodePtr t(new Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+            AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
             m_match_stack.push_back(t);
 
-            build_match(AST_NodePtr(new Additive_AST_Node()), prev_stack_top);
+            build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
           }
           else {
-            AST_NodePtr t(new Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+            AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
             m_match_stack.push_back(t);
           }
           return true;
@@ -859,7 +862,7 @@ namespace chaiscript
               is_escaped = false;
             }
           }
-          AST_NodePtr t(new Single_Quoted_String_AST_Node(match, AST_Node_Type::Single_Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+          AST_NodePtr t(new eval::Single_Quoted_String_AST_Node(match, AST_Node_Type::Single_Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
           m_match_stack.push_back(t);
           return true;
         }
@@ -898,7 +901,7 @@ namespace chaiscript
         int prev_line = m_line;
         if (Char_(t_c)) {
           std::string match(start, m_input_pos);
-          AST_NodePtr t(new Char_AST_Node(match, AST_Node_Type::Char, m_filename, prev_line, prev_col, m_line, m_col));
+          AST_NodePtr t(new eval::Char_AST_Node(match, AST_Node_Type::Char, m_filename, prev_line, prev_col, m_line, m_col));
           m_match_stack.push_back(t);
           return true;
         }
@@ -941,7 +944,7 @@ namespace chaiscript
       int prev_line = m_line;
       bool retval = Keyword_(t_s);
       // ignore substring matches
-      if ( retval && has_more_input() && char_in_alphabet(*m_input_pos,keyword_alphabet) ) {
+      if ( retval && has_more_input() && char_in_alphabet(*m_input_pos, detail::keyword_alphabet) ) {
             m_input_pos = start;
             m_col = prev_col;
             m_line = prev_line;
@@ -950,7 +953,7 @@ namespace chaiscript
 
       if ( t_capture && retval ) {
           std::string match(start, m_input_pos);
-          AST_NodePtr t(new Str_AST_Node(match, AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
+          AST_NodePtr t(new eval::Str_AST_Node(match, AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
           m_match_stack.push_back(t);
       }
       return retval;
@@ -989,7 +992,7 @@ namespace chaiscript
       int prev_line = m_line;
       bool retval = Symbol_(t_s);
       // ignore substring matches
-      if (retval && has_more_input() && (t_disallow_prevention == false) && char_in_alphabet(*m_input_pos,symbol_alphabet)) {
+      if (retval && has_more_input() && (t_disallow_prevention == false) && char_in_alphabet(*m_input_pos,detail::symbol_alphabet)) {
           m_input_pos = start;
           m_col = prev_col;
           m_line = prev_line;
@@ -998,7 +1001,7 @@ namespace chaiscript
 
       if ( t_capture && retval ) {
           std::string match(start, m_input_pos);
-          AST_NodePtr t(new Str_AST_Node(match, AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
+          AST_NodePtr t(new eval::Str_AST_Node(match, AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
           m_match_stack.push_back(t);
       }
 
@@ -1038,7 +1041,7 @@ namespace chaiscript
         int prev_line = m_line;
         if (Eol_()) {
           std::string match(start, m_input_pos);
-          AST_NodePtr t(new Eol_AST_Node(match, AST_Node_Type::Eol, m_filename, prev_line, prev_col, m_line, m_col));
+          AST_NodePtr t(new eval::Eol_AST_Node(match, AST_Node_Type::Eol, m_filename, prev_line, prev_col, m_line, m_col));
           m_match_stack.push_back(t);
           return true;
         }
@@ -1067,7 +1070,7 @@ namespace chaiscript
             }
           } while (retval && Char(','));
         }
-        build_match(AST_NodePtr(new Arg_List_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
       }
 
       return retval;
@@ -1083,7 +1086,7 @@ namespace chaiscript
 
       if (Value_Range()) {
         retval = true;
-        build_match(AST_NodePtr(new Arg_List_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
       }
       else if (Map_Pair()) {
         retval = true;
@@ -1096,7 +1099,7 @@ namespace chaiscript
             }
           } while (retval && Char(','));
         }
-        build_match(AST_NodePtr(new Arg_List_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
       }
       else if (Operator()) {
         retval = true;
@@ -1109,7 +1112,7 @@ namespace chaiscript
             }
           } while (retval && Char(','));
         }
-        build_match(AST_NodePtr(new Arg_List_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
       }
 
       return retval;
@@ -1140,7 +1143,7 @@ namespace chaiscript
           throw Eval_Error("Incomplete anonymous function", File_Position(m_line, m_col), *m_filename);
         }
 
-        build_match(AST_NodePtr(new Lambda_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Lambda_AST_Node()), prev_stack_top);
       }
 
       return retval;
@@ -1201,10 +1204,10 @@ namespace chaiscript
         }
 
         if (is_method) {
-          build_match(AST_NodePtr(new Method_AST_Node()), prev_stack_top);
+          build_match(AST_NodePtr(new eval::Method_AST_Node()), prev_stack_top);
         }
         else {
-          build_match(AST_NodePtr(new Def_AST_Node()), prev_stack_top);
+          build_match(AST_NodePtr(new eval::Def_AST_Node()), prev_stack_top);
         }
 
         if (is_annotated) {
@@ -1254,7 +1257,7 @@ namespace chaiscript
             if (!Block()) {
               throw Eval_Error("Incomplete 'catch' block", File_Position(m_line, m_col), *m_filename);
             }
-            build_match(AST_NodePtr(new Catch_AST_Node()), catch_stack_top);
+            build_match(AST_NodePtr(new eval::Catch_AST_Node()), catch_stack_top);
             has_matches = true;
           }
         }
@@ -1267,10 +1270,10 @@ namespace chaiscript
           if (!Block()) {
             throw Eval_Error("Incomplete 'finally' block", File_Position(m_line, m_col), *m_filename);
           }
-          build_match(AST_NodePtr(new Finally_AST_Node()), finally_stack_top);
+          build_match(AST_NodePtr(new eval::Finally_AST_Node()), finally_stack_top);
         }
 
-        build_match(AST_NodePtr(new Try_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Try_AST_Node()), prev_stack_top);
       }
 
       return retval;
@@ -1334,7 +1337,7 @@ namespace chaiscript
           }
         }
 
-        build_match(AST_NodePtr(new If_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::If_AST_Node()), prev_stack_top);
       }
 
       return retval;
@@ -1365,7 +1368,7 @@ namespace chaiscript
           throw Eval_Error("Incomplete 'while' block", File_Position(m_line, m_col), *m_filename);
         }
 
-        build_match(AST_NodePtr(new While_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::While_AST_Node()), prev_stack_top);
       }
 
       return retval;
@@ -1410,7 +1413,7 @@ namespace chaiscript
           throw Eval_Error("Incomplete 'for' block", File_Position(m_line, m_col), *m_filename);
         }
 
-        build_match(AST_NodePtr(new For_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::For_AST_Node()), prev_stack_top);
       }
 
       return retval;
@@ -1432,7 +1435,7 @@ namespace chaiscript
           throw Eval_Error("Incomplete block", File_Position(m_line, m_col), *m_filename);
         }
 
-        build_match(AST_NodePtr(new Block_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Block_AST_Node()), prev_stack_top);
       }
 
       return retval;
@@ -1450,7 +1453,7 @@ namespace chaiscript
         retval = true;
 
         Operator();
-        build_match(AST_NodePtr(new Return_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Return_AST_Node()), prev_stack_top);
       }
 
       return retval;
@@ -1467,7 +1470,7 @@ namespace chaiscript
       if (Keyword("break")) {
         retval = true;
 
-        build_match(AST_NodePtr(new Break_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Break_AST_Node()), prev_stack_top);
       }
 
       return retval;
@@ -1496,7 +1499,7 @@ namespace chaiscript
               throw Eval_Error("Incomplete function call", File_Position(m_line, m_col), *m_filename);
             }
 
-            build_match(AST_NodePtr(new Fun_Call_AST_Node()), prev_stack_top);
+            build_match(AST_NodePtr(new eval::Fun_Call_AST_Node()), prev_stack_top);
           }
           else if (Char('[')) {
             has_more = true;
@@ -1505,7 +1508,7 @@ namespace chaiscript
               throw Eval_Error("Incomplete array access", File_Position(m_line, m_col), *m_filename);
             }
 
-            build_match(AST_NodePtr(new Array_Call_AST_Node()), prev_stack_top);
+            build_match(AST_NodePtr(new eval::Array_Call_AST_Node()), prev_stack_top);
           }
         }
       }
@@ -1528,7 +1531,7 @@ namespace chaiscript
           throw Eval_Error("Incomplete variable declaration", File_Position(m_line, m_col), *m_filename);
         }
 
-        build_match(AST_NodePtr(new Var_Decl_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Var_Decl_AST_Node()), prev_stack_top);
       }
       else if (Keyword("attr")) {
         retval = true;
@@ -1544,7 +1547,7 @@ namespace chaiscript
         }
 
 
-        build_match(AST_NodePtr(new Attr_Decl_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Attr_Decl_AST_Node()), prev_stack_top);
       }
 
       return retval;
@@ -1584,17 +1587,17 @@ namespace chaiscript
         }
         if ((prev_stack_top != m_match_stack.size()) && (m_match_stack.back()->children.size() > 0)) {
           if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Value_Range) {
-            build_match(AST_NodePtr(new Inline_Range_AST_Node()), prev_stack_top);
+            build_match(AST_NodePtr(new eval::Inline_Range_AST_Node()), prev_stack_top);
           }
           else if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Map_Pair) {
-            build_match(AST_NodePtr(new Inline_Map_AST_Node()), prev_stack_top);
+            build_match(AST_NodePtr(new eval::Inline_Map_AST_Node()), prev_stack_top);
           }
           else {
-            build_match(AST_NodePtr(new Inline_Array_AST_Node()), prev_stack_top);
+            build_match(AST_NodePtr(new eval::Inline_Array_AST_Node()), prev_stack_top);
           }
         }
         else {
-          build_match(AST_NodePtr(new Inline_Array_AST_Node()), prev_stack_top);
+          build_match(AST_NodePtr(new eval::Inline_Array_AST_Node()), prev_stack_top);
         }
       }
 
@@ -1616,7 +1619,7 @@ namespace chaiscript
           throw Eval_Error("Incomplete '++' expression", File_Position(m_line, m_col), *m_filename);
         }
 
-        build_match(AST_NodePtr(new Prefix_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
       }
       else if (Symbol("--", true)) {
         retval = true;
@@ -1625,7 +1628,7 @@ namespace chaiscript
           throw Eval_Error("Incomplete '--' expression", File_Position(m_line, m_col), *m_filename);
         }
 
-        build_match(AST_NodePtr(new Prefix_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
       }
       else if (Char('-', true)) {
         retval = true;
@@ -1634,7 +1637,7 @@ namespace chaiscript
           throw Eval_Error("Incomplete unary '-' expression", File_Position(m_line, m_col), *m_filename);
         }
 
-        build_match(AST_NodePtr(new Prefix_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
       }
       else if (Char('+', true)) {
         retval = true;
@@ -1643,7 +1646,7 @@ namespace chaiscript
           throw Eval_Error("Incomplete unary '+' expression", File_Position(m_line, m_col), *m_filename);
         }
 
-        build_match(AST_NodePtr(new Prefix_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
       }
       else if (Char('!', true)) {
         retval = true;
@@ -1652,7 +1655,7 @@ namespace chaiscript
           throw Eval_Error("Incomplete '!' expression", File_Position(m_line, m_col), *m_filename);
         }
 
-        build_match(AST_NodePtr(new Prefix_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
       }
       else if (Char('~', true)) {
         retval = true;
@@ -1661,7 +1664,7 @@ namespace chaiscript
           throw Eval_Error("Incomplete '~' expression", File_Position(m_line, m_col), *m_filename);
         }
 
-        build_match(AST_NodePtr(new Prefix_AST_Node()), prev_stack_top);
+        build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
       }
 
       return retval;
@@ -1708,37 +1711,37 @@ namespace chaiscript
 
             switch (m_operators[t_precedence]) {
             case(AST_Node_Type::Comparison) :
-              build_match(AST_NodePtr(new Comparison_AST_Node()), prev_stack_top);
+              build_match(AST_NodePtr(new eval::Comparison_AST_Node()), prev_stack_top);
               break;
             case(AST_Node_Type::Dot_Access) :
-              build_match(AST_NodePtr(new Dot_Access_AST_Node()), prev_stack_top);
+              build_match(AST_NodePtr(new eval::Dot_Access_AST_Node()), prev_stack_top);
               break;
             case(AST_Node_Type::Additive) :
-              build_match(AST_NodePtr(new Additive_AST_Node()), prev_stack_top);
+              build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
               break;
             case(AST_Node_Type::Multiplicative) :
-              build_match(AST_NodePtr(new Multiplicative_AST_Node()), prev_stack_top);
+              build_match(AST_NodePtr(new eval::Multiplicative_AST_Node()), prev_stack_top);
               break;
             case(AST_Node_Type::Shift) :
-              build_match(AST_NodePtr(new Shift_AST_Node()), prev_stack_top);
+              build_match(AST_NodePtr(new eval::Shift_AST_Node()), prev_stack_top);
               break;
             case(AST_Node_Type::Equality) :
-              build_match(AST_NodePtr(new Equality_AST_Node()), prev_stack_top);
+              build_match(AST_NodePtr(new eval::Equality_AST_Node()), prev_stack_top);
               break;
             case(AST_Node_Type::Bitwise_And) :
-              build_match(AST_NodePtr(new Bitwise_And_AST_Node()), prev_stack_top);
+              build_match(AST_NodePtr(new eval::Bitwise_And_AST_Node()), prev_stack_top);
               break;
             case(AST_Node_Type::Bitwise_Xor) :
-              build_match(AST_NodePtr(new Bitwise_Xor_AST_Node()), prev_stack_top);
+              build_match(AST_NodePtr(new eval::Bitwise_Xor_AST_Node()), prev_stack_top);
               break;
             case(AST_Node_Type::Bitwise_Or) :
-              build_match(AST_NodePtr(new Bitwise_Or_AST_Node()), prev_stack_top);
+              build_match(AST_NodePtr(new eval::Bitwise_Or_AST_Node()), prev_stack_top);
               break;
             case(AST_Node_Type::Logical_And) :
-              build_match(AST_NodePtr(new Logical_And_AST_Node()), prev_stack_top);
+              build_match(AST_NodePtr(new eval::Logical_And_AST_Node()), prev_stack_top);
               break;
             case(AST_Node_Type::Logical_Or) :
-              build_match(AST_NodePtr(new Logical_Or_AST_Node()), prev_stack_top);
+              build_match(AST_NodePtr(new eval::Logical_Or_AST_Node()), prev_stack_top);
               break;
             default:
               throw Eval_Error("Internal error: unhandled ast_node", File_Position(m_line, m_col), *m_filename);
@@ -1770,7 +1773,7 @@ namespace chaiscript
             throw Eval_Error("Incomplete map pair", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(AST_NodePtr(new Map_Pair_AST_Node()), prev_stack_top);
+          build_match(AST_NodePtr(new eval::Map_Pair_AST_Node()), prev_stack_top);
         }
         else {
           m_input_pos = prev_pos;
@@ -1801,7 +1804,7 @@ namespace chaiscript
             throw Eval_Error("Incomplete value range", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(AST_NodePtr(new Value_Range_AST_Node()), prev_stack_top);
+          build_match(AST_NodePtr(new eval::Value_Range_AST_Node()), prev_stack_top);
         }
         else {
           m_input_pos = prev_pos;
@@ -1833,7 +1836,7 @@ namespace chaiscript
             throw Eval_Error("Incomplete equation", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(AST_NodePtr(new Equation_AST_Node()), prev_stack_top);
+          build_match(AST_NodePtr(new eval::Equation_AST_Node()), prev_stack_top);
         }
       }
 
@@ -1957,7 +1960,7 @@ namespace chaiscript
           throw Eval_Error("Unparsed input", File_Position(m_line, m_col), t_fname);
         }
         else {
-          build_match(AST_NodePtr(new File_AST_Node()), 0);
+          build_match(AST_NodePtr(new eval::File_AST_Node()), 0);
           return true;
         }
       }

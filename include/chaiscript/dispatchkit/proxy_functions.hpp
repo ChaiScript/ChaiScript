@@ -324,7 +324,7 @@ namespace chaiscript
       Bound_Function(const Const_Proxy_Function &t_f, 
                      const std::vector<Boxed_Value> &t_args)
         : Proxy_Function_Base(build_param_type_info(t_f, t_args)),
-          m_f(t_f), m_args(t_args), m_arity(t_f->get_arity()<0?-1:get_param_types().size()-1)
+          m_f(t_f), m_args(t_args), m_arity(t_f->get_arity()<0?-1:static_cast<int>(get_param_types().size())-1)
       {
         assert(m_f->get_arity() < 0 || m_f->get_arity() == static_cast<int>(m_args.size()));
       }
@@ -569,26 +569,30 @@ namespace chaiscript
       T Class::* m_attr;
   };
 
-  /**
-   * Exception thrown in the case that a multi method dispatch fails
-   * because no matching function was found
-   * at runtime due to either an arity_error, a guard_error or a bad_boxed_cast
-   * exception
-   */
-  struct dispatch_error : std::runtime_error
+  namespace exception
   {
-    dispatch_error() throw()
-      : std::runtime_error("No matching function to dispatch to")
+    /**
+     * Exception thrown in the case that a multi method dispatch fails
+     * because no matching function was found
+     * at runtime due to either an arity_error, a guard_error or a bad_boxed_cast
+     * exception
+     */
+    class dispatch_error : public std::runtime_error
     {
-    }
+      public:
+        dispatch_error() throw()
+          : std::runtime_error("No matching function to dispatch to")
+        {
+        }
 
-    dispatch_error(bool is_const) throw()
-      : std::runtime_error(std::string("No matching function to dispatch to") + (is_const?", parameter is const":""))
-      {
-      }
+        dispatch_error(bool is_const) throw()
+          : std::runtime_error(std::string("No matching function to dispatch to") + (is_const?", parameter is const":""))
+        {
+        }
 
-    virtual ~dispatch_error() throw() {}
-  };
+        virtual ~dispatch_error() throw() {}
+    };
+  }
 
   /**
    * Take a vector of functions and a vector of parameters. Attempt to execute
@@ -617,7 +621,7 @@ namespace chaiscript
       ++begin;
     }
 
-    throw dispatch_error(plist.empty()?false:plist[0].is_const());
+    throw exception::dispatch_error(plist.empty()?false:plist[0].is_const());
   }
 
   /**

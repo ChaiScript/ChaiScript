@@ -298,6 +298,13 @@ namespace chaiscript
       }
     }
 
+    /**
+     * Returns the current evaluation m_engine
+     */
+    Dispatch_Engine &get_eval_engine() {
+      return m_engine;
+    }
+
 
   public:
     ChaiScript(const std::vector<std::string> &t_modulepaths = std::vector<std::string>(),
@@ -480,13 +487,6 @@ namespace chaiscript
       return do_eval(t_script);
     }
 
-
-    /**
-     * Returns the current evaluation m_engine
-     */
-    Dispatch_Engine &get_eval_engine() {
-      return m_engine;
-    }
 
     /**
      * Helper function for loading a file

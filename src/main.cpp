@@ -102,7 +102,7 @@ void interactive(chaiscript::ChaiScript& chai)
       //Then, we try to print the result of the evaluation to the user
       if (!val.get_type_info().bare_equal(chaiscript::user_type<void>())) {
         try {
-          chaiscript::dispatch(chai.get_eval_engine().get_function("print"), chaiscript::Param_List_Builder() << val);
+          std::cout << chai.functor<std::string (const chaiscript::Boxed_Value &bv)>("to_string")(val) << std::endl;
         }
         catch (...) {} //If we can't, do nothing
       }
