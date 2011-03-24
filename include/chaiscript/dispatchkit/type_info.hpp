@@ -22,12 +22,14 @@
 namespace chaiscript
 {
 
-  template<typename T>
-    struct Bare_Type
-    {
-      typedef typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type type;
-    };
-
+  namespace detail
+  {
+    template<typename T>
+      struct Bare_Type
+      {
+        typedef typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type type;
+      };
+  }
 
   /**
    * compile time deduced information about a type
