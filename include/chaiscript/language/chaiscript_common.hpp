@@ -108,59 +108,65 @@ namespace chaiscript
 
   
 
-  /**
-   * Errors generated during parsing or evaluation
-   */
-  struct Eval_Error : public std::runtime_error {
-    std::string reason;
-    File_Position start_position;
-    File_Position end_position;
-    std::string filename;
-    std::vector<AST_NodePtr> call_stack;
+  namespace exception
+  {
+    /**
+     * Errors generated during parsing or evaluation
+     */
+    struct eval_error : public std::runtime_error {
+      std::string reason;
+      File_Position start_position;
+      File_Position end_position;
+      std::string filename;
+      std::vector<AST_NodePtr> call_stack;
 
-    Eval_Error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) :
-      std::runtime_error("Error: \"" + t_why + "\" " +
-                         (t_fname != "__EVAL__" ? ("in '" + t_fname + "' ") : "during evaluation ") +
-                         + "at (" + boost::lexical_cast<std::string>(t_where.line) + ", " +
-                         boost::lexical_cast<std::string>(t_where.column) + ")"),
-      reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname)
-    { }
+      eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) throw() :
+        std::runtime_error("Error: \"" + t_why + "\" " +
+            (t_fname != "__EVAL__" ? ("in '" + t_fname + "' ") : "during evaluation ") +
+            + "at (" + boost::lexical_cast<std::string>(t_where.line) + ", " +
+            boost::lexical_cast<std::string>(t_where.column) + ")"),
+        reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname)
+        { }
 
-    Eval_Error(const std::string &t_why)
-      : std::runtime_error("Error: \"" + t_why + "\" "),
+      eval_error(const std::string &t_why) throw()
+        : std::runtime_error("Error: \"" + t_why + "\" "),
         reason(t_why) 
-    {}
+      {}
 
-    virtual ~Eval_Error() throw() {}
-  };
+      virtual ~eval_error() throw() {}
+    };
 
-  /**
-   * Errors generated when loading a file
-   */
-  struct File_Not_Found_Error : public std::runtime_error {
-    File_Not_Found_Error(const std::string &t_filename)
-      : std::runtime_error("File Not Found: " + t_filename)
-    { }
+    /**
+     * Errors generated when loading a file
+     */
+    struct file_not_found_error : public std::runtime_error {
+      file_not_found_error(const std::string &t_filename) throw()
+        : std::runtime_error("File Not Found: " + t_filename)
+      { }
 
-    virtual ~File_Not_Found_Error() throw() {}
-  };
+      virtual ~file_not_found_error() throw() {}
+    };
 
+  }
 
-  /**
-   * Special type for returned values
-   */
-  struct Return_Value {
-    Boxed_Value retval;
+  namespace detail
+  {
+    /**
+     * Special type for returned values
+     */
+    struct Return_Value {
+      Boxed_Value retval;
 
-    Return_Value(const Boxed_Value &t_return_value) : retval(t_return_value) { }
-  };
+      Return_Value(const Boxed_Value &t_return_value) : retval(t_return_value) { }
+    };
 
-  /**
-   * Special type indicating a call to 'break'
-   */
-  struct Break_Loop {
-    Break_Loop() { }
-  };
+    /**
+     * Special type indicating a call to 'break'
+     */
+    struct Break_Loop {
+      Break_Loop() { }
+    };
+  }
 }
 
 #endif	/* _CHAISCRIPT_COMMON_HPP */

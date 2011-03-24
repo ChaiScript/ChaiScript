@@ -28,193 +28,199 @@
 
 namespace chaiscript
 {
-  struct load_module_error : std::runtime_error
+  namespace exception
   {
-    load_module_error(const std::string &t_reason) throw()
-      : std::runtime_error(t_reason)
+    struct load_module_error : std::runtime_error
     {
-    }
+      load_module_error(const std::string &t_reason) throw()
+        : std::runtime_error(t_reason)
+      {
+      }
 
-    virtual ~load_module_error() throw()
-    {
-    }
-  };
+      virtual ~load_module_error() throw()
+      {
+      }
+    };
+  }
 
+  namespace detail
+  {
 #ifdef _POSIX_VERSION
-  struct Loadable_Module
-  {
-    struct DLModule
+    struct Loadable_Module
     {
-      DLModule(const std::string &t_filename)
-        : m_data(dlopen(t_filename.c_str(), RTLD_NOW))
+      struct DLModule
       {
-        if (!m_data)
+        DLModule(const std::string &t_filename)
+          : m_data(dlopen(t_filename.c_str(), RTLD_NOW))
+        {
+          if (!m_data)
           {
-            throw load_module_error(dlerror());
+            throw exception::load_module_error(dlerror());
           }
-      }
+        }
 
-      DLModule(const DLModule &); // Explicitly unimplemented copy constructor
-      DLModule &operator=(const DLModule &); // Explicitly unimplemented assignment operator
+        DLModule(const DLModule &); // Explicitly unimplemented copy constructor
+        DLModule &operator=(const DLModule &); // Explicitly unimplemented assignment operator
 
-      ~DLModule()
-      {
-        dlclose(m_data);
-      }
+        ~DLModule()
+        {
+          dlclose(m_data);
+        }
 
-      void *m_data;
-    };
+        void *m_data;
+      };
 
-    template<typename T>
-    struct DLSym
-    {
-      DLSym(DLModule &t_mod, const std::string &t_symbol)
-        : m_symbol(reinterpret_cast<T>(dlsym(t_mod.m_data, t_symbol.c_str())))
-      {
-        if (!m_symbol)
+      template<typename T>
+        struct DLSym
+        {
+          DLSym(DLModule &t_mod, const std::string &t_symbol)
+            : m_symbol(reinterpret_cast<T>(dlsym(t_mod.m_data, t_symbol.c_str())))
           {
-            throw load_module_error(dlerror());
+            if (!m_symbol)
+            {
+              throw exception::load_module_error(dlerror());
+            }
           }
-      }
 
-      T m_symbol;
-    };
+          T m_symbol;
+        };
 
-    Loadable_Module(const std::string &t_module_name, const std::string &t_filename)
-      : m_dlmodule(t_filename), m_func(m_dlmodule, "create_chaiscript_module_" + t_module_name),
+      Loadable_Module(const std::string &t_module_name, const std::string &t_filename)
+        : m_dlmodule(t_filename), m_func(m_dlmodule, "create_chaiscript_module_" + t_module_name),
         m_moduleptr(m_func.m_symbol())
-    {
-    }
+      {
+      }
 
-    DLModule m_dlmodule;
-    DLSym<Create_Module_Func> m_func;
-    ModulePtr m_moduleptr;
-  };
+      DLModule m_dlmodule;
+      DLSym<Create_Module_Func> m_func;
+      ModulePtr m_moduleptr;
+    };
 #else
 
 #ifdef WIN32
 
 
-  struct Loadable_Module
-  {
-    template<typename T>
-    static std::wstring towstring(const T &t_str) 
+    struct Loadable_Module
     {
-      return std::wstring(t_str.begin(), t_str.end());
-    }
+      template<typename T>
+        static std::wstring towstring(const T &t_str) 
+        {
+          return std::wstring(t_str.begin(), t_str.end());
+        }
 
-    template<typename T>
-    static std::string tostring(const T &t_str)
-    {
-      return std::string(t_str.begin(), t_str.end());
-    }
+      template<typename T>
+        static std::string tostring(const T &t_str)
+        {
+          return std::string(t_str.begin(), t_str.end());
+        }
 
 #ifdef _UNICODE
-    template<typename T>
-    static std::wstring toproperstring(const T &t_str)
-    {
-      return towstring(t_str);
-    }
+      template<typename T>
+        static std::wstring toproperstring(const T &t_str)
+        {
+          return towstring(t_str);
+        }
 #else
-    template<typename T>
-    static std::string toproperstring(const T &t_str)
-    {
-      return tostring(t_str);
-    }
+      template<typename T>
+        static std::string toproperstring(const T &t_str)
+        {
+          return tostring(t_str);
+        }
 #endif
 
-    static std::string GetErrorMessage(DWORD t_err)
-    {
+      static std::string GetErrorMessage(DWORD t_err)
+      {
 #ifdef _UNICODE
-      typedef LPWSTR StringType;
-      std::wstring retval = L"Unknown Error";
+        typedef LPWSTR StringType;
+        std::wstring retval = L"Unknown Error";
 #else
-      typedef LPSTR StringType;
-      std::string retval = "Unknown Error";
+        typedef LPSTR StringType;
+        std::string retval = "Unknown Error";
 #endif
-      StringType lpMsgBuf = 0;
+        StringType lpMsgBuf = 0;
 
-      FormatMessage(
-          FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-          FORMAT_MESSAGE_FROM_SYSTEM |
-          FORMAT_MESSAGE_IGNORE_INSERTS,
-          NULL,
-          t_err,
-          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-          (StringType)&lpMsgBuf,
-          0, NULL );        
+        FormatMessage(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+            FORMAT_MESSAGE_FROM_SYSTEM |
+            FORMAT_MESSAGE_IGNORE_INSERTS,
+            NULL,
+            t_err,
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            (StringType)&lpMsgBuf,
+            0, NULL );        
 
-      if (lpMsgBuf)
-      {
-        retval = lpMsgBuf;
+        if (lpMsgBuf)
+        {
+          retval = lpMsgBuf;
+        }
+
+        LocalFree(lpMsgBuf);
+        return tostring(retval);
       }
 
-      LocalFree(lpMsgBuf);
-      return tostring(retval);
-    }
-
-    struct DLModule
-    {
-      DLModule(const std::string &t_filename)
-        : m_data(LoadLibrary(toproperstring(t_filename).c_str()))
+      struct DLModule
       {
-        if (!m_data)
+        DLModule(const std::string &t_filename)
+          : m_data(LoadLibrary(toproperstring(t_filename).c_str()))
+        {
+          if (!m_data)
           {
-            throw load_module_error(GetErrorMessage(GetLastError()));
+            throw exception::load_module_error(GetErrorMessage(GetLastError()));
           }
-      }
+        }
 
-      ~DLModule()
-      {
-        FreeLibrary(m_data);
-      }
+        ~DLModule()
+        {
+          FreeLibrary(m_data);
+        }
 
-      HMODULE m_data;
-    };
+        HMODULE m_data;
+      };
 
-    template<typename T>
-    struct DLSym
-    {
-      DLSym(DLModule &t_mod, const std::string &t_symbol)
-        : m_symbol(reinterpret_cast<T>(GetProcAddress(t_mod.m_data, t_symbol.c_str())))
-      {
-        if (!m_symbol)
+      template<typename T>
+        struct DLSym
+        {
+          DLSym(DLModule &t_mod, const std::string &t_symbol)
+            : m_symbol(reinterpret_cast<T>(GetProcAddress(t_mod.m_data, t_symbol.c_str())))
           {
-            throw load_module_error(GetErrorMessage(GetLastError()));
+            if (!m_symbol)
+            {
+              throw exception::load_module_error(GetErrorMessage(GetLastError()));
+            }
           }
-      }
 
-      T m_symbol;
-    };
+          T m_symbol;
+        };
 
-    Loadable_Module(const std::string &t_module_name, const std::string &t_filename)
-      : m_dlmodule(t_filename), m_func(m_dlmodule, "create_chaiscript_module_" + t_module_name),
+      Loadable_Module(const std::string &t_module_name, const std::string &t_filename)
+        : m_dlmodule(t_filename), m_func(m_dlmodule, "create_chaiscript_module_" + t_module_name),
         m_moduleptr(m_func.m_symbol())
-    {
-    }
+      {
+      }
 
-    DLModule m_dlmodule;
-    DLSym<Create_Module_Func> m_func;
-    ModulePtr m_moduleptr;
-  };
+      DLModule m_dlmodule;
+      DLSym<Create_Module_Func> m_func;
+      ModulePtr m_moduleptr;
+    };
 
 #else
-  struct Loadable_Module
-  {
-    Loadable_Module(const std::string &, const std::string &)
+    struct Loadable_Module
     {
-      throw load_module_error("Loadable module support not available for your platform");
-    }
+      Loadable_Module(const std::string &, const std::string &)
+      {
+        throw exception::load_module_error("Loadable module support not available for your platform");
+      }
 
-    ModulePtr get()
-    {
-      throw load_module_error("Loadable module support not available for your platform");
-    }
-  };
+      ModulePtr get()
+      {
+        throw exception::load_module_error("Loadable module support not available for your platform");
+      }
+    };
 #endif
 #endif
 
-  typedef boost::shared_ptr<Loadable_Module> Loadable_Module_Ptr;
+    typedef boost::shared_ptr<Loadable_Module> Loadable_Module_Ptr;
+  }
 
   class ChaiScript {
 #ifndef CHAISCRIPT_NO_THREADS
@@ -223,7 +229,7 @@ namespace chaiscript
 #endif
 
     std::set<std::string> m_used_files;
-    std::map<std::string, Loadable_Module_Ptr> m_loaded_modules;
+    std::map<std::string, detail::Loadable_Module_Ptr> m_loaded_modules;
     std::set<std::string> m_active_loaded_modules;
 
     std::vector<std::string> m_modulepaths;
@@ -238,7 +244,7 @@ namespace chaiscript
     Boxed_Value do_eval(const std::string &t_input, const std::string &t_filename = "__EVAL__", bool /* t_internal*/  = false) 
     {
       try {
-        ChaiScript_Parser parser;
+        parser::ChaiScript_Parser parser;
         if (parser.parse(t_input, t_filename)) {
           //parser.show_match_stack();
           return parser.ast()->eval(m_engine);
@@ -246,7 +252,7 @@ namespace chaiscript
           return Boxed_Value();
         }
       }
-      catch (const Return_Value &rv) {
+      catch (const detail::Return_Value &rv) {
         return rv.retval;
       }
     }
@@ -287,10 +293,10 @@ namespace chaiscript
 #endif
             eval_file(appendedpath);
           }
-        } catch (const File_Not_Found_Error &) {
+        } catch (const exception::file_not_found_error &) {
           if (i == m_usepaths.size() - 1)
           {
-            throw File_Not_Found_Error(t_filename);
+            throw exception::file_not_found_error(t_filename);
           }
 
           // failed to load, try the next path
@@ -305,6 +311,56 @@ namespace chaiscript
       return m_engine;
     }
 
+    /**
+     * Builds all the requirements for ChaiScript, including its evaluator and a run of its prelude.
+     */
+    void build_eval_system() {
+      using namespace bootstrap;
+      m_engine.add_reserved_word("def");
+      m_engine.add_reserved_word("fun");
+      m_engine.add_reserved_word("while");
+      m_engine.add_reserved_word("for");
+      m_engine.add_reserved_word("if");
+      m_engine.add_reserved_word("else");
+      m_engine.add_reserved_word("&&");
+      m_engine.add_reserved_word("||");
+      m_engine.add_reserved_word(",");
+      m_engine.add_reserved_word(":=");
+      m_engine.add_reserved_word("var");
+      m_engine.add_reserved_word("return");
+      m_engine.add_reserved_word("break");
+      m_engine.add_reserved_word("true");
+      m_engine.add_reserved_word("false");
+      m_engine.add_reserved_word("_");
+
+      add(Bootstrap::bootstrap());
+
+      m_engine.add(fun(&Dispatch_Engine::dump_system, boost::ref(m_engine)), "dump_system");
+      m_engine.add(fun(&Dispatch_Engine::dump_object, boost::ref(m_engine)), "dump_object");
+      m_engine.add(fun(&Dispatch_Engine::is_type, boost::ref(m_engine)), "is_type");
+      m_engine.add(fun(&Dispatch_Engine::type_name, boost::ref(m_engine)), "type_name");
+      m_engine.add(fun(&Dispatch_Engine::function_exists, boost::ref(m_engine)), "function_exists");
+
+      m_engine.add(fun(&Dispatch_Engine::get_type_name, boost::ref(m_engine)), "name");
+
+
+      typedef void (ChaiScript::*load_mod_1)(const std::string&);
+      typedef void (ChaiScript::*load_mod_2)(const std::string&, const std::string&);
+
+      m_engine.add(fun(static_cast<load_mod_1>(&ChaiScript::load_module), this), "load_module");
+      m_engine.add(fun(static_cast<load_mod_2>(&ChaiScript::load_module), this), "load_module");
+
+      add(standard_library::vector_type<std::vector<Boxed_Value> >("Vector"));
+      add(standard_library::string_type<std::string>("string"));
+      add(standard_library::map_type<std::map<std::string, Boxed_Value> >("Map"));
+      add(standard_library::pair_type<std::pair<Boxed_Value, Boxed_Value > >("Pair"));
+
+      m_engine.add(fun(&ChaiScript::use, this), "use");
+      m_engine.add(fun(&ChaiScript::internal_eval, this), "eval");
+      m_engine.add(fun(&ChaiScript::internal_eval_ast, this), "eval");
+
+      do_eval(chaiscript_prelude, "standard prelude");
+    }
 
   public:
     ChaiScript(const std::vector<std::string> &t_modulepaths = std::vector<std::string>(),
@@ -398,7 +454,7 @@ namespace chaiscript
      */
     void load_module(const std::string &t_module_name)
     {
-      std::vector<load_module_error> errors;
+      std::vector<exception::load_module_error> errors;
 
       std::vector<std::string> prefixes;
       prefixes.push_back("lib");
@@ -419,7 +475,7 @@ namespace chaiscript
                     std::string name = m_modulepaths[i] + prefixes[j] + t_module_name + postfixes[k];
                     load_module(t_module_name, name);
                     return;
-                  } catch (const load_module_error &e) {
+                  } catch (const exception::load_module_error &e) {
                     errors.push_back(e);
                     // Try next set
                   }
@@ -429,7 +485,7 @@ namespace chaiscript
 
       std::string errstring;
 
-      for (std::vector<load_module_error>::const_iterator itr = errors.begin();
+      for (std::vector<exception::load_module_error>::const_iterator itr = errors.begin();
            itr != errors.end();
            ++itr)
       {
@@ -441,7 +497,7 @@ namespace chaiscript
         errstring += itr->what();
       }
 
-      throw load_module_error("Unable to find module: " + t_module_name + " Errors: " + errstring);
+      throw exception::load_module_error("Unable to find module: " + t_module_name + " Errors: " + errstring);
     }
 
     /**
@@ -455,7 +511,7 @@ namespace chaiscript
 
       if (m_loaded_modules.count(t_module_name) == 0)
       {
-        Loadable_Module_Ptr lm(new Loadable_Module(t_module_name, t_filename));
+        detail::Loadable_Module_Ptr lm(new detail::Loadable_Module(t_module_name, t_filename));
         m_loaded_modules[t_module_name] = lm;
         m_active_loaded_modules.insert(t_module_name);
         add(lm->m_moduleptr);
@@ -495,7 +551,7 @@ namespace chaiscript
       std::ifstream infile(t_filename.c_str(), std::ios::in | std::ios::ate | std::ios::binary );
 
       if (!infile.is_open()) {
-        throw File_Not_Found_Error(t_filename);
+        throw exception::file_not_found_error(t_filename);
       }
 
       std::streampos size = infile.tellg();
@@ -513,56 +569,6 @@ namespace chaiscript
       }
     }
 
-    /**
-     * Builds all the requirements for ChaiScript, including its evaluator and a run of its prelude.
-     */
-    void build_eval_system() {
-      using namespace bootstrap;
-      m_engine.add_reserved_word("def");
-      m_engine.add_reserved_word("fun");
-      m_engine.add_reserved_word("while");
-      m_engine.add_reserved_word("for");
-      m_engine.add_reserved_word("if");
-      m_engine.add_reserved_word("else");
-      m_engine.add_reserved_word("&&");
-      m_engine.add_reserved_word("||");
-      m_engine.add_reserved_word(",");
-      m_engine.add_reserved_word(":=");
-      m_engine.add_reserved_word("var");
-      m_engine.add_reserved_word("return");
-      m_engine.add_reserved_word("break");
-      m_engine.add_reserved_word("true");
-      m_engine.add_reserved_word("false");
-      m_engine.add_reserved_word("_");
-
-      add(Bootstrap::bootstrap());
-
-      m_engine.add(fun(&Dispatch_Engine::dump_system, boost::ref(m_engine)), "dump_system");
-      m_engine.add(fun(&Dispatch_Engine::dump_object, boost::ref(m_engine)), "dump_object");
-      m_engine.add(fun(&Dispatch_Engine::is_type, boost::ref(m_engine)), "is_type");
-      m_engine.add(fun(&Dispatch_Engine::type_name, boost::ref(m_engine)), "type_name");
-      m_engine.add(fun(&Dispatch_Engine::function_exists, boost::ref(m_engine)), "function_exists");
-
-      m_engine.add(fun(&Dispatch_Engine::get_type_name, boost::ref(m_engine)), "name");
-
-
-      typedef void (ChaiScript::*load_mod_1)(const std::string&);
-      typedef void (ChaiScript::*load_mod_2)(const std::string&, const std::string&);
-
-      m_engine.add(fun(static_cast<load_mod_1>(&ChaiScript::load_module), this), "load_module");
-      m_engine.add(fun(static_cast<load_mod_2>(&ChaiScript::load_module), this), "load_module");
-
-      add(standard_library::vector_type<std::vector<Boxed_Value> >("Vector"));
-      add(standard_library::string_type<std::string>("string"));
-      add(standard_library::map_type<std::map<std::string, Boxed_Value> >("Map"));
-      add(standard_library::pair_type<std::pair<Boxed_Value, Boxed_Value > >("Pair"));
-
-      m_engine.add(fun(&ChaiScript::use, this), "use");
-      m_engine.add(fun(&ChaiScript::internal_eval, this), "eval");
-      m_engine.add(fun(&ChaiScript::internal_eval_ast, this), "eval");
-
-      do_eval(chaiscript_prelude, "standard prelude");
-    }
 
     template<typename T>
     T eval(const std::string &t_input)

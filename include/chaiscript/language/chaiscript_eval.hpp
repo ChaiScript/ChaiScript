@@ -28,10 +28,10 @@ namespace chaiscript
         Boxed_Value retval(t_node->eval(t_ss));
         t_ss.pop_scope();
         return retval;
-      } catch (const Return_Value &rv) {
+      } catch (const detail::Return_Value &rv) {
         t_ss.pop_scope();
         return rv.retval;
-      } catch (Eval_Error &ee) {
+      } catch (exception::eval_error &ee) {
         ee.call_stack.push_back(t_node);
         t_ss.pop_scope();
         throw;
@@ -55,7 +55,7 @@ namespace chaiscript
           try {
             retval = this->children[0]->eval(t_ss);
           }
-          catch (Eval_Error &ee) {
+          catch (exception::eval_error &ee) {
             ee.call_stack.push_back(this->children[0]);
             throw;
           }
@@ -65,9 +65,9 @@ namespace chaiscript
               retval = t_ss.call_function(this->children[i]->text, retval, this->children[i+1]->eval(t_ss));
             }
             catch(const exception::dispatch_error &){
-              throw Eval_Error("Can not find appropriate '" + this->children[i]->text + "'");
+              throw exception::eval_error("Can not find appropriate '" + this->children[i]->text + "'");
             }
-            catch(Eval_Error &ee) {
+            catch(exception::eval_error &ee) {
               ee.call_stack.push_back(this->children[i+1]);
               throw;
             }
@@ -131,7 +131,7 @@ namespace chaiscript
               return t_ss.get_object(this->text);
             }
             catch (std::exception &) {
-              throw Eval_Error("Can not find object: " + this->text);
+              throw exception::eval_error("Can not find object: " + this->text);
             }
           }
         }
@@ -171,7 +171,7 @@ namespace chaiscript
               try {
                 plb << this->children[1]->children[i]->eval(t_ss);
               }
-              catch(Eval_Error &ee) {
+              catch(exception::eval_error &ee) {
                 ee.call_stack.push_back(this->children[1]->children[i]);
                 throw;
               }
@@ -192,9 +192,9 @@ namespace chaiscript
             }
             catch(const exception::dispatch_error &e){
               t_ss.set_stack(prev_stack);
-              throw Eval_Error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
+              throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
             }
-            catch(Return_Value &rv) {
+            catch(detail::Return_Value &rv) {
               t_ss.set_stack(prev_stack);
               return rv.retval;
             }
@@ -203,10 +203,10 @@ namespace chaiscript
               throw;
             }
           }
-          catch(Eval_Error &ee) {
+          catch(exception::eval_error &ee) {
             ee.call_stack.push_back(this->children[0]);
             t_ss.set_stack(prev_stack);
-            throw Eval_Error(ee.reason);
+            throw exception::eval_error(ee.reason);
           }
 
         }
@@ -226,7 +226,7 @@ namespace chaiscript
               try {
                 plb << this->children[1]->children[i]->eval(t_ss);
               }
-              catch (Eval_Error &ee) {
+              catch (exception::eval_error &ee) {
                 ee.call_stack.push_back(this->children[1]->children[i]);
                 throw;
               }
@@ -240,18 +240,18 @@ namespace chaiscript
               return (*boxed_cast<Const_Proxy_Function >(fn))(plb);
             }
             catch(const exception::dispatch_error &e){
-              throw Eval_Error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
+              throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
             }
-            catch(Return_Value &rv) {
+            catch(detail::Return_Value &rv) {
               return rv.retval;
             }
             catch(...) {
               throw;
             }
           }
-          catch(Eval_Error &ee) {
+          catch(exception::eval_error &ee) {
             ee.call_stack.push_back(this->children[0]);
-            throw Eval_Error(ee.reason);
+            throw exception::eval_error(ee.reason);
           }
 
         }
@@ -282,7 +282,7 @@ namespace chaiscript
           try {
             retval = this->children.back()->eval(t_ss); 
           }
-          catch (Eval_Error &ee) {
+          catch (exception::eval_error &ee) {
             ee.call_stack.push_back(this->children.back());
             throw;
           }
@@ -303,14 +303,14 @@ namespace chaiscript
                       retval = t_ss.call_function(this->children[i+1]->text, lhs, retval);
                     }
                     catch(const exception::dispatch_error &){
-                      throw Eval_Error(std::string("Mismatched types in equation") + (lhs.is_const()?", lhs is const.":"."));
+                      throw exception::eval_error(std::string("Mismatched types in equation") + (lhs.is_const()?", lhs is const.":"."));
                     }
                   }
                   catch(const exception::dispatch_error &){
-                    throw Eval_Error("Can not clone right hand side of equation");
+                    throw exception::eval_error("Can not clone right hand side of equation");
                   }
                 }
-                catch(Eval_Error &ee) {
+                catch(exception::eval_error &ee) {
                   ee.call_stack.push_back(this->children[i]);
                   throw;
                 }
@@ -322,10 +322,10 @@ namespace chaiscript
                     lhs.assign(retval);
                   }
                   else {
-                    throw Eval_Error("Mismatched types in equation");
+                    throw exception::eval_error("Mismatched types in equation");
                   }
                 }
-                catch (Eval_Error &ee) {
+                catch (exception::eval_error &ee) {
                   ee.call_stack.push_back(this->children[i]);
                   throw;
                 }
@@ -335,9 +335,9 @@ namespace chaiscript
                   retval = t_ss.call_function(this->children[i+1]->text, this->children[i]->eval(t_ss), retval);
                 }
                 catch(const exception::dispatch_error &){
-                  throw Eval_Error("Can not find appropriate '" + this->children[i+1]->text + "'");
+                  throw exception::eval_error("Can not find appropriate '" + this->children[i+1]->text + "'");
                 }
-                catch(Eval_Error &ee) {
+                catch(exception::eval_error &ee) {
                   ee.call_stack.push_back(this->children[i]);
                   throw;
                 }
@@ -358,7 +358,7 @@ namespace chaiscript
             t_ss.add_object(this->children[0]->text, Boxed_Value());
           }
           catch (const exception::reserved_word_error &) {
-            throw Eval_Error("Reserved word used as variable '" + this->children[0]->text + "'");
+            throw exception::eval_error("Reserved word used as variable '" + this->children[0]->text + "'");
           }
           return t_ss.get_object(this->children[0]->text);
         }
@@ -397,7 +397,7 @@ namespace chaiscript
           try {
             retval = this->children[0]->eval(t_ss);
           }
-          catch (Eval_Error &ee) {
+          catch (exception::eval_error &ee) {
             ee.call_stack.push_back(this->children[0]);
             throw;
           }
@@ -407,12 +407,12 @@ namespace chaiscript
               retval = t_ss.call_function("[]", retval, this->children[i]->eval(t_ss));
             }
             catch(std::out_of_range &) {
-              throw Eval_Error("Out of bounds exception");
+              throw exception::eval_error("Out of bounds exception");
             }
             catch(const exception::dispatch_error &){
-              throw Eval_Error("Can not find appropriate array lookup '[]' ");
+              throw exception::eval_error("Can not find appropriate array lookup '[]' ");
             }
-            catch(Eval_Error &ee) {
+            catch(exception::eval_error &ee) {
               ee.call_stack.push_back(this->children[i]);
               throw;
             }
@@ -432,7 +432,7 @@ namespace chaiscript
           try {
             retval = this->children[0]->eval(t_ss);
           }
-          catch (Eval_Error &ee) {
+          catch (exception::eval_error &ee) {
             ee.call_stack.push_back(this->children[0]);
             throw;
           }
@@ -447,7 +447,7 @@ namespace chaiscript
                   try {
                     plb << this->children[i]->children[1]->children[j]->eval(t_ss);
                   }
-                  catch (Eval_Error &ee) {
+                  catch (exception::eval_error &ee) {
                     ee.call_stack.push_back(this->children[i]->children[1]->children[j]);
                     throw;
                   }
@@ -472,9 +472,9 @@ namespace chaiscript
               }
               catch(const exception::dispatch_error &e){
                 t_ss.set_stack(prev_stack);
-                throw Eval_Error(std::string(e.what()));
+                throw exception::eval_error(std::string(e.what()));
               }
-              catch(Return_Value &rv) {
+              catch(detail::Return_Value &rv) {
                 t_ss.set_stack(prev_stack);
                 retval = rv.retval;
               }
@@ -488,12 +488,12 @@ namespace chaiscript
                     retval = t_ss.call_function("[]", retval, this->children[i]->children[j]->eval(t_ss));
                   }
                   catch(std::out_of_range &) {
-                    throw Eval_Error("Out of bounds exception");
+                    throw exception::eval_error("Out of bounds exception");
                   }
                   catch(const exception::dispatch_error &){
-                    throw Eval_Error("Can not find appropriate array lookup '[]' ");
+                    throw exception::eval_error("Can not find appropriate array lookup '[]' ");
                   }
-                  catch(Eval_Error &ee) {
+                  catch(exception::eval_error &ee) {
                     ee.call_stack.push_back(this->children[i]->children[j]);
                     throw;
                   }
@@ -576,11 +576,11 @@ namespace chaiscript
                 return retval;
               }
             }
-            catch (const chaiscript::Return_Value &) {
+            catch (const chaiscript::detail::Return_Value &) {
               t_ss.pop_scope();
               throw;
             }
-            catch (Eval_Error &ee) {
+            catch (exception::eval_error &ee) {
               ee.call_stack.push_back(this->children[i]);
               t_ss.pop_scope();
               throw;
@@ -644,7 +644,7 @@ namespace chaiscript
                                             l_annotation, guard)), l_function_name);
           }
           catch (const exception::reserved_word_error &e) {
-            throw Eval_Error("Reserved word used as function name '" + e.word() + "'");
+            throw exception::eval_error("Reserved word used as function name '" + e.word() + "'");
           }
           return Boxed_Value();
         }
@@ -666,9 +666,9 @@ namespace chaiscript
           }
           catch (const exception::bad_boxed_cast &) {
             t_ss.pop_scope();
-            throw Eval_Error("While condition not boolean");
+            throw exception::eval_error("While condition not boolean");
           }
-          catch (Eval_Error &ee) {
+          catch (exception::eval_error &ee) {
             ee.call_stack.push_back(this->children[0]);
             t_ss.pop_scope();
             throw;
@@ -678,7 +678,7 @@ namespace chaiscript
               try {
                 this->children[1]->eval(t_ss);
               }
-              catch (Eval_Error &ee) {
+              catch (exception::eval_error &ee) {
                 ee.call_stack.push_back(this->children[1]);
                 throw;
               }
@@ -688,15 +688,15 @@ namespace chaiscript
               }
               catch (const exception::bad_boxed_cast &) {
                 t_ss.pop_scope();
-                throw Eval_Error("While condition not boolean");
+                throw exception::eval_error("While condition not boolean");
               }
-              catch (Eval_Error &ee) {
+              catch (exception::eval_error &ee) {
                 ee.call_stack.push_back(this->children[0]);
                 t_ss.pop_scope();
                 throw;
               }
             }
-            catch (Break_Loop &) {
+            catch (detail::Break_Loop &) {
               cond = false;
             }
           }
@@ -717,9 +717,9 @@ namespace chaiscript
             cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
           }
           catch (const exception::bad_boxed_cast &) {
-            throw Eval_Error("If condition not boolean");
+            throw exception::eval_error("If condition not boolean");
           }
-          catch (Eval_Error &ee) {
+          catch (exception::eval_error &ee) {
             ee.call_stack.push_back(this->children[0]);
             throw;
           }
@@ -728,7 +728,7 @@ namespace chaiscript
             try {
               return this->children[1]->eval(t_ss);
             }
-            catch (Eval_Error &ee) {
+            catch (exception::eval_error &ee) {
               ee.call_stack.push_back(this->children[1]);
               throw;
             }
@@ -741,7 +741,7 @@ namespace chaiscript
                   try {
                     return this->children[i+1]->eval(t_ss);
                   }
-                  catch (Eval_Error &ee) {
+                  catch (exception::eval_error &ee) {
                     ee.call_stack.push_back(this->children[i+1]);
                     throw;
                   }
@@ -751,9 +751,9 @@ namespace chaiscript
                     cond = boxed_cast<bool>(this->children[i+1]->eval(t_ss));
                   }
                   catch (const exception::bad_boxed_cast &) {
-                    throw Eval_Error("'else if' condition not boolean");
+                    throw exception::eval_error("'else if' condition not boolean");
                   }
-                  catch (Eval_Error &ee) {
+                  catch (exception::eval_error &ee) {
                     ee.call_stack.push_back(this->children[i+1]);
                     throw;
                   }
@@ -761,7 +761,7 @@ namespace chaiscript
                     try {
                       return this->children[i+2]->eval(t_ss);
                     }
-                    catch (Eval_Error &ee) {
+                    catch (exception::eval_error &ee) {
                       ee.call_stack.push_back(this->children[i+2]);
                       throw;
                     }
@@ -792,7 +792,7 @@ namespace chaiscript
               try {
                 this->children[0]->eval(t_ss);
               }
-              catch (Eval_Error &ee) {
+              catch (exception::eval_error &ee) {
                 ee.call_stack.push_back(this->children[0]);
                 throw;
               }
@@ -800,7 +800,7 @@ namespace chaiscript
               try {
                 cond = boxed_cast<bool>(this->children[1]->eval(t_ss));
               }
-              catch (Eval_Error &ee) {
+              catch (exception::eval_error &ee) {
                 ee.call_stack.push_back(this->children[1]);
                 throw;
               }
@@ -809,7 +809,7 @@ namespace chaiscript
               try {
                 cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
               }
-              catch (Eval_Error &ee) {
+              catch (exception::eval_error &ee) {
                 ee.call_stack.push_back(this->children[0]);
                 t_ss.pop_scope();
                 throw;
@@ -818,7 +818,7 @@ namespace chaiscript
           }
           catch (const exception::bad_boxed_cast &) {
             t_ss.pop_scope();
-            throw Eval_Error("For condition not boolean");
+            throw exception::eval_error("For condition not boolean");
           }
           while (cond) {
             try {
@@ -826,7 +826,7 @@ namespace chaiscript
                 try {
                   this->children[3]->eval(t_ss);
                 }
-                catch (Eval_Error &ee) {
+                catch (exception::eval_error &ee) {
                   ee.call_stack.push_back(this->children[3]);
                   throw;
                 }
@@ -834,7 +834,7 @@ namespace chaiscript
                 try {
                   this->children[2]->eval(t_ss);
                 }
-                catch (Eval_Error &ee) {
+                catch (exception::eval_error &ee) {
                   ee.call_stack.push_back(this->children[2]);
                   throw;
                 }
@@ -842,7 +842,7 @@ namespace chaiscript
                 try {
                   cond = boxed_cast<bool>(this->children[1]->eval(t_ss));
                 }
-                catch (Eval_Error &ee) {
+                catch (exception::eval_error &ee) {
                   ee.call_stack.push_back(this->children[1]);
                   throw;
                 }
@@ -851,7 +851,7 @@ namespace chaiscript
                 try {
                   this->children[2]->eval(t_ss);
                 }
-                catch (Eval_Error &ee) {
+                catch (exception::eval_error &ee) {
                   ee.call_stack.push_back(this->children[2]);
                   throw;
                 }
@@ -859,7 +859,7 @@ namespace chaiscript
                 try {
                   this->children[1]->eval(t_ss);
                 }
-                catch (Eval_Error &ee) {
+                catch (exception::eval_error &ee) {
                   ee.call_stack.push_back(this->children[1]);
                   throw;
                 }
@@ -867,7 +867,7 @@ namespace chaiscript
                 try {
                   cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
                 }
-                catch (Eval_Error &ee) {
+                catch (exception::eval_error &ee) {
                   ee.call_stack.push_back(this->children[0]);
                   t_ss.pop_scope();
                   throw;
@@ -876,9 +876,9 @@ namespace chaiscript
             }
             catch (const exception::bad_boxed_cast &) {
               t_ss.pop_scope();
-              throw Eval_Error("For condition not boolean");
+              throw exception::eval_error("For condition not boolean");
             }
-            catch (Break_Loop &) {
+            catch (detail::Break_Loop &) {
               cond = false;
             }
           }
@@ -900,7 +900,7 @@ namespace chaiscript
               try {
                 vec.push_back(this->children[0]->children[i]->eval(t_ss));
               }
-              catch(Eval_Error &ee) {
+              catch(exception::eval_error &ee) {
                 ee.call_stack.push_back(this->children[0]->children[i]);
                 throw;
               }
@@ -925,7 +925,7 @@ namespace chaiscript
                 retval[boxed_cast<std::string>(this->children[0]->children[i]->children[0]->eval(t_ss))] 
                   = t_ss.call_function("clone", this->children[0]->children[i]->children[1]->eval(t_ss));
               }
-              catch(Eval_Error &ee) {
+              catch(exception::eval_error &ee) {
                 ee.call_stack.push_back(this->children[0]->children[i]);
                 throw;
               }
@@ -933,7 +933,7 @@ namespace chaiscript
             return const_var(retval);
           }
           catch (const exception::dispatch_error &) {
-            throw Eval_Error("Can not find appropriate 'Map()'");
+            throw exception::eval_error("Can not find appropriate 'Map()'");
           }
         }
 
@@ -947,15 +947,15 @@ namespace chaiscript
         virtual Boxed_Value eval(Dispatch_Engine &t_ss){
           if (this->children.size() > 0) {
             try {
-              throw Return_Value(this->children[0]->eval(t_ss));
+              throw detail::Return_Value(this->children[0]->eval(t_ss));
             }
-            catch (Eval_Error &ee) {
+            catch (exception::eval_error &ee) {
               ee.call_stack.push_back(this->children[0]);
               throw;
             }
           }
           else {
-            throw Return_Value(Boxed_Value());
+            throw detail::Return_Value(Boxed_Value());
           }
         }
 
@@ -975,7 +975,7 @@ namespace chaiscript
                 return retval;
               }
             }
-            catch (Eval_Error &ee) {
+            catch (exception::eval_error &ee) {
               ee.call_stack.push_back(this->children[i]);
               throw;
             }
@@ -994,7 +994,7 @@ namespace chaiscript
             return t_ss.call_function(this->children[0]->text, this->children[1]->eval(t_ss));
           }
           catch(std::exception &){
-            throw Eval_Error("Can not find appropriate unary '" + this->children[0]->text + "'");
+            throw exception::eval_error("Can not find appropriate unary '" + this->children[0]->text + "'");
           }
         }
 
@@ -1006,7 +1006,7 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Break_AST_Node() {}
         virtual Boxed_Value eval(Dispatch_Engine &){
-          throw Break_Loop();
+          throw detail::Break_Loop();
         }
     };
 
@@ -1036,9 +1036,9 @@ namespace chaiscript
                 this->children[0]->children[0]->children[1]->eval(t_ss));
           }
           catch (const exception::dispatch_error &) {
-            throw Eval_Error("Unable to generate range vector");
+            throw exception::eval_error("Unable to generate range vector");
           }
-          catch(Eval_Error &ee) {
+          catch(exception::eval_error &ee) {
             ee.call_stack.push_back(this->children[0]->children[0]);
             throw;
           }
@@ -1065,13 +1065,13 @@ namespace chaiscript
           try {
             retval = this->children[0]->eval(t_ss);
           }
-          catch (Eval_Error &ee) {
+          catch (exception::eval_error &ee) {
             ee.call_stack.push_back(this->children[0]);
             if (this->children.back()->identifier == AST_Node_Type::Finally) {
               try {
                 this->children.back()->children[0]->eval(t_ss);
               }
-              catch (Eval_Error &ee2) {
+              catch (exception::eval_error &ee2) {
                 ee2.call_stack.push_back(this->children.back()->children[0]);
                 t_ss.pop_scope();
                 throw;
@@ -1096,7 +1096,7 @@ namespace chaiscript
                 try {
                   retval = catch_block->children[0]->eval(t_ss);
                 }
-                catch (Eval_Error &ee) {
+                catch (exception::eval_error &ee) {
                   ee.call_stack.push_back(catch_block->children[0]);
                   throw;
                 }
@@ -1108,7 +1108,7 @@ namespace chaiscript
                 try {
                   retval = catch_block->children[1]->eval(t_ss);
                 }
-                catch (Eval_Error &ee) {
+                catch (exception::eval_error &ee) {
                   ee.call_stack.push_back(catch_block->children[1]);
                   throw;
                 }
@@ -1127,20 +1127,20 @@ namespace chaiscript
                     try {
                       this->children.back()->children[0]->eval(t_ss);
                     }
-                    catch (Eval_Error &ee) {
+                    catch (exception::eval_error &ee) {
                       ee.call_stack.push_back(this->children.back()->children[0]);
                       t_ss.pop_scope();
                       throw;
                     }
                   }
                   t_ss.pop_scope();
-                  throw Eval_Error("Guard condition not boolean");
+                  throw exception::eval_error("Guard condition not boolean");
                 }
                 if (guard) {
                   try {
                     retval = catch_block->children[2]->eval(t_ss);
                   }
-                  catch (Eval_Error &ee) {
+                  catch (exception::eval_error &ee) {
                     ee.call_stack.push_back(catch_block->children[2]);
                     throw;
                   }
@@ -1153,14 +1153,14 @@ namespace chaiscript
                   try {
                     this->children.back()->children[0]->eval(t_ss);
                   }
-                  catch (Eval_Error &ee) {
+                  catch (exception::eval_error &ee) {
                     ee.call_stack.push_back(this->children.back()->children[0]);
                     t_ss.pop_scope();
                     throw;
                   }
                 }
                 t_ss.pop_scope();
-                throw Eval_Error("Internal error: catch block size unrecognized");
+                throw exception::eval_error("Internal error: catch block size unrecognized");
               }
             }
           }
@@ -1174,7 +1174,7 @@ namespace chaiscript
                 try {
                   retval = catch_block->children[0]->eval(t_ss);
                 }
-                catch (Eval_Error &ee) {
+                catch (exception::eval_error &ee) {
                   ee.call_stack.push_back(catch_block->children[0]);
                   throw;
                 }
@@ -1187,7 +1187,7 @@ namespace chaiscript
                 try {
                   retval = catch_block->children[1]->eval(t_ss);
                 }
-                catch (Eval_Error &ee) {
+                catch (exception::eval_error &ee) {
                   ee.call_stack.push_back(catch_block->children[1]);
                   throw;
                 }
@@ -1207,7 +1207,7 @@ namespace chaiscript
                     try {
                       this->children.back()->children[0]->eval(t_ss);
                     }
-                    catch (Eval_Error &ee) {
+                    catch (exception::eval_error &ee) {
                       ee.call_stack.push_back(this->children.back()->children[0]);
                       t_ss.pop_scope();
                       throw;
@@ -1215,9 +1215,9 @@ namespace chaiscript
                   }
 
                   t_ss.pop_scope();
-                  throw Eval_Error("Guard condition not boolean");
+                  throw exception::eval_error("Guard condition not boolean");
                 }
-                catch (Eval_Error &ee) {
+                catch (exception::eval_error &ee) {
                   ee.call_stack.push_back(catch_block->children[1]);
                   throw;
                 }
@@ -1225,7 +1225,7 @@ namespace chaiscript
                   try {
                     retval = catch_block->children[2]->eval(t_ss);
                   }
-                  catch (Eval_Error &ee) {
+                  catch (exception::eval_error &ee) {
                     ee.call_stack.push_back(catch_block->children[2]);
                     throw;
                   }
@@ -1237,14 +1237,14 @@ namespace chaiscript
                   try {
                     this->children.back()->children[0]->eval(t_ss);
                   }
-                  catch (Eval_Error &ee) {
+                  catch (exception::eval_error &ee) {
                     ee.call_stack.push_back(this->children.back()->children[0]);
                     t_ss.pop_scope();
                     throw;
                   }
                 }
                 t_ss.pop_scope();
-                throw Eval_Error("Internal error: catch block size unrecognized");
+                throw exception::eval_error("Internal error: catch block size unrecognized");
               }
             }
           }
@@ -1253,7 +1253,7 @@ namespace chaiscript
               try {
                 this->children.back()->children[0]->eval(t_ss);
               }
-              catch (Eval_Error &ee) {
+              catch (exception::eval_error &ee) {
                 ee.call_stack.push_back(this->children.back()->children[0]);
                 t_ss.pop_scope();
                 throw;
@@ -1267,7 +1267,7 @@ namespace chaiscript
             try {
               retval = this->children.back()->children[0]->eval(t_ss);
             }
-            catch (Eval_Error &ee) {
+            catch (exception::eval_error &ee) {
               ee.call_stack.push_back(this->children.back()->children[0]);
               t_ss.pop_scope();
               throw;
@@ -1365,7 +1365,7 @@ namespace chaiscript
             }
           }
           catch (const exception::reserved_word_error &e) {
-            throw Eval_Error("Reserved word used as method name '" + e.word() + "'");
+            throw exception::eval_error("Reserved word used as method name '" + e.word() + "'");
           }
           return Boxed_Value();
         }
@@ -1384,7 +1384,7 @@ namespace chaiscript
 
           }
           catch (const exception::reserved_word_error &) {
-            throw Eval_Error("Reserved word used as attribute '" + this->children[1]->text + "'");
+            throw exception::eval_error("Reserved word used as attribute '" + this->children[1]->text + "'");
           }
           return Boxed_Value();
         }
@@ -1436,7 +1436,7 @@ namespace chaiscript
           try {
             retval = this->children[0]->eval(t_ss);
           }
-          catch (Eval_Error &ee) {
+          catch (exception::eval_error &ee) {
             ee.call_stack.push_back(this->children[0]);
             throw;
           }
@@ -1448,13 +1448,13 @@ namespace chaiscript
                 lhs = boxed_cast<bool>(retval);
               }
               catch (const exception::bad_boxed_cast &) {
-                throw Eval_Error("Condition not boolean");
+                throw exception::eval_error("Condition not boolean");
               }
               if (lhs) {
                 try {
                   retval = this->children[i+1]->eval(t_ss);
                 }
-                catch (Eval_Error &ee) {
+                catch (exception::eval_error &ee) {
                   ee.call_stack.push_back(this->children[i+1]);
                   throw;
                 }
@@ -1479,7 +1479,7 @@ namespace chaiscript
           try {
             retval = this->children[0]->eval(t_ss);
           }
-          catch (Eval_Error &ee) {
+          catch (exception::eval_error &ee) {
             ee.call_stack.push_back(this->children[0]);
             throw;
           }
@@ -1491,7 +1491,7 @@ namespace chaiscript
                 lhs = boxed_cast<bool>(retval);
               }
               catch (const exception::bad_boxed_cast &) {
-                throw Eval_Error("Condition not boolean");
+                throw exception::eval_error("Condition not boolean");
               }
               if (lhs) {
                 retval = Boxed_Value(true);
@@ -1500,7 +1500,7 @@ namespace chaiscript
                 try {
                   retval = this->children[i+1]->eval(t_ss);
                 }
-                catch (Eval_Error &ee) {
+                catch (exception::eval_error &ee) {
                   ee.call_stack.push_back(this->children[i+1]);
                   throw;
                 }

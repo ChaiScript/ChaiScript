@@ -71,8 +71,8 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflect
     );
 
   CHAISCRIPT_CLASS( m, 
-      chaiscript::ChaiScript_Parser,
-      (chaiscript::ChaiScript_Parser ()),
+      chaiscript::parser::ChaiScript_Parser,
+      (chaiscript::parser::ChaiScript_Parser ()),
       ((parse))
       ((ast))
     );

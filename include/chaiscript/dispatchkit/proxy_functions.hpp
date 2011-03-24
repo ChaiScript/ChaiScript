@@ -139,7 +139,7 @@ namespace chaiscript
           || (!bv.get_type_info().is_undef()
             && (ti.bare_equal(user_type<Boxed_POD_Value>())
                 || ti.bare_equal(bv.get_type_info())
-                || dynamic_cast_converts(ti, bv.get_type_info()) 
+                || detail::dynamic_cast_converts(ti, bv.get_type_info()) 
                 || bv.get_type_info().bare_equal(user_type<boost::shared_ptr<const Proxy_Function_Base> >())
                 )
               )
@@ -594,46 +594,49 @@ namespace chaiscript
     };
   }
 
-  /**
-   * Take a vector of functions and a vector of parameters. Attempt to execute
-   * each function against the set of parameters, in order, until a matching
-   * function is found or throw dispatch_error if no matching function is found
-   */
-  template<typename InItr>
-  Boxed_Value dispatch(InItr begin, InItr end,
-      const std::vector<Boxed_Value> &plist)
+  namespace detail
   {
-    while (begin != end)
-    {
-      try {
-        if ((*begin)->filter(plist))
+    /**
+     * Take a vector of functions and a vector of parameters. Attempt to execute
+     * each function against the set of parameters, in order, until a matching
+     * function is found or throw dispatch_error if no matching function is found
+     */
+    template<typename InItr>
+      Boxed_Value dispatch(InItr begin, InItr end,
+          const std::vector<Boxed_Value> &plist)
+      {
+        while (begin != end)
         {
-          return (*(*begin))(plist);
+          try {
+            if ((*begin)->filter(plist))
+            {
+              return (*(*begin))(plist);
+            }
+          } catch (const exception::bad_boxed_cast &) {
+            //parameter failed to cast, try again
+          } catch (const exception::arity_error &) {
+            //invalid num params, try again
+          } catch (const exception::guard_error &) {
+            //guard failed to allow the function to execute,
+            //try again
+          }
+          ++begin;
         }
-      } catch (const exception::bad_boxed_cast &) {
-        //parameter failed to cast, try again
-      } catch (const exception::arity_error &) {
-        //invalid num params, try again
-      } catch (const exception::guard_error &) {
-        //guard failed to allow the function to execute,
-        //try again
+
+        throw exception::dispatch_error(plist.empty()?false:plist[0].is_const());
       }
-      ++begin;
-    }
 
-    throw exception::dispatch_error(plist.empty()?false:plist[0].is_const());
-  }
-
-  /**
-   * Take a vector of functions and a vector of parameters. Attempt to execute
-   * each function against the set of parameters, in order, until a matching
-   * function is found or throw dispatch_error if no matching function is found
-   */
-  template<typename Funcs>
-  Boxed_Value dispatch(const Funcs &funcs,
-      const std::vector<Boxed_Value> &plist)
-  {
-    return dispatch(funcs.begin(), funcs.end(), plist);
+    /**
+     * Take a vector of functions and a vector of parameters. Attempt to execute
+     * each function against the set of parameters, in order, until a matching
+     * function is found or throw dispatch_error if no matching function is found
+     */
+    template<typename Funcs>
+      Boxed_Value dispatch(const Funcs &funcs,
+          const std::vector<Boxed_Value> &plist)
+      {
+        return dispatch(funcs.begin(), funcs.end(), plist);
+      }
   }
 }
 

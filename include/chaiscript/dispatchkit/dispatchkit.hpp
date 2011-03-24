@@ -201,7 +201,7 @@ namespace chaiscript
     protected:
       virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
       {
-        return dispatch(m_funcs.begin(), m_funcs.end(), params);
+        return detail::dispatch(m_funcs.begin(), m_funcs.end(), params);
       }
 
     private:
@@ -647,7 +647,7 @@ namespace chaiscript
       {
         std::vector<Proxy_Function> functions = get_function(t_name);
 
-        return dispatch(functions.begin(), functions.end(), params);
+        return detail::dispatch(functions.begin(), functions.end(), params);
       }
 
       Boxed_Value call_function(const std::string &t_name) const

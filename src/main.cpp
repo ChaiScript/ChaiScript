@@ -107,14 +107,14 @@ void interactive(chaiscript::ChaiScript& chai)
         catch (...) {} //If we can't, do nothing
       }
     }
-    catch (chaiscript::Eval_Error &ee) {
+    catch (const chaiscript::exception::eval_error &ee) {
       std::cout << ee.what();
       if (ee.call_stack.size() > 0) {
         std::cout << "during evaluation at (" << ee.call_stack[0]->start.line << ", " << ee.call_stack[0]->start.column << ")";
       }
       std::cout << std::endl;
     }
-    catch (std::exception &e) {
+    catch (const std::exception &e) {
       std::cout << e.what();
       std::cout << std::endl;
     }
@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
         case eFile        : val = chai.eval_file(arg); break;
       }
     }
-    catch (chaiscript::Eval_Error &ee) {
+    catch (const chaiscript::exception::eval_error &ee) {
       std::cout << ee.what();
       if (ee.call_stack.size() > 0) {
         std::cout << "during evaluation at (" << *(ee.call_stack[0]->filename) << " " << ee.call_stack[0]->start.line << ", " << ee.call_stack[0]->start.column << ")";

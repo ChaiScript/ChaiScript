@@ -254,29 +254,31 @@ namespace chaiscript
     return detail::Dynamic_Conversions::create<Base, Derived>();
   }
 
-  template<typename Base, typename Derived>
-  bool dynamic_cast_converts()
+  namespace detail
   {
-    return dynamic_cast_converts(user_type<Base>(), user_type<Derived>());
-  }
+    template<typename Base, typename Derived>
+      bool dynamic_cast_converts()
+      {
+        return dynamic_cast_converts(user_type<Base>(), user_type<Derived>());
+      }
 
-  static bool dynamic_cast_converts(const Type_Info &base, const Type_Info &derived)
-  {
-    return detail::Dynamic_Conversions::get().has_conversion(base, derived);
-  }
-
-  template<typename Base>
-  Boxed_Value boxed_dynamic_cast(const Boxed_Value &derived)
-  {
-    try {
-      return detail::Dynamic_Conversions::get().get_conversion(user_type<Base>(), derived.get_type_info())->convert(derived);
-    } catch (const std::out_of_range &) {
-      throw exception::bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "No known conversion");
-    } catch (const std::bad_cast &) {
-      throw exception::bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "Unable to perform dynamic_cast operation");
+    static bool dynamic_cast_converts(const Type_Info &base, const Type_Info &derived)
+    {
+      return detail::Dynamic_Conversions::get().has_conversion(base, derived);
     }
-  }
 
+    template<typename Base>
+      Boxed_Value boxed_dynamic_cast(const Boxed_Value &derived)
+      {
+        try {
+          return detail::Dynamic_Conversions::get().get_conversion(user_type<Base>(), derived.get_type_info())->convert(derived);
+        } catch (const std::out_of_range &) {
+          throw exception::bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "No known conversion");
+        } catch (const std::bad_cast &) {
+          throw exception::bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "Unable to perform dynamic_cast operation");
+        }
+      }
+  }
 }
 
 

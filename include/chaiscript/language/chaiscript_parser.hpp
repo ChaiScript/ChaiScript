@@ -16,566 +16,275 @@
 
 namespace chaiscript
 {
-  namespace detail 
+  namespace parser
   {
-    enum Alphabet
-    {   symbol_alphabet = 0
+    namespace detail 
+    {
+      enum Alphabet
+      {   symbol_alphabet = 0
         ,   keyword_alphabet
-        ,   int_alphabet
-        ,   float_alphabet
-        ,   x_alphabet
-        ,   hex_alphabet
-        ,   b_alphabet
-        ,   bin_alphabet
-        ,   id_alphabet
-        ,   white_alphabet
-        ,   max_alphabet
-        ,   lengthof_alphabet = 256
-    };
-  }
-
-  class ChaiScript_Parser {
-
-    std::string::const_iterator m_input_pos, m_input_end;
-    int m_line, m_col;
-    std::string m_multiline_comment_begin;
-    std::string m_multiline_comment_end;
-    std::string m_singleline_comment;
-    boost::shared_ptr<std::string> m_filename;
-    std::vector<AST_NodePtr> m_match_stack;
-    bool m_alphabet[detail::max_alphabet][detail::lengthof_alphabet];
-
-    std::vector<std::vector<std::string> > m_operator_matches;
-    std::vector<AST_Node_Type::Type> m_operators;
-
-  public:
-    ChaiScript_Parser()
-      : m_multiline_comment_begin("/*"),
-        m_multiline_comment_end("*/"),
-        m_singleline_comment("//")
-    {
-      setup_operators();
+          ,   int_alphabet
+          ,   float_alphabet
+          ,   x_alphabet
+          ,   hex_alphabet
+          ,   b_alphabet
+          ,   bin_alphabet
+          ,   id_alphabet
+          ,   white_alphabet
+          ,   max_alphabet
+          ,   lengthof_alphabet = 256
+      };
     }
 
-    ChaiScript_Parser(const ChaiScript_Parser &); // explicitly unimplemented copy constructor
-    ChaiScript_Parser &operator=(const ChaiScript_Parser &); // explicitly unimplemented assignment operator
+    class ChaiScript_Parser {
 
-    void setup_operators()
-    {
-      m_operators.push_back(AST_Node_Type::Logical_Or);
-      std::vector<std::string> logical_or;
-      logical_or.push_back("||");
-      m_operator_matches.push_back(logical_or);
+      std::string::const_iterator m_input_pos, m_input_end;
+      int m_line, m_col;
+      std::string m_multiline_comment_begin;
+      std::string m_multiline_comment_end;
+      std::string m_singleline_comment;
+      boost::shared_ptr<std::string> m_filename;
+      std::vector<AST_NodePtr> m_match_stack;
+      bool m_alphabet[detail::max_alphabet][detail::lengthof_alphabet];
 
-      m_operators.push_back(AST_Node_Type::Logical_And);
-      std::vector<std::string> logical_and;
-      logical_and.push_back("&&");
-      m_operator_matches.push_back(logical_and);
+      std::vector<std::vector<std::string> > m_operator_matches;
+      std::vector<AST_Node_Type::Type> m_operators;
 
-      m_operators.push_back(AST_Node_Type::Bitwise_Or);
-      std::vector<std::string> bitwise_or;
-      bitwise_or.push_back("|");
-      m_operator_matches.push_back(bitwise_or);
-
-      m_operators.push_back(AST_Node_Type::Bitwise_Xor);
-      std::vector<std::string> bitwise_xor;
-      bitwise_xor.push_back("^");
-      m_operator_matches.push_back(bitwise_xor);
-
-      m_operators.push_back(AST_Node_Type::Bitwise_And);
-      std::vector<std::string> bitwise_and;
-      bitwise_and.push_back("&");
-      m_operator_matches.push_back(bitwise_and);
-
-      m_operators.push_back(AST_Node_Type::Equality);
-      std::vector<std::string> equality;
-      equality.push_back("==");
-      equality.push_back("!=");
-      m_operator_matches.push_back(equality);
-
-      m_operators.push_back(AST_Node_Type::Comparison);
-      std::vector<std::string> comparison;
-      comparison.push_back("<");
-      comparison.push_back("<=");
-      comparison.push_back(">");
-      comparison.push_back(">=");
-      m_operator_matches.push_back(comparison);
-
-      m_operators.push_back(AST_Node_Type::Shift);
-      std::vector<std::string> shift;
-      shift.push_back("<<");
-      shift.push_back(">>");
-      m_operator_matches.push_back(shift);
-
-      m_operators.push_back(AST_Node_Type::Additive);
-      std::vector<std::string> additive;
-      additive.push_back("+");
-      additive.push_back("-");
-      m_operator_matches.push_back(additive);
-
-      m_operators.push_back(AST_Node_Type::Multiplicative);
-      std::vector<std::string> multiplicative;
-      multiplicative.push_back("*");
-      multiplicative.push_back("/");
-      multiplicative.push_back("%");
-      m_operator_matches.push_back(multiplicative);
-
-      m_operators.push_back(AST_Node_Type::Dot_Access);
-      std::vector<std::string> dot_access;
-      dot_access.push_back(".");
-      m_operator_matches.push_back(dot_access);
-
-      for ( int c = 0 ; c < detail::lengthof_alphabet ; ++c ) {
-        for ( int a = 0 ; a < detail::max_alphabet ; a ++ ) {
-          m_alphabet[a][c]=false;
-        }
-      }
-      m_alphabet[detail::symbol_alphabet][static_cast<int>('+')]=true;
-      m_alphabet[detail::symbol_alphabet][static_cast<int>('-')]=true;
-      m_alphabet[detail::symbol_alphabet][static_cast<int>('*')]=true;
-      m_alphabet[detail::symbol_alphabet][static_cast<int>('/')]=true;
-      m_alphabet[detail::symbol_alphabet][static_cast<int>('|')]=true;
-      m_alphabet[detail::symbol_alphabet][static_cast<int>('&')]=true;
-      m_alphabet[detail::symbol_alphabet][static_cast<int>('^')]=true;
-      m_alphabet[detail::symbol_alphabet][static_cast<int>('=')]=true;
-      m_alphabet[detail::symbol_alphabet][static_cast<int>('.')]=true;
-      m_alphabet[detail::symbol_alphabet][static_cast<int>('<')]=true;
-      m_alphabet[detail::symbol_alphabet][static_cast<int>('>')]=true;
-
-      for ( int c = 'a' ; c <= 'z' ; ++c ) { m_alphabet[detail::keyword_alphabet][c]=true; }
-      for ( int c = 'A' ; c <= 'Z' ; ++c ) { m_alphabet[detail::keyword_alphabet][c]=true; }
-      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::keyword_alphabet][c]=true; }
-      m_alphabet[detail::keyword_alphabet][static_cast<int>('_')]=true;
-
-      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::int_alphabet][c]=true; }
-      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::float_alphabet][c]=true; }
-      m_alphabet[detail::float_alphabet][static_cast<int>('.')]=true;
-
-      for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::hex_alphabet][c]=true; }
-      for ( int c = 'a' ; c <= 'f' ; ++c ) { m_alphabet[detail::hex_alphabet][c]=true; }
-      for ( int c = 'A' ; c <= 'F' ; ++c ) { m_alphabet[detail::hex_alphabet][c]=true; }
-
-      m_alphabet[detail::x_alphabet][static_cast<int>('x')]=true;
-      m_alphabet[detail::x_alphabet][static_cast<int>('X')]=true;
-
-      for ( int c = '0' ; c <= '1' ; ++c ) { m_alphabet[detail::bin_alphabet][c]=true; }
-      m_alphabet[detail::b_alphabet][static_cast<int>('b')]=true;
-      m_alphabet[detail::b_alphabet][static_cast<int>('B')]=true;
-
-      for ( int c = 'a' ; c <= 'z' ; ++c ) { m_alphabet[detail::id_alphabet][c]=true; }
-      for ( int c = 'A' ; c <= 'Z' ; ++c ) { m_alphabet[detail::id_alphabet][c]=true; }
-      m_alphabet[detail::id_alphabet][static_cast<int>('_')] = true;
-
-      m_alphabet[detail::white_alphabet][static_cast<int>(' ')]=true;
-      m_alphabet[detail::white_alphabet][static_cast<int>('\t')]=true;
-    }
-
-    /**
-     * test a char in an m_alphabet
-     */
-    bool char_in_alphabet(unsigned char c, detail::Alphabet a) { return m_alphabet[a][c]; }
-
-    /**
-     * Prints the parsed ast_nodes as a tree
-     */
-    /*
-    void debug_print(AST_NodePtr t, std::string prepend = "") {
-      std::cout << prepend << "(" << ast_node_type_to_string(t->identifier) << ") " << t->text << " : " << t->start.line << ", " << t->start.column << std::endl;
-      for (unsigned int j = 0; j < t->children.size(); ++j) {
-        debug_print(t->children[j], prepend + "  ");
-      }
-    }
-    */
-
-    /**
-     * Shows the current stack of matched ast_nodes
-     */
-    void show_match_stack() {
-      for (unsigned int i = 0; i < m_match_stack.size(); ++i) {
-        //debug_print(match_stack[i]);
-        std::cout << m_match_stack[i]->to_string();
-      }
-    }
-
-    /**
-     * Clears the stack of matched ast_nodes
-     */
-    void clear_match_stack() {
-      m_match_stack.clear();
-    }
-
-    /**
-     * Returns the front-most AST node
-     */
-    AST_NodePtr ast() {
-      return m_match_stack.front();
-    }
-
-    /**
-     * Helper function that collects ast_nodes from a starting position to the top of the stack into a new AST node
-     */
-    void build_match(AST_NodePtr t_t, size_t t_match_start) {
-      int pos_line_start, pos_col_start, pos_line_stop, pos_col_stop;
-      int is_deep = false;
-
-      //so we want to take everything to the right of this and make them children
-      if (t_match_start != m_match_stack.size()) {
-        pos_line_start = m_match_stack[t_match_start]->start.line;
-        pos_col_start = m_match_stack[t_match_start]->start.column;
-        pos_line_stop = m_line;
-        pos_col_stop = m_col;
-        is_deep = true;
-      }
-      else {
-        pos_line_start = m_line;
-        pos_col_start = m_col;
-        pos_line_stop = m_line;
-        pos_col_stop = m_col;
+      public:
+      ChaiScript_Parser()
+        : m_multiline_comment_begin("/*"),
+          m_multiline_comment_end("*/"),
+          m_singleline_comment("//")
+      {
+        setup_operators();
       }
 
-      t_t->filename = m_filename;
-      t_t->start.line = pos_line_start;
-      t_t->start.column = pos_col_start;
-      t_t->end.line = pos_line_stop;
-      t_t->end.column = pos_col_stop;
+      ChaiScript_Parser(const ChaiScript_Parser &); // explicitly unimplemented copy constructor
+      ChaiScript_Parser &operator=(const ChaiScript_Parser &); // explicitly unimplemented assignment operator
 
-      if (is_deep) {
-        t_t->children.assign(m_match_stack.begin() + t_match_start, m_match_stack.end());
-        m_match_stack.erase(m_match_stack.begin() + t_match_start, m_match_stack.end());
-        m_match_stack.push_back(t_t);
-      }
-      else {
-        //todo: fix the fact that a successful match that captured no ast_nodes doesn't have any real start position
-        m_match_stack.push_back(t_t);
-      }
-    }
+      void setup_operators()
+      {
+        m_operators.push_back(AST_Node_Type::Logical_Or);
+        std::vector<std::string> logical_or;
+        logical_or.push_back("||");
+        m_operator_matches.push_back(logical_or);
 
-    /**
-     * Check to see if there is more text parse
-     */
-    inline bool has_more_input() {
-      return (m_input_pos != m_input_end);
-    }
+        m_operators.push_back(AST_Node_Type::Logical_And);
+        std::vector<std::string> logical_and;
+        logical_and.push_back("&&");
+        m_operator_matches.push_back(logical_and);
 
-    /**
-     * Skips any multi-line or single-line comment
-     */
-    bool SkipComment() {
-      bool retval = false;
+        m_operators.push_back(AST_Node_Type::Bitwise_Or);
+        std::vector<std::string> bitwise_or;
+        bitwise_or.push_back("|");
+        m_operator_matches.push_back(bitwise_or);
 
-      if (Symbol_(m_multiline_comment_begin.c_str())) {
-        while (m_input_pos != m_input_end) {
-          if (Symbol_(m_multiline_comment_end.c_str())) {
-            break;
-          }
-          else if (!Eol_()) {
-            ++m_col;
-            ++m_input_pos;
+        m_operators.push_back(AST_Node_Type::Bitwise_Xor);
+        std::vector<std::string> bitwise_xor;
+        bitwise_xor.push_back("^");
+        m_operator_matches.push_back(bitwise_xor);
+
+        m_operators.push_back(AST_Node_Type::Bitwise_And);
+        std::vector<std::string> bitwise_and;
+        bitwise_and.push_back("&");
+        m_operator_matches.push_back(bitwise_and);
+
+        m_operators.push_back(AST_Node_Type::Equality);
+        std::vector<std::string> equality;
+        equality.push_back("==");
+        equality.push_back("!=");
+        m_operator_matches.push_back(equality);
+
+        m_operators.push_back(AST_Node_Type::Comparison);
+        std::vector<std::string> comparison;
+        comparison.push_back("<");
+        comparison.push_back("<=");
+        comparison.push_back(">");
+        comparison.push_back(">=");
+        m_operator_matches.push_back(comparison);
+
+        m_operators.push_back(AST_Node_Type::Shift);
+        std::vector<std::string> shift;
+        shift.push_back("<<");
+        shift.push_back(">>");
+        m_operator_matches.push_back(shift);
+
+        m_operators.push_back(AST_Node_Type::Additive);
+        std::vector<std::string> additive;
+        additive.push_back("+");
+        additive.push_back("-");
+        m_operator_matches.push_back(additive);
+
+        m_operators.push_back(AST_Node_Type::Multiplicative);
+        std::vector<std::string> multiplicative;
+        multiplicative.push_back("*");
+        multiplicative.push_back("/");
+        multiplicative.push_back("%");
+        m_operator_matches.push_back(multiplicative);
+
+        m_operators.push_back(AST_Node_Type::Dot_Access);
+        std::vector<std::string> dot_access;
+        dot_access.push_back(".");
+        m_operator_matches.push_back(dot_access);
+
+        for ( int c = 0 ; c < detail::lengthof_alphabet ; ++c ) {
+          for ( int a = 0 ; a < detail::max_alphabet ; a ++ ) {
+            m_alphabet[a][c]=false;
           }
         }
-        retval = true;
-      }
-      else if (Symbol_(m_singleline_comment.c_str())) {
-        while (m_input_pos != m_input_end) {
-          if (Symbol_("\r\n")) {
-            m_input_pos -= 2;
-            break;
-          }
-          else if (Char_('\n')) {
-            --m_input_pos;
-            break;
-          }
-          else {
-            ++m_col;
-            ++m_input_pos;
-          }
-        }
-        retval = true;
-      }
-      return retval;
-    }
+        m_alphabet[detail::symbol_alphabet][static_cast<int>('+')]=true;
+        m_alphabet[detail::symbol_alphabet][static_cast<int>('-')]=true;
+        m_alphabet[detail::symbol_alphabet][static_cast<int>('*')]=true;
+        m_alphabet[detail::symbol_alphabet][static_cast<int>('/')]=true;
+        m_alphabet[detail::symbol_alphabet][static_cast<int>('|')]=true;
+        m_alphabet[detail::symbol_alphabet][static_cast<int>('&')]=true;
+        m_alphabet[detail::symbol_alphabet][static_cast<int>('^')]=true;
+        m_alphabet[detail::symbol_alphabet][static_cast<int>('=')]=true;
+        m_alphabet[detail::symbol_alphabet][static_cast<int>('.')]=true;
+        m_alphabet[detail::symbol_alphabet][static_cast<int>('<')]=true;
+        m_alphabet[detail::symbol_alphabet][static_cast<int>('>')]=true;
 
-    /**
-     * Skips ChaiScript whitespace, which means space and tab, but not cr/lf
-     */
-    bool SkipWS() {
-      bool retval = false;
-      while (has_more_input()) {
-        if ( char_in_alphabet(*m_input_pos,detail::white_alphabet) ) {
-          ++m_input_pos;
-          ++m_col;
-          retval = true;
+        for ( int c = 'a' ; c <= 'z' ; ++c ) { m_alphabet[detail::keyword_alphabet][c]=true; }
+        for ( int c = 'A' ; c <= 'Z' ; ++c ) { m_alphabet[detail::keyword_alphabet][c]=true; }
+        for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::keyword_alphabet][c]=true; }
+        m_alphabet[detail::keyword_alphabet][static_cast<int>('_')]=true;
+
+        for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::int_alphabet][c]=true; }
+        for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::float_alphabet][c]=true; }
+        m_alphabet[detail::float_alphabet][static_cast<int>('.')]=true;
+
+        for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::hex_alphabet][c]=true; }
+        for ( int c = 'a' ; c <= 'f' ; ++c ) { m_alphabet[detail::hex_alphabet][c]=true; }
+        for ( int c = 'A' ; c <= 'F' ; ++c ) { m_alphabet[detail::hex_alphabet][c]=true; }
+
+        m_alphabet[detail::x_alphabet][static_cast<int>('x')]=true;
+        m_alphabet[detail::x_alphabet][static_cast<int>('X')]=true;
+
+        for ( int c = '0' ; c <= '1' ; ++c ) { m_alphabet[detail::bin_alphabet][c]=true; }
+        m_alphabet[detail::b_alphabet][static_cast<int>('b')]=true;
+        m_alphabet[detail::b_alphabet][static_cast<int>('B')]=true;
+
+        for ( int c = 'a' ; c <= 'z' ; ++c ) { m_alphabet[detail::id_alphabet][c]=true; }
+        for ( int c = 'A' ; c <= 'Z' ; ++c ) { m_alphabet[detail::id_alphabet][c]=true; }
+        m_alphabet[detail::id_alphabet][static_cast<int>('_')] = true;
+
+        m_alphabet[detail::white_alphabet][static_cast<int>(' ')]=true;
+        m_alphabet[detail::white_alphabet][static_cast<int>('\t')]=true;
+      }
+
+      /**
+       * test a char in an m_alphabet
+       */
+      bool char_in_alphabet(unsigned char c, detail::Alphabet a) { return m_alphabet[a][c]; }
+
+      /**
+       * Prints the parsed ast_nodes as a tree
+       */
+      /*
+         void debug_print(AST_NodePtr t, std::string prepend = "") {
+         std::cout << prepend << "(" << ast_node_type_to_string(t->identifier) << ") " << t->text << " : " << t->start.line << ", " << t->start.column << std::endl;
+         for (unsigned int j = 0; j < t->children.size(); ++j) {
+         debug_print(t->children[j], prepend + "  ");
+         }
+         }
+         */
+
+      /**
+       * Shows the current stack of matched ast_nodes
+       */
+      void show_match_stack() {
+        for (unsigned int i = 0; i < m_match_stack.size(); ++i) {
+          //debug_print(match_stack[i]);
+          std::cout << m_match_stack[i]->to_string();
         }
-        else if (SkipComment()) {
-          retval = true;
+      }
+
+      /**
+       * Clears the stack of matched ast_nodes
+       */
+      void clear_match_stack() {
+        m_match_stack.clear();
+      }
+
+      /**
+       * Returns the front-most AST node
+       */
+      AST_NodePtr ast() {
+        return m_match_stack.front();
+      }
+
+      /**
+       * Helper function that collects ast_nodes from a starting position to the top of the stack into a new AST node
+       */
+      void build_match(AST_NodePtr t_t, size_t t_match_start) {
+        int pos_line_start, pos_col_start, pos_line_stop, pos_col_stop;
+        int is_deep = false;
+
+        //so we want to take everything to the right of this and make them children
+        if (t_match_start != m_match_stack.size()) {
+          pos_line_start = m_match_stack[t_match_start]->start.line;
+          pos_col_start = m_match_stack[t_match_start]->start.column;
+          pos_line_stop = m_line;
+          pos_col_stop = m_col;
+          is_deep = true;
         }
         else {
-          break;
+          pos_line_start = m_line;
+          pos_col_start = m_col;
+          pos_line_stop = m_line;
+          pos_col_stop = m_col;
         }
-      }
-      return retval;
-    }
 
-    /**
-     * Reads a floating point value from input, without skipping initial whitespace
-     */
-    bool Float_() {
-      bool retval = false;
-      std::string::const_iterator start = m_input_pos;
+        t_t->filename = m_filename;
+        t_t->start.line = pos_line_start;
+        t_t->start.column = pos_col_start;
+        t_t->end.line = pos_line_stop;
+        t_t->end.column = pos_col_stop;
 
-      if (has_more_input() && char_in_alphabet(*m_input_pos,detail::float_alphabet) ) {
-        while (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet) ) {
-          ++m_input_pos;
-          ++m_col;
-        }
-        if (has_more_input() && (*m_input_pos == '.')) {
-          ++m_input_pos;
-          ++m_col;
-          if (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet)) {
-            retval = true;
-            while (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet) ) {
-              ++m_input_pos;
-              ++m_col;
-            }
-          }
-          else {
-            --m_input_pos;
-            --m_col;
-          }
-        }
-      }
-      return retval;
-    }
-
-    /**
-     * Reads a floating point value from input, without skipping initial whitespace
-     */
-    bool Hex_() {
-      bool retval = false;
-      if (has_more_input() && (*m_input_pos == '0')) {
-        ++m_input_pos;
-        ++m_col;
-
-        if (has_more_input() && char_in_alphabet(*m_input_pos, detail::x_alphabet) ) {
-          ++m_input_pos;
-          ++m_col;
-          if (has_more_input() && char_in_alphabet(*m_input_pos, detail::hex_alphabet)) {
-            retval = true;
-            while (has_more_input() && char_in_alphabet(*m_input_pos, detail::hex_alphabet) ) {
-              ++m_input_pos;
-              ++m_col;
-            }
-          }
-          else {
-            --m_input_pos;
-            --m_col;
-          }
+        if (is_deep) {
+          t_t->children.assign(m_match_stack.begin() + t_match_start, m_match_stack.end());
+          m_match_stack.erase(m_match_stack.begin() + t_match_start, m_match_stack.end());
+          m_match_stack.push_back(t_t);
         }
         else {
-          --m_input_pos;
-          --m_col;
+          //todo: fix the fact that a successful match that captured no ast_nodes doesn't have any real start position
+          m_match_stack.push_back(t_t);
         }
       }
 
-      return retval;
-    }
-
-    /**
-     * Reads a floating point value from input, without skipping initial whitespace
-     */
-    bool Binary_() {
-      bool retval = false;
-      if (has_more_input() && (*m_input_pos == '0')) {
-        ++m_input_pos;
-        ++m_col;
-
-        if (has_more_input() && char_in_alphabet(*m_input_pos, detail::b_alphabet) ) {
-          ++m_input_pos;
-          ++m_col;
-          if (has_more_input() && char_in_alphabet(*m_input_pos, detail::bin_alphabet) ) {
-            retval = true;
-            while (has_more_input() && char_in_alphabet(*m_input_pos, detail::bin_alphabet) ) {
-              ++m_input_pos;
-              ++m_col;
-            }
-          }
-          else {
-            --m_input_pos;
-            --m_col;
-          }
-        }
-        else {
-          --m_input_pos;
-          --m_col;
-        }
+      /**
+       * Check to see if there is more text parse
+       */
+      inline bool has_more_input() {
+        return (m_input_pos != m_input_end);
       }
 
-      return retval;
-    }
+      /**
+       * Skips any multi-line or single-line comment
+       */
+      bool SkipComment() {
+        bool retval = false;
 
-    /**
-     * Reads a number from the input, detecting if it's an integer or floating point
-     */
-    bool Num(bool t_capture = false) {
-      SkipWS();
-
-      if (!t_capture) {
-        return Hex_() || Float_();
-      }
-      else {
-        std::string::const_iterator start = m_input_pos;
-        int prev_col = m_col;
-        int prev_line = m_line;
-        if (has_more_input() && char_in_alphabet(*m_input_pos, detail::float_alphabet) ) {
-          if (Hex_()) {
-            std::string match(start, m_input_pos);
-            std::stringstream ss(match);
-            unsigned int temp_int;
-            ss >> std::hex >> temp_int;
-
-            std::ostringstream out_int;
-            out_int << static_cast<int>(temp_int);
-            AST_NodePtr t(new eval::Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
-            m_match_stack.push_back(t);
-            return true;
-          }
-          if (Binary_()) {
-            std::string match(start, m_input_pos);
-            int temp_int = 0;
-            size_t pos = 0, end = match.length();
-
-            while ((pos < end) && (pos < (2 + sizeof(int) * 8))) {
-              temp_int <<= 1;
-              if (match[pos] == '1') {
-                temp_int += 1;
-              }
-              ++pos;
-            }
-
-            std::ostringstream out_int;
-            out_int << temp_int;
-            AST_NodePtr t(new eval::Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
-            m_match_stack.push_back(t);
-            return true;
-          }
-          if (Float_()) {
-            std::string match(start, m_input_pos);
-            AST_NodePtr t(new eval::Float_AST_Node(match, AST_Node_Type::Float, m_filename, prev_line, prev_col, m_line, m_col));
-            m_match_stack.push_back(t);
-            return true;
-          }
-          else {
-            std::string match(start, m_input_pos);
-            if ((match.size() > 0) && (match[0] == '0')) {
-              std::stringstream ss(match);
-              unsigned int temp_int;
-              ss >> std::oct >> temp_int;
-
-              std::ostringstream out_int;
-              out_int << int(temp_int);
-              AST_NodePtr t(new eval::Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
-              m_match_stack.push_back(t);
-            }
-            else {
-              AST_NodePtr t(new eval::Int_AST_Node(match, AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
-              m_match_stack.push_back(t);
-            }
-            return true;
-          }
-        }
-        else {
-          return false;
-        }
-      }
-    }
-
-    /**
-     * Reads an identifier from input which conforms to C's identifier naming conventions, without skipping initial whitespace
-     */
-    bool Id_() {
-      bool retval = false;
-      if (has_more_input() && char_in_alphabet(*m_input_pos, detail::id_alphabet)) {
-        retval = true;
-        while (has_more_input() && char_in_alphabet(*m_input_pos, detail::keyword_alphabet) ) {
-          ++m_input_pos;
-          ++m_col;
-        }
-      }
-      else if (has_more_input() && (*m_input_pos == '`')) {
-        retval = true;
-        ++m_col;
-        ++m_input_pos;
-        std::string::const_iterator start = m_input_pos;
-
-        while (has_more_input() && (*m_input_pos != '`')) {
-          if (Eol()) {
-            throw Eval_Error("Carriage return in identifier literal", File_Position(m_line, m_col), *m_filename);
-          }
-          else {
-            ++m_input_pos;
-            ++m_col;
-          }
-        }
-
-        if (start == m_input_pos) {
-          throw Eval_Error("Missing contents of identifier literal", File_Position(m_line, m_col), *m_filename);
-        }
-        else if (m_input_pos == m_input_end) {
-          throw Eval_Error("Incomplete identifier literal", File_Position(m_line, m_col), *m_filename);
-        }
-
-        ++m_col;
-        ++m_input_pos;
-      }
-      return retval;
-    }
-
-    /**
-     * Reads (and potentially captures) an identifier from input
-     */
-    bool Id(bool t_capture = false) {
-      SkipWS();
-
-      if (!t_capture) {
-        return Id_();
-      }
-      else {
-        std::string::const_iterator start = m_input_pos;
-        int prev_col = m_col;
-        int prev_line = m_line;
-        if (Id_()) {
-          if (*start == '`') {
-            //Id Literal
-            std::string match(start+1, m_input_pos-1);
-            AST_NodePtr t(new eval::Id_AST_Node(match, AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
-            m_match_stack.push_back(t);
-            return true;
-          }
-          else {
-            std::string match(start, m_input_pos);
-            AST_NodePtr t(new eval::Id_AST_Node(match, AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
-            m_match_stack.push_back(t);
-            return true;
-          }
-        }
-        else {
-          return false;
-        }
-      }
-    }
-
-    /**
-     * Checks for a node annotation of the form "#<annotation>"
-     */
-    bool Annotation() {
-      SkipWS();
-      std::string::const_iterator start = m_input_pos;
-      int prev_col = m_col;
-      int prev_line = m_line;
-      if (Symbol_("#")) {
-        do {
+        if (Symbol_(m_multiline_comment_begin.c_str())) {
           while (m_input_pos != m_input_end) {
-            if (Eol_()) {
+            if (Symbol_(m_multiline_comment_end.c_str())) {
+              break;
+            }
+            else if (!Eol_()) {
+              ++m_col;
+              ++m_input_pos;
+            }
+          }
+          retval = true;
+        }
+        else if (Symbol_(m_singleline_comment.c_str())) {
+          while (m_input_pos != m_input_end) {
+            if (Symbol_("\r\n")) {
+              m_input_pos -= 2;
+              break;
+            }
+            else if (Char_('\n')) {
+              --m_input_pos;
               break;
             }
             else {
@@ -583,1392 +292,1686 @@ namespace chaiscript
               ++m_input_pos;
             }
           }
-        } while (Symbol("#"));
-
-        std::string match(start, m_input_pos);
-        AST_NodePtr t(new eval::Annotation_AST_Node(match, AST_Node_Type::Annotation, m_filename, prev_line, prev_col, m_line, m_col));
-        m_match_stack.push_back(t);
-        return true;
+          retval = true;
+        }
+        return retval;
       }
-      else {
-        return false;
+
+      /**
+       * Skips ChaiScript whitespace, which means space and tab, but not cr/lf
+       */
+      bool SkipWS() {
+        bool retval = false;
+        while (has_more_input()) {
+          if ( char_in_alphabet(*m_input_pos,detail::white_alphabet) ) {
+            ++m_input_pos;
+            ++m_col;
+            retval = true;
+          }
+          else if (SkipComment()) {
+            retval = true;
+          }
+          else {
+            break;
+          }
+        }
+        return retval;
       }
-    }
 
-    /**
-     * Reads a quoted string from input, without skipping initial whitespace
-     */
-    bool Quoted_String_() {
-      bool retval = false;
-      char prev_char = 0;
-      if (has_more_input() && (*m_input_pos == '\"')) {
-        retval = true;
-        prev_char = *m_input_pos;
-        ++m_input_pos;
-        ++m_col;
+      /**
+       * Reads a floating point value from input, without skipping initial whitespace
+       */
+      bool Float_() {
+        bool retval = false;
+        std::string::const_iterator start = m_input_pos;
 
-        while (has_more_input() && ((*m_input_pos != '\"') || ((*m_input_pos == '\"') && (prev_char == '\\')))) {
-          if (!Eol_()) {
-            if (prev_char == '\\') {
-              prev_char = 0;
+        if (has_more_input() && char_in_alphabet(*m_input_pos,detail::float_alphabet) ) {
+          while (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet) ) {
+            ++m_input_pos;
+            ++m_col;
+          }
+          if (has_more_input() && (*m_input_pos == '.')) {
+            ++m_input_pos;
+            ++m_col;
+            if (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet)) {
+              retval = true;
+              while (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet) ) {
+                ++m_input_pos;
+                ++m_col;
+              }
             }
             else {
-              prev_char = *m_input_pos;
+              --m_input_pos;
+              --m_col;
             }
+          }
+        }
+        return retval;
+      }
+
+      /**
+       * Reads a floating point value from input, without skipping initial whitespace
+       */
+      bool Hex_() {
+        bool retval = false;
+        if (has_more_input() && (*m_input_pos == '0')) {
+          ++m_input_pos;
+          ++m_col;
+
+          if (has_more_input() && char_in_alphabet(*m_input_pos, detail::x_alphabet) ) {
+            ++m_input_pos;
+            ++m_col;
+            if (has_more_input() && char_in_alphabet(*m_input_pos, detail::hex_alphabet)) {
+              retval = true;
+              while (has_more_input() && char_in_alphabet(*m_input_pos, detail::hex_alphabet) ) {
+                ++m_input_pos;
+                ++m_col;
+              }
+            }
+            else {
+              --m_input_pos;
+              --m_col;
+            }
+          }
+          else {
+            --m_input_pos;
+            --m_col;
+          }
+        }
+
+        return retval;
+      }
+
+      /**
+       * Reads a floating point value from input, without skipping initial whitespace
+       */
+      bool Binary_() {
+        bool retval = false;
+        if (has_more_input() && (*m_input_pos == '0')) {
+          ++m_input_pos;
+          ++m_col;
+
+          if (has_more_input() && char_in_alphabet(*m_input_pos, detail::b_alphabet) ) {
+            ++m_input_pos;
+            ++m_col;
+            if (has_more_input() && char_in_alphabet(*m_input_pos, detail::bin_alphabet) ) {
+              retval = true;
+              while (has_more_input() && char_in_alphabet(*m_input_pos, detail::bin_alphabet) ) {
+                ++m_input_pos;
+                ++m_col;
+              }
+            }
+            else {
+              --m_input_pos;
+              --m_col;
+            }
+          }
+          else {
+            --m_input_pos;
+            --m_col;
+          }
+        }
+
+        return retval;
+      }
+
+      /**
+       * Reads a number from the input, detecting if it's an integer or floating point
+       */
+      bool Num(bool t_capture = false) {
+        SkipWS();
+
+        if (!t_capture) {
+          return Hex_() || Float_();
+        }
+        else {
+          std::string::const_iterator start = m_input_pos;
+          int prev_col = m_col;
+          int prev_line = m_line;
+          if (has_more_input() && char_in_alphabet(*m_input_pos, detail::float_alphabet) ) {
+            if (Hex_()) {
+              std::string match(start, m_input_pos);
+              std::stringstream ss(match);
+              unsigned int temp_int;
+              ss >> std::hex >> temp_int;
+
+              std::ostringstream out_int;
+              out_int << static_cast<int>(temp_int);
+              AST_NodePtr t(new eval::Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.push_back(t);
+              return true;
+            }
+            if (Binary_()) {
+              std::string match(start, m_input_pos);
+              int temp_int = 0;
+              size_t pos = 0, end = match.length();
+
+              while ((pos < end) && (pos < (2 + sizeof(int) * 8))) {
+                temp_int <<= 1;
+                if (match[pos] == '1') {
+                  temp_int += 1;
+                }
+                ++pos;
+              }
+
+              std::ostringstream out_int;
+              out_int << temp_int;
+              AST_NodePtr t(new eval::Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.push_back(t);
+              return true;
+            }
+            if (Float_()) {
+              std::string match(start, m_input_pos);
+              AST_NodePtr t(new eval::Float_AST_Node(match, AST_Node_Type::Float, m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.push_back(t);
+              return true;
+            }
+            else {
+              std::string match(start, m_input_pos);
+              if ((match.size() > 0) && (match[0] == '0')) {
+                std::stringstream ss(match);
+                unsigned int temp_int;
+                ss >> std::oct >> temp_int;
+
+                std::ostringstream out_int;
+                out_int << int(temp_int);
+                AST_NodePtr t(new eval::Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+                m_match_stack.push_back(t);
+              }
+              else {
+                AST_NodePtr t(new eval::Int_AST_Node(match, AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+                m_match_stack.push_back(t);
+              }
+              return true;
+            }
+          }
+          else {
+            return false;
+          }
+        }
+      }
+
+      /**
+       * Reads an identifier from input which conforms to C's identifier naming conventions, without skipping initial whitespace
+       */
+      bool Id_() {
+        bool retval = false;
+        if (has_more_input() && char_in_alphabet(*m_input_pos, detail::id_alphabet)) {
+          retval = true;
+          while (has_more_input() && char_in_alphabet(*m_input_pos, detail::keyword_alphabet) ) {
             ++m_input_pos;
             ++m_col;
           }
         }
-
-        if (has_more_input()) {
-          ++m_input_pos;
+        else if (has_more_input() && (*m_input_pos == '`')) {
+          retval = true;
           ++m_col;
+          ++m_input_pos;
+          std::string::const_iterator start = m_input_pos;
+
+          while (has_more_input() && (*m_input_pos != '`')) {
+            if (Eol()) {
+              throw exception::eval_error("Carriage return in identifier literal", File_Position(m_line, m_col), *m_filename);
+            }
+            else {
+              ++m_input_pos;
+              ++m_col;
+            }
+          }
+
+          if (start == m_input_pos) {
+            throw exception::eval_error("Missing contents of identifier literal", File_Position(m_line, m_col), *m_filename);
+          }
+          else if (m_input_pos == m_input_end) {
+            throw exception::eval_error("Incomplete identifier literal", File_Position(m_line, m_col), *m_filename);
+          }
+
+          ++m_col;
+          ++m_input_pos;
+        }
+        return retval;
+      }
+
+      /**
+       * Reads (and potentially captures) an identifier from input
+       */
+      bool Id(bool t_capture = false) {
+        SkipWS();
+
+        if (!t_capture) {
+          return Id_();
         }
         else {
-          throw Eval_Error("Unclosed quoted string", File_Position(m_line, m_col), *m_filename);
+          std::string::const_iterator start = m_input_pos;
+          int prev_col = m_col;
+          int prev_line = m_line;
+          if (Id_()) {
+            if (*start == '`') {
+              //Id Literal
+              std::string match(start+1, m_input_pos-1);
+              AST_NodePtr t(new eval::Id_AST_Node(match, AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.push_back(t);
+              return true;
+            }
+            else {
+              std::string match(start, m_input_pos);
+              AST_NodePtr t(new eval::Id_AST_Node(match, AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.push_back(t);
+              return true;
+            }
+          }
+          else {
+            return false;
+          }
         }
       }
-      return retval;
-    }
 
-    /**
-     * Reads (and potentially captures) a quoted string from input.  Translates escaped sequences.
-     */
-    bool Quoted_String(bool t_capture = false) {
-      SkipWS();
-
-      if (!t_capture) {
-        return Quoted_String_();
-      }
-      else {
+      /**
+       * Checks for a node annotation of the form "#<annotation>"
+       */
+      bool Annotation() {
+        SkipWS();
         std::string::const_iterator start = m_input_pos;
         int prev_col = m_col;
         int prev_line = m_line;
-        if (Quoted_String_()) {
-          std::string match;
-          bool is_escaped = false;
-          bool is_interpolated = false;
-          bool saw_interpolation_marker = false;
-          size_t prev_stack_top = m_match_stack.size();
+        if (Symbol_("#")) {
+          do {
+            while (m_input_pos != m_input_end) {
+              if (Eol_()) {
+                break;
+              }
+              else {
+                ++m_col;
+                ++m_input_pos;
+              }
+            }
+          } while (Symbol("#"));
 
-          //for (std::string::iterator s = start + 1, end = m_input_pos - 1; s != end; ++s) {
-          std::string::const_iterator s = start + 1, end = m_input_pos - 1;
+          std::string match(start, m_input_pos);
+          AST_NodePtr t(new eval::Annotation_AST_Node(match, AST_Node_Type::Annotation, m_filename, prev_line, prev_col, m_line, m_col));
+          m_match_stack.push_back(t);
+          return true;
+        }
+        else {
+          return false;
+        }
+      }
 
-          while (s != end) {
-            if (saw_interpolation_marker) {
-              if (*s == '{') {
-                //We've found an interpolation point
+      /**
+       * Reads a quoted string from input, without skipping initial whitespace
+       */
+      bool Quoted_String_() {
+        bool retval = false;
+        char prev_char = 0;
+        if (has_more_input() && (*m_input_pos == '\"')) {
+          retval = true;
+          prev_char = *m_input_pos;
+          ++m_input_pos;
+          ++m_col;
 
-                if (is_interpolated) {
-                  //If we've seen previous interpolation, add on instead of making a new one
+          while (has_more_input() && ((*m_input_pos != '\"') || ((*m_input_pos == '\"') && (prev_char == '\\')))) {
+            if (!Eol_()) {
+              if (prev_char == '\\') {
+                prev_char = 0;
+              }
+              else {
+                prev_char = *m_input_pos;
+              }
+              ++m_input_pos;
+              ++m_col;
+            }
+          }
+
+          if (has_more_input()) {
+            ++m_input_pos;
+            ++m_col;
+          }
+          else {
+            throw exception::eval_error("Unclosed quoted string", File_Position(m_line, m_col), *m_filename);
+          }
+        }
+        return retval;
+      }
+
+      /**
+       * Reads (and potentially captures) a quoted string from input.  Translates escaped sequences.
+       */
+      bool Quoted_String(bool t_capture = false) {
+        SkipWS();
+
+        if (!t_capture) {
+          return Quoted_String_();
+        }
+        else {
+          std::string::const_iterator start = m_input_pos;
+          int prev_col = m_col;
+          int prev_line = m_line;
+          if (Quoted_String_()) {
+            std::string match;
+            bool is_escaped = false;
+            bool is_interpolated = false;
+            bool saw_interpolation_marker = false;
+            size_t prev_stack_top = m_match_stack.size();
+
+            //for (std::string::iterator s = start + 1, end = m_input_pos - 1; s != end; ++s) {
+            std::string::const_iterator s = start + 1, end = m_input_pos - 1;
+
+            while (s != end) {
+              if (saw_interpolation_marker) {
+                if (*s == '{') {
+                  //We've found an interpolation point
+
+                  if (is_interpolated) {
+                    //If we've seen previous interpolation, add on instead of making a new one
+                    AST_NodePtr plus(new eval::Str_AST_Node("+", AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
+                    m_match_stack.push_back(plus);
+
+                    AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+                    m_match_stack.push_back(t);
+
+                    build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
+                  }
+                  else {
+                    AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+                    m_match_stack.push_back(t);
+                  }
+
+                  //We've finished with the part of the string up to this point, so clear it
+                  match = "";
+
                   AST_NodePtr plus(new eval::Str_AST_Node("+", AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
                   m_match_stack.push_back(plus);
 
-                  AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
-                  m_match_stack.push_back(t);
+                  std::string eval_match;
 
-                  build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
-                }
-                else {
-                  AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
-                  m_match_stack.push_back(t);
-                }
-
-                //We've finished with the part of the string up to this point, so clear it
-                match = "";
-
-                AST_NodePtr plus(new eval::Str_AST_Node("+", AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
-                m_match_stack.push_back(plus);
-
-                std::string eval_match;
-
-                ++s;
-                while ((*s != '}') && (s != end)) {
-                  eval_match.push_back(*s);
                   ++s;
-                }
-                if (*s == '}') {
-                  is_interpolated = true;
-                  ++s;
+                  while ((*s != '}') && (s != end)) {
+                    eval_match.push_back(*s);
+                    ++s;
+                  }
+                  if (*s == '}') {
+                    is_interpolated = true;
+                    ++s;
 
-                  size_t tostr_stack_top = m_match_stack.size();
+                    size_t tostr_stack_top = m_match_stack.size();
 
-                  AST_NodePtr tostr(new eval::Id_AST_Node("to_string", AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
-                  m_match_stack.push_back(tostr);
+                    AST_NodePtr tostr(new eval::Id_AST_Node("to_string", AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
+                    m_match_stack.push_back(tostr);
 
-                  size_t ev_stack_top = m_match_stack.size();
+                    size_t ev_stack_top = m_match_stack.size();
 
-                  AST_NodePtr ev(new eval::Id_AST_Node("eval", AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
-                  m_match_stack.push_back(ev);
+                    AST_NodePtr ev(new eval::Id_AST_Node("eval", AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
+                    m_match_stack.push_back(ev);
 
-                  size_t arg_stack_top = m_match_stack.size();
+                    size_t arg_stack_top = m_match_stack.size();
 
-                  AST_NodePtr t(new eval::Quoted_String_AST_Node(eval_match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
-                  m_match_stack.push_back(t);
+                    AST_NodePtr t(new eval::Quoted_String_AST_Node(eval_match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+                    m_match_stack.push_back(t);
 
-                  build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), arg_stack_top);
+                    build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), arg_stack_top);
 
-                  build_match(AST_NodePtr(new eval::Inplace_Fun_Call_AST_Node()), ev_stack_top);
+                    build_match(AST_NodePtr(new eval::Inplace_Fun_Call_AST_Node()), ev_stack_top);
 
-                  build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), ev_stack_top);
+                    build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), ev_stack_top);
 
-                  build_match(AST_NodePtr(new eval::Fun_Call_AST_Node()), tostr_stack_top);
+                    build_match(AST_NodePtr(new eval::Fun_Call_AST_Node()), tostr_stack_top);
 
-                  build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
-                }
-                else {
-                  throw Eval_Error("Unclosed in-string eval", File_Position(prev_line, prev_col), *m_filename);
-                }
-              }
-              else {
-                match.push_back('$');
-              }
-              saw_interpolation_marker = false;
-            }
-            else {
-              if (*s == '\\') {
-                if (is_escaped) {
-                  match.push_back('\\');
-                  is_escaped = false;
-                }
-                else {
-                  is_escaped = true;
-                }
-              }
-              else {
-                if (is_escaped) {
-                  switch (*s) {
-                  case ('b') : match.push_back('\b'); break;
-                  case ('f') : match.push_back('\f'); break;
-                  case ('n') : match.push_back('\n'); break;
-                  case ('r') : match.push_back('\r'); break;
-                  case ('t') : match.push_back('\t'); break;
-                  case ('\'') : match.push_back('\''); break;
-                  case ('\"') : match.push_back('\"'); break;
-                  case ('$') : match.push_back('$'); break;
-                  default: throw Eval_Error("Unknown escaped sequence in string", File_Position(prev_line, prev_col), *m_filename);
+                    build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
+                  }
+                  else {
+                    throw exception::eval_error("Unclosed in-string eval", File_Position(prev_line, prev_col), *m_filename);
                   }
                 }
-                else if (*s == '$') {
-                  saw_interpolation_marker = true;
+                else {
+                  match.push_back('$');
+                }
+                saw_interpolation_marker = false;
+              }
+              else {
+                if (*s == '\\') {
+                  if (is_escaped) {
+                    match.push_back('\\');
+                    is_escaped = false;
+                  }
+                  else {
+                    is_escaped = true;
+                  }
                 }
                 else {
-                  match.push_back(*s);
+                  if (is_escaped) {
+                    switch (*s) {
+                      case ('b') : match.push_back('\b'); break;
+                      case ('f') : match.push_back('\f'); break;
+                      case ('n') : match.push_back('\n'); break;
+                      case ('r') : match.push_back('\r'); break;
+                      case ('t') : match.push_back('\t'); break;
+                      case ('\'') : match.push_back('\''); break;
+                                    case ('\"') : match.push_back('\"'); break;
+                      case ('$') : match.push_back('$'); break;
+                      default: throw exception::eval_error("Unknown escaped sequence in string", File_Position(prev_line, prev_col), *m_filename);
+                    }
+                  }
+                  else if (*s == '$') {
+                    saw_interpolation_marker = true;
+                  }
+                  else {
+                    match.push_back(*s);
+                  }
+                  is_escaped = false;
                 }
-                is_escaped = false;
+                ++s;
               }
-              ++s;
             }
-          }
-          if (is_interpolated) {
-            AST_NodePtr plus(new eval::Str_AST_Node("+", AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
-            m_match_stack.push_back(plus);
+            if (is_interpolated) {
+              AST_NodePtr plus(new eval::Str_AST_Node("+", AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.push_back(plus);
 
-            AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
-            m_match_stack.push_back(t);
+              AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.push_back(t);
 
-            build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
+              build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
+            }
+            else {
+              AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.push_back(t);
+            }
+            return true;
           }
           else {
-            AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
-            m_match_stack.push_back(t);
-          }
-          return true;
-        }
-        else {
-          return false;
-        }
-      }
-    }
-
-    /**
-     * Reads a character group from input, without skipping initial whitespace
-     */
-    bool Single_Quoted_String_() {
-      bool retval = false;
-      char prev_char = 0;
-      if (has_more_input() && (*m_input_pos == '\'')) {
-        retval = true;
-        prev_char = *m_input_pos;
-        ++m_input_pos;
-        ++m_col;
-
-        while (has_more_input() && ((*m_input_pos != '\'') || ((*m_input_pos == '\'') && (prev_char == '\\')))) {
-          if (!Eol_()) {
-            if (prev_char == '\\') {
-              prev_char = 0;
-            }
-            else {
-              prev_char = *m_input_pos;
-            }
-            ++m_input_pos;
-            ++m_col;
-          }
-        }
-
-        if (m_input_pos != m_input_end) {
-          ++m_input_pos;
-          ++m_col;
-        }
-        else {
-          throw Eval_Error("Unclosed single-quoted string", File_Position(m_line, m_col), *m_filename);
-        }
-      }
-      return retval;
-    }
-
-    /**
-     * Reads (and potentially captures) a char group from input.  Translates escaped sequences.
-     */
-    bool Single_Quoted_String(bool t_capture = false) {
-      SkipWS();
-
-      if (!t_capture) {
-        return Single_Quoted_String_();
-      }
-      else {
-        std::string::const_iterator start = m_input_pos;
-        int prev_col = m_col;
-        int prev_line = m_line;
-        if (Single_Quoted_String_()) {
-          std::string match;
-          bool is_escaped = false;
-          for (std::string::const_iterator s = start + 1, end = m_input_pos - 1; s != end; ++s) {
-            if (*s == '\\') {
-              if (is_escaped) {
-                match.push_back('\\');
-                is_escaped = false;
-              }
-              else {
-                is_escaped = true;
-              }
-            }
-            else {
-              if (is_escaped) {
-                switch (*s) {
-                case ('b') : match.push_back('\b'); break;
-                case ('f') : match.push_back('\f'); break;
-                case ('n') : match.push_back('\n'); break;
-                case ('r') : match.push_back('\r'); break;
-                case ('t') : match.push_back('\t'); break;
-                case ('\'') : match.push_back('\''); break;
-                case ('\"') : match.push_back('\"'); break;
-                default: throw Eval_Error("Unknown escaped sequence in string", File_Position(prev_line, prev_col), *m_filename);
-                }
-              }
-              else {
-                match.push_back(*s);
-              }
-              is_escaped = false;
-            }
-          }
-          AST_NodePtr t(new eval::Single_Quoted_String_AST_Node(match, AST_Node_Type::Single_Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
-          m_match_stack.push_back(t);
-          return true;
-        }
-        else {
-          return false;
-        }
-      }
-    }
-
-    /**
-     * Reads a char from input if it matches the parameter, without skipping initial whitespace
-     */
-    bool Char_(char c) {
-      bool retval = false;
-      if (has_more_input() && (*m_input_pos == c)) {
-        ++m_input_pos;
-        ++m_col;
-        retval = true;
-      }
-
-      return retval;
-    }
-
-    /**
-     * Reads (and potentially captures) a char from input if it matches the parameter
-     */
-    bool Char(char t_c, bool t_capture = false) {
-      SkipWS();
-
-      if (!t_capture) {
-        return Char_(t_c);
-      }
-      else {
-        std::string::const_iterator start = m_input_pos;
-        int prev_col = m_col;
-        int prev_line = m_line;
-        if (Char_(t_c)) {
-          std::string match(start, m_input_pos);
-          AST_NodePtr t(new eval::Char_AST_Node(match, AST_Node_Type::Char, m_filename, prev_line, prev_col, m_line, m_col));
-          m_match_stack.push_back(t);
-          return true;
-        }
-        else {
-          return false;
-        }
-      }
-    }
-
-    /**
-     * Reads a string from input if it matches the parameter, without skipping initial whitespace
-     */
-    bool Keyword_(const char *t_s) {
-      bool retval = false;
-      int len = static_cast<int>(strlen(t_s));
-
-      if ((m_input_end - m_input_pos) >= len) {
-        std::string::const_iterator tmp = m_input_pos;
-        for (int i = 0; i < len; ++i) {
-          if (*tmp != t_s[i]) {
             return false;
           }
-          ++tmp;
+          }
         }
-        retval = true;
-        m_input_pos = tmp;
-        m_col += len;
-      }
 
-      return retval;
-    }
+        /**
+         * Reads a character group from input, without skipping initial whitespace
+         */
+        bool Single_Quoted_String_() {
+          bool retval = false;
+          char prev_char = 0;
+          if (has_more_input() && (*m_input_pos == '\'')) {
+            retval = true;
+            prev_char = *m_input_pos;
+            ++m_input_pos;
+            ++m_col;
 
-    /**
-     * Reads (and potentially captures) a string from input if it matches the parameter
-     */
-    bool Keyword(const char *t_s, bool t_capture = false) {
-      SkipWS();
-      std::string::const_iterator start = m_input_pos;
-      int prev_col = m_col;
-      int prev_line = m_line;
-      bool retval = Keyword_(t_s);
-      // ignore substring matches
-      if ( retval && has_more_input() && char_in_alphabet(*m_input_pos, detail::keyword_alphabet) ) {
+            while (has_more_input() && ((*m_input_pos != '\'') || ((*m_input_pos == '\'') && (prev_char == '\\')))) {
+              if (!Eol_()) {
+                if (prev_char == '\\') {
+                  prev_char = 0;
+                }
+                else {
+                  prev_char = *m_input_pos;
+                }
+                ++m_input_pos;
+                ++m_col;
+              }
+            }
+
+            if (m_input_pos != m_input_end) {
+              ++m_input_pos;
+              ++m_col;
+            }
+            else {
+              throw exception::eval_error("Unclosed single-quoted string", File_Position(m_line, m_col), *m_filename);
+            }
+          }
+          return retval;
+        }
+
+        /**
+         * Reads (and potentially captures) a char group from input.  Translates escaped sequences.
+         */
+        bool Single_Quoted_String(bool t_capture = false) {
+          SkipWS();
+
+          if (!t_capture) {
+            return Single_Quoted_String_();
+          }
+          else {
+            std::string::const_iterator start = m_input_pos;
+            int prev_col = m_col;
+            int prev_line = m_line;
+            if (Single_Quoted_String_()) {
+              std::string match;
+              bool is_escaped = false;
+              for (std::string::const_iterator s = start + 1, end = m_input_pos - 1; s != end; ++s) {
+                if (*s == '\\') {
+                  if (is_escaped) {
+                    match.push_back('\\');
+                    is_escaped = false;
+                  }
+                  else {
+                    is_escaped = true;
+                  }
+                }
+                else {
+                  if (is_escaped) {
+                    switch (*s) {
+                      case ('b') : match.push_back('\b'); break;
+                      case ('f') : match.push_back('\f'); break;
+                      case ('n') : match.push_back('\n'); break;
+                      case ('r') : match.push_back('\r'); break;
+                      case ('t') : match.push_back('\t'); break;
+                      case ('\'') : match.push_back('\''); break;
+                                    case ('\"') : match.push_back('\"'); break;
+                      default: throw exception::eval_error("Unknown escaped sequence in string", File_Position(prev_line, prev_col), *m_filename);
+                    }
+                  }
+                  else {
+                    match.push_back(*s);
+                  }
+                  is_escaped = false;
+                }
+              }
+              AST_NodePtr t(new eval::Single_Quoted_String_AST_Node(match, AST_Node_Type::Single_Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.push_back(t);
+              return true;
+            }
+            else {
+              return false;
+            }
+          }
+        }
+
+        /**
+         * Reads a char from input if it matches the parameter, without skipping initial whitespace
+         */
+        bool Char_(char c) {
+          bool retval = false;
+          if (has_more_input() && (*m_input_pos == c)) {
+            ++m_input_pos;
+            ++m_col;
+            retval = true;
+          }
+
+          return retval;
+        }
+
+        /**
+         * Reads (and potentially captures) a char from input if it matches the parameter
+         */
+        bool Char(char t_c, bool t_capture = false) {
+          SkipWS();
+
+          if (!t_capture) {
+            return Char_(t_c);
+          }
+          else {
+            std::string::const_iterator start = m_input_pos;
+            int prev_col = m_col;
+            int prev_line = m_line;
+            if (Char_(t_c)) {
+              std::string match(start, m_input_pos);
+              AST_NodePtr t(new eval::Char_AST_Node(match, AST_Node_Type::Char, m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.push_back(t);
+              return true;
+            }
+            else {
+              return false;
+            }
+          }
+        }
+
+        /**
+         * Reads a string from input if it matches the parameter, without skipping initial whitespace
+         */
+        bool Keyword_(const char *t_s) {
+          bool retval = false;
+          int len = static_cast<int>(strlen(t_s));
+
+          if ((m_input_end - m_input_pos) >= len) {
+            std::string::const_iterator tmp = m_input_pos;
+            for (int i = 0; i < len; ++i) {
+              if (*tmp != t_s[i]) {
+                return false;
+              }
+              ++tmp;
+            }
+            retval = true;
+            m_input_pos = tmp;
+            m_col += len;
+          }
+
+          return retval;
+        }
+
+        /**
+         * Reads (and potentially captures) a string from input if it matches the parameter
+         */
+        bool Keyword(const char *t_s, bool t_capture = false) {
+          SkipWS();
+          std::string::const_iterator start = m_input_pos;
+          int prev_col = m_col;
+          int prev_line = m_line;
+          bool retval = Keyword_(t_s);
+          // ignore substring matches
+          if ( retval && has_more_input() && char_in_alphabet(*m_input_pos, detail::keyword_alphabet) ) {
             m_input_pos = start;
             m_col = prev_col;
             m_line = prev_line;
             retval = false;
-      }
-
-      if ( t_capture && retval ) {
-          std::string match(start, m_input_pos);
-          AST_NodePtr t(new eval::Str_AST_Node(match, AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
-          m_match_stack.push_back(t);
-      }
-      return retval;
-    }
-
-    /**
-     * Reads a symbol group from input if it matches the parameter, without skipping initial whitespace
-     */
-    bool Symbol_(const char *t_s) {
-      bool retval = false;
-      int len = static_cast<int>(strlen(t_s));
-
-      if ((m_input_end - m_input_pos) >= len) {
-        std::string::const_iterator tmp = m_input_pos;
-        for (int i = 0; i < len; ++i) {
-          if (*tmp != t_s[i]) {
-            return false;
           }
-          ++tmp;
-        }
-        retval = true;
-        m_input_pos = tmp;
-        m_col += len;
-      }
 
-      return retval;
-    }
-
-    /**
-     * Reads (and potentially captures) a symbol group from input if it matches the parameter
-     */
-    bool Symbol(const char *t_s, bool t_capture = false, bool t_disallow_prevention=false) {
-      SkipWS();
-      std::string::const_iterator start = m_input_pos;
-      int prev_col = m_col;
-      int prev_line = m_line;
-      bool retval = Symbol_(t_s);
-      // ignore substring matches
-      if (retval && has_more_input() && (t_disallow_prevention == false) && char_in_alphabet(*m_input_pos,detail::symbol_alphabet)) {
-          m_input_pos = start;
-          m_col = prev_col;
-          m_line = prev_line;
-          retval = false;
-      }
-
-      if ( t_capture && retval ) {
-          std::string match(start, m_input_pos);
-          AST_NodePtr t(new eval::Str_AST_Node(match, AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
-          m_match_stack.push_back(t);
-      }
-
-      return retval;
-    }
-
-    /**
-     * Reads an end-of-line group from input, without skipping initial whitespace
-     */
-    bool Eol_() {
-      bool retval = false;
-
-      if (has_more_input() && (Symbol_("\r\n") || Char_('\n'))) {
-        retval = true;
-        ++m_line;
-        m_col = 1;
-      }
-      else if (has_more_input() && Char_(';')) {
-        retval = true;
-      }
-
-      return retval;
-    }
-
-    /**
-     * Reads (and potentially captures) an end-of-line group from input
-     */
-    bool Eol(bool t_capture = false) {
-      SkipWS();
-
-      if (!t_capture) {
-        return Eol_();
-      }
-      else {
-        std::string::const_iterator start = m_input_pos;
-        int prev_col = m_col;
-        int prev_line = m_line;
-        if (Eol_()) {
-          std::string match(start, m_input_pos);
-          AST_NodePtr t(new eval::Eol_AST_Node(match, AST_Node_Type::Eol, m_filename, prev_line, prev_col, m_line, m_col));
-          m_match_stack.push_back(t);
-          return true;
-        }
-        else {
-          return false;
-        }
-      }
-    }
-
-    /**
-     * Reads a comma-separated list of values from input
-     */
-    bool Arg_List() {
-      bool retval = false;
-
-      size_t prev_stack_top = m_match_stack.size();
-
-      if (Equation()) {
-        retval = true;
-        while (Eol()) {}
-        if (Char(',')) {
-          do {
-            while (Eol()) {}
-            if (!Equation()) {
-              throw Eval_Error("Unexpected value in parameter list", File_Position(m_line, m_col), *m_filename);
-            }
-          } while (retval && Char(','));
-        }
-        build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
-      }
-
-      return retval;
-    }
-
-    /**
-     * Reads possible special container values, including ranges and map_pairs
-     */
-    bool Container_Arg_List() {
-      bool retval = false;
-
-      size_t prev_stack_top = m_match_stack.size();
-
-      if (Value_Range()) {
-        retval = true;
-        build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
-      }
-      else if (Map_Pair()) {
-        retval = true;
-        while (Eol()) {}
-        if (Char(',')) {
-          do {
-            while (Eol()) {}
-            if (!Map_Pair()) {
-              throw Eval_Error("Unexpected value in container", File_Position(m_line, m_col), *m_filename);
-            }
-          } while (retval && Char(','));
-        }
-        build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
-      }
-      else if (Operator()) {
-        retval = true;
-        while (Eol()) {}
-        if (Char(',')) {
-          do {
-            while (Eol()) {}
-            if (!Operator()) {
-              throw Eval_Error("Unexpected value in container", File_Position(m_line, m_col), *m_filename);
-            }
-          } while (retval && Char(','));
-        }
-        build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
-      }
-
-      return retval;
-
-    }
-
-    /**
-     * Reads a lambda (anonymous function) from input
-     */
-    bool Lambda() {
-      bool retval = false;
-
-      size_t prev_stack_top = m_match_stack.size();
-
-      if (Keyword("fun")) {
-        retval = true;
-
-        if (Char('(')) {
-          Arg_List();
-          if (!Char(')')) {
-            throw Eval_Error("Incomplete anonymous function", File_Position(m_line, m_col), *m_filename);
+          if ( t_capture && retval ) {
+            std::string match(start, m_input_pos);
+            AST_NodePtr t(new eval::Str_AST_Node(match, AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
+            m_match_stack.push_back(t);
           }
+          return retval;
         }
 
-        while (Eol()) {}
+        /**
+         * Reads a symbol group from input if it matches the parameter, without skipping initial whitespace
+         */
+        bool Symbol_(const char *t_s) {
+          bool retval = false;
+          int len = static_cast<int>(strlen(t_s));
 
-        if (!Block()) {
-          throw Eval_Error("Incomplete anonymous function", File_Position(m_line, m_col), *m_filename);
-        }
-
-        build_match(AST_NodePtr(new eval::Lambda_AST_Node()), prev_stack_top);
-      }
-
-      return retval;
-    }
-
-    /**
-     * Reads a function definition from input
-     */
-    bool Def() {
-      bool retval = false;
-      bool is_annotated = false;
-      bool is_method = false;
-      AST_NodePtr annotation;
-
-      if (Annotation()) {
-        while (Eol_()) {}
-        annotation = m_match_stack.back();
-        m_match_stack.pop_back();
-        is_annotated = true;
-      }
-
-      size_t prev_stack_top = m_match_stack.size();
-
-      if (Keyword("def")) {
-        retval = true;
-
-        if (!Id(true)) {
-          throw Eval_Error("Missing function name in definition", File_Position(m_line, m_col), *m_filename);
-        }
-
-        if (Symbol("::", false)) {
-          //We're now a method
-          is_method = true;
-
-          if (!Id(true)) {
-            throw Eval_Error("Missing method name in definition", File_Position(m_line, m_col), *m_filename);
-          }
-        }
-
-        if (Char('(')) {
-          Arg_List();
-          if (!Char(')')) {
-            throw Eval_Error("Incomplete function definition", File_Position(m_line, m_col), *m_filename);
-          }
-        }
-
-        while (Eol()) {}
-
-        if (Char(':')) {
-          if (!Operator()) {
-            throw Eval_Error("Missing guard expression for function", File_Position(m_line, m_col), *m_filename);
-          }
-        }
-
-        while (Eol()) {}
-        if (!Block()) {
-          throw Eval_Error("Incomplete function definition", File_Position(m_line, m_col), *m_filename);
-        }
-
-        if (is_method) {
-          build_match(AST_NodePtr(new eval::Method_AST_Node()), prev_stack_top);
-        }
-        else {
-          build_match(AST_NodePtr(new eval::Def_AST_Node()), prev_stack_top);
-        }
-
-        if (is_annotated) {
-          m_match_stack.back()->annotation = annotation;
-        }
-      }
-
-      return retval;
-    }
-
-    /**
-     * Reads a function definition from input
-     */
-    bool Try() {
-      bool retval = false;
-
-      size_t prev_stack_top = m_match_stack.size();
-
-      if (Keyword("try")) {
-        retval = true;
-
-        while (Eol()) {}
-
-        if (!Block()) {
-          throw Eval_Error("Incomplete 'try' block", File_Position(m_line, m_col), *m_filename);
-        }
-
-        bool has_matches = true;
-        while (has_matches) {
-          while (Eol()) {}
-          has_matches = false;
-          if (Keyword("catch", false)) {
-            size_t catch_stack_top = m_match_stack.size();
-            if (Char('(')) {
-              if (!(Id(true) && Char(')'))) {
-                throw Eval_Error("Incomplete 'catch' expression", File_Position(m_line, m_col), *m_filename);
+          if ((m_input_end - m_input_pos) >= len) {
+            std::string::const_iterator tmp = m_input_pos;
+            for (int i = 0; i < len; ++i) {
+              if (*tmp != t_s[i]) {
+                return false;
               }
-              if (Char(':')) {
-                if (!Operator()) {
-                  throw Eval_Error("Missing guard expression for catch", File_Position(m_line, m_col), *m_filename);
+              ++tmp;
+            }
+            retval = true;
+            m_input_pos = tmp;
+            m_col += len;
+          }
+
+          return retval;
+        }
+
+        /**
+         * Reads (and potentially captures) a symbol group from input if it matches the parameter
+         */
+        bool Symbol(const char *t_s, bool t_capture = false, bool t_disallow_prevention=false) {
+          SkipWS();
+          std::string::const_iterator start = m_input_pos;
+          int prev_col = m_col;
+          int prev_line = m_line;
+          bool retval = Symbol_(t_s);
+          // ignore substring matches
+          if (retval && has_more_input() && (t_disallow_prevention == false) && char_in_alphabet(*m_input_pos,detail::symbol_alphabet)) {
+            m_input_pos = start;
+            m_col = prev_col;
+            m_line = prev_line;
+            retval = false;
+          }
+
+          if ( t_capture && retval ) {
+            std::string match(start, m_input_pos);
+            AST_NodePtr t(new eval::Str_AST_Node(match, AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
+            m_match_stack.push_back(t);
+          }
+
+          return retval;
+        }
+
+        /**
+         * Reads an end-of-line group from input, without skipping initial whitespace
+         */
+        bool Eol_() {
+          bool retval = false;
+
+          if (has_more_input() && (Symbol_("\r\n") || Char_('\n'))) {
+            retval = true;
+            ++m_line;
+            m_col = 1;
+          }
+          else if (has_more_input() && Char_(';')) {
+            retval = true;
+          }
+
+          return retval;
+        }
+
+        /**
+         * Reads (and potentially captures) an end-of-line group from input
+         */
+        bool Eol(bool t_capture = false) {
+          SkipWS();
+
+          if (!t_capture) {
+            return Eol_();
+          }
+          else {
+            std::string::const_iterator start = m_input_pos;
+            int prev_col = m_col;
+            int prev_line = m_line;
+            if (Eol_()) {
+              std::string match(start, m_input_pos);
+              AST_NodePtr t(new eval::Eol_AST_Node(match, AST_Node_Type::Eol, m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.push_back(t);
+              return true;
+            }
+            else {
+              return false;
+            }
+          }
+        }
+
+        /**
+         * Reads a comma-separated list of values from input
+         */
+        bool Arg_List() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Equation()) {
+            retval = true;
+            while (Eol()) {}
+            if (Char(',')) {
+              do {
+                while (Eol()) {}
+                if (!Equation()) {
+                  throw exception::eval_error("Unexpected value in parameter list", File_Position(m_line, m_col), *m_filename);
                 }
+              } while (retval && Char(','));
+            }
+            build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
+          }
+
+          return retval;
+        }
+
+        /**
+         * Reads possible special container values, including ranges and map_pairs
+         */
+        bool Container_Arg_List() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Value_Range()) {
+            retval = true;
+            build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
+          }
+          else if (Map_Pair()) {
+            retval = true;
+            while (Eol()) {}
+            if (Char(',')) {
+              do {
+                while (Eol()) {}
+                if (!Map_Pair()) {
+                  throw exception::eval_error("Unexpected value in container", File_Position(m_line, m_col), *m_filename);
+                }
+              } while (retval && Char(','));
+            }
+            build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
+          }
+          else if (Operator()) {
+            retval = true;
+            while (Eol()) {}
+            if (Char(',')) {
+              do {
+                while (Eol()) {}
+                if (!Operator()) {
+                  throw exception::eval_error("Unexpected value in container", File_Position(m_line, m_col), *m_filename);
+                }
+              } while (retval && Char(','));
+            }
+            build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
+          }
+
+          return retval;
+
+        }
+
+        /**
+         * Reads a lambda (anonymous function) from input
+         */
+        bool Lambda() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Keyword("fun")) {
+            retval = true;
+
+            if (Char('(')) {
+              Arg_List();
+              if (!Char(')')) {
+                throw exception::eval_error("Incomplete anonymous function", File_Position(m_line, m_col), *m_filename);
               }
             }
 
             while (Eol()) {}
 
             if (!Block()) {
-              throw Eval_Error("Incomplete 'catch' block", File_Position(m_line, m_col), *m_filename);
+              throw exception::eval_error("Incomplete anonymous function", File_Position(m_line, m_col), *m_filename);
             }
-            build_match(AST_NodePtr(new eval::Catch_AST_Node()), catch_stack_top);
-            has_matches = true;
+
+            build_match(AST_NodePtr(new eval::Lambda_AST_Node()), prev_stack_top);
           }
+
+          return retval;
         }
-        while (Eol()) {}
-        if (Keyword("finally", false)) {
-          size_t finally_stack_top = m_match_stack.size();
 
-          while (Eol()) {}
+        /**
+         * Reads a function definition from input
+         */
+        bool Def() {
+          bool retval = false;
+          bool is_annotated = false;
+          bool is_method = false;
+          AST_NodePtr annotation;
 
-          if (!Block()) {
-            throw Eval_Error("Incomplete 'finally' block", File_Position(m_line, m_col), *m_filename);
+          if (Annotation()) {
+            while (Eol_()) {}
+            annotation = m_match_stack.back();
+            m_match_stack.pop_back();
+            is_annotated = true;
           }
-          build_match(AST_NodePtr(new eval::Finally_AST_Node()), finally_stack_top);
-        }
 
-        build_match(AST_NodePtr(new eval::Try_AST_Node()), prev_stack_top);
-      }
+          size_t prev_stack_top = m_match_stack.size();
 
-      return retval;
-    }
+          if (Keyword("def")) {
+            retval = true;
 
-    /**
-     * Reads an if/elseif/else block from input
-     */
-    bool If() {
-      bool retval = false;
+            if (!Id(true)) {
+              throw exception::eval_error("Missing function name in definition", File_Position(m_line, m_col), *m_filename);
+            }
 
-      size_t prev_stack_top = m_match_stack.size();
+            if (Symbol("::", false)) {
+              //We're now a method
+              is_method = true;
 
-      if (Keyword("if")) {
-        retval = true;
-
-        if (!Char('(')) {
-          throw Eval_Error("Incomplete 'if' expression", File_Position(m_line, m_col), *m_filename);
-        }
-
-        if (!(Operator() && Char(')'))) {
-          throw Eval_Error("Incomplete 'if' expression", File_Position(m_line, m_col), *m_filename);
-        }
-
-        while (Eol()) {}
-
-        if (!Block()) {
-          throw Eval_Error("Incomplete 'if' block", File_Position(m_line, m_col), *m_filename);
-        }
-
-        bool has_matches = true;
-        while (has_matches) {
-          while (Eol()) {}
-          has_matches = false;
-          if (Keyword("else", true)) {
-            if (Keyword("if")) {
-              m_match_stack.back()->text = "else if";
-              if (!Char('(')) {
-                throw Eval_Error("Incomplete 'else if' expression", File_Position(m_line, m_col), *m_filename);
+              if (!Id(true)) {
+                throw exception::eval_error("Missing method name in definition", File_Position(m_line, m_col), *m_filename);
               }
+            }
 
-              if (!(Operator() && Char(')'))) {
-                throw Eval_Error("Incomplete 'else if' expression", File_Position(m_line, m_col), *m_filename);
+            if (Char('(')) {
+              Arg_List();
+              if (!Char(')')) {
+                throw exception::eval_error("Incomplete function definition", File_Position(m_line, m_col), *m_filename);
               }
+            }
 
-              while (Eol()) {}
+            while (Eol()) {}
 
-              if (!Block()) {
-                throw Eval_Error("Incomplete 'else if' block", File_Position(m_line, m_col), *m_filename);
+            if (Char(':')) {
+              if (!Operator()) {
+                throw exception::eval_error("Missing guard expression for function", File_Position(m_line, m_col), *m_filename);
               }
-              has_matches = true;
+            }
+
+            while (Eol()) {}
+            if (!Block()) {
+              throw exception::eval_error("Incomplete function definition", File_Position(m_line, m_col), *m_filename);
+            }
+
+            if (is_method) {
+              build_match(AST_NodePtr(new eval::Method_AST_Node()), prev_stack_top);
             }
             else {
+              build_match(AST_NodePtr(new eval::Def_AST_Node()), prev_stack_top);
+            }
+
+            if (is_annotated) {
+              m_match_stack.back()->annotation = annotation;
+            }
+          }
+
+          return retval;
+        }
+
+        /**
+         * Reads a function definition from input
+         */
+        bool Try() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Keyword("try")) {
+            retval = true;
+
+            while (Eol()) {}
+
+            if (!Block()) {
+              throw exception::eval_error("Incomplete 'try' block", File_Position(m_line, m_col), *m_filename);
+            }
+
+            bool has_matches = true;
+            while (has_matches) {
+              while (Eol()) {}
+              has_matches = false;
+              if (Keyword("catch", false)) {
+                size_t catch_stack_top = m_match_stack.size();
+                if (Char('(')) {
+                  if (!(Id(true) && Char(')'))) {
+                    throw exception::eval_error("Incomplete 'catch' expression", File_Position(m_line, m_col), *m_filename);
+                  }
+                  if (Char(':')) {
+                    if (!Operator()) {
+                      throw exception::eval_error("Missing guard expression for catch", File_Position(m_line, m_col), *m_filename);
+                    }
+                  }
+                }
+
+                while (Eol()) {}
+
+                if (!Block()) {
+                  throw exception::eval_error("Incomplete 'catch' block", File_Position(m_line, m_col), *m_filename);
+                }
+                build_match(AST_NodePtr(new eval::Catch_AST_Node()), catch_stack_top);
+                has_matches = true;
+              }
+            }
+            while (Eol()) {}
+            if (Keyword("finally", false)) {
+              size_t finally_stack_top = m_match_stack.size();
+
               while (Eol()) {}
 
               if (!Block()) {
-                throw Eval_Error("Incomplete 'else' block", File_Position(m_line, m_col), *m_filename);
+                throw exception::eval_error("Incomplete 'finally' block", File_Position(m_line, m_col), *m_filename);
               }
-              has_matches = true;
-            }
-          }
-        }
-
-        build_match(AST_NodePtr(new eval::If_AST_Node()), prev_stack_top);
-      }
-
-      return retval;
-    }
-
-    /**
-     * Reads a while block from input
-     */
-    bool While() {
-      bool retval = false;
-
-      size_t prev_stack_top = m_match_stack.size();
-
-      if (Keyword("while")) {
-        retval = true;
-
-        if (!Char('(')) {
-          throw Eval_Error("Incomplete 'while' expression", File_Position(m_line, m_col), *m_filename);
-        }
-
-        if (!(Operator() && Char(')'))) {
-          throw Eval_Error("Incomplete 'while' expression", File_Position(m_line, m_col), *m_filename);
-        }
-
-        while (Eol()) {}
-
-        if (!Block()) {
-          throw Eval_Error("Incomplete 'while' block", File_Position(m_line, m_col), *m_filename);
-        }
-
-        build_match(AST_NodePtr(new eval::While_AST_Node()), prev_stack_top);
-      }
-
-      return retval;
-    }
-
-    /**
-     * Reads the C-style for conditions from input
-     */
-    bool For_Guards() {
-      Equation();
-
-      if (Char(';') && Operator() && Char(';') && Equation()) {
-        return true;
-      }
-      else {
-        throw Eval_Error("Incomplete conditions in 'for' loop", File_Position(m_line, m_col), *m_filename);
-      }
-    }
-
-    /**
-     * Reads a for block from input
-     */
-    bool For() {
-      bool retval = false;
-
-      size_t prev_stack_top = m_match_stack.size();
-
-      if (Keyword("for")) {
-        retval = true;
-
-        if (!Char('(')) {
-          throw Eval_Error("Incomplete 'for' expression", File_Position(m_line, m_col), *m_filename);
-        }
-
-        if (!(For_Guards() && Char(')'))) {
-          throw Eval_Error("Incomplete 'for' expression", File_Position(m_line, m_col), *m_filename);
-        }
-
-        while (Eol()) {}
-
-        if (!Block()) {
-          throw Eval_Error("Incomplete 'for' block", File_Position(m_line, m_col), *m_filename);
-        }
-
-        build_match(AST_NodePtr(new eval::For_AST_Node()), prev_stack_top);
-      }
-
-      return retval;
-    }
-
-    /**
-     * Reads a curly-brace C-style block from input
-     */
-    bool Block() {
-      bool retval = false;
-
-      size_t prev_stack_top = m_match_stack.size();
-
-      if (Char('{')) {
-        retval = true;
-
-        Statements();
-        if (!Char('}')) {
-          throw Eval_Error("Incomplete block", File_Position(m_line, m_col), *m_filename);
-        }
-
-        build_match(AST_NodePtr(new eval::Block_AST_Node()), prev_stack_top);
-      }
-
-      return retval;
-    }
-
-    /**
-     * Reads a return statement from input
-     */
-    bool Return() {
-      bool retval = false;
-
-      size_t prev_stack_top = m_match_stack.size();
-
-      if (Keyword("return")) {
-        retval = true;
-
-        Operator();
-        build_match(AST_NodePtr(new eval::Return_AST_Node()), prev_stack_top);
-      }
-
-      return retval;
-    }
-
-    /**
-     * Reads a break statement from input
-     */
-    bool Break() {
-      bool retval = false;
-
-      size_t prev_stack_top = m_match_stack.size();
-
-      if (Keyword("break")) {
-        retval = true;
-
-        build_match(AST_NodePtr(new eval::Break_AST_Node()), prev_stack_top);
-      }
-
-      return retval;
-    }
-
-    /**
-     * Reads an identifier, then proceeds to check if it's a function or array call
-     */
-    bool Id_Fun_Array() {
-      bool retval = false;
-      std::string::const_iterator prev_pos = m_input_pos;
-
-      size_t prev_stack_top = m_match_stack.size();
-      if (Id(true)) {
-        retval = true;
-        bool has_more = true;
-
-        while (has_more) {
-          has_more = false;
-
-          if (Char('(')) {
-            has_more = true;
-
-            Arg_List();
-            if (!Char(')')) {
-              throw Eval_Error("Incomplete function call", File_Position(m_line, m_col), *m_filename);
+              build_match(AST_NodePtr(new eval::Finally_AST_Node()), finally_stack_top);
             }
 
-            build_match(AST_NodePtr(new eval::Fun_Call_AST_Node()), prev_stack_top);
+            build_match(AST_NodePtr(new eval::Try_AST_Node()), prev_stack_top);
           }
-          else if (Char('[')) {
-            has_more = true;
 
-            if (!(Operator() && Char(']'))) {
-              throw Eval_Error("Incomplete array access", File_Position(m_line, m_col), *m_filename);
+          return retval;
+        }
+
+        /**
+         * Reads an if/elseif/else block from input
+         */
+        bool If() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Keyword("if")) {
+            retval = true;
+
+            if (!Char('(')) {
+              throw exception::eval_error("Incomplete 'if' expression", File_Position(m_line, m_col), *m_filename);
             }
 
-            build_match(AST_NodePtr(new eval::Array_Call_AST_Node()), prev_stack_top);
+            if (!(Operator() && Char(')'))) {
+              throw exception::eval_error("Incomplete 'if' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            while (Eol()) {}
+
+            if (!Block()) {
+              throw exception::eval_error("Incomplete 'if' block", File_Position(m_line, m_col), *m_filename);
+            }
+
+            bool has_matches = true;
+            while (has_matches) {
+              while (Eol()) {}
+              has_matches = false;
+              if (Keyword("else", true)) {
+                if (Keyword("if")) {
+                  m_match_stack.back()->text = "else if";
+                  if (!Char('(')) {
+                    throw exception::eval_error("Incomplete 'else if' expression", File_Position(m_line, m_col), *m_filename);
+                  }
+
+                  if (!(Operator() && Char(')'))) {
+                    throw exception::eval_error("Incomplete 'else if' expression", File_Position(m_line, m_col), *m_filename);
+                  }
+
+                  while (Eol()) {}
+
+                  if (!Block()) {
+                    throw exception::eval_error("Incomplete 'else if' block", File_Position(m_line, m_col), *m_filename);
+                  }
+                  has_matches = true;
+                }
+                else {
+                  while (Eol()) {}
+
+                  if (!Block()) {
+                    throw exception::eval_error("Incomplete 'else' block", File_Position(m_line, m_col), *m_filename);
+                  }
+                  has_matches = true;
+                }
+              }
+            }
+
+            build_match(AST_NodePtr(new eval::If_AST_Node()), prev_stack_top);
           }
-        }
-      }
 
-      return retval;
-    }
-
-    /**
-     * Reads a variable declaration from input
-     */
-    bool Var_Decl() {
-      bool retval = false;
-
-      size_t prev_stack_top = m_match_stack.size();
-
-      if (Keyword("var")) {
-        retval = true;
-
-        if (!Id(true)) {
-          throw Eval_Error("Incomplete variable declaration", File_Position(m_line, m_col), *m_filename);
+          return retval;
         }
 
-        build_match(AST_NodePtr(new eval::Var_Decl_AST_Node()), prev_stack_top);
-      }
-      else if (Keyword("attr")) {
-        retval = true;
+        /**
+         * Reads a while block from input
+         */
+        bool While() {
+          bool retval = false;
 
-        if (!Id(true)) {
-          throw Eval_Error("Incomplete attribute declaration", File_Position(m_line, m_col), *m_filename);
-        }
-        if (!Symbol("::", false)) {
-          throw Eval_Error("Incomplete attribute declaration", File_Position(m_line, m_col), *m_filename);
-        }
-        if (!Id(true)) {
-          throw Eval_Error("Missing attribute name in definition", File_Position(m_line, m_col), *m_filename);
-        }
+          size_t prev_stack_top = m_match_stack.size();
 
+          if (Keyword("while")) {
+            retval = true;
 
-        build_match(AST_NodePtr(new eval::Attr_Decl_AST_Node()), prev_stack_top);
-      }
+            if (!Char('(')) {
+              throw exception::eval_error("Incomplete 'while' expression", File_Position(m_line, m_col), *m_filename);
+            }
 
-      return retval;
-    }
+            if (!(Operator() && Char(')'))) {
+              throw exception::eval_error("Incomplete 'while' expression", File_Position(m_line, m_col), *m_filename);
+            }
 
-    /**
-     * Reads an expression surrounded by parentheses from input
-     */
-    bool Paren_Expression() {
-      bool retval = false;
+            while (Eol()) {}
 
-      if (Char('(')) {
-        retval = true;
-        if (!Operator()) {
-          throw Eval_Error("Incomplete expression", File_Position(m_line, m_col), *m_filename);
-        }
-        if (!Char(')')) {
-          throw Eval_Error("Missing closing parenthesis", File_Position(m_line, m_col), *m_filename);
-        }
-      }
-      return retval;
-    }
+            if (!Block()) {
+              throw exception::eval_error("Incomplete 'while' block", File_Position(m_line, m_col), *m_filename);
+            }
 
-    /**
-     * Reads, and identifies, a short-form container initialization from input
-     */
-    bool Inline_Container() {
-      bool retval = false;
-
-      size_t prev_stack_top = m_match_stack.size();
-
-      if (Char('[')) {
-        retval = true;
-        Container_Arg_List();
-        if (!Char(']')) {
-          throw Eval_Error("Missing closing square bracket", File_Position(m_line, m_col), *m_filename);
-        }
-        if ((prev_stack_top != m_match_stack.size()) && (m_match_stack.back()->children.size() > 0)) {
-          if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Value_Range) {
-            build_match(AST_NodePtr(new eval::Inline_Range_AST_Node()), prev_stack_top);
+            build_match(AST_NodePtr(new eval::While_AST_Node()), prev_stack_top);
           }
-          else if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Map_Pair) {
-            build_match(AST_NodePtr(new eval::Inline_Map_AST_Node()), prev_stack_top);
+
+          return retval;
+        }
+
+        /**
+         * Reads the C-style for conditions from input
+         */
+        bool For_Guards() {
+          Equation();
+
+          if (Char(';') && Operator() && Char(';') && Equation()) {
+            return true;
           }
           else {
-            build_match(AST_NodePtr(new eval::Inline_Array_AST_Node()), prev_stack_top);
+            throw exception::eval_error("Incomplete conditions in 'for' loop", File_Position(m_line, m_col), *m_filename);
           }
         }
-        else {
-          build_match(AST_NodePtr(new eval::Inline_Array_AST_Node()), prev_stack_top);
-        }
-      }
 
-      return retval;
-    }
+        /**
+         * Reads a for block from input
+         */
+        bool For() {
+          bool retval = false;
 
-    /**
-     * Reads a unary prefixed expression from input
-     */
-    bool Prefix() {
-      bool retval = false;
+          size_t prev_stack_top = m_match_stack.size();
 
-      size_t prev_stack_top = m_match_stack.size();
+          if (Keyword("for")) {
+            retval = true;
 
-      if (Symbol("++", true)) {
-        retval = true;
+            if (!Char('(')) {
+              throw exception::eval_error("Incomplete 'for' expression", File_Position(m_line, m_col), *m_filename);
+            }
 
-        if (!Operator(m_operators.size()-1)) {
-          throw Eval_Error("Incomplete '++' expression", File_Position(m_line, m_col), *m_filename);
-        }
+            if (!(For_Guards() && Char(')'))) {
+              throw exception::eval_error("Incomplete 'for' expression", File_Position(m_line, m_col), *m_filename);
+            }
 
-        build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
-      }
-      else if (Symbol("--", true)) {
-        retval = true;
+            while (Eol()) {}
 
-        if (!Operator(m_operators.size()-1)) {
-          throw Eval_Error("Incomplete '--' expression", File_Position(m_line, m_col), *m_filename);
-        }
+            if (!Block()) {
+              throw exception::eval_error("Incomplete 'for' block", File_Position(m_line, m_col), *m_filename);
+            }
 
-        build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
-      }
-      else if (Char('-', true)) {
-        retval = true;
+            build_match(AST_NodePtr(new eval::For_AST_Node()), prev_stack_top);
+          }
 
-        if (!Operator(m_operators.size()-1)) {
-          throw Eval_Error("Incomplete unary '-' expression", File_Position(m_line, m_col), *m_filename);
+          return retval;
         }
 
-        build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
-      }
-      else if (Char('+', true)) {
-        retval = true;
+        /**
+         * Reads a curly-brace C-style block from input
+         */
+        bool Block() {
+          bool retval = false;
 
-        if (!Operator(m_operators.size()-1)) {
-          throw Eval_Error("Incomplete unary '+' expression", File_Position(m_line, m_col), *m_filename);
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Char('{')) {
+            retval = true;
+
+            Statements();
+            if (!Char('}')) {
+              throw exception::eval_error("Incomplete block", File_Position(m_line, m_col), *m_filename);
+            }
+
+            build_match(AST_NodePtr(new eval::Block_AST_Node()), prev_stack_top);
+          }
+
+          return retval;
         }
 
-        build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
-      }
-      else if (Char('!', true)) {
-        retval = true;
+        /**
+         * Reads a return statement from input
+         */
+        bool Return() {
+          bool retval = false;
 
-        if (!Operator(m_operators.size()-1)) {
-          throw Eval_Error("Incomplete '!' expression", File_Position(m_line, m_col), *m_filename);
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Keyword("return")) {
+            retval = true;
+
+            Operator();
+            build_match(AST_NodePtr(new eval::Return_AST_Node()), prev_stack_top);
+          }
+
+          return retval;
         }
 
-        build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
-      }
-      else if (Char('~', true)) {
-        retval = true;
+        /**
+         * Reads a break statement from input
+         */
+        bool Break() {
+          bool retval = false;
 
-        if (!Operator(m_operators.size()-1)) {
-          throw Eval_Error("Incomplete '~' expression", File_Position(m_line, m_col), *m_filename);
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Keyword("break")) {
+            retval = true;
+
+            build_match(AST_NodePtr(new eval::Break_AST_Node()), prev_stack_top);
+          }
+
+          return retval;
         }
 
-        build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
-      }
+        /**
+         * Reads an identifier, then proceeds to check if it's a function or array call
+         */
+        bool Id_Fun_Array() {
+          bool retval = false;
+          std::string::const_iterator prev_pos = m_input_pos;
 
-      return retval;
-    }
+          size_t prev_stack_top = m_match_stack.size();
+          if (Id(true)) {
+            retval = true;
+            bool has_more = true;
 
-    /**
-     * Parses any of a group of 'value' style ast_node groups from input
-     */
-    bool Value() {
-      if (Var_Decl() || Lambda() || Id_Fun_Array() || Num(true) || Prefix() || Quoted_String(true) || Single_Quoted_String(true) ||
-          Paren_Expression() || Inline_Container()) {
-        return true;
-      }
-      else {
-        return false;
-      }
-    }
+            while (has_more) {
+              has_more = false;
 
-    bool Operator_Helper(size_t t_precedence) {
-      for (size_t i = 0; i < m_operator_matches[t_precedence].size(); ++i) {
-        if (Symbol(m_operator_matches[t_precedence][i].c_str(), true)) {
-          return true;
-        }
-      }
-      return false;
-    }
+              if (Char('(')) {
+                has_more = true;
 
-    bool Operator(size_t t_precedence = 0) {
-      bool retval = false;
+                Arg_List();
+                if (!Char(')')) {
+                  throw exception::eval_error("Incomplete function call", File_Position(m_line, m_col), *m_filename);
+                }
 
-      size_t prev_stack_top = m_match_stack.size();
-
-      if (t_precedence < m_operators.size()) {
-        if (Operator(t_precedence+1)) {
-          retval = true;
-          if (Operator_Helper(t_precedence)) {
-            do {
-              if (!Operator(t_precedence+1)) {
-                throw Eval_Error("Incomplete "
-                    + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
-                                 File_Position(m_line, m_col), *m_filename);
+                build_match(AST_NodePtr(new eval::Fun_Call_AST_Node()), prev_stack_top);
               }
-            } while (Operator_Helper(t_precedence));
+              else if (Char('[')) {
+                has_more = true;
 
-            switch (m_operators[t_precedence]) {
-            case(AST_Node_Type::Comparison) :
-              build_match(AST_NodePtr(new eval::Comparison_AST_Node()), prev_stack_top);
-              break;
-            case(AST_Node_Type::Dot_Access) :
-              build_match(AST_NodePtr(new eval::Dot_Access_AST_Node()), prev_stack_top);
-              break;
-            case(AST_Node_Type::Additive) :
-              build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
-              break;
-            case(AST_Node_Type::Multiplicative) :
-              build_match(AST_NodePtr(new eval::Multiplicative_AST_Node()), prev_stack_top);
-              break;
-            case(AST_Node_Type::Shift) :
-              build_match(AST_NodePtr(new eval::Shift_AST_Node()), prev_stack_top);
-              break;
-            case(AST_Node_Type::Equality) :
-              build_match(AST_NodePtr(new eval::Equality_AST_Node()), prev_stack_top);
-              break;
-            case(AST_Node_Type::Bitwise_And) :
-              build_match(AST_NodePtr(new eval::Bitwise_And_AST_Node()), prev_stack_top);
-              break;
-            case(AST_Node_Type::Bitwise_Xor) :
-              build_match(AST_NodePtr(new eval::Bitwise_Xor_AST_Node()), prev_stack_top);
-              break;
-            case(AST_Node_Type::Bitwise_Or) :
-              build_match(AST_NodePtr(new eval::Bitwise_Or_AST_Node()), prev_stack_top);
-              break;
-            case(AST_Node_Type::Logical_And) :
-              build_match(AST_NodePtr(new eval::Logical_And_AST_Node()), prev_stack_top);
-              break;
-            case(AST_Node_Type::Logical_Or) :
-              build_match(AST_NodePtr(new eval::Logical_Or_AST_Node()), prev_stack_top);
-              break;
-            default:
-              throw Eval_Error("Internal error: unhandled ast_node", File_Position(m_line, m_col), *m_filename);
+                if (!(Operator() && Char(']'))) {
+                  throw exception::eval_error("Incomplete array access", File_Position(m_line, m_col), *m_filename);
+                }
+
+                build_match(AST_NodePtr(new eval::Array_Call_AST_Node()), prev_stack_top);
+              }
             }
           }
+
+          return retval;
         }
-      }
-      else {
-        return Value();
-      }
 
-      return retval;
-    }
+        /**
+         * Reads a variable declaration from input
+         */
+        bool Var_Decl() {
+          bool retval = false;
 
-    /**
-     * Reads a pair of values used to create a map initialization from input
-     */
-    bool Map_Pair() {
-      bool retval = false;
+          size_t prev_stack_top = m_match_stack.size();
 
-      size_t prev_stack_top = m_match_stack.size();
-      std::string::const_iterator prev_pos = m_input_pos;
-      int prev_col = m_col;
+          if (Keyword("var")) {
+            retval = true;
 
-      if (Operator()) {
-        if (Symbol(":")) {
-          retval = true;
-          if (!Operator()) {
-            throw Eval_Error("Incomplete map pair", File_Position(m_line, m_col), *m_filename);
+            if (!Id(true)) {
+              throw exception::eval_error("Incomplete variable declaration", File_Position(m_line, m_col), *m_filename);
+            }
+
+            build_match(AST_NodePtr(new eval::Var_Decl_AST_Node()), prev_stack_top);
+          }
+          else if (Keyword("attr")) {
+            retval = true;
+
+            if (!Id(true)) {
+              throw exception::eval_error("Incomplete attribute declaration", File_Position(m_line, m_col), *m_filename);
+            }
+            if (!Symbol("::", false)) {
+              throw exception::eval_error("Incomplete attribute declaration", File_Position(m_line, m_col), *m_filename);
+            }
+            if (!Id(true)) {
+              throw exception::eval_error("Missing attribute name in definition", File_Position(m_line, m_col), *m_filename);
+            }
+
+
+            build_match(AST_NodePtr(new eval::Attr_Decl_AST_Node()), prev_stack_top);
           }
 
-          build_match(AST_NodePtr(new eval::Map_Pair_AST_Node()), prev_stack_top);
+          return retval;
         }
-        else {
-          m_input_pos = prev_pos;
-          m_col = prev_col;
-          while (prev_stack_top != m_match_stack.size()) {
-            m_match_stack.pop_back();
+
+        /**
+         * Reads an expression surrounded by parentheses from input
+         */
+        bool Paren_Expression() {
+          bool retval = false;
+
+          if (Char('(')) {
+            retval = true;
+            if (!Operator()) {
+              throw exception::eval_error("Incomplete expression", File_Position(m_line, m_col), *m_filename);
+            }
+            if (!Char(')')) {
+              throw exception::eval_error("Missing closing parenthesis", File_Position(m_line, m_col), *m_filename);
+            }
           }
+          return retval;
         }
-      }
 
-      return retval;
-    }
+        /**
+         * Reads, and identifies, a short-form container initialization from input
+         */
+        bool Inline_Container() {
+          bool retval = false;
 
-    /**
-     * Reads a pair of values used to create a range initialization from input
-     */
-    bool Value_Range() {
-      bool retval = false;
+          size_t prev_stack_top = m_match_stack.size();
 
-      size_t prev_stack_top = m_match_stack.size();
-      std::string::const_iterator prev_pos = m_input_pos;
-      int prev_col = m_col;
-
-      if (Operator()) {
-        if (Symbol("..")) {
-          retval = true;
-          if (!Operator()) {
-            throw Eval_Error("Incomplete value range", File_Position(m_line, m_col), *m_filename);
-          }
-
-          build_match(AST_NodePtr(new eval::Value_Range_AST_Node()), prev_stack_top);
-        }
-        else {
-          m_input_pos = prev_pos;
-          m_col = prev_col;
-          while (prev_stack_top != m_match_stack.size()) {
-            m_match_stack.pop_back();
-          }
-        }
-      }
-
-      return retval;
-    }
-
-    /**
-     * Parses a string of binary equation operators
-     */
-    bool Equation() {
-      bool retval = false;
-
-      size_t prev_stack_top = m_match_stack.size();
-
-      if (Operator()) {
-        retval = true;
-        if (Symbol("=", true, true) || Symbol(":=", true, true) || Symbol("+=", true, true) ||
-            Symbol("-=", true, true) || Symbol("*=", true, true) || Symbol("/=", true, true) ||
-            Symbol("%=", true, true) || Symbol("<<=", true, true) || Symbol(">>=", true, true) ||
-            Symbol("&=", true, true) || Symbol("^=", true, true) || Symbol("|=", true, true)) {
-          if (!Equation()) {
-            throw Eval_Error("Incomplete equation", File_Position(m_line, m_col), *m_filename);
+          if (Char('[')) {
+            retval = true;
+            Container_Arg_List();
+            if (!Char(']')) {
+              throw exception::eval_error("Missing closing square bracket", File_Position(m_line, m_col), *m_filename);
+            }
+            if ((prev_stack_top != m_match_stack.size()) && (m_match_stack.back()->children.size() > 0)) {
+              if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Value_Range) {
+                build_match(AST_NodePtr(new eval::Inline_Range_AST_Node()), prev_stack_top);
+              }
+              else if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Map_Pair) {
+                build_match(AST_NodePtr(new eval::Inline_Map_AST_Node()), prev_stack_top);
+              }
+              else {
+                build_match(AST_NodePtr(new eval::Inline_Array_AST_Node()), prev_stack_top);
+              }
+            }
+            else {
+              build_match(AST_NodePtr(new eval::Inline_Array_AST_Node()), prev_stack_top);
+            }
           }
 
-          build_match(AST_NodePtr(new eval::Equation_AST_Node()), prev_stack_top);
+          return retval;
         }
-      }
 
-      return retval;
-    }
+        /**
+         * Reads a unary prefixed expression from input
+         */
+        bool Prefix() {
+          bool retval = false;
 
-    /**
-     * Top level parser, starts parsing of all known parses
-     */
-    bool Statements() {
-      bool retval = false;
+          size_t prev_stack_top = m_match_stack.size();
 
-      bool has_more = true;
-      bool saw_eol = true;
+          if (Symbol("++", true)) {
+            retval = true;
 
-      while (has_more) {
-        has_more = false;
-        int prev_line = m_line;
-        int prev_col = m_col;
-        if (Def()) {
-          if (!saw_eol) {
-            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-          }
-          has_more = true;
-          retval = true;
-          saw_eol = true;
-        }
-        else if (Try()) {
-          if (!saw_eol) {
-            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-          }
-          has_more = true;
-          retval = true;
-          saw_eol = true;
-        }
-        else if (If()) {
-          if (!saw_eol) {
-            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-          }
-          has_more = true;
-          retval = true;
-          saw_eol = true;
-        }
-        else if (While()) {
-          if (!saw_eol) {
-            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-          }
-          has_more = true;
-          retval = true;
-          saw_eol = true;
-        }
-        else if (For()) {
-          if (!saw_eol) {
-            throw Eval_Error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-          }
-          has_more = true;
-          retval = true;
-          saw_eol = true;
-        }
-        else if (Return()) {
-          if (!saw_eol) {
-            throw Eval_Error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-          }
-          has_more = true;
-          retval = true;
-          saw_eol = false;
-        }
-        else if (Break()) {
-          if (!saw_eol) {
-            throw Eval_Error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-          }
-          has_more = true;
-          retval = true;
-          saw_eol = false;
-        }
-        else if (Equation()) {
-          if (!saw_eol) {
-            throw Eval_Error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-          }
-          has_more = true;
-          retval = true;
-          saw_eol = false;
-        }
-        else if (Eol()) {
-          has_more = true;
-          retval = true;
-          saw_eol = true;
-        }
-        else if (Block()) {
-          has_more = true;
-          retval = true;
-          saw_eol = true;
-        }
-        else {
-          has_more = false;
-        }
-      }
+            if (!Operator(m_operators.size()-1)) {
+              throw exception::eval_error("Incomplete '++' expression", File_Position(m_line, m_col), *m_filename);
+            }
 
-      return retval;
-    }
+            build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
+          }
+          else if (Symbol("--", true)) {
+            retval = true;
 
-    /**
-     * Parses the given input string, tagging parsed ast_nodes with the given m_filename.
-     */
-    bool parse(const std::string &t_input, const std::string &t_fname) {
-      m_input_pos = t_input.begin();
-      m_input_end = t_input.end();
-      m_line = 1;
-      m_col = 1;
-      m_filename = boost::shared_ptr<std::string>(new std::string(t_fname));
+            if (!Operator(m_operators.size()-1)) {
+              throw exception::eval_error("Incomplete '--' expression", File_Position(m_line, m_col), *m_filename);
+            }
 
-      if ((t_input.size() > 1) && (t_input[0] == '#') && (t_input[1] == '!')) {
-        while ((m_input_pos != m_input_end) && (!Eol())) {
-          ++m_input_pos;
-        }
-        // TODO: respect // -*- coding: utf-8 -*- on line 1 or 2 see: http://evanjones.ca/python-utf8.html)
-      }
+            build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
+          }
+          else if (Char('-', true)) {
+            retval = true;
 
-      if (Statements()) {
-        if (m_input_pos != m_input_end) {
-          throw Eval_Error("Unparsed input", File_Position(m_line, m_col), t_fname);
+            if (!Operator(m_operators.size()-1)) {
+              throw exception::eval_error("Incomplete unary '-' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
+          }
+          else if (Char('+', true)) {
+            retval = true;
+
+            if (!Operator(m_operators.size()-1)) {
+              throw exception::eval_error("Incomplete unary '+' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
+          }
+          else if (Char('!', true)) {
+            retval = true;
+
+            if (!Operator(m_operators.size()-1)) {
+              throw exception::eval_error("Incomplete '!' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
+          }
+          else if (Char('~', true)) {
+            retval = true;
+
+            if (!Operator(m_operators.size()-1)) {
+              throw exception::eval_error("Incomplete '~' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
+          }
+
+          return retval;
         }
-        else {
-          build_match(AST_NodePtr(new eval::File_AST_Node()), 0);
-          return true;
+
+        /**
+         * Parses any of a group of 'value' style ast_node groups from input
+         */
+        bool Value() {
+          if (Var_Decl() || Lambda() || Id_Fun_Array() || Num(true) || Prefix() || Quoted_String(true) || Single_Quoted_String(true) ||
+              Paren_Expression() || Inline_Container()) {
+            return true;
+          }
+          else {
+            return false;
+          }
         }
-      }
-      else {
-        return false;
-      }
-    }
-  };
+
+        bool Operator_Helper(size_t t_precedence) {
+          for (size_t i = 0; i < m_operator_matches[t_precedence].size(); ++i) {
+            if (Symbol(m_operator_matches[t_precedence][i].c_str(), true)) {
+              return true;
+            }
+          }
+          return false;
+        }
+
+        bool Operator(size_t t_precedence = 0) {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (t_precedence < m_operators.size()) {
+            if (Operator(t_precedence+1)) {
+              retval = true;
+              if (Operator_Helper(t_precedence)) {
+                do {
+                  if (!Operator(t_precedence+1)) {
+                    throw exception::eval_error("Incomplete "
+                        + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
+                        File_Position(m_line, m_col), *m_filename);
+                  }
+                } while (Operator_Helper(t_precedence));
+
+                switch (m_operators[t_precedence]) {
+                  case(AST_Node_Type::Comparison) :
+                    build_match(AST_NodePtr(new eval::Comparison_AST_Node()), prev_stack_top);
+                    break;
+                  case(AST_Node_Type::Dot_Access) :
+                    build_match(AST_NodePtr(new eval::Dot_Access_AST_Node()), prev_stack_top);
+                    break;
+                  case(AST_Node_Type::Additive) :
+                    build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
+                    break;
+                  case(AST_Node_Type::Multiplicative) :
+                    build_match(AST_NodePtr(new eval::Multiplicative_AST_Node()), prev_stack_top);
+                    break;
+                  case(AST_Node_Type::Shift) :
+                    build_match(AST_NodePtr(new eval::Shift_AST_Node()), prev_stack_top);
+                    break;
+                  case(AST_Node_Type::Equality) :
+                    build_match(AST_NodePtr(new eval::Equality_AST_Node()), prev_stack_top);
+                    break;
+                  case(AST_Node_Type::Bitwise_And) :
+                    build_match(AST_NodePtr(new eval::Bitwise_And_AST_Node()), prev_stack_top);
+                    break;
+                  case(AST_Node_Type::Bitwise_Xor) :
+                    build_match(AST_NodePtr(new eval::Bitwise_Xor_AST_Node()), prev_stack_top);
+                    break;
+                  case(AST_Node_Type::Bitwise_Or) :
+                    build_match(AST_NodePtr(new eval::Bitwise_Or_AST_Node()), prev_stack_top);
+                    break;
+                  case(AST_Node_Type::Logical_And) :
+                    build_match(AST_NodePtr(new eval::Logical_And_AST_Node()), prev_stack_top);
+                    break;
+                  case(AST_Node_Type::Logical_Or) :
+                    build_match(AST_NodePtr(new eval::Logical_Or_AST_Node()), prev_stack_top);
+                    break;
+                  default:
+                    throw exception::eval_error("Internal error: unhandled ast_node", File_Position(m_line, m_col), *m_filename);
+                }
+              }
+            }
+          }
+          else {
+            return Value();
+          }
+
+          return retval;
+        }
+
+        /**
+         * Reads a pair of values used to create a map initialization from input
+         */
+        bool Map_Pair() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+          std::string::const_iterator prev_pos = m_input_pos;
+          int prev_col = m_col;
+
+          if (Operator()) {
+            if (Symbol(":")) {
+              retval = true;
+              if (!Operator()) {
+                throw exception::eval_error("Incomplete map pair", File_Position(m_line, m_col), *m_filename);
+              }
+
+              build_match(AST_NodePtr(new eval::Map_Pair_AST_Node()), prev_stack_top);
+            }
+            else {
+              m_input_pos = prev_pos;
+              m_col = prev_col;
+              while (prev_stack_top != m_match_stack.size()) {
+                m_match_stack.pop_back();
+              }
+            }
+          }
+
+          return retval;
+        }
+
+        /**
+         * Reads a pair of values used to create a range initialization from input
+         */
+        bool Value_Range() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+          std::string::const_iterator prev_pos = m_input_pos;
+          int prev_col = m_col;
+
+          if (Operator()) {
+            if (Symbol("..")) {
+              retval = true;
+              if (!Operator()) {
+                throw exception::eval_error("Incomplete value range", File_Position(m_line, m_col), *m_filename);
+              }
+
+              build_match(AST_NodePtr(new eval::Value_Range_AST_Node()), prev_stack_top);
+            }
+            else {
+              m_input_pos = prev_pos;
+              m_col = prev_col;
+              while (prev_stack_top != m_match_stack.size()) {
+                m_match_stack.pop_back();
+              }
+            }
+          }
+
+          return retval;
+        }
+
+        /**
+         * Parses a string of binary equation operators
+         */
+        bool Equation() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Operator()) {
+            retval = true;
+            if (Symbol("=", true, true) || Symbol(":=", true, true) || Symbol("+=", true, true) ||
+                Symbol("-=", true, true) || Symbol("*=", true, true) || Symbol("/=", true, true) ||
+                Symbol("%=", true, true) || Symbol("<<=", true, true) || Symbol(">>=", true, true) ||
+                Symbol("&=", true, true) || Symbol("^=", true, true) || Symbol("|=", true, true)) {
+              if (!Equation()) {
+                throw exception::eval_error("Incomplete equation", File_Position(m_line, m_col), *m_filename);
+              }
+
+              build_match(AST_NodePtr(new eval::Equation_AST_Node()), prev_stack_top);
+            }
+          }
+
+          return retval;
+        }
+
+        /**
+         * Top level parser, starts parsing of all known parses
+         */
+        bool Statements() {
+          bool retval = false;
+
+          bool has_more = true;
+          bool saw_eol = true;
+
+          while (has_more) {
+            has_more = false;
+            int prev_line = m_line;
+            int prev_col = m_col;
+            if (Def()) {
+              if (!saw_eol) {
+                throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
+              }
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            }
+            else if (Try()) {
+              if (!saw_eol) {
+                throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
+              }
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            }
+            else if (If()) {
+              if (!saw_eol) {
+                throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
+              }
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            }
+            else if (While()) {
+              if (!saw_eol) {
+                throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
+              }
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            }
+            else if (For()) {
+              if (!saw_eol) {
+                throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
+              }
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            }
+            else if (Return()) {
+              if (!saw_eol) {
+                throw exception::eval_error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
+              }
+              has_more = true;
+              retval = true;
+              saw_eol = false;
+            }
+            else if (Break()) {
+              if (!saw_eol) {
+                throw exception::eval_error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
+              }
+              has_more = true;
+              retval = true;
+              saw_eol = false;
+            }
+            else if (Equation()) {
+              if (!saw_eol) {
+                throw exception::eval_error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
+              }
+              has_more = true;
+              retval = true;
+              saw_eol = false;
+            }
+            else if (Eol()) {
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            }
+            else if (Block()) {
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            }
+            else {
+              has_more = false;
+            }
+          }
+
+          return retval;
+        }
+
+        /**
+         * Parses the given input string, tagging parsed ast_nodes with the given m_filename.
+         */
+        bool parse(const std::string &t_input, const std::string &t_fname) {
+          m_input_pos = t_input.begin();
+          m_input_end = t_input.end();
+          m_line = 1;
+          m_col = 1;
+          m_filename = boost::shared_ptr<std::string>(new std::string(t_fname));
+
+          if ((t_input.size() > 1) && (t_input[0] == '#') && (t_input[1] == '!')) {
+            while ((m_input_pos != m_input_end) && (!Eol())) {
+              ++m_input_pos;
+            }
+            // TODO: respect // -*- coding: utf-8 -*- on line 1 or 2 see: http://evanjones.ca/python-utf8.html)
+          }
+
+          if (Statements()) {
+            if (m_input_pos != m_input_end) {
+              throw exception::eval_error("Unparsed input", File_Position(m_line, m_col), t_fname);
+            }
+            else {
+              build_match(AST_NodePtr(new eval::File_AST_Node()), 0);
+              return true;
+            }
+          }
+          else {
+            return false;
+          }
+        }
+      };
+  }
 }
 
 #endif /* CHAISCRIPT_PARSER_HPP_ */
