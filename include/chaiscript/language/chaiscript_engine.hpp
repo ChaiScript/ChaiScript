@@ -206,10 +206,7 @@ namespace chaiscript
       throw load_module_error("Loadable module support not available for your platform");
     }
 
-    ModulePtr get()
-    {
-      throw load_module_error("Loadable module support not available for your platform");
-    }
+    ModulePtr m_moduleptr;
   };
 #endif
 #endif
