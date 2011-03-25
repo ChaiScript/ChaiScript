@@ -111,151 +111,153 @@ namespace chaiscript
 
   typedef boost::shared_ptr<Module> ModulePtr;
 
-  /**
-   * A Proxy_Function implementation that is able to take
-   * a vector of Proxy_Functions and perform a dispatch on them. It is 
-   * used specifically in the case of dealing with Function object variables
-   */
-  class Dispatch_Function : public Proxy_Function_Base
+  namespace detail
   {
-    public:
-      Dispatch_Function(const std::vector<Proxy_Function> &t_funcs)
-        : Proxy_Function_Base(build_type_infos(t_funcs)),
+    /**
+     * A Proxy_Function implementation that is able to take
+     * a vector of Proxy_Functions and perform a dispatch on them. It is 
+     * used specifically in the case of dealing with Function object variables
+     */
+    class Dispatch_Function : public dispatch::Proxy_Function_Base
+    {
+      public:
+        Dispatch_Function(const std::vector<Proxy_Function> &t_funcs)
+          : Proxy_Function_Base(build_type_infos(t_funcs)),
           m_funcs(t_funcs)
       {
       }
 
-      virtual bool operator==(const Proxy_Function_Base &rhs) const
-      {
-        try {
-          const Dispatch_Function &dispatchfun = dynamic_cast<const Dispatch_Function &>(rhs);
-          return m_funcs == dispatchfun.m_funcs;
-        } catch (const std::bad_cast &) {
+        virtual bool operator==(const dispatch::Proxy_Function_Base &rhs) const
+        {
+          try {
+            const Dispatch_Function &dispatchfun = dynamic_cast<const Dispatch_Function &>(rhs);
+            return m_funcs == dispatchfun.m_funcs;
+          } catch (const std::bad_cast &) {
+            return false;
+          }
+        }
+
+        virtual ~Dispatch_Function() {}
+
+        virtual std::vector<Const_Proxy_Function> get_contained_functions() const
+        {
+          return std::vector<Const_Proxy_Function>(m_funcs.begin(), m_funcs.end());
+        }
+
+
+        virtual int get_arity() const
+        {
+          typedef std::vector<Proxy_Function> function_vec;
+
+          function_vec::const_iterator begin = m_funcs.begin();
+          const function_vec::const_iterator end = m_funcs.end();
+
+          if (begin != end)
+          {
+            int arity = (*begin)->get_arity();
+
+            ++begin;
+
+            while (begin != end)
+            {
+              if (arity != (*begin)->get_arity())
+              {
+                // The arities in the list do not match, so it's unspecified
+                return -1;
+              }
+
+              ++begin;
+            }
+
+            return arity;
+          }
+
+          return -1; // unknown arity
+        }
+
+        virtual bool call_match(const std::vector<Boxed_Value> &vals) const
+        {
+          typedef std::vector<Proxy_Function> function_vec;
+
+          function_vec::const_iterator begin = m_funcs.begin();
+          function_vec::const_iterator end = m_funcs.end();
+
+          while (begin != end)
+          {
+            if ((*begin)->call_match(vals))
+            {
+              return true;
+            } else {
+              ++begin;
+            }
+          }
+
           return false;
         }
-      }
 
-      virtual ~Dispatch_Function() {}
-
-      virtual std::vector<Const_Proxy_Function> get_contained_functions() const
-      {
-        return std::vector<Const_Proxy_Function>(m_funcs.begin(), m_funcs.end());
-      }
-
-
-      virtual int get_arity() const
-      {
-        typedef std::vector<Proxy_Function> function_vec;
-
-        function_vec::const_iterator begin = m_funcs.begin();
-        const function_vec::const_iterator end = m_funcs.end();
-
-        if (begin != end)
+        virtual std::string annotation() const
         {
-          int arity = (*begin)->get_arity();
-
-          ++begin;
-
-          while (begin != end)
-          {
-            if (arity != (*begin)->get_arity())
-            {
-              // The arities in the list do not match, so it's unspecified
-              return -1;
-            }
-
-            ++begin;
-          }
-
-          return arity;
+          return "Multiple method dispatch function wrapper.";
         }
 
-        return -1; // unknown arity
-      }
-
-      virtual bool call_match(const std::vector<Boxed_Value> &vals) const
-      {
-        typedef std::vector<Proxy_Function> function_vec;
-
-        function_vec::const_iterator begin = m_funcs.begin();
-        function_vec::const_iterator end = m_funcs.end();
-
-        while (begin != end)
+      protected:
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
         {
-          if ((*begin)->call_match(vals))
-          {
-            return true;
-          } else {
-            ++begin;
-          }
+          return dispatch::dispatch(m_funcs.begin(), m_funcs.end(), params);
         }
 
-        return false;
-      }
+      private:
+        std::vector<Proxy_Function> m_funcs;
 
-      virtual std::string annotation() const
-      {
-        return "Multiple method dispatch function wrapper.";
-      }
-
-    protected:
-      virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
-      {
-        return detail::dispatch(m_funcs.begin(), m_funcs.end(), params);
-      }
-
-    private:
-      std::vector<Proxy_Function> m_funcs;
-
-      static std::vector<Type_Info> build_type_infos(const std::vector<Proxy_Function> &t_funcs)
-      {
-        typedef std::vector<Proxy_Function> function_vec;
-
-        function_vec::const_iterator begin = t_funcs.begin();
-        const function_vec::const_iterator end = t_funcs.end();
-
-        if (begin != end)
+        static std::vector<Type_Info> build_type_infos(const std::vector<Proxy_Function> &t_funcs)
         {
-          std::vector<Type_Info> type_infos = (*begin)->get_param_types();
+          typedef std::vector<Proxy_Function> function_vec;
 
-          ++begin;
+          function_vec::const_iterator begin = t_funcs.begin();
+          const function_vec::const_iterator end = t_funcs.end();
 
-          bool sizemismatch = false;
-
-          while (begin != end)
+          if (begin != end)
           {
-            std::vector<Type_Info> param_types = (*begin)->get_param_types();
+            std::vector<Type_Info> type_infos = (*begin)->get_param_types();
 
-            if (param_types.size() != type_infos.size())
-            {
-              sizemismatch = true;
-            }
+            ++begin;
 
-            for (size_t i = 0; i < type_infos.size() && i < param_types.size(); ++i)
+            bool sizemismatch = false;
+
+            while (begin != end)
             {
-              if (!(type_infos[i] == param_types[i]))
+              std::vector<Type_Info> param_types = (*begin)->get_param_types();
+
+              if (param_types.size() != type_infos.size())
               {
-                type_infos[i] = detail::Get_Type_Info<Boxed_Value>::get();
+                sizemismatch = true;
               }
+
+              for (size_t i = 0; i < type_infos.size() && i < param_types.size(); ++i)
+              {
+                if (!(type_infos[i] == param_types[i]))
+                {
+                  type_infos[i] = detail::Get_Type_Info<Boxed_Value>::get();
+                }
+              }
+
+              ++begin;
             }
 
-            ++begin;
+            assert(type_infos.size() > 0 && " type_info vector size is < 0, this is only possible if something else is broken");
+
+            if (sizemismatch)
+            {
+              type_infos.resize(1);
+            }
+
+            return type_infos;
           }
 
-          assert(type_infos.size() > 0 && " type_info vector size is < 0, this is only possible if something else is broken");
-
-          if (sizemismatch)
-          {
-            type_infos.resize(1);
-          }
-
-          return type_infos;
+          return std::vector<Type_Info>();
         }
-
-        return std::vector<Type_Info>();
-      }
-  };  
-
+    };  
+  }
 
   namespace exception
   {
@@ -300,396 +302,398 @@ namespace chaiscript
     };
   }
 
-  /**
-   * Main class for the dispatchkit. Handles management
-   * of the object stack, functions and registered types.
-   */
-  class Dispatch_Engine
+  namespace detail
   {
-    public:
-      typedef std::map<std::string, chaiscript::Type_Info> Type_Name_Map;
-      typedef std::map<std::string, Boxed_Value> Scope;
-      typedef std::deque<Scope> StackData;
-      typedef boost::shared_ptr<StackData> Stack;
+    /**
+     * Main class for the dispatchkit. Handles management
+     * of the object stack, functions and registered types.
+     */
+    class Dispatch_Engine
+    {
+      public:
+        typedef std::map<std::string, chaiscript::Type_Info> Type_Name_Map;
+        typedef std::map<std::string, Boxed_Value> Scope;
+        typedef std::deque<Scope> StackData;
+        typedef boost::shared_ptr<StackData> Stack;
 
-      struct State
-      {
-        std::map<std::string, std::vector<Proxy_Function> > m_functions;
-        std::map<std::string, Boxed_Value> m_global_objects;
-        Type_Name_Map m_types;
-        std::set<std::string> m_reserved_words;
-      };
-
-      Dispatch_Engine()
-        : m_place_holder(boost::shared_ptr<Placeholder_Object>(new Placeholder_Object()))
-      {
-      }
-
-      ~Dispatch_Engine()
-      {
-        detail::Dynamic_Conversions::get().cleanup(m_conversions.begin(), m_conversions.end());
-      }
-
-      /**
-       * Add a new conversion for upcasting to a base class
-       */
-      void add(const Dynamic_Cast_Conversion &d)
-      {
-        m_conversions.push_back(d);
-        return detail::Dynamic_Conversions::get().add_conversion(d);
-      }
-
-      /**
-       * Add a new named Proxy_Function to the system
-       */
-      bool add(const Proxy_Function &f, const std::string &name)
-      {
-        validate_object_name(name);
-        return add_function(f, name);
-      }
-
-      /**
-       * Set the value of an object, by name. If the object
-       * is not available in the current scope it is created
-       */
-      void add(const Boxed_Value &obj, const std::string &name)
-      {
-        validate_object_name(name);
-        StackData &stack = get_stack_data();
-
-        for (int i = static_cast<int>(stack.size())-1; i >= 0; --i)
+        struct State
         {
-          std::map<std::string, Boxed_Value>::const_iterator itr = stack[i].find(name);
-          if (itr != stack[i].end())
+          std::map<std::string, std::vector<Proxy_Function> > m_functions;
+          std::map<std::string, Boxed_Value> m_global_objects;
+          Type_Name_Map m_types;
+          std::set<std::string> m_reserved_words;
+        };
+
+        Dispatch_Engine()
+          : m_place_holder(boost::shared_ptr<dispatch::Placeholder_Object>(new dispatch::Placeholder_Object()))
+        {
+        }
+
+        ~Dispatch_Engine()
+        {
+          detail::Dynamic_Conversions::get().cleanup(m_conversions.begin(), m_conversions.end());
+        }
+
+        /**
+         * Add a new conversion for upcasting to a base class
+         */
+        void add(const Dynamic_Cast_Conversion &d)
+        {
+          m_conversions.push_back(d);
+          return detail::Dynamic_Conversions::get().add_conversion(d);
+        }
+
+        /**
+         * Add a new named Proxy_Function to the system
+         */
+        bool add(const Proxy_Function &f, const std::string &name)
+        {
+          validate_object_name(name);
+          return add_function(f, name);
+        }
+
+        /**
+         * Set the value of an object, by name. If the object
+         * is not available in the current scope it is created
+         */
+        void add(const Boxed_Value &obj, const std::string &name)
+        {
+          validate_object_name(name);
+          StackData &stack = get_stack_data();
+
+          for (int i = static_cast<int>(stack.size())-1; i >= 0; --i)
           {
-            stack[i][name] = obj;
-            return;
+            std::map<std::string, Boxed_Value>::const_iterator itr = stack[i].find(name);
+            if (itr != stack[i].end())
+            {
+              stack[i][name] = obj;
+              return;
+            }
+          }
+
+          add_object(name, obj);
+        }
+
+        /**
+         * Adds a named object to the current scope
+         */
+        void add_object(const std::string &name, const Boxed_Value &obj)
+        {
+          StackData &stack = get_stack_data();
+          validate_object_name(name);
+          stack.back()[name] = obj;
+        }
+
+        /**
+         * Adds a new global shared object, between all the threads
+         */
+        void add_global_const(const Boxed_Value &obj, const std::string &name)
+        {
+          validate_object_name(name);
+          if (!obj.is_const())
+          {
+            throw exception::global_non_const();
+          }
+
+#ifndef CHAISCRIPT_NO_THREADS
+          boost::unique_lock<boost::shared_mutex> l(m_global_object_mutex);
+#endif
+
+          m_state.m_global_objects[name] = obj;
+        }
+
+        /**
+         * Adds a new scope to the stack
+         */
+        void new_scope()
+        {
+          StackData &stack = get_stack_data();
+          stack.push_back(Scope());
+        }
+
+        /**
+         * Pops the current scope from the stack
+         */
+        void pop_scope()
+        {
+          StackData &stack = get_stack_data();
+          if (stack.size() > 1)
+          {
+            stack.pop_back();
+          } else {
+            throw std::range_error("Unable to pop global stack");
           }
         }
 
-        add_object(name, obj);
-      }
-
-      /**
-       * Adds a named object to the current scope
-       */
-      void add_object(const std::string &name, const Boxed_Value &obj)
-      {
-        StackData &stack = get_stack_data();
-        validate_object_name(name);
-        stack.back()[name] = obj;
-      }
-
-      /**
-       * Adds a new global shared object, between all the threads
-       */
-      void add_global_const(const Boxed_Value &obj, const std::string &name)
-      {
-        validate_object_name(name);
-        if (!obj.is_const())
+        /**
+         * Swaps out the stack with a new stack
+         * \returns the old stack
+         * \param[in] s The new stack
+         */
+        Stack set_stack(const Stack &s)
         {
-          throw exception::global_non_const();
+          Stack old = m_stack_holder->stack;
+          m_stack_holder->stack = s;
+          return old;
         }
 
+        Stack new_stack() const
+        {
+          Stack s(new Stack::element_type());
+          s->push_back(Scope());
+          return s;
+        }
+
+        Stack get_stack() const
+        {
+          return m_stack_holder->stack;
+        }
+
+        /**
+         * Searches the current stack for an object of the given name
+         * includes a special overload for the _ place holder object to
+         * ensure that it is always in scope.
+         */
+        Boxed_Value get_object(const std::string &name) const
+        {
+          // Is it a placeholder object?
+          if (name == "_")
+          {
+            return m_place_holder;
+          }
+
+          StackData &stack = get_stack_data();
+
+          // Is it in the stack?
+          for (int i = static_cast<int>(stack.size())-1; i >= 0; --i)
+          {
+            std::map<std::string, Boxed_Value>::const_iterator stackitr = stack[i].find(name);
+            if (stackitr != stack[i].end())
+            {
+              return stackitr->second;
+            }
+          }
+
+          // Is the value we are looking for a global?
+          {
 #ifndef CHAISCRIPT_NO_THREADS
-        boost::unique_lock<boost::shared_mutex> l(m_global_object_mutex);
+            boost::shared_lock<boost::shared_mutex> l(m_global_object_mutex);
 #endif
 
-        m_state.m_global_objects[name] = obj;
-      }
+            std::map<std::string, Boxed_Value>::const_iterator itr = m_state.m_global_objects.find(name);
+            if (itr != m_state.m_global_objects.end())
+            {
+              return itr->second;
+            }
+          }
 
-      /**
-       * Adds a new scope to the stack
-       */
-      void new_scope()
-      {
-        StackData &stack = get_stack_data();
-        stack.push_back(Scope());
-      }
+          // If all that failed, then check to see if it's a function
+          std::vector<Proxy_Function> funcs = get_function(name);
 
-      /**
-       * Pops the current scope from the stack
-       */
-      void pop_scope()
-      {
-        StackData &stack = get_stack_data();
-        if (stack.size() > 1)
-        {
-          stack.pop_back();
-        } else {
-          throw std::range_error("Unable to pop global stack");
-        }
-      }
-
-      /**
-       * Swaps out the stack with a new stack
-       * \returns the old stack
-       * \param[in] s The new stack
-       */
-      Stack set_stack(const Stack &s)
-      {
-        Stack old = m_stack_holder->stack;
-        m_stack_holder->stack = s;
-        return old;
-      }
-
-      Stack new_stack() const
-      {
-        Stack s(new Stack::element_type());
-        s->push_back(Scope());
-        return s;
-      }
-
-      Stack get_stack() const
-      {
-        return m_stack_holder->stack;
-      }
-
-      /**
-       * Searches the current stack for an object of the given name
-       * includes a special overload for the _ place holder object to
-       * ensure that it is always in scope.
-       */
-      Boxed_Value get_object(const std::string &name) const
-      {
-        // Is it a placeholder object?
-        if (name == "_")
-        {
-          return m_place_holder;
-        }
-
-        StackData &stack = get_stack_data();
-
-        // Is it in the stack?
-        for (int i = static_cast<int>(stack.size())-1; i >= 0; --i)
-        {
-          std::map<std::string, Boxed_Value>::const_iterator stackitr = stack[i].find(name);
-          if (stackitr != stack[i].end())
+          if (funcs.empty())
           {
-            return stackitr->second;
+            throw std::range_error("Object not known: " + name);
+          } else {
+            if (funcs.size() == 1)
+            {
+              // Return the first item if there is only one,
+              // no reason to take the cast of the extra level of dispatch
+              return const_var(*funcs.begin());
+            } else {
+              return Boxed_Value(Const_Proxy_Function(new Dispatch_Function(funcs)));
+            }
           }
         }
 
-        // Is the value we are looking for a global?
+        /**
+         * Registers a new named type
+         */
+        void add(const Type_Info &ti, const std::string &name)
         {
+          add_global_const(const_var(ti), name + "_type");
+
 #ifndef CHAISCRIPT_NO_THREADS
-          boost::shared_lock<boost::shared_mutex> l(m_global_object_mutex);
+          boost::unique_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-          std::map<std::string, Boxed_Value>::const_iterator itr = m_state.m_global_objects.find(name);
-          if (itr != m_state.m_global_objects.end())
+          m_state.m_types.insert(std::make_pair(name, ti));
+        }
+
+        /**
+         * Returns the type info for a named type
+         */
+        Type_Info get_type(const std::string &name) const
+        {
+#ifndef CHAISCRIPT_NO_THREADS
+          boost::shared_lock<boost::shared_mutex> l(m_mutex);
+#endif
+
+          Type_Name_Map::const_iterator itr = m_state.m_types.find(name);
+
+          if (itr != m_state.m_types.end())
           {
             return itr->second;
           }
+
+          throw std::range_error("Type Not Known");
         }
 
-        // If all that failed, then check to see if it's a function
-        std::vector<Proxy_Function> funcs = get_function(name);
-
-        if (funcs.empty())
+        /**
+         * Returns the registered name of a known type_info object
+         * compares the "bare_type_info" for the broadest possible
+         * match
+         */
+        std::string get_type_name(const Type_Info &ti) const
         {
-          throw std::range_error("Object not known: " + name);
-        } else {
-          if (funcs.size() == 1)
+#ifndef CHAISCRIPT_NO_THREADS
+          boost::shared_lock<boost::shared_mutex> l(m_mutex);
+#endif
+
+          for (Type_Name_Map::const_iterator itr = m_state.m_types.begin();
+              itr != m_state.m_types.end();
+              ++itr)
           {
-            // Return the first item if there is only one,
-            // no reason to take the cast of the extra level of dispatch
-            return const_var(*funcs.begin());
-          } else {
-            return Boxed_Value(Const_Proxy_Function(new Dispatch_Function(funcs)));
+            if (itr->second.bare_equal(ti))
+            {
+              return itr->first;
+            }
           }
-        }
-      }
 
-      /**
-       * Registers a new named type
-       */
-      void add(const Type_Info &ti, const std::string &name)
-      {
-        add_global_const(const_var(ti), name + "_type");
-       
-#ifndef CHAISCRIPT_NO_THREADS
-        boost::unique_lock<boost::shared_mutex> l(m_mutex);
-#endif
-
-        m_state.m_types.insert(std::make_pair(name, ti));
-      }
-
-      /**
-       * Returns the type info for a named type
-       */
-      Type_Info get_type(const std::string &name) const
-      {
-#ifndef CHAISCRIPT_NO_THREADS
-        boost::shared_lock<boost::shared_mutex> l(m_mutex);
-#endif
-
-        Type_Name_Map::const_iterator itr = m_state.m_types.find(name);
-
-        if (itr != m_state.m_types.end())
-        {
-          return itr->second;
+          return ti.bare_name();
         }
 
-        throw std::range_error("Type Not Known");
-      }
-
-      /**
-       * Returns the registered name of a known type_info object
-       * compares the "bare_type_info" for the broadest possible
-       * match
-       */
-      std::string get_type_name(const Type_Info &ti) const
-      {
+        /**
+         * Return all registered types
+         */
+        std::vector<std::pair<std::string, Type_Info> > get_types() const
+        {
 #ifndef CHAISCRIPT_NO_THREADS
-        boost::shared_lock<boost::shared_mutex> l(m_mutex);
+          boost::shared_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-        for (Type_Name_Map::const_iterator itr = m_state.m_types.begin();
-             itr != m_state.m_types.end();
-             ++itr)
-        {
-          if (itr->second.bare_equal(ti))
+          return std::vector<std::pair<std::string, Type_Info> >(m_state.m_types.begin(), m_state.m_types.end());
+        }
+
+        /**
+         * Return a function by name
+         */
+        std::vector< Proxy_Function >
+          get_function(const std::string &t_name) const
           {
-            return itr->first;
+#ifndef CHAISCRIPT_NO_THREADS
+            boost::shared_lock<boost::shared_mutex> l(m_mutex);
+#endif
+
+            const std::map<std::string, std::vector<Proxy_Function> > &funs = get_functions_int();
+
+            std::map<std::string, std::vector<Proxy_Function> >::const_iterator itr 
+              = funs.find(t_name);
+
+            if (itr != funs.end())
+            {
+              return itr->second;
+            } else {
+              return std::vector<Proxy_Function>();
+            }
+
           }
+
+        /**
+         * Return true if a function exists
+         */
+        bool function_exists(const std::string &name) const
+        {
+#ifndef CHAISCRIPT_NO_THREADS
+          boost::shared_lock<boost::shared_mutex> l(m_mutex);
+#endif
+
+          const std::map<std::string, std::vector<Proxy_Function> > &functions = get_functions_int();
+          return functions.find(name) != functions.end();
         }
 
-        return ti.bare_name();
-      }
-
-      /**
-       * Return all registered types
-       */
-      std::vector<std::pair<std::string, Type_Info> > get_types() const
-      {
-#ifndef CHAISCRIPT_NO_THREADS
-        boost::shared_lock<boost::shared_mutex> l(m_mutex);
-#endif
-
-        return std::vector<std::pair<std::string, Type_Info> >(m_state.m_types.begin(), m_state.m_types.end());
-      }
-
-      /**
-       * Return a function by name
-       */
-      std::vector< Proxy_Function >
-        get_function(const std::string &t_name) const
-      {
-#ifndef CHAISCRIPT_NO_THREADS
-        boost::shared_lock<boost::shared_mutex> l(m_mutex);
-#endif
-
-        const std::map<std::string, std::vector<Proxy_Function> > &funs = get_functions_int();
-
-        std::map<std::string, std::vector<Proxy_Function> >::const_iterator itr 
-          = funs.find(t_name);
-
-        if (itr != funs.end())
+        /**
+         * Get a vector of all registered functions
+         */
+        std::vector<std::pair<std::string, Proxy_Function > > get_functions() const
         {
-          return itr->second;
-        } else {
-          return std::vector<Proxy_Function>();
-        }
-
-      }
-
-      /**
-       * Return true if a function exists
-       */
-      bool function_exists(const std::string &name) const
-      {
 #ifndef CHAISCRIPT_NO_THREADS
-        boost::shared_lock<boost::shared_mutex> l(m_mutex);
+          boost::shared_lock<boost::shared_mutex> l(m_mutex);
 #endif
+          std::vector<std::pair<std::string, Proxy_Function> > rets;
 
-        const std::map<std::string, std::vector<Proxy_Function> > &functions = get_functions_int();
-        return functions.find(name) != functions.end();
-      }
+          const std::map<std::string, std::vector<Proxy_Function> > &functions = get_functions_int();
 
-      /**
-       * Get a vector of all registered functions
-       */
-      std::vector<std::pair<std::string, Proxy_Function > > get_functions() const
-      {
-#ifndef CHAISCRIPT_NO_THREADS
-        boost::shared_lock<boost::shared_mutex> l(m_mutex);
-#endif
-        std::vector<std::pair<std::string, Proxy_Function> > rets;
-
-        const std::map<std::string, std::vector<Proxy_Function> > &functions = get_functions_int();
-
-        for (std::map<std::string, std::vector<Proxy_Function> >::const_iterator itr = functions.begin();
-             itr != functions.end();
-             ++itr)
-        {
-          for (std::vector<Proxy_Function>::const_iterator itr2 = itr->second.begin();
-               itr2 != itr->second.end();
-               ++itr2)
+          for (std::map<std::string, std::vector<Proxy_Function> >::const_iterator itr = functions.begin();
+              itr != functions.end();
+              ++itr)
           {
-            rets.push_back(std::make_pair(itr->first, *itr2));
+            for (std::vector<Proxy_Function>::const_iterator itr2 = itr->second.begin();
+                itr2 != itr->second.end();
+                ++itr2)
+            {
+              rets.push_back(std::make_pair(itr->first, *itr2));
+            }
           }
+
+          return rets;
         }
 
-        return rets;
-      }
-
-      void add_reserved_word(const std::string &name)
-      {
+        void add_reserved_word(const std::string &name)
+        {
 #ifndef CHAISCRIPT_NO_THREADS
-        boost::unique_lock<boost::shared_mutex> l(m_mutex);
+          boost::unique_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-        m_state.m_reserved_words.insert(name);
-      }
+          m_state.m_reserved_words.insert(name);
+        }
 
-      Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params) const
-      {
-        std::vector<Proxy_Function> functions = get_function(t_name);
+        Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params) const
+        {
+          std::vector<Proxy_Function> functions = get_function(t_name);
 
-        return detail::dispatch(functions.begin(), functions.end(), params);
-      }
+          return dispatch::dispatch(functions.begin(), functions.end(), params);
+        }
 
-      Boxed_Value call_function(const std::string &t_name) const
-      {
-        return call_function(t_name, std::vector<Boxed_Value>());
-      }
+        Boxed_Value call_function(const std::string &t_name) const
+        {
+          return call_function(t_name, std::vector<Boxed_Value>());
+        }
 
-      Boxed_Value call_function(const std::string &t_name, const Boxed_Value &p1) const
-      {
-        std::vector<Boxed_Value> params;
-        params.push_back(p1);
-        return call_function(t_name, params);
-      }
+        Boxed_Value call_function(const std::string &t_name, const Boxed_Value &p1) const
+        {
+          std::vector<Boxed_Value> params;
+          params.push_back(p1);
+          return call_function(t_name, params);
+        }
 
-      Boxed_Value call_function(const std::string &t_name, const Boxed_Value &p1, const Boxed_Value &p2) const
-      {
-        std::vector<Boxed_Value> params;
-        params.push_back(p1);
-        params.push_back(p2);
-        return call_function(t_name, params);
-      }
+        Boxed_Value call_function(const std::string &t_name, const Boxed_Value &p1, const Boxed_Value &p2) const
+        {
+          std::vector<Boxed_Value> params;
+          params.push_back(p1);
+          params.push_back(p2);
+          return call_function(t_name, params);
+        }
 
-      /**
-       * Dump object info to stdout
-       */
+        /**
+         * Dump object info to stdout
+         */
         void dump_object(Boxed_Value o) const
         {
           Type_Info ti = o.get_type_info();
           std::cout << (ti.is_const()?"const ":"") << get_type_name(ti) << std::endl;
         }
 
-      /**
-       * Dump type info to stdout
-       */
+        /**
+         * Dump type info to stdout
+         */
         void dump_type(const Type_Info &type) const
         {
           std::cout << (type.is_const()?"const ":"") << get_type_name(type);
         }
 
-      /**
-       * Dump function to stdout
-       */
+        /**
+         * Dump function to stdout
+         */
         void dump_function(const std::pair<const std::string, Proxy_Function > &f) const
         {
           std::vector<Type_Info> params = f.second->get_param_types();
@@ -717,9 +721,9 @@ namespace chaiscript
           std::cout << ") " << std::endl;
         }
 
-      /**
-       * Dump all system info to stdout
-       */
+        /**
+         * Dump all system info to stdout
+         */
         void dump_system() const
         {
           std::cout << "Registered Types: " << std::endl;
@@ -746,249 +750,249 @@ namespace chaiscript
           std::cout << std::endl;
         }
 
-      /**
-       * return true if the Boxed_Value matches the registered type by name
-       */
-      bool is_type(Boxed_Value r, const std::string &user_typename) const
-      {
-        try {
-          if (get_type(user_typename).bare_equal(r.get_type_info()))
-          {
-            return true;
-          }
-        } catch (const std::range_error &) {
-        }
-
-        try {
-          const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(r);
-          return d.get_type_name() == user_typename;
-        } catch (const std::bad_cast &) {
-        }
-
-        return false;
-      }
-
-      std::string type_name(Boxed_Value obj) const
-      {
-        return get_type_name(obj.get_type_info());
-      }
-
-      State get_state()
-      {
-#ifndef CHAISCRIPT_NO_THREADS
-        boost::unique_lock<boost::shared_mutex> l(m_mutex);
-        boost::unique_lock<boost::shared_mutex> l2(m_global_object_mutex);
-#endif
-
-        return m_state;
-      }
-
-      void set_state(const State &t_state)
-      {
-#ifndef CHAISCRIPT_NO_THREADS
-        boost::unique_lock<boost::shared_mutex> l(m_mutex);
-        boost::unique_lock<boost::shared_mutex> l2(m_global_object_mutex);
-#endif
-
-        m_state = t_state;
-      }
-
-
-    private:
-      /**
-       * Returns the current stack
-       * make const/non const versions
-       */
-      StackData &get_stack_data() const
-      {
-        return *(m_stack_holder->stack);
-      }
-
-      const std::map<std::string, std::vector<Proxy_Function> > &get_functions_int() const
-      {
-        return m_state.m_functions;
-      }
-
-      std::map<std::string, std::vector<Proxy_Function> > &get_functions_int() 
-      {
-        return m_state.m_functions;
-      }
-
-      static bool function_less_than(const Proxy_Function &lhs, const Proxy_Function &rhs)
-      {
-        const std::vector<Type_Info> lhsparamtypes = lhs->get_param_types();
-        const std::vector<Type_Info> rhsparamtypes = rhs->get_param_types();
-
-        const int lhssize = lhsparamtypes.size();
-        const int rhssize = rhsparamtypes.size();
-
-        const Type_Info boxed_type = user_type<Boxed_Value>();
-        const Type_Info boxed_pod_type = user_type<Boxed_POD_Value>();
-
-        boost::shared_ptr<const Dynamic_Proxy_Function> dynamic_lhs(boost::dynamic_pointer_cast<const Dynamic_Proxy_Function>(lhs));
-        boost::shared_ptr<const Dynamic_Proxy_Function> dynamic_rhs(boost::dynamic_pointer_cast<const Dynamic_Proxy_Function>(rhs));
-
-        if (dynamic_lhs && dynamic_rhs)
+        /**
+         * return true if the Boxed_Value matches the registered type by name
+         */
+        bool is_type(Boxed_Value r, const std::string &user_typename) const
         {
-          if (dynamic_lhs->get_guard())
-          {
-            if (dynamic_rhs->get_guard())
+          try {
+            if (get_type(user_typename).bare_equal(r.get_type_info()))
             {
-              return false;
-            } else {
               return true;
             }
-          } else {
-            return false;
+          } catch (const std::range_error &) {
           }
-        }
 
-        if (dynamic_lhs && !dynamic_rhs)
-        {
+          try {
+            const dispatch::Dynamic_Object &d = boxed_cast<const dispatch::Dynamic_Object &>(r);
+            return d.get_type_name() == user_typename;
+          } catch (const std::bad_cast &) {
+          }
+
           return false;
         }
 
-        if (!dynamic_lhs && dynamic_rhs)
+        std::string type_name(Boxed_Value obj) const
         {
-          return true;
+          return get_type_name(obj.get_type_info());
         }
 
-
-
-        for (int i = 1; i < lhssize && i < rhssize; ++i)
+        State get_state()
         {
-          const Type_Info lt = lhsparamtypes[i];
-          const Type_Info rt = rhsparamtypes[i];
-
-          if (lt.bare_equal(rt) && lt.is_const() == rt.is_const())
-          {
-            continue; // The first two types are essentially the same, next iteration
-          }
-
-          // const is after non-const for the same type
-          if (lt.bare_equal(rt) && lt.is_const() && !rt.is_const())
-          {
-            return false;
-          }
-
-          if (lt.bare_equal(rt) && !lt.is_const())
-          {
-            return true;
-          }
-
-          // boxed_values are sorted last
-          if (lt.bare_equal(boxed_type))
-          {
-            return false;
-          }
-
-          if (rt.bare_equal(boxed_type))
-          {
-            if (lt.bare_equal(boxed_pod_type))
-            {
-              return true;
-            }
-            return true;
-          }
-
-          if (lt.bare_equal(boxed_pod_type))
-          {
-            return false;
-          }
-
-          if (rt.bare_equal(boxed_pod_type))
-          {
-            return true;
-          }
-
-          // otherwise, we want to sort by typeid
-          return lt < rt;
-        }
-
-        return false;
-      }
-
-
-      /**
-       * Throw a reserved_word exception if the name is not allowed
-       */
-      void validate_object_name(const std::string &name) const
-      {
 #ifndef CHAISCRIPT_NO_THREADS
-        boost::shared_lock<boost::shared_mutex> l(m_mutex);
+          boost::unique_lock<boost::shared_mutex> l(m_mutex);
+          boost::unique_lock<boost::shared_mutex> l2(m_global_object_mutex);
 #endif
 
-        if (m_state.m_reserved_words.find(name) != m_state.m_reserved_words.end())
-        {
-          throw exception::reserved_word_error(name);
+          return m_state;
         }
-      }
 
-      /**
-       * Implementation detail for adding a function. Returns
-       * true if the function was added, false if a function with the
-       * same signature and name already exists.
-       */
-      bool add_function(const Proxy_Function &t_f, const std::string &t_name)
-      {
+        void set_state(const State &t_state)
+        {
 #ifndef CHAISCRIPT_NO_THREADS
-        boost::unique_lock<boost::shared_mutex> l(m_mutex);
+          boost::unique_lock<boost::shared_mutex> l(m_mutex);
+          boost::unique_lock<boost::shared_mutex> l2(m_global_object_mutex);
 #endif
 
-        std::map<std::string, std::vector<Proxy_Function> > &funcs = get_functions_int();
-        
-        std::map<std::string, std::vector<Proxy_Function> >::iterator itr
-          = funcs.find(t_name);
+          m_state = t_state;
+        }
 
-        if (itr != funcs.end())
+
+      private:
+        /**
+         * Returns the current stack
+         * make const/non const versions
+         */
+        StackData &get_stack_data() const
         {
-          std::vector<Proxy_Function> &vec = itr->second;
-          for (std::vector<Proxy_Function>::const_iterator itr2 = vec.begin();
-               itr2 != vec.end();
-               ++itr2)
+          return *(m_stack_holder->stack);
+        }
+
+        const std::map<std::string, std::vector<Proxy_Function> > &get_functions_int() const
+        {
+          return m_state.m_functions;
+        }
+
+        std::map<std::string, std::vector<Proxy_Function> > &get_functions_int() 
+        {
+          return m_state.m_functions;
+        }
+
+        static bool function_less_than(const Proxy_Function &lhs, const Proxy_Function &rhs)
+        {
+          const std::vector<Type_Info> lhsparamtypes = lhs->get_param_types();
+          const std::vector<Type_Info> rhsparamtypes = rhs->get_param_types();
+
+          const int lhssize = lhsparamtypes.size();
+          const int rhssize = rhsparamtypes.size();
+
+          const Type_Info boxed_type = user_type<Boxed_Value>();
+          const Type_Info boxed_pod_type = user_type<Boxed_POD_Value>();
+
+          boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynamic_lhs(boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(lhs));
+          boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynamic_rhs(boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(rhs));
+
+          if (dynamic_lhs && dynamic_rhs)
           {
-            if ((*t_f) == *(*itr2))
+            if (dynamic_lhs->get_guard())
             {
+              if (dynamic_rhs->get_guard())
+              {
+                return false;
+              } else {
+                return true;
+              }
+            } else {
               return false;
             }
           }
 
-          vec.push_back(t_f);
-          std::stable_sort(vec.begin(), vec.end(), &function_less_than);
-        } else {
-          std::vector<Proxy_Function> vec;
-          vec.push_back(t_f);
-          funcs.insert(std::make_pair(t_name, vec));
+          if (dynamic_lhs && !dynamic_rhs)
+          {
+            return false;
+          }
+
+          if (!dynamic_lhs && dynamic_rhs)
+          {
+            return true;
+          }
+
+
+
+          for (int i = 1; i < lhssize && i < rhssize; ++i)
+          {
+            const Type_Info lt = lhsparamtypes[i];
+            const Type_Info rt = rhsparamtypes[i];
+
+            if (lt.bare_equal(rt) && lt.is_const() == rt.is_const())
+            {
+              continue; // The first two types are essentially the same, next iteration
+            }
+
+            // const is after non-const for the same type
+            if (lt.bare_equal(rt) && lt.is_const() && !rt.is_const())
+            {
+              return false;
+            }
+
+            if (lt.bare_equal(rt) && !lt.is_const())
+            {
+              return true;
+            }
+
+            // boxed_values are sorted last
+            if (lt.bare_equal(boxed_type))
+            {
+              return false;
+            }
+
+            if (rt.bare_equal(boxed_type))
+            {
+              if (lt.bare_equal(boxed_pod_type))
+              {
+                return true;
+              }
+              return true;
+            }
+
+            if (lt.bare_equal(boxed_pod_type))
+            {
+              return false;
+            }
+
+            if (rt.bare_equal(boxed_pod_type))
+            {
+              return true;
+            }
+
+            // otherwise, we want to sort by typeid
+            return lt < rt;
+          }
+
+          return false;
         }
 
-        return true;
-      }
 
+        /**
+         * Throw a reserved_word exception if the name is not allowed
+         */
+        void validate_object_name(const std::string &name) const
+        {
 #ifndef CHAISCRIPT_NO_THREADS
-      mutable boost::shared_mutex m_mutex;
-      mutable boost::shared_mutex m_global_object_mutex;
+          boost::shared_lock<boost::shared_mutex> l(m_mutex);
 #endif
 
-      struct Stack_Holder
-      {
-        Stack_Holder()
-          : stack(new StackData())
-        {
-          stack->push_back(Scope());
+          if (m_state.m_reserved_words.find(name) != m_state.m_reserved_words.end())
+          {
+            throw exception::reserved_word_error(name);
+          }
         }
 
-        Stack stack;
-      };  
+        /**
+         * Implementation detail for adding a function. Returns
+         * true if the function was added, false if a function with the
+         * same signature and name already exists.
+         */
+        bool add_function(const Proxy_Function &t_f, const std::string &t_name)
+        {
+#ifndef CHAISCRIPT_NO_THREADS
+          boost::unique_lock<boost::shared_mutex> l(m_mutex);
+#endif
 
-      std::vector<Dynamic_Cast_Conversion> m_conversions;
-      chaiscript::detail::threading::Thread_Storage<Stack_Holder> m_stack_holder;
+          std::map<std::string, std::vector<Proxy_Function> > &funcs = get_functions_int();
+
+          std::map<std::string, std::vector<Proxy_Function> >::iterator itr
+            = funcs.find(t_name);
+
+          if (itr != funcs.end())
+          {
+            std::vector<Proxy_Function> &vec = itr->second;
+            for (std::vector<Proxy_Function>::const_iterator itr2 = vec.begin();
+                itr2 != vec.end();
+                ++itr2)
+            {
+              if ((*t_f) == *(*itr2))
+              {
+                return false;
+              }
+            }
+
+            vec.push_back(t_f);
+            std::stable_sort(vec.begin(), vec.end(), &function_less_than);
+          } else {
+            std::vector<Proxy_Function> vec;
+            vec.push_back(t_f);
+            funcs.insert(std::make_pair(t_name, vec));
+          }
+
+          return true;
+        }
+
+#ifndef CHAISCRIPT_NO_THREADS
+        mutable boost::shared_mutex m_mutex;
+        mutable boost::shared_mutex m_global_object_mutex;
+#endif
+
+        struct Stack_Holder
+        {
+          Stack_Holder()
+            : stack(new StackData())
+          {
+            stack->push_back(Scope());
+          }
+
+          Stack stack;
+        };  
+
+        std::vector<Dynamic_Cast_Conversion> m_conversions;
+        chaiscript::detail::threading::Thread_Storage<Stack_Holder> m_stack_holder;
 
 
-      State m_state;
+        State m_state;
 
-      Boxed_Value m_place_holder;
-  };
-
+        Boxed_Value m_place_holder;
+    };
+  }
 }
 
 #endif

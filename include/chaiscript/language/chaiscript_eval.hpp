@@ -49,7 +49,7 @@ namespace chaiscript
         Binary_Operator_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Bitwise_Xor, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Binary_Operator_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           Boxed_Value retval;
 
           try {
@@ -91,7 +91,7 @@ namespace chaiscript
         Int_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Int, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Int_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &){
           return const_var(int(atoi(this->text.c_str())));
         }
 
@@ -102,7 +102,7 @@ namespace chaiscript
         Float_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Float, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Float_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &){
           return const_var(double(atof(this->text.c_str())));
         }
 
@@ -113,7 +113,7 @@ namespace chaiscript
         Id_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Id, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Id_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           if (this->text == "true") {
             return const_var(true);
           }
@@ -163,8 +163,8 @@ namespace chaiscript
         Fun_Call_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Fun_Call, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Fun_Call_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
-          Param_List_Builder plb;
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+          dispatch::Param_List_Builder plb;
 
           if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
             for (size_t i = 0; i < this->children[1]->children.size(); ++i) {
@@ -178,8 +178,8 @@ namespace chaiscript
             }
           }
 
-          Dispatch_Engine::Stack prev_stack = t_ss.get_stack();
-          Dispatch_Engine::Stack new_stack = t_ss.new_stack();
+          chaiscript::detail::Dispatch_Engine::Stack prev_stack = t_ss.get_stack();
+          chaiscript::detail::Dispatch_Engine::Stack new_stack = t_ss.new_stack();
 
           try {
             Boxed_Value fn = this->children[0]->eval(t_ss);
@@ -218,8 +218,8 @@ namespace chaiscript
         Inplace_Fun_Call_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inplace_Fun_Call, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inplace_Fun_Call_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
-          Param_List_Builder plb;
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+          dispatch::Param_List_Builder plb;
 
           if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
             for (size_t i = 0; i < this->children[1]->children.size(); ++i) {
@@ -277,7 +277,7 @@ namespace chaiscript
         Equation_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Equation, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Equation_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           Boxed_Value retval;
           try {
             retval = this->children.back()->eval(t_ss); 
@@ -353,7 +353,7 @@ namespace chaiscript
         Var_Decl_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Var_Decl, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Var_Decl_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           try {
             t_ss.add_object(this->children[0]->text, Boxed_Value());
           }
@@ -391,7 +391,7 @@ namespace chaiscript
         Array_Call_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Array_Call, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Array_Call_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           Boxed_Value retval;
 
           try {
@@ -427,7 +427,7 @@ namespace chaiscript
         Dot_Access_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Dot_Access, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Dot_Access_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           Boxed_Value retval;
           try {
             retval = this->children[0]->eval(t_ss);
@@ -439,7 +439,7 @@ namespace chaiscript
 
           if (this->children.size() > 1) {
             for (size_t i = 2; i < this->children.size(); i+=2) {
-              Param_List_Builder plb;
+              dispatch::Param_List_Builder plb;
               plb << retval;
 
               if (this->children[i]->children.size() > 1) {
@@ -462,8 +462,8 @@ namespace chaiscript
                 fun_name = this->children[i]->text;
               }
 
-              Dispatch_Engine::Stack prev_stack = t_ss.get_stack();
-              Dispatch_Engine::Stack new_stack = t_ss.new_stack();
+              chaiscript::detail::Dispatch_Engine::Stack prev_stack = t_ss.get_stack();
+              chaiscript::detail::Dispatch_Engine::Stack new_stack = t_ss.new_stack();
 
               try {
                 t_ss.set_stack(new_stack);
@@ -512,7 +512,7 @@ namespace chaiscript
         Quoted_String_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Quoted_String, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Quoted_String_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &){
           return const_var(this->text);
         }
 
@@ -523,7 +523,7 @@ namespace chaiscript
         Single_Quoted_String_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Single_Quoted_String, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Single_Quoted_String_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &){
           return const_var(char(this->text[0]));
         }
 
@@ -534,7 +534,7 @@ namespace chaiscript
         Lambda_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Lambda, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Lambda_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           std::vector<std::string> t_param_names;
           size_t numparams = 0;
 
@@ -550,8 +550,8 @@ namespace chaiscript
             numparams = 0;
           }
 
-          return Boxed_Value(Proxy_Function(new Dynamic_Proxy_Function
-                (boost::bind(&eval_function<Dispatch_Engine>, boost::ref(t_ss), this->children.back(), t_param_names, _1),
+          return Boxed_Value(Proxy_Function(new dispatch::Dynamic_Proxy_Function
+                (boost::bind(&eval_function<chaiscript::detail::Dispatch_Engine>, boost::ref(t_ss), this->children.back(), t_param_names, _1),
                  static_cast<int>(numparams), this->children.back())));
         }
 
@@ -562,7 +562,7 @@ namespace chaiscript
         Block_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Block, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Block_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           size_t num_children = this->children.size();
 
           t_ss.new_scope();
@@ -602,7 +602,7 @@ namespace chaiscript
         Def_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Def, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Def_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           std::vector<std::string> t_param_names;
           size_t numparams = 0;
           AST_NodePtr guardnode;
@@ -626,10 +626,10 @@ namespace chaiscript
             }
           }
 
-          boost::shared_ptr<Dynamic_Proxy_Function> guard;
+          boost::shared_ptr<dispatch::Dynamic_Proxy_Function> guard;
           if (guardnode) {
-            guard = boost::shared_ptr<Dynamic_Proxy_Function>
-              (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
+            guard = boost::shared_ptr<dispatch::Dynamic_Proxy_Function>
+              (new dispatch::Dynamic_Proxy_Function(boost::bind(&eval_function<chaiscript::detail::Dispatch_Engine>,
                                                       boost::ref(t_ss), guardnode,
                                                       t_param_names, _1), static_cast<int>(numparams), guardnode));
           }
@@ -638,7 +638,7 @@ namespace chaiscript
             const std::string & l_function_name = this->children[0]->text;
             const std::string & l_annotation = this->annotation?this->annotation->text:"";
             t_ss.add(Proxy_Function
-                (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
+                (new dispatch::Dynamic_Proxy_Function(boost::bind(&eval_function<chaiscript::detail::Dispatch_Engine>,
                                                         boost::ref(t_ss), this->children.back(),
                                                         t_param_names, _1), static_cast<int>(numparams), this->children.back(),
                                             l_annotation, guard)), l_function_name);
@@ -656,7 +656,7 @@ namespace chaiscript
         While_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::While, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~While_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           bool cond;
 
           t_ss.new_scope();
@@ -711,7 +711,7 @@ namespace chaiscript
         If_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::If, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~If_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           bool cond;
           try {
             cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
@@ -782,7 +782,7 @@ namespace chaiscript
         For_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::For, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~For_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           bool cond;
 
           t_ss.new_scope();
@@ -893,7 +893,7 @@ namespace chaiscript
         Inline_Array_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inline_Array, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inline_Array_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           std::vector<Boxed_Value> vec;
           if (this->children.size() > 0) {
             for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
@@ -917,7 +917,7 @@ namespace chaiscript
         Inline_Map_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inline_Map, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inline_Map_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           try {
             std::map<std::string, Boxed_Value> retval;
             for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
@@ -944,7 +944,7 @@ namespace chaiscript
         Return_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Return, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Return_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           if (this->children.size() > 0) {
             try {
               throw detail::Return_Value(this->children[0]->eval(t_ss));
@@ -966,7 +966,7 @@ namespace chaiscript
         File_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::File, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~File_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss) {
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss) {
           const size_t size = this->children.size(); 
           for (size_t i = 0; i < size; ++i) {
             try {
@@ -989,7 +989,7 @@ namespace chaiscript
         Prefix_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Prefix, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Prefix_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           try {
             return t_ss.call_function(this->children[0]->text, this->children[1]->eval(t_ss));
           }
@@ -1005,7 +1005,7 @@ namespace chaiscript
         Break_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Break, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Break_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &){
           throw detail::Break_Loop();
         }
     };
@@ -1029,7 +1029,7 @@ namespace chaiscript
         Inline_Range_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inline_Range, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inline_Range_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           try {
             return t_ss.call_function("generate_range",
                 this->children[0]->children[0]->children[0]->eval(t_ss),
@@ -1058,7 +1058,7 @@ namespace chaiscript
         Try_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Try, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Try_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           Boxed_Value retval;        
 
           t_ss.new_scope();
@@ -1300,7 +1300,7 @@ namespace chaiscript
         Method_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Method, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Method_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
 
           std::vector<std::string> t_param_names;
           AST_NodePtr guardnode;
@@ -1327,10 +1327,10 @@ namespace chaiscript
 
           size_t numparams = t_param_names.size();
 
-          boost::shared_ptr<Dynamic_Proxy_Function> guard;
+          boost::shared_ptr<dispatch::Dynamic_Proxy_Function> guard;
           if (guardnode) {
-            guard = boost::shared_ptr<Dynamic_Proxy_Function>
-              (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
+            guard = boost::shared_ptr<dispatch::Dynamic_Proxy_Function>
+              (new dispatch::Dynamic_Proxy_Function(boost::bind(&eval_function<chaiscript::detail::Dispatch_Engine>,
                                                       boost::ref(t_ss), guardnode,
                                                       t_param_names, _1), static_cast<int>(numparams), guardnode));
           }
@@ -1341,8 +1341,8 @@ namespace chaiscript
             const std::string & function_name = this->children[1]->text;
             if (function_name == class_name) {
               t_ss.add(Proxy_Function
-                  (new detail::Dynamic_Object_Constructor(class_name, Proxy_Function
-                                                          (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
+                  (new dispatch::detail::Dynamic_Object_Constructor(class_name, Proxy_Function
+                                                          (new dispatch::Dynamic_Proxy_Function(boost::bind(&eval_function<chaiscript::detail::Dispatch_Engine>,
                                                                                                   boost::ref(t_ss), this->children.back(),
                                                                                                   t_param_names, _1), static_cast<int>(numparams), this->children.back(),
                                                                                       l_annotation, guard)))), function_name);
@@ -1356,8 +1356,8 @@ namespace chaiscript
                 // No biggie, the type name is just not known
               }
               t_ss.add(Proxy_Function
-                  (new detail::Dynamic_Object_Function(class_name, Proxy_Function
-                                                       (new Dynamic_Proxy_Function(boost::bind(&eval_function<Dispatch_Engine>,
+                  (new dispatch::detail::Dynamic_Object_Function(class_name, Proxy_Function
+                                                       (new dispatch::Dynamic_Proxy_Function(boost::bind(&eval_function<chaiscript::detail::Dispatch_Engine>,
                                                                                                boost::ref(t_ss), this->children.back(),
                                                                                                t_param_names, _1), static_cast<int>(numparams), this->children.back(),
                                                                                    l_annotation, guard)), ti)), function_name);
@@ -1377,9 +1377,9 @@ namespace chaiscript
         Attr_Decl_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Attr_Decl, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Attr_Decl_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           try {
-            t_ss.add(fun(boost::function<Boxed_Value (Dynamic_Object &)>(boost::bind(&detail::Dynamic_Object_Attribute::func, this->children[0]->text,
+            t_ss.add(fun(boost::function<Boxed_Value (dispatch::Dynamic_Object &)>(boost::bind(&dispatch::detail::Dynamic_Object_Attribute::func, this->children[0]->text,
                       this->children[1]->text, _1))), this->children[1]->text);
 
           }
@@ -1431,7 +1431,7 @@ namespace chaiscript
         Logical_And_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Logical_And, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Logical_And_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           Boxed_Value retval;
           try {
             retval = this->children[0]->eval(t_ss);
@@ -1473,7 +1473,7 @@ namespace chaiscript
         Logical_Or_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Logical_Or, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Logical_Or_AST_Node() {}
-        virtual Boxed_Value eval(Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
           Boxed_Value retval;
 
           try {

@@ -45,7 +45,7 @@ struct System
   void add_callback(const std::string &t_name, 
       const chaiscript::Proxy_Function &t_func)
   {
-    m_callbacks[t_name] = chaiscript::functor<std::string (const std::string &)>(t_func);
+    m_callbacks[t_name] = chaiscript::dispatch::functor<std::string (const std::string &)>(t_func);
   }
 
 
@@ -163,9 +163,9 @@ int main(int /*argc*/, char * /*argv*/[]) {
   chai.add(fun(&bound_log, std::string("Msg")), "BoundFun");
 
   //Dynamic objects test
-  chai.add(chaiscript::Proxy_Function(new detail::Dynamic_Object_Function("TestType", fun(&hello_world))), "hello_world");
-  chai.add(chaiscript::Proxy_Function(new detail::Dynamic_Object_Constructor("TestType", fun(&hello_constructor))), "TestType");
-  chai.add(fun(boost::function<Boxed_Value (Dynamic_Object &)>(boost::bind(&detail::Dynamic_Object_Attribute::func, "TestType", "attr", _1))), "attr");
+  chai.add(chaiscript::Proxy_Function(new dispatch::detail::Dynamic_Object_Function("TestType", fun(&hello_world))), "hello_world");
+  chai.add(chaiscript::Proxy_Function(new dispatch::detail::Dynamic_Object_Constructor("TestType", fun(&hello_constructor))), "TestType");
+  chai.add(fun(boost::function<Boxed_Value (dispatch::Dynamic_Object &)>(boost::bind(&dispatch::detail::Dynamic_Object_Attribute::func, "TestType", "attr", _1))), "attr");
 
   chai.eval("var x = TestType()");
 //  chai.eval("x.attr = \"hi\"");

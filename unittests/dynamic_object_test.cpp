@@ -19,7 +19,7 @@ int main()
 
   chai("attr bob::z; def bob::bob() { this.z = 10 }; var x = bob()");
 
-  chaiscript::Dynamic_Object &mydo = chai.eval<chaiscript::Dynamic_Object &>("x");
+  chaiscript::dispatch::Dynamic_Object &mydo = chai.eval<chaiscript::dispatch::Dynamic_Object &>("x");
 
   assert_equal(mydo.get_type_name(), "bob");
 

@@ -23,35 +23,38 @@
 
 namespace chaiscript
 {
-  namespace detail
+  namespace dispatch
   {
+    namespace detail
+    {
 
-    /**
-     * Internal helper class for handling the return
-     * value of a build_function_caller
-     */
-    template<typename Ret>
-      struct Function_Caller_Ret
-      {
-        static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
-            const std::vector<Boxed_Value> &params)
+      /**
+       * Internal helper class for handling the return
+       * value of a build_function_caller
+       */
+      template<typename Ret>
+        struct Function_Caller_Ret
         {
-          return boxed_cast<Ret>(dispatch(t_funcs, params));
-        }
-      };
+          static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
+              const std::vector<Boxed_Value> &params)
+          {
+            return boxed_cast<Ret>(dispatch::dispatch(t_funcs, params));
+          }
+        };
 
-    /**
-     * Specialization for void return types
-     */
-    template<>
-      struct Function_Caller_Ret<void>
-      {
-        static void call(const std::vector<Const_Proxy_Function> &t_funcs, 
-            const std::vector<Boxed_Value> &params)
+      /**
+       * Specialization for void return types
+       */
+      template<>
+        struct Function_Caller_Ret<void>
         {
-          dispatch(t_funcs, params);
-        }
-      };
+          static void call(const std::vector<Const_Proxy_Function> &t_funcs, 
+              const std::vector<Boxed_Value> &params)
+          {
+            dispatch::dispatch(t_funcs, params);
+          }
+        };
+    }
   }
 }
 
@@ -65,47 +68,49 @@ namespace chaiscript
 
 namespace chaiscript
 {
-  namespace detail
+  namespace dispatch
   {
-    /**
-     * used internally for unwrapping a function call's types
-     */
-    template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-      Ret function_caller(const std::vector<Const_Proxy_Function> &funcs 
-          BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_BINARY_PARAMS(n, Param, p) )
-      {
-        std::vector<Boxed_Value> params;
-
-        BOOST_PP_REPEAT(n, addparam, ~)
-
-        return Function_Caller_Ret<Ret>::call(funcs, params);
-      }
-
-    /**
-     * used internally for unwrapping a function call's types
-     */
-    template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-      boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param)) > 
-      build_function_caller_helper(Ret (BOOST_PP_ENUM_PARAMS(n, Param)), const std::vector<Const_Proxy_Function> &funcs)
-      {
-        if (funcs.size() == 1)
+    namespace detail
+    {
+      /**
+       * used internally for unwrapping a function call's types
+       */
+      template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
+        Ret function_caller(const std::vector<Const_Proxy_Function> &funcs 
+            BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_BINARY_PARAMS(n, Param, p) )
         {
-          boost::shared_ptr<const Proxy_Function_Impl<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> > pfi = 
-            boost::dynamic_pointer_cast<const Proxy_Function_Impl<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> >
-            (funcs[0]);
+          std::vector<Boxed_Value> params;
 
-          if (pfi)
-          {
-            return pfi->internal_function();
-          } 
-          // looks like this either wasn't a Proxy_Function_Impl or the types didn't match
-          // we cannot make any other guesses or assumptions really, so continuing
+          BOOST_PP_REPEAT(n, addparam, ~)
+
+            return Function_Caller_Ret<Ret>::call(funcs, params);
         }
 
-        return boost::bind(&function_caller<Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>, funcs
-            BOOST_PP_ENUM_TRAILING(n, curry, ~));
-      }
+      /**
+       * used internally for unwrapping a function call's types
+       */
+      template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
+        boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param)) > 
+        build_function_caller_helper(Ret (BOOST_PP_ENUM_PARAMS(n, Param)), const std::vector<Const_Proxy_Function> &funcs)
+        {
+          if (funcs.size() == 1)
+          {
+            boost::shared_ptr<const Proxy_Function_Impl<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> > pfi = 
+              boost::dynamic_pointer_cast<const Proxy_Function_Impl<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> >
+              (funcs[0]);
 
+            if (pfi)
+            {
+              return pfi->internal_function();
+            } 
+            // looks like this either wasn't a Proxy_Function_Impl or the types didn't match
+            // we cannot make any other guesses or assumptions really, so continuing
+          }
+
+          return boost::bind(&function_caller<Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>, funcs
+              BOOST_PP_ENUM_TRAILING(n, curry, ~));
+        }
+    }
   }
 }
 #undef n

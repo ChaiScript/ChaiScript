@@ -31,7 +31,7 @@ namespace chaiscript
       P1 &assign_pod(P1 &p1, Boxed_POD_Value v)
       {
 
-        if (v.m_isfloat)
+        if (v.isfloat)
         {
           return (p1 = P1(v.d));
         } else {
@@ -42,7 +42,7 @@ namespace chaiscript
       template<typename P1>
       P1 construct_pod(Boxed_POD_Value v)
       {
-        if (v.m_isfloat)
+        if (v.isfloat)
         {
           return P1(v.d);
         } else {
@@ -53,7 +53,7 @@ namespace chaiscript
       template<typename P1>
       P1 &assign_bitwise_and_pod(P1 &p1, Boxed_POD_Value r)
       {
-        if (!r.m_isfloat)
+        if (!r.isfloat)
         {
           return p1 &= P1(r.i);
         }
@@ -64,7 +64,7 @@ namespace chaiscript
       template<typename P1>
       P1 &assign_xor_pod(P1 &p1, Boxed_POD_Value r)
       {
-        if (!r.m_isfloat)
+        if (!r.isfloat)
         {
           return p1 ^= P1(r.i);
         }
@@ -75,7 +75,7 @@ namespace chaiscript
       template<typename P1>
       P1 &assign_bitwise_or_pod(P1 &p1, Boxed_POD_Value r)
       {
-        if (!r.m_isfloat)
+        if (!r.isfloat)
         {
           return p1 |= P1(r.i);
         }
@@ -86,7 +86,7 @@ namespace chaiscript
       template<typename P1>
       P1 &assign_difference_pod(P1 &p1, Boxed_POD_Value r)
       {
-        if (r.m_isfloat)
+        if (r.isfloat)
         {
           return p1 -= P1(r.d);
         } else {
@@ -97,7 +97,7 @@ namespace chaiscript
       template<typename P1>
       P1 &assign_left_shift_pod(P1 &p1, Boxed_POD_Value r)
       {
-        if (!r.m_isfloat)
+        if (!r.isfloat)
         {
           return p1 <<= P1(r.i);
         }
@@ -109,7 +109,7 @@ namespace chaiscript
       template<typename P1>
       P1 &assign_product_pod(P1 &p1, Boxed_POD_Value r)
       {
-        if (r.m_isfloat)
+        if (r.isfloat)
         {
           return p1 *= P1(r.d);
         } else {
@@ -120,7 +120,7 @@ namespace chaiscript
       template<typename P1>
       P1 &assign_quotient_pod(P1 &p1, Boxed_POD_Value r)
       {
-        if (r.m_isfloat)
+        if (r.isfloat)
         {
           return p1 /= P1(r.d);
         } else {
@@ -131,7 +131,7 @@ namespace chaiscript
       template<typename P1>
       P1 &assign_remainder_pod(P1 &p1, Boxed_POD_Value r)
       {
-        if (!r.m_isfloat)
+        if (!r.isfloat)
         {
           return p1 %= P1(r.i);
         }
@@ -143,7 +143,7 @@ namespace chaiscript
       template<typename P1>
       P1 &assign_right_shift_pod(P1 &p1, Boxed_POD_Value r)
       {
-        if (!r.m_isfloat)
+        if (!r.isfloat)
         {
           return p1 >>= P1(r.i);
         }
@@ -155,7 +155,7 @@ namespace chaiscript
       template<typename P1>
       P1 &assign_sum_pod(P1 &p1, Boxed_POD_Value r)
       {
-        if (r.m_isfloat)
+        if (r.isfloat)
         {
           return p1 += P1(r.d);
         } else {
@@ -458,7 +458,7 @@ namespace chaiscript
 
         Const_Proxy_Function f = boxed_cast<Const_Proxy_Function>(params[0]);
 
-        return Boxed_Value(Const_Proxy_Function(new Bound_Function(f,
+        return Boxed_Value(Const_Proxy_Function(new dispatch::Bound_Function(f,
           std::vector<Boxed_Value>(params.begin() + 1, params.end()))));
       }
 
@@ -480,7 +480,7 @@ namespace chaiscript
 
       static bool has_guard(const Const_Proxy_Function &t_pf)
       {
-        boost::shared_ptr<const Dynamic_Proxy_Function> pf = boost::dynamic_pointer_cast<const Dynamic_Proxy_Function>(t_pf);
+        boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> pf = boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
         if (pf)
         {
           return pf->get_guard();
@@ -491,7 +491,7 @@ namespace chaiscript
 
       static Const_Proxy_Function get_guard(const Const_Proxy_Function &t_pf)
       {
-        boost::shared_ptr<const Dynamic_Proxy_Function> pf = boost::dynamic_pointer_cast<const Dynamic_Proxy_Function>(t_pf);
+        boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> pf = boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
         if (pf)
         {
           if (pf->get_guard())
@@ -509,7 +509,7 @@ namespace chaiscript
         throw bv;
       }
       
-      static boost::shared_ptr<Dispatch_Engine> bootstrap2(boost::shared_ptr<Dispatch_Engine> e = boost::shared_ptr<Dispatch_Engine> (new Dispatch_Engine()))
+      static boost::shared_ptr<chaiscript::detail::Dispatch_Engine> bootstrap2(boost::shared_ptr<chaiscript::detail::Dispatch_Engine> e = boost::shared_ptr<chaiscript::detail::Dispatch_Engine> (new chaiscript::detail::Dispatch_Engine()))
       {
         e->add(user_type<void>(), "void");
         return e;
@@ -535,7 +535,7 @@ namespace chaiscript
 
       template<typename FunctionType>
         static std::vector<Boxed_Value> do_return_boxed_value_vector(FunctionType f,
-            const Proxy_Function_Base *b)
+            const dispatch::Proxy_Function_Base *b)
         {
           typedef typename boost::function_types::result_type<FunctionType>::type Vector;
           Vector v = (b->*f)();
@@ -552,7 +552,7 @@ namespace chaiscript
         }
 
       template<typename Function>
-      static boost::function<std::vector<Boxed_Value> (const Proxy_Function_Base*)> return_boxed_value_vector(const Function &f)
+      static boost::function<std::vector<Boxed_Value> (const dispatch::Proxy_Function_Base*)> return_boxed_value_vector(const Function &f)
       {
         return boost::bind(&do_return_boxed_value_vector<Function>, f, _1);
       }
@@ -570,14 +570,14 @@ namespace chaiscript
         m->add(user_type<Proxy_Function>(), "function");
         m->add(user_type<std::exception>(), "exception");
 
-        m->add(fun(&Proxy_Function_Base::get_arity), "get_arity");
-        m->add(fun(&Proxy_Function_Base::annotation), "get_annotation");
-        m->add(fun(&Proxy_Function_Base::operator()), "call");
-        m->add(fun(&Proxy_Function_Base::operator==), "==");
+        m->add(fun(&dispatch::Proxy_Function_Base::get_arity), "get_arity");
+        m->add(fun(&dispatch::Proxy_Function_Base::annotation), "get_annotation");
+        m->add(fun(&dispatch::Proxy_Function_Base::operator()), "call");
+        m->add(fun(&dispatch::Proxy_Function_Base::operator==), "==");
 
         
-        m->add(fun(return_boxed_value_vector(&Proxy_Function_Base::get_param_types)), "get_param_types");
-        m->add(fun(return_boxed_value_vector(&Proxy_Function_Base::get_contained_functions)), "get_contained_functions");
+        m->add(fun(return_boxed_value_vector(&dispatch::Proxy_Function_Base::get_param_types)), "get_param_types");
+        m->add(fun(return_boxed_value_vector(&dispatch::Proxy_Function_Base::get_contained_functions)), "get_contained_functions");
 
 
         m->add(user_type<std::runtime_error>(), "runtime_error");
@@ -587,11 +587,11 @@ namespace chaiscript
         m->add(constructor<std::runtime_error (const std::string &)>(), "runtime_error");
         m->add(fun(boost::function<std::string (const std::runtime_error &)>(&what)), "what");     
 
-        m->add(user_type<Dynamic_Object>(), "Dynamic_Object");
-        m->add(constructor<Dynamic_Object (const std::string &)>(), "Dynamic_Object");
-        m->add(fun(&Dynamic_Object::get_type_name), "get_type_name");
-        m->add(fun(&Dynamic_Object::get_attrs), "get_attrs");
-        m->add(fun(&Dynamic_Object::get_attr), "get_attr");
+        m->add(user_type<dispatch::Dynamic_Object>(), "Dynamic_Object");
+        m->add(constructor<dispatch::Dynamic_Object (const std::string &)>(), "Dynamic_Object");
+        m->add(fun(&dispatch::Dynamic_Object::get_type_name), "get_type_name");
+        m->add(fun(&dispatch::Dynamic_Object::get_attrs), "get_attrs");
+        m->add(fun(&dispatch::Dynamic_Object::get_attr), "get_attr");
 
         m->eval("def Dynamic_Object::clone() { var new_o := Dynamic_Object(this.get_type_name()); for_each(this.get_attrs(), bind(fun(new_o, x) { new_o.get_attr(x.first) = x.second; }, new_o, _) ); return new_o; }");
 
@@ -648,14 +648,14 @@ namespace chaiscript
         m->add(fun(&print), "print_string");
         m->add(fun(&println), "println_string");
 
-        m->add(Proxy_Function(new Dynamic_Proxy_Function(boost::bind(&bind_function, _1))), 
+        m->add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(boost::bind(&bind_function, _1))), 
           "bind");
 
-        m->add(fun(&shared_ptr_unconst_clone<Proxy_Function_Base>), "clone");
-        m->add(fun(&ptr_assign<boost::remove_const<Proxy_Function_Base>::type>), "=");
-        m->add(fun(&ptr_assign<boost::add_const<Proxy_Function_Base>::type>), "=");
+        m->add(fun(&shared_ptr_unconst_clone<dispatch::Proxy_Function_Base>), "clone");
+        m->add(fun(&ptr_assign<boost::remove_const<dispatch::Proxy_Function_Base>::type>), "=");
+        m->add(fun(&ptr_assign<boost::add_const<dispatch::Proxy_Function_Base>::type>), "=");
 
-        m->add(Proxy_Function(new Dynamic_Proxy_Function(boost::bind(&call_exists, _1))), 
+        m->add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(boost::bind(&call_exists, _1))), 
           "call_exists");
 
         m->add(fun(&type_match), "type_match");

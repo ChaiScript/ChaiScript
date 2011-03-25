@@ -55,7 +55,7 @@ void version(int){
 bool throws_exception(const chaiscript::Proxy_Function &f)
 {
   try {
-    chaiscript::functor<void ()>(f)();
+    chaiscript::dispatch::functor<void ()>(f)();
   } catch (...) {
     return true;
   }
