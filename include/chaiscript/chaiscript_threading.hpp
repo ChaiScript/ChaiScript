@@ -23,6 +23,7 @@
 
 namespace chaiscript
 {
+  /// \internal
   namespace detail
   {
     namespace threading

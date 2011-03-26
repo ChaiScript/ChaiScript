@@ -1,0 +1,2 @@
+assert_throws("Mismatched types in equation, lhs is const.", fun() { 1 = 2 } );
+assert_throws("Mismatched types in equation, lhs is const.", fun() { 1 + 2 = 2 } );
