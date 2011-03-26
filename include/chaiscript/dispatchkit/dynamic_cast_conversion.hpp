@@ -15,10 +15,6 @@
 #include <boost/type_traits/is_polymorphic.hpp>
 #include <boost/type_traits/is_base_of.hpp>
 
-#ifndef CHAISCRIPT_NO_THREADS
-#include <boost/thread/shared_mutex.hpp>
-#endif
-
 namespace chaiscript
 {
   namespace exception
@@ -156,9 +152,7 @@ namespace chaiscript
         template<typename InItr>
         void cleanup(InItr begin, const InItr &end)
         {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::unique_lock<boost::shared_mutex> l(m_mutex);
-#endif
+          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           while (begin != end)
           {
@@ -173,28 +167,22 @@ namespace chaiscript
 
         void add_conversion(const boost::shared_ptr<Dynamic_Conversion> &conversion)
         {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::unique_lock<boost::shared_mutex> l(m_mutex);
-#endif
+          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           m_conversions.insert(conversion.get());
         }
 
-        bool has_conversion(const Type_Info &base, const Type_Info &derived)
+        bool has_conversion(const Type_Info &base, const Type_Info &derived) const
         {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::shared_lock<boost::shared_mutex> l(m_mutex);
-#endif
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           return find(base, derived) != m_conversions.end();
         }
 
 
-        Dynamic_Conversion *get_conversion(const Type_Info &base, const Type_Info &derived)
+        Dynamic_Conversion *get_conversion(const Type_Info &base, const Type_Info &derived) const
         {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::shared_lock<boost::shared_mutex> l(m_mutex);
-#endif
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           std::set<Dynamic_Conversion *>::const_iterator itr =
             find(base, derived);
@@ -211,7 +199,7 @@ namespace chaiscript
         Dynamic_Conversions() {}
 
         std::set<Dynamic_Conversion *>::const_iterator find(
-            const Type_Info &base, const Type_Info &derived)
+            const Type_Info &base, const Type_Info &derived) const
         {
           for (std::set<Dynamic_Conversion *>::const_iterator itr = m_conversions.begin();
                itr != m_conversions.end();
@@ -225,9 +213,8 @@ namespace chaiscript
 
           return m_conversions.end();
         }
-#ifndef CHAISCRIPT_NO_THREADS
-        boost::shared_mutex m_mutex;
-#endif
+
+        mutable chaiscript::detail::threading::shared_mutex m_mutex;
         std::set<Dynamic_Conversion *> m_conversions;
     };
   }

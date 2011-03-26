@@ -395,9 +395,7 @@ namespace chaiscript
             throw exception::global_non_const();
           }
 
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::unique_lock<boost::shared_mutex> l(m_global_object_mutex);
-#endif
+          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_global_object_mutex);
 
           m_state.m_global_objects[name] = obj;
         }
@@ -476,9 +474,7 @@ namespace chaiscript
 
           // Is the value we are looking for a global?
           {
-#ifndef CHAISCRIPT_NO_THREADS
-            boost::shared_lock<boost::shared_mutex> l(m_global_object_mutex);
-#endif
+            chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_global_object_mutex);
 
             std::map<std::string, Boxed_Value>::const_iterator itr = m_state.m_global_objects.find(name);
             if (itr != m_state.m_global_objects.end())
@@ -512,9 +508,7 @@ namespace chaiscript
         {
           add_global_const(const_var(ti), name + "_type");
 
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::unique_lock<boost::shared_mutex> l(m_mutex);
-#endif
+          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           m_state.m_types.insert(std::make_pair(name, ti));
         }
@@ -524,9 +518,7 @@ namespace chaiscript
          */
         Type_Info get_type(const std::string &name) const
         {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::shared_lock<boost::shared_mutex> l(m_mutex);
-#endif
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           Type_Name_Map::const_iterator itr = m_state.m_types.find(name);
 
@@ -545,9 +537,7 @@ namespace chaiscript
          */
         std::string get_type_name(const Type_Info &ti) const
         {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::shared_lock<boost::shared_mutex> l(m_mutex);
-#endif
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           for (Type_Name_Map::const_iterator itr = m_state.m_types.begin();
               itr != m_state.m_types.end();
@@ -567,9 +557,7 @@ namespace chaiscript
          */
         std::vector<std::pair<std::string, Type_Info> > get_types() const
         {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::shared_lock<boost::shared_mutex> l(m_mutex);
-#endif
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           return std::vector<std::pair<std::string, Type_Info> >(m_state.m_types.begin(), m_state.m_types.end());
         }
@@ -580,9 +568,7 @@ namespace chaiscript
         std::vector< Proxy_Function >
           get_function(const std::string &t_name) const
           {
-#ifndef CHAISCRIPT_NO_THREADS
-            boost::shared_lock<boost::shared_mutex> l(m_mutex);
-#endif
+            chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
             const std::map<std::string, std::vector<Proxy_Function> > &funs = get_functions_int();
 
@@ -603,9 +589,7 @@ namespace chaiscript
          */
         bool function_exists(const std::string &name) const
         {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::shared_lock<boost::shared_mutex> l(m_mutex);
-#endif
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           const std::map<std::string, std::vector<Proxy_Function> > &functions = get_functions_int();
           return functions.find(name) != functions.end();
@@ -616,9 +600,8 @@ namespace chaiscript
          */
         std::vector<std::pair<std::string, Proxy_Function > > get_functions() const
         {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::shared_lock<boost::shared_mutex> l(m_mutex);
-#endif
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+
           std::vector<std::pair<std::string, Proxy_Function> > rets;
 
           const std::map<std::string, std::vector<Proxy_Function> > &functions = get_functions_int();
@@ -640,9 +623,7 @@ namespace chaiscript
 
         void add_reserved_word(const std::string &name)
         {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::unique_lock<boost::shared_mutex> l(m_mutex);
-#endif
+          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           m_state.m_reserved_words.insert(name);
         }
@@ -779,20 +760,16 @@ namespace chaiscript
 
         State get_state()
         {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::unique_lock<boost::shared_mutex> l(m_mutex);
-          boost::unique_lock<boost::shared_mutex> l2(m_global_object_mutex);
-#endif
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l2(m_global_object_mutex);
 
           return m_state;
         }
 
         void set_state(const State &t_state)
         {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::unique_lock<boost::shared_mutex> l(m_mutex);
-          boost::unique_lock<boost::shared_mutex> l2(m_global_object_mutex);
-#endif
+          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l2(m_global_object_mutex);
 
           m_state = t_state;
         }
@@ -918,9 +895,7 @@ namespace chaiscript
          */
         void validate_object_name(const std::string &name) const
         {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::shared_lock<boost::shared_mutex> l(m_mutex);
-#endif
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           if (m_state.m_reserved_words.find(name) != m_state.m_reserved_words.end())
           {
@@ -935,9 +910,7 @@ namespace chaiscript
          */
         bool add_function(const Proxy_Function &t_f, const std::string &t_name)
         {
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::unique_lock<boost::shared_mutex> l(m_mutex);
-#endif
+          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           std::map<std::string, std::vector<Proxy_Function> > &funcs = get_functions_int();
 
@@ -968,10 +941,8 @@ namespace chaiscript
           return true;
         }
 
-#ifndef CHAISCRIPT_NO_THREADS
-        mutable boost::shared_mutex m_mutex;
-        mutable boost::shared_mutex m_global_object_mutex;
-#endif
+        mutable chaiscript::detail::threading::shared_mutex m_mutex;
+        mutable chaiscript::detail::threading::shared_mutex m_global_object_mutex;
 
         struct Stack_Holder
         {

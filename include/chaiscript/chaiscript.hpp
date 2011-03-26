@@ -7,15 +7,28 @@
 #ifndef CHAISCRIPT_HPP_
 #define CHAISCRIPT_HPP_
 
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/function.hpp>
 
-#include <stdexcept>
-#include <iostream>
-#include <map>
-#include <fstream>
-#include <boost/shared_ptr.hpp>
+
+/// \mainpage
+/// <a href="http://www.chaiscript.com">ChaiScript</a> is a scripting language designed specifically for integration with C++. It provides
+/// seamless integration with C++ on all levels, including shared_ptr objects, functors and exceptions.
+/// 
+/// The parts of the ChaiScript API that the average user will be concerned with are contained in the 
+/// chaiscript namespace and the chaiscript::ChaiScript class.
+///
+/// The end user parts of the API are extremely simple both in size and ease of use.
+///
+/// Currently, all source control and project management aspects of ChaiScript occur on <a href="http://www.github.com">github</a>.
+///
+/// \sa chaiscript
+/// \sa chaiscript::ChaiScript
+/// \sa http://www.chaiscript.com
+/// \sa http://www.github.com/ChaiScript/ChaiScript
+
+
+/// \namespace chaiscript
+/// The chaiscript namespace contains every API call that the average user will be concerned with.
+
 
 #include "dispatchkit/dispatchkit.hpp"
 #include "dispatchkit/bootstrap.hpp"

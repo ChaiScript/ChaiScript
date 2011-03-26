@@ -223,10 +223,9 @@ namespace chaiscript
   }
 
   class ChaiScript {
-#ifndef CHAISCRIPT_NO_THREADS
-    mutable boost::shared_mutex m_mutex;
-    mutable boost::recursive_mutex m_use_mutex;
-#endif
+
+    mutable chaiscript::detail::threading::shared_mutex m_mutex;
+    mutable chaiscript::detail::threading::recursive_mutex m_use_mutex;
 
     std::set<std::string> m_used_files;
     std::map<std::string, detail::Loadable_Module_Ptr> m_loaded_modules;
@@ -280,17 +279,13 @@ namespace chaiscript
         try {
           const std::string appendedpath = m_usepaths[i] + t_filename;
 
-#ifndef CHAISCRIPT_NO_THREADS
-          boost::lock_guard<boost::recursive_mutex> l(m_use_mutex);
-          boost::shared_lock<boost::shared_mutex> l2(m_mutex);
-#endif
+          chaiscript::detail::threading::lock_guard<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l2(m_mutex);
 
           if (m_used_files.count(appendedpath) == 0)
           {
-#ifndef CHAISCRIPT_NO_THREADS
             m_used_files.insert(appendedpath);
             l2.unlock();
-#endif
             eval_file(appendedpath);
           }
         } catch (const exception::file_not_found_error &) {
@@ -403,10 +398,8 @@ namespace chaiscript
      */
     State get_state()
     {
-#ifndef CHAISCRIPT_NO_THREADS
-      boost::lock_guard<boost::recursive_mutex> l(m_use_mutex);
-      boost::shared_lock<boost::shared_mutex> l2(m_mutex);
-#endif
+      chaiscript::detail::threading::lock_guard<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
+      chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l2(m_mutex);
 
       State s;
       s.used_files = m_used_files;
@@ -420,10 +413,8 @@ namespace chaiscript
      */
     void set_state(const State &t_state)
     {
-#ifndef CHAISCRIPT_NO_THREADS
-      boost::lock_guard<boost::recursive_mutex> l(m_use_mutex);
-      boost::shared_lock<boost::shared_mutex> l2(m_mutex);
-#endif
+      chaiscript::detail::threading::lock_guard<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
+      chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l2(m_mutex);
 
       m_used_files = t_state.used_files;
       m_active_loaded_modules = t_state.active_loaded_modules;
@@ -505,9 +496,7 @@ namespace chaiscript
      */
     void load_module(const std::string &t_module_name, const std::string &t_filename)
     {
-#ifndef CHAISCRIPT_NO_THREADS
-      boost::lock_guard<boost::recursive_mutex> l(m_use_mutex);
-#endif
+      chaiscript::detail::threading::lock_guard<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
 
       if (m_loaded_modules.count(t_module_name) == 0)
       {
