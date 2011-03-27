@@ -89,22 +89,29 @@ namespace chaiscript
     struct Int_AST_Node : public AST_Node {
       public:
         Int_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Int, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col), m_value(const_var(int(atoi(this->text.c_str())))) { }
         virtual ~Int_AST_Node() {}
         virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &){
-          return const_var(int(atoi(this->text.c_str())));
+          return m_value;
         }
+
+      private:
+        Boxed_Value m_value;
 
     };
 
     struct Float_AST_Node : public AST_Node {
       public:
         Float_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Float, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
+          m_value(const_var(double(atof(this->text.c_str())))) { }
         virtual ~Float_AST_Node() {}
         virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &){
-          return const_var(double(atof(this->text.c_str())));
+          return m_value;
         }
+
+      private:
+        Boxed_Value m_value;
 
     };
 
@@ -472,7 +479,7 @@ namespace chaiscript
               }
               catch(const exception::dispatch_error &e){
                 t_ss.set_stack(prev_stack);
-                throw exception::eval_error(std::string(e.what()));
+                throw exception::eval_error(std::string(e.what()) + " for function: " + fun_name);
               }
               catch(detail::Return_Value &rv) {
                 t_ss.set_stack(prev_stack);
@@ -510,23 +517,30 @@ namespace chaiscript
     struct Quoted_String_AST_Node : public AST_Node {
       public:
         Quoted_String_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Quoted_String, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
+          m_value(const_var(this->text)) { }
         virtual ~Quoted_String_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &){
-          return const_var(this->text);
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &) {
+          return m_value;
         }
+
+      private:
+        Boxed_Value m_value;
 
     };
 
     struct Single_Quoted_String_AST_Node : public AST_Node {
       public:
         Single_Quoted_String_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Single_Quoted_String, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
+          m_value(const_var(char(this->text[0]))) { }
         virtual ~Single_Quoted_String_AST_Node() {}
         virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &){
-          return const_var(char(this->text[0]));
+          return m_value;
         }
 
+      private:
+        Boxed_Value m_value;
     };
 
     struct Lambda_AST_Node : public AST_Node {
@@ -656,7 +670,7 @@ namespace chaiscript
         While_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::While, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~While_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss) {
           bool cond;
 
           t_ss.new_scope();

@@ -61,48 +61,57 @@ namespace chaiscript
    * The struct that doubles as both a parser ast_node and an AST node
    */
   struct AST_Node {
-    std::string text;
-    int identifier;
-    boost::shared_ptr<std::string> filename;
-    File_Position start, end;
-    std::vector<AST_NodePtr> children;
-    AST_NodePtr annotation;
+    public:
+      const std::string text;
+      const int identifier;
+      boost::shared_ptr<const std::string> filename;
+      File_Position start, end;
+      std::vector<AST_NodePtr> children;
+      AST_NodePtr annotation;
 
-    AST_Node(const std::string &t_ast_node_text, int t_id, const boost::shared_ptr<std::string> &t_fname, 
-             int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
-      text(t_ast_node_text), identifier(t_id), filename(t_fname),
-      start(t_start_line, t_start_col), end(t_end_line, t_end_col)
-    {
-    }
+      /**
+       * Prints the contents of an AST node, including its children, recursively
+       */
+      std::string to_string(std::string t_prepend = "") {
+        std::ostringstream oss;
 
-    AST_Node(const std::string &t_ast_node_text, int t_id, const boost::shared_ptr<std::string> &t_fname) :
-      text(t_ast_node_text), identifier(t_id), filename(t_fname) {}
-
-    virtual ~AST_Node() {}
-
-    /**
-     * Prints the contents of an AST node, including its children, recursively
-     */
-    std::string to_string(std::string t_prepend = "") {
-      std::ostringstream oss;
-
-      oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
-          << this->text << " : " << this->start.line << ", " << this->start.column << std::endl;
-      
-      for (unsigned int j = 0; j < this->children.size(); ++j) {
-        oss << this->children[j]->to_string(t_prepend + "  ");
+        oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
+            << this->text << " : " << this->start.line << ", " << this->start.column << std::endl;
+        
+        for (unsigned int j = 0; j < this->children.size(); ++j) {
+          oss << this->children[j]->to_string(t_prepend + "  ");
+        }
+        return oss.str();
       }
-      return oss.str();
-    }
 
-    std::string internal_to_string() {
-      return to_string();
-    }
+      std::string internal_to_string() {
+        return to_string();
+      }
 
-    virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &) {
-      Boxed_Value bv;
-      throw std::runtime_error("Undispatched ast_node (internal error)");
-    }
+      virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &) 
+      {
+        Boxed_Value bv;
+        throw std::runtime_error("Undispatched ast_node (internal error)");
+      }
+
+      void replace_child(const AST_NodePtr &t_child, const AST_NodePtr &t_new_child)
+      {
+        std::replace(children.begin(), children.end(), t_child, t_new_child);
+      }
+
+    protected:
+      AST_Node(const std::string &t_ast_node_text, int t_id, const boost::shared_ptr<std::string> &t_fname, 
+          int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
+        text(t_ast_node_text), identifier(t_id), filename(t_fname),
+        start(t_start_line, t_start_col), end(t_end_line, t_end_col)
+      {
+      }
+
+      AST_Node(const std::string &t_ast_node_text, int t_id, const boost::shared_ptr<std::string> &t_fname) :
+        text(t_ast_node_text), identifier(t_id), filename(t_fname) {}
+
+      virtual ~AST_Node() {}
+
   };
 
 

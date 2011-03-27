@@ -62,7 +62,7 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflect
 
   CHAISCRIPT_CLASS( m, 
       chaiscript::AST_Node,
-      (chaiscript::AST_Node (const std::string &, int, const boost::shared_ptr<std::string> &)),
+      ,
       ((text))
       ((identifier))
       ((filename))
@@ -70,6 +70,7 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflect
       ((end))
       ((internal_to_string))
       ((children))
+      ((replace_child))
     );
 
   CHAISCRIPT_CLASS( m, 

@@ -1312,7 +1312,12 @@ namespace chaiscript
               has_matches = false;
               if (Keyword("else", true)) {
                 if (Keyword("if")) {
-                  m_match_stack.back()->text = "else if";
+                  AST_NodePtr back(m_match_stack.back());
+                  m_match_stack.back() = AST_NodePtr(new eval::If_AST_Node("else if", back->identifier)); 
+                  m_match_stack.back()->start = back->start;
+                  m_match_stack.back()->end = back->end;
+                  m_match_stack.back()->children = back->children;
+                  m_match_stack.back()->annotation = back->annotation;
                   if (!Char('(')) {
                     throw exception::eval_error("Incomplete 'else if' expression", File_Position(m_line, m_col), *m_filename);
                   }
