@@ -90,7 +90,6 @@ namespace chaiscript
 
       virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &) 
       {
-        Boxed_Value bv;
         throw std::runtime_error("Undispatched ast_node (internal error)");
       }
 
@@ -175,6 +174,26 @@ namespace chaiscript
     struct Break_Loop {
       Break_Loop() { }
     };
+
+    /// Creates a new scope then pops it on destruction
+    struct Scope_Push_Pop
+    {
+      Scope_Push_Pop(chaiscript::detail::Dispatch_Engine &t_de)
+        : m_de(t_de)
+      {
+        m_de.new_scope();
+      }
+
+      ~Scope_Push_Pop()
+      {
+        m_de.pop_scope();
+      }
+
+
+      private:
+        chaiscript::detail::Dispatch_Engine &m_de;
+    };
+
   }
 }
 
