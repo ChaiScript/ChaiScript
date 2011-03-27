@@ -512,19 +512,6 @@ namespace chaiscript
 
 
     /**
-     * Helper for calling script code as if it were native C++ code
-     * example:
-     * boost::function<int (int, int)> f = build_functor(chai, "func(x, y){x+y}");
-     * \return a boost::function representing the passed in script
-     * \param[in] script Script code to build a function from
-     */
-    template<typename FunctionType>
-    boost::function<FunctionType> functor(const std::string &t_script)
-    {
-      return chaiscript::dispatch::functor<FunctionType>(eval(t_script));
-    }
-
-    /**
      * Evaluate a string via eval method
      */
     Boxed_Value operator()(const std::string &t_script)

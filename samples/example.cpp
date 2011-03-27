@@ -115,7 +115,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   //Call bound version of do_callbacks
   chai("do_callbacks()");
 
-  boost::function<void ()> caller = chai.functor<void ()>("fun() { system.do_callbacks(\"From Functor\"); }");
+  boost::function<void ()> caller = chai.eval<boost::function<void ()> >("fun() { system.do_callbacks(\"From Functor\"); }");
   caller();
 
 
@@ -139,7 +139,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   //To do: Add examples of handling Boxed_Values directly when needed
 
   //Creating a functor on the stack and using it immediatly 
-  int x = chai.functor<int (int, int)>("fun (x, y) { return x + y; }")(5, 6);
+  int x = chai.eval<boost::function<int (int, int)> >("fun (x, y) { return x + y; }")(5, 6);
 
   log("Functor test output", boost::lexical_cast<std::string>(x));
 

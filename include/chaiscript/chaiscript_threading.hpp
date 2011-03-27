@@ -23,20 +23,24 @@
 
 namespace chaiscript
 {
-  /// \internal
   namespace detail
   {
+    /// If threading is enabled, then this namespace contains boost::thread classes.
+    /// If threading is not enabled, then stubbed in wrappers that do nothing are provided.
+    /// This allows us to avoid #ifdef code in the sections that need thread safety.
     namespace threading
     {
 
 #ifndef CHAISCRIPT_NO_THREADS
-      using boost::unique_lock;
+      using boost::unique_lock; 
       using boost::shared_lock;
       using boost::lock_guard;
       using boost::shared_mutex;
       using boost::recursive_mutex;
 
 
+      /// Typesafe thread specific storage. If threading is enabled, this class uses boost::thread_specific_ptr<T>. If
+      /// threading is not enabled, the class always returns the same data, regardless of which thread it is called from.
       template<typename T>
         class Thread_Storage
         {

@@ -7,15 +7,15 @@ int main()
 
   chai.eval("def func() { print(\"Hello World\"); } ");
 
-  boost::function<void ()> f = chai.functor<void ()>("func");
+  boost::function<void ()> f = chai.eval<boost::function<void ()> >("func");
   f();
 
-  if (chai.functor<std::string (int)>("to_string")(6) != "6")
+  if (chai.eval<boost::function<std::string (int)> >("to_string")(6) != "6")
   {
     return EXIT_FAILURE;
   }
 
-  if (chai.functor<std::string (const chaiscript::Boxed_Value &)>("to_string")(chaiscript::var(6)) == "6")
+  if (chai.eval<boost::function<std::string (const chaiscript::Boxed_Value &)> >("to_string")(chaiscript::var(6)) == "6")
   {
     return EXIT_SUCCESS;
   } else {

@@ -21,16 +21,14 @@ namespace chaiscript
     namespace detail
     {
 
-      /* Special helpers for generating generic "POD" type operators
-      * The POD operators are needed for general support of C++ POD
-      * types without iterating out all possible combinations of operators
-      * (<, >, +, +=, *=, \=, -, <=, >=, ==) and types
-      * (char, uint8_t, int8_t, uint16_t, int16_t...)
-      */
+      /// \brief Assigns a POD value from a Boxed_POD_Value. Helps support operators between
+      ///        disparate POD types.
+      /// \param[in,out] p1 object to assign to
+      /// \param[in] v Boxed_POD_Value to assign from
+      /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
-      P1 &assign_pod(P1 &p1, Boxed_POD_Value v)
+      P1 &assign_pod(P1 &p1, const Boxed_POD_Value &v)
       {
-
         if (v.isfloat)
         {
           return (p1 = P1(v.d));
@@ -39,6 +37,9 @@ namespace chaiscript
         }
       }
 
+      /// \brief Constructs a new POD value object from a Boxed_POD_Value
+      /// \param[in] v Boxed_POD_Value to copy into the new object
+      /// \returns The newly created object.
       template<typename P1>
       P1 construct_pod(Boxed_POD_Value v)
       {
@@ -50,6 +51,10 @@ namespace chaiscript
         }    
       }
 
+      /// \brief Performs a bitwise and assignment (&=) on the given object with the given Boxed_POD_Value
+      /// \param[in,out] p1 object to bitwise and assign to
+      /// \param[in] r Boxed_POD_Value to assign from
+      /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
       P1 &assign_bitwise_and_pod(P1 &p1, Boxed_POD_Value r)
       {
@@ -61,6 +66,10 @@ namespace chaiscript
         throw exception::bad_boxed_cast("&= only valid for integer types");
       }
 
+      /// \brief Performs a xor assignment (^=) on the given object with the given Boxed_POD_Value
+      /// \param[in,out] p1 object to xor assign to
+      /// \param[in] r Boxed_POD_Value to assign from
+      /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
       P1 &assign_xor_pod(P1 &p1, Boxed_POD_Value r)
       {
@@ -72,6 +81,10 @@ namespace chaiscript
         throw exception::bad_boxed_cast("^= only valid for integer types");
       }
 
+      /// \brief Performs a bitwise or assignment (|=) on the given object with the given Boxed_POD_Value
+      /// \param[in,out] p1 object to bitwise or assign to
+      /// \param[in] r Boxed_POD_Value to assign from
+      /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
       P1 &assign_bitwise_or_pod(P1 &p1, Boxed_POD_Value r)
       {
@@ -83,6 +96,10 @@ namespace chaiscript
         throw exception::bad_boxed_cast("&= only valid for integer types");
       }
 
+      /// \brief Performs an assign difference (-=) on the given object with the given Boxed_POD_Value
+      /// \param[in,out] p1 object to difference assign to
+      /// \param[in] r Boxed_POD_Value to assign from
+      /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
       P1 &assign_difference_pod(P1 &p1, Boxed_POD_Value r)
       {
@@ -94,6 +111,10 @@ namespace chaiscript
         }
       }
 
+      /// \brief Performs an assign shift left (<<=) on the given object with the given Boxed_POD_Value
+      /// \param[in,out] p1 object to assign shift left to
+      /// \param[in] r Boxed_POD_Value to assign from
+      /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
       P1 &assign_left_shift_pod(P1 &p1, Boxed_POD_Value r)
       {
@@ -106,6 +127,10 @@ namespace chaiscript
       }
 
 
+      /// \brief Performs an assign product (*=) on the given object with the given Boxed_POD_Value
+      /// \param[in,out] p1 object to assign product to
+      /// \param[in] r Boxed_POD_Value to assign from
+      /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
       P1 &assign_product_pod(P1 &p1, Boxed_POD_Value r)
       {
@@ -117,6 +142,10 @@ namespace chaiscript
         }
       }
 
+      /// \brief Performs an assign quotient (/=) on the given object with the given Boxed_POD_Value
+      /// \param[in,out] p1 object to assign quotient to
+      /// \param[in] r Boxed_POD_Value to assign from
+      /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
       P1 &assign_quotient_pod(P1 &p1, Boxed_POD_Value r)
       {
@@ -128,6 +157,10 @@ namespace chaiscript
         }
       }
 
+      /// \brief Performs an assign remainder (%=) on the given object with the given Boxed_POD_Value
+      /// \param[in,out] p1 object to assign remainder to
+      /// \param[in] r Boxed_POD_Value to assign from
+      /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
       P1 &assign_remainder_pod(P1 &p1, Boxed_POD_Value r)
       {
@@ -140,6 +173,10 @@ namespace chaiscript
       }
 
 
+      /// \brief Performs an assign shift right (>>=) on the given object with the given Boxed_POD_Value
+      /// \param[in,out] p1 object to assign shift right to
+      /// \param[in] r Boxed_POD_Value to assign from
+      /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
       P1 &assign_right_shift_pod(P1 &p1, Boxed_POD_Value r)
       {
@@ -151,7 +188,10 @@ namespace chaiscript
         throw exception::bad_boxed_cast(">>= only valid for integer types");
       }
 
-
+      /// \brief Performs an assign sum (+=) on the given object with the given Boxed_POD_Value
+      /// \param[in,out] p1 object to sum assign to
+      /// \param[in] r Boxed_POD_Value to assign from
+      /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
       P1 &assign_sum_pod(P1 &p1, Boxed_POD_Value r)
       {
@@ -165,6 +205,10 @@ namespace chaiscript
 
     }
 
+    /// \brief Add all comparison operators for the templated type. Used during bootstrap, also available to users.
+    /// \tparam T Type to create comparison operators for
+    /// \param[in,out] m module to add comparison operators to
+    /// \returns the passed in ModulePtr or the newly constructed one if the default params are used.
     template<typename T>
     ModulePtr opers_comparison(ModulePtr m = ModulePtr(new Module()))
     {
@@ -177,6 +221,12 @@ namespace chaiscript
       return m;
     }
 
+
+    /// \brief Add all arithmetic operators appropriate for integers for the templated type. 
+    ///        Used during bootstrap, also available to users.
+    /// \tparam T Type to create arithmetic operators for
+    /// \param[in,out] m module to add arithmetic operators to
+    /// \returns the passed in ModulePtr or the newly constructed one if the default params are used.
     template<typename T>
     ModulePtr opers_integer_arithmetic(ModulePtr m = ModulePtr(new Module()))
     {
@@ -209,6 +259,11 @@ namespace chaiscript
       return m;
     }
 
+    /// \brief Add all arithmetic operators appropriate for floating point numbers for the templated type. 
+    ///        Used during bootstrap, also available to users.
+    /// \tparam T Type to create arithmetic operators for
+    /// \param[in,out] m module to add arithmetic operators to
+    /// \returns the passed in ModulePtr or the newly constructed one if the default params are used.
     template<typename T>
     ModulePtr opers_float_arithmetic(ModulePtr m = ModulePtr(new Module()))
     {
@@ -226,9 +281,11 @@ namespace chaiscript
       return m;
     }
 
-    /**
-    * Add a copy constructor for type T
-    */
+    /// \brief Adds a copy constructor for the given type to the given Model
+    /// \param[in] type The name of the type. The copy constructor will be named "type".
+    /// \param[in,out] m The Module to add the copy constructor to
+    /// \tparam T The type to add a copy constructor for
+    /// \returns The passed in ModulePtr, or the newly constructed one if the default param is used
     template<typename T>
     ModulePtr copy_constructor(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
@@ -236,9 +293,13 @@ namespace chaiscript
       return m;
     }
 
-    /**
-    * Add default and copy constructors for type T
-    */
+    /// \brief Adds default and copy constructors for the given type
+    /// \param[in] type The name of the type to add the constructors for.
+    /// \param[in,out] m The Module to add the basic constructors to
+    /// \tparam T Type to generate basic constructors for
+    /// \returns The passed in ModulePtr, or the newly constructed one if the default param is used
+    /// \sa copy_constructor
+    /// \sa constructor
     template<typename T>
     ModulePtr basic_constructors(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
@@ -247,9 +308,10 @@ namespace chaiscript
       return m;
     }
 
-    /**
-    * Add POD type constructor for type T. ie: T = type(POD)
-    */
+    /// \brief Adds a constructor for a POD type 
+    /// \tparam T The type to add the constructor for
+    /// \param[in] T The name of the type
+    /// \param[in,out] m The Module to add the constructor to
     template<typename T>
     ModulePtr construct_pod(const std::string &type, ModulePtr m = ModulePtr(new Module()))
     {
@@ -257,16 +319,6 @@ namespace chaiscript
       return m;
     }
 
-    /**
-    * add user defined single parameter constructor for type T.
-    * T = type(const U &)
-    */
-    template<typename T, typename U>
-    ModulePtr constructor_overload(const std::string &type, ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(constructor<T (const U &)>(), type);
-      return m;
-    }
 
     /**
     * to_string function for internal use. Uses ostream operator<<
@@ -558,9 +610,9 @@ namespace chaiscript
       }
 
     public:
-      /**
-      * perform all common bootstrap functions for std::string, void and POD types
-      */
+      /// \brief perform all common bootstrap functions for std::string, void and POD types
+      /// \param[in,out] m Module to add bootstrapped functions to
+      /// \returns passed in ModulePtr, or newly created one if default argument is used
       static ModulePtr bootstrap(ModulePtr m = ModulePtr(new Module()))
       {
         m->add(user_type<void>(), "void");
