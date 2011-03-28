@@ -63,6 +63,17 @@ bool throws_exception(const boost::function<void ()> &f)
   return false;
 }
 
+chaiscript::exception::eval_error get_eval_error(const boost::function<void ()> &f)
+{
+  try {
+    f();
+  } catch (const chaiscript::exception::eval_error &e) {
+    return e;
+  }
+
+  throw std::runtime_error("no exception throw");
+}
+
 std::string get_next_command() {
   std::string retval("quit");
   if ( ! std::cin.eof() ) {
@@ -158,6 +169,7 @@ int main(int argc, char *argv[])
   chai.add(chaiscript::fun(&help), "help");
   chai.add(chaiscript::fun(&version), "version");
   chai.add(chaiscript::fun(&throws_exception), "throws_exception");
+  chai.add(chaiscript::fun(&get_eval_error), "get_eval_error");
 
   for (int i = 0; i < argc; ++i) {
     if ( i == 0 && argc > 1 ) {
@@ -209,9 +221,13 @@ int main(int argc, char *argv[])
       std::cout << ee.what();
       if (ee.call_stack.size() > 0) {
         std::cout << "during evaluation at (" << *(ee.call_stack[0]->filename) << " " << ee.call_stack[0]->start.line << ", " << ee.call_stack[0]->start.column << ")";
-        for (unsigned int j = 1; j < ee.call_stack.size(); ++j) {
-          std::cout << std::endl;
-          std::cout << "  from " << *(ee.call_stack[j]->filename) << " (" << ee.call_stack[j]->start.line << ", " << ee.call_stack[j]->start.column << ")";
+        for (size_t j = 1; j < ee.call_stack.size(); ++j) {
+          if (ee.call_stack[j]->identifier != chaiscript::AST_Node_Type::Block
+              && ee.call_stack[j]->identifier != chaiscript::AST_Node_Type::File)
+          {
+            std::cout << std::endl;
+            std::cout << "  from " << *(ee.call_stack[j]->filename) << " (" << ee.call_stack[j]->start.line << ", " << ee.call_stack[j]->start.column << ")";
+          }
         }
       }
       std::cout << std::endl;

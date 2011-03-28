@@ -53,6 +53,13 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflect
   chaiscript::bootstrap::standard_library::vector_type<std::vector<boost::shared_ptr<chaiscript::AST_Node> > >("AST_NodeVector", m);
 
   CHAISCRIPT_CLASS( m,
+      chaiscript::exception::eval_error,
+      ,
+      ((reason))
+      ((call_stack))
+    );
+
+  CHAISCRIPT_CLASS( m,
       chaiscript::File_Position,
       (chaiscript::File_Position())
       (chaiscript::File_Position(int,int)),

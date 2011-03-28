@@ -28,9 +28,6 @@ namespace chaiscript
         return t_node->eval(t_ss);
       } catch (const detail::Return_Value &rv) {
         return rv.retval;
-      } catch (exception::eval_error &ee) {
-        ee.call_stack.push_back(t_node);
-        throw;
       } 
     }
 
@@ -42,16 +39,10 @@ namespace chaiscript
         Binary_Operator_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Bitwise_Xor, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Binary_Operator_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           Boxed_Value retval;
 
-          try {
-            retval = this->children[0]->eval(t_ss);
-          }
-          catch (exception::eval_error &ee) {
-            ee.call_stack.push_back(this->children[0]);
-            throw;
-          }
+          retval = this->children[0]->eval(t_ss);
 
           for (size_t i = 1; i < this->children.size(); i += 2) {
             try {
@@ -59,10 +50,6 @@ namespace chaiscript
             }
             catch(const exception::dispatch_error &){
               throw exception::eval_error("Can not find appropriate '" + this->children[i]->text + "'");
-            }
-            catch(exception::eval_error &ee) {
-              ee.call_stack.push_back(this->children[i+1]);
-              throw;
             }
           }
 
@@ -85,7 +72,7 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col), 
           m_value(const_var(int(atoi(this->text.c_str())))) { }
         virtual ~Int_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &){
           return m_value;
         }
 
@@ -100,7 +87,7 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
           m_value(const_var(double(atof(this->text.c_str())))) { }
         virtual ~Float_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &){
           return m_value;
         }
 
@@ -114,7 +101,7 @@ namespace chaiscript
         Id_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Id, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Id_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           if (this->text == "true") {
             return const_var(true);
           }
@@ -164,18 +151,12 @@ namespace chaiscript
         Fun_Call_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Fun_Call, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Fun_Call_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           dispatch::Param_List_Builder plb;
 
           if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
             for (size_t i = 0; i < this->children[1]->children.size(); ++i) {
-              try {
-                plb << this->children[1]->children[i]->eval(t_ss);
-              }
-              catch(exception::eval_error &ee) {
-                ee.call_stack.push_back(this->children[1]->children[i]);
-                throw;
-              }
+              plb << this->children[1]->children[i]->eval(t_ss);
             }
           }
 
@@ -205,9 +186,8 @@ namespace chaiscript
             }
           }
           catch(exception::eval_error &ee) {
-            ee.call_stack.push_back(this->children[0]);
             t_ss.set_stack(prev_stack);
-            throw exception::eval_error(ee.reason);
+            throw;
           }
 
         }
@@ -219,42 +199,29 @@ namespace chaiscript
         Inplace_Fun_Call_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inplace_Fun_Call, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inplace_Fun_Call_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           dispatch::Param_List_Builder plb;
 
           if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
             for (size_t i = 0; i < this->children[1]->children.size(); ++i) {
-              try {
-                plb << this->children[1]->children[i]->eval(t_ss);
-              }
-              catch (exception::eval_error &ee) {
-                ee.call_stack.push_back(this->children[1]->children[i]);
-                throw;
-              }
+              plb << this->children[1]->children[i]->eval(t_ss);
             }
           }
+
+          Boxed_Value fn = this->children[0]->eval(t_ss);
 
           try {
-            Boxed_Value fn = this->children[0]->eval(t_ss);
-
-            try {
-              return (*boxed_cast<Const_Proxy_Function >(fn))(plb);
-            }
-            catch(const exception::dispatch_error &e){
-              throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
-            }
-            catch(detail::Return_Value &rv) {
-              return rv.retval;
-            }
-            catch(...) {
-              throw;
-            }
+            return (*boxed_cast<Const_Proxy_Function >(fn))(plb);
           }
-          catch(exception::eval_error &ee) {
-            ee.call_stack.push_back(this->children[0]);
-            throw exception::eval_error(ee.reason);
+          catch(const exception::dispatch_error &e){
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
           }
-
+          catch(detail::Return_Value &rv) {
+            return rv.retval;
+          }
+          catch(...) {
+            throw;
+          }
         }
 
     };
@@ -278,69 +245,44 @@ namespace chaiscript
         Equation_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Equation, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Equation_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
-          Boxed_Value retval;
-          try {
-            retval = this->children.back()->eval(t_ss); 
-          }
-          catch (exception::eval_error &ee) {
-            ee.call_stack.push_back(this->children.back());
-            throw;
-          }
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
+          Boxed_Value retval = this->children.back()->eval(t_ss); 
 
           if (this->children.size() > 1) {
             for (int i = static_cast<int>(this->children.size())-3; i >= 0; i -= 2) {
               if (this->children[i+1]->text == "=") {
+                Boxed_Value lhs = this->children[i]->eval(t_ss);
+
                 try {
-                  Boxed_Value lhs = this->children[i]->eval(t_ss);
+                  if (lhs.is_undef()) {
+                    retval = t_ss.call_function("clone", retval);
+                    retval.clear_dependencies();
+                  }
 
                   try {
-                    if (lhs.is_undef()) {
-                      retval = t_ss.call_function("clone", retval);
-                      retval.clear_dependencies();
-                    }
-
-                    try {
-                      retval = t_ss.call_function(this->children[i+1]->text, lhs, retval);
-                    }
-                    catch(const exception::dispatch_error &){
-                      throw exception::eval_error(std::string("Mismatched types in equation") + (lhs.is_const()?", lhs is const.":"."));
-                    }
+                    retval = t_ss.call_function(this->children[i+1]->text, lhs, retval);
                   }
                   catch(const exception::dispatch_error &){
-                    throw exception::eval_error("Can not clone right hand side of equation");
+                    throw exception::eval_error(std::string("Mismatched types in equation") + (lhs.is_const()?", lhs is const.":"."));
                   }
                 }
-                catch(exception::eval_error &ee) {
-                  ee.call_stack.push_back(this->children[i]);
-                  throw;
+                catch(const exception::dispatch_error &){
+                  throw exception::eval_error("Can not clone right hand side of equation");
                 }
               }
               else if (this->children[i+1]->text == ":=") {
-                try {
-                  Boxed_Value lhs = this->children[i]->eval(t_ss);
-                  if (lhs.is_undef() || type_match(lhs, retval)) {
-                    lhs.assign(retval);
-                  }
-                  else {
-                    throw exception::eval_error("Mismatched types in equation");
-                  }
-                }
-                catch (exception::eval_error &ee) {
-                  ee.call_stack.push_back(this->children[i]);
-                  throw;
+                Boxed_Value lhs = this->children[i]->eval(t_ss);
+                if (lhs.is_undef() || type_match(lhs, retval)) {
+                  lhs.assign(retval);
+                } else {
+                  throw exception::eval_error("Mismatched types in equation");
                 }
               }
               else {
                 try {
                   retval = t_ss.call_function(this->children[i+1]->text, this->children[i]->eval(t_ss), retval);
-                }
-                catch(const exception::dispatch_error &){
+                } catch(const exception::dispatch_error &){
                   throw exception::eval_error("Can not find appropriate '" + this->children[i+1]->text + "'");
-                }
-                catch(exception::eval_error &ee) {
-                  ee.call_stack.push_back(this->children[i]);
-                  throw;
                 }
               }
             }
@@ -354,7 +296,7 @@ namespace chaiscript
         Var_Decl_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Var_Decl, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Var_Decl_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           try {
             t_ss.add_object(this->children[0]->text, Boxed_Value());
           }
@@ -392,16 +334,8 @@ namespace chaiscript
         Array_Call_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Array_Call, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Array_Call_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
-          Boxed_Value retval;
-
-          try {
-            retval = this->children[0]->eval(t_ss);
-          }
-          catch (exception::eval_error &ee) {
-            ee.call_stack.push_back(this->children[0]);
-            throw;
-          }
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
+          Boxed_Value retval = this->children[0]->eval(t_ss);
 
           for (size_t i = 1; i < this->children.size(); ++i) {
             try {
@@ -412,10 +346,6 @@ namespace chaiscript
             }
             catch(const exception::dispatch_error &){
               throw exception::eval_error("Can not find appropriate array lookup '[]' ");
-            }
-            catch(exception::eval_error &ee) {
-              ee.call_stack.push_back(this->children[i]);
-              throw;
             }
           }
 
@@ -428,15 +358,8 @@ namespace chaiscript
         Dot_Access_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Dot_Access, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Dot_Access_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
-          Boxed_Value retval;
-          try {
-            retval = this->children[0]->eval(t_ss);
-          }
-          catch (exception::eval_error &ee) {
-            ee.call_stack.push_back(this->children[0]);
-            throw;
-          }
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
+          Boxed_Value retval = this->children[0]->eval(t_ss);
 
           if (this->children.size() > 1) {
             for (size_t i = 2; i < this->children.size(); i+=2) {
@@ -445,13 +368,7 @@ namespace chaiscript
 
               if (this->children[i]->children.size() > 1) {
                 for (size_t j = 0; j < this->children[i]->children[1]->children.size(); ++j) {
-                  try {
-                    plb << this->children[i]->children[1]->children[j]->eval(t_ss);
-                  }
-                  catch (exception::eval_error &ee) {
-                    ee.call_stack.push_back(this->children[i]->children[1]->children[j]);
-                    throw;
-                  }
+                  plb << this->children[i]->children[1]->children[j]->eval(t_ss);
                 }
               }
 
@@ -494,10 +411,6 @@ namespace chaiscript
                   catch(const exception::dispatch_error &){
                     throw exception::eval_error("Can not find appropriate array lookup '[]' ");
                   }
-                  catch(exception::eval_error &ee) {
-                    ee.call_stack.push_back(this->children[i]->children[j]);
-                    throw;
-                  }
                 }
               }
             }
@@ -514,7 +427,7 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
           m_value(const_var(this->text)) { }
         virtual ~Quoted_String_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &) {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) {
           return m_value;
         }
 
@@ -529,7 +442,7 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
           m_value(const_var(char(this->text[0]))) { }
         virtual ~Single_Quoted_String_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &){
           return m_value;
         }
 
@@ -542,7 +455,7 @@ namespace chaiscript
         Lambda_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Lambda, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Lambda_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           std::vector<std::string> t_param_names;
           size_t numparams = 0;
 
@@ -570,7 +483,7 @@ namespace chaiscript
         Block_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Block, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Block_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           const size_t num_children = this->children.size();
 
           detail::Scope_Push_Pop spp(t_ss);
@@ -587,10 +500,6 @@ namespace chaiscript
             catch (const chaiscript::detail::Return_Value &) {
               throw;
             }
-            catch (exception::eval_error &ee) {
-              ee.call_stack.push_back(this->children[i]);
-              throw;
-            }
           }
 
           return Boxed_Value();
@@ -603,7 +512,7 @@ namespace chaiscript
         Def_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Def, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Def_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           std::vector<std::string> t_param_names;
           size_t numparams = 0;
           AST_NodePtr guardnode;
@@ -657,7 +566,7 @@ namespace chaiscript
         While_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::While, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~While_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss) {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
           bool cond;
 
           detail::Scope_Push_Pop spp(t_ss);
@@ -668,29 +577,15 @@ namespace chaiscript
           catch (const exception::bad_boxed_cast &) {
             throw exception::eval_error("While condition not boolean");
           }
-          catch (exception::eval_error &ee) {
-            ee.call_stack.push_back(this->children[0]);
-            throw;
-          }
           while (cond) {
             try {
-              try {
-                this->children[1]->eval(t_ss);
-              }
-              catch (exception::eval_error &ee) {
-                ee.call_stack.push_back(this->children[1]);
-                throw;
-              }
+              this->children[1]->eval(t_ss);
 
               try {
                 cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
               }
               catch (const exception::bad_boxed_cast &) {
                 throw exception::eval_error("While condition not boolean");
-              }
-              catch (exception::eval_error &ee) {
-                ee.call_stack.push_back(this->children[0]);
-                throw;
               }
             }
             catch (detail::Break_Loop &) {
@@ -707,7 +602,7 @@ namespace chaiscript
         If_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::If, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~If_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           bool cond;
           try {
             cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
@@ -715,32 +610,16 @@ namespace chaiscript
           catch (const exception::bad_boxed_cast &) {
             throw exception::eval_error("If condition not boolean");
           }
-          catch (exception::eval_error &ee) {
-            ee.call_stack.push_back(this->children[0]);
-            throw;
-          }
 
           if (cond) {
-            try {
-              return this->children[1]->eval(t_ss);
-            }
-            catch (exception::eval_error &ee) {
-              ee.call_stack.push_back(this->children[1]);
-              throw;
-            }
+            return this->children[1]->eval(t_ss);
           }
           else {
             if (this->children.size() > 2) {
               size_t i = 2;
               while ((!cond) && (i < this->children.size())) {
                 if (this->children[i]->text == "else") {
-                  try {
-                    return this->children[i+1]->eval(t_ss);
-                  }
-                  catch (exception::eval_error &ee) {
-                    ee.call_stack.push_back(this->children[i+1]);
-                    throw;
-                  }
+                  return this->children[i+1]->eval(t_ss);
                 }
                 else if (this->children[i]->text == "else if") {
                   try {
@@ -749,18 +628,8 @@ namespace chaiscript
                   catch (const exception::bad_boxed_cast &) {
                     throw exception::eval_error("'else if' condition not boolean");
                   }
-                  catch (exception::eval_error &ee) {
-                    ee.call_stack.push_back(this->children[i+1]);
-                    throw;
-                  }
                   if (cond) {
-                    try {
-                      return this->children[i+2]->eval(t_ss);
-                    }
-                    catch (exception::eval_error &ee) {
-                      ee.call_stack.push_back(this->children[i+2]);
-                      throw;
-                    }
+                    return this->children[i+2]->eval(t_ss);
                   }
                 }
                 i = i + 3;
@@ -778,37 +647,18 @@ namespace chaiscript
         For_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::For, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~For_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           bool cond;
 
           detail::Scope_Push_Pop spp(t_ss);
 
           try {
             if (this->children.size() == 4) {
-              try {
-                this->children[0]->eval(t_ss);
-              }
-              catch (exception::eval_error &ee) {
-                ee.call_stack.push_back(this->children[0]);
-                throw;
-              }
+              this->children[0]->eval(t_ss);
 
-              try {
-                cond = boxed_cast<bool>(this->children[1]->eval(t_ss));
-              }
-              catch (exception::eval_error &ee) {
-                ee.call_stack.push_back(this->children[1]);
-                throw;
-              }
-            }
-            else {
-              try {
-                cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
-              }
-              catch (exception::eval_error &ee) {
-                ee.call_stack.push_back(this->children[0]);
-                throw;
-              }
+              cond = boxed_cast<bool>(this->children[1]->eval(t_ss));
+            } else {
+              cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
             }
           }
           catch (const exception::bad_boxed_cast &) {
@@ -817,54 +667,17 @@ namespace chaiscript
           while (cond) {
             try {
               if (this->children.size() == 4) {
-                try {
-                  this->children[3]->eval(t_ss);
-                }
-                catch (exception::eval_error &ee) {
-                  ee.call_stack.push_back(this->children[3]);
-                  throw;
-                }
+                this->children[3]->eval(t_ss);
+                this->children[2]->eval(t_ss);
 
-                try {
-                  this->children[2]->eval(t_ss);
-                }
-                catch (exception::eval_error &ee) {
-                  ee.call_stack.push_back(this->children[2]);
-                  throw;
-                }
-
-                try {
-                  cond = boxed_cast<bool>(this->children[1]->eval(t_ss));
-                }
-                catch (exception::eval_error &ee) {
-                  ee.call_stack.push_back(this->children[1]);
-                  throw;
-                }
+                cond = boxed_cast<bool>(this->children[1]->eval(t_ss));
               }
               else {
-                try {
-                  this->children[2]->eval(t_ss);
-                }
-                catch (exception::eval_error &ee) {
-                  ee.call_stack.push_back(this->children[2]);
-                  throw;
-                }
+                this->children[2]->eval(t_ss);
 
-                try {
-                  this->children[1]->eval(t_ss);
-                }
-                catch (exception::eval_error &ee) {
-                  ee.call_stack.push_back(this->children[1]);
-                  throw;
-                }
+                this->children[1]->eval(t_ss);
 
-                try {
-                  cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
-                }
-                catch (exception::eval_error &ee) {
-                  ee.call_stack.push_back(this->children[0]);
-                  throw;
-                }
+                cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
               }
             }
             catch (const exception::bad_boxed_cast &) {
@@ -884,17 +697,11 @@ namespace chaiscript
         Inline_Array_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inline_Array, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inline_Array_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           std::vector<Boxed_Value> vec;
           if (this->children.size() > 0) {
             for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
-              try {
-                vec.push_back(this->children[0]->children[i]->eval(t_ss));
-              }
-              catch(exception::eval_error &ee) {
-                ee.call_stack.push_back(this->children[0]->children[i]);
-                throw;
-              }
+              vec.push_back(this->children[0]->children[i]->eval(t_ss));
             }
           }
 
@@ -908,18 +715,12 @@ namespace chaiscript
         Inline_Map_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inline_Map, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inline_Map_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           try {
             std::map<std::string, Boxed_Value> retval;
             for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
-              try {
-                retval[boxed_cast<std::string>(this->children[0]->children[i]->children[0]->eval(t_ss))] 
-                  = t_ss.call_function("clone", this->children[0]->children[i]->children[1]->eval(t_ss));
-              }
-              catch(exception::eval_error &ee) {
-                ee.call_stack.push_back(this->children[0]->children[i]);
-                throw;
-              }
+              retval[boxed_cast<std::string>(this->children[0]->children[i]->children[0]->eval(t_ss))] 
+                = t_ss.call_function("clone", this->children[0]->children[i]->children[1]->eval(t_ss));
             }
             return const_var(retval);
           }
@@ -935,15 +736,9 @@ namespace chaiscript
         Return_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Return, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Return_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           if (this->children.size() > 0) {
-            try {
-              throw detail::Return_Value(this->children[0]->eval(t_ss));
-            }
-            catch (exception::eval_error &ee) {
-              ee.call_stack.push_back(this->children[0]);
-              throw;
-            }
+            throw detail::Return_Value(this->children[0]->eval(t_ss));
           }
           else {
             throw detail::Return_Value(Boxed_Value());
@@ -957,18 +752,12 @@ namespace chaiscript
         File_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::File, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~File_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss) {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
           const size_t size = this->children.size(); 
           for (size_t i = 0; i < size; ++i) {
-            try {
-              const Boxed_Value &retval = this->children[i]->eval(t_ss);
-              if (i + 1 == size) {
-                return retval;
-              }
-            }
-            catch (exception::eval_error &ee) {
-              ee.call_stack.push_back(this->children[i]);
-              throw;
+            const Boxed_Value &retval = this->children[i]->eval(t_ss);
+            if (i + 1 == size) {
+              return retval;
             }
           }
           return Boxed_Value();
@@ -980,13 +769,8 @@ namespace chaiscript
         Prefix_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Prefix, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Prefix_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
-          try {
-            return t_ss.call_function(this->children[0]->text, this->children[1]->eval(t_ss));
-          }
-          catch(std::exception &){
-            throw exception::eval_error("Can not find appropriate unary '" + this->children[0]->text + "'");
-          }
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
+          return t_ss.call_function(this->children[0]->text, this->children[1]->eval(t_ss));
         }
 
     };
@@ -996,7 +780,7 @@ namespace chaiscript
         Break_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Break, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Break_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &){
           throw detail::Break_Loop();
         }
     };
@@ -1020,7 +804,7 @@ namespace chaiscript
         Inline_Range_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inline_Range, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inline_Range_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           try {
             return t_ss.call_function("generate_range",
                 this->children[0]->children[0]->children[0]->eval(t_ss),
@@ -1028,10 +812,6 @@ namespace chaiscript
           }
           catch (const exception::dispatch_error &) {
             throw exception::eval_error("Unable to generate range vector");
-          }
-          catch(exception::eval_error &ee) {
-            ee.call_stack.push_back(this->children[0]->children[0]);
-            throw;
           }
         }
 
@@ -1049,7 +829,7 @@ namespace chaiscript
         Try_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Try, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Try_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           Boxed_Value retval;        
 
           detail::Scope_Push_Pop spp(t_ss);
@@ -1058,15 +838,8 @@ namespace chaiscript
             retval = this->children[0]->eval(t_ss);
           }
           catch (exception::eval_error &ee) {
-            ee.call_stack.push_back(this->children[0]);
             if (this->children.back()->identifier == AST_Node_Type::Finally) {
-              try {
-                this->children.back()->children[0]->eval(t_ss);
-              }
-              catch (exception::eval_error &ee2) {
-                ee2.call_stack.push_back(this->children.back()->children[0]);
-                throw;
-              }
+              this->children.back()->children[0]->eval(t_ss);
             }
             throw;
           }
@@ -1083,25 +856,13 @@ namespace chaiscript
 
               if (catch_block->children.size() == 1) {
                 //No variable capture, no guards
-                try {
-                  retval = catch_block->children[0]->eval(t_ss);
-                }
-                catch (exception::eval_error &ee) {
-                  ee.call_stack.push_back(catch_block->children[0]);
-                  throw;
-                }
+                retval = catch_block->children[0]->eval(t_ss);
                 break;
               }
               else if (catch_block->children.size() == 2) {
                 //Variable capture, no guards
                 t_ss.add_object(catch_block->children[0]->text, except);
-                try {
-                  retval = catch_block->children[1]->eval(t_ss);
-                }
-                catch (exception::eval_error &ee) {
-                  ee.call_stack.push_back(catch_block->children[1]);
-                  throw;
-                }
+                retval = catch_block->children[1]->eval(t_ss);
 
                 break;
               }
@@ -1114,37 +875,18 @@ namespace chaiscript
                   guard = boxed_cast<bool>(catch_block->children[1]->eval(t_ss));
                 } catch (const exception::bad_boxed_cast &) {
                   if (this->children.back()->identifier == AST_Node_Type::Finally) {
-                    try {
-                      this->children.back()->children[0]->eval(t_ss);
-                    }
-                    catch (exception::eval_error &ee) {
-                      ee.call_stack.push_back(this->children.back()->children[0]);
-                      throw;
-                    }
+                    this->children.back()->children[0]->eval(t_ss);
                   }
                   throw exception::eval_error("Guard condition not boolean");
                 }
                 if (guard) {
-                  try {
-                    retval = catch_block->children[2]->eval(t_ss);
-                  }
-                  catch (exception::eval_error &ee) {
-                    ee.call_stack.push_back(catch_block->children[2]);
-                    throw;
-                  }
-
+                  retval = catch_block->children[2]->eval(t_ss);
                   break;
                 }
               }
               else {
                 if (this->children.back()->identifier == AST_Node_Type::Finally) {
-                  try {
-                    this->children.back()->children[0]->eval(t_ss);
-                  }
-                  catch (exception::eval_error &ee) {
-                    ee.call_stack.push_back(this->children.back()->children[0]);
-                    throw;
-                  }
+                  this->children.back()->children[0]->eval(t_ss);
                 }
                 throw exception::eval_error("Internal error: catch block size unrecognized");
               }
@@ -1156,27 +898,13 @@ namespace chaiscript
 
               if (catch_block->children.size() == 1) {
                 //No variable capture, no guards
-                try {
-                  retval = catch_block->children[0]->eval(t_ss);
-                }
-                catch (exception::eval_error &ee) {
-                  ee.call_stack.push_back(catch_block->children[0]);
-                  throw;
-                }
-
+                retval = catch_block->children[0]->eval(t_ss);
                 break;
               }
               else if (catch_block->children.size() == 2) {
                 //Variable capture, no guards
                 t_ss.add_object(catch_block->children[0]->text, except);
-                try {
-                  retval = catch_block->children[1]->eval(t_ss);
-                }
-                catch (exception::eval_error &ee) {
-                  ee.call_stack.push_back(catch_block->children[1]);
-                  throw;
-                }
-
+                retval = catch_block->children[1]->eval(t_ss);
                 break;
               }
               else if (catch_block->children.size() == 3) {
@@ -1189,41 +917,19 @@ namespace chaiscript
                 }
                 catch (const exception::bad_boxed_cast &) {
                   if (this->children.back()->identifier == AST_Node_Type::Finally) {
-                    try {
-                      this->children.back()->children[0]->eval(t_ss);
-                    }
-                    catch (exception::eval_error &ee) {
-                      ee.call_stack.push_back(this->children.back()->children[0]);
-                      throw;
-                    }
+                    this->children.back()->children[0]->eval(t_ss);
                   }
 
                   throw exception::eval_error("Guard condition not boolean");
                 }
-                catch (exception::eval_error &ee) {
-                  ee.call_stack.push_back(catch_block->children[1]);
-                  throw;
-                }
                 if (guard) {
-                  try {
-                    retval = catch_block->children[2]->eval(t_ss);
-                  }
-                  catch (exception::eval_error &ee) {
-                    ee.call_stack.push_back(catch_block->children[2]);
-                    throw;
-                  }
+                  retval = catch_block->children[2]->eval(t_ss);
                   break;
                 }
               }
               else {
                 if (this->children.back()->identifier == AST_Node_Type::Finally) {
-                  try {
-                    this->children.back()->children[0]->eval(t_ss);
-                  }
-                  catch (exception::eval_error &ee) {
-                    ee.call_stack.push_back(this->children.back()->children[0]);
-                    throw;
-                  }
+                  this->children.back()->children[0]->eval(t_ss);
                 }
                 throw exception::eval_error("Internal error: catch block size unrecognized");
               }
@@ -1231,25 +937,13 @@ namespace chaiscript
           }
           catch (...) {
             if (this->children.back()->identifier == AST_Node_Type::Finally) {
-              try {
-                this->children.back()->children[0]->eval(t_ss);
-              }
-              catch (exception::eval_error &ee) {
-                ee.call_stack.push_back(this->children.back()->children[0]);
-                throw;
-              }
+              this->children.back()->children[0]->eval(t_ss);
             }
             throw;
           }
 
           if (this->children.back()->identifier == AST_Node_Type::Finally) {
-            try {
-              retval = this->children.back()->children[0]->eval(t_ss);
-            }
-            catch (exception::eval_error &ee) {
-              ee.call_stack.push_back(this->children.back()->children[0]);
-              throw;
-            }
+            retval = this->children.back()->children[0]->eval(t_ss);
           }
 
           return retval;
@@ -1276,7 +970,7 @@ namespace chaiscript
         Method_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Method, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Method_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
 
           std::vector<std::string> t_param_names;
           AST_NodePtr guardnode;
@@ -1353,7 +1047,7 @@ namespace chaiscript
         Attr_Decl_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Attr_Decl, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Attr_Decl_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           try {
             t_ss.add(fun(boost::function<Boxed_Value (dispatch::Dynamic_Object &)>(boost::bind(&dispatch::detail::Dynamic_Object_Attribute::func, this->children[0]->text,
                       this->children[1]->text, _1))), this->children[1]->text);
@@ -1407,15 +1101,8 @@ namespace chaiscript
         Logical_And_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Logical_And, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Logical_And_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
-          Boxed_Value retval;
-          try {
-            retval = this->children[0]->eval(t_ss);
-          }
-          catch (exception::eval_error &ee) {
-            ee.call_stack.push_back(this->children[0]);
-            throw;
-          }
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
+          Boxed_Value retval = this->children[0]->eval(t_ss);
 
           if (this->children.size() > 1) {
             for (size_t i = 1; i < this->children.size(); i += 2) {
@@ -1427,13 +1114,7 @@ namespace chaiscript
                 throw exception::eval_error("Condition not boolean");
               }
               if (lhs) {
-                try {
-                  retval = this->children[i+1]->eval(t_ss);
-                }
-                catch (exception::eval_error &ee) {
-                  ee.call_stack.push_back(this->children[i+1]);
-                  throw;
-                }
+                retval = this->children[i+1]->eval(t_ss);
               }
               else {
                 retval = Boxed_Value(false);
@@ -1449,37 +1130,20 @@ namespace chaiscript
         Logical_Or_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Logical_Or, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Logical_Or_AST_Node() {}
-        virtual Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           Boxed_Value retval;
 
-          try {
-            retval = this->children[0]->eval(t_ss);
-          }
-          catch (exception::eval_error &ee) {
-            ee.call_stack.push_back(this->children[0]);
-            throw;
-          }
+          retval = this->children[0]->eval(t_ss);
 
           if (this->children.size() > 1) {
             for (size_t i = 1; i < this->children.size(); i += 2) {
-              bool lhs;
-              try {
-                lhs = boxed_cast<bool>(retval);
-              }
-              catch (const exception::bad_boxed_cast &) {
-                throw exception::eval_error("Condition not boolean");
-              }
+              bool lhs = boxed_cast<bool>(retval);
+
               if (lhs) {
                 retval = Boxed_Value(true);
               }
               else {
-                try {
-                  retval = this->children[i+1]->eval(t_ss);
-                }
-                catch (exception::eval_error &ee) {
-                  ee.call_stack.push_back(this->children[i+1]);
-                  throw;
-                }
+                retval = this->children[i+1]->eval(t_ss);
               }
             }
           }
