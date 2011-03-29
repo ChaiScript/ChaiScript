@@ -99,22 +99,16 @@ namespace chaiscript
     struct Id_AST_Node : public AST_Node {
       public:
         Id_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Id, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
+          m_value(get_value(t_ast_node_text))
+        { }
+
         virtual ~Id_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
-          if (this->text == "true") {
-            return const_var(true);
-          }
-          else if (this->text == "false") {
-            return const_var(false);
-          }
-          else if (this->text == "Infinity") {
-            return const_var(std::numeric_limits<double>::infinity());
-          }
-          else if (this->text == "NaN") {
-            return const_var(std::numeric_limits<double>::quiet_NaN());
-          }
-          else {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
+          if (!m_value.is_undef())
+          {
+            return m_value;
+          } else {
             try {
               return t_ss.get_object(this->text);
             }
@@ -123,6 +117,27 @@ namespace chaiscript
             }
           }
         }
+
+      private:
+        static Boxed_Value get_value(const std::string &t_text)
+        {
+          if (t_text == "true") {
+            return const_var(true);
+          }
+          else if (t_text == "false") {
+            return const_var(false);
+          }
+          else if (t_text == "Infinity") {
+            return const_var(std::numeric_limits<double>::infinity());
+          }
+          else if (t_text == "NaN") {
+            return const_var(std::numeric_limits<double>::quiet_NaN());
+          } else {
+            return Boxed_Value();
+          }
+        }
+
+        Boxed_Value m_value;
     };
 
     struct Char_AST_Node : public AST_Node {
@@ -168,7 +183,7 @@ namespace chaiscript
 
             try {
               t_ss.set_stack(new_stack);
-              const Boxed_Value &retval = (*boxed_cast<Const_Proxy_Function>(fn))(plb);
+              const Boxed_Value &retval = (*boxed_cast<const Const_Proxy_Function &>(fn))(plb);
               t_ss.set_stack(prev_stack);
               return retval;
             }
@@ -208,10 +223,8 @@ namespace chaiscript
             }
           }
 
-          Boxed_Value fn = this->children[0]->eval(t_ss);
-
           try {
-            return (*boxed_cast<Const_Proxy_Function >(fn))(plb);
+            return (*boxed_cast<const Const_Proxy_Function &>(this->children[0]->eval(t_ss)))(plb);
           }
           catch(const exception::dispatch_error &e){
             throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
