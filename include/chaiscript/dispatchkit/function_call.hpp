@@ -4,8 +4,8 @@
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
-#ifndef __function_call_hpp__
-#define __function_call_hpp__
+#ifndef CHAISCRIPT_FUNCTION_CALL_HPP_
+#define CHAISCRIPT_FUNCTION_CALL_HPP_
 
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>

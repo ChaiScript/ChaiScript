@@ -4,8 +4,8 @@
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
-#ifndef CHAISCRIPT_UTILITY_UTILITY_HPP__
-#define CHAISCRIPT_UTILITY_UTILITY_HPP__
+#ifndef CHAISCRIPT_UTILITY_UTILITY_HPP_
+#define CHAISCRIPT_UTILITY_UTILITY_HPP_
 
 #include "../chaiscript.hpp"
 #include <boost/preprocessor.hpp>
