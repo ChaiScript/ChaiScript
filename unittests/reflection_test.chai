@@ -8,7 +8,11 @@ assert_equal(eval(a), 7)
 var childs := a.children.front().children
 var node := childs[0]
 
-node.text = "9"
+var parser2 := ChaiScript_Parser()
+parser2.parse("9", "INPUT")
+
+
+a.children.front().replace_child(childs[0], parser2.ast())
 
 assert_equal(eval(a), 13)
 assert_equal(node.filename, "INPUT")

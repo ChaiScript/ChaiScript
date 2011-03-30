@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2010, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -8,6 +8,7 @@
 #define	CHAISCRIPT_COMMON_HPP_
 
 #include <chaiscript/dispatchkit/dispatchkit.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 namespace chaiscript
 {
@@ -57,110 +58,155 @@ namespace chaiscript
 
   typedef boost::shared_ptr<struct AST_Node> AST_NodePtr;
 
+  namespace exception
+  {
+    /**
+     * Errors generated during parsing or evaluation
+     */
+    struct eval_error : public std::runtime_error {
+      std::string reason;
+      File_Position start_position;
+      File_Position end_position;
+      std::string filename;
+      std::vector<AST_NodePtr> call_stack;
+
+      eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) throw() :
+        std::runtime_error("Error: \"" + t_why + "\" " +
+            (t_fname != "__EVAL__" ? ("in '" + t_fname + "' ") : "during evaluation ") +
+            + "at (" + boost::lexical_cast<std::string>(t_where.line) + ", " +
+            boost::lexical_cast<std::string>(t_where.column) + ")"),
+        reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname)
+        { }
+
+      eval_error(const std::string &t_why) throw()
+        : std::runtime_error("Error: \"" + t_why + "\" "),
+        reason(t_why) 
+      {}
+
+      virtual ~eval_error() throw() {}
+    };
+
+    /**
+     * Errors generated when loading a file
+     */
+    struct file_not_found_error : public std::runtime_error {
+      file_not_found_error(const std::string &t_filename) throw()
+        : std::runtime_error("File Not Found: " + t_filename)
+      { }
+
+      virtual ~file_not_found_error() throw() {}
+    };
+
+  }
+
   /**
    * The struct that doubles as both a parser ast_node and an AST node
    */
-  struct AST_Node {
-    std::string text;
-    int identifier;
-    boost::shared_ptr<std::string> filename;
-    File_Position start, end;
-    std::vector<AST_NodePtr> children;
-    AST_NodePtr annotation;
+  struct AST_Node : boost::enable_shared_from_this<AST_Node> {
+    public:
+      const std::string text;
+      const int identifier;
+      boost::shared_ptr<const std::string> filename;
+      File_Position start, end;
+      std::vector<AST_NodePtr> children;
+      AST_NodePtr annotation;
 
-    AST_Node(const std::string &t_ast_node_text, int t_id, const boost::shared_ptr<std::string> &t_fname, 
-             int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
-      text(t_ast_node_text), identifier(t_id), filename(t_fname),
-      start(t_start_line, t_start_col), end(t_end_line, t_end_col)
-    {
-    }
+      /**
+       * Prints the contents of an AST node, including its children, recursively
+       */
+      std::string to_string(std::string t_prepend = "") {
+        std::ostringstream oss;
 
-    AST_Node(const std::string &t_ast_node_text, int t_id, const boost::shared_ptr<std::string> &t_fname) :
-      text(t_ast_node_text), identifier(t_id), filename(t_fname) {}
-
-    virtual ~AST_Node() {}
-
-    /**
-     * Prints the contents of an AST node, including its children, recursively
-     */
-    std::string to_string(std::string t_prepend = "") {
-      std::ostringstream oss;
-
-      oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
-          << this->text << " : " << this->start.line << ", " << this->start.column << std::endl;
-      
-      for (unsigned int j = 0; j < this->children.size(); ++j) {
-        oss << this->children[j]->to_string(t_prepend + "  ");
+        oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
+            << this->text << " : " << this->start.line << ", " << this->start.column << std::endl;
+        
+        for (unsigned int j = 0; j < this->children.size(); ++j) {
+          oss << this->children[j]->to_string(t_prepend + "  ");
+        }
+        return oss.str();
       }
-      return oss.str();
-    }
 
-    std::string internal_to_string() {
-      return to_string();
-    }
+      std::string internal_to_string() {
+        return to_string();
+      }
 
-    virtual Boxed_Value eval(Dispatch_Engine &) {
-      Boxed_Value bv;
-      throw std::runtime_error("Undispatched ast_node (internal error)");
-    }
+      Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_e) 
+      {
+        try {
+          return eval_internal(t_e);
+        } catch (exception::eval_error &ee) {
+          ee.call_stack.push_back(shared_from_this());
+          throw ee;
+        }
+      }
+
+
+      void replace_child(const AST_NodePtr &t_child, const AST_NodePtr &t_new_child)
+      {
+        std::replace(children.begin(), children.end(), t_child, t_new_child);
+      }
+
+    protected:
+      AST_Node(const std::string &t_ast_node_text, int t_id, const boost::shared_ptr<std::string> &t_fname, 
+          int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
+        text(t_ast_node_text), identifier(t_id), filename(t_fname),
+        start(t_start_line, t_start_col), end(t_end_line, t_end_col)
+      {
+      }
+
+      AST_Node(const std::string &t_ast_node_text, int t_id, const boost::shared_ptr<std::string> &t_fname) :
+        text(t_ast_node_text), identifier(t_id), filename(t_fname) {}
+
+      virtual ~AST_Node() {}
+
+      virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &)
+      {
+        throw std::runtime_error("Undispatched ast_node (internal error)");
+      }
   };
 
 
   
 
-  /**
-   * Errors generated during parsing or evaluation
-   */
-  struct Eval_Error : public std::runtime_error {
-    std::string reason;
-    File_Position start_position;
-    File_Position end_position;
-    std::string filename;
-    std::vector<AST_NodePtr> call_stack;
 
-    Eval_Error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) :
-      std::runtime_error("Error: \"" + t_why + "\" " +
-                         (t_fname != "__EVAL__" ? ("in '" + t_fname + "' ") : "during evaluation ") +
-                         + "at (" + boost::lexical_cast<std::string>(t_where.line) + ", " +
-                         boost::lexical_cast<std::string>(t_where.column) + ")"),
-      reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname)
-    { }
+  namespace detail
+  {
+    /**
+     * Special type for returned values
+     */
+    struct Return_Value {
+      Boxed_Value retval;
 
-    Eval_Error(const std::string &t_why)
-      : std::runtime_error("Error: \"" + t_why + "\" "),
-        reason(t_why) 
-    {}
+      Return_Value(const Boxed_Value &t_return_value) : retval(t_return_value) { }
+    };
 
-    virtual ~Eval_Error() throw() {}
-  };
+    /**
+     * Special type indicating a call to 'break'
+     */
+    struct Break_Loop {
+      Break_Loop() { }
+    };
 
-  /**
-   * Errors generated when loading a file
-   */
-  struct File_Not_Found_Error : public std::runtime_error {
-    File_Not_Found_Error(const std::string &t_filename)
-      : std::runtime_error("File Not Found: " + t_filename)
-    { }
+    /// Creates a new scope then pops it on destruction
+    struct Scope_Push_Pop
+    {
+      Scope_Push_Pop(chaiscript::detail::Dispatch_Engine &t_de)
+        : m_de(t_de)
+      {
+        m_de.new_scope();
+      }
 
-    virtual ~File_Not_Found_Error() throw() {}
-  };
+      ~Scope_Push_Pop()
+      {
+        m_de.pop_scope();
+      }
 
 
-  /**
-   * Special type for returned values
-   */
-  struct Return_Value {
-    Boxed_Value retval;
+      private:
+        chaiscript::detail::Dispatch_Engine &m_de;
+    };
 
-    Return_Value(const Boxed_Value &t_return_value) : retval(t_return_value) { }
-  };
-
-  /**
-   * Special type indicating a call to 'break'
-   */
-  struct Break_Loop {
-    Break_Loop() { }
-  };
+  }
 }
 
 #endif	/* _CHAISCRIPT_COMMON_HPP */

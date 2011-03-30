@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2010, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -49,7 +49,7 @@ namespace chaiscript
         try {
           // We will not catch any bad_boxed_dynamic_cast that is thrown, let the user get it
           // either way, we are not responsible if it doesn't work
-          return detail::Cast_Helper<Type>::cast(boxed_dynamic_cast<Type>(bv));
+          return detail::Cast_Helper<Type>::cast(detail::boxed_dynamic_cast<Type>(bv));
         } catch (const boost::bad_any_cast &) {
           throw exception::bad_boxed_cast(bv.get_type_info(), typeid(Type));
         }

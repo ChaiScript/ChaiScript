@@ -1,14 +1,17 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2010, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 /**
-* This file contains utility functions for registration of STL container
-* classes. The methodology used is based on the SGI STL concepts.
-* http://www.sgi.com/tech/stl/table_of_contents.html
-*/
+ * \file
+ * This file contains utility functions for registration of STL container
+ * classes. The methodology used is based on the SGI STL concepts.
+ * http://www.sgi.com/tech/stl/table_of_contents.html
+ */
+
+
 
 #ifndef CHAISCRIPT_BOOTSTRAP_STL_HPP_
 #define CHAISCRIPT_BOOTSTRAP_STL_HPP_

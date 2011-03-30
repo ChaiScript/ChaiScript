@@ -45,7 +45,7 @@ struct System
   void add_callback(const std::string &t_name, 
       const chaiscript::Proxy_Function &t_func)
   {
-    m_callbacks[t_name] = chaiscript::functor<std::string (const std::string &)>(t_func);
+    m_callbacks[t_name] = chaiscript::dispatch::functor<std::string (const std::string &)>(t_func);
   }
 
 
@@ -115,7 +115,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   //Call bound version of do_callbacks
   chai("do_callbacks()");
 
-  boost::function<void ()> caller = chai.functor<void ()>("fun() { system.do_callbacks(\"From Functor\"); }");
+  boost::function<void ()> caller = chai.eval<boost::function<void ()> >("fun() { system.do_callbacks(\"From Functor\"); }");
   caller();
 
 
@@ -139,7 +139,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   //To do: Add examples of handling Boxed_Values directly when needed
 
   //Creating a functor on the stack and using it immediatly 
-  int x = chai.functor<int (int, int)>("fun (x, y) { return x + y; }")(5, 6);
+  int x = chai.eval<boost::function<int (int, int)> >("fun (x, y) { return x + y; }")(5, 6);
 
   log("Functor test output", boost::lexical_cast<std::string>(x));
 
@@ -163,9 +163,9 @@ int main(int /*argc*/, char * /*argv*/[]) {
   chai.add(fun(&bound_log, std::string("Msg")), "BoundFun");
 
   //Dynamic objects test
-  chai.add(chaiscript::Proxy_Function(new detail::Dynamic_Object_Function("TestType", fun(&hello_world))), "hello_world");
-  chai.add(chaiscript::Proxy_Function(new detail::Dynamic_Object_Constructor("TestType", fun(&hello_constructor))), "TestType");
-  chai.add(fun(boost::function<Boxed_Value (Dynamic_Object &)>(boost::bind(&detail::Dynamic_Object_Attribute::func, "TestType", "attr", _1))), "attr");
+  chai.add(chaiscript::Proxy_Function(new dispatch::detail::Dynamic_Object_Function("TestType", fun(&hello_world))), "hello_world");
+  chai.add(chaiscript::Proxy_Function(new dispatch::detail::Dynamic_Object_Constructor("TestType", fun(&hello_constructor))), "TestType");
+  chai.add(fun(boost::function<Boxed_Value (dispatch::Dynamic_Object &)>(boost::bind(&dispatch::detail::Dynamic_Object_Attribute::func, "TestType", "attr", _1))), "attr");
 
   chai.eval("var x = TestType()");
 //  chai.eval("x.attr = \"hi\"");

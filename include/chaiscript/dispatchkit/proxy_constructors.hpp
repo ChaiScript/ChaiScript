@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2010, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -26,7 +26,7 @@ namespace chaiscript
     Proxy_Function constructor()
     {
       T *f = 0;
-      return (detail::build_constructor_(f));
+      return (dispatch::detail::build_constructor_(f));
     }
 }
 
@@ -35,30 +35,33 @@ namespace chaiscript
 
 namespace chaiscript
 {
-  namespace detail
+  namespace dispatch
   {
-    /**
-     * A constructor function, used for creating a new object
-     * of a given type with a given set of params
-     */
-    template<typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-      boost::shared_ptr<Class> constructor_( BOOST_PP_ENUM_BINARY_PARAMS(n, Param, p) )
-      {
-        return boost::shared_ptr<Class>(new Class( BOOST_PP_ENUM_PARAMS(n, p) ));
-      }
+    namespace detail
+    {
+      /**
+       * A constructor function, used for creating a new object
+       * of a given type with a given set of params
+       */
+      template<typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
+        boost::shared_ptr<Class> constructor_( BOOST_PP_ENUM_BINARY_PARAMS(n, Param, p) )
+        {
+          return boost::shared_ptr<Class>(new Class( BOOST_PP_ENUM_PARAMS(n, p) ));
+        }
 
-    /**
-     * Helper function for build a constructor function
-     * example:
-     * dispatchengine.register_function(build_constructor<MyClass, int, const std::string&>, "MyClass");
-     * \todo See if it is possible to make this not be a variadic function
-     */
-    template<typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-      Proxy_Function build_constructor_(Class (*)(BOOST_PP_ENUM_PARAMS(n, Param)))
-      {
-        typedef boost::shared_ptr<Class> (sig)(BOOST_PP_ENUM_PARAMS(n, Param));
-        return Proxy_Function(new Proxy_Function_Impl<sig>(boost::function<sig>(&(constructor_<Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>))));
-      }
+      /**
+       * Helper function for build a constructor function
+       * example:
+       * dispatchengine.register_function(build_constructor<MyClass, int, const std::string&>, "MyClass");
+       * \todo See if it is possible to make this not be a variadic function
+       */
+      template<typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
+        Proxy_Function build_constructor_(Class (*)(BOOST_PP_ENUM_PARAMS(n, Param)))
+        {
+          typedef boost::shared_ptr<Class> (sig)(BOOST_PP_ENUM_PARAMS(n, Param));
+          return Proxy_Function(new Proxy_Function_Impl<sig>(boost::function<sig>(&(constructor_<Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>))));
+        }
+    }
   }
 }
 #undef n

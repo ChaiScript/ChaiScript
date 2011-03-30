@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2010, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -49,29 +49,6 @@ namespace chaiscript
     };
   }
 
-  namespace detail
-  {
-    template<typename Ret>
-      struct Do_Call
-      {
-        template<typename Fun>
-          static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
-          {
-            return Handle_Return<Ret>::handle(call_func(fun, params));
-          }
-      };
-
-    template<>
-      struct Do_Call<void>
-      {
-        template<typename Fun>
-          static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
-          {
-            call_func(fun, params);
-            return Handle_Return<void>::handle();
-          }
-      };
-  }
 }
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
@@ -141,5 +118,37 @@ namespace chaiscript
 }
 
 #undef n
+
+#endif
+
+
+#ifndef BOOST_PP_IS_ITERATING
+
+namespace chaiscript
+{
+  namespace detail
+  {
+    template<typename Ret>
+      struct Do_Call
+      {
+        template<typename Fun>
+          static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
+          {
+            return Handle_Return<Ret>::handle(chaiscript::detail::call_func(fun, params));
+          }
+      };
+
+    template<>
+      struct Do_Call<void>
+      {
+        template<typename Fun>
+          static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
+          {
+            chaiscript::detail::call_func(fun, params);
+            return Handle_Return<void>::handle();
+          }
+      };
+  }
+}
 
 #endif

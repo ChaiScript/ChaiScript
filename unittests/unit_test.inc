@@ -10,6 +10,24 @@ def assert_equal(x, y)
   }
 }
 
+def assert_false(f)
+{
+  if (f)
+  {
+    print("assert_false failure");
+    exit(-1);
+  }
+}
+
+def assert_true(f)
+{
+  if (!f)
+  {
+    print("assert_false failure");
+    exit(-1);
+  }
+}
+
 def assert_not_equal(x, y)
 {
   if (!(x == y))

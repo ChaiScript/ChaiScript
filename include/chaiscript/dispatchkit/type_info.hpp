@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2010, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -22,12 +22,14 @@
 namespace chaiscript
 {
 
-  template<typename T>
-    struct Bare_Type
-    {
-      typedef typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type type;
-    };
-
+  namespace detail
+  {
+    template<typename T>
+      struct Bare_Type
+      {
+        typedef typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type type;
+      };
+  }
 
   /**
    * compile time deduced information about a type

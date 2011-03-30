@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2010, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -30,9 +30,14 @@
 
 namespace chaiscript
 {
-
   namespace detail
   { 
+    /// \brief Helper function for binding the first parameter of a class method pointer. Used in chaiscript::fun overloads
+    ///        that take 1 or 2 parameters to pre-bind to the function.
+    ///
+    /// \param[in] f method pointer to bind
+    /// \param[in] o object to bind as first parameter 
+    /// \returns a new boost::function object with one fewer parameters than the function passed in. 
     template<typename Ret, typename O, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
       boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> 
       bind_first(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)), const O &o)
@@ -40,13 +45,25 @@ namespace chaiscript
         return boost::bind(boost::mem_fn(f), o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
       }
 
+    /// \brief Helper function for binding the first parameter of a const class method pointer. Used in chaiscript::fun overloads
+    ///        that take 1 or 2 parameters to pre-bind to the function.
+    ///
+    /// \param[in] f method pointer to bind
+    /// \param[in] o object to bind as first parameter 
+    /// \returns a new boost::function object with one fewer parameters than the function passed in. 
     template<typename Ret, typename O, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
       boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> 
-      bind_first(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param))const, const O &o)
+      bind_first(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)) const, const O &o)
       {
         return boost::bind(boost::mem_fn(f), o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
       }
 
+    /// \brief Helper function for binding the first parameter of a function pointer. Used in chaiscript::fun overloads
+    ///        that take 1 or 2 parameters to pre-bind to the function.
+    ///
+    /// \param[in] f method pointer to bind
+    /// \param[in] o object to bind as first parameter 
+    /// \returns a new boost::function object with one fewer parameters than the function passed in. 
     template<typename Ret,typename O BOOST_PP_COMMA_IF(m) BOOST_PP_ENUM_PARAMS(m, typename Param) >
       boost::function<Ret (BOOST_PP_ENUM(n, param, Param))> 
       bind_first(Ret (*f)(BOOST_PP_ENUM_PARAMS(m, Param)), const O &o)
@@ -54,6 +71,12 @@ namespace chaiscript
         return boost::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
       }
 
+    /// \brief Helper function for binding the first parameter of a boost::function object. Used in chaiscript::fun overloads
+    ///        that take 1 or 2 parameters to pre-bind to the function.
+    ///
+    /// \param[in] f method pointer to bind
+    /// \param[in] o object to bind as first parameter 
+    /// \returns a new boost::function object with one fewer parameters than the function passed in. 
     template<typename Ret,typename O BOOST_PP_COMMA_IF(m) BOOST_PP_ENUM_PARAMS(m, typename Param) >
       boost::function<Ret (BOOST_PP_ENUM(n, param, Param))> 
       bind_first(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(m, Param))> &f, const O &o)

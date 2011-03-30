@@ -1,5 +1,11 @@
-#ifndef CHAISCRIPT_UTILITY_UTILITY_HPP__
-#define CHAISCRIPT_UTILITY_UTILITY_HPP__
+// This file is distributed under the BSD License.
+// See "license.txt" for details.
+// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
+// and Jason Turner (jason@emptycrate.com)
+// http://www.chaiscript.com
+
+#ifndef CHAISCRIPT_UTILITY_UTILITY_HPP_
+#define CHAISCRIPT_UTILITY_UTILITY_HPP_
 
 #include "../chaiscript.hpp"
 #include <boost/preprocessor.hpp>

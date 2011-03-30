@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2010, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -27,12 +27,21 @@ namespace chaiscript
       {
         static Boxed_Value handle(const Ret &r)
         {
-          return Boxed_Value(r);
+          return const_var(r);
         }
       };
 
     template<typename Ret>
       struct Handle_Return<boost::shared_ptr<Ret> &>
+      {
+        static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
+        {
+          return Boxed_Value(r);
+        }
+      };
+
+    template<typename Ret>
+      struct Handle_Return<boost::shared_ptr<Ret> >
       {
         static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
         {
@@ -81,6 +90,18 @@ namespace chaiscript
      */
     template<>
       struct Handle_Return<Boxed_Value>
+      {
+        static Boxed_Value handle(const Boxed_Value &r)
+        {
+          return r;
+        }
+      };
+
+    /**
+     * Used internally for handling a return value from a Proxy_Function call
+     */
+    template<>
+      struct Handle_Return<const Boxed_Value>
       {
         static Boxed_Value handle(const Boxed_Value &r)
         {
