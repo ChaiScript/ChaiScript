@@ -20,7 +20,7 @@
 
 namespace chaiscript
 {
-  struct Boxed_POD_Value;
+  class Boxed_POD_Value;
   struct AST_Node;
 
   typedef boost::shared_ptr<struct AST_Node> AST_NodePtr;
@@ -141,7 +141,7 @@ namespace chaiscript
               || (!bv.get_type_info().is_undef()
                 && (ti.bare_equal(user_type<Boxed_POD_Value>())
                   || ti.bare_equal(bv.get_type_info())
-                  || detail::dynamic_cast_converts(ti, bv.get_type_info()) 
+                  || chaiscript::detail::dynamic_cast_converts(ti, bv.get_type_info()) 
                   || bv.get_type_info().bare_equal(user_type<boost::shared_ptr<const Proxy_Function_Base> >())
                   )
                 )
@@ -289,13 +289,13 @@ namespace chaiscript
           std::vector<Type_Info> types;
 
           // For the return type
-          types.push_back(detail::Get_Type_Info<Boxed_Value>::get());
+          types.push_back(chaiscript::detail::Get_Type_Info<Boxed_Value>::get());
 
           if (arity >= 0)
           {
             for (int i = 0; i < arity; ++i)
             {
-              types.push_back(detail::Get_Type_Info<Boxed_Value>::get());
+              types.push_back(chaiscript::detail::Get_Type_Info<Boxed_Value>::get());
             }
           }
 
@@ -371,7 +371,7 @@ namespace chaiscript
           while (!(parg == params.end() && barg == m_args.end()))
           {
             while (barg != m_args.end() 
-                && !(barg->get_type_info() == detail::Get_Type_Info<Placeholder_Object>::get()))
+                && !(barg->get_type_info() == chaiscript::detail::Get_Type_Info<Placeholder_Object>::get()))
             {
               args.push_back(*barg);
               ++barg;
@@ -384,7 +384,7 @@ namespace chaiscript
             }
 
             if (barg != m_args.end() 
-                && barg->get_type_info() == detail::Get_Type_Info<Placeholder_Object>::get())
+                && barg->get_type_info() == chaiscript::detail::Get_Type_Info<Placeholder_Object>::get())
             {
               ++barg;
             } 
@@ -416,7 +416,7 @@ namespace chaiscript
           retval.push_back(types[0]);
           for (size_t i = 0; i < types.size()-1; ++i)
           {
-            if (t_args[i].get_type_info() == detail::Get_Type_Info<Placeholder_Object>::get())
+            if (t_args[i].get_type_info() == chaiscript::detail::Get_Type_Info<Placeholder_Object>::get())
             {
               retval.push_back(types[i+1]);
             }

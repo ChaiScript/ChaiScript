@@ -17,135 +17,137 @@
 
 namespace chaiscript
 {
-  namespace detail
+  namespace dispatch
   {
-    /**
-     * Used internally for handling a return value from a Proxy_Function call
-     */
-    template<typename Ret>
-      struct Handle_Return
-      {
-        static Boxed_Value handle(const Ret &r)
+    namespace detail
+    {
+      /**
+       * Used internally for handling a return value from a Proxy_Function call
+       */
+      template<typename Ret>
+        struct Handle_Return
         {
-          return const_var(r);
-        }
-      };
+          static Boxed_Value handle(const Ret &r)
+          {
+            return const_var(r);
+          }
+        };
 
-    template<typename Ret>
-      struct Handle_Return<boost::shared_ptr<Ret> &>
-      {
-        static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
+      template<typename Ret>
+        struct Handle_Return<boost::shared_ptr<Ret> &>
         {
-          return Boxed_Value(r);
-        }
-      };
+          static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
+          {
+            return Boxed_Value(r);
+          }
+        };
 
-    template<typename Ret>
-      struct Handle_Return<boost::shared_ptr<Ret> >
-      {
-        static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
+      template<typename Ret>
+        struct Handle_Return<boost::shared_ptr<Ret> >
         {
-          return Boxed_Value(r);
-        }
-      };
+          static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
+          {
+            return Boxed_Value(r);
+          }
+        };
 
-    template<typename Ret>
-      struct Handle_Return<const boost::shared_ptr<Ret> &>
-      {
-        static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
+      template<typename Ret>
+        struct Handle_Return<const boost::shared_ptr<Ret> &>
         {
-          return Boxed_Value(r);
-        }
-      };
+          static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
+          {
+            return Boxed_Value(r);
+          }
+        };
 
-    template<typename Ret>
-      struct Handle_Return<const Ret &>
-      {
-        static Boxed_Value handle(const Ret &r)
+      template<typename Ret>
+        struct Handle_Return<const Ret &>
         {
-          return Boxed_Value(boost::cref(r));
-        }
-      };
+          static Boxed_Value handle(const Ret &r)
+          {
+            return Boxed_Value(boost::cref(r));
+          }
+        };
 
 
-    /**
-     * Used internally for handling a return value from a Proxy_Function call
-     */
-    template<typename Ret>
-      struct Handle_Return<Ret &>
-      {
-        static Boxed_Value handle(Ret &r)
+      /**
+       * Used internally for handling a return value from a Proxy_Function call
+       */
+      template<typename Ret>
+        struct Handle_Return<Ret &>
         {
-          return Boxed_Value(boost::ref(r));
-        }
+          static Boxed_Value handle(Ret &r)
+          {
+            return Boxed_Value(boost::ref(r));
+          }
 
-        static Boxed_Value handle(const Ret &r)
+          static Boxed_Value handle(const Ret &r)
+          {
+            return Boxed_Value(boost::cref(r));
+          }
+        };
+
+      /**
+       * Used internally for handling a return value from a Proxy_Function call
+       */
+      template<>
+        struct Handle_Return<Boxed_Value>
         {
-          return Boxed_Value(boost::cref(r));
-        }
-      };
+          static Boxed_Value handle(const Boxed_Value &r)
+          {
+            return r;
+          }
+        };
 
-    /**
-     * Used internally for handling a return value from a Proxy_Function call
-     */
-    template<>
-      struct Handle_Return<Boxed_Value>
-      {
-        static Boxed_Value handle(const Boxed_Value &r)
+      /**
+       * Used internally for handling a return value from a Proxy_Function call
+       */
+      template<>
+        struct Handle_Return<const Boxed_Value>
         {
-          return r;
-        }
-      };
+          static Boxed_Value handle(const Boxed_Value &r)
+          {
+            return r;
+          }
+        };
 
-    /**
-     * Used internally for handling a return value from a Proxy_Function call
-     */
-    template<>
-      struct Handle_Return<const Boxed_Value>
-      {
-        static Boxed_Value handle(const Boxed_Value &r)
+      /**
+       * Used internally for handling a return value from a Proxy_Function call
+       */
+      template<>
+        struct Handle_Return<Boxed_Value &>
         {
-          return r;
-        }
-      };
+          static Boxed_Value handle(const Boxed_Value &r)
+          {
+            return r;
+          }
+        };
 
-    /**
-     * Used internally for handling a return value from a Proxy_Function call
-     */
-    template<>
-      struct Handle_Return<Boxed_Value &>
-      {
-        static Boxed_Value handle(const Boxed_Value &r)
+      /**
+       * Used internally for handling a return value from a Proxy_Function call
+       */
+      template<>
+        struct Handle_Return<const Boxed_Value &>
         {
-          return r;
-        }
-      };
+          static Boxed_Value handle(const Boxed_Value &r)
+          {
+            return r;
+          }
+        };
 
-    /**
-     * Used internally for handling a return value from a Proxy_Function call
-     */
-    template<>
-      struct Handle_Return<const Boxed_Value &>
-      {
-        static Boxed_Value handle(const Boxed_Value &r)
+
+      /**
+       * Used internally for handling a return value from a Proxy_Function call
+       */
+      template<>
+        struct Handle_Return<void>
         {
-          return r;
-        }
-      };
-
-
-    /**
-     * Used internally for handling a return value from a Proxy_Function call
-     */
-    template<>
-      struct Handle_Return<void>
-      {
-        static Boxed_Value handle()
-        {
-          return Boxed_Value(Boxed_Value::Void_Type());
-        }
-      };
-
+          static Boxed_Value handle()
+          {
+            return Boxed_Value(Boxed_Value::Void_Type());
+          }
+        };
+    }
   }
 }
 

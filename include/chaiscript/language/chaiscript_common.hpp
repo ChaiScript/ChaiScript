@@ -163,6 +163,11 @@ namespace chaiscript
       {
         throw std::runtime_error("Undispatched ast_node (internal error)");
       }
+
+    private:
+      // Copy and assignment explicitly unimplemented
+      AST_Node(const AST_Node &);
+      AST_Node& operator=(const AST_Node &);
   };
 
 
@@ -203,6 +208,10 @@ namespace chaiscript
 
 
       private:
+        // explicitly unimplemented copy and assignment
+        Scope_Push_Pop(const Scope_Push_Pop &);
+        Scope_Push_Pop& operator=(const Scope_Push_Pop &);
+
         chaiscript::detail::Dispatch_Engine &m_de;
     };
 

@@ -70,7 +70,7 @@ namespace chaiscript
       public:
         Int_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Int, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col), 
-          m_value(const_var(int(atoi(this->text.c_str())))) { }
+          m_value(const_var(int(atoi(t_ast_node_text.c_str())))) { }
         virtual ~Int_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &){
           return m_value;
@@ -85,7 +85,7 @@ namespace chaiscript
       public:
         Float_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Float, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
-          m_value(const_var(double(atof(this->text.c_str())))) { }
+          m_value(const_var(double(atof(t_ast_node_text.c_str())))) { }
         virtual ~Float_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &){
           return m_value;
@@ -200,7 +200,7 @@ namespace chaiscript
               throw;
             }
           }
-          catch(exception::eval_error &ee) {
+          catch(exception::eval_error &) {
             t_ss.set_stack(prev_stack);
             throw;
           }
@@ -438,7 +438,7 @@ namespace chaiscript
       public:
         Quoted_String_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Quoted_String, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
-          m_value(const_var(this->text)) { }
+          m_value(const_var(t_ast_node_text)) { }
         virtual ~Quoted_String_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) {
           return m_value;
@@ -453,7 +453,7 @@ namespace chaiscript
       public:
         Single_Quoted_String_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Single_Quoted_String, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
-          m_value(const_var(char(this->text[0]))) { }
+          m_value(const_var(char(t_ast_node_text.at(0)))) { }
         virtual ~Single_Quoted_String_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &){
           return m_value;
@@ -850,7 +850,7 @@ namespace chaiscript
           try {
             retval = this->children[0]->eval(t_ss);
           }
-          catch (exception::eval_error &ee) {
+          catch (exception::eval_error &) {
             if (this->children.back()->identifier == AST_Node_Type::Finally) {
               this->children.back()->children[0]->eval(t_ss);
             }
