@@ -55,6 +55,7 @@
 
 namespace chaiscript 
 {
+  /// \brief Classes and functions which provide general utility to the end user.
   namespace utility
   {
     inline std::string class_name_translator(const std::string &t_name)

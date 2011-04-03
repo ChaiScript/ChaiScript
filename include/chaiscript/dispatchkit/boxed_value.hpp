@@ -23,12 +23,8 @@
 
 namespace chaiscript 
 {
-  /**
-   * Boxed_Value is the main tool of the dispatchkit. It allows
-   * for boxed / untyped containment of any C++ object. It uses
-   * boost::any internally but also provides user access the underlying
-   * stored type information
-   */
+  /// \brief A wrapper for holding any valid C++ type. All types in ChaiScript are Boxed_Value objects
+  /// \sa chaiscript::boxed_cast
   class Boxed_Value
   {
     public:

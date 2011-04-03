@@ -27,8 +27,10 @@
 
 
 /// \namespace chaiscript
-/// The chaiscript namespace contains every API call that the average user will be concerned with.
+/// \brief Every API call that the average user will be concerned with.
 
+/// \namespace chaiscript::detail
+/// \brief Classes and functions reserved for internal use. Items in this namespace are not supported.
 
 #include "dispatchkit/dispatchkit.hpp"
 #include "dispatchkit/bootstrap.hpp"

@@ -14,9 +14,7 @@ namespace chaiscript
 {
   typedef ModulePtr (*Create_Module_Func)();
 
-  /**
-   * Types of AST nodes available to the parser and eval
-   */
+  /// Types of AST nodes available to the parser and eval
   class AST_Node_Type {
   public:
     enum Type { Error, Int, Float, Id, Char, Str, Eol, Fun_Call, Inplace_Fun_Call, Arg_List, Variable, Equation, Var_Decl,
@@ -43,9 +41,7 @@ namespace chaiscript
     }
   }
 
-  /**
-   * Convenience type for file positions
-   */
+  /// \brief Convenience type for file positions
   struct File_Position {
     int line;
     int column;
@@ -58,6 +54,8 @@ namespace chaiscript
 
   typedef boost::shared_ptr<struct AST_Node> AST_NodePtr;
 
+
+  /// \brief Classes which may be thrown during error cases when ChaiScript is executing.
   namespace exception
   {
     /**
@@ -99,9 +97,8 @@ namespace chaiscript
 
   }
 
-  /**
-   * The struct that doubles as both a parser ast_node and an AST node
-   */
+ 
+  /// \brief Struct that doubles as both a parser ast_node and an AST node.
   struct AST_Node : boost::enable_shared_from_this<AST_Node> {
     public:
       const std::string text;
@@ -171,50 +168,49 @@ namespace chaiscript
   };
 
 
-  
-
-
-  namespace detail
+  namespace eval
   {
-    /**
-     * Special type for returned values
-     */
-    struct Return_Value {
-      Boxed_Value retval;
-
-      Return_Value(const Boxed_Value &t_return_value) : retval(t_return_value) { }
-    };
-
-    /**
-     * Special type indicating a call to 'break'
-     */
-    struct Break_Loop {
-      Break_Loop() { }
-    };
-
-    /// Creates a new scope then pops it on destruction
-    struct Scope_Push_Pop
+    namespace detail
     {
-      Scope_Push_Pop(chaiscript::detail::Dispatch_Engine &t_de)
-        : m_de(t_de)
+      /**
+       * Special type for returned values
+       */
+      struct Return_Value {
+        Boxed_Value retval;
+
+        Return_Value(const Boxed_Value &t_return_value) : retval(t_return_value) { }
+      };
+
+      /**
+       * Special type indicating a call to 'break'
+       */
+      struct Break_Loop {
+        Break_Loop() { }
+      };
+
+      /// Creates a new scope then pops it on destruction
+      struct Scope_Push_Pop
       {
-        m_de.new_scope();
-      }
+        Scope_Push_Pop(chaiscript::detail::Dispatch_Engine &t_de)
+          : m_de(t_de)
+        {
+          m_de.new_scope();
+        }
 
-      ~Scope_Push_Pop()
-      {
-        m_de.pop_scope();
-      }
+        ~Scope_Push_Pop()
+        {
+          m_de.pop_scope();
+        }
 
 
-      private:
+        private:
         // explicitly unimplemented copy and assignment
         Scope_Push_Pop(const Scope_Push_Pop &);
         Scope_Push_Pop& operator=(const Scope_Push_Pop &);
 
         chaiscript::detail::Dispatch_Engine &m_de;
-    };
-
+      };
+    }
   }
 }
 

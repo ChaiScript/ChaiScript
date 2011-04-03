@@ -16,8 +16,10 @@
 
 namespace chaiscript
 {
+  /// \brief Classes and functions used during the parsing process.
   namespace parser
   {
+    /// \brief Classes and functions internal to the parsing process. Not supported for the end user.
     namespace detail 
     {
       enum Alphabet

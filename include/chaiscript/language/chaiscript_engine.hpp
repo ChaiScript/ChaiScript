@@ -219,6 +219,8 @@ namespace chaiscript
     typedef boost::shared_ptr<Loadable_Module> Loadable_Module_Ptr;
   }
 
+
+  /// \brief The main object that the ChaiScript user will use.
   class ChaiScript {
 
     mutable chaiscript::detail::threading::shared_mutex m_mutex;
@@ -248,7 +250,7 @@ namespace chaiscript
           return Boxed_Value();
         }
       }
-      catch (const detail::Return_Value &rv) {
+      catch (const chaiscript::eval::detail::Return_Value &rv) {
         return rv.retval;
       }
     }

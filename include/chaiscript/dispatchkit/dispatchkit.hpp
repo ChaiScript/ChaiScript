@@ -26,8 +26,14 @@
 #include "dynamic_object.hpp"
 #include "../chaiscript_threading.hpp"
 
+
+/// \namespace chaiscript::dispatch
+/// \brief Classes and functions specific to the runtime dispatch side of ChaiScript. Some items may be of use to the end user.
+
 namespace chaiscript
 {
+  /// \brief Holds a collection of ChaiScript settings which can be applied to the ChaiScript runtime.
+  ///        Used to implement loadable module support.
   class Module
   {
     public:
@@ -109,6 +115,7 @@ namespace chaiscript
         }
   };
 
+  /// Convenience typedef for Module objects to be added to the ChaiScript runtime
   typedef boost::shared_ptr<Module> ModulePtr;
 
   namespace detail

@@ -16,11 +16,8 @@
 
 namespace chaiscript 
 {
-  
-  /**
-   * Object which attempts to convert a Boxed_Value into a generic
-   * POD type and provide generic POD type operations
-   */
+ 
+  /// \brief Represents any numeric type, generically. Used internally for generic operations between POD values
   class Boxed_POD_Value
   {
     public:

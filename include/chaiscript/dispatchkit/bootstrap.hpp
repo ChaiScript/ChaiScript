@@ -16,6 +16,7 @@
 
 namespace chaiscript 
 {
+  /// \brief Classes and functions useful for bootstrapping of ChaiScript and adding of new types
   namespace bootstrap
   {
     namespace detail

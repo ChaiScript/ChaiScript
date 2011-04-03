@@ -31,9 +31,7 @@ namespace chaiscript
       };
   }
 
-  /**
-   * compile time deduced information about a type
-   */
+  /// \brief Compile time deduced information about a type
   class Type_Info
   {
     public:

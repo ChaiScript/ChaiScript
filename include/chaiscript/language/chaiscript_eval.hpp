@@ -13,27 +13,29 @@
 
 namespace chaiscript
 {
-  /**
-   * Helper function that will set up the scope around a function call, including handling the named function parameters
-   */
-  template <typename Eval_System>
-    const Boxed_Value eval_function (Eval_System &t_ss, const AST_NodePtr &t_node, const std::vector<std::string> &t_param_names, const std::vector<Boxed_Value> &t_vals) {
-      detail::Scope_Push_Pop spp(t_ss);
-
-      for (unsigned int i = 0; i < t_param_names.size(); ++i) {
-        t_ss.add_object(t_param_names[i], t_vals[i]);
-      }
-
-      try {
-        return t_node->eval(t_ss);
-      } catch (const detail::Return_Value &rv) {
-        return rv.retval;
-      } 
-    }
-
-
+  /// \brief Classes and functions that are part of the runtime eval system
   namespace eval
   {
+    namespace detail
+    {
+      /**
+       * Helper function that will set up the scope around a function call, including handling the named function parameters
+       */
+      static const Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_NodePtr &t_node, const std::vector<std::string> &t_param_names, const std::vector<Boxed_Value> &t_vals) {
+        chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+
+        for (unsigned int i = 0; i < t_param_names.size(); ++i) {
+          t_ss.add_object(t_param_names[i], t_vals[i]);
+        }
+
+        try {
+          return t_node->eval(t_ss);
+        } catch (const detail::Return_Value &rv) {
+          return rv.retval;
+        } 
+      }
+    }
+
     struct Binary_Operator_AST_Node : public AST_Node {
       public:
         Binary_Operator_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Bitwise_Xor, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
@@ -101,7 +103,7 @@ namespace chaiscript
         Id_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Id, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
           m_value(get_value(t_ast_node_text))
-        { }
+      { }
 
         virtual ~Id_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
@@ -485,7 +487,7 @@ namespace chaiscript
           }
 
           return Boxed_Value(Proxy_Function(new dispatch::Dynamic_Proxy_Function
-                (boost::bind(&eval_function<chaiscript::detail::Dispatch_Engine>, boost::ref(t_ss), this->children.back(), t_param_names, _1),
+                (boost::bind(chaiscript::eval::detail::eval_function, boost::ref(t_ss), this->children.back(), t_param_names, _1),
                  static_cast<int>(numparams), this->children.back())));
         }
 
@@ -499,7 +501,7 @@ namespace chaiscript
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           const size_t num_children = this->children.size();
 
-          detail::Scope_Push_Pop spp(t_ss);
+          chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
           for (size_t i = 0; i < num_children; ++i) {
             try {
@@ -510,7 +512,7 @@ namespace chaiscript
                 return retval;
               }
             }
-            catch (const chaiscript::detail::Return_Value &) {
+            catch (const chaiscript::eval::detail::Return_Value &) {
               throw;
             }
           }
@@ -552,19 +554,19 @@ namespace chaiscript
           boost::shared_ptr<dispatch::Dynamic_Proxy_Function> guard;
           if (guardnode) {
             guard = boost::shared_ptr<dispatch::Dynamic_Proxy_Function>
-              (new dispatch::Dynamic_Proxy_Function(boost::bind(&eval_function<chaiscript::detail::Dispatch_Engine>,
-                                                      boost::ref(t_ss), guardnode,
-                                                      t_param_names, _1), static_cast<int>(numparams), guardnode));
+              (new dispatch::Dynamic_Proxy_Function(boost::bind(chaiscript::eval::detail::eval_function,
+                                                                boost::ref(t_ss), guardnode,
+                                                                t_param_names, _1), static_cast<int>(numparams), guardnode));
           }
 
           try {
             const std::string & l_function_name = this->children[0]->text;
             const std::string & l_annotation = this->annotation?this->annotation->text:"";
             t_ss.add(Proxy_Function
-                (new dispatch::Dynamic_Proxy_Function(boost::bind(&eval_function<chaiscript::detail::Dispatch_Engine>,
-                                                        boost::ref(t_ss), this->children.back(),
-                                                        t_param_names, _1), static_cast<int>(numparams), this->children.back(),
-                                            l_annotation, guard)), l_function_name);
+                (new dispatch::Dynamic_Proxy_Function(boost::bind(chaiscript::eval::detail::eval_function,
+                                                                  boost::ref(t_ss), this->children.back(),
+                                                                  t_param_names, _1), static_cast<int>(numparams), this->children.back(),
+                                                      l_annotation, guard)), l_function_name);
           }
           catch (const exception::reserved_word_error &e) {
             throw exception::eval_error("Reserved word used as function name '" + e.word() + "'");
@@ -582,7 +584,7 @@ namespace chaiscript
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
           bool cond;
 
-          detail::Scope_Push_Pop spp(t_ss);
+          chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
           try {
             cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
@@ -607,7 +609,7 @@ namespace chaiscript
           }
           return Boxed_Value();
         }
-        
+
     };
 
     struct If_AST_Node : public AST_Node {
@@ -663,7 +665,7 @@ namespace chaiscript
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           bool cond;
 
-          detail::Scope_Push_Pop spp(t_ss);
+          chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
           try {
             if (this->children.size() == 4) {
@@ -845,7 +847,7 @@ namespace chaiscript
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           Boxed_Value retval;        
 
-          detail::Scope_Push_Pop spp(t_ss);
+          chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
           try {
             retval = this->children[0]->eval(t_ss);
@@ -1013,9 +1015,9 @@ namespace chaiscript
           boost::shared_ptr<dispatch::Dynamic_Proxy_Function> guard;
           if (guardnode) {
             guard = boost::shared_ptr<dispatch::Dynamic_Proxy_Function>
-              (new dispatch::Dynamic_Proxy_Function(boost::bind(&eval_function<chaiscript::detail::Dispatch_Engine>,
-                                                      boost::ref(t_ss), guardnode,
-                                                      t_param_names, _1), static_cast<int>(numparams), guardnode));
+              (new dispatch::Dynamic_Proxy_Function(boost::bind(chaiscript::eval::detail::eval_function,
+                                                                boost::ref(t_ss), guardnode,
+                                                                t_param_names, _1), static_cast<int>(numparams), guardnode));
           }
 
           try {
@@ -1025,10 +1027,10 @@ namespace chaiscript
             if (function_name == class_name) {
               t_ss.add(Proxy_Function
                   (new dispatch::detail::Dynamic_Object_Constructor(class_name, Proxy_Function
-                                                          (new dispatch::Dynamic_Proxy_Function(boost::bind(&eval_function<chaiscript::detail::Dispatch_Engine>,
-                                                                                                  boost::ref(t_ss), this->children.back(),
-                                                                                                  t_param_names, _1), static_cast<int>(numparams), this->children.back(),
-                                                                                      l_annotation, guard)))), function_name);
+                                                                    (new dispatch::Dynamic_Proxy_Function(boost::bind(chaiscript::eval::detail::eval_function,
+                                                                                                                      boost::ref(t_ss), this->children.back(),
+                                                                                                                      t_param_names, _1), static_cast<int>(numparams), this->children.back(),
+                                                                                                          l_annotation, guard)))), function_name);
 
             }
             else {
@@ -1040,10 +1042,10 @@ namespace chaiscript
               }
               t_ss.add(Proxy_Function
                   (new dispatch::detail::Dynamic_Object_Function(class_name, Proxy_Function
-                                                       (new dispatch::Dynamic_Proxy_Function(boost::bind(&eval_function<chaiscript::detail::Dispatch_Engine>,
-                                                                                               boost::ref(t_ss), this->children.back(),
-                                                                                               t_param_names, _1), static_cast<int>(numparams), this->children.back(),
-                                                                                   l_annotation, guard)), ti)), function_name);
+                                                                 (new dispatch::Dynamic_Proxy_Function(boost::bind(chaiscript::eval::detail::eval_function,
+                                                                                                                   boost::ref(t_ss), this->children.back(),
+                                                                                                                   t_param_names, _1), static_cast<int>(numparams), this->children.back(),
+                                                                                                       l_annotation, guard)), ti)), function_name);
 
             }
           }
