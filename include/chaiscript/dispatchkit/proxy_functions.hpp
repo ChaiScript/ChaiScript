@@ -175,7 +175,11 @@ namespace chaiscript
     };
   }
 
+  /// \brief Common typedef used for passing of any registered function in ChaiScript
   typedef boost::shared_ptr<dispatch::Proxy_Function_Base> Proxy_Function;
+
+  /// \brief Const version of Proxy_Function chaiscript. Points to a const Proxy_Function. This is how most registered functions
+  ///        are handled internally.
   typedef boost::shared_ptr<const dispatch::Proxy_Function_Base> Const_Proxy_Function;
 
   namespace exception

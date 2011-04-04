@@ -12,6 +12,7 @@
 
 namespace chaiscript
 {
+  /// Signature of module entry point that all binary loadable modules must implement.
   typedef ModulePtr (*Create_Module_Func)();
 
   /// Types of AST nodes available to the parser and eval
@@ -52,6 +53,7 @@ namespace chaiscript
     File_Position() : line(0), column(0) { }
   };
 
+  /// \brief Typedef for pointers to AST_Node objects. Used in building of the AST_Node tree
   typedef boost::shared_ptr<struct AST_Node> AST_NodePtr;
 
 

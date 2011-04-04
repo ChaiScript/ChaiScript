@@ -27,7 +27,7 @@
 
 
 /// \namespace chaiscript
-/// \brief Every API call that the average user will be concerned with.
+/// \brief Namespace chaiscript contains every API call that the average user will be concerned with.
 
 /// \namespace chaiscript::detail
 /// \brief Classes and functions reserved for internal use. Items in this namespace are not supported.

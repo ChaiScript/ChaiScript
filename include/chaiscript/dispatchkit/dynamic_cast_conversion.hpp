@@ -221,6 +221,9 @@ namespace chaiscript
 
   typedef boost::shared_ptr<chaiscript::detail::Dynamic_Conversion> Dynamic_Cast_Conversion;
 
+  /// \brief Used to register a base / parent class relationship with ChaiScript. Necessary if you
+  ///        want automatic conversions up your inheritance hierarchy.
+  ///
   /// Create a new base class registration for applying to a module or to the chaiscript engine
   /// Currently, due to limitations in module loading on Windows, and for the sake of portability,
   /// if you have a type that is introduced in a loadable module and is used by multiple modules
