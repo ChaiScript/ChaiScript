@@ -270,50 +270,97 @@ namespace chaiscript
       boost::shared_ptr<Data> m_data;
   };
 
-  /// Clean wrapper for providing the user with a Boxed_Value
-  /// Suggested use: chai.add(var(myvariable), "myvariable");
+  /// \brief Creates a Boxed_Value. If the object passed in is a value type, it is copied. If it is a pointer, boost::shared_ptr, or boost::reference_type
+  ///        a copy is not made.
   /// \param t The value to box
+  /// 
+  /// Example:
+  /// \code
+  /// int i;
+  /// chaiscript::ChaiScript chai;
+  /// chai.add(chaiscript::var(i), "i");
+  /// chai.add(chaiscript::var(&i), "ip");
+  /// \endcode
   template<typename T>
     Boxed_Value var(T t)
     {
       return Boxed_Value(t);
     }
 
-  /// Wrapper for providing the user with a Boxed_Value that is const inside
-  /// of the ChaiScript engine.
-  /// Suggested use: chai.add(const_var(myvariable), "myvariable");
-  /// \param t The value to box
-  template<typename T>
-    Boxed_Value const_var(T *t)
-    {
-      return Boxed_Value( const_cast<typename boost::add_const<T>::type *>(t) );
-    }
+  namespace detail {
+    /// \brief Takes a value, copies it and returns a Boxed_Value object that is immutable
+    /// \param[in] t Value to copy and make const
+    /// \returns Immutable Boxed_Value 
+    /// \sa Boxed_Value::is_const
+    template<typename T>
+      Boxed_Value const_var_impl(const T &t)
+      {
+        return Boxed_Value(boost::shared_ptr<typename boost::add_const<T>::type >(new T(t)));
+      }
 
-  /// boost::shared_ptr<T> overload for const_var
-  template<typename T>
-    Boxed_Value const_var(const boost::shared_ptr<T> &t)
-    {
-      return Boxed_Value( boost::const_pointer_cast<typename boost::add_const<T>::type>(t) );
-    }
+    /// \brief Takes a pointer to a value, adds const to the pointed to type and returns an immutable Boxed_Value.
+    ///        Does not copy the pointed to value.
+    /// \param[in] t Pointer to make immutable
+    /// \returns Immutable Boxed_Value
+    /// \sa Boxed_Value::is_const
+    template<typename T>
+      Boxed_Value const_var_impl(T *t)
+      {
+        return Boxed_Value( const_cast<typename boost::add_const<T>::type *>(t) );
+      }
 
-  /// boost::reference_wrapper<T> overload for const_var
-  template<typename T>
-    Boxed_Value const_var(const boost::reference_wrapper<T> &t)
-    {
-      return Boxed_Value( boost::cref(t.get()) );
-    }
+    /// \brief Takes a boost::shared_ptr to a value, adds const to the pointed to type and returns an immutable Boxed_Value.
+    ///        Does not copy the pointed to value.
+    /// \param[in] t Pointer to make immutable
+    /// \returns Immutable Boxed_Value
+    /// \sa Boxed_Value::is_const
+    template<typename T>
+      Boxed_Value const_var_impl(const boost::shared_ptr<T> &t)
+      {
+        return Boxed_Value( boost::const_pointer_cast<typename boost::add_const<T>::type>(t) );
+      }
 
-  /// Generic overload for const_var
+    /// \brief Takes a boost::reference_wrapper value, adds const to the referenced type and returns an immutable Boxed_Value.
+    ///        Does not copy the referenced value.
+    /// \param[in] t Reference object to make immutable
+    /// \returns Immutable Boxed_Value
+    /// \sa Boxed_Value::is_const
+    template<typename T>
+      Boxed_Value const_var_impl(const boost::reference_wrapper<T> &t)
+      {
+        return Boxed_Value( boost::cref(t.get()) );
+      }
+  }
+
+  /// \brief Takes an object and returns an immutable Boxed_Value. If the object is a boost::reference or pointer type
+  ///        the value is not copied. If it is an object type, it is copied.
+  /// \param[in] t Object to make immutable
+  /// \returns Immutable Boxed_Value
+  /// \sa chaiscript::Boxed_Value::is_const
+  /// \sa chaiscript::var
+  ///
+  /// Example:
+  /// \code
+  /// enum Colors
+  /// {
+  ///   Blue,
+  ///   Green,
+  ///   Red
+  /// };
+  /// chaiscript::ChaiScript chai
+  /// chai.add(chaiscript::const_var(Blue), "Blue"); // add immutable constant
+  /// chai.add(chaiscript::const_var(Red), "Red");
+  /// chai.add(chaiscript::const_var(Green), "Green");
+  /// \endcode
   template<typename T>
     Boxed_Value const_var(const T &t)
     {
-      return Boxed_Value(boost::shared_ptr<typename boost::add_const<T>::type >(new T(t)));
+      return detail::const_var_impl(t);
     }
 
 
-  /**
-   * Return true if the two Boxed_Values share the same internal type
-   */
+
+  /// \returns true if the two Boxed_Values share the same internal type
   static bool type_match(Boxed_Value l, Boxed_Value r)
   {
     return l.get_type_info() == r.get_type_info();

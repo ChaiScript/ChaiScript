@@ -22,6 +22,17 @@
 
 namespace chaiscript
 {
+  /// \brief Generates a constructor function for use with ChaiScript
+  /// 
+  /// \tparam T The signature of the constructor to generate. In the form of: ClassType (ParamType1, ParamType2, ...)
+  /// 
+  /// Example:
+  /// \code
+  ///    chaiscript::ChaiScript chai;
+  ///    // Create a new function that creates a MyClass object using the (int, float) constructor
+  ///    // and call that function "MyClass" so that it appears as a normal constructor to the user.
+  ///    chai.add(constructor<MyClass (int, float)>(), "MyClass");
+  /// \endcode
   template<typename T>
     Proxy_Function constructor()
     {

@@ -24,12 +24,49 @@
 
 namespace chaiscript 
 {
-  
-  /**
-   * boxed_cast function for casting a Boxed_Value into a given type
-   * example:
-   * int &i = boxed_cast<int &>(boxedvalue);
-   */
+ 
+  /// \brief Function for extracting a value stored in a Boxed_Value object
+  /// \tparam Type The type to extract from the Boxed_Value
+  /// \param[in] bv The Boxed_Value to extract a typed value from
+  /// \returns Type equivalent to the requested type 
+  /// \throws exception::bad_boxed_cast If the requested conversion is not possible
+  /// 
+  /// boxed_cast will attempt to make conversions between value, &, *, boost::shared_ptr, boost::reference_wrapper,
+  /// and boost::function (const and non-const) where possible. boxed_cast is used internally during function
+  /// dispatch. This means that all of these conversions will be attempted automatically for you during
+  /// ChaiScript function calls.
+  ///
+  /// \li non-const values can be extracted as const or non-const
+  /// \li const values can be extracted only as const
+  /// \li Boxed_Value constructed from pointer or boost::reference_wrapper can be extracted as reference,
+  ///     pointer or value types
+  /// \li Boxed_Value constructed from boost::shared_ptr or value types can be extracted as reference,
+  ///     pointer, value, or boost::shared_ptr types
+  ///
+  /// Conversions to boost::function objects are attempted as well
+  ///
+  /// Example:
+  /// \code
+  /// // All of the following should succeed
+  /// chaiscript::Boxed_Value bv(1);
+  /// boost::shared_ptr<int> spi = chaiscript::boxed_cast<boost::shared_ptr<int> >(bv);
+  /// int i = chaiscript::boxed_cast<int>(bv);
+  /// int *ip = chaiscript::boxed_cast<int *>(bv);
+  /// int &ir = chaiscript::boxed_cast<int &>(bv);
+  /// boost::shared_ptr<const int> cspi = chaiscript::boxed_cast<boost::shared_ptr<const int> >(bv);
+  /// const int ci = chaiscript::boxed_cast<const int>(bv);
+  /// const int *cip = chaiscript::boxed_cast<const int *>(bv);
+  /// const int &cir = chaiscript::boxed_cast<const int &>(bv);
+  /// \endcode
+  ///
+  /// boost::function conversion example
+  /// \code
+  /// chaiscript::ChaiScript chai;
+  /// Boxed_Value bv = chai.eval("`+`"); // Get the functor for the + operator which is built in 
+  /// boost::function<int (int, int)> f = chaiscript::boxed_cast<boost::function<int (int, int)> >(bv);
+  /// int i = f(2,3);
+  /// assert(i == 5);
+  /// \endcode
   template<typename Type>
   typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv)
   {

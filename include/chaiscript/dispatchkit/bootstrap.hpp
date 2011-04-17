@@ -311,7 +311,7 @@ namespace chaiscript
 
     /// \brief Adds a constructor for a POD type 
     /// \tparam T The type to add the constructor for
-    /// \param[in] T The name of the type
+    /// \param[in] type The name of the type
     /// \param[in,out] m The Module to add the constructor to
     template<typename T>
     ModulePtr construct_pod(const std::string &type, ModulePtr m = ModulePtr(new Module()))

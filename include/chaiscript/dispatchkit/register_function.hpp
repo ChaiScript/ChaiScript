@@ -65,24 +65,85 @@ namespace chaiscript
     }
   }
 
+  /// \brief Creates a new Proxy_Function object from a boost::function object
+  /// \param[in] f boost::function to expose to ChaiScript
+  ///
+  /// \b Example:
+  /// \code
+  /// boost::function<int (char, float, std::string)> f = get_some_function();
+  /// chaiscript::ChaiScript chai;
+  /// chai.add(fun(f), "some_function");
+  /// \endcode
   template<typename T>
     Proxy_Function fun(const boost::function<T> &f)
     {
       return Proxy_Function(new dispatch::Proxy_Function_Impl<T>(f));
     }
 
+  /// \brief Creates a new Proxy_Function object from a free function, member function or data member
+  /// \param[in] t Function / member to expose
+  ///
+  /// \b Example:
+  /// \code
+  /// int myfunction(const std::string &);
+  /// class MyClass
+  /// {
+  ///   public:
+  ///     void memberfunction();
+  ///     int memberdata;
+  /// };
+  /// 
+  /// chaiscript::ChaiScript chai;
+  /// chai.add(fun(&myfunction), "myfunction");
+  /// chai.add(fun(&MyClass::memberfunction), "memberfunction");
+  /// chai.add(fun(&MyClass::memberdata), "memberdata");
+  /// \endcode
   template<typename T>
     Proxy_Function fun(T t)
     {
       return dispatch::detail::Fun_Helper<boost::function_types::is_member_object_pointer<T>::value, boost::function_types::is_member_function_pointer<T>::value>::go(t);
     }
 
+  /// \brief Creates a new Proxy_Function object from a free function, member function or data member and binds the first parameter of it
+  /// \param[in] t Function / member to expose
+  /// \param[in] q Value to bind to first parameter
+  ///
+  /// \b Example:
+  /// \code
+  /// struct MyClass
+  /// {
+  ///   void memberfunction(int);
+  /// };
+  /// 
+  /// MyClass obj;
+  /// chaiscript::ChaiScript chai;
+  /// // Add function taking only one argument, an int, and permanently bound to "obj"
+  /// chai.add(fun(&MyClass::memberfunction, boost::ref(obj)), "memberfunction"); 
+  /// \endcode
   template<typename T, typename Q>
     Proxy_Function fun(T t, const Q &q)
     {
       return fun(detail::bind_first(t, q));
     }
 
+  /// \brief Creates a new Proxy_Function object from a free function or member function and binds the first and second parameters of it
+  /// \param[in] t Function / member to expose
+  /// \param[in] q Value to bind to first parameter
+  /// \param[in] r Value to bind to second parameter
+  ///
+  /// \b Example:
+  /// \code
+  /// struct MyClass
+  /// {
+  ///   void memberfunction(int);
+  /// };
+  /// 
+  /// MyClass obj;
+  /// chaiscript::ChaiScript chai;
+  /// // Add function taking only no arguments, and permanently bound to "obj" and "1"
+  /// // memberfunction() will be equivalent to obj.memberfunction(1)
+  /// chai.add(fun(&MyClass::memberfunction, boost::ref(obj), 1), "memberfunction"); 
+  /// \endcode
   template<typename T, typename Q, typename R>
     Proxy_Function fun(T t, const Q &q, const R &r)
     {

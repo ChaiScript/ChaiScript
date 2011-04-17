@@ -184,9 +184,7 @@ namespace chaiscript
 
   namespace exception
   {
-    /**
-     * Exception thrown if a function's guard fails to execute
-     */
+    /// \brief  Exception thrown if a function's guard fails
     class guard_error : public std::runtime_error
     {
       public:
@@ -581,12 +579,11 @@ namespace chaiscript
 
   namespace exception
   {
-    /**
-     * Exception thrown in the case that a multi method dispatch fails
-     * because no matching function was found
-     * at runtime due to either an arity_error, a guard_error or a bad_boxed_cast
-     * exception
-     */
+     /// \brief Exception thrown in the case that a method dispatch fails
+     ///        because no matching function was found
+     /// 
+     /// May be thrown due to an arity_error, a guard_error or a bad_boxed_cast
+     /// exception
     class dispatch_error : public std::runtime_error
     {
       public:

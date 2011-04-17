@@ -30,6 +30,7 @@ namespace chaiscript
 {
   namespace exception
   {
+    /// \brief Thrown if an error occurs while attempting to load a binary module
     struct load_module_error : std::runtime_error
     {
       load_module_error(const std::string &t_reason) throw()
@@ -356,7 +357,35 @@ namespace chaiscript
       do_eval(chaiscript_prelude, "standard prelude");
     }
 
+    /**
+     * Helper function for loading a file
+     */
+    std::string load_file(const std::string &t_filename) {
+      std::ifstream infile(t_filename.c_str(), std::ios::in | std::ios::ate | std::ios::binary );
+
+      if (!infile.is_open()) {
+        throw exception::file_not_found_error(t_filename);
+      }
+
+      std::streampos size = infile.tellg();
+      infile.seekg(0, std::ios::beg);
+
+      assert(size >= 0);
+
+      if (size == std::streampos(0))
+      {
+        return std::string();
+      } else {
+        std::vector<char> v(static_cast<unsigned int>(size));
+        infile.read(&v[0], size);
+        return std::string(v.begin(), v.end());
+      }
+    }
+
   public:
+    /// \brief Constructor for ChaiScript
+    /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
+    /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
     ChaiScript(const std::vector<std::string> &t_modulepaths = std::vector<std::string>(),
                       const std::vector<std::string> &t_usepaths = std::vector<std::string>())
       : m_modulepaths(t_modulepaths), m_usepaths(t_usepaths) 
@@ -374,15 +403,20 @@ namespace chaiscript
       build_eval_system();
     }
 
-    /**
-     * Adds a shared object, that can be used by all threads, to the system
-     */
+    /// \brief Adds a constant object that is available in all contexts and to all threads
+    /// \param[in] t_bv Boxed_Value to add as a global
+    /// \param[in] t_name Name of the value to add
+    /// \throw exception::global_non_const If t_bv is not a constant object
+    /// \sa Boxed_Value::is_const
     ChaiScript &add_global_const(const Boxed_Value &t_bv, const std::string &t_name)
     {
       m_engine.add_global_const(t_bv, t_name);
       return *this;
     }
 
+    /// \brief Represents the current state of the ChaiScript system. State and be saved and restored
+    /// \sa ChaiScript::get_state
+    /// \sa ChaiScript::set_state
     struct State
     {
       std::set<std::string> used_files;
@@ -390,11 +424,15 @@ namespace chaiscript
       std::set<std::string> active_loaded_modules;
     };
 
-    /**
-     * Returns a state object that represents the current
-     * set of loaded files, the set of global variables and
-     * the set of initialized functions
-     */
+    /// \brief Returns a state object that represents the current state of the system
+    /// \return Current state of the system
+    ///
+    /// \b Example:
+    ///
+    /// \code
+    /// chaiscript::ChaiScript chai;
+    /// chaiscript::ChaiScript::State s = chai.get_state(); // represents bootstrapped initial state
+    /// \endcode
     State get_state()
     {
       chaiscript::detail::threading::lock_guard<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
@@ -407,9 +445,16 @@ namespace chaiscript
       return s;
     }
 
-    /**
-     * Restores the state from a saved State object.
-     */
+    /// \brief Sets the state of the system
+    /// \param[in] t_state New state to set
+    ///
+    /// \b Example:
+    /// \code
+    /// chaiscript::ChaiScript chai;
+    /// chaiscript::ChaiScript::State s = chai.get_state(); // get initial state
+    /// chai.add(chaiscript::fun(&somefunction), "somefunction");
+    /// chai.set_state(s); // restore initial state, which does not have the recently added "somefunction"
+    /// \endcode
     void set_state(const State &t_state)
     {
       chaiscript::detail::threading::lock_guard<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
@@ -420,9 +465,19 @@ namespace chaiscript
       m_engine.set_state(t_state.engine_state);
     }
 
-    /**
-     * Adds an object to the system: type, function, object
-     */
+    /// \brief Adds a type, function or object to ChaiScript
+    /// \param[in] t_t Item to add
+    /// \param[in] t_name Name of item to add
+    /// \returns Reference to current ChaiScript object
+    /// 
+    /// \b Examples:
+    /// \code
+    /// chaiscript::ChaiScript chai;
+    /// chai.add(chaiscript::user_type<MyClass>(), "MyClass"); // Add explicit type info (not strictly necessary)
+    /// chai.add(chaiscript::fun(&MyClass::function), "function"); // Add a class method
+    /// MyClass obj;
+    /// chai.add(chaiscript::var(&obj), "obj"); // Add a pointer to a locally defined object
+    /// \endcode
     template<typename T>
     ChaiScript &add(const T &t_t, const std::string &t_name)
     {
@@ -430,18 +485,42 @@ namespace chaiscript
       return *this;
     }
 
-    /**
-     * Adds a module object to the system
-     */
+    /// \brief Add a new conversion for upcasting to a base class
+    /// \sa chaiscript::base_class
+    /// \param[in] d Base class / parent class 
+    ///
+    /// \b Example:
+    /// \code
+    /// chaiscript::ChaiScript chai;
+    /// chai.add(chaiscript::base_class<std::runtime_error, chaiscript::dispatch_error>());
+    /// \endcode
+    ChaiScript &add(const Dynamic_Cast_Conversion &d)
+    {
+      m_engine.add(d);
+      return *this;
+    }
+
+    /// \brief Adds all elements of a module to ChaiScript runtime
+    /// \param[in] t_p The module to add.
+    /// \sa chaiscript::Module
     ChaiScript &add(const ModulePtr &t_p)
     {
       t_p->apply(*this, this->get_eval_engine());
       return *this;
     }
 
-    /**
-     * Load a dynamic library containing a chaiscript module
-     */
+    /// \brief Load a binary module from a dynamic library. Works on platforms that support
+    ///        dynamic libraries.
+    /// \param[in] t_module_name Name of the module to load
+    ///
+    /// The module is searched for in the registered module path folders (chaiscript::ChaiScript::ChaiScript)
+    /// and with standard prefixes and postfixes: ("lib"|"")\<t_module_name\>(".dll"|".so"|"").
+    ///
+    /// Once the file is located, the system looks for the symbol "create_chaiscript_module_\<t_module_name\>".
+    /// If no file can be found matching the search criteria and containing the appropriate entry point 
+    /// (the symbol mentioned above), an exception is thrown.
+    ///
+    /// \throw exception::load_module_error In the event that no matching module can be found.
     void load_module(const std::string &t_module_name)
     {
       std::vector<exception::load_module_error> errors;
@@ -490,9 +569,13 @@ namespace chaiscript
       throw exception::load_module_error("Unable to find module: " + t_module_name + " Errors: " + errstring);
     }
 
-    /**
-     * Load a dynamic library and provide the file name to load it from
-     */
+    /// \brief Load a binary module from a dynamic library. Works on platforms that support
+    ///        dynamic libraries.
+    ///
+    /// \param[in] t_module_name Module name to load
+    /// \param[in] t_filename Ignore normal filename search process and use specific filename
+    ///
+    /// \sa ChaiScript::load_module(const std::string &t_module_name)
     void load_module(const std::string &t_module_name, const std::string &t_filename)
     {
       chaiscript::detail::threading::lock_guard<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
@@ -510,62 +593,61 @@ namespace chaiscript
     }
 
 
-    /**
-     * Evaluate a string via eval method
-     */
+    /// \brief Evaluates a string. Equivalent to ChaiScript::eval.
+    ///
+    /// \param[in] t_script Script to execute
+    ///
+    /// \return result of the script execution
+    /// 
+    /// \throw exception::eval_error In the case that evaluation fails.
     Boxed_Value operator()(const std::string &t_script)
     {
       return do_eval(t_script);
     }
 
-
-    /**
-     * Helper function for loading a file
-     */
-    std::string load_file(const std::string &t_filename) {
-      std::ifstream infile(t_filename.c_str(), std::ios::in | std::ios::ate | std::ios::binary );
-
-      if (!infile.is_open()) {
-        throw exception::file_not_found_error(t_filename);
-      }
-
-      std::streampos size = infile.tellg();
-      infile.seekg(0, std::ios::beg);
-
-      assert(size >= 0);
-
-      if (size == std::streampos(0))
-      {
-        return std::string();
-      } else {
-        std::vector<char> v(static_cast<unsigned int>(size));
-        infile.read(&v[0], size);
-        return std::string(v.begin(), v.end());
-      }
-    }
-
-
+    /// \brief Evaluates a string and returns a typesafe result.
+    ///
+    /// \tparam T Type to extract from the result value of the script execution
+    /// \param[in] t_input Script to execute
+    ///
+    /// \return result of the script execution
+    /// 
+    /// \throw exception::eval_error In the case that evaluation fails.
+    /// \throw exception::bad_boxed_cast In the case that evaluation succeeds but the result value cannot be converted
+    ///        to the requested type.
     template<typename T>
     T eval(const std::string &t_input)
     {
       return boxed_cast<T>(do_eval(t_input));
     }
 
+    /// \brief Evaluates a string.
+    ///
+    /// \param[in] t_input Script to execute
+    ///
+    /// \return result of the script execution
+    /// 
+    /// \throw exception::eval_error In the case that evaluation fails.
     Boxed_Value eval(const std::string &t_input)
     {
       return do_eval(t_input);
     }
 
-    /**
-     * Loads the file specified by filename, evaluates it, and returns the result
-     */
+    /// \brief Loads the file specified by filename, evaluates it, and returns the result.
+    /// \param[in] t_filename File to load and parse.
+    /// \return result of the script execution
+    /// \throw exception::eval_error In the case that evaluation fails.
     Boxed_Value eval_file(const std::string &t_filename) {
       return do_eval(load_file(t_filename), t_filename);
     }
 
-    /**
-     * Loads the file specified by filename, evaluates it, and returns the as the specified type
-     */
+    /// \brief Loads the file specified by filename, evaluates it, and returns the typesafe result.
+    /// \tparam T Type to extract from the result value of the script execution
+    /// \param[in] t_filename File to load and parse.
+    /// \return result of the script execution
+    /// \throw exception::eval_error In the case that evaluation fails.
+    /// \throw exception::bad_boxed_cast In the case that evaluation succeeds but the result value cannot be converted
+    ///        to the requested type.
     template<typename T>
     T eval_file(const std::string &t_filename) {
       return boxed_cast<T>(do_eval(load_file(t_filename), t_filename));

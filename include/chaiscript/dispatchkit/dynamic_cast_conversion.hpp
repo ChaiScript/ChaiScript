@@ -230,6 +230,18 @@ namespace chaiscript
   /// (through a tertiary dll that is shared between the modules, static linking the new type
   /// into both loadable modules would not be portable), you need to register the base type
   /// relationship in all modules that use the newly added type in a polymorphic way.
+  ///
+  /// Example:
+  /// \code
+  /// class Base
+  /// {};
+  /// class Derived : public Base
+  /// {};
+  ///
+  /// chaiscript::ChaiScript chai;
+  /// chai.add(chaiscript::base_class<Base, Derived>());
+  /// \endcode
+  /// 
   /// \todo Move share static type registration code into a mechanism that allows it to be properly
   ///       shared by all modules
   template<typename Base, typename Derived>
