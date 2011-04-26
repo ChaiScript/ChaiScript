@@ -14,9 +14,6 @@ namespace ChaiScript_Language
 ///
 
 
-/// \section LibraryStrings Strings
-///
-
 
 /// \brief Converts o into a string.
 ///
@@ -147,6 +144,20 @@ class string
     /// \sa \ref keyworddef
     string trim() const;
 };
+
+class Function
+{
+  public:
+};
+
+/// \brief Generic concept of a value in ChaiScript. 
+///
+/// The Object type exists merely as a concept. All objects in ChaiScript support this concept 
+/// and have the following methods available to them. All objects are stored internally as chaiscript::Boxed_Value types.
+class Object
+{
+  public:
+}
 
 /// \brief Returns the max of a or b. Requires that operator>(a, b) exists
 /// Equivalent to 
@@ -366,7 +377,7 @@ Vector generate_range(Object x, Object y)
 /// eval> concat([1, 2, 3], [4, 5, 6])
 /// [1, 2, 3, 4, 5, 6]
 /// \endcode
-concat(Container x, Container y) 
+Object concat(Container x, Container y) 
 
 
 /// \brief Returns a new Vector with x and y as its values.
@@ -376,7 +387,7 @@ concat(Container x, Container y)
 /// eval> collate(1, 2)
 /// [1, 2]
 /// \endcode
-collate(x, y) 
+Vector collate(x, y) 
 
 
 /// \brief Applies f to elements of x and y, returning a new Vector with the result of each application.
@@ -386,7 +397,7 @@ collate(x, y)
 /// eval> zip_with(`+`, [1, 2, 3], [4, 5, 6])
 /// [5, 7, 9]
 /// \endcode
-zip_with(Function f, x, y) 
+Vector zip_with(Function f, Container x, Container y) 
 
 
 /// \brief Collates elements of x and y, returning a new Vector with the result.
@@ -396,7 +407,7 @@ zip_with(Function f, x, y)
 /// eval> zip([1, 2, 3], [4, 5, 6])
 /// [[1, 4], [2, 5], [3, 6]]
 /// \endcode
-zip(x, y) 
+Vector zip(Container x, Container y) 
 
 
 }

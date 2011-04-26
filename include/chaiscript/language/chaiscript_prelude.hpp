@@ -313,7 +313,7 @@ def string::rtrim() { \n\
 def string::trim() { \n\
   ltrim(rtrim(this)); \n\
 } \n\
-def find(container, value, compare_func) : call_exists(range, container) && is_type(compare_func, "function") { \n\
+def find(container, value, compare_func) : call_exists(range, container) && is_type(compare_func, "Function") { \n\
   var range = range(container); \n\
   while (!range.empty()) { \n\
     if (compare_func(range.front(), value)) { \n\

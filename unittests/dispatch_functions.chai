@@ -8,4 +8,4 @@ assert_equal(get_arity.get_param_types().size(), 2);
 
 var paramtypes = get_arity.get_param_types();
 
-assert_equal(true, paramtypes[1].bare_equal(function_type));
+assert_equal(true, paramtypes[1].bare_equal(Function_type));
