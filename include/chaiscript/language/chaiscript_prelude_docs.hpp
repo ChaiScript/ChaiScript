@@ -1,3 +1,5 @@
+/// This file is not technically part of the ChaiScript API. It is used solely for generating Doxygen docs
+/// regarding the ChaiScript standard runtime library.
 
 /// \brief Items in this namespace exist in the ChaiScript language runtime. They are not part of the C++ API
 namespace ChaiScript_Language
@@ -8,8 +10,10 @@ namespace ChaiScript_Language
 /// ChaiScript, at its core, has some very functional programming-inspired habits. Few places show this off as clearly 
 /// as the prelude, itself a name taken as a nod to the popular functional language Haskell. This prelude is available 
 /// to all standard ChaiScript applications, and provides a simple foundation for using numbers, strings, and ranges 
-/// (the general category of containers and their iteration).
+/// (the general category of Container cs and their iteration).
 ///
+
+
 /// \section LibraryStrings Strings
 ///
 
@@ -73,7 +77,7 @@ class string
     /// \endcode
     int rfind(string s) const;
 
-    /// Finds the first of characters in list in the string.
+    /// \brief Finds the first of characters in list in the string.
     ///
     /// \code
     /// eval> find_first_of("abab", "bec")
@@ -81,7 +85,7 @@ class string
     /// \endcode
     int find_first_of(string list) const;
 
-    /// Finds the last of characters in list in the string.
+    /// \brief Finds the last of characters in list in the string.
     ///
     /// \code
     /// eval> find_last_of("abab", "bec")
@@ -89,7 +93,7 @@ class string
     /// \endcode
     int find_last_of(string list) const;
 
-    /// Finds the first non-matching character to list in the str string.
+    /// \brief Finds the first non-matching character to list in the str string.
     ///
     /// \code
     /// eval> find_first_not_of("abcd", "fec")
@@ -97,7 +101,7 @@ class string
     /// \endcode
     int find_first_not_of(string list) const;
 
-    ///find_last_not_of(str, list): Finds the last non-matching character to list in the str string.
+    /// \brief Finds the last non-matching character to list in the list string.
     ///
     /// \code
     /// eval> find_last_not_of("abcd", "fec")
@@ -105,7 +109,7 @@ class string
     /// \endcode 
     int find_last_not_of(string list) const;
 
-    /// Removes whitespace from the front of the string, returning a new string
+    /// \brief Removes whitespace from the front of the string, returning a new string
     ///
     /// \note This function is implemented as a ChaiScript function using the def member function notation.
     ///
@@ -117,7 +121,7 @@ class string
     /// \sa \ref keyworddef
     string lstrim() const;
 
-    /// Removes whitespace from the back of the string, returning a new string
+    /// \brief Removes whitespace from the back of the string, returning a new string
     ///
     /// \note This function is implemented as a ChaiScript function using the def member function notation.
     ///
@@ -129,7 +133,7 @@ class string
     /// \sa \ref keyworddef
     string rtrim() const;
 
-    /// Removes whitespace from the front and back of the string, returning a new string
+    /// \brief Removes whitespace from the front and back of the string, returning a new string
     ///
     /// \note This function is implemented as a ChaiScript function using the def member function notation.
     ///
@@ -144,99 +148,256 @@ class string
     string trim() const;
 };
 
-///Numbers
+/// \brief Returns the max of a or b. Requires that operator>(a, b) exists
+/// Equivalent to 
+/// \code
+/// return a>b?a:b;
+/// \endcode
 ///
-///max(a, b): Returns the maximum value of a or b.
+/// Example:
+/// \code
+/// eval> max(4, 10)
+/// 10
+/// \endcode
+Object max(Object a, Object b);
+
+/// \brief Returns the min of a or b. Requires that operator<(a, b) exists
 ///
-///eval> max(4, 10)
-///10
-///min(a, b): Returns the minimum value of a or b.
+/// Equivalent to 
+/// \code
+/// return a<b?a:b;
+/// \endcode
 ///
-///eval> min(4, 10)
-///4
-///even(x): Returns true if x is even, otherwise returns false.
+/// Example:
+/// \code
+/// eval> min(4, 10)
+/// 4
+/// \endcode
+Object min(Object a, Object b);
+
+/// \brief Returns true if x is an even integer. 
+/// 
+/// Will also work on any non-integer type for which an operator%(x, int) exists
 ///
-///eval> even(4)
-///true
-///odd(x): Returns true if x is odd, otherwise returns false.
+/// Example:
+/// \code
+/// eval> even(4)
+/// true
+/// \endcode
+bool even(Object x);
+
+/// \brief Returns true if x is an odd integer. 
+/// 
+/// Will also work on any non-integer type for which an operator%(x, int) exists
 ///
-///eval> odd(4)
-///false
-///Containers
+/// Example:
+/// \code
+/// eval> odd(4)
+/// false 
+/// \endcode
+bool even(Object x);
+
+
+/// \brief Applies the function f over each element in the Container c.
 ///
-///for_each(container, f): Applies the function f over each element in the container.
+/// Example:
+/// \code
+/// eval> for_each([1, 2, 3], print)
+/// 1
+/// 2
+/// 3
+/// \endcode
+void for_each(Container c, Function f) 
+
+
+/// \brief Applies f over each element in the Container c, joining all the results.
 ///
-///eval> for_each([1, 2, 3], print)
-///1
-///2
-///3
-///map(container, f): Applies f over each element in the container, joining all the results.
+/// Example:
+/// \code
+/// eval> map([1, 2, 3], odd)
+/// [true, false, true]
+/// \endcode
+Container map(Container c, Function f) 
+
+
+/// \brief Starts with the initial value and applies the function f to it and the first element of the Container c. 
+///        The result is then applied to the second element, and so on until the elements are exhausted.
 ///
-///eval> map([1, 2, 3], odd)
-///[true, false, true]
-///foldl(container, f, initial): Starts with the initial value and applies the function f to it and the first element of the container. The result is then applied to the second element, and so on until the elements are exhausted.
+/// Example:
+/// \code
+/// eval> foldl([1, 2, 3, 4], `+`, 0)
+/// 10
+/// \endcode
+Object foldl(Container c, Function f, Object initial) 
+
+
+/// \brief Returns the sum total of the values in the Container c.
 ///
-///eval> foldl([1, 2, 3, 4], `+`, 0)
-///10
-///sum(container): Returns the sum total of the values in the container.
+/// Example:
+/// \code
+/// eval> sum([1, 2, 3, 4])
+/// 10
+/// \endcode
 ///
-///eval> sum([1, 2, 3, 4])
-///10
-///product(container): Returns the product of the value in the container.
+/// Equivalent to:
+/// \code
+/// foldl(c, `+`, 0.0);
+/// \endcode
+Numeric sum(Container c) 
+
+
+/// \brief Returns the product of the value in the Container c.
 ///
-///eval> product([1, 2, 3, 4])
-///24
-///take(container, num): Takes num elements from the container, returning them.
+/// Example:
+/// \code
+/// eval> product([1, 2, 3, 4])
+/// 24
+/// \endcode
 ///
-///eval> take([1, 2, 3, 4], 2)
-///[1, 2]
-///take_while(container, f): Takes elements from the container that match function f, stopping at the first non-match, returning them as a new Vector.
+/// Equivalent to:
+/// \code
+/// foldl(c, `*`, 1.0);
+/// \endcode
+Numeric product(Container c) 
+
+
+/// \brief Takes num elements from the Container c, returning them.
 ///
-///eval> take_while([1, 2, 3], odd)
-///[1]
-///drop(container, num): Drops num elements from the container, returning the remainder.
+/// Example:
+/// \code
+/// eval> take([1, 2, 3, 4], 2)
+/// [1, 2]
+/// \endcode
 ///
-///eval> drop([1, 2, 3, 4], 2)
-///[3, 4]
-///drop_while(container, f): Drops elements from the container that match f, stopping at the first non-match, returning the remainder.
+/// \returns A container of the same type that was passed in
+Object take(Container c, int num) 
+
+
+/// \brief Takes elements from the Container c that match function f, stopping at the first non-match, returning them as a new Vector.
 ///
-///eval> drop_while([1, 2, 3], odd)         
-///[2, 3]
-///reduce(container, f): Similar to foldl, this takes the first two elements as its starting values for f. This assumes container has at least 2 elements.
+/// Example:
+/// \code
+/// eval> take_while([1, 2, 3], odd)
+/// [1]
+/// \endcode
 ///
-///eval> reduce([1, 2, 3, 4], `+`)
-///10
-///filter(container, f): Takes elements from container that match function f, return them.
+/// \returns A container of the same type that was passed in
+Object take_while(Container c, Function f) 
+
+
+/// \brief Drops num elements from the Container c, returning the remainder.
 ///
-///eval> filter([1, 2, 3, 4], odd)
-///[1, 3]
-///join(container, delim): Joins the elements of the container into a string, delimiting each with the delim string.
+/// Example:
+/// \code
+/// eval> drop([1, 2, 3, 4], 2)
+/// [3, 4]
+/// \endcode
 ///
-///eval> join([1, 2, 3], "*") 
-///1*2*3
-///reverse(container): Returns the contents of the container in reversed order.
+/// \returns A container of the same type that was passed in
+Object drop(Container c, int num) 
+
+
+/// \brief Drops elements from the Container c that match f, stopping at the first non-match, returning the remainder.
 ///
-///eval> reverse([1, 2, 3, 4, 5, 6, 7])
-///[7, 6, 5, 4, 3, 2, 1]
-///generate_range(x, y): Generates a new Vector filled with values starting at x and ending with y.
+/// Example:
+/// \code
+/// eval> drop_while([1, 2, 3], odd)         
+/// [2, 3]
+/// \endcode
+Object drop_while(Container c, Function f) 
+
+
+/// \brief Similar to foldl, this takes the first two elements as its starting values for f. This assumes Container c has at least 2 elements.
 ///
-///eval> generate_range(1, 10)
-///[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-///concat(x, y): Returns a new Vector with x and y concatenated.
+/// Example:
+/// \code
+/// eval> reduce([1, 2, 3, 4], `+`)
+/// 10
+/// \endcode
+Object reduce(Container c, Function f) 
+
+
+/// \brief Takes elements from Container c that match function f, return them.
 ///
-///eval> concat([1, 2, 3], [4, 5, 6])
-///[1, 2, 3, 4, 5, 6]
-///collate(x, y): Returns a new Vector with x and y as its values.
+/// Example:
+/// \code
+/// eval> filter([1, 2, 3, 4], odd)
+/// [1, 3]
+/// \endcode
+Object filter(Container c, Function f) 
+
+
+/// \brief Joins the elements of the Container c into a string, delimiting each with the delim string.
 ///
-///eval> collate(1, 2)
-///[1, 2]
-///zip_with(f, x, y): Applies f to elements of x and y, returning a new Vector with the result of each application.
+/// Example:
+/// \code
+/// eval> join([1, 2, 3], "*") 
+/// 1*2*3
+/// \endcode
+string join(Container c, string delim) 
+
+
+/// \brief Returns the contents of the Container c in reversed order.
 ///
-///eval> zip_with(`+`, [1, 2, 3], [4, 5, 6])
-///[5, 7, 9]
-///zip(x, y): Collates elements of x and y, returning a new Vector with the result.
+/// Example:
+/// \code
+/// eval> reverse([1, 2, 3, 4, 5, 6, 7])
+/// [7, 6, 5, 4, 3, 2, 1]
+/// \endcode
+Container reverse(Container c) 
+
+
+/// \brief Generates a new Vector filled with values starting at x and ending with y.
 ///
-///eval> zip([1, 2, 3], [4, 5, 6])
-///[[1, 4], [2, 5], [3, 6]]
+/// Works on types supporting operator<=(x, y) and operator++(x)
+///
+/// Example:
+/// \code
+/// eval> generate_range(1, 10)
+/// [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+/// \endcode
+Vector generate_range(Object x, Object y) 
+
+
+/// \brief Returns a new Container with x and y concatenated.
+///
+/// Example:
+/// \code
+/// eval> concat([1, 2, 3], [4, 5, 6])
+/// [1, 2, 3, 4, 5, 6]
+/// \endcode
+concat(Container x, Container y) 
+
+
+/// \brief Returns a new Vector with x and y as its values.
+///
+/// Example:
+/// \code
+/// eval> collate(1, 2)
+/// [1, 2]
+/// \endcode
+collate(x, y) 
+
+
+/// \brief Applies f to elements of x and y, returning a new Vector with the result of each application.
+///
+/// Example:
+/// \code
+/// eval> zip_with(`+`, [1, 2, 3], [4, 5, 6])
+/// [5, 7, 9]
+/// \endcode
+zip_with(Function f, x, y) 
+
+
+/// \brief Collates elements of x and y, returning a new Vector with the result.
+///
+/// Example:
+/// \code
+/// eval> zip([1, 2, 3], [4, 5, 6])
+/// [[1, 4], [2, 5], [3, 6]]
+/// \endcode
+zip(x, y) 
+
+
 }
 

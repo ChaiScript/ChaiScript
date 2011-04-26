@@ -620,7 +620,7 @@ namespace chaiscript
         m->add(user_type<bool>(), "bool");
         m->add(user_type<Boxed_Value>(), "Object");
         m->add(user_type<Boxed_POD_Value>(), "PODObject");
-        m->add(user_type<Proxy_Function>(), "function");
+        m->add(user_type<Proxy_Function>(), "Function");
         m->add(user_type<std::exception>(), "exception");
 
         m->add(fun(&dispatch::Proxy_Function_Base::get_arity), "get_arity");
