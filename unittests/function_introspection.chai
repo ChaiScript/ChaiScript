@@ -10,7 +10,7 @@ def test_function(a)
 
 // test_function tests
 assert_equal(test_function.get_arity(), 1);
-assert_equal(test_function.get_annotation(), "#Test Function Description\n");
+assert_equal(trim(test_function.get_annotation()), "#Test Function Description");
 assert_equal(test_function.get_contained_functions().size(), 0);
 assert_equal(test_function.get_param_types().size(), 2);
 

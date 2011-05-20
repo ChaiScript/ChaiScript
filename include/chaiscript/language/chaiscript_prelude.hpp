@@ -305,10 +305,10 @@ def string::find_last_not_of(list) : is_type(list, "string") { \n\
   int(find_last_not_of(this, list, -1)); \n\
 } \n\
 def string::ltrim() { \n\
-  drop_while(this, fun(x) { x == ' ' || x == '\t' }); \n\
+  drop_while(this, fun(x) { x == ' ' || x == '\t' || x == '\r' || x == '\n'}); \n\
 } \n\
 def string::rtrim() { \n\
-  reverse(drop_while(reverse(this), fun(x) { x == ' ' || x == '\t' })); \n\
+  reverse(drop_while(reverse(this), fun(x) { x == ' ' || x == '\t' || x == '\r' || x == '\n'})); \n\
 } \n\
 def string::trim() { \n\
   ltrim(rtrim(this)); \n\

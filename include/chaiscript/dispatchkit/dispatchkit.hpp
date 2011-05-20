@@ -807,8 +807,8 @@ namespace chaiscript
           const std::vector<Type_Info> lhsparamtypes = lhs->get_param_types();
           const std::vector<Type_Info> rhsparamtypes = rhs->get_param_types();
 
-          const int lhssize = lhsparamtypes.size();
-          const int rhssize = rhsparamtypes.size();
+          const size_t lhssize = lhsparamtypes.size();
+          const size_t rhssize = rhsparamtypes.size();
 
           const Type_Info boxed_type = user_type<Boxed_Value>();
           const Type_Info boxed_pod_type = user_type<Boxed_POD_Value>();
@@ -843,7 +843,7 @@ namespace chaiscript
 
 
 
-          for (int i = 1; i < lhssize && i < rhssize; ++i)
+          for (size_t i = 1; i < lhssize && i < rhssize; ++i)
           {
             const Type_Info lt = lhsparamtypes[i];
             const Type_Info rt = rhsparamtypes[i];
