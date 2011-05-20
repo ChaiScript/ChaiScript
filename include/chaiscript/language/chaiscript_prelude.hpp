@@ -131,11 +131,11 @@ def product(container) { foldl(container, `*`, 1.0) } \n\
 # Returns a new container with the elements of the first value concatenated with the elements of the second value\n\
 def concat(x, y) : call_exists(clone, x) { \n\
   var retval = x; \n\
-  var len = y.size(); \n\
-  var i = 0; \n\
-  while (i < len) { \n\
-    retval.push_back(y[i]); \n\
-    ++i; \n\
+  var inserter = back_inserter(retval); \n\
+  var range = range(y); \n\
+  while (!range.empty()) { \n\
+    inserter(range.front()); \n\
+    range.pop_front(); \n\
   } \n\
   retval; \n\
 } \n\

@@ -155,6 +155,7 @@
 ///    ["finally" block]
 /// \endcode
 ///
+/// \sa ChaiScript_Language::throw
 ///
 /// <hr>
 /// \section keywordwhile while

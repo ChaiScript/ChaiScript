@@ -213,9 +213,9 @@ namespace chaiscript
             const std::string &t_description = "",
             const Proxy_Function &t_guard = Proxy_Function())
           : Proxy_Function_Base(build_param_type_list(t_arity)),
-          m_f(t_f), m_arity(t_arity), m_description(t_description), m_guard(t_guard), m_parsenode(t_parsenode)
-      {
-      }
+            m_f(t_f), m_arity(t_arity), m_description(t_description), m_guard(t_guard), m_parsenode(t_parsenode)
+        {
+        }
 
         virtual bool operator==(const Proxy_Function_Base &rhs) const
         {
