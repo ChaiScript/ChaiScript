@@ -27,7 +27,7 @@ namespace chaiscript
   {
     /// If threading is enabled, then this namespace contains boost::thread classes.
     /// If threading is not enabled, then stubbed in wrappers that do nothing are provided.
-    /// This allows us to avoid #ifdef code in the sections that need thread safety.
+    /// This allows us to avoid \#ifdef code in the sections that need thread safety.
     namespace threading
     {
 

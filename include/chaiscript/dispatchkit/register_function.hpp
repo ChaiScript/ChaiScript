@@ -74,6 +74,8 @@ namespace chaiscript
   /// chaiscript::ChaiScript chai;
   /// chai.add(fun(f), "some_function");
   /// \endcode
+  /// 
+  /// \sa \ref addingfunctions
   template<typename T>
     Proxy_Function fun(const boost::function<T> &f)
     {
@@ -98,6 +100,8 @@ namespace chaiscript
   /// chai.add(fun(&MyClass::memberfunction), "memberfunction");
   /// chai.add(fun(&MyClass::memberdata), "memberdata");
   /// \endcode
+  /// 
+  /// \sa \ref addingfunctions
   template<typename T>
     Proxy_Function fun(T t)
     {
@@ -120,6 +124,8 @@ namespace chaiscript
   /// // Add function taking only one argument, an int, and permanently bound to "obj"
   /// chai.add(fun(&MyClass::memberfunction, boost::ref(obj)), "memberfunction"); 
   /// \endcode
+  /// 
+  /// \sa \ref addingfunctions
   template<typename T, typename Q>
     Proxy_Function fun(T t, const Q &q)
     {
@@ -144,6 +150,8 @@ namespace chaiscript
   /// // memberfunction() will be equivalent to obj.memberfunction(1)
   /// chai.add(fun(&MyClass::memberfunction, boost::ref(obj), 1), "memberfunction"); 
   /// \endcode
+  /// 
+  /// \sa \ref addingfunctions
   template<typename T, typename Q, typename R>
     Proxy_Function fun(T t, const Q &q, const R &r)
     {

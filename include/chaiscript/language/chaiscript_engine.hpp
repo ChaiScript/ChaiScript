@@ -478,6 +478,8 @@ namespace chaiscript
     /// MyClass obj;
     /// chai.add(chaiscript::var(&obj), "obj"); // Add a pointer to a locally defined object
     /// \endcode
+    ///
+    /// \sa \ref addingitems
     template<typename T>
     ChaiScript &add(const T &t_t, const std::string &t_name)
     {

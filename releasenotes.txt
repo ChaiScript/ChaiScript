@@ -1,0 +1,26 @@
+Changes since 2.3.3
+
+* Code simplifications
+* Fully integrate documentation with source code in doxygen style comments
+* Unit tests increased from 114 to 137
+* Automatic conversion between boost::function objects and ChaiScript functions ****
+* Many bug fixes
+* Minor performance improvements
+* Namespace reorganization to make end user code more accessible
+* clang support
+* VisualStudio 2010 Support
+* Support for C++ base classes and automatic upcasting ****
+* Remove __ reserved identifiers
+* Better code organization to reduce #ifdefs 
+* clanmills: command line options for chai eval
+* clanmills: parser cleanups and code reduction
+* Function introspection and reflection ****
+* Correct function dispatch order to account for base classes and provide a defined order of dispatch ****
+* Predictable object lifetime that emulates C++ stack lifetime
+* emarcotte: pkgconfig support
+* standardize on method/member naming and indentation
+* 64bit Visual Studio support
+* Better support for const objects
+* Drastic reduction of runtime exceptions - making debug builds orders of magnitude faster
+* Support for platforms with no loadable module support
+* Add helper macro for registering class ****

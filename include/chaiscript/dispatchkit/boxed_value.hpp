@@ -281,6 +281,8 @@ namespace chaiscript
   /// chai.add(chaiscript::var(i), "i");
   /// chai.add(chaiscript::var(&i), "ip");
   /// \endcode
+  /// 
+  /// \sa \ref addingobjects
   template<typename T>
     Boxed_Value var(T t)
     {
@@ -352,6 +354,8 @@ namespace chaiscript
   /// chai.add(chaiscript::const_var(Red), "Red");
   /// chai.add(chaiscript::const_var(Green), "Green");
   /// \endcode
+  /// 
+  /// \sa \ref addingobjects
   template<typename T>
     Boxed_Value const_var(const T &t)
     {
