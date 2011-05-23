@@ -18,9 +18,31 @@
 ///
 /// The end user parts of the API are extremely simple both in size and ease of use.
 ///
-/// Currently, all source control and project management aspects of ChaiScript occur on <a href="http://www.github.com">github</a>.
+/// Currently, all source control and project management aspects of ChaiScript occur on <a href="http://www.github.comi/chaiscript">github</a>.
+///
+/// <hr>
+/// 
+/// \sa chaiscript
+/// \sa chaiscript::ChaiScript
+/// \sa \ref LangKeywordRef
+/// \sa \ref LangObjectSystemRef
+/// \sa http://www.chaiscript.com
+/// \sa http://www.github.com/ChaiScript/ChaiScript
+///
+/// <hr>
 ///
 /// \section gettingstarted Getting Started
+///
+/// \li \ref basics
+/// \li \ref eval
+/// \li \ref addingitems
+/// \li \ref helpermacro
+/// \li \ref pointerconversions
+/// \li \ref baseclasses
+/// \li \ref functionobjects
+/// \li \ref threading
+/// \li \ref exceptions
+/// 
 /// 
 /// \subsection basics Basics
 /// 
@@ -303,14 +325,68 @@
 /// 
 /// <hr>
 ///
-/// function objects
+/// \subsection functionobjects Function Objects
+///
+/// Functions are first class objects in Chaiscript and ChaiScript supports automatic conversion
+/// between ChaiScript functions and boost::function objects.
+///
+/// \code
+/// void callafunc(const boost::function<void (const std::string &)> &t_func)
+/// {
+///   t_func("bob");
+/// }
+/// 
+/// int main()
+/// {
+///   chaiscript::ChaiScript chai;
+///   chai.add(chaiscript::fun(&callafunc), "callafunc");
+///   chai("callafunc(fun(x) { print(x); })"); // pass a lambda function to the registered function
+///                                            // which expects a typed boost::function
+///
+///   boost::function<void ()> f = chai.eval<boost::function<void ()> >("dump_system");
+///   f(); // call the ChaiScript function dump_system, from C++
+/// }
+/// \endcode
+/// 
+/// <hr>
+///
+/// \subsection threading Threading
+/// 
+/// Thread safety is automatically handled within the ChaiScript system. Objects can be added
+/// and scripts executed from multiple threads. For each thread that executes scripts, a new
+/// context is created and managed by the engine.
+/// 
+/// Thread safety can be disabled by defining CHAISCRIPT_NO_THREADS when using the library.
+///
+/// Disabling thread safety increases performance and removes the requirement for boost_threads.
 ///
 /// <hr>
+///
+/// \subsection exceptions Exception Handling
 /// 
-/// \sa chaiscript
-/// \sa chaiscript::ChaiScript
-/// \sa http://www.chaiscript.com
-/// \sa http://www.github.com/ChaiScript/ChaiScript
+/// Exceptions can be thrown in ChaiScript and caught in C++ or thrown in C++ and caught in 
+/// ChaiScript.
+///
+/// \code
+/// void throwexception()
+/// {
+///   throw std::runtime_error("err");
+/// }
+/// 
+/// int main()
+/// {
+///   chaiscript::ChaiScript chai;
+///   chai.add(chaiscript::fun(&throwexception), "throwexception");
+///   chai("try { throwexception(); } catch (e) { print(e.what()); }"); // prints "err"
+/// 
+///   try {
+///     chai("throw(1)");
+///   } catch (chaiscript::Boxed_Value bv) {
+///     int i = chaiscript::boxed_cast<int>(bv);
+///     // i == 1
+///   }
+/// }
+/// \endcode
 
 /// \page LangObjectSystemRef ChaiScript Language Object Model Reference
 ///
