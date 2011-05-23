@@ -190,14 +190,20 @@ ENDIF(BUILD_TESTING)
 install(TARGETS chai ${MODULES} RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript )
 install(DIRECTORY include/chaiscript DESTINATION include 
    PATTERN "*.hpp"
-   PATTERN "*/.svn*" EXCLUDE)
+   PATTERN "*/.svn*" EXCLUDE
+   PATTERN "*/.git*" EXCLUDE
+   PATTERN "*~" EXCLUDE)
 install(DIRECTORY unittests DESTINATION share/chaiscript 
    PATTERN "*.chai" 
    PATTERN "*.inc"
-   PATTERN "*/.svn*" EXCLUDE)
+   PATTERN "*/.svn*" EXCLUDE
+   PATTERN "*/.git*" EXCLUDE
+   PATTERN "*~" EXCLUDE)
 install(DIRECTORY samples DESTINATION share/chaiscript 
    PATTERN "*.chai"
-   PATTERN "*/.svn*" EXCLUDE)
+   PATTERN "*/.svn*" EXCLUDE
+   PATTERN "*/.git*" EXCLUDE
+   PATTERN "*~" EXCLUDE)
         
 
 configure_file(contrib/pkgconfig/chaiscript.pc.in lib/pkgconfig/chaiscript.pc @ONLY)
