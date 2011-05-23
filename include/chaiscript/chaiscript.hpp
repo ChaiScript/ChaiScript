@@ -18,13 +18,14 @@
 ///
 /// The end user parts of the API are extremely simple both in size and ease of use.
 ///
-/// Currently, all source control and project management aspects of ChaiScript occur on <a href="http://www.github.comi/chaiscript">github</a>.
+/// Currently, all source control and project management aspects of ChaiScript occur on <a href="http://www.github.com/ChaiScript/ChaiScript">github</a>.
 ///
 /// <hr>
 /// 
 /// \sa chaiscript
 /// \sa chaiscript::ChaiScript
 /// \sa \ref LangKeywordRef
+/// \sa \ref LangInPlaceRef
 /// \sa \ref LangObjectSystemRef
 /// \sa http://www.chaiscript.com
 /// \sa http://www.github.com/ChaiScript/ChaiScript
@@ -388,9 +389,6 @@
 /// }
 /// \endcode
 
-/// \page LangStatementRef ChaiScript Language Statement Types references
-///
-
 /// \page LangObjectSystemRef ChaiScript Language Object Model Reference
 ///
 ///
@@ -410,6 +408,26 @@
 /// \sa \ref keywordattr
 /// \sa \ref keyworddef
 
+/// \page LangInPlaceRef ChaiScript Language In-Place Creation Reference
+/// \section inplacevector Vector
+/// 
+/// \code
+/// In-place Vector ::= "[" [expression ("," expression)*]  "]"
+/// \endcode
+///
+/// \section inplacerangedvector Ranged Vector
+///
+/// \code
+/// In-place Ranged Vector ::= "[" value ".." value "]"
+/// \endcode
+///
+/// Creates a vector over a range (eg. 1..10)
+///
+/// \section inplacemap Map
+///
+/// \code
+/// In-place Map ::= "[" (string ":" expression)+ "]"
+/// \endcode
 
 /// \page LangKeywordRef ChaiScript Language Keyword Reference
 ///
