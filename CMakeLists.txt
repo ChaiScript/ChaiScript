@@ -202,5 +202,5 @@ install(DIRECTORY samples DESTINATION share/chaiscript
 
 configure_file(contrib/pkgconfig/chaiscript.pc.in lib/pkgconfig/chaiscript.pc @ONLY)
 install(FILES "${chaiscript_BINARY_DIR}/lib/pkgconfig/chaiscript.pc" 
-	DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/pkgconfig)
+	DESTINATION lib/pkgconfig)
 
