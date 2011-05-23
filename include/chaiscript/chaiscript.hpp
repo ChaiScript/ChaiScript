@@ -223,10 +223,11 @@
 /// 
 /// \sa \ref addingmodules
 ///
+/// <hr>
 /// \subsection pointerconversions Pointer / Object Conversions
 ///
 /// As much as possible, ChaiScript attempts to convert between &, *, const &, const *, boost::shared_ptr<T>,
-/// boost::shared_ptr<const T> and boost::reference_wrapand value types automatically.
+/// boost::shared_ptr<const T>, boost::reference_wrapper<T>, boost::reference_wrapper<const T> and value types automatically.
 ///
 /// If a var object was created in C++ from a pointer, it cannot be convered to a shared_ptr (this would add invalid reference counting).
 /// Const may be added, but never removed. 
@@ -243,6 +244,8 @@
 /// void fun6(boost::shared_ptr<const int>);
 /// void fun7(const boost::shared_ptr<int> &);
 /// void fun8(const boost::shared_ptr<const int> &);
+/// void fun9(boost::reference_wrapper<int>);
+/// void fun10(boost::reference_wrapper<const int>);
 ///
 /// int main()
 /// {
@@ -256,6 +259,8 @@
 ///   chai.add(fun(fun6), "fun6");
 ///   chai.add(fun(fun7), "fun7");
 ///   chai.add(fun(fun8), "fun8");
+///   chai.add(fun(fun9), "fun9");
+///   chai.add(fun(fun10), "fun10");
 ///
 ///   chai("var i = 10;");
 ///   chai("fun1(i)");
@@ -266,12 +271,38 @@
 ///   chai("fun6(i)");
 ///   chai("fun7(i)");
 ///   chai("fun8(i)");
-/// }  add demo for reference_wrapper
+///   chai("fun9(i)");
+///   chai("fun10(i)");
+/// }  
 /// \endcode
 ///
-/// See the unit test unittests/
+/// See the unit test unittests/boxed_cast_test.cpp for a complete breakdown of the automatic casts that 
+/// available and tested.
 /// 
-/// base classes
+/// <hr>
+/// \subsection baseclasses Base Classes
+/// 
+/// ChaiScript supports handling of passing a derived class object to a function expecting a base class object.
+/// For the process to work, the base/derived relationship must be registered with the engine.
+///
+/// \code
+/// class Base {};
+/// class Derived : public Base {};
+/// void myfunction(Base *b);
+///
+/// int main()
+/// {
+///   chaiscript::ChaiScript chai;
+///   chai.add(chaiscript::base_class<Base, Derived>());
+///   Derived d;
+///   chai.add(chaiscript::var(&d), "d");
+///   chai.add(chaiscript::fun(&myfunction), "myfunction");
+///   chai("myfunction(d)");
+/// }
+/// \endcode
+/// 
+/// <hr>
+///
 /// function objects
 ///
 /// <hr>
