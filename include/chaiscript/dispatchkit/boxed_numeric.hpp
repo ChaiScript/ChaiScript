@@ -4,8 +4,8 @@
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
-#ifndef CHAISCRIPT_BOXED_POD_VALUE_HPP_
-#define CHAISCRIPT_BOXED_POD_VALUE_HPP_
+#ifndef CHAISCRIPT_BOXED_NUMERIC_HPP_
+#define CHAISCRIPT_BOXED_NUMERIC_HPP_
 
 #include "type_info.hpp"
 #include "boxed_value.hpp"
@@ -18,10 +18,10 @@ namespace chaiscript
 {
  
   /// \brief Represents any numeric type, generically. Used internally for generic operations between POD values
-  class Boxed_POD_Value
+  class Boxed_Numeric
   {
     public:
-      Boxed_POD_Value(const Boxed_Value &v)
+      Boxed_Numeric(const Boxed_Value &v)
         : d(0), i(0), isfloat(false)
       {
         if (v.get_type_info().is_undef())
@@ -69,37 +69,37 @@ namespace chaiscript
         }
       }
 
-      bool operator==(const Boxed_POD_Value &r) const
+      bool operator==(const Boxed_Numeric &r) const
       {
         return ((isfloat)?d:i) == ((r.isfloat)?r.d:r.i);
       }
 
-      bool operator<(const Boxed_POD_Value &r) const
+      bool operator<(const Boxed_Numeric &r) const
       {
         return ((isfloat)?d:i) < ((r.isfloat)?r.d:r.i);
       }
 
-      bool operator>(const Boxed_POD_Value &r) const
+      bool operator>(const Boxed_Numeric &r) const
       {
         return ((isfloat)?d:i) > ((r.isfloat)?r.d:r.i);
       }
 
-      bool operator>=(const Boxed_POD_Value &r) const
+      bool operator>=(const Boxed_Numeric &r) const
       {
         return ((isfloat)?d:i) >= ((r.isfloat)?r.d:r.i);
       }
 
-      bool operator<=(const Boxed_POD_Value &r) const
+      bool operator<=(const Boxed_Numeric &r) const
       {
         return ((isfloat)?d:i) <= ((r.isfloat)?r.d:r.i);
       }
 
-      bool operator!=(const Boxed_POD_Value &r) const
+      bool operator!=(const Boxed_Numeric &r) const
       {
         return ((isfloat)?d:i) != ((r.isfloat)?r.d:r.i);
       }
 
-      Boxed_Value operator+(const Boxed_POD_Value &r) const
+      Boxed_Value operator+(const Boxed_Numeric &r) const
       {
         if (!isfloat && !r.isfloat)
         {
@@ -109,7 +109,7 @@ namespace chaiscript
         return Boxed_Value(((isfloat)?d:i) + ((r.isfloat)?r.d:r.i));
       }
 
-      Boxed_Value operator-(const Boxed_POD_Value &r) const
+      Boxed_Value operator-(const Boxed_Numeric &r) const
       {
         if (!isfloat && !r.isfloat)
         {
@@ -119,7 +119,7 @@ namespace chaiscript
         return Boxed_Value(((isfloat)?d:i) - ((r.isfloat)?r.d:r.i));
       }
 
-      Boxed_Value operator&(const Boxed_POD_Value &r) const
+      Boxed_Value operator&(const Boxed_Numeric &r) const
       {
         if (!isfloat && !r.isfloat)
         {
@@ -129,7 +129,7 @@ namespace chaiscript
         throw exception::bad_boxed_cast("& only valid for integer types");
       }
 
-      Boxed_Value operator^(const Boxed_POD_Value &r) const
+      Boxed_Value operator^(const Boxed_Numeric &r) const
       {
         if (!isfloat && !r.isfloat)
         {
@@ -139,7 +139,7 @@ namespace chaiscript
         throw exception::bad_boxed_cast("^ only valid for integer types");
       }
 
-      Boxed_Value operator|(const Boxed_POD_Value &r) const
+      Boxed_Value operator|(const Boxed_Numeric &r) const
       {
         if (!isfloat && !r.isfloat)
         {
@@ -149,7 +149,7 @@ namespace chaiscript
         throw exception::bad_boxed_cast("| only valid for integer types");
       }
 
-      Boxed_Value operator/(const Boxed_POD_Value &r) const
+      Boxed_Value operator/(const Boxed_Numeric &r) const
       {
         if (!isfloat && !r.isfloat)
         {
@@ -159,7 +159,7 @@ namespace chaiscript
         return Boxed_Value(((isfloat)?d:i) / ((r.isfloat)?r.d:r.i));
       }
 
-      Boxed_Value operator<<(const Boxed_POD_Value &r) const
+      Boxed_Value operator<<(const Boxed_Numeric &r) const
       {
         if (!isfloat && !r.isfloat)
         {
@@ -170,7 +170,7 @@ namespace chaiscript
       }
 
 
-      Boxed_Value operator*(const Boxed_POD_Value &r) const
+      Boxed_Value operator*(const Boxed_Numeric &r) const
       {
         if (!isfloat && !r.isfloat)
         {
@@ -181,7 +181,7 @@ namespace chaiscript
       }
 
 
-      Boxed_Value operator%(const Boxed_POD_Value &r) const
+      Boxed_Value operator%(const Boxed_Numeric &r) const
       {
         if (!isfloat && !r.isfloat)
         {
@@ -191,7 +191,7 @@ namespace chaiscript
         throw exception::bad_boxed_cast("% only valid for integer types");
       }
 
-      Boxed_Value operator>>(const Boxed_POD_Value &r) const
+      Boxed_Value operator>>(const Boxed_Numeric &r) const
       {
         if (!isfloat && !r.isfloat)
         {
@@ -222,32 +222,32 @@ namespace chaiscript
   namespace detail
   {
     /**
-     * Cast_Helper for converting from Boxed_Value to Boxed_POD_Value
+     * Cast_Helper for converting from Boxed_Value to Boxed_Numeric
      */
     template<>
-      struct Cast_Helper<Boxed_POD_Value>
+      struct Cast_Helper<Boxed_Numeric>
       {
-        typedef Boxed_POD_Value Result_Type;
+        typedef Boxed_Numeric Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob)
         {
-          return Boxed_POD_Value(ob);
+          return Boxed_Numeric(ob);
         }
       };
 
     /**
-     * Cast_Helper for converting from Boxed_Value to Boxed_POD_Value
+     * Cast_Helper for converting from Boxed_Value to Boxed_Numeric
      */
     template<>
-      struct Cast_Helper<const Boxed_POD_Value &> : Cast_Helper<Boxed_POD_Value>
+      struct Cast_Helper<const Boxed_Numeric &> : Cast_Helper<Boxed_Numeric>
       {
       };
       
     /**
-     * Cast_Helper for converting from Boxed_Value to Boxed_POD_Value
+     * Cast_Helper for converting from Boxed_Value to Boxed_Numeric
      */
     template<>
-      struct Cast_Helper<const Boxed_POD_Value> : Cast_Helper<Boxed_POD_Value>
+      struct Cast_Helper<const Boxed_Numeric> : Cast_Helper<Boxed_Numeric>
       {
       };  
   }

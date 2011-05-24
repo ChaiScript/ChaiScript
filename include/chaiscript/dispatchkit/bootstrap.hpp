@@ -11,7 +11,7 @@
 #include "dynamic_object.hpp"
 #include "register_function.hpp"
 #include "operators.hpp"
-#include "boxed_pod_value.hpp"
+#include "boxed_numeric.hpp"
 #include <boost/function_types/result_type.hpp>
 
 namespace chaiscript 
@@ -22,13 +22,13 @@ namespace chaiscript
     namespace detail
     {
 
-      /// \brief Assigns a POD value from a Boxed_POD_Value. Helps support operators between
+      /// \brief Assigns a POD value from a Boxed_Numeric. Helps support operators between
       ///        disparate POD types.
       /// \param[in,out] p1 object to assign to
-      /// \param[in] v Boxed_POD_Value to assign from
+      /// \param[in] v Boxed_Numeric to assign from
       /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
-      P1 &assign_pod(P1 &p1, const Boxed_POD_Value &v)
+      P1 &assign_pod(P1 &p1, const Boxed_Numeric &v)
       {
         if (v.isfloat)
         {
@@ -38,11 +38,11 @@ namespace chaiscript
         }
       }
 
-      /// \brief Constructs a new POD value object from a Boxed_POD_Value
-      /// \param[in] v Boxed_POD_Value to copy into the new object
+      /// \brief Constructs a new POD value object from a Boxed_Numeric
+      /// \param[in] v Boxed_Numeric to copy into the new object
       /// \returns The newly created object.
       template<typename P1>
-      P1 construct_pod(Boxed_POD_Value v)
+      P1 construct_pod(Boxed_Numeric v)
       {
         if (v.isfloat)
         {
@@ -52,12 +52,12 @@ namespace chaiscript
         }    
       }
 
-      /// \brief Performs a bitwise and assignment (&=) on the given object with the given Boxed_POD_Value
+      /// \brief Performs a bitwise and assignment (&=) on the given object with the given Boxed_Numeric
       /// \param[in,out] p1 object to bitwise and assign to
-      /// \param[in] r Boxed_POD_Value to assign from
+      /// \param[in] r Boxed_Numeric to assign from
       /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
-      P1 &assign_bitwise_and_pod(P1 &p1, Boxed_POD_Value r)
+      P1 &assign_bitwise_and_pod(P1 &p1, Boxed_Numeric r)
       {
         if (!r.isfloat)
         {
@@ -67,12 +67,12 @@ namespace chaiscript
         throw exception::bad_boxed_cast("&= only valid for integer types");
       }
 
-      /// \brief Performs a xor assignment (^=) on the given object with the given Boxed_POD_Value
+      /// \brief Performs a xor assignment (^=) on the given object with the given Boxed_Numeric
       /// \param[in,out] p1 object to xor assign to
-      /// \param[in] r Boxed_POD_Value to assign from
+      /// \param[in] r Boxed_Numeric to assign from
       /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
-      P1 &assign_xor_pod(P1 &p1, Boxed_POD_Value r)
+      P1 &assign_xor_pod(P1 &p1, Boxed_Numeric r)
       {
         if (!r.isfloat)
         {
@@ -82,12 +82,12 @@ namespace chaiscript
         throw exception::bad_boxed_cast("^= only valid for integer types");
       }
 
-      /// \brief Performs a bitwise or assignment (|=) on the given object with the given Boxed_POD_Value
+      /// \brief Performs a bitwise or assignment (|=) on the given object with the given Boxed_Numeric
       /// \param[in,out] p1 object to bitwise or assign to
-      /// \param[in] r Boxed_POD_Value to assign from
+      /// \param[in] r Boxed_Numeric to assign from
       /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
-      P1 &assign_bitwise_or_pod(P1 &p1, Boxed_POD_Value r)
+      P1 &assign_bitwise_or_pod(P1 &p1, Boxed_Numeric r)
       {
         if (!r.isfloat)
         {
@@ -97,12 +97,12 @@ namespace chaiscript
         throw exception::bad_boxed_cast("&= only valid for integer types");
       }
 
-      /// \brief Performs an assign difference (-=) on the given object with the given Boxed_POD_Value
+      /// \brief Performs an assign difference (-=) on the given object with the given Boxed_Numeric
       /// \param[in,out] p1 object to difference assign to
-      /// \param[in] r Boxed_POD_Value to assign from
+      /// \param[in] r Boxed_Numeric to assign from
       /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
-      P1 &assign_difference_pod(P1 &p1, Boxed_POD_Value r)
+      P1 &assign_difference_pod(P1 &p1, Boxed_Numeric r)
       {
         if (r.isfloat)
         {
@@ -112,12 +112,12 @@ namespace chaiscript
         }
       }
 
-      /// \brief Performs an assign shift left (<<=) on the given object with the given Boxed_POD_Value
+      /// \brief Performs an assign shift left (<<=) on the given object with the given Boxed_Numeric
       /// \param[in,out] p1 object to assign shift left to
-      /// \param[in] r Boxed_POD_Value to assign from
+      /// \param[in] r Boxed_Numeric to assign from
       /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
-      P1 &assign_left_shift_pod(P1 &p1, Boxed_POD_Value r)
+      P1 &assign_left_shift_pod(P1 &p1, Boxed_Numeric r)
       {
         if (!r.isfloat)
         {
@@ -128,12 +128,12 @@ namespace chaiscript
       }
 
 
-      /// \brief Performs an assign product (*=) on the given object with the given Boxed_POD_Value
+      /// \brief Performs an assign product (*=) on the given object with the given Boxed_Numeric
       /// \param[in,out] p1 object to assign product to
-      /// \param[in] r Boxed_POD_Value to assign from
+      /// \param[in] r Boxed_Numeric to assign from
       /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
-      P1 &assign_product_pod(P1 &p1, Boxed_POD_Value r)
+      P1 &assign_product_pod(P1 &p1, Boxed_Numeric r)
       {
         if (r.isfloat)
         {
@@ -143,12 +143,12 @@ namespace chaiscript
         }
       }
 
-      /// \brief Performs an assign quotient (/=) on the given object with the given Boxed_POD_Value
+      /// \brief Performs an assign quotient (/=) on the given object with the given Boxed_Numeric
       /// \param[in,out] p1 object to assign quotient to
-      /// \param[in] r Boxed_POD_Value to assign from
+      /// \param[in] r Boxed_Numeric to assign from
       /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
-      P1 &assign_quotient_pod(P1 &p1, Boxed_POD_Value r)
+      P1 &assign_quotient_pod(P1 &p1, Boxed_Numeric r)
       {
         if (r.isfloat)
         {
@@ -158,12 +158,12 @@ namespace chaiscript
         }
       }
 
-      /// \brief Performs an assign remainder (%=) on the given object with the given Boxed_POD_Value
+      /// \brief Performs an assign remainder (%=) on the given object with the given Boxed_Numeric
       /// \param[in,out] p1 object to assign remainder to
-      /// \param[in] r Boxed_POD_Value to assign from
+      /// \param[in] r Boxed_Numeric to assign from
       /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
-      P1 &assign_remainder_pod(P1 &p1, Boxed_POD_Value r)
+      P1 &assign_remainder_pod(P1 &p1, Boxed_Numeric r)
       {
         if (!r.isfloat)
         {
@@ -174,12 +174,12 @@ namespace chaiscript
       }
 
 
-      /// \brief Performs an assign shift right (>>=) on the given object with the given Boxed_POD_Value
+      /// \brief Performs an assign shift right (>>=) on the given object with the given Boxed_Numeric
       /// \param[in,out] p1 object to assign shift right to
-      /// \param[in] r Boxed_POD_Value to assign from
+      /// \param[in] r Boxed_Numeric to assign from
       /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
-      P1 &assign_right_shift_pod(P1 &p1, Boxed_POD_Value r)
+      P1 &assign_right_shift_pod(P1 &p1, Boxed_Numeric r)
       {
         if (!r.isfloat)
         {
@@ -189,12 +189,12 @@ namespace chaiscript
         throw exception::bad_boxed_cast(">>= only valid for integer types");
       }
 
-      /// \brief Performs an assign sum (+=) on the given object with the given Boxed_POD_Value
+      /// \brief Performs an assign sum (+=) on the given object with the given Boxed_Numeric
       /// \param[in,out] p1 object to sum assign to
-      /// \param[in] r Boxed_POD_Value to assign from
+      /// \param[in] r Boxed_Numeric to assign from
       /// \returns Reference to p1, to support normal C assignment semantics
       template<typename P1>
-      P1 &assign_sum_pod(P1 &p1, Boxed_POD_Value r)
+      P1 &assign_sum_pod(P1 &p1, Boxed_Numeric r)
       {
         if (r.isfloat)
         {
@@ -485,16 +485,16 @@ namespace chaiscript
       */
       static void opers_arithmetic_pod(ModulePtr m = ModulePtr(new Module()))
       {
-        m->add(fun(&operators::addition<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "+");
-        m->add(fun(&operators::subtraction<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "-");
-        m->add(fun(&operators::bitwise_and<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "&");
-        m->add(fun(&operators::bitwise_xor<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "^");
-        m->add(fun(&operators::bitwise_or<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "|");
-        m->add(fun(&operators::division<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "/");
-        m->add(fun(&operators::left_shift<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "<<");
-        m->add(fun(&operators::multiplication<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "*");
-        m->add(fun(&operators::remainder<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), "%");
-        m->add(fun(&operators::right_shift<Boxed_Value, Boxed_POD_Value, Boxed_POD_Value>), ">>");
+        m->add(fun(&operators::addition<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "+");
+        m->add(fun(&operators::subtraction<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "-");
+        m->add(fun(&operators::bitwise_and<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "&");
+        m->add(fun(&operators::bitwise_xor<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "^");
+        m->add(fun(&operators::bitwise_or<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "|");
+        m->add(fun(&operators::division<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "/");
+        m->add(fun(&operators::left_shift<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "<<");
+        m->add(fun(&operators::multiplication<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "*");
+        m->add(fun(&operators::remainder<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "%");
+        m->add(fun(&operators::right_shift<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), ">>");
       }
 
       /**
@@ -619,7 +619,7 @@ namespace chaiscript
         m->add(user_type<void>(), "void");
         m->add(user_type<bool>(), "bool");
         m->add(user_type<Boxed_Value>(), "Object");
-        m->add(user_type<Boxed_POD_Value>(), "PODObject");
+        m->add(user_type<Boxed_Numeric>(), "PODObject");
         m->add(user_type<Proxy_Function>(), "Function");
         m->add(user_type<std::exception>(), "exception");
 
@@ -694,7 +694,7 @@ namespace chaiscript
 
         operators::logical_compliment<bool>(m);
 
-        opers_comparison<Boxed_POD_Value>(m);
+        opers_comparison<Boxed_Numeric>(m);
         opers_arithmetic_pod(m);
 
 
