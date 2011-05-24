@@ -563,7 +563,7 @@
 #include "dispatchkit/bootstrap_stl.hpp"
 #include "dispatchkit/function_call.hpp"
 #include "dispatchkit/dynamic_object.hpp"
-#include "dispatchkit/boxed_pod_value.hpp"
+#include "dispatchkit/boxed_numeric.hpp"
 
 #ifdef  BOOST_HAS_DECLSPEC
 #define CHAISCRIPT_MODULE_EXPORT extern "C" __declspec(dllexport)
