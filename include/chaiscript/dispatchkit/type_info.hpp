@@ -14,6 +14,7 @@
 #include <boost/type_traits/is_void.hpp>
 #include <boost/type_traits/is_reference.hpp>
 #include <boost/type_traits/is_pointer.hpp>
+#include <boost/type_traits/is_arithmetic.hpp>
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/type_traits/remove_pointer.hpp>
@@ -36,9 +37,9 @@ namespace chaiscript
   {
     public:
       Type_Info(bool t_is_const, bool t_is_reference, bool t_is_pointer, bool t_is_void, 
-          const std::type_info *t_ti, const std::type_info *t_bareti)
+          bool t_is_arithmetic, const std::type_info *t_ti, const std::type_info *t_bareti)
         : m_is_const(t_is_const), m_is_reference(t_is_reference), m_is_pointer(t_is_pointer),
-        m_is_void(t_is_void),
+        m_is_void(t_is_void), m_is_arithmetic(t_is_arithmetic),
         m_type_info(t_ti), m_bare_type_info(t_bareti),
         m_is_undef(false)
       {
@@ -46,7 +47,7 @@ namespace chaiscript
 
       Type_Info()
         : m_is_const(false), m_is_reference(false), m_is_pointer(false),
-        m_is_void(false), m_type_info(0), m_bare_type_info(0),
+        m_is_void(false), m_is_arithmetic(false), m_type_info(0), m_bare_type_info(0),
         m_is_undef(true)
       {
       }
@@ -54,7 +55,8 @@ namespace chaiscript
       Type_Info(const Type_Info &ti)
         : m_is_const(ti.m_is_const), m_is_reference(ti.m_is_reference), 
         m_is_pointer(ti.m_is_pointer),
-        m_is_void(ti.m_is_void), m_type_info(ti.m_type_info), 
+        m_is_void(ti.m_is_void), m_is_arithmetic(ti.m_is_arithmetic),
+        m_type_info(ti.m_type_info), 
         m_bare_type_info(ti.m_bare_type_info),
         m_is_undef(ti.m_is_undef)
       {
@@ -66,6 +68,7 @@ namespace chaiscript
         m_is_reference = ti.m_is_reference;
         m_is_pointer = ti.m_is_pointer;
         m_is_void = ti.m_is_void;
+        m_is_arithmetic = ti.m_is_arithmetic;
         m_type_info = ti.m_type_info;
         m_bare_type_info = ti.m_bare_type_info;
         m_is_undef = ti.m_is_undef;
@@ -97,6 +100,7 @@ namespace chaiscript
       bool is_const() const { return m_is_const; }
       bool is_reference() const { return m_is_reference; }
       bool is_void() const { return m_is_void; }
+      bool is_arithmetic() const { return m_is_arithmetic; }
       bool is_undef() const { return m_is_undef || m_bare_type_info == 0; }
       bool is_pointer() const { return m_is_pointer; }
 
@@ -125,6 +129,7 @@ namespace chaiscript
       bool m_is_reference;
       bool m_is_pointer;
       bool m_is_void;
+      bool m_is_arithmetic;
       const std::type_info *m_type_info;
       const std::type_info *m_bare_type_info;
       bool m_is_undef;
@@ -144,6 +149,7 @@ namespace chaiscript
         {
           return Type_Info(boost::is_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
+              boost::is_arithmetic<T>::value,
               &typeid(T), 
               &typeid(typename Bare_Type<T>::type));
         }
@@ -158,6 +164,7 @@ namespace chaiscript
         {
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
+              boost::is_arithmetic<T>::value,
               &typeid(boost::shared_ptr<T> ), 
               &typeid(typename Bare_Type<T>::type));
         }
@@ -172,6 +179,7 @@ namespace chaiscript
         {
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
+              boost::is_arithmetic<T>::value,
               &typeid(const boost::shared_ptr<T> &), 
               &typeid(typename Bare_Type<T>::type));
         }
@@ -186,6 +194,7 @@ namespace chaiscript
         {
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
+              boost::is_arithmetic<T>::value,
               &typeid(boost::reference_wrapper<T> ), 
               &typeid(typename Bare_Type<T>::type));
         }
@@ -200,6 +209,7 @@ namespace chaiscript
         {
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
+              boost::is_arithmetic<T>::value,
               &typeid(const boost::reference_wrapper<T> &), 
               &typeid(typename Bare_Type<T>::type));
         }
