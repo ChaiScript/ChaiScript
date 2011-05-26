@@ -97,21 +97,6 @@ namespace chaiscript
         throw exception::bad_boxed_cast("&= only valid for integer types");
       }
 
-      /// \brief Performs an assign difference (-=) on the given object with the given Boxed_Numeric
-      /// \param[in,out] p1 object to difference assign to
-      /// \param[in] r Boxed_Numeric to assign from
-      /// \returns Reference to p1, to support normal C assignment semantics
-      template<typename P1>
-      P1 &assign_difference_pod(P1 &p1, Boxed_Numeric r)
-      {
-        if (r.isfloat)
-        {
-          return p1 -= P1(r.d);
-        } else {
-          return p1 -= P1(r.i);
-        }
-      }
-
       /// \brief Performs an assign shift left (<<=) on the given object with the given Boxed_Numeric
       /// \param[in,out] p1 object to assign shift left to
       /// \param[in] r Boxed_Numeric to assign from
@@ -127,36 +112,6 @@ namespace chaiscript
         throw exception::bad_boxed_cast("<<= only valid for integer types");
       }
 
-
-      /// \brief Performs an assign product (*=) on the given object with the given Boxed_Numeric
-      /// \param[in,out] p1 object to assign product to
-      /// \param[in] r Boxed_Numeric to assign from
-      /// \returns Reference to p1, to support normal C assignment semantics
-      template<typename P1>
-      P1 &assign_product_pod(P1 &p1, Boxed_Numeric r)
-      {
-        if (r.isfloat)
-        {
-          return p1 *= P1(r.d);
-        } else {
-          return p1 *= P1(r.i);
-        }
-      }
-
-      /// \brief Performs an assign quotient (/=) on the given object with the given Boxed_Numeric
-      /// \param[in,out] p1 object to assign quotient to
-      /// \param[in] r Boxed_Numeric to assign from
-      /// \returns Reference to p1, to support normal C assignment semantics
-      template<typename P1>
-      P1 &assign_quotient_pod(P1 &p1, Boxed_Numeric r)
-      {
-        if (r.isfloat)
-        {
-          return p1 /= P1(r.d);
-        } else {
-          return p1 /= P1(r.i);
-        }
-      }
 
       /// \brief Performs an assign remainder (%=) on the given object with the given Boxed_Numeric
       /// \param[in,out] p1 object to assign remainder to
@@ -189,20 +144,6 @@ namespace chaiscript
         throw exception::bad_boxed_cast(">>= only valid for integer types");
       }
 
-      /// \brief Performs an assign sum (+=) on the given object with the given Boxed_Numeric
-      /// \param[in,out] p1 object to sum assign to
-      /// \param[in] r Boxed_Numeric to assign from
-      /// \returns Reference to p1, to support normal C assignment semantics
-      template<typename P1>
-      P1 &assign_sum_pod(P1 &p1, Boxed_Numeric r)
-      {
-        if (r.isfloat)
-        {
-          return p1 += P1(r.d);
-        } else {
-          return p1 += P1(r.i);
-        }
-      }
 
     }
 
@@ -234,27 +175,27 @@ namespace chaiscript
       operators::assign_bitwise_and<T>(m);
       operators::assign_xor<T>(m);
       operators::assign_bitwise_or<T>(m);
-      operators::assign_difference<T>(m);
+//      operators::assign_difference<T>(m);
       operators::assign_left_shift<T>(m);
-      operators::assign_product<T>(m);
-      operators::assign_quotient<T>(m);
-      operators::assign_remainder<T>(m);
+//      operators::assign_product<T>(m);
+//      operators::assign_quotient<T>(m);
+//      operators::assign_remainder<T>(m);
       operators::assign_right_shift<T>(m);
-      operators::assign_sum<T>(m);
+//      operators::assign_sum<T>(m);
 
-      operators::prefix_decrement<T>(m);
-      operators::prefix_increment<T>(m);
-      operators::addition<T>(m);
+//      operators::prefix_decrement<T>(m);
+//      operators::prefix_increment<T>(m);
+//      operators::addition<T>(m);
       operators::unary_plus<T>(m);
-      operators::subtraction<T>(m);
+//      operators::subtraction<T>(m);
       operators::unary_minus<T>(m);
       operators::bitwise_and<T>(m);
       operators::bitwise_compliment<T>(m);
       operators::bitwise_xor<T>(m);
       operators::bitwise_or<T>(m);
-      operators::division<T>(m);
+//      operators::division<T>(m);
       operators::left_shift<T>(m);
-      operators::multiplication<T>(m);
+//      operators::multiplication<T>(m);
       operators::remainder<T>(m);
       operators::right_shift<T>(m);
       return m;
@@ -268,17 +209,17 @@ namespace chaiscript
     template<typename T>
     ModulePtr opers_float_arithmetic(ModulePtr m = ModulePtr(new Module()))
     {
-      operators::assign_difference<T>(m);
-      operators::assign_product<T>(m);
-      operators::assign_quotient<T>(m);
-      operators::assign_sum<T>(m);
+//      operators::assign_difference<T>(m);
+//      operators::assign_product<T>(m);
+//      operators::assign_quotient<T>(m);
+//      operators::assign_sum<T>(m);
 
-      operators::addition<T>(m);
+//      operators::addition<T>(m);
       operators::unary_plus<T>(m);
-      operators::subtraction<T>(m);
+//      operators::subtraction<T>(m);
       operators::unary_minus<T>(m);
-      operators::division<T>(m);
-      operators::multiplication<T>(m);
+//      operators::division<T>(m);
+//      operators::multiplication<T>(m);
       return m;
     }
 
@@ -365,10 +306,10 @@ namespace chaiscript
       oper_assign_pod<T>(m);
       construct_pod<T>(name, m);
 
-      m->add(fun(&detail::assign_sum_pod<T>), "+=");
-      m->add(fun(&detail::assign_difference_pod<T>), "-=");
-      m->add(fun(&detail::assign_product_pod<T>), "*=");
-      m->add(fun(&detail::assign_quotient_pod<T>), "/=");
+//      m->add(fun(&detail::assign_sum_pod<T>), "+=");
+//      m->add(fun(&detail::assign_difference_pod<T>), "-=");
+//      m->add(fun(&detail::assign_product_pod<T>), "*=");
+//      m->add(fun(&detail::assign_quotient_pod<T>), "/=");
 
       m->add(fun(&to_string<T>), "to_string");
       m->add(fun(&parse_string<T>), "to_" + name);
@@ -495,6 +436,12 @@ namespace chaiscript
         m->add(fun(&operators::multiplication<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "*");
         m->add(fun(&operators::remainder<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "%");
         m->add(fun(&operators::right_shift<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), ">>");
+        m->add(fun(&Boxed_Numeric::operator*=), "*=");
+        m->add(fun(&Boxed_Numeric::operator/=), "/=");
+        m->add(fun(&Boxed_Numeric::operator+=), "+=");
+        m->add(fun(&Boxed_Numeric::operator-=), "-=");
+        m->add(fun(&Boxed_Numeric::operator--), "--");
+        m->add(fun(&Boxed_Numeric::operator++), "++");
       }
 
       /**
