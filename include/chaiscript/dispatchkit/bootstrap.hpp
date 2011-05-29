@@ -21,130 +21,30 @@ namespace chaiscript
   {
     namespace detail
     {
-
-      /// \brief Assigns a POD value from a Boxed_Numeric. Helps support operators between
-      ///        disparate POD types.
-      /// \param[in,out] p1 object to assign to
-      /// \param[in] v Boxed_Numeric to assign from
-      /// \returns Reference to p1, to support normal C assignment semantics
-      template<typename P1>
-      P1 &assign_pod(P1 &p1, const Boxed_Numeric &v)
-      {
-        if (v.isfloat)
-        {
-          return (p1 = P1(v.d));
-        } else {
-          return (p1 = P1(v.i));
-        }
-      }
-
       /// \brief Constructs a new POD value object from a Boxed_Numeric
       /// \param[in] v Boxed_Numeric to copy into the new object
       /// \returns The newly created object.
       template<typename P1>
-      P1 construct_pod(Boxed_Numeric v)
+      boost::shared_ptr<P1> construct_pod(Boxed_Numeric v)
       {
-        if (v.isfloat)
-        {
-          return P1(v.d);
-        } else {
-          return P1(v.i);
-        }    
+        boost::shared_ptr<P1> p(new P1());
+        Boxed_Value bv(p);
+        Boxed_Numeric nb(bv);
+        nb = v;
+        return p;
       }
+    }
 
-      /// \brief Performs a bitwise and assignment (&=) on the given object with the given Boxed_Numeric
-      /// \param[in,out] p1 object to bitwise and assign to
-      /// \param[in] r Boxed_Numeric to assign from
-      /// \returns Reference to p1, to support normal C assignment semantics
-      template<typename P1>
-      P1 &assign_bitwise_and_pod(P1 &p1, Boxed_Numeric r)
-      {
-        if (!r.isfloat)
-        {
-          return p1 &= P1(r.i);
-        }
-
-        throw exception::bad_boxed_cast("&= only valid for integer types");
-      }
-
-      /// \brief Performs a xor assignment (^=) on the given object with the given Boxed_Numeric
-      /// \param[in,out] p1 object to xor assign to
-      /// \param[in] r Boxed_Numeric to assign from
-      /// \returns Reference to p1, to support normal C assignment semantics
-      template<typename P1>
-      P1 &assign_xor_pod(P1 &p1, Boxed_Numeric r)
-      {
-        if (!r.isfloat)
-        {
-          return p1 ^= P1(r.i);
-        }
-
-        throw exception::bad_boxed_cast("^= only valid for integer types");
-      }
-
-      /// \brief Performs a bitwise or assignment (|=) on the given object with the given Boxed_Numeric
-      /// \param[in,out] p1 object to bitwise or assign to
-      /// \param[in] r Boxed_Numeric to assign from
-      /// \returns Reference to p1, to support normal C assignment semantics
-      template<typename P1>
-      P1 &assign_bitwise_or_pod(P1 &p1, Boxed_Numeric r)
-      {
-        if (!r.isfloat)
-        {
-          return p1 |= P1(r.i);
-        }
-
-        throw exception::bad_boxed_cast("&= only valid for integer types");
-      }
-
-      /// \brief Performs an assign shift left (<<=) on the given object with the given Boxed_Numeric
-      /// \param[in,out] p1 object to assign shift left to
-      /// \param[in] r Boxed_Numeric to assign from
-      /// \returns Reference to p1, to support normal C assignment semantics
-      template<typename P1>
-      P1 &assign_left_shift_pod(P1 &p1, Boxed_Numeric r)
-      {
-        if (!r.isfloat)
-        {
-          return p1 <<= P1(r.i);
-        }
-
-        throw exception::bad_boxed_cast("<<= only valid for integer types");
-      }
-
-
-      /// \brief Performs an assign remainder (%=) on the given object with the given Boxed_Numeric
-      /// \param[in,out] p1 object to assign remainder to
-      /// \param[in] r Boxed_Numeric to assign from
-      /// \returns Reference to p1, to support normal C assignment semantics
-      template<typename P1>
-      P1 &assign_remainder_pod(P1 &p1, Boxed_Numeric r)
-      {
-        if (!r.isfloat)
-        {
-          return p1 %= P1(r.i);
-        }
-
-        throw exception::bad_boxed_cast("%= only valid for integer types");
-      }
-
-
-      /// \brief Performs an assign shift right (>>=) on the given object with the given Boxed_Numeric
-      /// \param[in,out] p1 object to assign shift right to
-      /// \param[in] r Boxed_Numeric to assign from
-      /// \returns Reference to p1, to support normal C assignment semantics
-      template<typename P1>
-      P1 &assign_right_shift_pod(P1 &p1, Boxed_Numeric r)
-      {
-        if (!r.isfloat)
-        {
-          return p1 >>= P1(r.i);
-        }
-
-        throw exception::bad_boxed_cast(">>= only valid for integer types");
-      }
-
-
+    /// \brief Adds a copy constructor for the given type to the given Model
+    /// \param[in] type The name of the type. The copy constructor will be named "type".
+    /// \param[in,out] m The Module to add the copy constructor to
+    /// \tparam T The type to add a copy constructor for
+    /// \returns The passed in ModulePtr, or the newly constructed one if the default param is used
+    template<typename T>
+    ModulePtr copy_constructor(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    {
+      m->add(constructor<T (const T &)>(), type);
+      return m;
     }
 
     /// \brief Add all comparison operators for the templated type. Used during bootstrap, also available to users.
@@ -164,76 +64,6 @@ namespace chaiscript
     }
 
 
-    /// \brief Add all arithmetic operators appropriate for integers for the templated type. 
-    ///        Used during bootstrap, also available to users.
-    /// \tparam T Type to create arithmetic operators for
-    /// \param[in,out] m module to add arithmetic operators to
-    /// \returns the passed in ModulePtr or the newly constructed one if the default params are used.
-    template<typename T>
-    ModulePtr opers_integer_arithmetic(ModulePtr m = ModulePtr(new Module()))
-    {
-      operators::assign_bitwise_and<T>(m);
-      operators::assign_xor<T>(m);
-      operators::assign_bitwise_or<T>(m);
-//      operators::assign_difference<T>(m);
-      operators::assign_left_shift<T>(m);
-//      operators::assign_product<T>(m);
-//      operators::assign_quotient<T>(m);
-//      operators::assign_remainder<T>(m);
-      operators::assign_right_shift<T>(m);
-//      operators::assign_sum<T>(m);
-
-//      operators::prefix_decrement<T>(m);
-//      operators::prefix_increment<T>(m);
-//      operators::addition<T>(m);
-      operators::unary_plus<T>(m);
-//      operators::subtraction<T>(m);
-      operators::unary_minus<T>(m);
-      operators::bitwise_and<T>(m);
-      operators::bitwise_compliment<T>(m);
-      operators::bitwise_xor<T>(m);
-      operators::bitwise_or<T>(m);
-//      operators::division<T>(m);
-      operators::left_shift<T>(m);
-//      operators::multiplication<T>(m);
-      operators::remainder<T>(m);
-      operators::right_shift<T>(m);
-      return m;
-    }
-
-    /// \brief Add all arithmetic operators appropriate for floating point numbers for the templated type. 
-    ///        Used during bootstrap, also available to users.
-    /// \tparam T Type to create arithmetic operators for
-    /// \param[in,out] m module to add arithmetic operators to
-    /// \returns the passed in ModulePtr or the newly constructed one if the default params are used.
-    template<typename T>
-    ModulePtr opers_float_arithmetic(ModulePtr m = ModulePtr(new Module()))
-    {
-//      operators::assign_difference<T>(m);
-//      operators::assign_product<T>(m);
-//      operators::assign_quotient<T>(m);
-//      operators::assign_sum<T>(m);
-
-//      operators::addition<T>(m);
-      operators::unary_plus<T>(m);
-//      operators::subtraction<T>(m);
-      operators::unary_minus<T>(m);
-//      operators::division<T>(m);
-//      operators::multiplication<T>(m);
-      return m;
-    }
-
-    /// \brief Adds a copy constructor for the given type to the given Model
-    /// \param[in] type The name of the type. The copy constructor will be named "type".
-    /// \param[in,out] m The Module to add the copy constructor to
-    /// \tparam T The type to add a copy constructor for
-    /// \returns The passed in ModulePtr, or the newly constructed one if the default param is used
-    template<typename T>
-    ModulePtr copy_constructor(const std::string &type, ModulePtr m = ModulePtr(new Module()))
-    {
-      m->add(constructor<T (const T &)>(), type);
-      return m;
-    }
 
     /// \brief Adds default and copy constructors for the given type
     /// \param[in] type The name of the type to add the constructors for.
@@ -283,15 +113,6 @@ namespace chaiscript
     }
 
 
-    /**
-     * Add assignment operator for T = POD.
-     */
-    template<typename T>
-      ModulePtr oper_assign_pod(ModulePtr m = ModulePtr(new Module()))
-      {
-        m->add(fun(&detail::assign_pod<T>), "=");
-        return m;
-      }
 
     /**
     * Add all common functions for a POD type. All operators, and
@@ -301,52 +122,14 @@ namespace chaiscript
     ModulePtr bootstrap_pod_type(const std::string &name, ModulePtr m = ModulePtr(new Module()))
     {
       m->add(user_type<T>(), name);
-      basic_constructors<T>(name, m);
-      operators::assign<T>(m);
-      oper_assign_pod<T>(m);
+      m->add(constructor<T ()>(), name);
       construct_pod<T>(name, m);
-
-//      m->add(fun(&detail::assign_sum_pod<T>), "+=");
-//      m->add(fun(&detail::assign_difference_pod<T>), "-=");
-//      m->add(fun(&detail::assign_product_pod<T>), "*=");
-//      m->add(fun(&detail::assign_quotient_pod<T>), "/=");
 
       m->add(fun(&to_string<T>), "to_string");
       m->add(fun(&parse_string<T>), "to_" + name);
       return m;
     }
 
-    /**
-    * Add all common functions for a POD type. All operators, and
-    * common conversions
-    */
-    template<typename T>
-    ModulePtr bootstrap_integer_type(const std::string &name, ModulePtr m = ModulePtr(new Module()))
-    {
-      bootstrap_pod_type<T>(name, m);
-
-      m->add(fun(&detail::assign_bitwise_and_pod<T>), "&=");
-      m->add(fun(&detail::assign_xor_pod<T>), "^=");
-      m->add(fun(&detail::assign_bitwise_or_pod<T>), "|=");
-      m->add(fun(&detail::assign_left_shift_pod<T>), "<<=");
-      m->add(fun(&detail::assign_remainder_pod<T>), "%=");
-      m->add(fun(&detail::assign_right_shift_pod<T>), ">>=");
-
-      opers_integer_arithmetic<T>(m);
-      return m;
-    }
-
-    /**
-    * Add all common functions for a POD type. All operators, and
-    * common conversions
-    */
-    template<typename T>
-    ModulePtr bootstrap_float_type(const std::string &name, ModulePtr m = ModulePtr(new Module()))
-    {
-      bootstrap_pod_type<T>(name, m);
-      opers_float_arithmetic<T>(m);
-      return m;
-    }
 
     /**
     * "clone" function for a shared_ptr type. This is used in the case
@@ -421,28 +204,48 @@ namespace chaiscript
         std::cout << s << std::endl;
       }
 
+
       /**
       * Add all arithmetic operators for PODs
       */
       static void opers_arithmetic_pod(ModulePtr m = ModulePtr(new Module()))
       {
-        m->add(fun(&operators::addition<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "+");
-        m->add(fun(&operators::subtraction<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "-");
-        m->add(fun(&operators::bitwise_and<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "&");
-        m->add(fun(&operators::bitwise_xor<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "^");
-        m->add(fun(&operators::bitwise_or<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "|");
-        m->add(fun(&operators::division<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "/");
-        m->add(fun(&operators::left_shift<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "<<");
-        m->add(fun(&operators::multiplication<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "*");
-        m->add(fun(&operators::remainder<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), "%");
-        m->add(fun(&operators::right_shift<Boxed_Value, Boxed_Numeric, Boxed_Numeric>), ">>");
+        m->add(fun(&Boxed_Numeric::operator&=), "&=");
+        m->add(fun(&Boxed_Numeric::operator|=), "|=");
+        m->add(fun(&Boxed_Numeric::operator%=), "%=");
+        m->add(fun(&Boxed_Numeric::operator^=), "^=");
+        m->add(fun(&Boxed_Numeric::operator<<=), "<<=");
+        m->add(fun(&Boxed_Numeric::operator>>=), ">>=");
+
+        m->add(fun(&Boxed_Numeric::operator&), "&");
+        m->add(fun(&Boxed_Numeric::operator~), "~");
+        m->add(fun(&Boxed_Numeric::operator^), "^");
+        m->add(fun(&Boxed_Numeric::operator|), "|");
+        m->add(fun(&Boxed_Numeric::operator<<), "<<");
+        m->add(fun(&Boxed_Numeric::operator%), "%");
+        m->add(fun(&Boxed_Numeric::operator>>), ">>");
+
+        m->add(fun<Boxed_Value (Boxed_Numeric::*)(const Boxed_Numeric &) const>(&Boxed_Numeric::operator=), "=");
         m->add(fun(&Boxed_Numeric::operator*=), "*=");
         m->add(fun(&Boxed_Numeric::operator/=), "/=");
         m->add(fun(&Boxed_Numeric::operator+=), "+=");
         m->add(fun(&Boxed_Numeric::operator-=), "-=");
         m->add(fun(&Boxed_Numeric::operator--), "--");
         m->add(fun(&Boxed_Numeric::operator++), "++");
-      }
+        m->add(fun(&Boxed_Numeric::operator/), "/");
+        m->add(fun(&Boxed_Numeric::operator*), "*");
+        m->add(fun<Boxed_Value (Boxed_Numeric::*)() const>(&Boxed_Numeric::operator+), "+");
+        m->add(fun<Boxed_Value (Boxed_Numeric::*)() const>(&Boxed_Numeric::operator-), "-");
+        m->add(fun<Boxed_Value (Boxed_Numeric::*)(const Boxed_Numeric &) const>(&Boxed_Numeric::operator+), "+");
+        m->add(fun<Boxed_Value (Boxed_Numeric::*)(const Boxed_Numeric &) const>(&Boxed_Numeric::operator-), "-");
+
+        m->add(fun(&Boxed_Numeric::operator==), "==");
+        m->add(fun(&Boxed_Numeric::operator>), ">");
+        m->add(fun(&Boxed_Numeric::operator>=), ">=");
+        m->add(fun(&Boxed_Numeric::operator<), "<");
+        m->add(fun(&Boxed_Numeric::operator<=), "<=");
+        m->add(fun(&Boxed_Numeric::operator!=), "!=");
+     }
 
       /**
       * Create a bound function object. The first param is the function to bind
@@ -633,15 +436,25 @@ namespace chaiscript
         m->add(fun(&throw_exception), "throw");
         m->add(fun(&what), "what");
 
-        bootstrap_float_type<double>("double", m);
-        bootstrap_integer_type<int>("int", m);
-        bootstrap_integer_type<size_t>("size_t", m);
-        bootstrap_integer_type<char>("char", m);
-        bootstrap_integer_type<boost::int64_t>("int64_t", m);
+        bootstrap_pod_type<double>("double", m);
+        bootstrap_pod_type<long double>("long_double", m);
+        bootstrap_pod_type<float>("float", m);
+        bootstrap_pod_type<int>("int", m);
+        bootstrap_pod_type<unsigned int>("unsigned_int", m);
+        bootstrap_pod_type<unsigned long>("unsigned_long", m);
+        bootstrap_pod_type<size_t>("size_t", m);
+        bootstrap_pod_type<char>("char", m);
+        bootstrap_pod_type<boost::int8_t>("int8_t", m);
+        bootstrap_pod_type<boost::int16_t>("int16_t", m);
+        bootstrap_pod_type<boost::int32_t>("int32_t", m);
+        bootstrap_pod_type<boost::int64_t>("int64_t", m);
+        bootstrap_pod_type<boost::uint8_t>("uint8_t", m);
+        bootstrap_pod_type<boost::uint16_t>("uint16_t", m);
+        bootstrap_pod_type<boost::uint32_t>("uint32_t", m);
+        bootstrap_pod_type<boost::uint64_t>("uint64_t", m);
 
         operators::logical_compliment<bool>(m);
 
-        opers_comparison<Boxed_Numeric>(m);
         opers_arithmetic_pod(m);
 
 

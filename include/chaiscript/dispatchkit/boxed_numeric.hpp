@@ -42,8 +42,49 @@ namespace chaiscript
       struct equals
       {
         static const bool lhs_const = true;
+#pragma GCC diagnostic ignored "-Wsign-compare"
         template<typename T, typename U>
         static bool go(const T &t, const U &u) { return t == u; }
+      };
+
+      struct less_than
+      {
+        static const bool lhs_const = true;
+#pragma GCC diagnostic ignored "-Wsign-compare"
+        template<typename T, typename U>
+        static bool go(const T &t, const U &u) { return t < u; }
+      };
+
+      struct greater_than
+      {
+        static const bool lhs_const = true;
+#pragma GCC diagnostic ignored "-Wsign-compare"
+        template<typename T, typename U>
+        static bool go(const T &t, const U &u) { return t > u; }
+      };
+
+      struct greater_than_equal
+      {
+        static const bool lhs_const = true;
+#pragma GCC diagnostic ignored "-Wsign-compare"
+        template<typename T, typename U>
+        static bool go(const T &t, const U &u) { return t >= u; }
+      };
+
+      struct less_than_equal
+      {
+        static const bool lhs_const = true;
+#pragma GCC diagnostic ignored "-Wsign-compare"
+        template<typename T, typename U>
+        static bool go(const T &t, const U &u) { return t <= u; }
+      };
+
+      struct not_equal
+      {
+        static const bool lhs_const = true;
+#pragma GCC diagnostic ignored "-Wsign-compare"
+        template<typename T, typename U>
+        static bool go(const T &t, const U &u) { return t != u; }
       };
 
       struct add
@@ -95,6 +136,13 @@ namespace chaiscript
         static  Boxed_Value go(T &t, const U &u) { return var(&(t += u)); }
       };
 
+      struct assign
+      {
+        static const bool lhs_const = false;
+        template<typename T, typename U>
+        static  Boxed_Value go(T &t, const U &u) { return var(&(t.get() = u.get())); }
+      };
+
       struct assign_difference
       {
         static const bool lhs_const = false;
@@ -102,11 +150,117 @@ namespace chaiscript
         static  Boxed_Value go(T &t, const U &u) { return var(&(t -= u)); }
       };
 
+      struct assign_bitwise_and
+      {
+        static const bool lhs_const = false;
+        template<typename T, typename U>
+        static  Boxed_Value go(T &t, const U &u) { return var(&(t &= u)); }
+      };
+
+      struct assign_bitwise_or
+      {
+        static const bool lhs_const = false;
+        template<typename T, typename U>
+        static  Boxed_Value go(T &t, const U &u) { return var(&(t |= u)); }
+      };
+
+      struct assign_bitwise_xor
+      {
+        static const bool lhs_const = false;
+        template<typename T, typename U>
+        static  Boxed_Value go(T &t, const U &u) { return var(&(t ^= u)); }
+      };
+
+      struct assign_remainder
+      {
+        static const bool lhs_const = false;
+        template<typename T, typename U>
+        static  Boxed_Value go(T &t, const U &u) { return var(&(t %= u)); }
+      };
+
+      struct assign_bitshift_left
+      {
+        static const bool lhs_const = false;
+        template<typename T, typename U>
+        static  Boxed_Value go(T &t, const U &u) { return var(&(t <<= u)); }
+      };
+
+      struct assign_bitshift_right
+      {
+        static const bool lhs_const = false;
+        template<typename T, typename U>
+        static  Boxed_Value go(T &t, const U &u) { return var(&(t >>= u)); }
+      };
+
+
       struct pre_increment
       {
         static const bool lhs_const = false;
         template<typename T, typename U>
           static Boxed_Value go(T &t, const U) { return var(&++t); }
+      };
+
+      struct unary_plus
+      {
+        static const bool lhs_const = true;
+        template<typename T, typename U>
+          static Boxed_Value go(const T &t, const U) { return const_var(+t); }
+      };
+
+      struct bitwise_complement
+      {
+        static const bool lhs_const = true;
+        template<typename T, typename U>
+          static Boxed_Value go(const T &t, const U) { return const_var(~t); }
+      };
+
+      struct unary_minus
+      {
+        static const bool lhs_const = true;
+        template<typename T, typename U>
+          static Boxed_Value go(const T &t, const U) { return const_var(-t); }
+      };
+
+      struct bitwise_and 
+      {
+        static const bool lhs_const = true;
+        template<typename T, typename U>
+          static Boxed_Value go(const T &t, const U &u) { return const_var(t & u); }
+      };
+
+      struct bitwise_xor
+      {
+        static const bool lhs_const = true;
+        template<typename T, typename U>
+          static Boxed_Value go(const T &t, const U &u) { return const_var(t ^ u); }
+      };
+
+      struct bitwise_or
+      {
+        static const bool lhs_const = true;
+        template<typename T, typename U>
+          static Boxed_Value go(const T &t, const U &u) { return const_var(t | u); }
+      };
+
+      struct remainder
+      {
+        static const bool lhs_const = true;
+        template<typename T, typename U>
+          static Boxed_Value go(const T &t, const U &u) { return const_var(t % u); }
+      };
+
+      struct left_shift
+      {
+        static const bool lhs_const = true;
+        template<typename T, typename U>
+          static Boxed_Value go(const T &t, const U &u) { return const_var(t << u); }
+      };
+
+      struct right_shift
+      {
+        static const bool lhs_const = true;
+        template<typename T, typename U>
+          static Boxed_Value go(const T &t, const U &u) { return const_var(t >> u); }
       };
 
       struct pre_decrement
@@ -130,12 +284,12 @@ namespace chaiscript
             return O::go(l, boxed_cast<const double &>(r.bv));
           } else if (inp_ == typeid(float)) {
             return O::go(l, boxed_cast<const float&>(r.bv));
+          } else if (inp_ == typeid(long double)) {
+            return O::go(l, boxed_cast<const long double&>(r.bv));
           } else if (inp_ == typeid(bool)) {
             return O::go(l, boxed_cast<const bool&>(r.bv));
           } else if (inp_ == typeid(char)) {
             return O::go(l, boxed_cast<const char&>(r.bv));
-          } else if (inp_ == typeid(int)) {
-            return O::go(l, boxed_cast<const int&>(r.bv));
           } else if (inp_ == typeid(unsigned int)) {
             return O::go(l, boxed_cast<const unsigned int&>(r.bv));
           } else if (inp_ == typeid(long)) {
@@ -156,6 +310,8 @@ namespace chaiscript
             return O::go(l, boxed_cast<const boost::uint16_t &>(r.bv));
           } else if (inp_ == typeid(boost::uint32_t)) {
             return O::go(l, boxed_cast<const boost::uint32_t &>(r.bv));
+          } else if (inp_ == typeid(boost::uint64_t)) {
+            return O::go(l, boxed_cast<const boost::uint64_t &>(r.bv));
           } else {
             throw boost::bad_any_cast();
           }
@@ -169,6 +325,8 @@ namespace chaiscript
           if (inp_ == typeid(double))
           {
             return oper_lhs<Ret, O>(boxed_cast<typename lhs_type<O, double>::type>(l.bv), r);
+          } else if (inp_ == typeid(long double)) {
+            return oper_lhs<Ret, O>(boxed_cast<typename lhs_type<O, long double>::type>(l.bv), r);
           } else if (inp_ == typeid(float)) {
             return oper_lhs<Ret, O>(boxed_cast<typename lhs_type<O, float>::type>(l.bv), r);
           } else if (inp_ == typeid(bool)) {
@@ -197,15 +355,91 @@ namespace chaiscript
             return oper_lhs<Ret, O>(boxed_cast<typename lhs_type<O, boost::uint16_t>::type>(l.bv), r);
           } else if (inp_ == typeid(boost::uint32_t)) {
             return oper_lhs<Ret, O>(boxed_cast<typename lhs_type<O, boost::uint32_t>::type>(l.bv), r);
+          } else if (inp_ == typeid(boost::uint64_t)) {
+            return oper_lhs<Ret, O>(boxed_cast<typename lhs_type<O, boost::uint64_t>::type>(l.bv), r);
+          } else {
+            throw boost::bad_any_cast();
+          }
+        }
+      
+
+      template<typename Ret, typename O, typename L>
+        static Ret oper_int_lhs(L l, const Boxed_Numeric &r)
+        {
+          const Type_Info &inp_ = r.bv.get_type_info();
+
+          if (inp_ == typeid(bool)) {
+            return O::go(l, boxed_cast<const bool&>(r.bv));
+          } else if (inp_ == typeid(char)) {
+            return O::go(l, boxed_cast<const char&>(r.bv));
+          } else if (inp_ == typeid(unsigned int)) {
+            return O::go(l, boxed_cast<const unsigned int&>(r.bv));
+          } else if (inp_ == typeid(long)) {
+            return O::go(l, boxed_cast<const long&>(r.bv));
+          } else if (inp_ == typeid(unsigned long)) {
+            return O::go(l, boxed_cast<const unsigned long&>(r.bv));
+          } else if (inp_ == typeid(boost::int8_t)) {
+            return O::go(l, boxed_cast<const boost::int8_t &>(r.bv));
+          } else if (inp_ == typeid(boost::int16_t)) {
+            return O::go(l, boxed_cast<const boost::int16_t &>(r.bv));
+          } else if (inp_ == typeid(boost::int32_t)) {
+            return O::go(l, boxed_cast<const boost::int32_t &>(r.bv));
+          } else if (inp_ == typeid(boost::int64_t)) {
+            return O::go(l, boxed_cast<const boost::int64_t &>(r.bv));
+          } else if (inp_ == typeid(boost::uint8_t)) {
+            return O::go(l, boxed_cast<const boost::uint8_t &>(r.bv));
+          } else if (inp_ == typeid(boost::uint16_t)) {
+            return O::go(l, boxed_cast<const boost::uint16_t &>(r.bv));
+          } else if (inp_ == typeid(boost::uint32_t)) {
+            return O::go(l, boxed_cast<const boost::uint32_t &>(r.bv));
+          } else if (inp_ == typeid(boost::uint64_t)) {
+            return O::go(l, boxed_cast<const boost::uint64_t &>(r.bv));
+          } else {
+            throw boost::bad_any_cast();
+          }
+        } 
+
+      template<typename Ret, typename O>
+        static Ret oper_int(const Boxed_Numeric &l, const Boxed_Numeric &r)
+        {
+          const Type_Info &inp_ = l.bv.get_type_info();
+
+          if (inp_ == typeid(bool)) {
+            return oper_int_lhs<Ret, O>(boxed_cast<typename lhs_type<O, bool>::type>(l.bv), r);
+          } else if (inp_ == typeid(char)) {
+            return oper_int_lhs<Ret, O>(boxed_cast<typename lhs_type<O, char>::type>(l.bv), r);
+          } else if (inp_ == typeid(int)) {
+            return oper_int_lhs<Ret, O>(boxed_cast<typename lhs_type<O, int>::type>(l.bv), r);
+          } else if (inp_ == typeid(unsigned int)) {
+            return oper_int_lhs<Ret, O>(boxed_cast<typename lhs_type<O, unsigned int>::type>(l.bv), r);
+          } else if (inp_ == typeid(long)) {
+            return oper_int_lhs<Ret, O>(boxed_cast<typename lhs_type<O, long>::type>(l.bv), r);
+          } else if (inp_ == typeid(unsigned long)) {
+            return oper_int_lhs<Ret, O>(boxed_cast<typename lhs_type<O, unsigned long>::type>(l.bv), r);
+          } else if (inp_ == typeid(boost::int8_t)) {
+            return oper_int_lhs<Ret, O>(boxed_cast<typename lhs_type<O, boost::int8_t>::type>(l.bv), r);
+          } else if (inp_ == typeid(boost::int16_t)) {
+            return oper_int_lhs<Ret, O>(boxed_cast<typename lhs_type<O, boost::int32_t>::type>(l.bv), r);
+          } else if (inp_ == typeid(boost::int32_t)) {
+            return oper_int_lhs<Ret, O>(boxed_cast<typename lhs_type<O, boost::int32_t>::type>(l.bv), r);
+          } else if (inp_ == typeid(boost::int64_t)) {
+            return oper_int_lhs<Ret, O>(boxed_cast<typename lhs_type<O, boost::int64_t>::type>(l.bv), r);
+          } else if (inp_ == typeid(boost::uint8_t)) {
+            return oper_int_lhs<Ret, O>(boxed_cast<typename lhs_type<O, boost::uint8_t>::type>(l.bv), r);
+          } else if (inp_ == typeid(boost::uint16_t)) {
+            return oper_int_lhs<Ret, O>(boxed_cast<typename lhs_type<O, boost::uint16_t>::type>(l.bv), r);
+          } else if (inp_ == typeid(boost::uint32_t)) {
+            return oper_int_lhs<Ret, O>(boxed_cast<typename lhs_type<O, boost::uint32_t>::type>(l.bv), r);
+          } else if (inp_ == typeid(boost::uint64_t)) {
+            return oper_int_lhs<Ret, O>(boxed_cast<typename lhs_type<O, boost::uint64_t>::type>(l.bv), r);
           } else {
             throw boost::bad_any_cast();
           }
         };
       
-
     public:
       Boxed_Numeric(const Boxed_Value &v)
-        : bv(v), d(0), i(0), isfloat(false)
+        : bv(v)
       {
         const Type_Info &inp_ = v.get_type_info();
 
@@ -213,44 +447,8 @@ namespace chaiscript
         {
           throw boost::bad_any_cast();
         }
-
-        if (inp_ == typeid(double))
-        {
-          d = boxed_cast<double>(v);
-          isfloat = true;
-        } else if (inp_ == typeid(float)) {
-          d = boxed_cast<float>(v);
-          isfloat = true;
-        } else if (inp_ == typeid(bool)) {
-          i = boxed_cast<bool>(v);
-        } else if (inp_ == typeid(char)) {
-          i = boxed_cast<char>(v);
-        } else if (inp_ == typeid(int)) {
-          i = boxed_cast<int>(v);
-        } else if (inp_ == typeid(unsigned int)) {
-          i = boxed_cast<unsigned int>(v);
-        } else if (inp_ == typeid(long)) {
-          i = boxed_cast<long>(v);
-        } else if (inp_ == typeid(unsigned long)) {
-          i = boxed_cast<unsigned long>(v);
-        } else if (inp_ == typeid(boost::int8_t)) {
-          i = boxed_cast<boost::int8_t>(v);
-        } else if (inp_ == typeid(boost::int16_t)) {
-          i = boxed_cast<boost::int16_t>(v);
-        } else if (inp_ == typeid(boost::int32_t)) {
-          i = boxed_cast<boost::int32_t>(v);
-        } else if (inp_ == typeid(boost::int64_t)) {
-          i = boxed_cast<boost::int64_t>(v);
-        } else if (inp_ == typeid(boost::uint8_t)) {
-          i = boxed_cast<boost::uint8_t>(v);
-        } else if (inp_ == typeid(boost::uint16_t)) {
-          i = boxed_cast<boost::uint16_t>(v);
-        } else if (inp_ == typeid(boost::uint32_t)) {
-          i = boxed_cast<boost::uint32_t>(v);
-        } else {
-          throw boost::bad_any_cast();
-        }
       }
+
 
       bool operator==(const Boxed_Numeric &r) const
       {
@@ -259,27 +457,27 @@ namespace chaiscript
 
       bool operator<(const Boxed_Numeric &r) const
       {
-        return ((isfloat)?d:i) < ((r.isfloat)?r.d:r.i);
+        return oper<bool, less_than>(*this, r);
       }
 
       bool operator>(const Boxed_Numeric &r) const
       {
-        return ((isfloat)?d:i) > ((r.isfloat)?r.d:r.i);
+        return oper<bool, greater_than>(*this, r);
       }
 
       bool operator>=(const Boxed_Numeric &r) const
       {
-        return ((isfloat)?d:i) >= ((r.isfloat)?r.d:r.i);
+        return oper<bool, greater_than_equal>(*this, r);
       }
 
       bool operator<=(const Boxed_Numeric &r) const
       {
-        return ((isfloat)?d:i) <= ((r.isfloat)?r.d:r.i);
+        return oper<bool, less_than_equal>(*this, r);
       }
 
       bool operator!=(const Boxed_Numeric &r) const
       {
-        return ((isfloat)?d:i) != ((r.isfloat)?r.d:r.i);
+        return oper<bool, not_equal>(*this, r);
       }
 
       Boxed_Value operator--() const
@@ -297,39 +495,74 @@ namespace chaiscript
         return oper<Boxed_Value, add>(*this, r);
       }
 
+      Boxed_Value operator+() const
+      {
+        return oper<Boxed_Value, unary_plus>(*this, Boxed_Value(0));
+      }
+
+      Boxed_Value operator-() const
+      {
+        return oper<Boxed_Value, unary_minus>(*this, Boxed_Value(0));
+      }
+
       Boxed_Value operator-(const Boxed_Numeric &r) const
       {
         return oper<Boxed_Value, subtract>(*this, r);
       }
 
+      Boxed_Value operator&=(const Boxed_Numeric &r) const
+      {
+        return oper_int<Boxed_Value, assign_bitwise_and>(*this, r);
+      }
+
+      Boxed_Value operator=(const Boxed_Numeric &r) const
+      {
+        return oper<Boxed_Value, assign>(*this, r);
+      }
+
+      Boxed_Value operator|=(const Boxed_Numeric &r) const
+      {
+        return oper_int<Boxed_Value, assign_bitwise_or>(*this, r);
+      }
+
+      Boxed_Value operator^=(const Boxed_Numeric &r) const
+      {
+        return oper_int<Boxed_Value, assign_bitwise_xor>(*this, r);
+      }
+
+      Boxed_Value operator%=(const Boxed_Numeric &r) const
+      {
+        return oper_int<Boxed_Value, assign_remainder>(*this, r);
+      }
+
+      Boxed_Value operator<<=(const Boxed_Numeric &r) const
+      {
+        return oper_int<Boxed_Value, assign_bitshift_left>(*this, r);
+      }
+
+      Boxed_Value operator>>=(const Boxed_Numeric &r) const
+      {
+        return oper_int<Boxed_Value, assign_bitshift_right>(*this, r);
+      }
+
       Boxed_Value operator&(const Boxed_Numeric &r) const
       {
-        if (!isfloat && !r.isfloat)
-        {
-          return Boxed_Value(i & r.i);
-        }
+        return oper_int<Boxed_Value, bitwise_and>(*this, r);
+      }
 
-        throw exception::bad_boxed_cast("& only valid for integer types");
+      Boxed_Value operator~() const
+      {
+        return oper_int<Boxed_Value, bitwise_complement>(*this, Boxed_Value(0));
       }
 
       Boxed_Value operator^(const Boxed_Numeric &r) const
       {
-        if (!isfloat && !r.isfloat)
-        {
-          return Boxed_Value(i ^ r.i);
-        }
-
-        throw exception::bad_boxed_cast("^ only valid for integer types");
+        return oper_int<Boxed_Value, bitwise_xor>(*this, r);
       }
 
       Boxed_Value operator|(const Boxed_Numeric &r) const
       {
-        if (!isfloat && !r.isfloat)
-        {
-          return Boxed_Value(i | r.i);
-        }
-
-        throw exception::bad_boxed_cast("| only valid for integer types");
+        return oper_int<Boxed_Value, bitwise_or>(*this, r);
       }
 
       Boxed_Value operator*=(const Boxed_Numeric &r) const
@@ -356,58 +589,25 @@ namespace chaiscript
 
       Boxed_Value operator<<(const Boxed_Numeric &r) const
       {
-        if (!isfloat && !r.isfloat)
-        {
-          return smart_size(i << r.i);
-        }
-
-        throw exception::bad_boxed_cast("<< only valid for integer types");
+        return oper_int<Boxed_Value, left_shift>(*this, r);
       }
-
 
       Boxed_Value operator*(const Boxed_Numeric &r) const
       {
         return oper<Boxed_Value, multiply>(*this, r);
       }
 
-
       Boxed_Value operator%(const Boxed_Numeric &r) const
       {
-        if (!isfloat && !r.isfloat)
-        {
-          return smart_size(i % r.i);
-        }
-
-        throw exception::bad_boxed_cast("% only valid for integer types");
+        return oper_int<Boxed_Value, remainder>(*this, r);
       }
 
       Boxed_Value operator>>(const Boxed_Numeric &r) const
       {
-        if (!isfloat && !r.isfloat)
-        {
-          return smart_size(i >> r.i);
-        }
-
-        throw exception::bad_boxed_cast(">> only valid for integer types");
+        return oper_int<Boxed_Value, right_shift>(*this, r);
       }
-
-      Boxed_Value smart_size(boost::int64_t t_i) const
-      {
-        if (t_i < boost::integer_traits<int>::const_min
-            || t_i > boost::integer_traits<int>::const_max)
-        {
-          return Boxed_Value(t_i);
-        } else {
-          return Boxed_Value(static_cast<int>(t_i));
-        }
-      }
-
 
       Boxed_Value bv;
-      double d;
-      boost::int64_t i;
-
-      bool isfloat;
   };
 
   namespace detail
