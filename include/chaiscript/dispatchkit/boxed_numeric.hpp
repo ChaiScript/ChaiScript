@@ -21,63 +21,71 @@ namespace chaiscript
   class Boxed_Numeric
   {
     private:
-      template<typename T, bool Const>
-      struct choose_const 
+
+      enum opers
       {
-        typedef T& type;
+        boolean_flag,
+        equals,
+        less_than,
+        greater_than,
+        less_than_equal,
+        greater_than_equal,
+        not_equal,
+        non_const_flag,
+        assign,
+        pre_increment,
+        pre_decrement,
+        assign_product,
+        assign_sum,
+        assign_quotient,
+        assign_difference,
+        non_const_int_flag,
+        assign_bitwise_and,
+        assign_bitwise_or,
+        assign_shift_left,
+        assign_shift_right,
+        assign_remainder,
+        assign_bitwise_xor,
+        shift_left,
+        shift_right,
+        const_int_flag,
+        remainder,
+        bitwise_and,
+        bitwise_or,
+        bitwise_xor,
+        bitwise_complement,
+        const_flag,
+        sum,
+        quotient,
+        product,
+        difference,
+        unary_plus,
+        unary_minus
       };
 
-      template<typename T>
-        struct choose_const<T, true>
-        {
-          typedef const T& type;
-        };
-
-      template<typename O, typename T>
-        struct lhs_type
-        {
-          typedef typename choose_const<T, O::lhs_const>::type type;
-        };
 
       struct boolean
       {
-        enum oper
-        {
-          equals,
-          less_than,
-          greater_than,
-          less_than_equal,
-          greater_than_equal,
-          not_equal
-        };
-
-        oper m_oper;
-
-        boolean(boolean::oper t_oper)
-          : m_oper(t_oper)
-        {
-        }
-
-        static const bool lhs_const = true;
-
 #pragma GCC diagnostic ignored "-Wsign-compare"
         template<typename T, typename U>
-        bool go(const T &t, const U &u) const 
+        static Boxed_Value go(opers t_oper, const T &t, const U &u)
         {
-          switch (m_oper)
+          switch (t_oper)
           {
             case equals:
-              return t == u;
+              return const_var(t == u);
             case less_than:
-              return t < u;
+              return const_var(t < u);
             case greater_than:
-              return t > u;
+              return const_var(t > u);
             case less_than_equal:
-              return t <= u;
+              return const_var(t <= u);
             case greater_than_equal:
-              return t >= u;
+              return const_var(t >= u);
             case not_equal:
-              return t != u;
+              return const_var(t != u);
+            default:
+              throw boost::bad_any_cast();        
           }
           throw boost::bad_any_cast();        
         }
@@ -85,33 +93,13 @@ namespace chaiscript
 
       struct binary 
       {
-        enum oper
-        {
-          assign,
-          pre_increment,
-          pre_decrement,
-          assign_product,
-          assign_sum,
-          assign_quotient,
-          assign_difference,
-        };
-
-        oper m_oper;
-
-        binary(binary::oper t_oper)
-          : m_oper(t_oper)
-        {
-        }
-
-        static const bool lhs_const = false;
-
         template<typename T, typename U>
-        Boxed_Value go(T &t, const U &u) const 
+        static Boxed_Value go(opers t_oper, T &t, const U &u) 
         {
-          switch (m_oper)
+          switch (t_oper)
           {
             case assign:
-              return var(&(t.get() = u.get()));
+              return var(&(t = u));
             case pre_increment:
               return var(&(++t));
             case pre_decrement:
@@ -124,37 +112,19 @@ namespace chaiscript
               return var(&(t /= u));
             case assign_difference:
               return var(&(t -= u));
+            default:
+              throw boost::bad_any_cast();        
           }
           throw boost::bad_any_cast();        
         }
       };
 
-
       struct binary_int
       {
-        enum oper
-        {
-          assign_bitwise_and,
-          assign_bitwise_or,
-          assign_shift_left,
-          assign_shift_right,
-          assign_remainder,
-          assign_bitwise_xor,
-        };
-
-        oper m_oper;
-
-        binary_int(binary_int::oper t_oper)
-          : m_oper(t_oper)
-        {
-        }
-
-        static const bool lhs_const = false;
-
         template<typename T, typename U>
-        Boxed_Value go(T &t, const U &u) const 
+        static Boxed_Value go(opers t_oper, T &t, const U &u) 
         {
-          switch (m_oper)
+          switch (t_oper)
           {
             case assign_bitwise_and:
               return var(&(t &= u));
@@ -168,6 +138,8 @@ namespace chaiscript
               return var(&(t %= u));
             case assign_bitwise_xor:
               return var(&(t ^= u));
+            default:
+              throw boost::bad_any_cast();        
           }
           throw boost::bad_any_cast();        
         }
@@ -175,30 +147,10 @@ namespace chaiscript
 
       struct const_binary_int
       {
-        enum oper
-        {
-          shift_left,
-          shift_right,
-          remainder,
-          bitwise_and,
-          bitwise_or,
-          bitwise_xor,
-          bitwise_complement
-        };
-
-        oper m_oper;
-
-        const_binary_int(const_binary_int::oper t_oper)
-          : m_oper(t_oper)
-        {
-        }
-
-        static const bool lhs_const = true;
-
         template<typename T, typename U>
-        Boxed_Value go(const T &t, const U &u) const 
+        static Boxed_Value go(opers t_oper, const T &t, const U &u) 
         {
-          switch (m_oper)
+          switch (t_oper)
           {
             case shift_left:
               return const_var(t << u);
@@ -214,6 +166,8 @@ namespace chaiscript
               return const_var(t ^ u);
             case bitwise_complement:
               return const_var(~t);
+            default:
+              throw boost::bad_any_cast();        
           }
           throw boost::bad_any_cast();        
         }
@@ -221,29 +175,10 @@ namespace chaiscript
 
       struct const_binary
       {
-        enum oper
-        {
-          sum,
-          quotient,
-          product,
-          difference,
-          unary_plus,
-          unary_minus
-        };
-
-        oper m_oper;
-
-        const_binary(const_binary::oper t_oper)
-          : m_oper(t_oper)
-        {
-        }
-
-        static const bool lhs_const = true;
-
         template<typename T, typename U>
-        Boxed_Value go(const T &t, const U &u) const 
+        static Boxed_Value go(opers t_oper, const T &t, const U &u) 
         {
-          switch (m_oper)
+          switch (t_oper)
           {
             case sum:
               return const_var(t + u);
@@ -257,165 +192,141 @@ namespace chaiscript
               return const_var(-t);
             case unary_plus:
               return const_var(+t);
+            default:
+              throw boost::bad_any_cast();        
           }
           throw boost::bad_any_cast();        
         }
       };
 
-      template<typename Ret, typename O, typename L>
-        static Ret oper_lhs(const O &t_o, L l, const Boxed_Numeric &r)
+      template<typename LHS, typename RHS, bool Float>
+      struct Go
+      {
+        static Boxed_Value go(opers t_oper, const Boxed_Numeric &t_lhs, const Boxed_Numeric &t_rhs)
         {
-          const Type_Info &inp_ = r.bv.get_type_info();
+          if (t_oper > boolean_flag && t_oper < non_const_flag)
+          {
+            return boolean::go<LHS, RHS>(t_oper, boxed_cast<const LHS &>(t_lhs.bv), boxed_cast<const RHS &>(t_rhs.bv));
+          } else if (t_oper > non_const_flag && t_oper < non_const_int_flag) {
+            return binary::go<LHS, RHS>(t_oper, boxed_cast<LHS &>(t_lhs.bv), boxed_cast<const RHS &>(t_rhs.bv));
+          } else if (t_oper > non_const_int_flag && t_oper < const_int_flag) {
+            return binary_int::go<LHS, RHS>(t_oper, boxed_cast<LHS &>(t_lhs.bv), boxed_cast<const RHS &>(t_rhs.bv));
+          } else if (t_oper > const_int_flag && t_oper < const_flag) {
+            return const_binary_int::go<LHS, RHS>(t_oper, boxed_cast<const LHS &>(t_lhs.bv), boxed_cast<const RHS &>(t_rhs.bv));
+          } else if (t_oper > const_flag) {
+            return const_binary::go<LHS, RHS>(t_oper, boxed_cast<const LHS &>(t_lhs.bv), boxed_cast<const RHS &>(t_rhs.bv));
+          } else {
+            throw boost::bad_any_cast();
+          }
+        }
+      };
+
+      template<typename LHS, typename RHS>
+      struct Go<LHS, RHS, true>
+      {
+        static Boxed_Value go(opers t_oper, const Boxed_Numeric &t_lhs, const Boxed_Numeric &t_rhs)
+        {
+          if (t_oper > boolean_flag && t_oper < non_const_flag)
+          {
+            return boolean::go<LHS, RHS>(t_oper, boxed_cast<const LHS &>(t_lhs.bv), boxed_cast<const RHS &>(t_rhs.bv));
+          } else if (t_oper > non_const_flag && t_oper < non_const_int_flag) {
+            return binary::go<LHS, RHS>(t_oper, boxed_cast<LHS &>(t_lhs.bv), boxed_cast<const RHS &>(t_rhs.bv));
+          } else if (t_oper > non_const_int_flag && t_oper < const_int_flag) {
+            throw boost::bad_any_cast();
+          } else if (t_oper > const_int_flag && t_oper < const_flag) {
+            throw boost::bad_any_cast();
+          } else if (t_oper > const_flag) {
+            return const_binary::go<LHS, RHS>(t_oper, boxed_cast<const LHS &>(t_lhs.bv), boxed_cast<const RHS &>(t_rhs.bv));
+          } else {
+            throw boost::bad_any_cast();
+          }
+        }
+      };
+
+      template<typename LHS, bool Float>
+        static Boxed_Value oper_rhs(opers t_oper, const Boxed_Numeric &t_lhs, const Boxed_Numeric &t_rhs)
+        {
+          const Type_Info &inp_ = t_rhs.bv.get_type_info();
 
           if (inp_ == typeid(double))
           {
-            return t_o.go(l, boxed_cast<const double &>(r.bv));
+            return Go<LHS, double, true>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(float)) {
-            return t_o.go(l, boxed_cast<const float&>(r.bv));
+            return Go<LHS, float, true>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(long double)) {
-            return t_o.go(l, boxed_cast<const long double&>(r.bv));
+            return Go<LHS, long double, true>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(char)) {
-            return t_o.go(l, boxed_cast<const char&>(r.bv));
+            return Go<LHS, char, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(unsigned int)) {
-            return t_o.go(l, boxed_cast<const unsigned int&>(r.bv));
+            return Go<LHS, unsigned int, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(long)) {
-            return t_o.go(l, boxed_cast<const long&>(r.bv));
+            return Go<LHS, long, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(unsigned long)) {
-            return t_o.go(l, boxed_cast<const unsigned long&>(r.bv));
+            return Go<LHS, unsigned long, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::int8_t)) {
-            return t_o.go(l, boxed_cast<const boost::int8_t &>(r.bv));
+            return Go<LHS, boost::int8_t, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::int16_t)) {
-            return t_o.go(l, boxed_cast<const boost::int16_t &>(r.bv));
+            return Go<LHS, boost::int16_t, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::int32_t)) {
-            return t_o.go(l, boxed_cast<const boost::int32_t &>(r.bv));
+            return Go<LHS, boost::int32_t, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::int64_t)) {
-            return t_o.go(l, boxed_cast<const boost::int64_t &>(r.bv));
+            return Go<LHS, boost::int64_t, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::uint8_t)) {
-            return t_o.go(l, boxed_cast<const boost::uint8_t &>(r.bv));
+            return Go<LHS, boost::uint8_t, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::uint16_t)) {
-            return t_o.go(l, boxed_cast<const boost::uint16_t &>(r.bv));
+            return Go<LHS, boost::uint16_t, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::uint32_t)) {
-            return t_o.go(l, boxed_cast<const boost::uint32_t &>(r.bv));
+            return Go<LHS, boost::uint32_t, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::uint64_t)) {
-            return t_o.go(l, boxed_cast<const boost::uint64_t &>(r.bv));
+            return Go<LHS, boost::uint64_t, Float>::go(t_oper, t_lhs, t_rhs);
           } else {
             throw boost::bad_any_cast();
           }
         } 
 
-      template<typename Ret, typename O>
-        static Ret oper(const O& t_o, const Boxed_Numeric &l, const Boxed_Numeric &r)
+        static Boxed_Value oper(opers t_oper, const Boxed_Numeric &t_lhs, const Boxed_Numeric &t_rhs)
         {
-          const Type_Info &inp_ = l.bv.get_type_info();
+          const Type_Info &inp_ = t_lhs.bv.get_type_info();
 
           if (inp_ == typeid(double))
           {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, double>::type>(l.bv), r);
+            return oper_rhs<double, true>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(long double)) {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, long double>::type>(l.bv), r);
+            return oper_rhs<long double, true>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(float)) {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, float>::type>(l.bv), r);
+            return oper_rhs<float, true>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(char)) {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, char>::type>(l.bv), r);
+            return oper_rhs<char, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(int)) {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, int>::type>(l.bv), r);
+            return oper_rhs<int, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(unsigned int)) {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, unsigned int>::type>(l.bv), r);
+            return oper_rhs<unsigned int, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(long)) {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, long>::type>(l.bv), r);
+            return oper_rhs<long, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(unsigned long)) {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, unsigned long>::type>(l.bv), r);
+            return oper_rhs<unsigned long, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::int8_t)) {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::int8_t>::type>(l.bv), r);
+            return oper_rhs<boost::int8_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::int16_t)) {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::int32_t>::type>(l.bv), r);
+            return oper_rhs<boost::int32_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::int32_t)) {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::int32_t>::type>(l.bv), r);
+            return oper_rhs<boost::int32_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::int64_t)) {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::int64_t>::type>(l.bv), r);
+            return oper_rhs<boost::int64_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::uint8_t)) {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::uint8_t>::type>(l.bv), r);
+            return oper_rhs<boost::uint8_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::uint16_t)) {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::uint16_t>::type>(l.bv), r);
+            return oper_rhs<boost::uint16_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::uint32_t)) {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::uint32_t>::type>(l.bv), r);
+            return oper_rhs<boost::uint32_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::uint64_t)) {
-            return oper_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::uint64_t>::type>(l.bv), r);
+            return oper_rhs<boost::uint64_t, false>(t_oper, t_lhs, t_rhs);
           } else {
             throw boost::bad_any_cast();
           }
         }
       
 
-      template<typename Ret, typename O, typename L>
-        static Ret oper_int_lhs(const O &t_o, L l, const Boxed_Numeric &r)
-        {
-          const Type_Info &inp_ = r.bv.get_type_info();
-
-          if (inp_ == typeid(char)) {
-            return t_o.go(l, boxed_cast<const char&>(r.bv));
-          } else if (inp_ == typeid(unsigned int)) {
-            return t_o.go(l, boxed_cast<const unsigned int&>(r.bv));
-          } else if (inp_ == typeid(long)) {
-            return t_o.go(l, boxed_cast<const long&>(r.bv));
-          } else if (inp_ == typeid(unsigned long)) {
-            return t_o.go(l, boxed_cast<const unsigned long&>(r.bv));
-          } else if (inp_ == typeid(boost::int8_t)) {
-            return t_o.go(l, boxed_cast<const boost::int8_t &>(r.bv));
-          } else if (inp_ == typeid(boost::int16_t)) {
-            return t_o.go(l, boxed_cast<const boost::int16_t &>(r.bv));
-          } else if (inp_ == typeid(boost::int32_t)) {
-            return t_o.go(l, boxed_cast<const boost::int32_t &>(r.bv));
-          } else if (inp_ == typeid(boost::int64_t)) {
-            return t_o.go(l, boxed_cast<const boost::int64_t &>(r.bv));
-          } else if (inp_ == typeid(boost::uint8_t)) {
-            return t_o.go(l, boxed_cast<const boost::uint8_t &>(r.bv));
-          } else if (inp_ == typeid(boost::uint16_t)) {
-            return t_o.go(l, boxed_cast<const boost::uint16_t &>(r.bv));
-          } else if (inp_ == typeid(boost::uint32_t)) {
-            return t_o.go(l, boxed_cast<const boost::uint32_t &>(r.bv));
-          } else if (inp_ == typeid(boost::uint64_t)) {
-            return t_o.go(l, boxed_cast<const boost::uint64_t &>(r.bv));
-          } else {
-            throw boost::bad_any_cast();
-          }
-        } 
-
-      template<typename Ret, typename O>
-        static Ret oper_int(const O &t_o, const Boxed_Numeric &l, const Boxed_Numeric &r)
-        {
-          const Type_Info &inp_ = l.bv.get_type_info();
-
-          if (inp_ == typeid(char)) {
-            return oper_int_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, char>::type>(l.bv), r);
-          } else if (inp_ == typeid(int)) {
-            return oper_int_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, int>::type>(l.bv), r);
-          } else if (inp_ == typeid(unsigned int)) {
-            return oper_int_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, unsigned int>::type>(l.bv), r);
-          } else if (inp_ == typeid(long)) {
-            return oper_int_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, long>::type>(l.bv), r);
-          } else if (inp_ == typeid(unsigned long)) {
-            return oper_int_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, unsigned long>::type>(l.bv), r);
-          } else if (inp_ == typeid(boost::int8_t)) {
-            return oper_int_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::int8_t>::type>(l.bv), r);
-          } else if (inp_ == typeid(boost::int16_t)) {
-            return oper_int_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::int32_t>::type>(l.bv), r);
-          } else if (inp_ == typeid(boost::int32_t)) {
-            return oper_int_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::int32_t>::type>(l.bv), r);
-          } else if (inp_ == typeid(boost::int64_t)) {
-            return oper_int_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::int64_t>::type>(l.bv), r);
-          } else if (inp_ == typeid(boost::uint8_t)) {
-            return oper_int_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::uint8_t>::type>(l.bv), r);
-          } else if (inp_ == typeid(boost::uint16_t)) {
-            return oper_int_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::uint16_t>::type>(l.bv), r);
-          } else if (inp_ == typeid(boost::uint32_t)) {
-            return oper_int_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::uint32_t>::type>(l.bv), r);
-          } else if (inp_ == typeid(boost::uint64_t)) {
-            return oper_int_lhs<Ret>(t_o, boxed_cast<typename lhs_type<O, boost::uint64_t>::type>(l.bv), r);
-          } else {
-            throw boost::bad_any_cast();
-          }
-        };
       
     public:
       Boxed_Numeric(const Boxed_Value &v)
@@ -432,159 +343,159 @@ namespace chaiscript
 
       bool operator==(const Boxed_Numeric &r) const
       {
-        return oper<bool>(boolean(boolean::equals), *this, r);
+        return boxed_cast<bool>(oper(equals, *this, r));
       }
 
       bool operator<(const Boxed_Numeric &r) const
       {
-        return oper<bool>(boolean(boolean::less_than), *this, r);
+        return boxed_cast<bool>(oper(less_than, *this, r));
       }
 
       bool operator>(const Boxed_Numeric &r) const
       {
-        return oper<bool>(boolean(boolean::greater_than), *this, r);
+        return boxed_cast<bool>(oper(greater_than, *this, r));
       }
 
       bool operator>=(const Boxed_Numeric &r) const
       {
-        return oper<bool>(boolean(boolean::greater_than_equal), *this, r);
+        return boxed_cast<bool>(oper(greater_than_equal, *this, r));
       }
 
       bool operator<=(const Boxed_Numeric &r) const
       {
-        return oper<bool>(boolean(boolean::less_than_equal), *this, r);
+        return boxed_cast<bool>(oper(less_than_equal, *this, r));
       }
 
       bool operator!=(const Boxed_Numeric &r) const
       {
-        return oper<bool>(boolean(boolean::not_equal), *this, r);
+        return boxed_cast<bool>(oper(not_equal, *this, r));
       }
 
       Boxed_Value operator--() const
       {
-        return oper<Boxed_Value>(binary(binary::pre_decrement), *this, var(0));
+        return oper(pre_decrement, *this, var(0));
       }
 
       Boxed_Value operator++() const
       {
-        return oper<Boxed_Value>(binary(binary::pre_increment), *this, var(0));
+        return oper(pre_increment, *this, var(0));
       }
 
       Boxed_Value operator+(const Boxed_Numeric &r) const
       {
-        return oper<Boxed_Value>(const_binary(const_binary::sum), *this, r);
+        return oper(sum, *this, r);
       }
 
       Boxed_Value operator+() const
       {
-        return oper<Boxed_Value>(const_binary(const_binary::unary_plus), *this, Boxed_Value(0));
+        return oper(unary_plus, *this, Boxed_Value(0));
       }
 
       Boxed_Value operator-() const
       {
-        return oper<Boxed_Value>(const_binary(const_binary::unary_minus), *this, Boxed_Value(0));
+        return oper(unary_minus, *this, Boxed_Value(0));
       }
 
       Boxed_Value operator-(const Boxed_Numeric &r) const
       {
-        return oper<Boxed_Value>(const_binary(const_binary::difference), *this, r);
+        return oper(difference, *this, r);
       }
 
       Boxed_Value operator&=(const Boxed_Numeric &r) const
       {
-        return oper_int<Boxed_Value>(binary_int(binary_int::assign_bitwise_or), *this, r);
+        return oper(assign_bitwise_and, *this, r);
       }
 
       Boxed_Value operator=(const Boxed_Numeric &r) const
       {
-        return oper<Boxed_Value>(binary(binary::assign), *this, r);
+        return oper(assign, *this, r);
       }
 
       Boxed_Value operator|=(const Boxed_Numeric &r) const
       {
-        return oper_int<Boxed_Value>(binary_int(binary_int::assign_bitwise_or), *this, r);
+        return oper(assign_bitwise_or, *this, r);
       }
 
       Boxed_Value operator^=(const Boxed_Numeric &r) const
       {
-        return oper_int<Boxed_Value>(binary_int(binary_int::assign_bitwise_xor), *this, r);
+        return oper(assign_bitwise_xor, *this, r);
       }
 
       Boxed_Value operator%=(const Boxed_Numeric &r) const
       {
-        return oper_int<Boxed_Value>(binary_int(binary_int::assign_remainder), *this, r);
+        return oper(assign_remainder, *this, r);
       }
 
       Boxed_Value operator<<=(const Boxed_Numeric &r) const
       {
-        return oper_int<Boxed_Value>(binary_int(binary_int::assign_shift_left), *this, r);
+        return oper(assign_shift_left, *this, r);
       }
 
       Boxed_Value operator>>=(const Boxed_Numeric &r) const
       {
-        return oper_int<Boxed_Value>(binary_int(binary_int::assign_shift_right), *this, r);
+        return oper(assign_shift_right, *this, r);
       }
 
       Boxed_Value operator&(const Boxed_Numeric &r) const
       {
-        return oper_int<Boxed_Value>(const_binary_int(const_binary_int::bitwise_and), *this, r);
+        return oper(bitwise_and, *this, r);
       }
 
       Boxed_Value operator~() const
       {
-        return oper_int<Boxed_Value>(const_binary_int(const_binary_int::bitwise_complement), *this, Boxed_Value(0));
+        return oper(bitwise_complement, *this, Boxed_Value(0));
       }
 
       Boxed_Value operator^(const Boxed_Numeric &r) const
       {
-        return oper_int<Boxed_Value>(const_binary_int(const_binary_int::bitwise_xor), *this, r);
+        return oper(bitwise_xor, *this, r);
       }
 
       Boxed_Value operator|(const Boxed_Numeric &r) const
       {
-        return oper_int<Boxed_Value>(const_binary_int(const_binary_int::bitwise_or), *this, r);
+        return oper(bitwise_or, *this, r);
       }
 
       Boxed_Value operator*=(const Boxed_Numeric &r) const
       {
-        return oper<Boxed_Value>(binary(binary::assign_product), *this, r);
+        return oper(assign_product, *this, r);
       }
       Boxed_Value operator/=(const Boxed_Numeric &r) const
       {
-        return oper<Boxed_Value>(binary(binary::assign_quotient), *this, r);
+        return oper(assign_quotient, *this, r);
       }
       Boxed_Value operator+=(const Boxed_Numeric &r) const
       {
-        return oper<Boxed_Value>(binary(binary::assign_sum), *this, r);
+        return oper(assign_sum, *this, r);
       }
       Boxed_Value operator-=(const Boxed_Numeric &r) const
       {
-        return oper<Boxed_Value>(binary(binary::assign_difference), *this, r);
+        return oper(assign_difference, *this, r);
       }
 
       Boxed_Value operator/(const Boxed_Numeric &r) const
       {
-        return oper<Boxed_Value>(const_binary(const_binary::quotient), *this, r);
+        return oper(quotient, *this, r);
       }
 
       Boxed_Value operator<<(const Boxed_Numeric &r) const
       {
-        return oper_int<Boxed_Value>(const_binary_int(const_binary_int::shift_left), *this, r);
+        return oper(shift_left, *this, r);
       }
 
       Boxed_Value operator*(const Boxed_Numeric &r) const
       {
-        return oper<Boxed_Value>(const_binary(const_binary::product), *this, r);
+        return oper(product, *this, r);
       }
 
       Boxed_Value operator%(const Boxed_Numeric &r) const
       {
-        return oper_int<Boxed_Value>(const_binary_int(const_binary_int::remainder), *this, r);
+        return oper(remainder, *this, r);
       }
 
       Boxed_Value operator>>(const Boxed_Numeric &r) const
       {
-        return oper_int<Boxed_Value>(const_binary_int(const_binary_int::shift_right), *this, r);
+        return oper(shift_right, *this, r);
       }
 
       Boxed_Value bv;
