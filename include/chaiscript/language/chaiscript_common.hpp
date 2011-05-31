@@ -15,6 +15,43 @@ namespace chaiscript
   /// Signature of module entry point that all binary loadable modules must implement.
   typedef ModulePtr (*Create_Module_Func)();
 
+  struct Operators {
+    enum Opers
+    {
+      boolean_flag,
+      equals, less_than, greater_than, less_than_equal, greater_than_equal, not_equal, 
+      non_const_flag, 
+      assign, pre_increment, pre_decrement, assign_product, assign_sum,
+      assign_quotient, assign_difference,
+      non_const_int_flag,
+      assign_bitwise_and, assign_bitwise_or, assign_shift_left, assign_shift_right,
+      assign_remainder, assign_bitwise_xor,
+      const_int_flag,
+      shift_left, shift_right, remainder, bitwise_and, bitwise_or, bitwise_xor, bitwise_complement,
+      const_flag,
+      sum, quotient, product, difference, unary_plus, unary_minus
+    };
+
+    static const char *to_string(Opers t_oper) {
+      const char *opers[] = { 
+        "",
+        "==", "<", ">", "<=", ">=", "!=",
+        "",
+        "=", "++", "--", "*=", "+=",
+        "/=", "-=",
+        "",
+        "&=", "|=", "<<=", ">>=",
+        "%=", "^=",
+        "", 
+        "<<", ">>", "%", "&", "|", "^", "~",
+        "",
+        "+", "/", "*", "-", "+", "-"
+      };
+      return opers[t_oper];
+    }
+
+  };
+
   /// Types of AST nodes available to the parser and eval
   class AST_Node_Type {
   public:
