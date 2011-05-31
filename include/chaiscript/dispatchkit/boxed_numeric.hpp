@@ -46,9 +46,9 @@ namespace chaiscript
         assign_shift_right,
         assign_remainder,
         assign_bitwise_xor,
+        const_int_flag,
         shift_left,
         shift_right,
-        const_int_flag,
         remainder,
         bitwise_and,
         bitwise_or,
@@ -321,7 +321,7 @@ namespace chaiscript
             return oper_rhs<boost::uint32_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::uint64_t)) {
             return oper_rhs<boost::uint64_t, false>(t_oper, t_lhs, t_rhs);
-          } else {
+          } else  {
             throw boost::bad_any_cast();
           }
         }
@@ -333,6 +333,10 @@ namespace chaiscript
         : bv(v)
       {
         const Type_Info &inp_ = v.get_type_info();
+        if (inp_ == typeid(bool))
+        {
+          throw boost::bad_any_cast();
+        }
 
         if (!inp_.is_arithmetic())
         {
