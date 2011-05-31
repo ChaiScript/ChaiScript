@@ -1,0 +1,25 @@
+def isprime(n)
+{
+  for (var i = 2; i < n; ++i)
+  {
+    if (n % i == 0) {return false}
+  }
+
+  return true
+}
+
+
+def primes(n)
+{
+  var count = 0
+  for (var i = 2; i <= n; ++i)
+  {
+    if (isprime(i)) {++count}
+  }
+
+  return count
+}
+
+
+var N = 500
+print("primes: " + primes(N).to_string())
