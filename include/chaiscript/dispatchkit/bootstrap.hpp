@@ -429,6 +429,7 @@ namespace chaiscript
 
         basic_constructors<bool>("bool", m);
         operators::assign<bool>(m);
+        operators::equal<bool>(m);
 
         m->add(fun(&to_string<const std::string &>), "internal_to_string");
         m->add(fun(&Bootstrap::bool_to_string), "internal_to_string");

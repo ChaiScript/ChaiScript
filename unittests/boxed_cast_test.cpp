@@ -301,7 +301,9 @@ int main()
   passed &= built_in_type_test<int>(5, true);
   passed &= built_in_type_test<double>(1.1, true);
   passed &= built_in_type_test<char>('a', true);
-  passed &= built_in_type_test<bool>(false, true);
+  passed &= built_in_type_test<uint8_t>('a', true);
+  passed &= built_in_type_test<int64_t>('a', true);
+  passed &= built_in_type_test<bool>(false, false);
   passed &= built_in_type_test<std::string>("Hello World", false);
   
   // storing a pointer 
