@@ -14,6 +14,7 @@
 #include <boost/type_traits/is_void.hpp>
 #include <boost/type_traits/is_reference.hpp>
 #include <boost/type_traits/is_pointer.hpp>
+#include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_arithmetic.hpp>
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/remove_reference.hpp>
@@ -149,7 +150,7 @@ namespace chaiscript
         {
           return Type_Info(boost::is_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
-              boost::is_arithmetic<T>::value,
+              boost::is_arithmetic<T>::value && !boost::is_same<typename boost::remove_const<T>::type, bool>::value,
               &typeid(T), 
               &typeid(typename Bare_Type<T>::type));
         }
@@ -164,7 +165,7 @@ namespace chaiscript
         {
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
-              boost::is_arithmetic<T>::value,
+              boost::is_arithmetic<T>::value && !boost::is_same<typename boost::remove_const<T>::type, bool>::value,
               &typeid(boost::shared_ptr<T> ), 
               &typeid(typename Bare_Type<T>::type));
         }
@@ -179,7 +180,7 @@ namespace chaiscript
         {
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
-              boost::is_arithmetic<T>::value,
+              boost::is_arithmetic<T>::value && !boost::is_same<typename boost::remove_const<T>::type, bool>::value,
               &typeid(const boost::shared_ptr<T> &), 
               &typeid(typename Bare_Type<T>::type));
         }
@@ -194,7 +195,7 @@ namespace chaiscript
         {
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
-              boost::is_arithmetic<T>::value,
+              boost::is_arithmetic<T>::value && !boost::is_same<typename boost::remove_const<T>::type, bool>::value,
               &typeid(boost::reference_wrapper<T> ), 
               &typeid(typename Bare_Type<T>::type));
         }
@@ -209,7 +210,7 @@ namespace chaiscript
         {
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
-              boost::is_arithmetic<T>::value,
+              boost::is_arithmetic<T>::value && !boost::is_same<typename boost::remove_const<T>::type, bool>::value,
               &typeid(const boost::reference_wrapper<T> &), 
               &typeid(typename Bare_Type<T>::type));
         }

@@ -249,7 +249,7 @@ namespace chaiscript
           m_match_stack.push_back(t_t);
         }
         else {
-          //todo: fix the fact that a successful match that captured no ast_nodes doesn't have any real start position
+          /// \todo fix the fact that a successful match that captured no ast_nodes doesn't have any real start position
           m_match_stack.push_back(t_t);
         }
       }
