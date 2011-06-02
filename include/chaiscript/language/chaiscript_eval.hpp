@@ -39,22 +39,36 @@ namespace chaiscript
     struct Binary_Operator_AST_Node : public AST_Node {
       public:
         Binary_Operator_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Bitwise_Xor, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
+        { }
+
         virtual ~Binary_Operator_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
-          Boxed_Value retval;
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
+          Boxed_Value retval = this->children[0]->eval(t_ss);
 
-          retval = this->children[0]->eval(t_ss);
-
+          // Else loop through all children collecting the retval
           for (size_t i = 1; i < this->children.size(); i += 2) {
+            Boxed_Value rhs(this->children[i+1]->eval(t_ss));
+            Operators::Opers oper = Operators::to_operator(children[i]->text);
+
             try {
-              retval = t_ss.call_function(this->children[i]->text, retval, this->children[i+1]->eval(t_ss));
+              if (oper != Operators::invalid && retval.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic())
+              {
+                // If it's an arithmetic operation we want to short circuit dispatch
+                try{
+                  retval = Boxed_Numeric::do_oper(oper, retval, rhs);
+                } catch (...) {
+                  throw exception::eval_error("Error with numeric operator calling: " + children[i]->text);
+                }
+
+              } else {
+                retval = t_ss.call_function(this->children[1]->text, retval, rhs);
+              }
             }
             catch(const exception::dispatch_error &){
               throw exception::eval_error("Can not find appropriate '" + this->children[i]->text + "'");
             }
           }
-
           return retval;
         }
 
@@ -258,16 +272,28 @@ namespace chaiscript
     struct Equation_AST_Node : public AST_Node {
       public:
         Equation_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Equation, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
+        {}
+
         virtual ~Equation_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
           Boxed_Value retval = this->children.back()->eval(t_ss); 
+
 
           if (this->children.size() > 1) {
             for (int i = static_cast<int>(this->children.size())-3; i >= 0; i -= 2) {
-              if (this->children[i+1]->text == "=") {
-                Boxed_Value lhs = this->children[i]->eval(t_ss);
+              Boxed_Value lhs = this->children[i]->eval(t_ss);
 
+              Operators::Opers oper = Operators::to_operator(this->children[i+1]->text);
+
+              if (oper != Operators::invalid && lhs.get_type_info().is_arithmetic() && retval.get_type_info().is_arithmetic())
+              {
+                try {
+                  retval = Boxed_Numeric::do_oper(oper, lhs, retval);
+                } catch (const std::exception &) {
+                  throw exception::eval_error("Error with unsupported arithmetic assignment operation");
+                }
+              } else if (this->children[i+1]->text == "=") {
                 try {
                   if (lhs.is_undef()) {
                     retval = t_ss.call_function("clone", retval);
@@ -286,7 +312,6 @@ namespace chaiscript
                 }
               }
               else if (this->children[i+1]->text == ":=") {
-                Boxed_Value lhs = this->children[i]->eval(t_ss);
                 if (lhs.is_undef() || type_match(lhs, retval)) {
                   lhs.assign(retval);
                 } else {
@@ -295,7 +320,7 @@ namespace chaiscript
               }
               else {
                 try {
-                  retval = t_ss.call_function(this->children[i+1]->text, this->children[i]->eval(t_ss), retval);
+                  retval = t_ss.call_function(this->children[i+1]->text, lhs, retval);
                 } catch(const exception::dispatch_error &){
                   throw exception::eval_error("Can not find appropriate '" + this->children[i+1]->text + "'");
                 }
@@ -304,6 +329,7 @@ namespace chaiscript
           }
           return retval;
         }
+
     };
 
     struct Var_Decl_AST_Node : public AST_Node {
@@ -782,10 +808,24 @@ namespace chaiscript
     struct Prefix_AST_Node : public AST_Node {
       public:
         Prefix_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Prefix, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
+        { }
+
         virtual ~Prefix_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
-          return t_ss.call_function(this->children[0]->text, this->children[1]->eval(t_ss));
+          Boxed_Value bv(this->children[1]->eval(t_ss));
+
+          Operators::Opers oper = Operators::to_operator(children[0]->text, true);
+          try {
+            if (bv.get_type_info().is_arithmetic() && oper != Operators::invalid)
+            {
+              return Boxed_Numeric::do_oper(oper, bv);
+            } else {
+              return t_ss.call_function(this->children[0]->text, bv);
+            }
+          } catch (const exception::dispatch_error &) {
+            throw exception::eval_error("Error with prefix operator evaluation: " + children[0]->text);
+          }
         }
 
     };
