@@ -26,7 +26,7 @@ namespace chaiscript
       {
 #pragma GCC diagnostic ignored "-Wsign-compare"
         template<typename T, typename U>
-        static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u)
+        static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &)
         {
           switch (t_oper)
           {
@@ -52,61 +52,75 @@ namespace chaiscript
       struct binary 
       {
         template<typename T, typename U>
-        static Boxed_Value go(Operators::Opers t_oper, T &t, const U &u) 
+        static Boxed_Value go(Operators::Opers t_oper, T &t, const U &u, const Boxed_Value &t_lhs) 
         {
           switch (t_oper)
           {
             case Operators::assign:
-              return var(&(t = u));
+              t = u;
+              break;
             case Operators::pre_increment:
-              return var(&(++t));
+              ++t;
+              break;
             case Operators::pre_decrement:
-              return var(&(--t));
+              --t;
+              break;
             case Operators::assign_product:
-              return var(&(t *= u));
+              t *= u;
+              break;
             case Operators::assign_sum:
-              return var(&(t += u));
+              t += u;
+              break;
             case Operators::assign_quotient:
-              return var(&(t /= u));
+              t /= u;
+              break;
             case Operators::assign_difference:
-              return var(&(t -= u));
+              t -= u;
+              break;
             default:
               throw boost::bad_any_cast();        
           }
-          throw boost::bad_any_cast();        
+
+          return t_lhs;
         }
       };
 
       struct binary_int
       {
         template<typename T, typename U>
-        static Boxed_Value go(Operators::Opers t_oper, T &t, const U &u) 
+        static Boxed_Value go(Operators::Opers t_oper, T &t, const U &u, const Boxed_Value &t_lhs) 
         {
           switch (t_oper)
           {
             case Operators::assign_bitwise_and:
-              return var(&(t &= u));
+              t &= u;
+              break;
             case Operators::assign_bitwise_or:
-              return var(&(t |= u));
+              t |= u;
+              break;
             case Operators::assign_shift_left:
-              return var(&(t <<= u));
+              t <<= u;
+              break;
             case Operators::assign_shift_right:
-              return var(&(t >>= u));
+              t >>= u;
+              break;
             case Operators::assign_remainder:
-              return var(&(t %= u));
+              t %= u;
+              break;
             case Operators::assign_bitwise_xor:
-              return var(&(t ^= u));
+              t ^= u;
+              break;
             default:
               throw boost::bad_any_cast();        
           }
-          throw boost::bad_any_cast();        
+          return t_lhs;
         }
       };
 
       struct const_binary_int
       {
         template<typename T, typename U>
-        static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u) 
+        static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &) 
         {
           switch (t_oper)
           {
@@ -134,7 +148,7 @@ namespace chaiscript
       struct const_binary
       {
         template<typename T, typename U>
-        static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u) 
+        static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &) 
         {
           switch (t_oper)
           {
@@ -164,15 +178,15 @@ namespace chaiscript
         {
           if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
           {
-            return boolean::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
+            return boolean::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
           } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const()) {
-            return binary::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
+            return binary::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
           } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag && !t_lhs.is_const()) {
-            return binary_int::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
+            return binary_int::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
           } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
-            return const_binary_int::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
+            return const_binary_int::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
           } else if (t_oper > Operators::const_flag) {
-            return const_binary::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
+            return const_binary::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
           } else {
             throw boost::bad_any_cast();
           }
@@ -186,15 +200,15 @@ namespace chaiscript
         {
           if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
           {
-            return boolean::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
+            return boolean::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
           } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const()) {
-            return binary::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
+            return binary::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
           } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag) {
             throw boost::bad_any_cast();
           } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
             throw boost::bad_any_cast();
           } else if (t_oper > Operators::const_flag) {
-            return const_binary::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
+            return const_binary::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
           } else {
             throw boost::bad_any_cast();
           }
