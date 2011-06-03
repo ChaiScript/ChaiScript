@@ -164,15 +164,15 @@ namespace chaiscript
         {
           if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
           {
-            return boolean::go<LHS, RHS>(t_oper, boxed_cast<const LHS &>(t_lhs), boxed_cast<const RHS &>(t_rhs));
-          } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag) {
-            return binary::go<LHS, RHS>(t_oper, boxed_cast<LHS &>(t_lhs), boxed_cast<const RHS &>(t_rhs));
-          } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag) {
-            return binary_int::go<LHS, RHS>(t_oper, boxed_cast<LHS &>(t_lhs), boxed_cast<const RHS &>(t_rhs));
+            return boolean::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
+          } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const()) {
+            return binary::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
+          } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag && !t_lhs.is_const()) {
+            return binary_int::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
           } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
-            return const_binary_int::go<LHS, RHS>(t_oper, boxed_cast<const LHS &>(t_lhs), boxed_cast<const RHS &>(t_rhs));
+            return const_binary_int::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
           } else if (t_oper > Operators::const_flag) {
-            return const_binary::go<LHS, RHS>(t_oper, boxed_cast<const LHS &>(t_lhs), boxed_cast<const RHS &>(t_rhs));
+            return const_binary::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
           } else {
             throw boost::bad_any_cast();
           }
@@ -186,15 +186,15 @@ namespace chaiscript
         {
           if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
           {
-            return boolean::go<LHS, RHS>(t_oper, boxed_cast<const LHS &>(t_lhs), boxed_cast<const RHS &>(t_rhs));
-          } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag) {
-            return binary::go<LHS, RHS>(t_oper, boxed_cast<LHS &>(t_lhs), boxed_cast<const RHS &>(t_rhs));
+            return boolean::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
+          } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const()) {
+            return binary::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
           } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag) {
             throw boost::bad_any_cast();
           } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
             throw boost::bad_any_cast();
           } else if (t_oper > Operators::const_flag) {
-            return const_binary::go<LHS, RHS>(t_oper, boxed_cast<const LHS &>(t_lhs), boxed_cast<const RHS &>(t_rhs));
+            return const_binary::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()));
           } else {
             throw boost::bad_any_cast();
           }

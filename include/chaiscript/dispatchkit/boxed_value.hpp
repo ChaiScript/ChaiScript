@@ -23,6 +23,7 @@
 
 namespace chaiscript 
 {
+
   /// \brief A wrapper for holding any valid C++ type. All types in ChaiScript are Boxed_Value objects
   /// \sa chaiscript::boxed_cast
   class Boxed_Value
@@ -41,19 +42,12 @@ namespace chaiscript
        */
       struct Data
       {
-        template<typename T>
-          static bool is_null(boost::any *a)
-          {
-            boost::shared_ptr<T> *ptr = boost::any_cast<boost::shared_ptr<T> >(a);
-            return ptr->get() == 0;
-          }
-
         Data(const Type_Info &ti,
             const boost::any &to,
             bool tr,
-            const boost::function<bool (boost::any*)> &t_is_null = boost::function<bool (boost::any*)>())
-          : m_type_info(ti), m_obj(to), 
-          m_is_ref(tr), m_is_null(t_is_null)
+            const void *t_void_ptr)
+          : m_type_info(ti), m_obj(to), m_data_ptr(ti.is_const()?0:const_cast<void *>(t_void_ptr)), m_const_data_ptr(t_void_ptr),
+            m_is_ref(tr)
         {
         }
 
@@ -62,7 +56,8 @@ namespace chaiscript
           m_type_info = rhs.m_type_info;
           m_obj = rhs.m_obj;
           m_is_ref = rhs.m_is_ref;
-          m_is_null = rhs.m_is_null;
+          m_data_ptr = rhs.m_data_ptr;
+          m_const_data_ptr = rhs.m_const_data_ptr;
 
           return *this;
         }
@@ -73,8 +68,9 @@ namespace chaiscript
 
         Type_Info m_type_info;
         boost::any m_obj;
+        void *m_data_ptr;
+        const void *m_const_data_ptr;
         bool m_is_ref;
-        boost::function<bool (boost::any*)> m_is_null;
         std::vector<boost::shared_ptr<Data> > m_dependencies;
       };
 
@@ -85,7 +81,8 @@ namespace chaiscript
           return boost::shared_ptr<Data> (new Data(
                 detail::Get_Type_Info<void>::get(),
                 boost::any(), 
-                false)
+                false,
+                0)
               );
         }
 
@@ -102,7 +99,7 @@ namespace chaiscript
                   detail::Get_Type_Info<T>::get(), 
                   boost::any(obj), 
                   false,
-                  boost::function<bool (boost::any *)>(&Data::is_null<T>))
+                  obj.get())
                 );
           }
 
@@ -117,19 +114,21 @@ namespace chaiscript
           {
             return boost::shared_ptr<Data>(new Data(
                   detail::Get_Type_Info<T>::get(),
-                  boost::any(obj), 
-                  true)
+                  boost::any(obj),
+                  true,
+                  obj.get_pointer())
                 );
           }
 
         template<typename T>
           static boost::shared_ptr<Data> get(const T& t)
           {
+            boost::shared_ptr<T> p(new T(t));
             return boost::shared_ptr<Data>(new Data(
                   detail::Get_Type_Info<T>::get(), 
-                  boost::any(boost::shared_ptr<T>(new T(t))), 
+                  boost::any(p), 
                   false,
-                  boost::function<bool (boost::any *)>(&Data::is_null<T>))
+                  p.get())
                 );
           }
 
@@ -138,7 +137,8 @@ namespace chaiscript
           return boost::shared_ptr<Data> (new Data(
                 Type_Info(),
                 boost::any(),
-                false)
+                false,
+                0)
               );
         }
 
@@ -224,12 +224,7 @@ namespace chaiscript
 
       bool is_null() const
       {
-        if (m_data->m_is_null)
-        {
-          return m_data->m_is_null(&m_data->m_obj);
-        } else {
-          return false;
-        }
+        return (m_data->m_data_ptr == 0 && m_data->m_const_data_ptr == 0);
       }
 
       const boost::any & get() const
@@ -265,6 +260,15 @@ namespace chaiscript
           }
         }
 
+      void *get_ptr() const
+      {
+        return m_data->m_data_ptr;
+      }
+
+      const void *get_const_ptr() const
+      {
+        return m_data->m_const_data_ptr;
+      }
 
     private:
       boost::shared_ptr<Data> m_data;
