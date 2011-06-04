@@ -40,33 +40,37 @@ namespace chaiscript
       public:
         Binary_Operator_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Bitwise_Xor, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
-        { }
+      { }
 
         virtual ~Binary_Operator_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
-          Boxed_Value retval = this->children[0]->eval(t_ss);
-          Boxed_Value rhs(this->children[2]->eval(t_ss));
-          Operators::Opers oper = Operators::to_operator(children[1]->text);
+          return do_oper(t_ss, Operators::to_operator(children[1]->text), children[1]->text,
+              this->children[0]->eval(t_ss),
+              this->children[2]->eval(t_ss));
+        }
 
+      protected:
+        Boxed_Value do_oper(chaiscript::detail::Dispatch_Engine &t_ss, 
+            Operators::Opers t_oper, const std::string &t_oper_string, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
+        {
           try {
-            if (oper != Operators::invalid && retval.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic())
+            if (t_oper != Operators::invalid && t_lhs.get_type_info().is_arithmetic() && t_rhs.get_type_info().is_arithmetic())
             {
               // If it's an arithmetic operation we want to short circuit dispatch
               try{
-                return Boxed_Numeric::do_oper(oper, retval, rhs);
+                return Boxed_Numeric::do_oper(t_oper, t_lhs, t_rhs);
               } catch (...) {
-                throw exception::eval_error("Error with numeric operator calling: " + children[1]->text);
+                throw exception::eval_error("Error with numeric operator calling: " + t_oper_string);
               }
 
             } else {
-              return t_ss.call_function(this->children[1]->text, retval, rhs);
+              return t_ss.call_function(t_oper_string, t_lhs, t_rhs);
             }
           }
           catch(const exception::dispatch_error &){
-            throw exception::eval_error("Can not find appropriate '" + this->children[1]->text + "'");
+            throw exception::eval_error("Can not find appropriate '" + t_oper_string + "'");
           }
         }
-
     };
 
     struct Error_AST_Node : public AST_Node {
@@ -357,28 +361,7 @@ namespace chaiscript
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Addition_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
-          Boxed_Value retval = this->children[0]->eval(t_ss);
-          Boxed_Value rhs(this->children[1]->eval(t_ss));
-          Operators::Opers oper = Operators::sum;
-
-          try {
-            if (oper != Operators::invalid && retval.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic())
-            {
-              // If it's an arithmetic operation we want to short circuit dispatch
-              try{
-                retval = Boxed_Numeric::do_oper(oper, retval, rhs);
-              } catch (...) {
-                throw exception::eval_error("Error with numeric operator calling: +");
-              }
-
-            } else {
-              retval = t_ss.call_function("+", retval, rhs);
-            }
-          }
-          catch(const exception::dispatch_error &){
-            throw exception::eval_error("Can not find appropriate '+'");
-          }
-          return retval;
+          return do_oper(t_ss, Operators::sum, "+", this->children[0]->eval(t_ss), this->children[1]->eval(t_ss));
         }
     };
 
@@ -390,28 +373,7 @@ namespace chaiscript
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Subtraction_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
-          Boxed_Value retval = this->children[0]->eval(t_ss);
-          Boxed_Value rhs(this->children[1]->eval(t_ss));
-          Operators::Opers oper = Operators::difference;
-
-          try {
-            if (oper != Operators::invalid && retval.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic())
-            {
-              // If it's an arithmetic operation we want to short circuit dispatch
-              try{
-                retval = Boxed_Numeric::do_oper(oper, retval, rhs);
-              } catch (...) {
-                throw exception::eval_error("Error with numeric operator calling: -");
-              }
-
-            } else {
-              retval = t_ss.call_function("-", retval, rhs);
-            }
-          }
-          catch(const exception::dispatch_error &){
-            throw exception::eval_error("Can not find appropriate '-'");
-          }
-          return retval;
+          return do_oper(t_ss, Operators::difference, "-", this->children[0]->eval(t_ss), this->children[1]->eval(t_ss));
         }
     };
 
@@ -423,28 +385,7 @@ namespace chaiscript
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Multiplication_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
-          Boxed_Value retval = this->children[0]->eval(t_ss);
-          Boxed_Value rhs(this->children[1]->eval(t_ss));
-          Operators::Opers oper = Operators::product;
-
-          try {
-            if (oper != Operators::invalid && retval.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic())
-            {
-              // If it's an arithmetic operation we want to short circuit dispatch
-              try{
-                retval = Boxed_Numeric::do_oper(oper, retval, rhs);
-              } catch (...) {
-                throw exception::eval_error("Error with numeric operator calling: *");
-              }
-
-            } else {
-              retval = t_ss.call_function("*", rhs);
-            }
-          }
-          catch(const exception::dispatch_error &){
-            throw exception::eval_error("Can not find appropriate '*'");
-          }
-          return retval;
+          return do_oper(t_ss, Operators::product, "*", this->children[0]->eval(t_ss), this->children[1]->eval(t_ss));
         }
     };
 
@@ -456,28 +397,7 @@ namespace chaiscript
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Division_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
-          Boxed_Value retval = this->children[0]->eval(t_ss);
-          Boxed_Value rhs(this->children[1]->eval(t_ss));
-          Operators::Opers oper = Operators::quotient;
-
-          try {
-            if (oper != Operators::invalid && retval.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic())
-            {
-              // If it's an arithmetic operation we want to short circuit dispatch
-              try{
-                retval = Boxed_Numeric::do_oper(oper, retval, rhs);
-              } catch (...) {
-                throw exception::eval_error("Error with numeric operator calling: /");
-              }
-
-            } else {
-              retval = t_ss.call_function("/", retval, rhs);
-            }
-          }
-          catch(const exception::dispatch_error &){
-            throw exception::eval_error("Can not find appropriate '/'");
-          }
-          return retval;
+          return do_oper(t_ss, Operators::quotient, "/", this->children[0]->eval(t_ss), this->children[1]->eval(t_ss));
         }
     };
 
@@ -489,28 +409,7 @@ namespace chaiscript
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Modulus_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
-          Boxed_Value retval = this->children[0]->eval(t_ss);
-          Boxed_Value rhs(this->children[1]->eval(t_ss));
-          Operators::Opers oper = Operators::remainder;
-
-          try {
-            if (oper != Operators::invalid && retval.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic())
-            {
-              // If it's an arithmetic operation we want to short circuit dispatch
-              try{
-                retval = Boxed_Numeric::do_oper(oper, retval, rhs);
-              } catch (...) {
-                throw exception::eval_error("Error with numeric operator calling: %");
-              }
-
-            } else {
-              retval = t_ss.call_function("%", retval, rhs);
-            }
-          }
-          catch(const exception::dispatch_error &){
-            throw exception::eval_error("Can not find appropriate '%'");
-          }
-          return retval;
+          return do_oper(t_ss, Operators::remainder, "%", this->children[0]->eval(t_ss), this->children[1]->eval(t_ss));
         }
     };
 
