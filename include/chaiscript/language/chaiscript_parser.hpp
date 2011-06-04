@@ -111,18 +111,20 @@ namespace chaiscript
         shift.push_back(">>");
         m_operator_matches.push_back(shift);
 
-        m_operators.push_back(AST_Node_Type::Additive);
-        std::vector<std::string> additive;
-        additive.push_back("+");
-        additive.push_back("-");
-        m_operator_matches.push_back(additive);
+        //We share precedence here but then separate them later
+        m_operators.push_back(AST_Node_Type::Addition);
+        std::vector<std::string> addition;
+        addition.push_back("+");
+        addition.push_back("-");
+        m_operator_matches.push_back(addition);
 
-        m_operators.push_back(AST_Node_Type::Multiplicative);
-        std::vector<std::string> multiplicative;
-        multiplicative.push_back("*");
-        multiplicative.push_back("/");
-        multiplicative.push_back("%");
-        m_operator_matches.push_back(multiplicative);
+        //We share precedence here but then separate them later
+        m_operators.push_back(AST_Node_Type::Multiplication);
+        std::vector<std::string> multiplication;
+        multiplication.push_back("*");
+        multiplication.push_back("/");
+        multiplication.push_back("%");
+        m_operator_matches.push_back(multiplication);
 
         m_operators.push_back(AST_Node_Type::Dot_Access);
         std::vector<std::string> dot_access;
@@ -655,7 +657,6 @@ namespace chaiscript
             bool saw_interpolation_marker = false;
             size_t prev_stack_top = m_match_stack.size();
 
-            //for (std::string::iterator s = start + 1, end = m_input_pos - 1; s != end; ++s) {
             std::string::const_iterator s = start + 1, end = m_input_pos - 1;
 
             while (s != end) {
@@ -665,13 +666,11 @@ namespace chaiscript
 
                   if (is_interpolated) {
                     //If we've seen previous interpolation, add on instead of making a new one
-                    AST_NodePtr plus(new eval::Str_AST_Node("+", AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
-                    m_match_stack.push_back(plus);
 
                     AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
                     m_match_stack.push_back(t);
 
-                    build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
+                    build_match(AST_NodePtr(new eval::Addition_AST_Node()), prev_stack_top);
                   }
                   else {
                     AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
@@ -680,9 +679,6 @@ namespace chaiscript
 
                   //We've finished with the part of the string up to this point, so clear it
                   match = "";
-
-                  AST_NodePtr plus(new eval::Str_AST_Node("+", AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
-                  m_match_stack.push_back(plus);
 
                   std::string eval_match;
 
@@ -718,7 +714,7 @@ namespace chaiscript
 
                     build_match(AST_NodePtr(new eval::Fun_Call_AST_Node()), tostr_stack_top);
 
-                    build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
+                    build_match(AST_NodePtr(new eval::Addition_AST_Node()), prev_stack_top);
                   }
                   else {
                     throw exception::eval_error("Unclosed in-string eval", File_Position(prev_line, prev_col), *m_filename);
@@ -765,13 +761,10 @@ namespace chaiscript
               }
             }
             if (is_interpolated) {
-              AST_NodePtr plus(new eval::Str_AST_Node("+", AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
-              m_match_stack.push_back(plus);
-
               AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
 
-              build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
+              build_match(AST_NodePtr(new eval::Addition_AST_Node()), prev_stack_top);
             }
             else {
               AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
@@ -1703,7 +1696,7 @@ namespace chaiscript
 
         bool Operator(size_t t_precedence = 0) {
           bool retval = false;
-
+          AST_NodePtr oper;
           size_t prev_stack_top = m_match_stack.size();
 
           if (t_precedence < m_operators.size()) {
@@ -1724,11 +1717,30 @@ namespace chaiscript
                     case(AST_Node_Type::Dot_Access) :
                       build_match(AST_NodePtr(new eval::Dot_Access_AST_Node()), prev_stack_top);
                       break;
-                    case(AST_Node_Type::Additive) :
-                      build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
+                    case(AST_Node_Type::Addition) :
+                      oper = m_match_stack.at(m_match_stack.size()-2);
+                      m_match_stack.erase(m_match_stack.begin() + m_match_stack.size() - 2,
+                          m_match_stack.begin() + m_match_stack.size() - 1);
+                      if (oper->text == "+") {
+                        build_match(AST_NodePtr(new eval::Addition_AST_Node()), prev_stack_top);
+                      }
+                      else if (oper->text == "-") {
+                        build_match(AST_NodePtr(new eval::Subtraction_AST_Node()), prev_stack_top);
+                      }
                       break;
-                    case(AST_Node_Type::Multiplicative) :
-                      build_match(AST_NodePtr(new eval::Multiplicative_AST_Node()), prev_stack_top);
+                    case(AST_Node_Type::Multiplication) :
+                      oper = m_match_stack.at(m_match_stack.size()-2);
+                      m_match_stack.erase(m_match_stack.begin() + m_match_stack.size() - 2,
+                          m_match_stack.begin() + m_match_stack.size() - 1);
+                      if (oper->text == "*") {
+                        build_match(AST_NodePtr(new eval::Multiplication_AST_Node()), prev_stack_top);
+                      }
+                      else if (oper->text == "/") {
+                        build_match(AST_NodePtr(new eval::Division_AST_Node()), prev_stack_top);
+                      }
+                      else if (oper->text == "%") {
+                        build_match(AST_NodePtr(new eval::Modulus_AST_Node()), prev_stack_top);
+                      }
                       break;
                     case(AST_Node_Type::Shift) :
                       build_match(AST_NodePtr(new eval::Shift_AST_Node()), prev_stack_top);

@@ -354,18 +354,169 @@ namespace chaiscript
         virtual ~Comparison_AST_Node() {}
     };
 
-    struct Additive_AST_Node : public Binary_Operator_AST_Node {
+    struct Addition_AST_Node : public Binary_Operator_AST_Node {
       public:
-        Additive_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Additive, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Addition_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Addition,
+            const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(),
+            int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
-        virtual ~Additive_AST_Node() {}
+        virtual ~Addition_AST_Node() {}
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
+          Boxed_Value retval = this->children[0]->eval(t_ss);
+          Boxed_Value rhs(this->children[1]->eval(t_ss));
+          Operators::Opers oper = Operators::sum;
+
+          try {
+            if (oper != Operators::invalid && retval.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic())
+            {
+              // If it's an arithmetic operation we want to short circuit dispatch
+              try{
+                retval = Boxed_Numeric::do_oper(oper, retval, rhs);
+              } catch (...) {
+                throw exception::eval_error("Error with numeric operator calling: +");
+              }
+
+            } else {
+              retval = t_ss.call_function("+", retval, rhs);
+            }
+          }
+          catch(const exception::dispatch_error &){
+            throw exception::eval_error("Can not find appropriate '+'");
+          }
+          return retval;
+        }
     };
 
-    struct Multiplicative_AST_Node : public Binary_Operator_AST_Node {
+    struct Subtraction_AST_Node : public Binary_Operator_AST_Node {
       public:
-        Multiplicative_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Multiplicative, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Subtraction_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Subtraction,
+            const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0,
+            int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
-        virtual ~Multiplicative_AST_Node() {}
+        virtual ~Subtraction_AST_Node() {}
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
+          Boxed_Value retval = this->children[0]->eval(t_ss);
+          Boxed_Value rhs(this->children[1]->eval(t_ss));
+          Operators::Opers oper = Operators::difference;
+
+          try {
+            if (oper != Operators::invalid && retval.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic())
+            {
+              // If it's an arithmetic operation we want to short circuit dispatch
+              try{
+                retval = Boxed_Numeric::do_oper(oper, retval, rhs);
+              } catch (...) {
+                throw exception::eval_error("Error with numeric operator calling: -");
+              }
+
+            } else {
+              retval = t_ss.call_function("-", retval, rhs);
+            }
+          }
+          catch(const exception::dispatch_error &){
+            throw exception::eval_error("Can not find appropriate '-'");
+          }
+          return retval;
+        }
+    };
+
+    struct Multiplication_AST_Node : public Binary_Operator_AST_Node {
+      public:
+        Multiplication_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Multiplication,
+            const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0,
+            int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        virtual ~Multiplication_AST_Node() {}
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
+          Boxed_Value retval = this->children[0]->eval(t_ss);
+          Boxed_Value rhs(this->children[1]->eval(t_ss));
+          Operators::Opers oper = Operators::product;
+
+          try {
+            if (oper != Operators::invalid && retval.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic())
+            {
+              // If it's an arithmetic operation we want to short circuit dispatch
+              try{
+                retval = Boxed_Numeric::do_oper(oper, retval, rhs);
+              } catch (...) {
+                throw exception::eval_error("Error with numeric operator calling: *");
+              }
+
+            } else {
+              retval = t_ss.call_function("*", rhs);
+            }
+          }
+          catch(const exception::dispatch_error &){
+            throw exception::eval_error("Can not find appropriate '*'");
+          }
+          return retval;
+        }
+    };
+
+    struct Division_AST_Node : public Binary_Operator_AST_Node {
+      public:
+        Division_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Division,
+            const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0,
+            int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        virtual ~Division_AST_Node() {}
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
+          Boxed_Value retval = this->children[0]->eval(t_ss);
+          Boxed_Value rhs(this->children[1]->eval(t_ss));
+          Operators::Opers oper = Operators::quotient;
+
+          try {
+            if (oper != Operators::invalid && retval.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic())
+            {
+              // If it's an arithmetic operation we want to short circuit dispatch
+              try{
+                retval = Boxed_Numeric::do_oper(oper, retval, rhs);
+              } catch (...) {
+                throw exception::eval_error("Error with numeric operator calling: /");
+              }
+
+            } else {
+              retval = t_ss.call_function("/", retval, rhs);
+            }
+          }
+          catch(const exception::dispatch_error &){
+            throw exception::eval_error("Can not find appropriate '/'");
+          }
+          return retval;
+        }
+    };
+
+    struct Modulus_AST_Node : public Binary_Operator_AST_Node {
+      public:
+        Modulus_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Modulus,
+            const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0,
+            int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        virtual ~Modulus_AST_Node() {}
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
+          Boxed_Value retval = this->children[0]->eval(t_ss);
+          Boxed_Value rhs(this->children[1]->eval(t_ss));
+          Operators::Opers oper = Operators::remainder;
+
+          try {
+            if (oper != Operators::invalid && retval.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic())
+            {
+              // If it's an arithmetic operation we want to short circuit dispatch
+              try{
+                retval = Boxed_Numeric::do_oper(oper, retval, rhs);
+              } catch (...) {
+                throw exception::eval_error("Error with numeric operator calling: %");
+              }
+
+            } else {
+              retval = t_ss.call_function("%", retval, rhs);
+            }
+          }
+          catch(const exception::dispatch_error &){
+            throw exception::eval_error("Can not find appropriate '%'");
+          }
+          return retval;
+        }
     };
 
     struct Array_Call_AST_Node : public AST_Node {
