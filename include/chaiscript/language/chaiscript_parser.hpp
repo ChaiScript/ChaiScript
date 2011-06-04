@@ -352,7 +352,7 @@ namespace chaiscript
       }
 
       /**
-       * Reads a floating point value from input, without skipping initial whitespace
+       * Reads a hex value from input, without skipping initial whitespace
        */
       bool Hex_() {
         bool retval = false;
@@ -385,7 +385,7 @@ namespace chaiscript
       }
 
       /**
-       * Reads a floating point value from input, without skipping initial whitespace
+       * Reads a binary value from input, without skipping initial whitespace
        */
       bool Binary_() {
         bool retval = false;
@@ -1716,45 +1716,45 @@ namespace chaiscript
                         + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
                         File_Position(m_line, m_col), *m_filename);
                   }
-                } while (Operator_Helper(t_precedence));
 
-                switch (m_operators[t_precedence]) {
-                  case(AST_Node_Type::Comparison) :
-                    build_match(AST_NodePtr(new eval::Comparison_AST_Node()), prev_stack_top);
-                    break;
-                  case(AST_Node_Type::Dot_Access) :
-                    build_match(AST_NodePtr(new eval::Dot_Access_AST_Node()), prev_stack_top);
-                    break;
-                  case(AST_Node_Type::Additive) :
-                    build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
-                    break;
-                  case(AST_Node_Type::Multiplicative) :
-                    build_match(AST_NodePtr(new eval::Multiplicative_AST_Node()), prev_stack_top);
-                    break;
-                  case(AST_Node_Type::Shift) :
-                    build_match(AST_NodePtr(new eval::Shift_AST_Node()), prev_stack_top);
-                    break;
-                  case(AST_Node_Type::Equality) :
-                    build_match(AST_NodePtr(new eval::Equality_AST_Node()), prev_stack_top);
-                    break;
-                  case(AST_Node_Type::Bitwise_And) :
-                    build_match(AST_NodePtr(new eval::Bitwise_And_AST_Node()), prev_stack_top);
-                    break;
-                  case(AST_Node_Type::Bitwise_Xor) :
-                    build_match(AST_NodePtr(new eval::Bitwise_Xor_AST_Node()), prev_stack_top);
-                    break;
-                  case(AST_Node_Type::Bitwise_Or) :
-                    build_match(AST_NodePtr(new eval::Bitwise_Or_AST_Node()), prev_stack_top);
-                    break;
-                  case(AST_Node_Type::Logical_And) :
-                    build_match(AST_NodePtr(new eval::Logical_And_AST_Node()), prev_stack_top);
-                    break;
-                  case(AST_Node_Type::Logical_Or) :
-                    build_match(AST_NodePtr(new eval::Logical_Or_AST_Node()), prev_stack_top);
-                    break;
-                  default:
-                    throw exception::eval_error("Internal error: unhandled ast_node", File_Position(m_line, m_col), *m_filename);
-                }
+                  switch (m_operators[t_precedence]) {
+                    case(AST_Node_Type::Comparison) :
+                      build_match(AST_NodePtr(new eval::Comparison_AST_Node()), prev_stack_top);
+                      break;
+                    case(AST_Node_Type::Dot_Access) :
+                      build_match(AST_NodePtr(new eval::Dot_Access_AST_Node()), prev_stack_top);
+                      break;
+                    case(AST_Node_Type::Additive) :
+                      build_match(AST_NodePtr(new eval::Additive_AST_Node()), prev_stack_top);
+                      break;
+                    case(AST_Node_Type::Multiplicative) :
+                      build_match(AST_NodePtr(new eval::Multiplicative_AST_Node()), prev_stack_top);
+                      break;
+                    case(AST_Node_Type::Shift) :
+                      build_match(AST_NodePtr(new eval::Shift_AST_Node()), prev_stack_top);
+                      break;
+                    case(AST_Node_Type::Equality) :
+                      build_match(AST_NodePtr(new eval::Equality_AST_Node()), prev_stack_top);
+                      break;
+                    case(AST_Node_Type::Bitwise_And) :
+                      build_match(AST_NodePtr(new eval::Bitwise_And_AST_Node()), prev_stack_top);
+                      break;
+                    case(AST_Node_Type::Bitwise_Xor) :
+                      build_match(AST_NodePtr(new eval::Bitwise_Xor_AST_Node()), prev_stack_top);
+                      break;
+                    case(AST_Node_Type::Bitwise_Or) :
+                      build_match(AST_NodePtr(new eval::Bitwise_Or_AST_Node()), prev_stack_top);
+                      break;
+                    case(AST_Node_Type::Logical_And) :
+                      build_match(AST_NodePtr(new eval::Logical_And_AST_Node()), prev_stack_top);
+                      break;
+                    case(AST_Node_Type::Logical_Or) :
+                      build_match(AST_NodePtr(new eval::Logical_Or_AST_Node()), prev_stack_top);
+                      break;
+                    default:
+                      throw exception::eval_error("Internal error: unhandled ast_node", File_Position(m_line, m_col), *m_filename);
+                  }
+                } while (Operator_Helper(t_precedence));
               }
             }
           }

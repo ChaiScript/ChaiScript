@@ -281,55 +281,53 @@ namespace chaiscript
 
 
           if (this->children.size() > 1) {
-            for (int i = static_cast<int>(this->children.size())-3; i >= 0; i -= 2) {
-              Boxed_Value lhs = this->children[i]->eval(t_ss);
+            Boxed_Value lhs = this->children[0]->eval(t_ss);
 
-              Operators::Opers oper = Operators::to_operator(this->children[i+1]->text);
+            Operators::Opers oper = Operators::to_operator(this->children[1]->text);
 
-              if (oper != Operators::invalid && lhs.get_type_info().is_arithmetic() && retval.get_type_info().is_arithmetic())
-              {
-                try {
-                  retval = Boxed_Numeric::do_oper(oper, lhs, retval);
-                } catch (const std::exception &) {
-                  throw exception::eval_error("Error with unsupported arithmetic assignment operation");
+            if (oper != Operators::invalid && lhs.get_type_info().is_arithmetic() &&
+                retval.get_type_info().is_arithmetic())
+            {
+              try {
+                retval = Boxed_Numeric::do_oper(oper, lhs, retval);
+              } catch (const std::exception &) {
+                throw exception::eval_error("Error with unsupported arithmetic assignment operation");
+              }
+            } else if (this->children[1]->text == "=") {
+              try {
+                if (lhs.is_undef()) {
+                  retval = t_ss.call_function("clone", retval);
+                  retval.clear_dependencies();
                 }
-              } else if (this->children[i+1]->text == "=") {
-                try {
-                  if (lhs.is_undef()) {
-                    retval = t_ss.call_function("clone", retval);
-                    retval.clear_dependencies();
-                  }
 
-                  try {
-                    retval = t_ss.call_function(this->children[i+1]->text, lhs, retval);
-                  }
-                  catch(const exception::dispatch_error &){
-                    throw exception::eval_error(std::string("Mismatched types in equation") + (lhs.is_const()?", lhs is const.":"."));
-                  }
+                try {
+                  retval = t_ss.call_function(this->children[1]->text, lhs, retval);
                 }
                 catch(const exception::dispatch_error &){
-                  throw exception::eval_error("Can not clone right hand side of equation");
+                  throw exception::eval_error(std::string("Mismatched types in equation") + (lhs.is_const()?", lhs is const.":"."));
                 }
               }
-              else if (this->children[i+1]->text == ":=") {
-                if (lhs.is_undef() || type_match(lhs, retval)) {
-                  lhs.assign(retval);
-                } else {
-                  throw exception::eval_error("Mismatched types in equation");
-                }
+              catch(const exception::dispatch_error &){
+                throw exception::eval_error("Can not clone right hand side of equation");
               }
-              else {
-                try {
-                  retval = t_ss.call_function(this->children[i+1]->text, lhs, retval);
-                } catch(const exception::dispatch_error &){
-                  throw exception::eval_error("Can not find appropriate '" + this->children[i+1]->text + "'");
-                }
+            }
+            else if (this->children[1]->text == ":=") {
+              if (lhs.is_undef() || type_match(lhs, retval)) {
+                lhs.assign(retval);
+              } else {
+                throw exception::eval_error("Mismatched types in equation");
+              }
+            }
+            else {
+              try {
+                retval = t_ss.call_function(this->children[1]->text, lhs, retval);
+              } catch(const exception::dispatch_error &){
+                throw exception::eval_error("Can not find appropriate '" + this->children[1]->text + "'");
               }
             }
           }
           return retval;
         }
-
     };
 
     struct Var_Decl_AST_Node : public AST_Node {
