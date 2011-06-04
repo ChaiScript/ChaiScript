@@ -45,31 +45,26 @@ namespace chaiscript
         virtual ~Binary_Operator_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
           Boxed_Value retval = this->children[0]->eval(t_ss);
+          Boxed_Value rhs(this->children[2]->eval(t_ss));
+          Operators::Opers oper = Operators::to_operator(children[1]->text);
 
-          // Else loop through all children collecting the retval
-          for (size_t i = 1; i < this->children.size(); i += 2) {
-            Boxed_Value rhs(this->children[i+1]->eval(t_ss));
-            Operators::Opers oper = Operators::to_operator(children[i]->text);
-
-            try {
-              if (oper != Operators::invalid && retval.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic())
-              {
-                // If it's an arithmetic operation we want to short circuit dispatch
-                try{
-                  retval = Boxed_Numeric::do_oper(oper, retval, rhs);
-                } catch (...) {
-                  throw exception::eval_error("Error with numeric operator calling: " + children[i]->text);
-                }
-
-              } else {
-                retval = t_ss.call_function(this->children[1]->text, retval, rhs);
+          try {
+            if (oper != Operators::invalid && retval.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic())
+            {
+              // If it's an arithmetic operation we want to short circuit dispatch
+              try{
+                return Boxed_Numeric::do_oper(oper, retval, rhs);
+              } catch (...) {
+                throw exception::eval_error("Error with numeric operator calling: " + children[1]->text);
               }
-            }
-            catch(const exception::dispatch_error &){
-              throw exception::eval_error("Can not find appropriate '" + this->children[i]->text + "'");
+
+            } else {
+              return t_ss.call_function(this->children[1]->text, retval, rhs);
             }
           }
-          return retval;
+          catch(const exception::dispatch_error &){
+            throw exception::eval_error("Can not find appropriate '" + this->children[1]->text + "'");
+          }
         }
 
     };
