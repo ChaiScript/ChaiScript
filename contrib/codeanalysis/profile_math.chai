@@ -1,0 +1,9 @@
+
+var something = 0;
+
+for (var i = 1; i < 10000; ++i)
+{
+  something += int(3 % 2 * 4 + 2 / 16.0 - 100 + (10 ^ 19) / 64 + (3 & 12) - (4 | 14)) % i;
+}
+
+print(something);
