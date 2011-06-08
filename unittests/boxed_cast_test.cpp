@@ -58,8 +58,8 @@ bool do_test(const Boxed_Value &bv, bool T, bool ConstT, bool TRef, bool ConstTR
     bool ConstTPtrConst, bool SharedPtrT, bool SharedConstPtrT,
     bool ConstSharedPtrT, bool ConstSharedConstPtrT, bool ConstSharedPtrTRef, bool ConstSharedPtrTConstRef,
     bool BoostRef, bool BoostConstRef, bool ConstBoostRef, bool ConstBoostConstRef,
-    bool ConstBoostRefRef, bool ConstBoostConstRefRef, bool PODValue,
-    bool ConstPODValue, bool ConstPODValueRef, bool TPtrConstRef, bool ConstTPtrConstRef)
+    bool ConstBoostRefRef, bool ConstBoostConstRefRef, bool Number,
+    bool ConstNumber, bool ConstNumberRef, bool TPtrConstRef, bool ConstTPtrConstRef)
 {
   bool passed = true;
   passed &= test_type_conversion<Type>(bv, T);
@@ -86,14 +86,14 @@ bool do_test(const Boxed_Value &bv, bool T, bool ConstT, bool TRef, bool ConstTR
   passed &= test_type_conversion<const boost::reference_wrapper<const Type> >(bv, ConstBoostConstRef);
   passed &= test_type_conversion<const boost::reference_wrapper<Type> &>(bv, ConstBoostRefRef);
   passed &= test_type_conversion<const boost::reference_wrapper<const Type> &>(bv, ConstBoostConstRefRef);
-  passed &= test_type_conversion<Boxed_Numeric>(bv, PODValue);
-  passed &= test_type_conversion<const Boxed_Numeric>(bv, ConstPODValue);
-  passed &= test_type_conversion<Boxed_Numeric &>(bv, false);
-  passed &= test_type_conversion<const Boxed_Numeric &>(bv, ConstPODValueRef);
-  passed &= test_type_conversion<Boxed_Numeric *>(bv, false);
-  passed &= test_type_conversion<const Boxed_Numeric *>(bv, false);
-  passed &= test_type_conversion<Boxed_Numeric * const>(bv, false);
-  passed &= test_type_conversion<const Boxed_Numeric *const>(bv, false);
+  passed &= test_type_conversion<Boxed_Number>(bv, Number);
+  passed &= test_type_conversion<const Boxed_Number>(bv, ConstNumber);
+  passed &= test_type_conversion<Boxed_Number &>(bv, false);
+  passed &= test_type_conversion<const Boxed_Number &>(bv, ConstNumberRef);
+  passed &= test_type_conversion<Boxed_Number *>(bv, false);
+  passed &= test_type_conversion<const Boxed_Number *>(bv, false);
+  passed &= test_type_conversion<Boxed_Number * const>(bv, false);
+  passed &= test_type_conversion<const Boxed_Number *const>(bv, false);
   passed &= test_type_conversion<Type *&>(bv, false);
   passed &= test_type_conversion<const Type *&>(bv, false);
   passed &= test_type_conversion<Type * const&>(bv, TPtrConstRef);
@@ -295,7 +295,7 @@ int main()
   bool ConstTPtr, bool TPtrConst, bool ConstTPtrConst, bool SharedPtrT, bool SharedConstPtrT,
     bool ConstSharedPtrT, bool ConstSharedConstPtrT, bool ConstSharedPtrTRef, bool ConstSharedPtrTConstRef, bool BoostRef, 
     bool BoostConstRef, bool ConstBoostRef, bool ConstBoostConstRef, bool ConstBoostRefRef, bool ConstBoostConstRefRef, 
-    bool PODValue, bool ConstPODValue, bool ConstPODValueRef
+    bool Number, bool ConstNumber, bool ConstNumberRef
     */
 
   passed &= built_in_type_test<int>(5, true);

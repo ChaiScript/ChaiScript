@@ -58,7 +58,7 @@ namespace chaiscript
             {
               // If it's an arithmetic operation we want to short circuit dispatch
               try{
-                return Boxed_Numeric::do_oper(t_oper, t_lhs, t_rhs);
+                return Boxed_Number::do_oper(t_oper, t_lhs, t_rhs);
               } catch (...) {
                 throw exception::eval_error("Error with numeric operator calling: " + t_oper_string);
               }
@@ -288,7 +288,7 @@ namespace chaiscript
                 retval.get_type_info().is_arithmetic())
             {
               try {
-                retval = Boxed_Numeric::do_oper(oper, lhs, retval);
+                retval = Boxed_Number::do_oper(oper, lhs, retval);
               } catch (const std::exception &) {
                 throw exception::eval_error("Error with unsupported arithmetic assignment operation");
               }
@@ -862,7 +862,7 @@ namespace chaiscript
           try {
             if (bv.get_type_info().is_arithmetic() && oper != Operators::invalid)
             {
-              return Boxed_Numeric::do_oper(oper, bv);
+              return Boxed_Number::do_oper(oper, bv);
             } else {
               return t_ss.call_function(this->children[0]->text, bv);
             }

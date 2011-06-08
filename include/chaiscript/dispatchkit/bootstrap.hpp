@@ -11,7 +11,7 @@
 #include "dynamic_object.hpp"
 #include "register_function.hpp"
 #include "operators.hpp"
-#include "boxed_numeric.hpp"
+#include "boxed_number.hpp"
 #include <boost/function_types/result_type.hpp>
 
 namespace chaiscript 
@@ -21,15 +21,15 @@ namespace chaiscript
   {
     namespace detail
     {
-      /// \brief Constructs a new POD value object from a Boxed_Numeric
-      /// \param[in] v Boxed_Numeric to copy into the new object
+      /// \brief Constructs a new POD value object from a Boxed_Number
+      /// \param[in] v Boxed_Number to copy into the new object
       /// \returns The newly created object.
       template<typename P1>
-      boost::shared_ptr<P1> construct_pod(Boxed_Numeric v)
+      boost::shared_ptr<P1> construct_pod(Boxed_Number v)
       {
         boost::shared_ptr<P1> p(new P1());
         Boxed_Value bv(p);
-        Boxed_Numeric nb(bv);
+        Boxed_Number nb(bv);
         nb = v;
         return p;
       }
@@ -210,41 +210,41 @@ namespace chaiscript
       */
       static void opers_arithmetic_pod(ModulePtr m = ModulePtr(new Module()))
       {
-        m->add(fun(&Boxed_Numeric::operator&=), "&=");
-        m->add(fun(&Boxed_Numeric::operator|=), "|=");
-        m->add(fun(&Boxed_Numeric::operator%=), "%=");
-        m->add(fun(&Boxed_Numeric::operator^=), "^=");
-        m->add(fun(&Boxed_Numeric::operator<<=), "<<=");
-        m->add(fun(&Boxed_Numeric::operator>>=), ">>=");
+        m->add(fun(&Boxed_Number::operator&=), "&=");
+        m->add(fun(&Boxed_Number::operator|=), "|=");
+        m->add(fun(&Boxed_Number::operator%=), "%=");
+        m->add(fun(&Boxed_Number::operator^=), "^=");
+        m->add(fun(&Boxed_Number::operator<<=), "<<=");
+        m->add(fun(&Boxed_Number::operator>>=), ">>=");
 
-        m->add(fun(&Boxed_Numeric::operator&), "&");
-        m->add(fun(&Boxed_Numeric::operator~), "~");
-        m->add(fun(&Boxed_Numeric::operator^), "^");
-        m->add(fun(&Boxed_Numeric::operator|), "|");
-        m->add(fun(&Boxed_Numeric::operator<<), "<<");
-        m->add(fun(&Boxed_Numeric::operator%), "%");
-        m->add(fun(&Boxed_Numeric::operator>>), ">>");
+        m->add(fun(&Boxed_Number::operator&), "&");
+        m->add(fun(&Boxed_Number::operator~), "~");
+        m->add(fun(&Boxed_Number::operator^), "^");
+        m->add(fun(&Boxed_Number::operator|), "|");
+        m->add(fun(&Boxed_Number::operator<<), "<<");
+        m->add(fun(&Boxed_Number::operator%), "%");
+        m->add(fun(&Boxed_Number::operator>>), ">>");
 
-        m->add(fun<Boxed_Value (Boxed_Numeric::*)(const Boxed_Numeric &) const>(&Boxed_Numeric::operator=), "=");
-        m->add(fun(&Boxed_Numeric::operator*=), "*=");
-        m->add(fun(&Boxed_Numeric::operator/=), "/=");
-        m->add(fun(&Boxed_Numeric::operator+=), "+=");
-        m->add(fun(&Boxed_Numeric::operator-=), "-=");
-        m->add(fun(&Boxed_Numeric::operator--), "--");
-        m->add(fun(&Boxed_Numeric::operator++), "++");
-        m->add(fun(&Boxed_Numeric::operator/), "/");
-        m->add(fun(&Boxed_Numeric::operator*), "*");
-        m->add(fun<Boxed_Value (Boxed_Numeric::*)() const>(&Boxed_Numeric::operator+), "+");
-        m->add(fun<Boxed_Value (Boxed_Numeric::*)() const>(&Boxed_Numeric::operator-), "-");
-        m->add(fun<Boxed_Value (Boxed_Numeric::*)(const Boxed_Numeric &) const>(&Boxed_Numeric::operator+), "+");
-        m->add(fun<Boxed_Value (Boxed_Numeric::*)(const Boxed_Numeric &) const>(&Boxed_Numeric::operator-), "-");
+        m->add(fun<Boxed_Value (Boxed_Number::*)(const Boxed_Number &) const>(&Boxed_Number::operator=), "=");
+        m->add(fun(&Boxed_Number::operator*=), "*=");
+        m->add(fun(&Boxed_Number::operator/=), "/=");
+        m->add(fun(&Boxed_Number::operator+=), "+=");
+        m->add(fun(&Boxed_Number::operator-=), "-=");
+        m->add(fun(&Boxed_Number::operator--), "--");
+        m->add(fun(&Boxed_Number::operator++), "++");
+        m->add(fun(&Boxed_Number::operator/), "/");
+        m->add(fun(&Boxed_Number::operator*), "*");
+        m->add(fun<Boxed_Value (Boxed_Number::*)() const>(&Boxed_Number::operator+), "+");
+        m->add(fun<Boxed_Value (Boxed_Number::*)() const>(&Boxed_Number::operator-), "-");
+        m->add(fun<Boxed_Value (Boxed_Number::*)(const Boxed_Number &) const>(&Boxed_Number::operator+), "+");
+        m->add(fun<Boxed_Value (Boxed_Number::*)(const Boxed_Number &) const>(&Boxed_Number::operator-), "-");
 
-        m->add(fun(&Boxed_Numeric::operator==), "==");
-        m->add(fun(&Boxed_Numeric::operator>), ">");
-        m->add(fun(&Boxed_Numeric::operator>=), ">=");
-        m->add(fun(&Boxed_Numeric::operator<), "<");
-        m->add(fun(&Boxed_Numeric::operator<=), "<=");
-        m->add(fun(&Boxed_Numeric::operator!=), "!=");
+        m->add(fun(&Boxed_Number::operator==), "==");
+        m->add(fun(&Boxed_Number::operator>), ">");
+        m->add(fun(&Boxed_Number::operator>=), ">=");
+        m->add(fun(&Boxed_Number::operator<), "<");
+        m->add(fun(&Boxed_Number::operator<=), "<=");
+        m->add(fun(&Boxed_Number::operator!=), "!=");
      }
 
       /**
@@ -369,7 +369,7 @@ namespace chaiscript
         m->add(user_type<void>(), "void");
         m->add(user_type<bool>(), "bool");
         m->add(user_type<Boxed_Value>(), "Object");
-        m->add(user_type<Boxed_Numeric>(), "PODObject");
+        m->add(user_type<Boxed_Number>(), "Number");
         m->add(user_type<Proxy_Function>(), "Function");
         m->add(user_type<std::exception>(), "exception");
 

@@ -19,7 +19,7 @@ namespace chaiscript
 {
  
   /// \brief Represents any numeric type, generically. Used internally for generic operations between POD values
-  class Boxed_Numeric
+  class Boxed_Number
   {
     private:
       struct boolean
@@ -301,7 +301,7 @@ namespace chaiscript
 
       
     public:
-      Boxed_Numeric(const Boxed_Value &v)
+      Boxed_Number(const Boxed_Value &v)
         : bv(v)
       {
         const Type_Info &inp_ = v.get_type_info();
@@ -317,32 +317,32 @@ namespace chaiscript
       }
 
 
-      bool operator==(const Boxed_Numeric &t_rhs) const
+      bool operator==(const Boxed_Number &t_rhs) const
       {
         return boxed_cast<bool>(oper(Operators::equals, this->bv, t_rhs.bv));
       }
 
-      bool operator<(const Boxed_Numeric &t_rhs) const
+      bool operator<(const Boxed_Number &t_rhs) const
       {
         return boxed_cast<bool>(oper(Operators::less_than, this->bv, t_rhs.bv));
       }
 
-      bool operator>(const Boxed_Numeric &t_rhs) const
+      bool operator>(const Boxed_Number &t_rhs) const
       {
         return boxed_cast<bool>(oper(Operators::greater_than, this->bv, t_rhs.bv));
       }
 
-      bool operator>=(const Boxed_Numeric &t_rhs) const
+      bool operator>=(const Boxed_Number &t_rhs) const
       {
         return boxed_cast<bool>(oper(Operators::greater_than_equal, this->bv, t_rhs.bv));
       }
 
-      bool operator<=(const Boxed_Numeric &t_rhs) const
+      bool operator<=(const Boxed_Number &t_rhs) const
       {
         return boxed_cast<bool>(oper(Operators::less_than_equal, this->bv, t_rhs.bv));
       }
 
-      bool operator!=(const Boxed_Numeric &t_rhs) const
+      bool operator!=(const Boxed_Number &t_rhs) const
       {
         return boxed_cast<bool>(oper(Operators::not_equal, this->bv, t_rhs.bv));
       }
@@ -357,7 +357,7 @@ namespace chaiscript
         return oper(Operators::pre_increment, this->bv, var(0));
       }
 
-      Boxed_Value operator+(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator+(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::sum, this->bv, t_rhs.bv);
       }
@@ -372,47 +372,47 @@ namespace chaiscript
         return oper(Operators::unary_minus, this->bv, Boxed_Value(0));
       }
 
-      Boxed_Value operator-(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator-(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::difference, this->bv, t_rhs.bv);
       }
 
-      Boxed_Value operator&=(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator&=(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::assign_bitwise_and, this->bv, t_rhs.bv);
       }
 
-      Boxed_Value operator=(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator=(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::assign, this->bv, t_rhs.bv);
       }
 
-      Boxed_Value operator|=(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator|=(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::assign_bitwise_or, this->bv, t_rhs.bv);
       }
 
-      Boxed_Value operator^=(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator^=(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::assign_bitwise_xor, this->bv, t_rhs.bv);
       }
 
-      Boxed_Value operator%=(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator%=(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::assign_remainder, this->bv, t_rhs.bv);
       }
 
-      Boxed_Value operator<<=(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator<<=(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::assign_shift_left, this->bv, t_rhs.bv);
       }
 
-      Boxed_Value operator>>=(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator>>=(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::assign_shift_right, this->bv, t_rhs.bv);
       }
 
-      Boxed_Value operator&(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator&(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::bitwise_and, this->bv, t_rhs.bv);
       }
@@ -422,54 +422,54 @@ namespace chaiscript
         return oper(Operators::bitwise_complement, this->bv, Boxed_Value(0));
       }
 
-      Boxed_Value operator^(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator^(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::bitwise_xor, this->bv, t_rhs.bv);
       }
 
-      Boxed_Value operator|(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator|(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::bitwise_or, this->bv, t_rhs.bv);
       }
 
-      Boxed_Value operator*=(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator*=(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::assign_product, this->bv, t_rhs.bv);
       }
-      Boxed_Value operator/=(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator/=(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::assign_quotient, this->bv, t_rhs.bv);
       }
-      Boxed_Value operator+=(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator+=(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::assign_sum, this->bv, t_rhs.bv);
       }
-      Boxed_Value operator-=(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator-=(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::assign_difference, this->bv, t_rhs.bv);
       }
 
-      Boxed_Value operator/(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator/(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::quotient, this->bv, t_rhs.bv);
       }
 
-      Boxed_Value operator<<(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator<<(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::shift_left, this->bv, t_rhs.bv);
       }
 
-      Boxed_Value operator*(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator*(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::product, this->bv, t_rhs.bv);
       }
 
-      Boxed_Value operator%(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator%(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::remainder, this->bv, t_rhs.bv);
       }
 
-      Boxed_Value operator>>(const Boxed_Numeric &t_rhs) const
+      Boxed_Value operator>>(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::shift_right, this->bv, t_rhs.bv);
       }
@@ -490,32 +490,32 @@ namespace chaiscript
   namespace detail
   {
     /**
-     * Cast_Helper for converting from Boxed_Value to Boxed_Numeric
+     * Cast_Helper for converting from Boxed_Value to Boxed_Number
      */
     template<>
-      struct Cast_Helper<Boxed_Numeric>
+      struct Cast_Helper<Boxed_Number>
       {
-        typedef Boxed_Numeric Result_Type;
+        typedef Boxed_Number Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob)
         {
-          return Boxed_Numeric(ob);
+          return Boxed_Number(ob);
         }
       };
 
     /**
-     * Cast_Helper for converting from Boxed_Value to Boxed_Numeric
+     * Cast_Helper for converting from Boxed_Value to Boxed_Number
      */
     template<>
-      struct Cast_Helper<const Boxed_Numeric &> : Cast_Helper<Boxed_Numeric>
+      struct Cast_Helper<const Boxed_Number &> : Cast_Helper<Boxed_Number>
       {
       };
       
     /**
-     * Cast_Helper for converting from Boxed_Value to Boxed_Numeric
+     * Cast_Helper for converting from Boxed_Value to Boxed_Number
      */
     template<>
-      struct Cast_Helper<const Boxed_Numeric> : Cast_Helper<Boxed_Numeric>
+      struct Cast_Helper<const Boxed_Number> : Cast_Helper<Boxed_Number>
       {
       };  
   }

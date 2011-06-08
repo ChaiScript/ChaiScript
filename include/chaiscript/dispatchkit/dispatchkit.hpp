@@ -811,7 +811,7 @@ namespace chaiscript
           const size_t rhssize = rhsparamtypes.size();
 
           const Type_Info boxed_type = user_type<Boxed_Value>();
-          const Type_Info boxed_pod_type = user_type<Boxed_Numeric>();
+          const Type_Info boxed_pod_type = user_type<Boxed_Number>();
 
           boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynamic_lhs(boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(lhs));
           boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynamic_rhs(boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(rhs));

@@ -20,7 +20,7 @@
 
 namespace chaiscript
 {
-  class Boxed_Numeric;
+  class Boxed_Number;
   struct AST_Node;
 
   typedef boost::shared_ptr<struct AST_Node> AST_NodePtr;
@@ -139,7 +139,7 @@ namespace chaiscript
           if (ti.is_undef() 
               || ti.bare_equal(user_type<Boxed_Value>())
               || (!bv.get_type_info().is_undef()
-                && (ti.bare_equal(user_type<Boxed_Numeric>())
+                && (ti.bare_equal(user_type<Boxed_Number>())
                   || ti.bare_equal(bv.get_type_info())
                   || chaiscript::detail::dynamic_cast_converts(ti, bv.get_type_info()) 
                   || bv.get_type_info().bare_equal(user_type<boost::shared_ptr<const Proxy_Function_Base> >())
