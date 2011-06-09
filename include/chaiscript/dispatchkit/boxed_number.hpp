@@ -14,13 +14,21 @@
 namespace chaiscript 
 {
  
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4244 4018 4389 4146)
+#endif
+
   /// \brief Represents any numeric type, generically. Used internally for generic operations between POD values
   class Boxed_Number
   {
     private:
       struct boolean
       {
+
+#ifdef BOOST_GCC
 #pragma GCC diagnostic ignored "-Wsign-compare"
+#endif
         template<typename T, typename U>
         static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &)
         {
@@ -41,7 +49,6 @@ namespace chaiscript
             default:
               throw boost::bad_any_cast();        
           }
-          throw boost::bad_any_cast();        
         }
       };
 
@@ -137,7 +144,6 @@ namespace chaiscript
             default:
               throw boost::bad_any_cast();        
           }
-          throw boost::bad_any_cast();        
         }
       };
 
@@ -163,7 +169,6 @@ namespace chaiscript
             default:
               throw boost::bad_any_cast();        
           }
-          throw boost::bad_any_cast();        
         }
       };
 
@@ -680,7 +685,11 @@ namespace chaiscript
       {
       };  
   }
-  
+
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
+
 }
 
 
