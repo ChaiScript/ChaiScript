@@ -8,6 +8,7 @@
 #define CHAISCRIPT_HANDLE_RETURN_HPP_
 
 #include "boxed_value.hpp"
+#include "boxed_number.hpp"
 #include "type_info.hpp"
 #include <string>
 #include <boost/function.hpp>
@@ -132,6 +133,30 @@ namespace chaiscript
           static Boxed_Value handle(const Boxed_Value &r)
           {
             return r;
+          }
+        };
+
+      /**
+       * Used internally for handling a return value from a Proxy_Function call
+       */
+      template<>
+        struct Handle_Return<Boxed_Number>
+        {
+          static Boxed_Value handle(const Boxed_Number &r)
+          {
+            return r.bv;
+          }
+        };
+
+      /**
+       * Used internally for handling a return value from a Proxy_Function call
+       */
+      template<>
+        struct Handle_Return<const Boxed_Number>
+        {
+          static Boxed_Value handle(const Boxed_Number &r)
+          {
+            return r.bv;
           }
         };
 

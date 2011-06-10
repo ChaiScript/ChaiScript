@@ -210,41 +210,41 @@ namespace chaiscript
       */
       static void opers_arithmetic_pod(ModulePtr m = ModulePtr(new Module()))
       {
-        m->add(fun(&Boxed_Number::operator&=), "&=");
-        m->add(fun(&Boxed_Number::operator|=), "|=");
-        m->add(fun(&Boxed_Number::operator%=), "%=");
-        m->add(fun(&Boxed_Number::operator^=), "^=");
-        m->add(fun(&Boxed_Number::operator<<=), "<<=");
-        m->add(fun(&Boxed_Number::operator>>=), ">>=");
+        m->add(fun(&Boxed_Number::equals), "==");
+        m->add(fun(&Boxed_Number::less_than), "<");
+        m->add(fun(&Boxed_Number::greater_than), ">");
+        m->add(fun(&Boxed_Number::greater_than_equal), ">=");
+        m->add(fun(&Boxed_Number::less_than_equal), "<=");
+        m->add(fun(&Boxed_Number::not_equal), "!=");
 
-        m->add(fun(&Boxed_Number::operator&), "&");
-        m->add(fun(&Boxed_Number::operator~), "~");
-        m->add(fun(&Boxed_Number::operator^), "^");
-        m->add(fun(&Boxed_Number::operator|), "|");
-        m->add(fun(&Boxed_Number::operator<<), "<<");
-        m->add(fun(&Boxed_Number::operator%), "%");
-        m->add(fun(&Boxed_Number::operator>>), ">>");
+        m->add(fun(&Boxed_Number::pre_decrement), "--");
+        m->add(fun(&Boxed_Number::pre_increment), "++");
+        m->add(fun(&Boxed_Number::sum), "+");
+        m->add(fun(&Boxed_Number::unary_plus), "+");
+        m->add(fun(&Boxed_Number::unary_minus), "-");
+        m->add(fun(&Boxed_Number::difference), "-");
+        m->add(fun(&Boxed_Number::assign_bitwise_and), "&=");
+        m->add(fun(&Boxed_Number::assign), "=");
+        m->add(fun(&Boxed_Number::assign_bitwise_or), "|=");
+        m->add(fun(&Boxed_Number::assign_bitwise_xor), "^=");
+        m->add(fun(&Boxed_Number::assign_remainder), "%=");
+        m->add(fun(&Boxed_Number::assign_shift_left), "<<=");
+        m->add(fun(&Boxed_Number::assign_shift_right), ">>=");
+        m->add(fun(&Boxed_Number::bitwise_and), "&");
+        m->add(fun(&Boxed_Number::bitwise_complement), "~");
+        m->add(fun(&Boxed_Number::bitwise_xor), "^");
+        m->add(fun(&Boxed_Number::bitwise_or), "|");
+        m->add(fun(&Boxed_Number::assign_product), "*=");
+        m->add(fun(&Boxed_Number::assign_quotient), "/=");
+        m->add(fun(&Boxed_Number::assign_sum), "+=");
+        m->add(fun(&Boxed_Number::assign_difference), "-=");
+        m->add(fun(&Boxed_Number::quotient), "/");
+        m->add(fun(&Boxed_Number::shift_left), "<<");
+        m->add(fun(&Boxed_Number::product), "*");
+        m->add(fun(&Boxed_Number::remainder), "%");
+        m->add(fun(&Boxed_Number::shift_right), ">>");
 
-        m->add(fun<Boxed_Value (Boxed_Number::*)(const Boxed_Number &) const>(&Boxed_Number::operator=), "=");
-        m->add(fun(&Boxed_Number::operator*=), "*=");
-        m->add(fun(&Boxed_Number::operator/=), "/=");
-        m->add(fun(&Boxed_Number::operator+=), "+=");
-        m->add(fun(&Boxed_Number::operator-=), "-=");
-        m->add(fun(&Boxed_Number::operator--), "--");
-        m->add(fun(&Boxed_Number::operator++), "++");
-        m->add(fun(&Boxed_Number::operator/), "/");
-        m->add(fun(&Boxed_Number::operator*), "*");
-        m->add(fun<Boxed_Value (Boxed_Number::*)() const>(&Boxed_Number::operator+), "+");
-        m->add(fun<Boxed_Value (Boxed_Number::*)() const>(&Boxed_Number::operator-), "-");
-        m->add(fun<Boxed_Value (Boxed_Number::*)(const Boxed_Number &) const>(&Boxed_Number::operator+), "+");
-        m->add(fun<Boxed_Value (Boxed_Number::*)(const Boxed_Number &) const>(&Boxed_Number::operator-), "-");
 
-        m->add(fun(&Boxed_Number::operator==), "==");
-        m->add(fun(&Boxed_Number::operator>), ">");
-        m->add(fun(&Boxed_Number::operator>=), ">=");
-        m->add(fun(&Boxed_Number::operator<), "<");
-        m->add(fun(&Boxed_Number::operator<=), "<=");
-        m->add(fun(&Boxed_Number::operator!=), "!=");
      }
 
       /**
