@@ -25,7 +25,7 @@ Once instantiated, the engine is ready to start running ChaiScript source.  You 
 
 To make functions in your C++ code visible to scripts, they must be registered with the scripting engine.  To do so, call add:
 
-chai.add(&my_function, "my_function_name");
+chai.add(chaiscript::fun(&my_function), "my_function_name");
 
 Once registered the function will be visible to scripts as "my_function_name"
 
@@ -49,7 +49,7 @@ double function(int i, double j)
 int main()
 {
   chaiscript::ChaiScript chai;
-  chai.add(&function, "function");
+  chai.add(chaiscript::fun(&function), "function");
 
   double d = chai.eval<double>("function(3, 4.75);");
 }
