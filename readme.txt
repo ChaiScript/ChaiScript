@@ -1,4 +1,4 @@
-ChaiScript v2.3.3
+ChaiScript
 http://www.chaiscript.com
 (c) 2009-2010 Jason Turner and Jonathan Turner
 Release under the BSD license, see "license.txt" for details.

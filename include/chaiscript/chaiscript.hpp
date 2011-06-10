@@ -24,6 +24,8 @@
 /// 
 /// \sa chaiscript
 /// \sa chaiscript::ChaiScript
+/// \sa ChaiScript_Language for Built in Functions
+/// \sa \ref LangGettingStarted
 /// \sa \ref LangKeywordRef
 /// \sa \ref LangInPlaceRef
 /// \sa \ref LangObjectSystemRef
@@ -32,11 +34,13 @@
 ///
 /// <hr>
 ///
-/// \section gettingstarted Getting Started
+/// \section gettingstarted API Getting Started
 ///
 /// \li \ref basics
+/// \li \ref compiling
 /// \li \ref eval
 /// \li \ref addingitems
+/// \li \ref operatoroverloading
 /// \li \ref helpermacro
 /// \li \ref pointerconversions
 /// \li \ref baseclasses
@@ -50,6 +54,7 @@
 /// Basic simple example:
 ///
 /// \code
+/// //main.cpp
 /// #include <chaiscript/chaiscript.hpp>
 /// 
 /// double function(int i, double j)
@@ -66,6 +71,27 @@
 /// } 
 /// \endcode
 ///
+/// <hr>
+/// \subsection compiling Compiling ChaiScript Applications
+///
+/// ChaiScript is a header only library with only two dependecies. boost::threads (optional) and the
+/// operating system provided dynamic library loader, which has to be specified on some platforms.
+/// 
+/// \subsubsection compilinggcc Compiling with GCC
+/// 
+/// To compile the above application on a Unix like operating system (MacOS, Linux) with GCC you need to link
+/// both boost::threads and the dynamic loader. For example:
+///
+/// \code
+/// gcc main.cpp -I/path/to/chaiscript/headers -ldl -lboost_threads
+/// \endcode
+///
+/// Alternatively, you may compile without threading support.
+///
+/// \code
+/// gcc main.cpp -I/path/to/chaiscript/headers -ldl -DCHAISCRIPT_NO_THREADS
+/// \endcode
+/// 
 /// <hr>
 /// \subsection eval Evaluating Scripts
 ///
@@ -204,7 +230,29 @@
 /// \endcode
 /// 
 /// \sa chaiscript::Module
+///
+/// <hr>
+/// \subsection operatoroverloading Operator Overloading
 /// 
+/// Operators are just like any other function in ChaiScript, to overload an operator, simply register it.
+/// 
+/// \code 
+/// class MyClass {
+///   MyClass operator+(const MyClass &) const;
+/// };
+///
+/// chai.add(fun(&MyClass::operator+), "+");
+///
+/// std::string append_string_int(const std::string &t_lhs, int t_rhs)
+/// {
+///   return t_lhs + boost::lexical_cast<std::string>(t_rhs);
+/// }
+///
+/// chai.add(fun(append_string_int), "+");
+/// \endcode
+///
+/// \sa \ref addingfunctions
+///
 /// <hr>
 /// \subsection helpermacro Class Helper Macro
 /// 
@@ -428,6 +476,114 @@
 /// \code
 /// In-place Map ::= "[" (string ":" expression)+ "]"
 /// \endcode
+
+/// \page LangGettingStarted ChaiScript Language Getting Started
+/// 
+/// ChaiScript is a simple language that should feel familiar to anyone who knows
+/// C++ or ECMAScript (JavaScript). 
+///
+/// <hr>
+/// \section chaiscriptloops Loops
+///
+/// Common looping constructs exist in ChaiScript
+///
+/// \code
+/// var i = 0;
+/// while (i < 10)
+/// {
+///   // do something
+///   ++i;
+/// }
+/// \endcode
+///
+/// \code
+/// for (var i = 0; i < 10; ++i)
+/// {
+///   // do something
+/// }
+/// \endcode
+///
+/// \sa \ref keywordfor
+/// \sa \ref keywordwhile
+///
+/// <hr>
+/// \section chaiscriptifs Conditionals
+///
+/// If statements work as expected
+/// 
+/// \code
+/// var b = true;
+/// 
+/// if (b) {
+///   // do something
+/// } else if (c < 10) {
+///   // do something else
+/// } else {
+///   // or do this
+/// }
+/// \endcode
+///
+/// \sa \ref keywordif
+///
+/// <hr>
+/// \section chaiscriptfunctions Functions
+/// 
+/// Functions are defined with the def keyword
+/// 
+/// \code
+/// def myfun(x) { print(x); }
+///
+/// myfun(10);
+/// \endcode
+///
+/// Functions may have "guards" which determine if which is called.
+///
+/// \code
+/// eval> def myfun2(x) : x < 10 { print("less than 10"); }
+/// eval> def myfun2(x) : x >= 10 { print("10 or greater"); }
+/// eval> myfun2(5)
+/// less than 10
+/// eval> myfun2(12)
+/// 10 or greater
+/// \endcode
+/// 
+/// \sa \ref keyworddef
+/// \sa \ref keywordattr
+/// \sa \ref LangObjectSystemRef
+///
+/// <hr>
+/// \section chaiscriptfunctionobjects Function Objects
+/// 
+/// Functions are first class types in ChaiScript and can be used as variables.
+///
+/// \code
+/// eval> var p = print;
+/// eval> p(1);
+/// 1
+/// \endcode
+/// 
+/// They can also be passed to functions. 
+///
+/// \code
+/// eval> def callfunc(f, lhs, rhs) { return f(lhs, rhs); }
+/// eval> def dosomething(lhs, rhs) { print("lhs: ${lhs}, rhs: ${rhs}"); }
+/// eval> callfunc(dosomething, 1, 2);
+/// lhs: 1, rhs: 2
+/// \endcode
+///
+/// Operators can also be treated as functions by using the back tick operator. Building on the above example:
+/// 
+/// \code
+/// eval> callfunc(`+`, 1, 4);
+/// 5
+/// eval> callfunc(`*`, 3, 2);
+/// 6
+/// \endcode
+///
+/// <hr>
+/// \sa \ref LangKeywordRef
+/// \sa ChaiScript_Language for Built in Functions
+
 
 /// \page LangKeywordRef ChaiScript Language Keyword Reference
 ///
