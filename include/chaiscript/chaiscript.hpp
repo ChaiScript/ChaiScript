@@ -140,7 +140,7 @@
 ///
 /// \subsubsection addingobjects Adding Objects
 ///
-/// Named objects can be created with the #var function.
+/// Named objects can be created with the chaiscript::var function.
 /// 
 /// \code
 /// using namespace chaiscript;
@@ -300,7 +300,7 @@
 /// As much as possible, ChaiScript attempts to convert between &, *, const &, const *, boost::shared_ptr<T>,
 /// boost::shared_ptr<const T>, boost::reference_wrapper<T>, boost::reference_wrapper<const T> and value types automatically.
 ///
-/// If a var object was created in C++ from a pointer, it cannot be convered to a shared_ptr (this would add invalid reference counting).
+/// If a chaiscript::var object was created in C++ from a pointer, it cannot be convered to a shared_ptr (this would add invalid reference counting).
 /// Const may be added, but never removed. 
 ///
 /// The take away is that you can pretty much expect function calls to Just Work when you need them to.
@@ -413,6 +413,8 @@
 ///
 /// \subsection exceptions Exception Handling
 /// 
+/// \subsubsection exceptionsbasics Exception Handling Basics
+///
 /// Exceptions can be thrown in ChaiScript and caught in C++ or thrown in C++ and caught in 
 /// ChaiScript.
 ///
@@ -424,10 +426,12 @@
 /// 
 /// int main()
 /// {
+///   // Throw in C++, catch in ChaiScript
 ///   chaiscript::ChaiScript chai;
 ///   chai.add(chaiscript::fun(&throwexception), "throwexception");
 ///   chai("try { throwexception(); } catch (e) { print(e.what()); }"); // prints "err"
 /// 
+///   // Throw in ChaiScript, catch in C++
 ///   try {
 ///     chai("throw(1)");
 ///   } catch (chaiscript::Boxed_Value bv) {
@@ -436,6 +440,31 @@
 ///   }
 /// }
 /// \endcode
+/// 
+/// \subsubsection exceptionsautomatic Exception Handling Automatic Unboxing
+///
+/// As an alternative to the manual unboxing of exceptions shown above, exception specifications allow the user to tell 
+/// ChaiScript what possible exceptions are expected from the script being executed. 
+///
+/// Example:
+/// \code
+/// chaiscript::ChaiScript chai;
+///
+/// try {
+///   chai.eval("throw(runtime_error(\"error\"))", chaiscript::exception_specification<int, double, float, const std::string &, const std::exception &>());
+/// } catch (const double e) {
+/// } catch (int) {
+/// } catch (float) {
+/// } catch (const std::string &) {
+/// } catch (const std::exception &e) {
+///   // This is the one what will be called in the specific throw() above
+/// }
+/// \endcode
+///
+/// \sa chaiscript::Exception_Handler for details on automatic exception unboxing 
+/// \sa chaiscript::exception_specification
+
+
 
 /// \page LangObjectSystemRef ChaiScript Language Object Model Reference
 ///

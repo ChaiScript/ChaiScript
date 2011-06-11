@@ -25,6 +25,7 @@
 
 #include <chaiscript/language/chaiscript_prelude.hpp>
 #include <chaiscript/language/chaiscript_parser.hpp>
+#include "../dispatchkit/exception_specification.hpp"
 
 namespace chaiscript
 {
@@ -598,19 +599,28 @@ namespace chaiscript
     /// \brief Evaluates a string. Equivalent to ChaiScript::eval.
     ///
     /// \param[in] t_script Script to execute
+    /// \param[in] t_handler Optional Exception_Handler used for automatic unboxing of script thrown exceptions
     ///
     /// \return result of the script execution
     /// 
     /// \throw exception::eval_error In the case that evaluation fails.
-    Boxed_Value operator()(const std::string &t_script)
+    Boxed_Value operator()(const std::string &t_script, const Exception_Handler &t_handler = Exception_Handler())
     {
-      return do_eval(t_script);
+      try {
+        return do_eval(t_script);
+      } catch (Boxed_Value &bv) {
+        if (t_handler) {
+          t_handler->handle(bv);
+        }
+        throw bv;
+      }
     }
 
     /// \brief Evaluates a string and returns a typesafe result.
     ///
     /// \tparam T Type to extract from the result value of the script execution
     /// \param[in] t_input Script to execute
+    /// \param[in] t_handler Optional Exception_Handler used for automatic unboxing of script thrown exceptions
     ///
     /// \return result of the script execution
     /// 
@@ -618,41 +628,72 @@ namespace chaiscript
     /// \throw exception::bad_boxed_cast In the case that evaluation succeeds but the result value cannot be converted
     ///        to the requested type.
     template<typename T>
-    T eval(const std::string &t_input)
+    T eval(const std::string &t_input, const Exception_Handler &t_handler = Exception_Handler())
     {
-      return boxed_cast<T>(do_eval(t_input));
+      try {
+        return boxed_cast<T>(do_eval(t_input));
+      } catch (Boxed_Value &bv) {
+        if (t_handler) {
+          t_handler->handle(bv);
+        }
+        throw bv;
+      }
     }
 
     /// \brief Evaluates a string.
     ///
     /// \param[in] t_input Script to execute
+    /// \param[in] t_handler Optional Exception_Handler used for automatic unboxing of script thrown exceptions
     ///
     /// \return result of the script execution
     /// 
     /// \throw exception::eval_error In the case that evaluation fails.
-    Boxed_Value eval(const std::string &t_input)
+    Boxed_Value eval(const std::string &t_input, const Exception_Handler &t_handler = Exception_Handler())
     {
-      return do_eval(t_input);
+      try {
+        return do_eval(t_input);
+      } catch (Boxed_Value &bv) {
+        if (t_handler) {
+          t_handler->handle(bv);
+        }
+        throw bv;
+      }
     }
 
     /// \brief Loads the file specified by filename, evaluates it, and returns the result.
     /// \param[in] t_filename File to load and parse.
+    /// \param[in] t_handler Optional Exception_Handler used for automatic unboxing of script thrown exceptions
     /// \return result of the script execution
     /// \throw exception::eval_error In the case that evaluation fails.
-    Boxed_Value eval_file(const std::string &t_filename) {
-      return do_eval(load_file(t_filename), t_filename);
+    Boxed_Value eval_file(const std::string &t_filename, const Exception_Handler &t_handler = Exception_Handler()) {
+      try {
+        return do_eval(load_file(t_filename), t_filename);
+      } catch (Boxed_Value &bv) {
+        if (t_handler) {
+          t_handler->handle(bv);
+        }
+        throw bv;
+      }
     }
 
     /// \brief Loads the file specified by filename, evaluates it, and returns the typesafe result.
     /// \tparam T Type to extract from the result value of the script execution
     /// \param[in] t_filename File to load and parse.
+    /// \param[in] t_handler Optional Exception_Handler used for automatic unboxing of script thrown exceptions
     /// \return result of the script execution
     /// \throw exception::eval_error In the case that evaluation fails.
     /// \throw exception::bad_boxed_cast In the case that evaluation succeeds but the result value cannot be converted
     ///        to the requested type.
     template<typename T>
-    T eval_file(const std::string &t_filename) {
-      return boxed_cast<T>(do_eval(load_file(t_filename), t_filename));
+    T eval_file(const std::string &t_filename, const Exception_Handler &t_handler = Exception_Handler()) {
+      try {
+        return boxed_cast<T>(do_eval(load_file(t_filename), t_filename));
+      } catch (Boxed_Value &bv) {
+        if (t_handler) {
+          t_handler->handle(bv);
+        }
+        throw bv;
+      }
     }
   };
 
