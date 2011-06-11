@@ -126,10 +126,12 @@ namespace chaiscript
         multiplication.push_back("%");
         m_operator_matches.push_back(multiplication);
 
+        /*
         m_operators.push_back(AST_Node_Type::Dot_Access);
         std::vector<std::string> dot_access;
         dot_access.push_back(".");
         m_operator_matches.push_back(dot_access);
+        */
 
         for ( int c = 0 ; c < detail::lengthof_alphabet ; ++c ) {
           for ( int a = 0 ; a < detail::max_alphabet ; a ++ ) {
@@ -1479,14 +1481,15 @@ namespace chaiscript
         }
 
         /**
-         * Reads an identifier, then proceeds to check if it's a function or array call
+         * Reads an dot expression(member access), then proceeds to check if it's a function or array call
          */
-        bool Id_Fun_Array() {
+        bool Dot_Fun_Array() {
           bool retval = false;
           std::string::const_iterator prev_pos = m_input_pos;
 
           size_t prev_stack_top = m_match_stack.size();
-          if (Id(true)) {
+          if (Lambda() || Num(true) || Quoted_String(true) || Single_Quoted_String(true) ||
+              Paren_Expression() || Inline_Container() || Id(true)) {
             retval = true;
             bool has_more = true;
 
@@ -1502,6 +1505,19 @@ namespace chaiscript
                 }
 
                 build_match(AST_NodePtr(new eval::Fun_Call_AST_Node()), prev_stack_top);
+                //FIXME: Work around for method calls until we have a better solution
+                if (!m_match_stack.back()->children.empty()) {
+                  if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Dot_Access) {
+                    AST_NodePtr dot_access = m_match_stack.back()->children[0];
+                    AST_NodePtr func_call = m_match_stack.back();
+                    m_match_stack.pop_back();
+                    func_call->children.erase(func_call->children.begin());
+                    func_call->children.insert(func_call->children.begin(), dot_access->children.back());
+                    dot_access->children.pop_back();
+                    dot_access->children.push_back(func_call);
+                    m_match_stack.push_back(dot_access);
+                  }
+                }
               }
               else if (Char('[')) {
                 has_more = true;
@@ -1511,6 +1527,14 @@ namespace chaiscript
                 }
 
                 build_match(AST_NodePtr(new eval::Array_Call_AST_Node()), prev_stack_top);
+              }
+              else if (Symbol(".", true)) {
+                has_more = true;
+                if (!(Id(true))) {
+                  throw exception::eval_error("Incomplete array access", File_Position(m_line, m_col), *m_filename);
+                }
+
+                build_match(AST_NodePtr(new eval::Dot_Access_AST_Node()), prev_stack_top);
               }
             }
           }
@@ -1676,8 +1700,9 @@ namespace chaiscript
          * Parses any of a group of 'value' style ast_node groups from input
          */
         bool Value() {
-          if (Var_Decl() || Lambda() || Id_Fun_Array() || Num(true) || Prefix() || Quoted_String(true) || Single_Quoted_String(true) ||
-              Paren_Expression() || Inline_Container()) {
+          if (Var_Decl() || /*Lambda() ||*/ Dot_Fun_Array() || /*Num(true) ||*/ Prefix() /*||
+              Quoted_String(true) || Single_Quoted_String(true) ||
+              Paren_Expression() || Inline_Container()*/) {
             return true;
           }
           else {
@@ -1714,9 +1739,11 @@ namespace chaiscript
                     case(AST_Node_Type::Comparison) :
                       build_match(AST_NodePtr(new eval::Comparison_AST_Node()), prev_stack_top);
                       break;
+                    /*
                     case(AST_Node_Type::Dot_Access) :
                       build_match(AST_NodePtr(new eval::Dot_Access_AST_Node()), prev_stack_top);
                       break;
+                    */
                     case(AST_Node_Type::Addition) :
                       oper = m_match_stack.at(m_match_stack.size()-2);
                       m_match_stack.erase(m_match_stack.begin() + m_match_stack.size() - 2,

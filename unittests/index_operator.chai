@@ -7,4 +7,4 @@ var b = Bob();
 
 
 assert_equal(b.bob3()[0], 1);
-assert_equal((b.bob3())[1, 2);
+assert_equal((b.bob3())[1], 2);
