@@ -1505,7 +1505,7 @@ namespace chaiscript
                 }
 
                 build_match(AST_NodePtr(new eval::Fun_Call_AST_Node()), prev_stack_top);
-                //FIXME: Work around for method calls until we have a better solution
+                /// \todo Work around for method calls until we have a better solution
                 if (!m_match_stack.back()->children.empty()) {
                   if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Dot_Access) {
                     AST_NodePtr dot_access = m_match_stack.back()->children[0];
