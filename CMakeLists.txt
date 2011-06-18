@@ -61,8 +61,12 @@ IF(MSVC)
     ADD_DEFINITIONS(/bigobj)
    ENDIF()
 ELSE()
-  # -Wno-missing-field-initializers is for boost on macos
-  ADD_DEFINITIONS(-Wall -Wextra -Wno-missing-field-initializers -Wshadow) 
+  ADD_DEFINITIONS(-Wall -Wextra -Wshadow) 
+
+  IF (APPLE)
+    # -Wno-missing-field-initializers is for boost on macos
+    ADD_DEFINITIONS(-Wno-missing-field-initializers -Wno-sign-compare)
+  ENDIF()
 ENDIF()
 
 include_directories(include)
