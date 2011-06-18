@@ -1,3 +1,11 @@
+Changes since 3.0.0
+* Numeric operations performance increased approximately 10x
+* Looping operations performance increased up to 2x
+* Engine start up time decreased
+* Several parsing bugs related to index operators fixed
+* Added full support for all C algebraic types: double, long double, float, int, long, char,
+  uint8_t, uint16_t, uint32_t, uint64_t, int8_t, int16_t, int32_t, int64_t
+
 Changes since 2.3.3
 
 * Code simplifications
