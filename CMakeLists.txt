@@ -61,7 +61,7 @@ if(MSVC)
     add_definitions(/bigobj)
    endif()
 else()
-  add_definitions(-Wall -Wextra -Wshadow) 
+  add_definitions(-Wall -Wextra -Wshadow)
 
   if (APPLE)
     # -Wno-missing-field-initializers is for boost on macos
@@ -70,9 +70,9 @@ else()
 endif()
 
 include_directories(include)
- 
+
 set(Boost_ADDITIONAL_VERSIONS "1.44" "1.44.0" "1.43" "1.43.0" "1.42" "1.42.0" "1.41")
-SET(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_MULTITHREADED ON)
 
 if (MULTITHREAD_SUPPORT_ENABLED)
   find_package(Boost 1.36.0 COMPONENTS thread)
@@ -136,7 +136,7 @@ if(BUILD_TESTING)
     add_test(${filename} chai ${CMAKE_CURRENT_SOURCE_DIR}/unittests/unit_test.inc ${CMAKE_CURRENT_SOURCE_DIR}/unittests/${filename})
   endforeach(filename)
 
-  SET_PROPERTY(TEST ${UNIT_TESTS}
+  set_property(TEST ${UNIT_TESTS}
    PROPERTY ENVIRONMENT
     "CHAI_USE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/unittests/"
     "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
@@ -158,7 +158,7 @@ if(BUILD_TESTING)
     add_executable(functor_cast_test unittests/functor_cast_test.cpp)
     target_link_libraries(functor_cast_test ${LIBS})
     add_test(NAME Functor_Cast_Test COMMAND functor_cast_test)
-    
+
     add_executable(boxed_cast_test unittests/boxed_cast_test.cpp)
     target_link_libraries(boxed_cast_test ${LIBS})
     add_test(NAME Boxed_Cast_Test COMMAND boxed_cast_test)
@@ -192,25 +192,24 @@ if(BUILD_TESTING)
 endif(BUILD_TESTING)
 
 install(TARGETS chai ${MODULES} RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript )
-install(DIRECTORY include/chaiscript DESTINATION include 
+install(DIRECTORY include/chaiscript DESTINATION include
    PATTERN "*.hpp"
    PATTERN "*/.svn*" EXCLUDE
    PATTERN "*/.git*" EXCLUDE
    PATTERN "*~" EXCLUDE)
-install(DIRECTORY unittests DESTINATION share/chaiscript 
+install(DIRECTORY unittests DESTINATION share/chaiscript
    PATTERN "*.chai" 
    PATTERN "*.inc"
    PATTERN "*/.svn*" EXCLUDE
    PATTERN "*/.git*" EXCLUDE
    PATTERN "*~" EXCLUDE)
-install(DIRECTORY samples DESTINATION share/chaiscript 
+install(DIRECTORY samples DESTINATION share/chaiscript
    PATTERN "*.chai"
    PATTERN "*/.svn*" EXCLUDE
    PATTERN "*/.git*" EXCLUDE
    PATTERN "*~" EXCLUDE)
-        
 
 configure_file(contrib/pkgconfig/chaiscript.pc.in lib/pkgconfig/chaiscript.pc @ONLY)
-install(FILES "${chaiscript_BINARY_DIR}/lib/pkgconfig/chaiscript.pc" 
-	DESTINATION lib/pkgconfig)
+install(FILES "${chaiscript_BINARY_DIR}/lib/pkgconfig/chaiscript.pc"
+        DESTINATION lib/pkgconfig)
 
