@@ -39,39 +39,39 @@ configure_file(Doxyfile.in ${CMAKE_BINARY_DIR}/Doxyfile)
 include(CTest)
 include(CPack)
 
-FIND_LIBRARY(READLINE_LIBRARY NAMES readline PATH /usr/lib /usr/local/lib /opt/local/lib)
+find_library(READLINE_LIBRARY NAMES readline PATH /usr/lib /usr/local/lib /opt/local/lib)
 
 enable_testing()
 
 
-MESSAGE(STATUS "Detecting readline support")
+message(STATUS "Detecting readline support")
 if (READLINE_LIBRARY)
-    MESSAGE(STATUS "Found: ${READLINE_LIBRARY}")
-    SET (READLINE_LIB readline)
-    ADD_DEFINITIONS(/DREADLINE_AVAILABLE)
+    message(STATUS "Found: ${READLINE_LIBRARY}")
+    set (READLINE_LIB readline)
+    add_definitions(/DREADLINE_AVAILABLE)
 else(READLINE_LIBRARY)
-    MESSAGE(STATUS "Not Found")
-    SET (READLINE_LIB )
-    SET (READLINE_FLAG )
+    message(STATUS "Not Found")
+    set (READLINE_LIB )
+    set (READLINE_FLAG )
 endif(READLINE_LIBRARY)
 
-IF(MSVC)
-  ADD_DEFINITIONS(/W4)
-  IF(CMAKE_CL_64)
-    ADD_DEFINITIONS(/bigobj)
-   ENDIF()
-ELSE()
-  ADD_DEFINITIONS(-Wall -Wextra -Wshadow) 
+if(MSVC)
+  add_definitions(/W4)
+  if(CMAKE_CL_64)
+    add_definitions(/bigobj)
+   endif()
+else()
+  add_definitions(-Wall -Wextra -Wshadow) 
 
-  IF (APPLE)
+  if (APPLE)
     # -Wno-missing-field-initializers is for boost on macos
-    ADD_DEFINITIONS(-Wno-missing-field-initializers -Wno-sign-compare)
-  ENDIF()
-ENDIF()
+    add_definitions(-Wno-missing-field-initializers -Wno-sign-compare)
+  endif()
+endif()
 
 include_directories(include)
  
-SET(Boost_ADDITIONAL_VERSIONS "1.44" "1.44.0" "1.43" "1.43.0" "1.42" "1.42.0" "1.41")
+set(Boost_ADDITIONAL_VERSIONS "1.44" "1.44.0" "1.43" "1.43.0" "1.42" "1.42.0" "1.41")
 SET(Boost_USE_MULTITHREADED ON)
 
 if (MULTITHREAD_SUPPORT_ENABLED)
@@ -83,18 +83,18 @@ if (MULTITHREAD_SUPPORT_ENABLED)
     message(FATAL_ERROR "Can not find Boost")
   endif(Boost_FOUND)
 else()
-  ADD_DEFINITIONS(-DCHAISCRIPT_NO_THREADS)
+  add_definitions(-DCHAISCRIPT_NO_THREADS)
 endif()
 
 if (CMAKE_HOST_UNIX)
-  SET(DYNAMIC_LOADER "dl")
+  set(DYNAMIC_LOADER "dl")
 endif(CMAKE_HOST_UNIX)
 
 if (MSVC)
   # Boost on MSVC does automatic linking
-  SET(LIBS ${DYNAMIC_LOADER} ${READLINE_LIB})
+  set(LIBS ${DYNAMIC_LOADER} ${READLINE_LIB})
 else()
-  SET(LIBS ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
+  set(LIBS ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
 endif()
 
 if (CMAKE_COMPILER_2005)
@@ -128,7 +128,7 @@ file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CUR
 
 list(SORT UNIT_TESTS)
 
-IF(BUILD_TESTING)
+if(BUILD_TESTING)
   option(UNIT_TEST_LIGHT "Unit tests light (expect module loading failures)" FALSE)
 
   foreach(filename ${UNIT_TESTS})
@@ -142,7 +142,7 @@ IF(BUILD_TESTING)
     "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
   )
 
-  IF (NOT UNIT_TEST_LIGHT)
+  if (NOT UNIT_TEST_LIGHT)
     add_executable(utility_test unittests/utility_test.cpp)
     target_link_libraries(utility_test ${LIBS})
     add_test(NAME Utility_Test COMMAND utility_test)
@@ -188,8 +188,8 @@ IF(BUILD_TESTING)
     target_link_libraries(test_module ${LIBS})
 
     install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript)
-  ENDIF()
-ENDIF(BUILD_TESTING)
+  endif()
+endif(BUILD_TESTING)
 
 install(TARGETS chai ${MODULES} RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript )
 install(DIRECTORY include/chaiscript DESTINATION include 
