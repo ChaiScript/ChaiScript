@@ -322,7 +322,6 @@ namespace chaiscript
        */
       bool Float_() {
         bool retval = false;
-        std::string::const_iterator start = m_input_pos;
 
         if (has_more_input() && char_in_alphabet(*m_input_pos,detail::float_alphabet) ) {
           while (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet) ) {
@@ -1478,7 +1477,6 @@ namespace chaiscript
          */
         bool Dot_Fun_Array() {
           bool retval = false;
-          std::string::const_iterator prev_pos = m_input_pos;
 
           size_t prev_stack_top = m_match_stack.size();
           if (Lambda() || Num(true) || Quoted_String(true) || Single_Quoted_String(true) ||
