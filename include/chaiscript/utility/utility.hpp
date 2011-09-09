@@ -49,9 +49,19 @@
     CHAISCRIPT_CLASS_METHODS((_module)(_class_name)(_class_name_translator)(_method_name_translator), _methods) \
   }
 
+#define CHAISCRIPT_CLASS_NO_CONSTRUCTOR_EX(_module, _class_name, _class_name_translator, _method_name_translator, _methods) \
+  { \
+    _module->add(chaiscript::user_type<_class_name>(), _class_name_translator (BOOST_PP_STRINGIZE(_class_name))); \
+    CHAISCRIPT_CLASS_METHODS((_module)(_class_name)(_class_name_translator)(_method_name_translator), _methods) \
+  }
+
 #define CHAISCRIPT_CLASS(_module, _class_name, _constructors, _methods) \
   CHAISCRIPT_CLASS_EX(_module, _class_name, chaiscript::utility::class_name_translator, \
       chaiscript::utility::method_name_translator, _constructors, _methods)
+
+#define CHAISCRIPT_CLASS_NO_CONSTRUCTOR(_module, _class_name, _methods) \
+  CHAISCRIPT_CLASS_NO_CONSTRUCTOR_EX(_module, _class_name, chaiscript::utility::class_name_translator, \
+      chaiscript::utility::method_name_translator, _methods)
 
 namespace chaiscript 
 {
