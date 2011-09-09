@@ -13,6 +13,16 @@ class TestBaseType
 
 };
 
+enum TestEnum
+{
+  TestValue1 = 1
+};
+
+int to_int(TestEnum t)
+{
+  return t;
+}
+
 class TestDerivedType : public TestBaseType
 {
   public:
@@ -60,6 +70,13 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::fun(&TestBaseType::func), "func");
 
   m->add(chaiscript::fun(&get_new_int), "get_new_int");
+
+  m->add_global_const(chaiscript::const_var(TestValue1), "TestValue1");
+
+  m->add(chaiscript::user_type<TestEnum>(), "TestEnum");
+
+  m->add(chaiscript::fun(&to_int), "to_int");
+
 
   return m;
 }

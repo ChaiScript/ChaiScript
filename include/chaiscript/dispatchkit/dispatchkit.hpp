@@ -32,6 +32,50 @@
 
 namespace chaiscript
 {
+  namespace exception
+  {
+    /**
+     * Exception thrown in the case that a multi method dispatch fails
+     * because no matching function was found
+     * at runtime due to either an arity_error, a guard_error or a bad_boxed_cast
+     * exception
+     */
+    class reserved_word_error : public std::runtime_error
+    {
+      public:
+        reserved_word_error(const std::string &t_word) throw()
+          : std::runtime_error("Reserved word not allowed in object name: " + t_word), m_word(t_word)
+        {
+        }
+
+        virtual ~reserved_word_error() throw() {}
+
+        std::string word() const
+        {
+          return m_word;
+        }
+
+      private:
+        std::string m_word;
+
+    };
+
+    /**
+     * Exception thrown in the case that a non-const object was added as a shared object
+     */
+    class global_non_const : public std::runtime_error
+    {
+      public:
+        global_non_const() throw()
+          : std::runtime_error("a global object must be const")
+        {
+        }
+
+        virtual ~global_non_const() throw() {}
+    };
+  }
+
+
   /// \brief Holds a collection of ChaiScript settings which can be applied to the ChaiScript runtime.
   ///        Used to implement loadable module support.
   class Module
@@ -52,6 +96,17 @@ namespace chaiscript
       Module &add(const Proxy_Function &f, const std::string &name)
       {
         m_funcs.push_back(std::make_pair(f, name));
+        return *this;
+      }
+
+      Module &add_global_const(const Boxed_Value &t_bv, const std::string &t_name)
+      {
+        if (!t_bv.is_const())
+        {
+          throw exception::global_non_const();
+        }
+
+        m_globals.push_back(std::make_pair(t_bv, t_name));
         return *this;
       }
 
@@ -76,11 +131,13 @@ namespace chaiscript
           apply(m_funcs.begin(), m_funcs.end(), t_engine);
           apply_eval(m_evals.begin(), m_evals.end(), t_eval);
           apply_single(m_conversions.begin(), m_conversions.end(), t_engine);
+          apply_globals(m_globals.begin(), m_globals.end(), t_engine);
         }
 
     private:
       std::vector<std::pair<Type_Info, std::string> > m_typeinfos;
       std::vector<std::pair<Proxy_Function, std::string> > m_funcs;
+      std::vector<std::pair<Boxed_Value, std::string> > m_globals;
       std::vector<std::string> m_evals;
       std::vector<Dynamic_Cast_Conversion> m_conversions;
 
@@ -90,6 +147,16 @@ namespace chaiscript
           while (begin != end)
           {
             t.add(begin->first, begin->second);
+            ++begin;
+          }
+        }
+
+      template<typename T, typename InItr>
+        void apply_globals(InItr begin, InItr end, T &t) const
+        {
+          while (begin != end)
+          {
+            t.add_global_const(begin->first, begin->second);
             ++begin;
           }
         }
@@ -266,48 +333,6 @@ namespace chaiscript
     };  
   }
 
-  namespace exception
-  {
-    /**
-     * Exception thrown in the case that a multi method dispatch fails
-     * because no matching function was found
-     * at runtime due to either an arity_error, a guard_error or a bad_boxed_cast
-     * exception
-     */
-    class reserved_word_error : public std::runtime_error
-    {
-      public:
-        reserved_word_error(const std::string &t_word) throw()
-          : std::runtime_error("Reserved word not allowed in object name: " + t_word), m_word(t_word)
-        {
-        }
-
-        virtual ~reserved_word_error() throw() {}
-
-        std::string word() const
-        {
-          return m_word;
-        }
-
-      private:
-        std::string m_word;
-
-    };
-
-    /**
-     * Exception thrown in the case that a non-const object was added as a shared object
-     */
-    class global_non_const : public std::runtime_error
-    {
-      public:
-        global_non_const() throw()
-          : std::runtime_error("a global object must be const")
-        {
-        }
-
-        virtual ~global_non_const() throw() {}
-    };
-  }
 
   namespace detail
   {
