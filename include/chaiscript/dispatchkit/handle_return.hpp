@@ -35,6 +35,15 @@ namespace chaiscript
         };
 
       template<typename Ret>
+        struct Handle_Return<Ret *>
+        {
+          static Boxed_Value handle(Ret *p)
+          {
+            return Boxed_Value(p);
+          }
+        };
+
+      template<typename Ret>
         struct Handle_Return<boost::shared_ptr<Ret> &>
         {
           static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
