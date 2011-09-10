@@ -102,7 +102,7 @@ namespace chaiscript
 
  
   /// \brief Struct that doubles as both a parser ast_node and an AST node.
-  struct AST_Node : boost::enable_shared_from_this<AST_Node> {
+  struct AST_Node : std::enable_shared_from_this<AST_Node> {
     public:
       const std::string text;
       const int identifier;

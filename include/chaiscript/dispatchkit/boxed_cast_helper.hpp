@@ -156,7 +156,7 @@ namespace chaiscript
         {
           if (!ob.get_type_info().is_const())
           {
-            return boost::const_pointer_cast<const Result>(boost::any_cast<std::shared_ptr<Result> >(ob.get()));
+            return std::const_pointer_cast<const Result>(boost::any_cast<std::shared_ptr<Result> >(ob.get()));
           } else {
             return boost::any_cast<std::shared_ptr<const Result> >(ob.get());
           }

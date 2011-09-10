@@ -151,7 +151,7 @@ namespace chaiscript
     std::shared_ptr<typename boost::remove_const<Type>::type> 
         shared_ptr_unconst_clone(const std::shared_ptr<typename boost::add_const<Type>::type> &p)
     {
-      return boost::const_pointer_cast<typename boost::remove_const<Type>::type>(p);
+      return std::const_pointer_cast<typename boost::remove_const<Type>::type>(p);
     }
 
 
@@ -286,7 +286,7 @@ namespace chaiscript
         std::shared_ptr<const dispatch::Dynamic_Proxy_Function> pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
         if (pf)
         {
-          return pf->get_guard();
+          return bool(pf->get_guard());
         } else {
           return false;
         }

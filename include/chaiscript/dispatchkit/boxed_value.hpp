@@ -323,7 +323,7 @@ namespace chaiscript
     template<typename T>
       Boxed_Value const_var_impl(const std::shared_ptr<T> &t)
       {
-        return Boxed_Value( boost::const_pointer_cast<typename boost::add_const<T>::type>(t) );
+        return Boxed_Value( std::const_pointer_cast<typename boost::add_const<T>::type>(t) );
       }
 
     /// \brief Takes a boost::reference_wrapper value, adds const to the referenced type and returns an immutable Boxed_Value.

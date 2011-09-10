@@ -18,7 +18,7 @@ bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
     = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
   if (pf)
   {
-    return pf->get_parse_tree();
+    return bool(pf->get_parse_tree());
   } else {
     return false;
   }
