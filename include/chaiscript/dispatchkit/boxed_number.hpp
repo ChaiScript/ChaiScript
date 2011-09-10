@@ -239,14 +239,14 @@ namespace chaiscript
             return Go<LHS, std::int32_t, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int64_t)) {
             return Go<LHS, std::int64_t, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint8_t)) {
-            return Go<LHS, boost::uint8_t, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint16_t)) {
-            return Go<LHS, boost::uint16_t, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint32_t)) {
-            return Go<LHS, boost::uint32_t, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint64_t)) {
-            return Go<LHS, boost::uint64_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint8_t)) {
+            return Go<LHS, std::uint8_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint16_t)) {
+            return Go<LHS, std::uint16_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint32_t)) {
+            return Go<LHS, std::uint32_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint64_t)) {
+            return Go<LHS, std::uint64_t, Float>::go(t_oper, t_lhs, t_rhs);
           } else {
             throw boost::bad_any_cast();
           }
@@ -280,14 +280,14 @@ namespace chaiscript
             return oper_rhs<std::int32_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int64_t)) {
             return oper_rhs<std::int64_t, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint8_t)) {
-            return oper_rhs<boost::uint8_t, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint16_t)) {
-            return oper_rhs<boost::uint16_t, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint32_t)) {
-            return oper_rhs<boost::uint32_t, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint64_t)) {
-            return oper_rhs<boost::uint64_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint8_t)) {
+            return oper_rhs<std::uint8_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint16_t)) {
+            return oper_rhs<std::uint16_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint32_t)) {
+            return oper_rhs<std::uint32_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint64_t)) {
+            return oper_rhs<std::uint64_t, false>(t_oper, t_lhs, t_rhs);
           } else  {
             throw boost::bad_any_cast();
           }

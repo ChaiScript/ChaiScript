@@ -449,10 +449,10 @@ namespace chaiscript
         bootstrap_pod_type<std::int16_t>("int16_t", m);
         bootstrap_pod_type<std::int32_t>("int32_t", m);
         bootstrap_pod_type<std::int64_t>("int64_t", m);
-        bootstrap_pod_type<boost::uint8_t>("uint8_t", m);
-        bootstrap_pod_type<boost::uint16_t>("uint16_t", m);
-        bootstrap_pod_type<boost::uint32_t>("uint32_t", m);
-        bootstrap_pod_type<boost::uint64_t>("uint64_t", m);
+        bootstrap_pod_type<std::uint8_t>("uint8_t", m);
+        bootstrap_pod_type<std::uint16_t>("uint16_t", m);
+        bootstrap_pod_type<std::uint32_t>("uint32_t", m);
+        bootstrap_pod_type<std::uint64_t>("uint64_t", m);
 
         operators::logical_compliment<bool>(m);
 
