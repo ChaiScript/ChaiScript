@@ -26,7 +26,7 @@ namespace chaiscript
     template<typename Result>
       struct Cast_Helper_Inner
       {
-        typedef typename boost::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
+        typedef typename std::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob)
         {
@@ -34,16 +34,16 @@ namespace chaiscript
           {
             if (!ob.get_type_info().is_const())
             {
-              return boost::cref((boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get());
+              return std::cref((boost::any_cast<std::reference_wrapper<Result> >(ob.get())).get());
             } else {
-              return boost::any_cast<boost::reference_wrapper<const Result> >(ob.get());
+              return boost::any_cast<std::reference_wrapper<const Result> >(ob.get());
             }
           } else {
             if (!ob.get_type_info().is_const())
             {
-              return boost::cref(*(boost::any_cast<std::shared_ptr<Result> >(ob.get())));   
+              return std::cref(*(boost::any_cast<std::shared_ptr<Result> >(ob.get())));   
             } else {
-              return boost::cref(*(boost::any_cast<std::shared_ptr<const Result> >(ob.get())));   
+              return std::cref(*(boost::any_cast<std::shared_ptr<const Result> >(ob.get())));   
             }
           }
         }
@@ -76,9 +76,9 @@ namespace chaiscript
           {
             if (!ob.get_type_info().is_const())
             {
-              return (boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get_pointer();
+              return &(boost::any_cast<std::reference_wrapper<Result> >(ob.get())).get();
             } else {
-              return (boost::any_cast<boost::reference_wrapper<const Result> >(ob.get())).get_pointer();
+              return &(boost::any_cast<std::reference_wrapper<const Result> >(ob.get())).get();
             }
           } else {
             if (!ob.get_type_info().is_const())
@@ -103,7 +103,7 @@ namespace chaiscript
         {
           if (ob.is_ref())
           {
-            return (boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get_pointer();
+            return &(boost::any_cast<std::reference_wrapper<Result> >(ob.get())).get();
           } else {
             return (boost::any_cast<std::shared_ptr<Result> >(ob.get())).get();
           }
@@ -116,15 +116,16 @@ namespace chaiscript
     template<typename Result>
       struct Cast_Helper_Inner<Result &>
       {
-        typedef typename boost::reference_wrapper<Result> Result_Type;
+        typedef Result& Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob)
+        static Result &cast(const Boxed_Value &ob)
         {
           if (ob.is_ref())
           {
-            return boost::any_cast<boost::reference_wrapper<Result> >(ob.get());
+            return boost::any_cast<std::reference_wrapper<Result> >(ob.get());
           } else {
-            return boost::ref(*(boost::any_cast<std::shared_ptr<Result> >(ob.get())));
+            Result &r = *(boost::any_cast<std::shared_ptr<Result> >(ob.get()));
+            return r;
           }
         }
       };
@@ -220,35 +221,35 @@ namespace chaiscript
     
 
 	/**
-     * Cast_Helper_Inner for casting to a boost::reference_wrapper type
+     * Cast_Helper_Inner for casting to a std::reference_wrapper type
      */
     template<typename Result>
-      struct Cast_Helper_Inner<boost::reference_wrapper<Result> > : Cast_Helper_Inner<Result &>
+      struct Cast_Helper_Inner<std::reference_wrapper<Result> > : Cast_Helper_Inner<Result &>
       {
       };
 
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::reference_wrapper<Result> > : Cast_Helper_Inner<Result &>
+      struct Cast_Helper_Inner<const std::reference_wrapper<Result> > : Cast_Helper_Inner<Result &>
       {
       };
 
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::reference_wrapper<Result> &> : Cast_Helper_Inner<Result &>
+      struct Cast_Helper_Inner<const std::reference_wrapper<Result> &> : Cast_Helper_Inner<Result &>
       {
       };
 
     template<typename Result>
-      struct Cast_Helper_Inner<boost::reference_wrapper<const Result> > : Cast_Helper_Inner<const Result &>
+      struct Cast_Helper_Inner<std::reference_wrapper<const Result> > : Cast_Helper_Inner<const Result &>
       {
       };
 
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::reference_wrapper<const Result> > : Cast_Helper_Inner<const Result &>
+      struct Cast_Helper_Inner<const std::reference_wrapper<const Result> > : Cast_Helper_Inner<const Result &>
       {
       };
 
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::reference_wrapper<const Result> & > : Cast_Helper_Inner<const Result &>
+      struct Cast_Helper_Inner<const std::reference_wrapper<const Result> & > : Cast_Helper_Inner<const Result &>
       {
       };
 

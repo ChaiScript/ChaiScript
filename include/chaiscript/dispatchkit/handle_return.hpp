@@ -75,7 +75,7 @@ namespace chaiscript
         {
           static Boxed_Value handle(const Ret &r)
           {
-            return Boxed_Value(boost::cref(r));
+            return Boxed_Value(std::cref(r));
           }
         };
 
@@ -88,12 +88,12 @@ namespace chaiscript
         {
           static Boxed_Value handle(Ret &r)
           {
-            return Boxed_Value(boost::ref(r));
+            return Boxed_Value(std::ref(r));
           }
 
           static Boxed_Value handle(const Ret &r)
           {
-            return Boxed_Value(boost::cref(r));
+            return Boxed_Value(std::cref(r));
           }
         };
 

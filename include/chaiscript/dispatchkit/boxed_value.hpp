@@ -103,17 +103,17 @@ namespace chaiscript
         template<typename T>
           static std::shared_ptr<Data> get(T *t)
           {
-            return get(boost::ref(*t));
+            return get(std::ref(*t));
           }
 
         template<typename T>
-          static std::shared_ptr<Data> get(boost::reference_wrapper<T> obj)
+          static std::shared_ptr<Data> get(std::reference_wrapper<T> obj)
           {
             return std::shared_ptr<Data>(new Data(
                   detail::Get_Type_Info<T>::get(),
                   boost::any(obj),
                   true,
-                  obj.get_pointer())
+                  &obj.get())
                 );
           }
 
@@ -271,7 +271,7 @@ namespace chaiscript
       std::shared_ptr<Data> m_data;
   };
 
-  /// \brief Creates a Boxed_Value. If the object passed in is a value type, it is copied. If it is a pointer, std::shared_ptr, or boost::reference_type
+  /// \brief Creates a Boxed_Value. If the object passed in is a value type, it is copied. If it is a pointer, std::shared_ptr, or std::reference_type
   ///        a copy is not made.
   /// \param t The value to box
   /// 
@@ -323,19 +323,19 @@ namespace chaiscript
         return Boxed_Value( std::const_pointer_cast<typename boost::add_const<T>::type>(t) );
       }
 
-    /// \brief Takes a boost::reference_wrapper value, adds const to the referenced type and returns an immutable Boxed_Value.
+    /// \brief Takes a std::reference_wrapper value, adds const to the referenced type and returns an immutable Boxed_Value.
     ///        Does not copy the referenced value.
     /// \param[in] t Reference object to make immutable
     /// \returns Immutable Boxed_Value
     /// \sa Boxed_Value::is_const
     template<typename T>
-      Boxed_Value const_var_impl(const boost::reference_wrapper<T> &t)
+      Boxed_Value const_var_impl(const std::reference_wrapper<T> &t)
       {
-        return Boxed_Value( boost::cref(t.get()) );
+        return Boxed_Value( std::cref(t.get()) );
       }
   }
 
-  /// \brief Takes an object and returns an immutable Boxed_Value. If the object is a boost::reference or pointer type
+  /// \brief Takes an object and returns an immutable Boxed_Value. If the object is a std::reference or pointer type
   ///        the value is not copied. If it is an object type, it is copied.
   /// \param[in] t Object to make immutable
   /// \returns Immutable Boxed_Value

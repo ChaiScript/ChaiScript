@@ -78,14 +78,14 @@ bool do_test(const Boxed_Value &bv, bool T, bool ConstT, bool TRef, bool ConstTR
   passed &= test_type_conversion<const std::shared_ptr<const Type> >(bv, ConstSharedConstPtrT);
   passed &= test_type_conversion<const std::shared_ptr<Type> &>(bv, ConstSharedPtrTRef);
   passed &= test_type_conversion<const std::shared_ptr<const Type> &>(bv, ConstSharedPtrTConstRef);
-  passed &= test_type_conversion<boost::reference_wrapper<Type> >(bv, BoostRef);
-  passed &= test_type_conversion<boost::reference_wrapper<const Type> >(bv, BoostConstRef);
-  passed &= test_type_conversion<boost::reference_wrapper<Type> &>(bv, false);
-  passed &= test_type_conversion<boost::reference_wrapper<const Type> &>(bv, false);
-  passed &= test_type_conversion<const boost::reference_wrapper<Type> >(bv, ConstBoostRef);
-  passed &= test_type_conversion<const boost::reference_wrapper<const Type> >(bv, ConstBoostConstRef);
-  passed &= test_type_conversion<const boost::reference_wrapper<Type> &>(bv, ConstBoostRefRef);
-  passed &= test_type_conversion<const boost::reference_wrapper<const Type> &>(bv, ConstBoostConstRefRef);
+  passed &= test_type_conversion<std::reference_wrapper<Type> >(bv, BoostRef);
+  passed &= test_type_conversion<std::reference_wrapper<const Type> >(bv, BoostConstRef);
+  passed &= test_type_conversion<std::reference_wrapper<Type> &>(bv, false);
+  passed &= test_type_conversion<std::reference_wrapper<const Type> &>(bv, false);
+  passed &= test_type_conversion<const std::reference_wrapper<Type> >(bv, ConstBoostRef);
+  passed &= test_type_conversion<const std::reference_wrapper<const Type> >(bv, ConstBoostConstRef);
+  passed &= test_type_conversion<const std::reference_wrapper<Type> &>(bv, ConstBoostRefRef);
+  passed &= test_type_conversion<const std::reference_wrapper<const Type> &>(bv, ConstBoostConstRefRef);
   passed &= test_type_conversion<Boxed_Number>(bv, Number);
   passed &= test_type_conversion<const Boxed_Number>(bv, ConstNumber);
   passed &= test_type_conversion<Boxed_Number &>(bv, false);
@@ -137,13 +137,13 @@ bool built_in_type_test(const T &initial, bool ispod)
                                  true, false, true, false, true,
                                  ispod && true, ispod && true, ispod && true, ispod && false, true);
 
-  passed &= do_test<T>(var(boost::ref(i)), true, true, true, true, true, 
+  passed &= do_test<T>(var(std::ref(i)), true, true, true, true, true, 
                                  true, true, true, false, false,
                                  false, false, false, false, true,
                                  true, true, true, true, true,
                                  ispod && true, ispod && true, ispod && true, true, true);
 
-  passed &= do_test<T>(var(boost::cref(i)), true, true, false, true, false, 
+  passed &= do_test<T>(var(std::cref(i)), true, true, false, true, false, 
                                  true, false, true, false, false,
                                  false, false, false, false, false,
                                  true, false, true, false, true,
@@ -167,7 +167,7 @@ bool built_in_type_test(const T &initial, bool ispod)
                                  true, false, true, false, true,
                                  ispod && true, ispod && true, ispod && true, false, true);
 
-  passed &= do_test<T>(var(boost::ref(ir)), true, true, false, true, false, 
+  passed &= do_test<T>(var(std::ref(ir)), true, true, false, true, false, 
                                  true, false, true, false, false,
                                  false, false, false, false, false,
                                  true, false, true, false, true,
@@ -180,7 +180,7 @@ bool built_in_type_test(const T &initial, bool ispod)
                                  true, false, true, false, true,
                                  ispod && true, ispod && true, ispod && true, false, true);
 
-  passed &= do_test<T>(const_var(boost::ref(ir)), true, true, false, true, false, 
+  passed &= do_test<T>(const_var(std::ref(ir)), true, true, false, true, false, 
                                  true, false, true, false, false,
                                  false, false, false, false, false,
                                  true, false, true, false, true,

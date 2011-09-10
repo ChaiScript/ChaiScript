@@ -109,7 +109,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
 
   //Finally, it is possible to register any std::function as a system function, in this 
   //way, we can, for instance add a bound member function to the system
-  chai.add(fun(&System::do_callbacks, boost::ref(system), std::string("Bound Test")), "do_callbacks");
+  chai.add(fun(&System::do_callbacks, std::ref(system), std::string("Bound Test")), "do_callbacks");
 
   //Call bound version of do_callbacks
   chai("do_callbacks()");

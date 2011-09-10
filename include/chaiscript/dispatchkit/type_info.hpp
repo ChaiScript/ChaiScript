@@ -187,7 +187,7 @@ namespace chaiscript
       };
 
     template<typename T>
-      struct Get_Type_Info<boost::reference_wrapper<T> >
+      struct Get_Type_Info<std::reference_wrapper<T> >
       {
         typedef T type;
 
@@ -196,13 +196,13 @@ namespace chaiscript
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
               boost::is_arithmetic<T>::value && !boost::is_same<typename boost::remove_const<T>::type, bool>::value,
-              &typeid(boost::reference_wrapper<T> ), 
+              &typeid(std::reference_wrapper<T> ), 
               &typeid(typename Bare_Type<T>::type));
         }
       };
 
     template<typename T>
-      struct Get_Type_Info<const boost::reference_wrapper<T> &>
+      struct Get_Type_Info<const std::reference_wrapper<T> &>
       {
         typedef T type;
 
@@ -211,7 +211,7 @@ namespace chaiscript
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
               boost::is_arithmetic<T>::value && !boost::is_same<typename boost::remove_const<T>::type, bool>::value,
-              &typeid(const boost::reference_wrapper<T> &), 
+              &typeid(const std::reference_wrapper<T> &), 
               &typeid(typename Bare_Type<T>::type));
         }
       };

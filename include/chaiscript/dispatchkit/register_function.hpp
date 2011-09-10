@@ -120,7 +120,7 @@ namespace chaiscript
   /// MyClass obj;
   /// chaiscript::ChaiScript chai;
   /// // Add function taking only one argument, an int, and permanently bound to "obj"
-  /// chai.add(fun(&MyClass::memberfunction, boost::ref(obj)), "memberfunction"); 
+  /// chai.add(fun(&MyClass::memberfunction, std::ref(obj)), "memberfunction"); 
   /// \endcode
   /// 
   /// \sa \ref addingfunctions
@@ -146,7 +146,7 @@ namespace chaiscript
   /// chaiscript::ChaiScript chai;
   /// // Add function taking only no arguments, and permanently bound to "obj" and "1"
   /// // memberfunction() will be equivalent to obj.memberfunction(1)
-  /// chai.add(fun(&MyClass::memberfunction, boost::ref(obj), 1), "memberfunction"); 
+  /// chai.add(fun(&MyClass::memberfunction, std::ref(obj), 1), "memberfunction"); 
   /// \endcode
   /// 
   /// \sa \ref addingfunctions

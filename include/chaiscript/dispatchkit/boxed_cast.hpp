@@ -29,14 +29,14 @@ namespace chaiscript
   /// \returns Type equivalent to the requested type 
   /// \throws exception::bad_boxed_cast If the requested conversion is not possible
   /// 
-  /// boxed_cast will attempt to make conversions between value, &, *, std::shared_ptr, boost::reference_wrapper,
+  /// boxed_cast will attempt to make conversions between value, &, *, std::shared_ptr, std::reference_wrapper,
   /// and std::function (const and non-const) where possible. boxed_cast is used internally during function
   /// dispatch. This means that all of these conversions will be attempted automatically for you during
   /// ChaiScript function calls.
   ///
   /// \li non-const values can be extracted as const or non-const
   /// \li const values can be extracted only as const
-  /// \li Boxed_Value constructed from pointer or boost::reference_wrapper can be extracted as reference,
+  /// \li Boxed_Value constructed from pointer or std::reference_wrapper can be extracted as reference,
   ///     pointer or value types
   /// \li Boxed_Value constructed from std::shared_ptr or value types can be extracted as reference,
   ///     pointer, value, or std::shared_ptr types

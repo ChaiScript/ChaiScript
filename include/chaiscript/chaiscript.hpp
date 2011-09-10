@@ -298,7 +298,7 @@
 /// \subsection pointerconversions Pointer / Object Conversions
 ///
 /// As much as possible, ChaiScript attempts to convert between &, *, const &, const *, std::shared_ptr<T>,
-/// std::shared_ptr<const T>, boost::reference_wrapper<T>, boost::reference_wrapper<const T> and value types automatically.
+/// std::shared_ptr<const T>, std::reference_wrapper<T>, std::reference_wrapper<const T> and value types automatically.
 ///
 /// If a chaiscript::var object was created in C++ from a pointer, it cannot be convered to a shared_ptr (this would add invalid reference counting).
 /// Const may be added, but never removed. 
@@ -315,8 +315,8 @@
 /// void fun6(std::shared_ptr<const int>);
 /// void fun7(const std::shared_ptr<int> &);
 /// void fun8(const std::shared_ptr<const int> &);
-/// void fun9(boost::reference_wrapper<int>);
-/// void fun10(boost::reference_wrapper<const int>);
+/// void fun9(std::reference_wrapper<int>);
+/// void fun10(std::reference_wrapper<const int>);
 ///
 /// int main()
 /// {

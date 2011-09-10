@@ -344,13 +344,13 @@ namespace chaiscript
 
       add(Bootstrap::bootstrap());
 
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::dump_system, boost::ref(m_engine)), "dump_system");
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::dump_object, boost::ref(m_engine)), "dump_object");
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::is_type, boost::ref(m_engine)), "is_type");
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::type_name, boost::ref(m_engine)), "type_name");
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::function_exists, boost::ref(m_engine)), "function_exists");
+      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::dump_system, std::ref(m_engine)), "dump_system");
+      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::dump_object, std::ref(m_engine)), "dump_object");
+      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::is_type, std::ref(m_engine)), "is_type");
+      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::type_name, std::ref(m_engine)), "type_name");
+      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::function_exists, std::ref(m_engine)), "function_exists");
 
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type_name, boost::ref(m_engine)), "name");
+      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type_name, std::ref(m_engine)), "name");
 
 
       typedef void (ChaiScript::*load_mod_1)(const std::string&);

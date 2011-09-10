@@ -112,11 +112,11 @@ namespace chaiscript
               {
                 const Derived &d = detail::Cast_Helper<const Derived &>::cast(t_derived);
                 const Base &data = dynamic_cast<const Base &>(d);
-                return Boxed_Value(boost::cref(data));
+                return Boxed_Value(std::cref(data));
               } else {
                 Derived &d = detail::Cast_Helper<Derived &>::cast(t_derived);
                 Base &data = dynamic_cast<Base &>(d);
-                return Boxed_Value(boost::ref(data));
+                return Boxed_Value(std::ref(data));
               }
             }
           } else {
