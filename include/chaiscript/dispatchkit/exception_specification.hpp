@@ -128,7 +128,7 @@ namespace chaiscript
   ///
   /// \sa chaiscript::exception_specification for creation of chaiscript::Exception_Handler objects
   /// \sa \ref exceptions
-  typedef boost::shared_ptr<detail::Exception_Handler_Base> Exception_Handler;
+  typedef std::shared_ptr<detail::Exception_Handler_Base> Exception_Handler;
 
   /// \brief creates a chaiscript::Exception_Handler which handles one type of exception unboxing
   /// \sa \ref exceptions

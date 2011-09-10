@@ -14,8 +14,8 @@
 
 bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
 {
-  boost::shared_ptr<const chaiscript::dispatch::Dynamic_Proxy_Function> pf
-    = boost::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
+  std::shared_ptr<const chaiscript::dispatch::Dynamic_Proxy_Function> pf
+    = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
   if (pf)
   {
     return pf->get_parse_tree();
@@ -26,8 +26,8 @@ bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
 
 chaiscript::AST_NodePtr get_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
 {
-  boost::shared_ptr<const chaiscript::dispatch::Dynamic_Proxy_Function> pf 
-    = boost::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
+  std::shared_ptr<const chaiscript::dispatch::Dynamic_Proxy_Function> pf 
+    = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
   if (pf)
   {
     if (pf->get_parse_tree())
@@ -50,7 +50,7 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflect
   m->add(chaiscript::fun(&get_parse_tree), "get_parse_tree");
 
 
-  chaiscript::bootstrap::standard_library::vector_type<std::vector<boost::shared_ptr<chaiscript::AST_Node> > >("AST_NodeVector", m);
+  chaiscript::bootstrap::standard_library::vector_type<std::vector<std::shared_ptr<chaiscript::AST_Node> > >("AST_NodeVector", m);
 
   CHAISCRIPT_CLASS_NO_CONSTRUCTOR( m,
       chaiscript::exception::eval_error,

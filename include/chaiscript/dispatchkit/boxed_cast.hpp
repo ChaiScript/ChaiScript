@@ -31,7 +31,7 @@ namespace chaiscript
   /// \returns Type equivalent to the requested type 
   /// \throws exception::bad_boxed_cast If the requested conversion is not possible
   /// 
-  /// boxed_cast will attempt to make conversions between value, &, *, boost::shared_ptr, boost::reference_wrapper,
+  /// boxed_cast will attempt to make conversions between value, &, *, std::shared_ptr, boost::reference_wrapper,
   /// and boost::function (const and non-const) where possible. boxed_cast is used internally during function
   /// dispatch. This means that all of these conversions will be attempted automatically for you during
   /// ChaiScript function calls.
@@ -40,8 +40,8 @@ namespace chaiscript
   /// \li const values can be extracted only as const
   /// \li Boxed_Value constructed from pointer or boost::reference_wrapper can be extracted as reference,
   ///     pointer or value types
-  /// \li Boxed_Value constructed from boost::shared_ptr or value types can be extracted as reference,
-  ///     pointer, value, or boost::shared_ptr types
+  /// \li Boxed_Value constructed from std::shared_ptr or value types can be extracted as reference,
+  ///     pointer, value, or std::shared_ptr types
   ///
   /// Conversions to boost::function objects are attempted as well
   ///
@@ -49,11 +49,11 @@ namespace chaiscript
   /// \code
   /// // All of the following should succeed
   /// chaiscript::Boxed_Value bv(1);
-  /// boost::shared_ptr<int> spi = chaiscript::boxed_cast<boost::shared_ptr<int> >(bv);
+  /// std::shared_ptr<int> spi = chaiscript::boxed_cast<std::shared_ptr<int> >(bv);
   /// int i = chaiscript::boxed_cast<int>(bv);
   /// int *ip = chaiscript::boxed_cast<int *>(bv);
   /// int &ir = chaiscript::boxed_cast<int &>(bv);
-  /// boost::shared_ptr<const int> cspi = chaiscript::boxed_cast<boost::shared_ptr<const int> >(bv);
+  /// std::shared_ptr<const int> cspi = chaiscript::boxed_cast<std::shared_ptr<const int> >(bv);
   /// const int ci = chaiscript::boxed_cast<const int>(bv);
   /// const int *cip = chaiscript::boxed_cast<const int *>(bv);
   /// const int &cir = chaiscript::boxed_cast<const int &>(bv);

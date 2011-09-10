@@ -44,27 +44,27 @@ namespace chaiscript
         };
 
       template<typename Ret>
-        struct Handle_Return<boost::shared_ptr<Ret> &>
+        struct Handle_Return<std::shared_ptr<Ret> &>
         {
-          static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
+          static Boxed_Value handle(const std::shared_ptr<Ret> &r)
           {
             return Boxed_Value(r);
           }
         };
 
       template<typename Ret>
-        struct Handle_Return<boost::shared_ptr<Ret> >
+        struct Handle_Return<std::shared_ptr<Ret> >
         {
-          static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
+          static Boxed_Value handle(const std::shared_ptr<Ret> &r)
           {
             return Boxed_Value(r);
           }
         };
 
       template<typename Ret>
-        struct Handle_Return<const boost::shared_ptr<Ret> &>
+        struct Handle_Return<const std::shared_ptr<Ret> &>
         {
-          static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
+          static Boxed_Value handle(const std::shared_ptr<Ret> &r)
           {
             return Boxed_Value(r);
           }

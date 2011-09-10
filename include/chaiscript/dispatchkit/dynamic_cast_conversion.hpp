@@ -87,8 +87,8 @@ namespace chaiscript
               // Dynamic cast out the contained boxed value, which we know is the type we want
               if (t_derived.is_const())
               {
-                boost::shared_ptr<const Base> data 
-                  = boost::dynamic_pointer_cast<const Base>(detail::Cast_Helper<boost::shared_ptr<const Derived> >::cast(t_derived));
+                std::shared_ptr<const Base> data 
+                  = std::dynamic_pointer_cast<const Base>(detail::Cast_Helper<std::shared_ptr<const Derived> >::cast(t_derived));
                 if (!data)
                 {
                   throw std::bad_cast();
@@ -96,8 +96,8 @@ namespace chaiscript
 
                 return Boxed_Value(data);
               } else {
-                boost::shared_ptr<Base> data 
-                  = boost::dynamic_pointer_cast<Base>(detail::Cast_Helper<boost::shared_ptr<Derived> >::cast(t_derived));
+                std::shared_ptr<Base> data 
+                  = std::dynamic_pointer_cast<Base>(detail::Cast_Helper<std::shared_ptr<Derived> >::cast(t_derived));
 
                 if (!data)
                 {
@@ -136,9 +136,9 @@ namespace chaiscript
         }
 
         template<typename Base, typename Derived>
-        static boost::shared_ptr<Dynamic_Conversion> create()
+        static std::shared_ptr<Dynamic_Conversion> create()
         {
-          boost::shared_ptr<Dynamic_Conversion> conversion(new Dynamic_Conversion_Impl<Base, Derived>());
+          std::shared_ptr<Dynamic_Conversion> conversion(new Dynamic_Conversion_Impl<Base, Derived>());
 
           /// \todo this is a hack and a kludge. The idea is to make sure that
           ///       the conversion is registered both in the module's notion of the static conversion object
@@ -165,7 +165,7 @@ namespace chaiscript
           }
         }
 
-        void add_conversion(const boost::shared_ptr<Dynamic_Conversion> &conversion)
+        void add_conversion(const std::shared_ptr<Dynamic_Conversion> &conversion)
         {
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
@@ -219,7 +219,7 @@ namespace chaiscript
     };
   }
 
-  typedef boost::shared_ptr<chaiscript::detail::Dynamic_Conversion> Dynamic_Cast_Conversion;
+  typedef std::shared_ptr<chaiscript::detail::Dynamic_Conversion> Dynamic_Cast_Conversion;
 
   /// \brief Used to register a base / parent class relationship with ChaiScript. Necessary if you
   ///        want automatic conversions up your inheritance hierarchy.

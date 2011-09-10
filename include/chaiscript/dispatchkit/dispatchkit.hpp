@@ -118,7 +118,7 @@ namespace chaiscript
         return *this;
       }
 
-      Module &add(const boost::shared_ptr<Module> &m)
+      Module &add(const std::shared_ptr<Module> &m)
       {
         m->apply(*this, *this);
         return *m;
@@ -183,7 +183,7 @@ namespace chaiscript
   };
 
   /// Convenience typedef for Module objects to be added to the ChaiScript runtime
-  typedef boost::shared_ptr<Module> ModulePtr;
+  typedef std::shared_ptr<Module> ModulePtr;
 
   namespace detail
   {
@@ -346,7 +346,7 @@ namespace chaiscript
         typedef std::map<std::string, chaiscript::Type_Info> Type_Name_Map;
         typedef std::map<std::string, Boxed_Value> Scope;
         typedef std::deque<Scope> StackData;
-        typedef boost::shared_ptr<StackData> Stack;
+        typedef std::shared_ptr<StackData> Stack;
 
         struct State
         {
@@ -357,7 +357,7 @@ namespace chaiscript
         };
 
         Dispatch_Engine()
-          : m_place_holder(boost::shared_ptr<dispatch::Placeholder_Object>(new dispatch::Placeholder_Object()))
+          : m_place_holder(std::shared_ptr<dispatch::Placeholder_Object>(new dispatch::Placeholder_Object()))
         {
         }
 
@@ -838,8 +838,8 @@ namespace chaiscript
           const Type_Info boxed_type = user_type<Boxed_Value>();
           const Type_Info boxed_pod_type = user_type<Boxed_Number>();
 
-          boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynamic_lhs(boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(lhs));
-          boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynamic_rhs(boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(rhs));
+          std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynamic_lhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(lhs));
+          std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynamic_rhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(rhs));
 
           if (dynamic_lhs && dynamic_rhs)
           {

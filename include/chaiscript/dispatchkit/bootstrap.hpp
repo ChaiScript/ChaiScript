@@ -25,9 +25,9 @@ namespace chaiscript
       /// \param[in] v Boxed_Number to copy into the new object
       /// \returns The newly created object.
       template<typename P1>
-      boost::shared_ptr<P1> construct_pod(Boxed_Number v)
+      std::shared_ptr<P1> construct_pod(Boxed_Number v)
       {
-        boost::shared_ptr<P1> p(new P1());
+        std::shared_ptr<P1> p(new P1());
         Boxed_Value bv(p);
         Boxed_Number nb(bv);
         nb = v;
@@ -139,7 +139,7 @@ namespace chaiscript
     * function variables.
     */
     template<typename Type>
-    boost::shared_ptr<Type> shared_ptr_clone(const boost::shared_ptr<Type> &p)
+    std::shared_ptr<Type> shared_ptr_clone(const std::shared_ptr<Type> &p)
     {
       return p;
     }
@@ -148,8 +148,8 @@ namespace chaiscript
      * Specific version of shared_ptr_clone just for Proxy_Functions
      */
     template<typename Type>
-    boost::shared_ptr<typename boost::remove_const<Type>::type> 
-        shared_ptr_unconst_clone(const boost::shared_ptr<typename boost::add_const<Type>::type> &p)
+    std::shared_ptr<typename boost::remove_const<Type>::type> 
+        shared_ptr_unconst_clone(const std::shared_ptr<typename boost::add_const<Type>::type> &p)
     {
       return boost::const_pointer_cast<typename boost::remove_const<Type>::type>(p);
     }
@@ -162,7 +162,7 @@ namespace chaiscript
     * Similar to shared_ptr_clone. Used for Proxy_Function.
     */
     template<typename Type>
-    Boxed_Value ptr_assign(Boxed_Value lhs, const boost::shared_ptr<Type> &rhs)
+    Boxed_Value ptr_assign(Boxed_Value lhs, const std::shared_ptr<Type> &rhs)
     {
       if (lhs.is_undef() 
           || (!lhs.get_type_info().is_const() && lhs.get_type_info().bare_equal(chaiscript::detail::Get_Type_Info<Type>::get())))
@@ -283,7 +283,7 @@ namespace chaiscript
 
       static bool has_guard(const Const_Proxy_Function &t_pf)
       {
-        boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> pf = boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
+        std::shared_ptr<const dispatch::Dynamic_Proxy_Function> pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
         if (pf)
         {
           return pf->get_guard();
@@ -294,7 +294,7 @@ namespace chaiscript
 
       static Const_Proxy_Function get_guard(const Const_Proxy_Function &t_pf)
       {
-        boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> pf = boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
+        std::shared_ptr<const dispatch::Dynamic_Proxy_Function> pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
         if (pf)
         {
           if (pf->get_guard())
@@ -312,7 +312,7 @@ namespace chaiscript
         throw bv;
       }
       
-      static boost::shared_ptr<chaiscript::detail::Dispatch_Engine> bootstrap2(boost::shared_ptr<chaiscript::detail::Dispatch_Engine> e = boost::shared_ptr<chaiscript::detail::Dispatch_Engine> (new chaiscript::detail::Dispatch_Engine()))
+      static std::shared_ptr<chaiscript::detail::Dispatch_Engine> bootstrap2(std::shared_ptr<chaiscript::detail::Dispatch_Engine> e = std::shared_ptr<chaiscript::detail::Dispatch_Engine> (new chaiscript::detail::Dispatch_Engine()))
       {
         e->add(user_type<void>(), "void");
         return e;

@@ -70,14 +70,14 @@ bool do_test(const Boxed_Value &bv, bool T, bool ConstT, bool TRef, bool ConstTR
   passed &= test_type_conversion<const Type *>(bv, ConstTPtr);
   passed &= test_type_conversion<Type * const>(bv, TPtrConst);
   passed &= test_type_conversion<const Type * const>(bv, ConstTPtrConst);
-  passed &= test_type_conversion<boost::shared_ptr<Type> >(bv, SharedPtrT);
-  passed &= test_type_conversion<boost::shared_ptr<const Type> >(bv, SharedConstPtrT);
-  passed &= test_type_conversion<boost::shared_ptr<Type> &>(bv, false);
-  passed &= test_type_conversion<boost::shared_ptr<const Type> &>(bv, false);
-  passed &= test_type_conversion<const boost::shared_ptr<Type> >(bv, ConstSharedPtrT);
-  passed &= test_type_conversion<const boost::shared_ptr<const Type> >(bv, ConstSharedConstPtrT);
-  passed &= test_type_conversion<const boost::shared_ptr<Type> &>(bv, ConstSharedPtrTRef);
-  passed &= test_type_conversion<const boost::shared_ptr<const Type> &>(bv, ConstSharedPtrTConstRef);
+  passed &= test_type_conversion<std::shared_ptr<Type> >(bv, SharedPtrT);
+  passed &= test_type_conversion<std::shared_ptr<const Type> >(bv, SharedConstPtrT);
+  passed &= test_type_conversion<std::shared_ptr<Type> &>(bv, false);
+  passed &= test_type_conversion<std::shared_ptr<const Type> &>(bv, false);
+  passed &= test_type_conversion<const std::shared_ptr<Type> >(bv, ConstSharedPtrT);
+  passed &= test_type_conversion<const std::shared_ptr<const Type> >(bv, ConstSharedConstPtrT);
+  passed &= test_type_conversion<const std::shared_ptr<Type> &>(bv, ConstSharedPtrTRef);
+  passed &= test_type_conversion<const std::shared_ptr<const Type> &>(bv, ConstSharedPtrTConstRef);
   passed &= test_type_conversion<boost::reference_wrapper<Type> >(bv, BoostRef);
   passed &= test_type_conversion<boost::reference_wrapper<const Type> >(bv, BoostConstRef);
   passed &= test_type_conversion<boost::reference_wrapper<Type> &>(bv, false);
@@ -205,7 +205,7 @@ bool built_in_type_test(const T &initial, bool ispod)
 
   /** shared_ptr tests **/
 
-  boost::shared_ptr<T> ip(new T(initial));
+  std::shared_ptr<T> ip(new T(initial));
 
   passed &= do_test<T>(var(ip), true, true, true, true, true, 
                                  true, true, true, true, true,
@@ -220,7 +220,7 @@ bool built_in_type_test(const T &initial, bool ispod)
                                        ispod && true, ispod && true, ispod && true, false, true);
 
   /** const shared_ptr tests **/
-  boost::shared_ptr<const T> ipc(new T(initial));
+  std::shared_ptr<const T> ipc(new T(initial));
 
   passed &= do_test<T>(var(ipc), true, true, false, true, false, 
                                        true, false, true, false, true,

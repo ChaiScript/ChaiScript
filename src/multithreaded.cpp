@@ -25,11 +25,11 @@ int main(int argc, char *argv[]) {
 
     //chai.add_shared_object(chaiscript::Boxed_Value(10000), "num_iterations");
 
-    std::vector<boost::shared_ptr<boost::thread> > threads;
+    std::vector<std::shared_ptr<boost::thread> > threads;
 
     for (int i = 0; i < argc - 1; ++i)
     {
-      threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(do_work, boost::ref(chai)))));
+      threads.push_back(std::shared_ptr<boost::thread>(new boost::thread(boost::bind(do_work, boost::ref(chai)))));
     }
 
     for (int i = 0; i < argc - 1; ++i)

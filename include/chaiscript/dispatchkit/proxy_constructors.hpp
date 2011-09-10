@@ -55,9 +55,9 @@ namespace chaiscript
        * of a given type with a given set of params
        */
       template<typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-        boost::shared_ptr<Class> constructor_( BOOST_PP_ENUM_BINARY_PARAMS(n, Param, p) )
+        std::shared_ptr<Class> constructor_( BOOST_PP_ENUM_BINARY_PARAMS(n, Param, p) )
         {
-          return boost::shared_ptr<Class>(new Class( BOOST_PP_ENUM_PARAMS(n, p) ));
+          return std::shared_ptr<Class>(new Class( BOOST_PP_ENUM_PARAMS(n, p) ));
         }
 
       /**
@@ -69,7 +69,7 @@ namespace chaiscript
       template<typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
         Proxy_Function build_constructor_(Class (*)(BOOST_PP_ENUM_PARAMS(n, Param)))
         {
-          typedef boost::shared_ptr<Class> (sig)(BOOST_PP_ENUM_PARAMS(n, Param));
+          typedef std::shared_ptr<Class> (sig)(BOOST_PP_ENUM_PARAMS(n, Param));
           return Proxy_Function(new Proxy_Function_Impl<sig>(boost::function<sig>(&(constructor_<Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>))));
         }
     }

@@ -6,7 +6,7 @@ Multi_Test_Chai::Multi_Test_Chai()
 }
 
 
-boost::shared_ptr<chaiscript::ChaiScript> Multi_Test_Chai::get_chai()
+std::shared_ptr<chaiscript::ChaiScript> Multi_Test_Chai::get_chai()
 {
   return m_chai;
 }

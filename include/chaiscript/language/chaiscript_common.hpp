@@ -55,7 +55,7 @@ namespace chaiscript
   };
 
   /// \brief Typedef for pointers to AST_Node objects. Used in building of the AST_Node tree
-  typedef boost::shared_ptr<struct AST_Node> AST_NodePtr;
+  typedef std::shared_ptr<struct AST_Node> AST_NodePtr;
 
 
   /// \brief Classes which may be thrown during error cases when ChaiScript is executing.
@@ -106,7 +106,7 @@ namespace chaiscript
     public:
       const std::string text;
       const int identifier;
-      boost::shared_ptr<const std::string> filename;
+      std::shared_ptr<const std::string> filename;
       File_Position start, end;
       std::vector<AST_NodePtr> children;
       AST_NodePtr annotation;
@@ -147,14 +147,14 @@ namespace chaiscript
       }
 
     protected:
-      AST_Node(const std::string &t_ast_node_text, int t_id, const boost::shared_ptr<std::string> &t_fname, 
+      AST_Node(const std::string &t_ast_node_text, int t_id, const std::shared_ptr<std::string> &t_fname, 
           int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
         text(t_ast_node_text), identifier(t_id), filename(t_fname),
         start(t_start_line, t_start_col), end(t_end_line, t_end_col)
       {
       }
 
-      AST_Node(const std::string &t_ast_node_text, int t_id, const boost::shared_ptr<std::string> &t_fname) :
+      AST_Node(const std::string &t_ast_node_text, int t_id, const std::shared_ptr<std::string> &t_fname) :
         text(t_ast_node_text), identifier(t_id), filename(t_fname) {}
 
       virtual ~AST_Node() {}

@@ -42,9 +42,9 @@ namespace chaiscript
           } else {
             if (!ob.get_type_info().is_const())
             {
-              return boost::cref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));   
+              return boost::cref(*(boost::any_cast<std::shared_ptr<Result> >(ob.get())));   
             } else {
-              return boost::cref(*(boost::any_cast<boost::shared_ptr<const Result> >(ob.get())));   
+              return boost::cref(*(boost::any_cast<std::shared_ptr<const Result> >(ob.get())));   
             }
           }
         }
@@ -84,9 +84,9 @@ namespace chaiscript
           } else {
             if (!ob.get_type_info().is_const())
             {
-              return (boost::any_cast<boost::shared_ptr<Result> >(ob.get())).get();
+              return (boost::any_cast<std::shared_ptr<Result> >(ob.get())).get();
             } else {
-              return (boost::any_cast<boost::shared_ptr<const Result> >(ob.get())).get();
+              return (boost::any_cast<std::shared_ptr<const Result> >(ob.get())).get();
             }
           }
         }
@@ -106,7 +106,7 @@ namespace chaiscript
           {
             return (boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get_pointer();
           } else {
-            return (boost::any_cast<boost::shared_ptr<Result> >(ob.get())).get();
+            return (boost::any_cast<std::shared_ptr<Result> >(ob.get())).get();
           }
         }
       };
@@ -125,68 +125,68 @@ namespace chaiscript
           {
             return boost::any_cast<boost::reference_wrapper<Result> >(ob.get());
           } else {
-            return boost::ref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));
+            return boost::ref(*(boost::any_cast<std::shared_ptr<Result> >(ob.get())));
           }
         }
       };
 
     /**
-     * Cast_Helper_Inner for casting to a boost::shared_ptr<> type
+     * Cast_Helper_Inner for casting to a std::shared_ptr<> type
      */
     template<typename Result>
-      struct Cast_Helper_Inner<typename boost::shared_ptr<Result> >
+      struct Cast_Helper_Inner<typename std::shared_ptr<Result> >
       {
-        typedef typename boost::shared_ptr<Result> Result_Type;
+        typedef typename std::shared_ptr<Result> Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob)
         {
-          return boost::any_cast<boost::shared_ptr<Result> >(ob.get());
+          return boost::any_cast<std::shared_ptr<Result> >(ob.get());
         }
       };
 
     /**
-     * Cast_Helper_Inner for casting to a boost::shared_ptr<const> type
+     * Cast_Helper_Inner for casting to a std::shared_ptr<const> type
      */
     template<typename Result>
-      struct Cast_Helper_Inner<typename boost::shared_ptr<const Result> >
+      struct Cast_Helper_Inner<typename std::shared_ptr<const Result> >
       {
-        typedef typename boost::shared_ptr<const Result> Result_Type;
+        typedef typename std::shared_ptr<const Result> Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob)
         {
           if (!ob.get_type_info().is_const())
           {
-            return boost::const_pointer_cast<const Result>(boost::any_cast<boost::shared_ptr<Result> >(ob.get()));
+            return boost::const_pointer_cast<const Result>(boost::any_cast<std::shared_ptr<Result> >(ob.get()));
           } else {
-            return boost::any_cast<boost::shared_ptr<const Result> >(ob.get());
+            return boost::any_cast<std::shared_ptr<const Result> >(ob.get());
           }
         }
       };
 
     /**
-     * Cast_Helper_Inner for casting to a const boost::shared_ptr<> & type
+     * Cast_Helper_Inner for casting to a const std::shared_ptr<> & type
      */
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::shared_ptr<Result> > : Cast_Helper_Inner<boost::shared_ptr<Result> >
+      struct Cast_Helper_Inner<const std::shared_ptr<Result> > : Cast_Helper_Inner<std::shared_ptr<Result> >
       {
       };
 
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::shared_ptr<Result> &> : Cast_Helper_Inner<boost::shared_ptr<Result> >
+      struct Cast_Helper_Inner<const std::shared_ptr<Result> &> : Cast_Helper_Inner<std::shared_ptr<Result> >
       {
       };
 
 
     /**
-     * Cast_Helper_Inner for casting to a const boost::shared_ptr<const> & type
+     * Cast_Helper_Inner for casting to a const std::shared_ptr<const> & type
      */
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::shared_ptr<const Result> > : Cast_Helper_Inner<boost::shared_ptr<const Result> >
+      struct Cast_Helper_Inner<const std::shared_ptr<const Result> > : Cast_Helper_Inner<std::shared_ptr<const Result> >
       {
       };
 
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::shared_ptr<const Result> &> : Cast_Helper_Inner<boost::shared_ptr<const Result> >
+      struct Cast_Helper_Inner<const std::shared_ptr<const Result> &> : Cast_Helper_Inner<std::shared_ptr<const Result> >
       {
       };
 

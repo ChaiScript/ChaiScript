@@ -157,7 +157,7 @@ namespace chaiscript
       };
 
     template<typename T>
-      struct Get_Type_Info<boost::shared_ptr<T> >
+      struct Get_Type_Info<std::shared_ptr<T> >
       {
         typedef T type;
 
@@ -166,13 +166,13 @@ namespace chaiscript
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
               boost::is_arithmetic<T>::value && !boost::is_same<typename boost::remove_const<T>::type, bool>::value,
-              &typeid(boost::shared_ptr<T> ), 
+              &typeid(std::shared_ptr<T> ), 
               &typeid(typename Bare_Type<T>::type));
         }
       };
 
     template<typename T>
-      struct Get_Type_Info<const boost::shared_ptr<T> &>
+      struct Get_Type_Info<const std::shared_ptr<T> &>
       {
         typedef T type;
 
@@ -181,7 +181,7 @@ namespace chaiscript
           return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
               boost::is_void<T>::value,
               boost::is_arithmetic<T>::value && !boost::is_same<typename boost::remove_const<T>::type, bool>::value,
-              &typeid(const boost::shared_ptr<T> &), 
+              &typeid(const std::shared_ptr<T> &), 
               &typeid(typename Bare_Type<T>::type));
         }
       };

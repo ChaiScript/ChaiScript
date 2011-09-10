@@ -61,7 +61,7 @@ struct System
   }
 };
 
-void take_shared_ptr(const boost::shared_ptr<const std::string> &p)
+void take_shared_ptr(const std::shared_ptr<const std::string> &p)
 {
   std::cout << *p << std::endl;
 }
@@ -143,7 +143,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
 
   log("Functor test output", boost::lexical_cast<std::string>(x));
 
-  chai.add(var(boost::shared_ptr<int>()), "nullvar");
+  chai.add(var(std::shared_ptr<int>()), "nullvar");
   chai("print(\"This should be true.\"); print(nullvar.is_var_null())");
 
   // test the global const action

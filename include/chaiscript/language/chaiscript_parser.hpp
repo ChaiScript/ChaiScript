@@ -45,7 +45,7 @@ namespace chaiscript
       std::string m_multiline_comment_begin;
       std::string m_multiline_comment_end;
       std::string m_singleline_comment;
-      boost::shared_ptr<std::string> m_filename;
+      std::shared_ptr<std::string> m_filename;
       std::vector<AST_NodePtr> m_match_stack;
       bool m_alphabet[detail::max_alphabet][detail::lengthof_alphabet];
 
@@ -1978,7 +1978,7 @@ namespace chaiscript
           m_input_end = t_input.end();
           m_line = 1;
           m_col = 1;
-          m_filename = boost::shared_ptr<std::string>(new std::string(t_fname));
+          m_filename = std::shared_ptr<std::string>(new std::string(t_fname));
 
           if ((t_input.size() > 1) && (t_input[0] == '#') && (t_input[1] == '!')) {
             while ((m_input_pos != m_input_end) && (!Eol())) {

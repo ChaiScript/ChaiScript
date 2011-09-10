@@ -38,7 +38,7 @@ namespace chaiscript
 
     struct Binary_Operator_AST_Node : public AST_Node {
       public:
-        Binary_Operator_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Bitwise_Xor, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Binary_Operator_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Bitwise_Xor, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
       { }
 
@@ -75,7 +75,7 @@ namespace chaiscript
 
     struct Error_AST_Node : public AST_Node {
       public:
-        Error_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Error, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Error_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Error, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
 
         virtual ~Error_AST_Node() {}
@@ -83,7 +83,7 @@ namespace chaiscript
 
     struct Int_AST_Node : public AST_Node {
       public:
-        Int_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Int, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Int_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Int, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col), 
           m_value(const_var(int(atoi(t_ast_node_text.c_str())))) { }
         virtual ~Int_AST_Node() {}
@@ -98,7 +98,7 @@ namespace chaiscript
 
     struct Float_AST_Node : public AST_Node {
       public:
-        Float_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Float, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Float_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Float, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
           m_value(const_var(double(atof(t_ast_node_text.c_str())))) { }
         virtual ~Float_AST_Node() {}
@@ -113,7 +113,7 @@ namespace chaiscript
 
     struct Id_AST_Node : public AST_Node {
       public:
-        Id_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Id, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Id_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Id, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
           m_value(get_value(t_ast_node_text))
       { }
@@ -157,28 +157,28 @@ namespace chaiscript
 
     struct Char_AST_Node : public AST_Node {
       public:
-        Char_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Char, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Char_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Char, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Char_AST_Node() {}
     };
 
     struct Str_AST_Node : public AST_Node {
       public:
-        Str_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Str, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Str_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Str, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Str_AST_Node() {}
     };
 
     struct Eol_AST_Node : public AST_Node {
       public:
-        Eol_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Eol, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Eol_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Eol, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Eol_AST_Node() {}
     };
 
     struct Fun_Call_AST_Node : public AST_Node {
       public:
-        Fun_Call_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Fun_Call, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Fun_Call_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Fun_Call, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Fun_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -226,7 +226,7 @@ namespace chaiscript
 
     struct Inplace_Fun_Call_AST_Node : public AST_Node {
       public:
-        Inplace_Fun_Call_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inplace_Fun_Call, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Inplace_Fun_Call_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inplace_Fun_Call, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inplace_Fun_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -256,21 +256,21 @@ namespace chaiscript
 
     struct Arg_List_AST_Node : public AST_Node {
       public:
-        Arg_List_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Arg_List, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Arg_List_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Arg_List, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Arg_List_AST_Node() {}
     };
 
     struct Variable_AST_Node : public AST_Node {
       public:
-        Variable_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Variable, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Variable_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Variable, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Variable_AST_Node() {}
     };
 
     struct Equation_AST_Node : public AST_Node {
       public:
-        Equation_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Equation, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Equation_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Equation, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
         {}
 
@@ -331,7 +331,7 @@ namespace chaiscript
 
     struct Var_Decl_AST_Node : public AST_Node {
       public:
-        Var_Decl_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Var_Decl, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Var_Decl_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Var_Decl, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Var_Decl_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -348,7 +348,7 @@ namespace chaiscript
 
     struct Comparison_AST_Node : public Binary_Operator_AST_Node {
       public:
-        Comparison_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Comparison, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Comparison_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Comparison, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Comparison_AST_Node() {}
     };
@@ -356,7 +356,7 @@ namespace chaiscript
     struct Addition_AST_Node : public Binary_Operator_AST_Node {
       public:
         Addition_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Addition,
-            const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(),
+            const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(),
             int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Addition_AST_Node() {}
@@ -368,7 +368,7 @@ namespace chaiscript
     struct Subtraction_AST_Node : public Binary_Operator_AST_Node {
       public:
         Subtraction_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Subtraction,
-            const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0,
+            const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0,
             int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Subtraction_AST_Node() {}
@@ -380,7 +380,7 @@ namespace chaiscript
     struct Multiplication_AST_Node : public Binary_Operator_AST_Node {
       public:
         Multiplication_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Multiplication,
-            const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0,
+            const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0,
             int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Multiplication_AST_Node() {}
@@ -392,7 +392,7 @@ namespace chaiscript
     struct Division_AST_Node : public Binary_Operator_AST_Node {
       public:
         Division_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Division,
-            const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0,
+            const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0,
             int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Division_AST_Node() {}
@@ -404,7 +404,7 @@ namespace chaiscript
     struct Modulus_AST_Node : public Binary_Operator_AST_Node {
       public:
         Modulus_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Modulus,
-            const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0,
+            const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0,
             int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Modulus_AST_Node() {}
@@ -415,7 +415,7 @@ namespace chaiscript
 
     struct Array_Call_AST_Node : public AST_Node {
       public:
-        Array_Call_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Array_Call, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Array_Call_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Array_Call, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Array_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -439,7 +439,7 @@ namespace chaiscript
 
     struct Dot_Access_AST_Node : public AST_Node {
       public:
-        Dot_Access_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Dot_Access, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Dot_Access_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Dot_Access, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Dot_Access_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -507,7 +507,7 @@ namespace chaiscript
 
     struct Quoted_String_AST_Node : public AST_Node {
       public:
-        Quoted_String_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Quoted_String, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Quoted_String_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Quoted_String, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
           m_value(const_var(t_ast_node_text)) { }
         virtual ~Quoted_String_AST_Node() {}
@@ -522,7 +522,7 @@ namespace chaiscript
 
     struct Single_Quoted_String_AST_Node : public AST_Node {
       public:
-        Single_Quoted_String_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Single_Quoted_String, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Single_Quoted_String_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Single_Quoted_String, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
           m_value(const_var(char(t_ast_node_text.at(0)))) { }
         virtual ~Single_Quoted_String_AST_Node() {}
@@ -536,7 +536,7 @@ namespace chaiscript
 
     struct Lambda_AST_Node : public AST_Node {
       public:
-        Lambda_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Lambda, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Lambda_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Lambda, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Lambda_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -564,7 +564,7 @@ namespace chaiscript
 
     struct Block_AST_Node : public AST_Node {
       public:
-        Block_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Block, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Block_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Block, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Block_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -593,7 +593,7 @@ namespace chaiscript
 
     struct Def_AST_Node : public AST_Node {
       public:
-        Def_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Def, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Def_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Def, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Def_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -620,9 +620,9 @@ namespace chaiscript
             }
           }
 
-          boost::shared_ptr<dispatch::Dynamic_Proxy_Function> guard;
+          std::shared_ptr<dispatch::Dynamic_Proxy_Function> guard;
           if (guardnode) {
-            guard = boost::shared_ptr<dispatch::Dynamic_Proxy_Function>
+            guard = std::shared_ptr<dispatch::Dynamic_Proxy_Function>
               (new dispatch::Dynamic_Proxy_Function(boost::bind(chaiscript::eval::detail::eval_function,
                                                                 boost::ref(t_ss), guardnode,
                                                                 t_param_names, _1), static_cast<int>(numparams), guardnode));
@@ -647,7 +647,7 @@ namespace chaiscript
 
     struct While_AST_Node : public AST_Node {
       public:
-        While_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::While, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        While_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::While, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~While_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
@@ -683,7 +683,7 @@ namespace chaiscript
 
     struct If_AST_Node : public AST_Node {
       public:
-        If_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::If, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        If_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::If, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~If_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -728,7 +728,7 @@ namespace chaiscript
 
     struct For_AST_Node : public AST_Node {
       public:
-        For_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::For, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        For_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::For, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~For_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -778,7 +778,7 @@ namespace chaiscript
 
     struct Inline_Array_AST_Node : public AST_Node {
       public:
-        Inline_Array_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inline_Array, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Inline_Array_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inline_Array, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inline_Array_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -796,7 +796,7 @@ namespace chaiscript
 
     struct Inline_Map_AST_Node : public AST_Node {
       public:
-        Inline_Map_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inline_Map, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Inline_Map_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inline_Map, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inline_Map_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -817,7 +817,7 @@ namespace chaiscript
 
     struct Return_AST_Node : public AST_Node {
       public:
-        Return_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Return, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Return_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Return, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Return_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -833,7 +833,7 @@ namespace chaiscript
 
     struct File_AST_Node : public AST_Node {
       public:
-        File_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::File, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        File_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::File, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~File_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
@@ -850,7 +850,7 @@ namespace chaiscript
 
     struct Prefix_AST_Node : public AST_Node {
       public:
-        Prefix_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Prefix, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Prefix_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Prefix, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
         { }
 
@@ -875,7 +875,7 @@ namespace chaiscript
 
     struct Break_AST_Node : public AST_Node {
       public:
-        Break_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Break, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Break_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Break, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Break_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &){
@@ -885,21 +885,21 @@ namespace chaiscript
 
     struct Map_Pair_AST_Node : public AST_Node {
       public:
-        Map_Pair_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Map_Pair, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Map_Pair_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Map_Pair, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Map_Pair_AST_Node() {}
     };
 
     struct Value_Range_AST_Node : public AST_Node {
       public:
-        Value_Range_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Value_Range, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Value_Range_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Value_Range, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Value_Range_AST_Node() {}
     };
 
     struct Inline_Range_AST_Node : public AST_Node {
       public:
-        Inline_Range_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inline_Range, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Inline_Range_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inline_Range, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inline_Range_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -917,14 +917,14 @@ namespace chaiscript
 
     struct Annotation_AST_Node : public AST_Node {
       public:
-        Annotation_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Annotation, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Annotation_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Annotation, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Annotation_AST_Node() {}
     };
 
     struct Try_AST_Node : public AST_Node {
       public:
-        Try_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Try, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Try_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Try, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Try_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -1051,21 +1051,21 @@ namespace chaiscript
 
     struct Catch_AST_Node : public AST_Node {
       public:
-        Catch_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Catch, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Catch_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Catch, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Catch_AST_Node() {}
     };
 
     struct Finally_AST_Node : public AST_Node {
       public:
-        Finally_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Finally, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Finally_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Finally, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Finally_AST_Node() {}
     };
 
     struct Method_AST_Node : public AST_Node {
       public:
-        Method_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Method, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Method_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Method, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Method_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -1095,9 +1095,9 @@ namespace chaiscript
 
           size_t numparams = t_param_names.size();
 
-          boost::shared_ptr<dispatch::Dynamic_Proxy_Function> guard;
+          std::shared_ptr<dispatch::Dynamic_Proxy_Function> guard;
           if (guardnode) {
-            guard = boost::shared_ptr<dispatch::Dynamic_Proxy_Function>
+            guard = std::shared_ptr<dispatch::Dynamic_Proxy_Function>
               (new dispatch::Dynamic_Proxy_Function(boost::bind(chaiscript::eval::detail::eval_function,
                                                                 boost::ref(t_ss), guardnode,
                                                                 t_param_names, _1), static_cast<int>(numparams), guardnode));
@@ -1142,7 +1142,7 @@ namespace chaiscript
 
     struct Attr_Decl_AST_Node : public AST_Node {
       public:
-        Attr_Decl_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Attr_Decl, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Attr_Decl_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Attr_Decl, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Attr_Decl_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -1161,42 +1161,42 @@ namespace chaiscript
 
     struct Shift_AST_Node : public Binary_Operator_AST_Node {
       public:
-        Shift_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Shift, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Shift_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Shift, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Shift_AST_Node() {}
     };
 
     struct Equality_AST_Node : public Binary_Operator_AST_Node {
       public:
-        Equality_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Equality, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Equality_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Equality, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Equality_AST_Node() {}
     };
 
     struct Bitwise_And_AST_Node : public Binary_Operator_AST_Node {
       public:
-        Bitwise_And_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Bitwise_And, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Bitwise_And_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Bitwise_And, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Bitwise_And_AST_Node() {}
     };
 
     struct Bitwise_Xor_AST_Node : public Binary_Operator_AST_Node {
       public:
-        Bitwise_Xor_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Bitwise_Xor, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Bitwise_Xor_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Bitwise_Xor, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Bitwise_Xor_AST_Node() {}
     };
 
     struct Bitwise_Or_AST_Node : public Binary_Operator_AST_Node {
       public:
-        Bitwise_Or_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Bitwise_Or, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Bitwise_Or_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Bitwise_Or, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Bitwise_Or_AST_Node() {}
     };
 
     struct Logical_And_AST_Node : public AST_Node {
       public:
-        Logical_And_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Logical_And, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Logical_And_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Logical_And, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Logical_And_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
@@ -1225,7 +1225,7 @@ namespace chaiscript
 
     struct Logical_Or_AST_Node : public AST_Node {
       public:
-        Logical_Or_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Logical_Or, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Logical_Or_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Logical_Or, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Logical_Or_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){

@@ -23,7 +23,7 @@ namespace chaiscript
   class Boxed_Number;
   struct AST_Node;
 
-  typedef boost::shared_ptr<struct AST_Node> AST_NodePtr;
+  typedef std::shared_ptr<struct AST_Node> AST_NodePtr;
 
 
   namespace dispatch
@@ -87,9 +87,9 @@ namespace chaiscript
         virtual bool operator==(const Proxy_Function_Base &) const = 0;
         virtual bool call_match(const std::vector<Boxed_Value> &vals) const = 0;
 
-        virtual std::vector<boost::shared_ptr<const Proxy_Function_Base> > get_contained_functions() const
+        virtual std::vector<std::shared_ptr<const Proxy_Function_Base> > get_contained_functions() const
         {
-          return std::vector<boost::shared_ptr<const Proxy_Function_Base> >();
+          return std::vector<std::shared_ptr<const Proxy_Function_Base> >();
         }
 
 
@@ -142,7 +142,7 @@ namespace chaiscript
                 && (ti.bare_equal(user_type<Boxed_Number>())
                   || ti.bare_equal(bv.get_type_info())
                   || chaiscript::detail::dynamic_cast_converts(ti, bv.get_type_info()) 
-                  || bv.get_type_info().bare_equal(user_type<boost::shared_ptr<const Proxy_Function_Base> >())
+                  || bv.get_type_info().bare_equal(user_type<std::shared_ptr<const Proxy_Function_Base> >())
                   )
                 )
              )
@@ -176,11 +176,11 @@ namespace chaiscript
   }
 
   /// \brief Common typedef used for passing of any registered function in ChaiScript
-  typedef boost::shared_ptr<dispatch::Proxy_Function_Base> Proxy_Function;
+  typedef std::shared_ptr<dispatch::Proxy_Function_Base> Proxy_Function;
 
   /// \brief Const version of Proxy_Function chaiscript. Points to a const Proxy_Function. This is how most registered functions
   ///        are handled internally.
-  typedef boost::shared_ptr<const dispatch::Proxy_Function_Base> Const_Proxy_Function;
+  typedef std::shared_ptr<const dispatch::Proxy_Function_Base> Const_Proxy_Function;
 
   namespace exception
   {

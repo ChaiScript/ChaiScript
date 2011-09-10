@@ -8,7 +8,7 @@ int main()
   Multi_Test_Chai chaitest;
   Multi_Test_Module chaimodule;
 
-  boost::shared_ptr<chaiscript::ChaiScript> chai = chaitest.get_chai();
+  std::shared_ptr<chaiscript::ChaiScript> chai = chaitest.get_chai();
   chai->add(chaimodule.get_module());
   return chai->eval<int>("get_module_value()");
 }

@@ -95,8 +95,8 @@ namespace chaiscript
         {
           if (funcs.size() == 1)
           {
-            boost::shared_ptr<const Proxy_Function_Impl<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> > pfi = 
-              boost::dynamic_pointer_cast<const Proxy_Function_Impl<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> >
+            std::shared_ptr<const Proxy_Function_Impl<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> > pfi = 
+              std::dynamic_pointer_cast<const Proxy_Function_Impl<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> >
               (funcs[0]);
 
             if (pfi)

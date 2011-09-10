@@ -231,7 +231,7 @@ namespace chaiscript
 #endif
 #endif
 
-    typedef boost::shared_ptr<Loadable_Module> Loadable_Module_Ptr;
+    typedef std::shared_ptr<Loadable_Module> Loadable_Module_Ptr;
   }
 
 

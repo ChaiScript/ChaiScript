@@ -61,7 +61,7 @@ if(MSVC)
     add_definitions(/bigobj)
    endif()
 else()
-  add_definitions(-Wall -Wextra -Wshadow -pedantic)
+  add_definitions(-Wall -Wextra -Wshadow -pedantic -std=c++0x)
 
   if (APPLE)
     # -Wno-missing-field-initializers is for boost on macos

@@ -71,14 +71,14 @@ namespace chaiscript
         void *m_data_ptr;
         const void *m_const_data_ptr;
         bool m_is_ref;
-        std::vector<boost::shared_ptr<Data> > m_dependencies;
+        std::vector<std::shared_ptr<Data> > m_dependencies;
       };
 
       struct Object_Data
       {
-        static boost::shared_ptr<Data> get(Boxed_Value::Void_Type)
+        static std::shared_ptr<Data> get(Boxed_Value::Void_Type)
         {
-          return boost::shared_ptr<Data> (new Data(
+          return std::shared_ptr<Data> (new Data(
                 detail::Get_Type_Info<void>::get(),
                 boost::any(), 
                 false,
@@ -87,15 +87,15 @@ namespace chaiscript
         }
 
         template<typename T>
-          static boost::shared_ptr<Data> get(const boost::shared_ptr<T> *obj)
+          static std::shared_ptr<Data> get(const std::shared_ptr<T> *obj)
           {
             return get(*obj);
           }
 
         template<typename T>
-          static boost::shared_ptr<Data> get(const boost::shared_ptr<T> &obj)
+          static std::shared_ptr<Data> get(const std::shared_ptr<T> &obj)
           {
-            return boost::shared_ptr<Data>(new Data(
+            return std::shared_ptr<Data>(new Data(
                   detail::Get_Type_Info<T>::get(), 
                   boost::any(obj), 
                   false,
@@ -104,15 +104,15 @@ namespace chaiscript
           }
 
         template<typename T>
-          static boost::shared_ptr<Data> get(T *t)
+          static std::shared_ptr<Data> get(T *t)
           {
             return get(boost::ref(*t));
           }
 
         template<typename T>
-          static boost::shared_ptr<Data> get(boost::reference_wrapper<T> obj)
+          static std::shared_ptr<Data> get(boost::reference_wrapper<T> obj)
           {
-            return boost::shared_ptr<Data>(new Data(
+            return std::shared_ptr<Data>(new Data(
                   detail::Get_Type_Info<T>::get(),
                   boost::any(obj),
                   true,
@@ -121,10 +121,10 @@ namespace chaiscript
           }
 
         template<typename T>
-          static boost::shared_ptr<Data> get(const T& t)
+          static std::shared_ptr<Data> get(const T& t)
           {
-            boost::shared_ptr<T> p(new T(t));
-            return boost::shared_ptr<Data>(new Data(
+            std::shared_ptr<T> p(new T(t));
+            return std::shared_ptr<Data>(new Data(
                   detail::Get_Type_Info<T>::get(), 
                   boost::any(p), 
                   false,
@@ -132,9 +132,9 @@ namespace chaiscript
                 );
           }
 
-        static boost::shared_ptr<Data> get()
+        static std::shared_ptr<Data> get()
         {
-          return boost::shared_ptr<Data> (new Data(
+          return std::shared_ptr<Data> (new Data(
                 Type_Info(),
                 boost::any(),
                 false,
@@ -271,10 +271,10 @@ namespace chaiscript
       }
 
     private:
-      boost::shared_ptr<Data> m_data;
+      std::shared_ptr<Data> m_data;
   };
 
-  /// \brief Creates a Boxed_Value. If the object passed in is a value type, it is copied. If it is a pointer, boost::shared_ptr, or boost::reference_type
+  /// \brief Creates a Boxed_Value. If the object passed in is a value type, it is copied. If it is a pointer, std::shared_ptr, or boost::reference_type
   ///        a copy is not made.
   /// \param t The value to box
   /// 
@@ -301,7 +301,7 @@ namespace chaiscript
     template<typename T>
       Boxed_Value const_var_impl(const T &t)
       {
-        return Boxed_Value(boost::shared_ptr<typename boost::add_const<T>::type >(new T(t)));
+        return Boxed_Value(std::shared_ptr<typename boost::add_const<T>::type >(new T(t)));
       }
 
     /// \brief Takes a pointer to a value, adds const to the pointed to type and returns an immutable Boxed_Value.
@@ -315,13 +315,13 @@ namespace chaiscript
         return Boxed_Value( const_cast<typename boost::add_const<T>::type *>(t) );
       }
 
-    /// \brief Takes a boost::shared_ptr to a value, adds const to the pointed to type and returns an immutable Boxed_Value.
+    /// \brief Takes a std::shared_ptr to a value, adds const to the pointed to type and returns an immutable Boxed_Value.
     ///        Does not copy the pointed to value.
     /// \param[in] t Pointer to make immutable
     /// \returns Immutable Boxed_Value
     /// \sa Boxed_Value::is_const
     template<typename T>
-      Boxed_Value const_var_impl(const boost::shared_ptr<T> &t)
+      Boxed_Value const_var_impl(const std::shared_ptr<T> &t)
       {
         return Boxed_Value( boost::const_pointer_cast<typename boost::add_const<T>::type>(t) );
       }
