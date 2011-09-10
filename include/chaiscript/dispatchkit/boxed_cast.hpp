@@ -14,9 +14,6 @@
 
 #include "../chaiscript_threading.hpp"
 #include <boost/any.hpp>
-#include <boost/type_traits/add_const.hpp>
-#include <boost/type_traits/is_polymorphic.hpp>
-#include <boost/integer_traits.hpp>
 
 namespace chaiscript 
 {
@@ -77,7 +74,7 @@ namespace chaiscript
 #pragma warning(disable : 4127)
 #endif
 
-      if (boost::is_polymorphic<typename detail::Stripped_Type<Type>::type>::value)
+      if (std::is_polymorphic<typename detail::Stripped_Type<Type>::type>::value)
       {
         try {
           // We will not catch any bad_boxed_dynamic_cast that is thrown, let the user get it

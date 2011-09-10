@@ -12,8 +12,6 @@
 #include "boxed_cast_helper.hpp"
 #include "bad_boxed_cast.hpp"
 #include <boost/static_assert.hpp>
-#include <boost/type_traits/is_polymorphic.hpp>
-#include <boost/type_traits/is_base_of.hpp>
 
 namespace chaiscript
 {
@@ -249,9 +247,9 @@ namespace chaiscript
   {
     //Can only be used with related polymorphic types
     //may be expanded some day to support conversions other than child -> parent
-    BOOST_STATIC_ASSERT((boost::is_base_of<Base,Derived>::value));
-    BOOST_STATIC_ASSERT(boost::is_polymorphic<Base>::value);
-    BOOST_STATIC_ASSERT(boost::is_polymorphic<Derived>::value);
+    BOOST_STATIC_ASSERT((std::is_base_of<Base,Derived>::value));
+    BOOST_STATIC_ASSERT(std::is_polymorphic<Base>::value);
+    BOOST_STATIC_ASSERT(std::is_polymorphic<Derived>::value);
 
     return detail::Dynamic_Conversions::create<Base, Derived>();
   }

@@ -46,7 +46,7 @@ bool test_type_conversion(const Boxed_Value &bv, bool expectedpass)
     std::cerr << "Error with type conversion test. From: " 
 		<< (bv.is_const()?(std::string("const ")):(std::string())) << bv.get_type_info().name() 
 		<< " To: "  
-		<< (boost::is_const<To>::value?(std::string("const ")):(std::string())) << typeid(To).name() 
+		<< (std::is_const<To>::value?(std::string("const ")):(std::string())) << typeid(To).name() 
       << " test was expected to " << ((expectedpass)?(std::string("succeed")):(std::string("fail"))) << " but did not" << std::endl;
   }
 

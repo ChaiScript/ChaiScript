@@ -12,7 +12,7 @@
 #include "boxed_value.hpp"
 #include "type_info.hpp"
 #include <string>
-#include <boost/type_traits/add_reference.hpp>
+#include <type_traits>
 #include <stdexcept>
 #include <vector>
 #include "proxy_functions_detail.hpp"
@@ -554,10 +554,10 @@ namespace chaiscript
             if (bv.is_const())
             {
               const Class *o = boxed_cast<const Class *>(bv);
-              return detail::Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
+              return detail::Handle_Return<typename std::add_lvalue_reference<T>::type>::handle(o->*m_attr);
             } else {
               Class *o = boxed_cast<Class *>(bv);
-              return detail::Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
+              return detail::Handle_Return<typename std::add_lvalue_reference<T>::type>::handle(o->*m_attr);
             }
           } else {
             throw exception::arity_error(static_cast<int>(params.size()), 1);

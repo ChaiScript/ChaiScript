@@ -13,8 +13,6 @@
 
 #include <map>
 #include <boost/any.hpp>
-#include <boost/type_traits/add_const.hpp>
-#include <boost/integer_traits.hpp>
 
 namespace chaiscript 
 {
@@ -296,7 +294,7 @@ namespace chaiscript
     template<typename T>
       Boxed_Value const_var_impl(const T &t)
       {
-        return Boxed_Value(std::shared_ptr<typename boost::add_const<T>::type >(new T(t)));
+        return Boxed_Value(std::shared_ptr<typename std::add_const<T>::type >(new T(t)));
       }
 
     /// \brief Takes a pointer to a value, adds const to the pointed to type and returns an immutable Boxed_Value.
@@ -307,7 +305,7 @@ namespace chaiscript
     template<typename T>
       Boxed_Value const_var_impl(T *t)
       {
-        return Boxed_Value( const_cast<typename boost::add_const<T>::type *>(t) );
+        return Boxed_Value( const_cast<typename std::add_const<T>::type *>(t) );
       }
 
     /// \brief Takes a std::shared_ptr to a value, adds const to the pointed to type and returns an immutable Boxed_Value.
@@ -318,7 +316,7 @@ namespace chaiscript
     template<typename T>
       Boxed_Value const_var_impl(const std::shared_ptr<T> &t)
       {
-        return Boxed_Value( std::const_pointer_cast<typename boost::add_const<T>::type>(t) );
+        return Boxed_Value( std::const_pointer_cast<typename std::add_const<T>::type>(t) );
       }
 
     /// \brief Takes a std::reference_wrapper value, adds const to the referenced type and returns an immutable Boxed_Value.

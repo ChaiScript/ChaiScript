@@ -11,7 +11,6 @@
 #include "boxed_value.hpp"
 
 #include <boost/any.hpp>
-#include <boost/type_traits/add_const.hpp>
 
 namespace chaiscript 
 {
@@ -25,7 +24,7 @@ namespace chaiscript
     template<typename Result>
       struct Cast_Helper_Inner
       {
-        typedef typename std::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
+        typedef typename std::reference_wrapper<typename std::add_const<Result>::type > Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob)
         {

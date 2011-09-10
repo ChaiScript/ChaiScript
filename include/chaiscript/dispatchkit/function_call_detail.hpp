@@ -6,7 +6,7 @@
 
 #include <boost/preprocessor.hpp>
 
-#define addparam(z,n,text)  params.push_back((boost::is_reference<Param ## n>::value&&!(boost::is_same<chaiscript::Boxed_Value, typename boost::remove_const<typename boost::remove_reference<Param ## n>::type>::type>::value))?Boxed_Value(std::ref(BOOST_PP_CAT(p, n))):Boxed_Value(BOOST_PP_CAT(p, n) ));
+#define addparam(z,n,text)  params.push_back((std::is_reference<Param ## n>::value&&!(std::is_same<chaiscript::Boxed_Value, typename std::remove_const<typename std::remove_reference<Param ## n>::type>::type>::value))?Boxed_Value(std::ref(BOOST_PP_CAT(p, n))):Boxed_Value(BOOST_PP_CAT(p, n) ));
 #define curry(z,n,text)  BOOST_PP_CAT(std::placeholders::_, BOOST_PP_INC(n))
 
 

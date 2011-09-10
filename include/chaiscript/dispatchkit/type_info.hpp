@@ -10,15 +10,7 @@
 #include <string>
 #include <typeinfo>
 #include <memory>
-#include <boost/type_traits/is_const.hpp>
-#include <boost/type_traits/is_void.hpp>
-#include <boost/type_traits/is_reference.hpp>
-#include <boost/type_traits/is_pointer.hpp>
-#include <boost/type_traits/is_same.hpp>
-#include <boost/type_traits/is_arithmetic.hpp>
-#include <boost/type_traits/remove_const.hpp>
-#include <boost/type_traits/remove_reference.hpp>
-#include <boost/type_traits/remove_pointer.hpp>
+#include <type_traits>
 
 namespace chaiscript
 {
@@ -28,7 +20,7 @@ namespace chaiscript
     template<typename T>
       struct Bare_Type
       {
-        typedef typename boost::remove_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::type type;
+        typedef typename std::remove_const<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::type type;
       };
   }
 
@@ -147,9 +139,9 @@ namespace chaiscript
 
         static Type_Info get()
         {
-          return Type_Info(boost::is_const<typename boost::remove_pointer<typename boost::remove_reference<T>::type>::type>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
-              boost::is_void<T>::value,
-              boost::is_arithmetic<T>::value && !boost::is_same<typename boost::remove_const<T>::type, bool>::value,
+          return Type_Info(std::is_const<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
+              std::is_void<T>::value,
+              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(T), 
               &typeid(typename Bare_Type<T>::type));
         }
@@ -162,9 +154,9 @@ namespace chaiscript
 
         static Type_Info get()
         {
-          return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
-              boost::is_void<T>::value,
-              boost::is_arithmetic<T>::value && !boost::is_same<typename boost::remove_const<T>::type, bool>::value,
+          return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
+              std::is_void<T>::value,
+              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(std::shared_ptr<T> ), 
               &typeid(typename Bare_Type<T>::type));
         }
@@ -177,9 +169,9 @@ namespace chaiscript
 
         static Type_Info get()
         {
-          return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
-              boost::is_void<T>::value,
-              boost::is_arithmetic<T>::value && !boost::is_same<typename boost::remove_const<T>::type, bool>::value,
+          return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
+              std::is_void<T>::value,
+              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(const std::shared_ptr<T> &), 
               &typeid(typename Bare_Type<T>::type));
         }
@@ -192,9 +184,9 @@ namespace chaiscript
 
         static Type_Info get()
         {
-          return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
-              boost::is_void<T>::value,
-              boost::is_arithmetic<T>::value && !boost::is_same<typename boost::remove_const<T>::type, bool>::value,
+          return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
+              std::is_void<T>::value,
+              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(std::reference_wrapper<T> ), 
               &typeid(typename Bare_Type<T>::type));
         }
@@ -207,9 +199,9 @@ namespace chaiscript
 
         static Type_Info get()
         {
-          return Type_Info(boost::is_const<T>::value, boost::is_reference<T>::value, boost::is_pointer<T>::value, 
-              boost::is_void<T>::value,
-              boost::is_arithmetic<T>::value && !boost::is_same<typename boost::remove_const<T>::type, bool>::value,
+          return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
+              std::is_void<T>::value,
+              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(const std::reference_wrapper<T> &), 
               &typeid(typename Bare_Type<T>::type));
         }

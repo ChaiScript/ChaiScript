@@ -80,7 +80,7 @@ std::string get_next_command() {
     char *input_raw = readline("eval> ");
     if ( input_raw ) {
       add_history(input_raw);
-      retval = boost::trim_copy_if(std::string(input_raw),boost::is_any_of(" \t"));
+      retval = boost::trim_copy_if(std::string(input_raw),boost::algorithm::is_any_of(" \t"));
       ::free(input_raw);
     }
   }
