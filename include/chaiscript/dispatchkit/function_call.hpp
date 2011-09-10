@@ -25,13 +25,13 @@ namespace chaiscript
     /**
      * Build a function caller that knows how to dispatch on a set of functions
      * example: 
-     * boost::function<void (int)> f = 
+     * std::function<void (int)> f = 
      *      build_function_caller(dispatchkit.get_function("print"));
-     * \returns A boost::function object for dispatching
+     * \returns A std::function object for dispatching
      * \param[in] funcs the set of functions to dispatch on.
      */
     template<typename FunctionType>
-      boost::function<FunctionType>
+      std::function<FunctionType>
       functor(const std::vector<Const_Proxy_Function> &funcs)
       {
         FunctionType *p=0;
@@ -45,14 +45,14 @@ namespace chaiscript
      * example: 
      * void my_function(Proxy_Function f)
      * {
-     *   boost::function<void (int)> local_f = 
+     *   std::function<void (int)> local_f = 
      *      build_function_caller(f);
      * }
-     * \returns A boost::function object for dispatching
+     * \returns A std::function object for dispatching
      * \param[in] func A function to execute.
      */
     template<typename FunctionType>
-      boost::function<FunctionType>
+      std::function<FunctionType>
       functor(Const_Proxy_Function func)
       {
         std::vector<Const_Proxy_Function> funcs;
@@ -65,7 +65,7 @@ namespace chaiscript
      * and creating a typesafe C++ function caller from it.
      */
     template<typename FunctionType>
-      boost::function<FunctionType>
+      std::function<FunctionType>
       functor(const Boxed_Value &bv)
       {
         return functor<FunctionType>(boxed_cast<Const_Proxy_Function >(bv));
@@ -74,12 +74,12 @@ namespace chaiscript
 
   namespace detail{
     /**
-     * Cast helper to handle automatic casting to const boost::function &
+     * Cast helper to handle automatic casting to const std::function &
      */
     template<typename Signature>
-      struct Cast_Helper<const boost::function<Signature> &>
+      struct Cast_Helper<const std::function<Signature> &>
       {
-        typedef boost::function<Signature> Result_Type;
+        typedef std::function<Signature> Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob)
         {
@@ -87,18 +87,18 @@ namespace chaiscript
           {
             return dispatch::functor<Signature>(ob);
           } else {
-            return Cast_Helper_Inner<const boost::function<Signature> &>::cast(ob);
+            return Cast_Helper_Inner<const std::function<Signature> &>::cast(ob);
           }
         }
       };
 
     /**
-     * Cast helper to handle automatic casting to boost::function
+     * Cast helper to handle automatic casting to std::function
      */
     template<typename Signature>
-      struct Cast_Helper<boost::function<Signature> >
+      struct Cast_Helper<std::function<Signature> >
       {
-        typedef boost::function<Signature> Result_Type;
+        typedef std::function<Signature> Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob)
         {
@@ -106,18 +106,18 @@ namespace chaiscript
           {
             return dispatch::functor<Signature>(ob);
           } else {
-            return Cast_Helper_Inner<boost::function<Signature> >::cast(ob);
+            return Cast_Helper_Inner<std::function<Signature> >::cast(ob);
           }
         }
       };
 
     /**
-     * Cast helper to handle automatic casting to const boost::function
+     * Cast helper to handle automatic casting to const std::function
      */
     template<typename Signature>
-      struct Cast_Helper<const boost::function<Signature> >
+      struct Cast_Helper<const std::function<Signature> >
       {
-        typedef boost::function<Signature> Result_Type;
+        typedef std::function<Signature> Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob)
         {
@@ -125,7 +125,7 @@ namespace chaiscript
           {
             return dispatch::functor<Signature>(ob);
           } else {
-            return Cast_Helper_Inner<const boost::function<Signature> >::cast(ob);
+            return Cast_Helper_Inner<const std::function<Signature> >::cast(ob);
           }
         }
       };

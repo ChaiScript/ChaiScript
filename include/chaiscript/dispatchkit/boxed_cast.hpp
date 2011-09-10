@@ -32,7 +32,7 @@ namespace chaiscript
   /// \throws exception::bad_boxed_cast If the requested conversion is not possible
   /// 
   /// boxed_cast will attempt to make conversions between value, &, *, std::shared_ptr, boost::reference_wrapper,
-  /// and boost::function (const and non-const) where possible. boxed_cast is used internally during function
+  /// and std::function (const and non-const) where possible. boxed_cast is used internally during function
   /// dispatch. This means that all of these conversions will be attempted automatically for you during
   /// ChaiScript function calls.
   ///
@@ -43,7 +43,7 @@ namespace chaiscript
   /// \li Boxed_Value constructed from std::shared_ptr or value types can be extracted as reference,
   ///     pointer, value, or std::shared_ptr types
   ///
-  /// Conversions to boost::function objects are attempted as well
+  /// Conversions to std::function objects are attempted as well
   ///
   /// Example:
   /// \code
@@ -59,11 +59,11 @@ namespace chaiscript
   /// const int &cir = chaiscript::boxed_cast<const int &>(bv);
   /// \endcode
   ///
-  /// boost::function conversion example
+  /// std::function conversion example
   /// \code
   /// chaiscript::ChaiScript chai;
   /// Boxed_Value bv = chai.eval("`+`"); // Get the functor for the + operator which is built in 
-  /// boost::function<int (int, int)> f = chaiscript::boxed_cast<boost::function<int (int, int)> >(bv);
+  /// std::function<int (int, int)> f = chaiscript::boxed_cast<std::function<int (int, int)> >(bv);
   /// int i = f(2,3);
   /// assert(i == 5);
   /// \endcode

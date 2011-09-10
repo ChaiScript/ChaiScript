@@ -88,7 +88,7 @@ namespace chaiscript
        * the bad_boxed_cast is passed up to the caller.
        */
       template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-        Ret call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f,
+        Ret call_func(const std::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f,
             const std::vector<Boxed_Value> &params)
         {
           if (params.size() != n)
@@ -137,7 +137,7 @@ namespace chaiscript
       struct Do_Call
       {
         template<typename Fun>
-          static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
+          static Boxed_Value go(const std::function<Fun> &fun, const std::vector<Boxed_Value> &params)
           {
             return Handle_Return<Ret>::handle(call_func(fun, params));
           }
@@ -147,7 +147,7 @@ namespace chaiscript
       struct Do_Call<void>
       {
         template<typename Fun>
-          static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
+          static Boxed_Value go(const std::function<Fun> &fun, const std::vector<Boxed_Value> &params)
           {
             call_func(fun, params);
             return Handle_Return<void>::handle();

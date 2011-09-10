@@ -90,7 +90,7 @@ namespace chaiscript
        * used internally for unwrapping a function call's types
        */
       template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-        boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param)) > 
+        std::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param)) > 
         build_function_caller_helper(Ret (BOOST_PP_ENUM_PARAMS(n, Param)), const std::vector<Const_Proxy_Function> &funcs)
         {
           if (funcs.size() == 1)

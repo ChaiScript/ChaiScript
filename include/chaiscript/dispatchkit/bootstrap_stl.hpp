@@ -227,10 +227,10 @@ namespace chaiscript
           //In the interest of runtime safety for the m, we prefer the at() method for [] access,
           //to throw an exception in an out of bounds condition.
           m->add(
-              fun(boost::function<typename ContainerType::reference (ContainerType *, int)>
+              fun(std::function<typename ContainerType::reference (ContainerType *, int)>
                 (boost::mem_fn(static_cast<indexoper>(&ContainerType::at)))), "[]");
           m->add(
-              fun(boost::function<typename ContainerType::const_reference (const ContainerType *, int)>
+              fun(std::function<typename ContainerType::const_reference (const ContainerType *, int)>
                 (boost::mem_fn(static_cast<constindexoper>(&ContainerType::at)))), "[]");
 
           return m;
@@ -255,7 +255,7 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
-          m->add(fun(boost::function<int (const ContainerType *)>(boost::mem_fn(&ContainerType::size))), "size");
+          m->add(fun(std::function<int (const ContainerType *)>(boost::mem_fn(&ContainerType::size))), "size");
           m->add(fun<bool (ContainerType::*)() const>(&ContainerType::empty), "empty");
           m->add(fun<void (ContainerType::*)()>(&ContainerType::clear), "clear");
 
@@ -390,7 +390,7 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr unique_associative_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
-          m->add(fun(boost::function<int (const ContainerType *, const typename ContainerType::key_type &)>(boost::mem_fn(&ContainerType::count))), "count");
+          m->add(fun(std::function<int (const ContainerType *, const typename ContainerType::key_type &)>(boost::mem_fn(&ContainerType::count))), "count");
 
           return m;
         }
@@ -513,7 +513,7 @@ namespace chaiscript
 
           typedef typename String::size_type (String::*find_func_ptr)(const String &, typename String::size_type) const;
 
-          typedef boost::function<int (const String *, const String &, int)> find_func;
+          typedef std::function<int (const String *, const String &, int)> find_func;
 
           m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::find)))), "find");
           m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::rfind)))), "rfind");

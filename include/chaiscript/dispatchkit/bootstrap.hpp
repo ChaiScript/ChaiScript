@@ -355,7 +355,7 @@ namespace chaiscript
         }
 
       template<typename Function>
-      static boost::function<std::vector<Boxed_Value> (const dispatch::Proxy_Function_Base*)> return_boxed_value_vector(const Function &f)
+      static std::function<std::vector<Boxed_Value> (const dispatch::Proxy_Function_Base*)> return_boxed_value_vector(const Function &f)
       {
         return boost::bind(&do_return_boxed_value_vector<Function>, f, _1);
       }
@@ -388,7 +388,7 @@ namespace chaiscript
  
 
         m->add(constructor<std::runtime_error (const std::string &)>(), "runtime_error");
-        m->add(fun(boost::function<std::string (const std::runtime_error &)>(&what)), "what");     
+        m->add(fun(std::function<std::string (const std::runtime_error &)>(&what)), "what");     
 
         m->add(user_type<dispatch::Dynamic_Object>(), "Dynamic_Object");
         m->add(constructor<dispatch::Dynamic_Object (const std::string &)>(), "Dynamic_Object");

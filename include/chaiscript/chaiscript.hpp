@@ -377,10 +377,10 @@
 /// \subsection functionobjects Function Objects
 ///
 /// Functions are first class objects in Chaiscript and ChaiScript supports automatic conversion
-/// between ChaiScript functions and boost::function objects.
+/// between ChaiScript functions and std::function objects.
 ///
 /// \code
-/// void callafunc(const boost::function<void (const std::string &)> &t_func)
+/// void callafunc(const std::function<void (const std::string &)> &t_func)
 /// {
 ///   t_func("bob");
 /// }
@@ -390,9 +390,9 @@
 ///   chaiscript::ChaiScript chai;
 ///   chai.add(chaiscript::fun(&callafunc), "callafunc");
 ///   chai("callafunc(fun(x) { print(x); })"); // pass a lambda function to the registered function
-///                                            // which expects a typed boost::function
+///                                            // which expects a typed std::function
 ///
-///   boost::function<void ()> f = chai.eval<boost::function<void ()> >("dump_system");
+///   std::function<void ()> f = chai.eval<std::function<void ()> >("dump_system");
 ///   f(); // call the ChaiScript function dump_system, from C++
 /// }
 /// \endcode

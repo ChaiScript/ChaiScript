@@ -70,7 +70,7 @@ namespace chaiscript
         Proxy_Function build_constructor_(Class (*)(BOOST_PP_ENUM_PARAMS(n, Param)))
         {
           typedef std::shared_ptr<Class> (sig)(BOOST_PP_ENUM_PARAMS(n, Param));
-          return Proxy_Function(new Proxy_Function_Impl<sig>(boost::function<sig>(&(constructor_<Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>))));
+          return Proxy_Function(new Proxy_Function_Impl<sig>(std::function<sig>(&(constructor_<Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>))));
         }
     }
   }

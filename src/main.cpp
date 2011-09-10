@@ -52,7 +52,7 @@ void version(int){
   std::cout << "chai: compiled " << __TIME__ << " " << __DATE__ << std::endl;
 }
 
-bool throws_exception(const boost::function<void ()> &f)
+bool throws_exception(const std::function<void ()> &f)
 {
   try {
     f();
@@ -63,7 +63,7 @@ bool throws_exception(const boost::function<void ()> &f)
   return false;
 }
 
-chaiscript::exception::eval_error get_eval_error(const boost::function<void ()> &f)
+chaiscript::exception::eval_error get_eval_error(const std::function<void ()> &f)
 {
   try {
     f();
@@ -113,7 +113,7 @@ void interactive(chaiscript::ChaiScript& chai)
       //Then, we try to print the result of the evaluation to the user
       if (!val.get_type_info().bare_equal(chaiscript::user_type<void>())) {
         try {
-          std::cout << chai.eval<boost::function<std::string (const chaiscript::Boxed_Value &bv)> >("to_string")(val) << std::endl;
+          std::cout << chai.eval<std::function<std::string (const chaiscript::Boxed_Value &bv)> >("to_string")(val) << std::endl;
         }
         catch (...) {} //If we can't, do nothing
       }

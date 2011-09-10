@@ -31,7 +31,7 @@ namespace chaiscript
               return Proxy_Function(
                   new Proxy_Function_Impl<
                   typename boost::function_types::function_type<boost::function_types::components<T> >::type> (
-                    boost::function< 
+                    std::function< 
                     typename boost::function_types::function_type<boost::function_types::components<T> >::type 
                     >(t)));
             }      
@@ -46,7 +46,7 @@ namespace chaiscript
               return Proxy_Function(
                   new Proxy_Function_Impl<
                   typename boost::function_types::function_type<boost::function_types::components<T> >::type> (
-                    boost::function< 
+                    std::function< 
                     typename boost::function_types::function_type<boost::function_types::components<T> >::type 
                     >(boost::mem_fn(t))));
             }      
@@ -65,19 +65,19 @@ namespace chaiscript
     }
   }
 
-  /// \brief Creates a new Proxy_Function object from a boost::function object
-  /// \param[in] f boost::function to expose to ChaiScript
+  /// \brief Creates a new Proxy_Function object from a std::function object
+  /// \param[in] f std::function to expose to ChaiScript
   ///
   /// \b Example:
   /// \code
-  /// boost::function<int (char, float, std::string)> f = get_some_function();
+  /// std::function<int (char, float, std::string)> f = get_some_function();
   /// chaiscript::ChaiScript chai;
   /// chai.add(fun(f), "some_function");
   /// \endcode
   /// 
   /// \sa \ref addingfunctions
   template<typename T>
-    Proxy_Function fun(const boost::function<T> &f)
+    Proxy_Function fun(const std::function<T> &f)
     {
       return Proxy_Function(new dispatch::Proxy_Function_Impl<T>(f));
     }

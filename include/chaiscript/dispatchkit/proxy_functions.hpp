@@ -207,7 +207,7 @@ namespace chaiscript
     {
       public:
         Dynamic_Proxy_Function(
-            const boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> &t_f, 
+            const std::function<Boxed_Value (const std::vector<Boxed_Value> &)> &t_f, 
             int t_arity=-1,
             const AST_NodePtr &t_parsenode = AST_NodePtr(),
             const std::string &t_description = "",
@@ -304,7 +304,7 @@ namespace chaiscript
           return types;
         }
 
-        boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
+        std::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
         int m_arity;
         std::string m_description;
         Proxy_Function m_guard;
@@ -440,14 +440,14 @@ namespace chaiscript
 
     /**
      * The standard typesafe function call implementation of Proxy_Function
-     * It takes a boost::function<> object and performs runtime 
+     * It takes a std::function<> object and performs runtime 
      * type checking of Boxed_Value parameters, in a type safe manner
      */
     template<typename Func>
       class Proxy_Function_Impl : public Proxy_Function_Base
     {
       public:
-        Proxy_Function_Impl(const boost::function<Func> &f)
+        Proxy_Function_Impl(const std::function<Func> &f)
           : Proxy_Function_Base(detail::build_param_type_list(static_cast<Func *>(0))),
           m_f(f), m_dummy_func(0)
       {
@@ -483,7 +483,7 @@ namespace chaiscript
           return "";
         }
 
-        boost::function<Func> internal_function() const
+        std::function<Func> internal_function() const
         {
           return m_f;
         }
@@ -491,11 +491,11 @@ namespace chaiscript
       protected:
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
         {
-          return detail::Do_Call<typename boost::function<Func>::result_type>::go(m_f, params);
+          return detail::Do_Call<typename std::function<Func>::result_type>::go(m_f, params);
         }
 
       private:
-        boost::function<Func> m_f;
+        std::function<Func> m_f;
         Func *m_dummy_func;
     };
 
