@@ -8,7 +8,9 @@
 #define CHAISCRIPT_THREADING_HPP_
 
 #ifndef CHAISCRIPT_NO_THREADS
-#include <boost/thread.hpp>
+#include <thread>
+#include <mutex>
+#include <boost/thread/tss.hpp>
 #else
 #pragma message ("ChaiScript is compiling without thread safety.")
 #endif
@@ -32,11 +34,33 @@ namespace chaiscript
     {
 
 #ifndef CHAISCRIPT_NO_THREADS
-      using boost::unique_lock; 
-      using boost::shared_lock;
-      using boost::lock_guard;
-      using boost::shared_mutex;
-      using boost::recursive_mutex;
+
+      template<typename T>
+      class unique_lock : public std::unique_lock<T>
+      {
+        public:
+          unique_lock(T &t) : std::unique_lock<T>(t) {}
+      };
+
+      template<typename T>
+      class shared_lock : public std::unique_lock<T>
+      {
+        public:
+          shared_lock(T &t) : std::unique_lock<T>(t) {}
+          void unlock() {}
+      };
+
+      template<typename T>
+      class lock_guard : public std::lock_guard<T>
+      {
+        public:
+          lock_guard(T &t) : std::lock_guard<T>(t) {}
+      };
+
+      class shared_mutex : public std::mutex { };
+
+      using std::recursive_mutex;
+
 
 
       /// Typesafe thread specific storage. If threading is enabled, this class uses boost::thread_specific_ptr<T>. If
