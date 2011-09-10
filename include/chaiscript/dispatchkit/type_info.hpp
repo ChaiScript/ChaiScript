@@ -19,7 +19,6 @@
 #include <boost/type_traits/remove_const.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/type_traits/remove_pointer.hpp>
-#include <boost/ref.hpp>
 
 namespace chaiscript
 {

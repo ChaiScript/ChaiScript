@@ -11,7 +11,6 @@
 #include "boxed_value.hpp"
 
 #include <boost/any.hpp>
-#include <boost/ref.hpp>
 #include <boost/type_traits/add_const.hpp>
 
 namespace chaiscript 

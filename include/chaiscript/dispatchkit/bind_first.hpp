@@ -13,7 +13,6 @@
 #ifndef CHAISCRIPT_BIND_FIRST_HPP_
 #define CHAISCRIPT_BIND_FIRST_HPP_
 
-#include <boost/ref.hpp>
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 8 )
 #define BOOST_PP_FILENAME_1 <chaiscript/dispatchkit/bind_first.hpp>

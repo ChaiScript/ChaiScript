@@ -13,8 +13,6 @@
 
 #include <map>
 #include <boost/any.hpp>
-#include <boost/ref.hpp>
-#include <boost/cstdint.hpp>
 #include <boost/type_traits/add_const.hpp>
 #include <boost/integer_traits.hpp>
 

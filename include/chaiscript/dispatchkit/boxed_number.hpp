@@ -9,7 +9,6 @@
 
 #include "boxed_value.hpp"
 #include "../language/chaiscript_algebraic.hpp"
-#include <boost/cstdint.hpp>
 
 namespace chaiscript 
 {
@@ -232,14 +231,14 @@ namespace chaiscript
             return Go<LHS, long, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(unsigned long)) {
             return Go<LHS, unsigned long, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int8_t)) {
-            return Go<LHS, boost::int8_t, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int16_t)) {
-            return Go<LHS, boost::int16_t, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int32_t)) {
-            return Go<LHS, boost::int32_t, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int64_t)) {
-            return Go<LHS, boost::int64_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int8_t)) {
+            return Go<LHS, std::int8_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int16_t)) {
+            return Go<LHS, std::int16_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int32_t)) {
+            return Go<LHS, std::int32_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int64_t)) {
+            return Go<LHS, std::int64_t, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::uint8_t)) {
             return Go<LHS, boost::uint8_t, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::uint16_t)) {
@@ -273,14 +272,14 @@ namespace chaiscript
             return oper_rhs<long, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(unsigned long)) {
             return oper_rhs<unsigned long, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int8_t)) {
-            return oper_rhs<boost::int8_t, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int16_t)) {
-            return oper_rhs<boost::int32_t, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int32_t)) {
-            return oper_rhs<boost::int32_t, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int64_t)) {
-            return oper_rhs<boost::int64_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int8_t)) {
+            return oper_rhs<std::int8_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int16_t)) {
+            return oper_rhs<std::int32_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int32_t)) {
+            return oper_rhs<std::int32_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int64_t)) {
+            return oper_rhs<std::int64_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::uint8_t)) {
             return oper_rhs<boost::uint8_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::uint16_t)) {
