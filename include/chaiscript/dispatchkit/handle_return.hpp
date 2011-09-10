@@ -11,7 +11,6 @@
 #include "boxed_number.hpp"
 #include "type_info.hpp"
 #include <string>
-#include <boost/function.hpp>
 
 #include <stdexcept>
 #include <vector>

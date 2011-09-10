@@ -11,7 +11,6 @@
 #include "boxed_value.hpp"
 #include "boxed_cast_helper.hpp"
 #include "bad_boxed_cast.hpp"
-#include <boost/static_assert.hpp>
 
 namespace chaiscript
 {

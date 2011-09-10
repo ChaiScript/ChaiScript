@@ -71,10 +71,7 @@ namespace chaiscript
       std::vector<AST_NodePtr> call_stack;
 
       eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) throw() :
-        std::runtime_error("Error: \"" + t_why + "\" " +
-            (t_fname != "__EVAL__" ? ("in '" + t_fname + "' ") : "during evaluation ") +
-            + "at (" + boost::lexical_cast<std::string>(t_where.line) + ", " +
-            boost::lexical_cast<std::string>(t_where.column) + ")"),
+        std::runtime_error(format(t_why, t_where, t_fname)),
         reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname)
         { }
 
@@ -84,6 +81,17 @@ namespace chaiscript
       {}
 
       virtual ~eval_error() throw() {}
+
+    private:
+      static std::string format(const std::string &t_why, const File_Position &t_where, const std::string &t_fname)
+      {
+        std::stringstream ss;
+        ss << "Error: \"" << t_why << "\" " <<
+            (t_fname != "__EVAL__" ? ("in '" + t_fname + "' ") : "during evaluation ") <<
+            "at (" << t_where.line << ", " <<
+            t_where.column + ")";
+        return ss.str();
+      }
     };
 
     /**

@@ -11,8 +11,6 @@
 #include "bind_first.hpp"
 #include <boost/function_types/components.hpp>
 #include <boost/function_types/function_type.hpp>
-#include <boost/function_types/is_member_object_pointer.hpp>
-#include <boost/function_types/is_member_function_pointer.hpp>
 
 namespace chaiscript
 {
@@ -103,7 +101,7 @@ namespace chaiscript
   template<typename T>
     Proxy_Function fun(T t)
     {
-      return dispatch::detail::Fun_Helper<boost::function_types::is_member_object_pointer<T>::value, boost::function_types::is_member_function_pointer<T>::value>::go(t);
+      return dispatch::detail::Fun_Helper<std::is_member_object_pointer<T>::value, std::is_member_function_pointer<T>::value>::go(t);
     }
 
   /// \brief Creates a new Proxy_Function object from a free function, member function or data member and binds the first parameter of it

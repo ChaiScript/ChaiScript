@@ -98,7 +98,9 @@ namespace chaiscript
     template<typename Input>
     std::string to_string(Input i)
     {
-      return boost::lexical_cast<std::string>(i);
+      std::stringstream ss;
+      ss << i;
+      return ss.str();
     }
 
 
@@ -109,7 +111,10 @@ namespace chaiscript
     template<typename Input>
     Input parse_string(const std::string &i)
     {
-      return boost::lexical_cast<Input>(i);
+      std::stringstream ss(i);
+      Input t;
+      ss >> t;
+      return t;
     }
 
 

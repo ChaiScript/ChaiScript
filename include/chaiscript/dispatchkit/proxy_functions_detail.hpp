@@ -19,7 +19,6 @@
 #include "type_info.hpp"
 #include "handle_return.hpp"
 #include <string>
-#include <boost/lexical_cast.hpp>
 
 #include <stdexcept>
 #include <vector>
