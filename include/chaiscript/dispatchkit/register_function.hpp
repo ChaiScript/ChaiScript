@@ -9,8 +9,6 @@
 
 #include "dispatchkit.hpp"
 #include "bind_first.hpp"
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
 #include <boost/function_types/components.hpp>
 #include <boost/function_types/function_type.hpp>
 #include <boost/function_types/is_member_object_pointer.hpp>

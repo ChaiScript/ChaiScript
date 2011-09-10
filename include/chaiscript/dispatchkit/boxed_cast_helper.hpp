@@ -10,7 +10,6 @@
 #include "type_info.hpp"
 #include "boxed_value.hpp"
 
-#include <boost/shared_ptr.hpp>
 #include <boost/any.hpp>
 #include <boost/ref.hpp>
 #include <boost/type_traits/add_const.hpp>

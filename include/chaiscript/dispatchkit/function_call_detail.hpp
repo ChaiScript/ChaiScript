@@ -7,16 +7,13 @@
 #include <boost/preprocessor.hpp>
 
 #define addparam(z,n,text)  params.push_back((boost::is_reference<Param ## n>::value&&!(boost::is_same<chaiscript::Boxed_Value, typename boost::remove_const<typename boost::remove_reference<Param ## n>::type>::type>::value))?Boxed_Value(boost::ref(BOOST_PP_CAT(p, n))):Boxed_Value(BOOST_PP_CAT(p, n) ));
-#define curry(z,n,text)  BOOST_PP_CAT(_, BOOST_PP_INC(n))
+#define curry(z,n,text)  BOOST_PP_CAT(std::placeholders::_, BOOST_PP_INC(n))
 
 
 #ifndef  BOOST_PP_IS_ITERATING
 #ifndef CHAISCRIPT_FUNCTION_CALL_DETAIL_HPP_
 #define CHAISCRIPT_FUNCTION_CALL_DETAIL_HPP_
 
-#include <boost/shared_ptr.hpp>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <string>
 #include <vector>
 #include "proxy_functions.hpp"
@@ -107,7 +104,7 @@ namespace chaiscript
             // we cannot make any other guesses or assumptions really, so continuing
           }
 
-          return boost::bind(&function_caller<Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>, funcs
+          return std::bind(&function_caller<Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>, funcs
               BOOST_PP_ENUM_TRAILING(n, curry, ~));
         }
     }

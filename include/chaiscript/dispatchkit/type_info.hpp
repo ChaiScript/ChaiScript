@@ -9,7 +9,7 @@
 
 #include <string>
 #include <typeinfo>
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <boost/type_traits/is_const.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/type_traits/is_reference.hpp>

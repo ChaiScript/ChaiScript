@@ -7,9 +7,6 @@
 #ifndef CHAISCRIPT_FUNCTION_CALL_HPP_
 #define CHAISCRIPT_FUNCTION_CALL_HPP_
 
-#include <boost/shared_ptr.hpp>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <string>
 #include <vector>
 #include "proxy_functions.hpp"

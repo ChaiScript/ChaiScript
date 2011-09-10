@@ -8,7 +8,6 @@
 #define	CHAISCRIPT_ALGEBRAIC_HPP_
 
 #include <chaiscript/dispatchkit/dispatchkit.hpp>
-#include <boost/enable_shared_from_this.hpp>
 
 namespace chaiscript
 {

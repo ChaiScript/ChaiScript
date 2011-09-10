@@ -4,8 +4,8 @@
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
-#ifndef __boxed_cast_hpp__
-#define __boxed_cast_hpp__
+#ifndef CHAISCRIPT_BOXED_CAST_HPP_
+#define CHAISCRIPT_BOXED_CAST_HPP_
 
 #include "type_info.hpp"
 #include "boxed_value.hpp"
@@ -13,9 +13,7 @@
 #include "dynamic_cast_conversion.hpp"
 
 #include "../chaiscript_threading.hpp"
-#include <boost/shared_ptr.hpp>
 #include <boost/any.hpp>
-#include <boost/function.hpp>
 #include <boost/ref.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/type_traits/add_const.hpp>

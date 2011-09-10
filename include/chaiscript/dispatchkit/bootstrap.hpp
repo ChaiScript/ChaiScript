@@ -357,7 +357,7 @@ namespace chaiscript
       template<typename Function>
       static std::function<std::vector<Boxed_Value> (const dispatch::Proxy_Function_Base*)> return_boxed_value_vector(const Function &f)
       {
-        return boost::bind(&do_return_boxed_value_vector<Function>, f, _1);
+        return std::bind(&do_return_boxed_value_vector<Function>, f, std::placeholders::_1);
       }
 
     public:
@@ -462,14 +462,14 @@ namespace chaiscript
         m->add(fun(&print), "print_string");
         m->add(fun(&println), "println_string");
 
-        m->add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(boost::bind(&bind_function, _1))), 
+        m->add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(std::bind(&bind_function, std::placeholders::_1))), 
           "bind");
 
         m->add(fun(&shared_ptr_unconst_clone<dispatch::Proxy_Function_Base>), "clone");
         m->add(fun(&ptr_assign<boost::remove_const<dispatch::Proxy_Function_Base>::type>), "=");
         m->add(fun(&ptr_assign<boost::add_const<dispatch::Proxy_Function_Base>::type>), "=");
 
-        m->add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(boost::bind(&call_exists, _1))), 
+        m->add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(std::bind(&call_exists, std::placeholders::_1))), 
           "call_exists");
 
         m->add(fun(&type_match), "type_match");

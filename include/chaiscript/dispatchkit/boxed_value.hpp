@@ -12,11 +12,8 @@
 #include "../chaiscript_threading.hpp"
 
 #include <map>
-#include <boost/shared_ptr.hpp>
 #include <boost/any.hpp>
-#include <boost/function.hpp>
 #include <boost/ref.hpp>
-#include <boost/bind.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/type_traits/add_const.hpp>
 #include <boost/integer_traits.hpp>

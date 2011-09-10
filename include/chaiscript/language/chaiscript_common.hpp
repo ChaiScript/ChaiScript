@@ -8,7 +8,6 @@
 #define	CHAISCRIPT_COMMON_HPP_
 
 #include <chaiscript/dispatchkit/dispatchkit.hpp>
-#include <boost/enable_shared_from_this.hpp>
 
 namespace chaiscript
 {

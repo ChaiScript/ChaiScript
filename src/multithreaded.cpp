@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < argc - 1; ++i)
     {
-      threads.push_back(std::shared_ptr<boost::thread>(new boost::thread(boost::bind(do_work, boost::ref(chai)))));
+      threads.push_back(std::shared_ptr<boost::thread>(new boost::thread(std::bind(do_work, boost::ref(chai)))));
     }
 
     for (int i = 0; i < argc - 1; ++i)

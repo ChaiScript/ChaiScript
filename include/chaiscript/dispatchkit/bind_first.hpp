@@ -13,8 +13,6 @@
 #ifndef CHAISCRIPT_BIND_FIRST_HPP_
 #define CHAISCRIPT_BIND_FIRST_HPP_
 
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
 #include <boost/ref.hpp>
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 8 )
@@ -42,7 +40,7 @@ namespace chaiscript
       std::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> 
       bind_first(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)), const O &o)
       {
-        return boost::bind(boost::mem_fn(f), o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
+        return std::bind(boost::mem_fn(f), o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, std::placeholders::_));
       }
 
     /// \brief Helper function for binding the first parameter of a const class method pointer. Used in chaiscript::fun overloads
@@ -55,7 +53,7 @@ namespace chaiscript
       std::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> 
       bind_first(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)) const, const O &o)
       {
-        return boost::bind(boost::mem_fn(f), o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
+        return std::bind(boost::mem_fn(f), o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, std::placeholders::_));
       }
 
     /// \brief Helper function for binding the first parameter of a function pointer. Used in chaiscript::fun overloads
@@ -68,7 +66,7 @@ namespace chaiscript
       std::function<Ret (BOOST_PP_ENUM(n, param, Param))> 
       bind_first(Ret (*f)(BOOST_PP_ENUM_PARAMS(m, Param)), const O &o)
       {
-        return boost::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
+        return std::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, std::placeholders::_));
       }
 
     /// \brief Helper function for binding the first parameter of a std::function object. Used in chaiscript::fun overloads
@@ -81,7 +79,7 @@ namespace chaiscript
       std::function<Ret (BOOST_PP_ENUM(n, param, Param))> 
       bind_first(const std::function<Ret (BOOST_PP_ENUM_PARAMS(m, Param))> &f, const O &o)
       {
-        return boost::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, _));
+        return std::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, std::placeholders::_));
       }
 
   }

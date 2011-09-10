@@ -19,8 +19,6 @@
 #include "type_info.hpp"
 #include "handle_return.hpp"
 #include <string>
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <stdexcept>

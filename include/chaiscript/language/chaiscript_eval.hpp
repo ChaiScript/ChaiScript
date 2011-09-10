@@ -556,7 +556,7 @@ namespace chaiscript
           }
 
           return Boxed_Value(Proxy_Function(new dispatch::Dynamic_Proxy_Function
-                (boost::bind(chaiscript::eval::detail::eval_function, boost::ref(t_ss), this->children.back(), t_param_names, _1),
+                (std::bind(chaiscript::eval::detail::eval_function, boost::ref(t_ss), this->children.back(), t_param_names, std::placeholders::_1),
                  static_cast<int>(numparams), this->children.back())));
         }
 
@@ -623,18 +623,18 @@ namespace chaiscript
           std::shared_ptr<dispatch::Dynamic_Proxy_Function> guard;
           if (guardnode) {
             guard = std::shared_ptr<dispatch::Dynamic_Proxy_Function>
-              (new dispatch::Dynamic_Proxy_Function(boost::bind(chaiscript::eval::detail::eval_function,
+              (new dispatch::Dynamic_Proxy_Function(std::bind(chaiscript::eval::detail::eval_function,
                                                                 boost::ref(t_ss), guardnode,
-                                                                t_param_names, _1), static_cast<int>(numparams), guardnode));
+                                                                t_param_names, std::placeholders::_1), static_cast<int>(numparams), guardnode));
           }
 
           try {
             const std::string & l_function_name = this->children[0]->text;
             const std::string & l_annotation = this->annotation?this->annotation->text:"";
             t_ss.add(Proxy_Function
-                (new dispatch::Dynamic_Proxy_Function(boost::bind(chaiscript::eval::detail::eval_function,
+                (new dispatch::Dynamic_Proxy_Function(std::bind(chaiscript::eval::detail::eval_function,
                                                                   boost::ref(t_ss), this->children.back(),
-                                                                  t_param_names, _1), static_cast<int>(numparams), this->children.back(),
+                                                                  t_param_names, std::placeholders::_1), static_cast<int>(numparams), this->children.back(),
                                                       l_annotation, guard)), l_function_name);
           }
           catch (const exception::reserved_word_error &e) {
@@ -1098,9 +1098,9 @@ namespace chaiscript
           std::shared_ptr<dispatch::Dynamic_Proxy_Function> guard;
           if (guardnode) {
             guard = std::shared_ptr<dispatch::Dynamic_Proxy_Function>
-              (new dispatch::Dynamic_Proxy_Function(boost::bind(chaiscript::eval::detail::eval_function,
+              (new dispatch::Dynamic_Proxy_Function(std::bind(chaiscript::eval::detail::eval_function,
                                                                 boost::ref(t_ss), guardnode,
-                                                                t_param_names, _1), static_cast<int>(numparams), guardnode));
+                                                                t_param_names, std::placeholders::_1), static_cast<int>(numparams), guardnode));
           }
 
           try {
@@ -1110,9 +1110,9 @@ namespace chaiscript
             if (function_name == class_name) {
               t_ss.add(Proxy_Function
                   (new dispatch::detail::Dynamic_Object_Constructor(class_name, Proxy_Function
-                                                                    (new dispatch::Dynamic_Proxy_Function(boost::bind(chaiscript::eval::detail::eval_function,
+                                                                    (new dispatch::Dynamic_Proxy_Function(std::bind(chaiscript::eval::detail::eval_function,
                                                                                                                       boost::ref(t_ss), this->children.back(),
-                                                                                                                      t_param_names, _1), static_cast<int>(numparams), this->children.back(),
+                                                                                                                      t_param_names, std::placeholders::_1), static_cast<int>(numparams), this->children.back(),
                                                                                                           l_annotation, guard)))), function_name);
 
             }
@@ -1125,9 +1125,9 @@ namespace chaiscript
               }
               t_ss.add(Proxy_Function
                   (new dispatch::detail::Dynamic_Object_Function(class_name, Proxy_Function
-                                                                 (new dispatch::Dynamic_Proxy_Function(boost::bind(chaiscript::eval::detail::eval_function,
+                                                                 (new dispatch::Dynamic_Proxy_Function(std::bind(chaiscript::eval::detail::eval_function,
                                                                                                                    boost::ref(t_ss), this->children.back(),
-                                                                                                                   t_param_names, _1), static_cast<int>(numparams), this->children.back(),
+                                                                                                                   t_param_names, std::placeholders::_1), static_cast<int>(numparams), this->children.back(),
                                                                                                        l_annotation, guard)), ti)), function_name);
 
             }
@@ -1147,8 +1147,8 @@ namespace chaiscript
         virtual ~Attr_Decl_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           try {
-            t_ss.add(fun(std::function<Boxed_Value (dispatch::Dynamic_Object &)>(boost::bind(&dispatch::detail::Dynamic_Object_Attribute::func, this->children[0]->text,
-                      this->children[1]->text, _1))), this->children[1]->text);
+            t_ss.add(fun(std::function<Boxed_Value (dispatch::Dynamic_Object &)>(std::bind(&dispatch::detail::Dynamic_Object_Attribute::func, this->children[0]->text,
+                      this->children[1]->text, std::placeholders::_1))), this->children[1]->text);
 
           }
           catch (const exception::reserved_word_error &) {

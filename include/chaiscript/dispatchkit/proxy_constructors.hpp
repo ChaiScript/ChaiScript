@@ -10,9 +10,6 @@
 #ifndef CHAISCRIPT_PROXY_CONSTRUCTORS_HPP_
 #define CHAISCRIPT_PROXY_CONSTRUCTORS_HPP_
 
-#include <boost/shared_ptr.hpp>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 
 
 #define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
