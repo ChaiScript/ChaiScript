@@ -44,7 +44,7 @@ namespace chaiscript
                   typename boost::function_types::function_type<boost::function_types::components<T> >::type> (
                     std::function< 
                     typename boost::function_types::function_type<boost::function_types::components<T> >::type 
-                    >(boost::mem_fn(t))));
+                    >(std::mem_fn(t))));
             }      
         };
 

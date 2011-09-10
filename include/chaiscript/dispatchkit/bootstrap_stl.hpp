@@ -228,10 +228,10 @@ namespace chaiscript
           //to throw an exception in an out of bounds condition.
           m->add(
               fun(std::function<typename ContainerType::reference (ContainerType *, int)>
-                (boost::mem_fn(static_cast<indexoper>(&ContainerType::at)))), "[]");
+                (std::mem_fn(static_cast<indexoper>(&ContainerType::at)))), "[]");
           m->add(
               fun(std::function<typename ContainerType::const_reference (const ContainerType *, int)>
-                (boost::mem_fn(static_cast<constindexoper>(&ContainerType::at)))), "[]");
+                (std::mem_fn(static_cast<constindexoper>(&ContainerType::at)))), "[]");
 
           return m;
         }
@@ -255,7 +255,7 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
-          m->add(fun(std::function<int (const ContainerType *)>(boost::mem_fn(&ContainerType::size))), "size");
+          m->add(fun(std::function<int (const ContainerType *)>(std::mem_fn(&ContainerType::size))), "size");
           m->add(fun<bool (ContainerType::*)() const>(&ContainerType::empty), "empty");
           m->add(fun<void (ContainerType::*)()>(&ContainerType::clear), "clear");
 
@@ -390,7 +390,7 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr unique_associative_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
-          m->add(fun(std::function<int (const ContainerType *, const typename ContainerType::key_type &)>(boost::mem_fn(&ContainerType::count))), "count");
+          m->add(fun(std::function<int (const ContainerType *, const typename ContainerType::key_type &)>(std::mem_fn(&ContainerType::count))), "count");
 
           return m;
         }
@@ -515,12 +515,12 @@ namespace chaiscript
 
           typedef std::function<int (const String *, const String &, int)> find_func;
 
-          m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::find)))), "find");
-          m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::rfind)))), "rfind");
-          m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::find_first_of)))), "find_first_of");
-          m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::find_last_of)))), "find_last_of");
-          m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::find_first_not_of)))), "find_first_not_of");
-          m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::find_last_not_of)))), "find_last_not_of");
+          m->add(fun(find_func(std::mem_fn(static_cast<find_func_ptr>(&String::find)))), "find");
+          m->add(fun(find_func(std::mem_fn(static_cast<find_func_ptr>(&String::rfind)))), "rfind");
+          m->add(fun(find_func(std::mem_fn(static_cast<find_func_ptr>(&String::find_first_of)))), "find_first_of");
+          m->add(fun(find_func(std::mem_fn(static_cast<find_func_ptr>(&String::find_last_of)))), "find_last_of");
+          m->add(fun(find_func(std::mem_fn(static_cast<find_func_ptr>(&String::find_first_not_of)))), "find_first_not_of");
+          m->add(fun(find_func(std::mem_fn(static_cast<find_func_ptr>(&String::find_last_not_of)))), "find_last_not_of");
 
           m->add(fun(&String::c_str), "c_str");
           m->add(fun(&String::data), "data");

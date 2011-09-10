@@ -39,7 +39,7 @@ namespace chaiscript
       std::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> 
       bind_first(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)), const O &o)
       {
-        return std::bind(boost::mem_fn(f), o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, std::placeholders::_));
+        return std::bind(std::mem_fn(f), o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, std::placeholders::_));
       }
 
     /// \brief Helper function for binding the first parameter of a const class method pointer. Used in chaiscript::fun overloads
@@ -52,7 +52,7 @@ namespace chaiscript
       std::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> 
       bind_first(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)) const, const O &o)
       {
-        return std::bind(boost::mem_fn(f), o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, std::placeholders::_));
+        return std::bind(std::mem_fn(f), o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, std::placeholders::_));
       }
 
     /// \brief Helper function for binding the first parameter of a function pointer. Used in chaiscript::fun overloads
