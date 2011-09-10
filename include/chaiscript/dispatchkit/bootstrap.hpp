@@ -13,6 +13,7 @@
 #include "operators.hpp"
 #include "boxed_number.hpp"
 #include <boost/function_types/result_type.hpp>
+#include <sstream>
 
 namespace chaiscript 
 {
