@@ -57,8 +57,8 @@ template<typename Type>
 bool do_test(const Boxed_Value &bv, bool T, bool ConstT, bool TRef, bool ConstTRef, bool TPtr, bool ConstTPtr, bool TPtrConst,
     bool ConstTPtrConst, bool SharedPtrT, bool SharedConstPtrT,
     bool ConstSharedPtrT, bool ConstSharedConstPtrT, bool ConstSharedPtrTRef, bool ConstSharedPtrTConstRef,
-    bool BoostRef, bool BoostConstRef, bool ConstBoostRef, bool ConstBoostConstRef,
-    bool ConstBoostRefRef, bool ConstBoostConstRefRef, bool Number,
+    bool WrappedRef, bool WrappedConstRef, bool ConstWrappedRef, bool ConstWrappedConstRef,
+    bool ConstWrappedRefRef, bool ConstWrappedConstRefRef, bool Number,
     bool ConstNumber, bool ConstNumberRef, bool TPtrConstRef, bool ConstTPtrConstRef)
 {
   bool passed = true;
@@ -78,14 +78,14 @@ bool do_test(const Boxed_Value &bv, bool T, bool ConstT, bool TRef, bool ConstTR
   passed &= test_type_conversion<const std::shared_ptr<const Type> >(bv, ConstSharedConstPtrT);
   passed &= test_type_conversion<const std::shared_ptr<Type> &>(bv, ConstSharedPtrTRef);
   passed &= test_type_conversion<const std::shared_ptr<const Type> &>(bv, ConstSharedPtrTConstRef);
-  passed &= test_type_conversion<std::reference_wrapper<Type> >(bv, BoostRef);
-  passed &= test_type_conversion<std::reference_wrapper<const Type> >(bv, BoostConstRef);
+  passed &= test_type_conversion<std::reference_wrapper<Type> >(bv, WrappedRef);
+  passed &= test_type_conversion<std::reference_wrapper<const Type> >(bv, WrappedConstRef);
   passed &= test_type_conversion<std::reference_wrapper<Type> &>(bv, false);
   passed &= test_type_conversion<std::reference_wrapper<const Type> &>(bv, false);
-  passed &= test_type_conversion<const std::reference_wrapper<Type> >(bv, ConstBoostRef);
-  passed &= test_type_conversion<const std::reference_wrapper<const Type> >(bv, ConstBoostConstRef);
-  passed &= test_type_conversion<const std::reference_wrapper<Type> &>(bv, ConstBoostRefRef);
-  passed &= test_type_conversion<const std::reference_wrapper<const Type> &>(bv, ConstBoostConstRefRef);
+  passed &= test_type_conversion<const std::reference_wrapper<Type> >(bv, ConstWrappedRef);
+  passed &= test_type_conversion<const std::reference_wrapper<const Type> >(bv, ConstWrappedConstRef);
+  passed &= test_type_conversion<const std::reference_wrapper<Type> &>(bv, ConstWrappedRefRef);
+  passed &= test_type_conversion<const std::reference_wrapper<const Type> &>(bv, ConstWrappedConstRefRef);
   passed &= test_type_conversion<Boxed_Number>(bv, Number);
   passed &= test_type_conversion<const Boxed_Number>(bv, ConstNumber);
   passed &= test_type_conversion<Boxed_Number &>(bv, false);
@@ -293,8 +293,8 @@ int main()
   /*
   bool T, bool ConstT, bool TRef, bool ConstTRef, bool TPtr, 
   bool ConstTPtr, bool TPtrConst, bool ConstTPtrConst, bool SharedPtrT, bool SharedConstPtrT,
-    bool ConstSharedPtrT, bool ConstSharedConstPtrT, bool ConstSharedPtrTRef, bool ConstSharedPtrTConstRef, bool BoostRef, 
-    bool BoostConstRef, bool ConstBoostRef, bool ConstBoostConstRef, bool ConstBoostRefRef, bool ConstBoostConstRefRef, 
+    bool ConstSharedPtrT, bool ConstSharedConstPtrT, bool ConstSharedPtrTRef, bool ConstSharedPtrTConstRef, bool WrappedRef, 
+    bool WrappedConstRef, bool ConstWrappedRef, bool ConstWrappedConstRef, bool ConstWrappedRefRef, bool ConstWrappedConstRefRef, 
     bool Number, bool ConstNumber, bool ConstNumberRef
     */
 
