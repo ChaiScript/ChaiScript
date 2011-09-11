@@ -9,7 +9,7 @@
 #include <list>
 
 #include <chaiscript/chaiscript.hpp>
-#include <boost/thread.hpp>
+#include <thread>
 
 void do_work(chaiscript::ChaiScript &c)
 {
@@ -20,21 +20,21 @@ void do_work(chaiscript::ChaiScript &c)
 }
 
 int main(int argc, char *argv[]) {
-    std::string input;
-    chaiscript::ChaiScript chai;
+  std::string input;
+  chaiscript::ChaiScript chai;
 
-    //chai.add_shared_object(chaiscript::Boxed_Value(10000), "num_iterations");
+  //chai.add_shared_object(chaiscript::Boxed_Value(10000), "num_iterations");
 
-    std::vector<std::shared_ptr<boost::thread> > threads;
+  std::vector<std::shared_ptr<std::thread> > threads;
 
-    for (int i = 0; i < argc - 1; ++i)
-    {
-      threads.push_back(std::shared_ptr<boost::thread>(new boost::thread(std::bind(do_work, std::ref(chai)))));
-    }
+  for (int i = 0; i < argc - 1; ++i)
+  {
+    threads.push_back(std::shared_ptr<std::thread>(new std::thread(std::bind(do_work, std::ref(chai)))));
+  }
 
-    for (int i = 0; i < argc - 1; ++i)
-    {
-      threads[i]->join();
-    }
+  for (int i = 0; i < argc - 1; ++i)
+  {
+    threads[i]->join();
+  }
 }
 

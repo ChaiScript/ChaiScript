@@ -1117,19 +1117,23 @@ namespace chaiscript
 
             }
             else {
-              boost::optional<chaiscript::Type_Info> ti;
               try {
-                ti = t_ss.get_type(class_name);
+                // Do know type name
+                t_ss.add(Proxy_Function
+                    (new dispatch::detail::Dynamic_Object_Function(class_name, Proxy_Function
+                         (new dispatch::Dynamic_Proxy_Function(std::bind(chaiscript::eval::detail::eval_function,
+                                                                         std::ref(t_ss), this->children.back(),
+                                                                         t_param_names, std::placeholders::_1), static_cast<int>(numparams), this->children.back(),
+                                                               l_annotation, guard)), t_ss.get_type(class_name))), function_name);
               } catch (const std::range_error &) {
-                // No biggie, the type name is just not known
+                // Do not know type name
+                t_ss.add(Proxy_Function
+                    (new dispatch::detail::Dynamic_Object_Function(class_name, Proxy_Function
+                         (new dispatch::Dynamic_Proxy_Function(std::bind(chaiscript::eval::detail::eval_function,
+                                                                         std::ref(t_ss), this->children.back(),
+                                                                         t_param_names, std::placeholders::_1), static_cast<int>(numparams), this->children.back(),
+                                                               l_annotation, guard)))), function_name);
               }
-              t_ss.add(Proxy_Function
-                  (new dispatch::detail::Dynamic_Object_Function(class_name, Proxy_Function
-                                                                 (new dispatch::Dynamic_Proxy_Function(std::bind(chaiscript::eval::detail::eval_function,
-                                                                                                                   std::ref(t_ss), this->children.back(),
-                                                                                                                   t_param_names, std::placeholders::_1), static_cast<int>(numparams), this->children.back(),
-                                                                                                       l_annotation, guard)), ti)), function_name);
-
             }
           }
           catch (const exception::reserved_word_error &e) {
