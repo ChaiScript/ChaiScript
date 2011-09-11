@@ -10,7 +10,6 @@
 #ifndef CHAISCRIPT_NO_THREADS
 #include <thread>
 #include <mutex>
-#include <boost/thread/tss.hpp>
 #else
 #pragma message ("ChaiScript is compiling without thread safety.")
 #endif
@@ -59,6 +58,8 @@ namespace chaiscript
 
       class shared_mutex : public std::mutex { };
 
+      using std::mutex;
+
       using std::recursive_mutex;
 
 
@@ -71,26 +72,37 @@ namespace chaiscript
           public:
             ~Thread_Storage()
             {
-              m_thread_storage.reset();
             }
 
             inline T *operator->() const
             {
-              if (!m_thread_storage.get())
-              {
-                m_thread_storage.reset(new T());
-              }
-
-              return m_thread_storage.get();
+              return get_tls().get();
             }
 
             inline T &operator*() const
             {
-              return *(this->operator->());
+              return *get_tls();
             }
 
+
           private:
-            mutable boost::thread_specific_ptr<T> m_thread_storage;
+            std::shared_ptr<T> get_tls() const
+            {
+              unique_lock<mutex> lock(m_mutex);
+             
+              typename std::map<std::thread::id, std::shared_ptr<T> >::iterator itr = m_instances.find(std::this_thread::get_id());
+
+              if (itr != m_instances.end()) { return itr->second; }
+             
+              std::shared_ptr<T> new_instance(new T());
+
+              m_instances.insert(std::make_pair(std::this_thread::get_id(), new_instance));
+
+              return new_instance;
+            }
+
+            mutable mutex m_mutex;
+            mutable std::map<std::thread::id, std::shared_ptr<T> > m_instances;
         };
 
 #else

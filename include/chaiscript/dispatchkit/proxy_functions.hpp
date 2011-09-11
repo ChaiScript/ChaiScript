@@ -15,6 +15,7 @@
 #include <type_traits>
 #include <stdexcept>
 #include <vector>
+#include <cassert>
 #include "proxy_functions_detail.hpp"
 
 namespace chaiscript
