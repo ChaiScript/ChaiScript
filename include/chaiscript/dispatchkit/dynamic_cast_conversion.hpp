@@ -246,9 +246,9 @@ namespace chaiscript
   {
     //Can only be used with related polymorphic types
     //may be expanded some day to support conversions other than child -> parent
-    BOOST_STATIC_ASSERT((std::is_base_of<Base,Derived>::value));
-    BOOST_STATIC_ASSERT(std::is_polymorphic<Base>::value);
-    BOOST_STATIC_ASSERT(std::is_polymorphic<Derived>::value);
+    static_assert(std::is_base_of<Base,Derived>::value, "Classes are not related by inheritance");
+    static_assert(std::is_polymorphic<Base>::value, "Base class must be polymorphic");
+    static_assert(std::is_polymorphic<Derived>::value, "Derived class must be polymorphic");
 
     return detail::Dynamic_Conversions::create<Base, Derived>();
   }

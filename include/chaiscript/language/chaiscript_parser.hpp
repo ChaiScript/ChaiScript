@@ -10,6 +10,7 @@
 #include <exception>
 #include <fstream>
 #include <sstream>
+#include <cstring>
 
 #include "chaiscript_prelude.hpp"
 #include "chaiscript_common.hpp"

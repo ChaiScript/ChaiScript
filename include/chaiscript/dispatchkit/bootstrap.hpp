@@ -12,8 +12,8 @@
 #include "register_function.hpp"
 #include "operators.hpp"
 #include "boxed_number.hpp"
-#include <boost/function_types/result_type.hpp>
 #include <sstream>
+#include <type_traits>
 
 namespace chaiscript 
 {
@@ -346,7 +346,9 @@ namespace chaiscript
         static std::vector<Boxed_Value> do_return_boxed_value_vector(FunctionType f,
             const dispatch::Proxy_Function_Base *b)
         {
-          typedef typename boost::function_types::result_type<FunctionType>::type Vector;
+          typedef decltype(std::mem_fn(f)) MemFunType;
+          typedef typename MemFunType::result_type Vector;
+
           Vector v = (b->*f)();
  
           std::vector<Boxed_Value> vbv;

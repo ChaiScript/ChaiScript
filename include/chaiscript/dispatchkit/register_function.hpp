@@ -9,8 +9,6 @@
 
 #include "dispatchkit.hpp"
 #include "bind_first.hpp"
-#include <boost/function_types/components.hpp>
-#include <boost/function_types/function_type.hpp>
 
 namespace chaiscript
 {
@@ -18,39 +16,48 @@ namespace chaiscript
   {
     namespace detail
     {
-      template<bool Object, bool MemFn>
+      template<typename T>
+        struct FunctionSignature
+        {
+        };
+
+      template<typename Sig>
+        struct FunctionSignature<std::function<Sig> >
+        {
+          typedef Sig Signature;
+        };
+
+      template<typename Ret, typename ... Args> 
+        std::function<Ret (Args...) > to_function(Ret (*func)(Args...))
+        {
+          return std::function<Ret (Args...)>(func);
+        }
+
+      template<typename Ret, typename Class, typename ... Args> 
+        std::function<Ret (Class &, Args...) > to_function(Ret (Class::*func)(Args...))
+        {
+          return std::function<Ret (Class &, Args...)>(func);
+        }
+
+      template<typename Ret, typename Class, typename ... Args> 
+        std::function<Ret (const Class &, Args...) > to_function(Ret (Class::*func)(Args...) const)
+        {
+          return std::function<Ret (const Class &, Args...)>(func);
+        }
+
+      template<bool Object>
         struct Fun_Helper
         {
           template<typename T>
             static Proxy_Function go(T t)
             {
               return Proxy_Function(
-                  new Proxy_Function_Impl<
-                  typename boost::function_types::function_type<boost::function_types::components<T> >::type> (
-                    std::function< 
-                    typename boost::function_types::function_type<boost::function_types::components<T> >::type 
-                    >(t)));
+                  new Proxy_Function_Impl<typename FunctionSignature<decltype(to_function(t)) >::Signature>(to_function(t)));
             }      
         };
 
       template<>
-        struct Fun_Helper<false, true>
-        {
-          template<typename T>
-            static Proxy_Function go(T t)
-            {
-              return Proxy_Function(
-                  new Proxy_Function_Impl<
-                  typename boost::function_types::function_type<boost::function_types::components<T> >::type> (
-                    std::function< 
-                    typename boost::function_types::function_type<boost::function_types::components<T> >::type 
-                    >(std::mem_fn(t))));
-            }      
-        };
-
-
-      template<>
-        struct Fun_Helper<true, false>
+        struct Fun_Helper<true>
         {
           template<typename T, typename Class>
             static Proxy_Function go(T Class::* m)
@@ -101,7 +108,7 @@ namespace chaiscript
   template<typename T>
     Proxy_Function fun(T t)
     {
-      return dispatch::detail::Fun_Helper<std::is_member_object_pointer<T>::value, std::is_member_function_pointer<T>::value>::go(t);
+      return dispatch::detail::Fun_Helper<std::is_member_object_pointer<T>::value>::go(t);
     }
 
   /// \brief Creates a new Proxy_Function object from a free function, member function or data member and binds the first parameter of it
