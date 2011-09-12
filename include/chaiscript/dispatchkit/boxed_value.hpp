@@ -12,7 +12,7 @@
 #include "../chaiscript_threading.hpp"
 
 #include <map>
-#include <boost/any.hpp>
+#include "any.hpp"
 
 namespace chaiscript 
 {
@@ -36,7 +36,7 @@ namespace chaiscript
       struct Data
       {
         Data(const Type_Info &ti,
-            const boost::any &to,
+            const chaiscript::detail::Any &to,
             bool tr,
             const void *t_void_ptr)
           : m_type_info(ti), m_obj(to), m_data_ptr(ti.is_const()?0:const_cast<void *>(t_void_ptr)), m_const_data_ptr(t_void_ptr),
@@ -60,7 +60,7 @@ namespace chaiscript
         }
 
         Type_Info m_type_info;
-        boost::any m_obj;
+        chaiscript::detail::Any m_obj;
         void *m_data_ptr;
         const void *m_const_data_ptr;
         bool m_is_ref;
@@ -73,7 +73,7 @@ namespace chaiscript
         {
           return std::shared_ptr<Data> (new Data(
                 detail::Get_Type_Info<void>::get(),
-                boost::any(), 
+                chaiscript::detail::Any(), 
                 false,
                 0)
               );
@@ -90,7 +90,7 @@ namespace chaiscript
           {
             return std::shared_ptr<Data>(new Data(
                   detail::Get_Type_Info<T>::get(), 
-                  boost::any(obj), 
+                  chaiscript::detail::Any(obj), 
                   false,
                   obj.get())
                 );
@@ -107,7 +107,7 @@ namespace chaiscript
           {
             return std::shared_ptr<Data>(new Data(
                   detail::Get_Type_Info<T>::get(),
-                  boost::any(obj),
+                  chaiscript::detail::Any(obj),
                   true,
                   &obj.get())
                 );
@@ -119,7 +119,7 @@ namespace chaiscript
             std::shared_ptr<T> p(new T(t));
             return std::shared_ptr<Data>(new Data(
                   detail::Get_Type_Info<T>::get(), 
-                  boost::any(p), 
+                  chaiscript::detail::Any(p), 
                   false,
                   p.get())
                 );
@@ -129,7 +129,7 @@ namespace chaiscript
         {
           return std::shared_ptr<Data> (new Data(
                 Type_Info(),
-                boost::any(),
+                chaiscript::detail::Any(),
                 false,
                 0)
               );
@@ -220,7 +220,7 @@ namespace chaiscript
         return (m_data->m_data_ptr == 0 && m_data->m_const_data_ptr == 0);
       }
 
-      const boost::any & get() const
+      const chaiscript::detail::Any & get() const
       {
         return m_data->m_obj;
       }

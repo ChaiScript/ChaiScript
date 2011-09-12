@@ -100,7 +100,7 @@ namespace chaiscript
       {
         if (!t_bv.is_const())
         {
-          throw exception::global_non_const();
+          throw chaiscript::exception::global_non_const();
         }
 
         m_globals.push_back(std::make_pair(t_bv, t_name));
@@ -421,7 +421,7 @@ namespace chaiscript
           validate_object_name(name);
           if (!obj.is_const())
           {
-            throw exception::global_non_const();
+            throw chaiscript::exception::global_non_const();
           }
 
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_global_object_mutex);
@@ -928,7 +928,7 @@ namespace chaiscript
 
           if (m_state.m_reserved_words.find(name) != m_state.m_reserved_words.end())
           {
-            throw exception::reserved_word_error(name);
+            throw chaiscript::exception::reserved_word_error(name);
           }
         }
 

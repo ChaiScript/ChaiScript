@@ -57,7 +57,7 @@ namespace chaiscript
         {
           if (!m_data)
           {
-            throw exception::load_module_error(dlerror());
+            throw chaiscript::exception::load_module_error(dlerror());
           }
         }
 
@@ -80,7 +80,7 @@ namespace chaiscript
           {
             if (!m_symbol)
             {
-              throw exception::load_module_error(dlerror());
+              throw chaiscript::exception::load_module_error(dlerror());
             }
           }
 
@@ -180,7 +180,7 @@ namespace chaiscript
         {
           if (!m_data)
           {
-            throw exception::load_module_error(GetErrorMessage(GetLastError()));
+            throw chaiscript::exception::load_module_error(GetErrorMessage(GetLastError()));
           }
         }
 
@@ -200,7 +200,7 @@ namespace chaiscript
           {
             if (!m_symbol)
             {
-              throw exception::load_module_error(GetErrorMessage(GetLastError()));
+              throw chaiscript::exception::load_module_error(GetErrorMessage(GetLastError()));
             }
           }
 
@@ -223,7 +223,7 @@ namespace chaiscript
     {
       Loadable_Module(const std::string &, const std::string &)
       {
-        throw exception::load_module_error("Loadable module support not available for your platform");
+        throw chaiscript::exception::load_module_error("Loadable module support not available for your platform");
       }
 
       ModulePtr m_moduleptr;
@@ -302,10 +302,10 @@ namespace chaiscript
             l2.unlock();
             eval_file(appendedpath);
           }
-        } catch (const exception::file_not_found_error &) {
+        } catch (const chaiscript::exception::file_not_found_error &) {
           if (i == m_usepaths.size() - 1)
           {
-            throw exception::file_not_found_error(t_filename);
+            throw chaiscript::exception::file_not_found_error(t_filename);
           }
 
           // failed to load, try the next path
@@ -378,7 +378,7 @@ namespace chaiscript
       std::ifstream infile(t_filename.c_str(), std::ios::in | std::ios::ate | std::ios::binary );
 
       if (!infile.is_open()) {
-        throw exception::file_not_found_error(t_filename);
+        throw chaiscript::exception::file_not_found_error(t_filename);
       }
 
       std::streampos size = infile.tellg();
@@ -420,7 +420,7 @@ namespace chaiscript
     /// \brief Adds a constant object that is available in all contexts and to all threads
     /// \param[in] t_bv Boxed_Value to add as a global
     /// \param[in] t_name Name of the value to add
-    /// \throw exception::global_non_const If t_bv is not a constant object
+    /// \throw chaiscript::exception::global_non_const If t_bv is not a constant object
     /// \sa Boxed_Value::is_const
     ChaiScript &add_global_const(const Boxed_Value &t_bv, const std::string &t_name)
     {
@@ -536,7 +536,7 @@ namespace chaiscript
     /// If no file can be found matching the search criteria and containing the appropriate entry point 
     /// (the symbol mentioned above), an exception is thrown.
     ///
-    /// \throw exception::load_module_error In the event that no matching module can be found.
+    /// \throw chaiscript::exception::load_module_error In the event that no matching module can be found.
     void load_module(const std::string &t_module_name)
     {
       std::vector<exception::load_module_error> errors;
@@ -560,7 +560,7 @@ namespace chaiscript
                     std::string name = m_modulepaths[i] + prefixes[j] + t_module_name + postfixes[k];
                     load_module(t_module_name, name);
                     return;
-                  } catch (const exception::load_module_error &e) {
+                  } catch (const chaiscript::exception::load_module_error &e) {
                     errors.push_back(e);
                     // Try next set
                   }
@@ -582,7 +582,7 @@ namespace chaiscript
         errstring += itr->what();
       }
 
-      throw exception::load_module_error("Unable to find module: " + t_module_name + " Errors: " + errstring);
+      throw chaiscript::exception::load_module_error("Unable to find module: " + t_module_name + " Errors: " + errstring);
     }
 
     /// \brief Load a binary module from a dynamic library. Works on platforms that support
@@ -616,7 +616,7 @@ namespace chaiscript
     ///
     /// \return result of the script execution
     /// 
-    /// \throw exception::eval_error In the case that evaluation fails.
+    /// \throw chaiscript::exception::eval_error In the case that evaluation fails.
     Boxed_Value operator()(const std::string &t_script, const Exception_Handler &t_handler = Exception_Handler())
     {
       try {
@@ -637,8 +637,8 @@ namespace chaiscript
     ///
     /// \return result of the script execution
     /// 
-    /// \throw exception::eval_error In the case that evaluation fails.
-    /// \throw exception::bad_boxed_cast In the case that evaluation succeeds but the result value cannot be converted
+    /// \throw chaiscript::exception::eval_error In the case that evaluation fails.
+    /// \throw chaiscript::exception::bad_boxed_cast In the case that evaluation succeeds but the result value cannot be converted
     ///        to the requested type.
     template<typename T>
     T eval(const std::string &t_input, const Exception_Handler &t_handler = Exception_Handler())
@@ -660,7 +660,7 @@ namespace chaiscript
     ///
     /// \return result of the script execution
     /// 
-    /// \throw exception::eval_error In the case that evaluation fails.
+    /// \throw chaiscript::exception::eval_error In the case that evaluation fails.
     Boxed_Value eval(const std::string &t_input, const Exception_Handler &t_handler = Exception_Handler())
     {
       try {
@@ -677,7 +677,7 @@ namespace chaiscript
     /// \param[in] t_filename File to load and parse.
     /// \param[in] t_handler Optional Exception_Handler used for automatic unboxing of script thrown exceptions
     /// \return result of the script execution
-    /// \throw exception::eval_error In the case that evaluation fails.
+    /// \throw chaiscript::exception::eval_error In the case that evaluation fails.
     Boxed_Value eval_file(const std::string &t_filename, const Exception_Handler &t_handler = Exception_Handler()) {
       try {
         return do_eval(load_file(t_filename), t_filename);
@@ -694,8 +694,8 @@ namespace chaiscript
     /// \param[in] t_filename File to load and parse.
     /// \param[in] t_handler Optional Exception_Handler used for automatic unboxing of script thrown exceptions
     /// \return result of the script execution
-    /// \throw exception::eval_error In the case that evaluation fails.
-    /// \throw exception::bad_boxed_cast In the case that evaluation succeeds but the result value cannot be converted
+    /// \throw chaiscript::exception::eval_error In the case that evaluation fails.
+    /// \throw chaiscript::exception::bad_boxed_cast In the case that evaluation succeeds but the result value cannot be converted
     ///        to the requested type.
     template<typename T>
     T eval_file(const std::string &t_filename, const Exception_Handler &t_handler = Exception_Handler()) {

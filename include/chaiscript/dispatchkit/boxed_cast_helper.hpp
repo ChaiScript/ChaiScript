@@ -10,7 +10,6 @@
 #include "type_info.hpp"
 #include "boxed_value.hpp"
 
-#include <boost/any.hpp>
 
 namespace chaiscript 
 {
@@ -32,16 +31,16 @@ namespace chaiscript
           {
             if (!ob.get_type_info().is_const())
             {
-              return std::cref((boost::any_cast<std::reference_wrapper<Result> >(ob.get())).get());
+              return std::cref((ob.get().cast<std::reference_wrapper<Result> >()).get());
             } else {
-              return boost::any_cast<std::reference_wrapper<const Result> >(ob.get());
+              return ob.get().cast<std::reference_wrapper<const Result> >();
             }
           } else {
             if (!ob.get_type_info().is_const())
             {
-              return std::cref(*(boost::any_cast<std::shared_ptr<Result> >(ob.get())));   
+              return std::cref(*(ob.get().cast<std::shared_ptr<Result> >()));   
             } else {
-              return std::cref(*(boost::any_cast<std::shared_ptr<const Result> >(ob.get())));   
+              return std::cref(*(ob.get().cast<std::shared_ptr<const Result> >()));   
             }
           }
         }
@@ -74,16 +73,16 @@ namespace chaiscript
           {
             if (!ob.get_type_info().is_const())
             {
-              return &(boost::any_cast<std::reference_wrapper<Result> >(ob.get())).get();
+              return &(ob.get().cast<std::reference_wrapper<Result> >()).get();
             } else {
-              return &(boost::any_cast<std::reference_wrapper<const Result> >(ob.get())).get();
+              return &(ob.get().cast<std::reference_wrapper<const Result> >()).get();
             }
           } else {
             if (!ob.get_type_info().is_const())
             {
-              return (boost::any_cast<std::shared_ptr<Result> >(ob.get())).get();
+              return (ob.get().cast<std::shared_ptr<Result> >()).get();
             } else {
-              return (boost::any_cast<std::shared_ptr<const Result> >(ob.get())).get();
+              return (ob.get().cast<std::shared_ptr<const Result> >()).get();
             }
           }
         }
@@ -101,9 +100,9 @@ namespace chaiscript
         {
           if (ob.is_ref())
           {
-            return &(boost::any_cast<std::reference_wrapper<Result> >(ob.get())).get();
+            return &(ob.get().cast<std::reference_wrapper<Result> >()).get();
           } else {
-            return (boost::any_cast<std::shared_ptr<Result> >(ob.get())).get();
+            return (ob.get().cast<std::shared_ptr<Result> >()).get();
           }
         }
       };
@@ -120,9 +119,9 @@ namespace chaiscript
         {
           if (ob.is_ref())
           {
-            return boost::any_cast<std::reference_wrapper<Result> >(ob.get());
+            return ob.get().cast<std::reference_wrapper<Result> >();
           } else {
-            Result &r = *(boost::any_cast<std::shared_ptr<Result> >(ob.get()));
+            Result &r = *(ob.get().cast<std::shared_ptr<Result> >());
             return r;
           }
         }
@@ -138,7 +137,7 @@ namespace chaiscript
 
         static Result_Type cast(const Boxed_Value &ob)
         {
-          return boost::any_cast<std::shared_ptr<Result> >(ob.get());
+          return ob.get().cast<std::shared_ptr<Result> >();
         }
       };
 
@@ -154,9 +153,9 @@ namespace chaiscript
         {
           if (!ob.get_type_info().is_const())
           {
-            return std::const_pointer_cast<const Result>(boost::any_cast<std::shared_ptr<Result> >(ob.get()));
+            return std::const_pointer_cast<const Result>(ob.get().cast<std::shared_ptr<Result> >());
           } else {
-            return boost::any_cast<std::shared_ptr<const Result> >(ob.get());
+            return ob.get().cast<std::shared_ptr<const Result> >();
           }
         }
       };

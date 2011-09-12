@@ -21,7 +21,7 @@ namespace chaiscript
         template<typename T>
         void throw_type(const Boxed_Value &bv)
         {
-          try { T t = boxed_cast<T>(bv); throw t; } catch (const exception::bad_boxed_cast &) {}
+          try { T t = boxed_cast<T>(bv); throw t; } catch (const chaiscript::exception::bad_boxed_cast &) {}
         }
     };
 

@@ -13,7 +13,6 @@
 #include "dynamic_cast_conversion.hpp"
 
 #include "../chaiscript_threading.hpp"
-#include <boost/any.hpp>
 
 namespace chaiscript 
 {
@@ -65,7 +64,7 @@ namespace chaiscript
   {
     try {
       return detail::Cast_Helper<Type>::cast(bv);
-    } catch (const boost::bad_any_cast &) {
+    } catch (const chaiscript::detail::exception::bad_any_cast &) {
 
 #ifdef BOOST_MSVC
       //Thank you MSVC, yes we know that a constant value is being used in the if
@@ -80,7 +79,7 @@ namespace chaiscript
           // We will not catch any bad_boxed_dynamic_cast that is thrown, let the user get it
           // either way, we are not responsible if it doesn't work
           return detail::Cast_Helper<Type>::cast(detail::boxed_dynamic_cast<Type>(bv));
-        } catch (const boost::bad_any_cast &) {
+        } catch (const chaiscript::detail::exception::bad_any_cast &) {
           throw exception::bad_boxed_cast(bv.get_type_info(), typeid(Type));
         }
       } else {

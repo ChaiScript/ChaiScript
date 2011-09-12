@@ -38,9 +38,9 @@ namespace chaiscript
             case Operators::not_equal:
               return const_var(t != u);
             default:
-              throw boost::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();        
           }
-          throw boost::bad_any_cast();        
+          throw chaiscript::detail::exception::bad_any_cast();        
         }
       };
 
@@ -73,7 +73,7 @@ namespace chaiscript
               t -= u;
               break;
             default:
-              throw boost::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();        
           }
 
           return t_lhs;
@@ -106,7 +106,7 @@ namespace chaiscript
               t ^= u;
               break;
             default:
-              throw boost::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();        
           }
           return t_lhs;
         }
@@ -134,9 +134,9 @@ namespace chaiscript
             case Operators::bitwise_complement:
               return const_var(~t);
             default:
-              throw boost::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();        
           }
-          throw boost::bad_any_cast();        
+          throw chaiscript::detail::exception::bad_any_cast();        
         }
       };
 
@@ -160,9 +160,9 @@ namespace chaiscript
             case Operators::unary_plus:
               return const_var(+t);
             default:
-              throw boost::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();        
           }
-          throw boost::bad_any_cast();        
+          throw chaiscript::detail::exception::bad_any_cast();        
         }
       };
 
@@ -183,7 +183,7 @@ namespace chaiscript
           } else if (t_oper > Operators::const_flag) {
             return const_binary::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
           } else {
-            throw boost::bad_any_cast();
+            throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -199,13 +199,13 @@ namespace chaiscript
           } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const()) {
             return binary::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
           } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag) {
-            throw boost::bad_any_cast();
+            throw chaiscript::detail::exception::bad_any_cast();
           } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
-            throw boost::bad_any_cast();
+            throw chaiscript::detail::exception::bad_any_cast();
           } else if (t_oper > Operators::const_flag) {
             return const_binary::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
           } else {
-            throw boost::bad_any_cast();
+            throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -248,7 +248,7 @@ namespace chaiscript
           } else if (inp_ == typeid(std::uint64_t)) {
             return Go<LHS, std::uint64_t, Float>::go(t_oper, t_lhs, t_rhs);
           } else {
-            throw boost::bad_any_cast();
+            throw chaiscript::detail::exception::bad_any_cast();
           }
         } 
 
@@ -289,7 +289,7 @@ namespace chaiscript
           } else if (inp_ == typeid(std::uint64_t)) {
             return oper_rhs<std::uint64_t, false>(t_oper, t_lhs, t_rhs);
           } else  {
-            throw boost::bad_any_cast();
+            throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       
@@ -302,12 +302,12 @@ namespace chaiscript
         const Type_Info &inp_ = v.get_type_info();
         if (inp_ == typeid(bool))
         {
-          throw boost::bad_any_cast();
+          throw chaiscript::detail::exception::bad_any_cast();
         }
 
         if (!inp_.is_arithmetic())
         {
-          throw boost::bad_any_cast();
+          throw chaiscript::detail::exception::bad_any_cast();
         }
       }
 
