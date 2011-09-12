@@ -8,17 +8,15 @@
 
 #include <chaiscript/chaiscript.hpp>
 #include <chaiscript/dispatchkit/function_call.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/regex.hpp>
 
 void log(const std::string &msg)
 {
-  std::cout << "[" << boost::posix_time::microsec_clock::local_time() << "] " << msg << std::endl;
+  std::cout << "[" << time(nullptr) << "] " << msg << std::endl;
 }
 
 void log(const std::string &module, const std::string &msg)
 {
-  std::cout << "[" << boost::posix_time::microsec_clock::local_time() << "] <" << module << "> " << msg << std::endl;
+  std::cout << "[" << time(nullptr) << "] <" << module << "> " << msg << std::endl;
 }
 
 void bound_log(const std::string &msg)
@@ -140,7 +138,9 @@ int main(int /*argc*/, char * /*argv*/[]) {
   //Creating a functor on the stack and using it immediatly 
   int x = chai.eval<std::function<int (int, int)> >("fun (x, y) { return x + y; }")(5, 6);
 
-  log("Functor test output", boost::lexical_cast<std::string>(x));
+  std::stringstream ss;
+  ss << x;
+  log("Functor test output", ss.str());
 
   chai.add(var(std::shared_ptr<int>()), "nullvar");
   chai("print(\"This should be true.\"); print(nullvar.is_var_null())");
