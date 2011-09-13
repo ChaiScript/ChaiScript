@@ -4,13 +4,6 @@
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
-#include <boost/preprocessor.hpp>
-
-#define gettypeinfo(z,n,text)  ti.push_back(chaiscript::detail::Get_Type_Info<Param ## n>::get());
-#define casthelper(z,n,text) BOOST_PP_COMMA_IF(n) chaiscript::boxed_cast< Param ## n >(params[n])
-#define trycast(z,n,text) chaiscript::boxed_cast<Param ## n>(params[n]);
-
-#ifndef  BOOST_PP_IS_ITERATING
 #ifndef CHAISCRIPT_PROXY_FUNCTIONS_DETAIL_HPP_
 #define CHAISCRIPT_PROXY_FUNCTIONS_DETAIL_HPP_
 
@@ -46,19 +39,6 @@ namespace chaiscript
     };
   }
 
-}
-
-#define BOOST_PP_ITERATION_LIMITS ( 0, 10 )
-#define BOOST_PP_FILENAME_1 <chaiscript/dispatchkit/proxy_functions_detail.hpp>
-#include BOOST_PP_ITERATE()
-
-
-# endif
-#else
-# define n BOOST_PP_ITERATION()
-
-namespace chaiscript
-{
   namespace dispatch
   {
     namespace detail
@@ -67,16 +47,80 @@ namespace chaiscript
        * Used by Proxy_Function_Impl to return a list of all param types
        * it contains.
        */
-      template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-        std::vector<Type_Info> build_param_type_list(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)))
+      template<typename Ret, typename ... Params>
+        std::vector<Type_Info> build_param_type_list(Ret (*)(Params...))
         {
-          std::vector<Type_Info> ti;
-          ti.push_back(chaiscript::detail::Get_Type_Info<Ret>::get());
-
-          BOOST_PP_REPEAT(n, gettypeinfo, ~) 
-
-          return ti;
+          return std::vector<Type_Info> { chaiscript::detail::Get_Type_Info<Ret>::get(),
+              chaiscript::detail::Get_Type_Info<Params>::get()... };
         }
+
+
+      // Forward declaration
+      template<typename ... Rest> 
+        struct Try_Cast; 
+
+      // implementation
+      template<typename Param, typename ... Rest>
+        struct Try_Cast<Param, Rest...>
+        {
+          static void do_try(const std::vector<Boxed_Value> &params, int generation)
+          {
+            boxed_cast<Param>(params[generation]);
+            Try_Cast<Rest...>::do_try(params, generation+1);
+          }
+        };
+
+      // 0th case
+      template<>
+        struct Try_Cast<>
+        {
+          static void do_try(const std::vector<Boxed_Value> &, int)
+          {
+          }
+        };
+      
+
+
+      /**
+       * Used by Proxy_Function_Impl to determine if it is equivalent to another
+       * Proxy_Function_Impl object. This function is primarly used to prevent
+       * registration of two functions with the exact same signatures
+       */
+      template<typename Ret, typename ... Params>
+        bool compare_types_cast(Ret (*)(Params...),
+             const std::vector<Boxed_Value> &params)
+        {
+          try {
+            Try_Cast<Params...>::do_try(params, 0);
+          } catch (const exception::bad_boxed_cast &) {
+            return false;
+          }
+
+          return true;
+        }
+
+      template<typename Ret, int count, typename ... Params>
+        struct Call_Func
+        {
+
+          template<typename ... InnerParams>
+          static Ret do_call(const std::function<Ret (Params...)> &f,
+              const std::vector<Boxed_Value> &params, InnerParams ... innerparams)
+          {
+            return Call_Func<Ret, count - 1, Params...>::do_call(f, params, innerparams..., params[sizeof...(Params) - count]);
+          } 
+        };
+
+      template<typename Ret, typename ... Params>
+        struct Call_Func<Ret, 0, Params...>
+        {
+          template<typename ... InnerParams>
+            static Ret do_call(const std::function<Ret (Params...)> &f,
+                const std::vector<Boxed_Value> &, InnerParams ... innerparams)
+            {
+              return f(boxed_cast<Params>(innerparams)...);
+            }
+        };
 
       /**
        * Used by Proxy_Function_Impl to perform typesafe execution of a function.
@@ -84,45 +128,24 @@ namespace chaiscript
        * if any unboxing fails the execution of the function fails and
        * the bad_boxed_cast is passed up to the caller.
        */
-      template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-        Ret call_func(const std::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f,
+      template<typename Ret, typename ... Params>
+        Ret call_func(const std::function<Ret (Params...)> &f,
             const std::vector<Boxed_Value> &params)
         {
-          if (params.size() != n)
+          if (params.size() == sizeof...(Params))
           {
-            throw exception::arity_error(static_cast<int>(params.size()), n);
-          } else {
-            return f(BOOST_PP_REPEAT(n, casthelper, ~));
-          }
-        }
-
-      /**
-       * Used by Proxy_Function_Impl to determine if it is equivalent to another
-       * Proxy_Function_Impl object. This function is primarly used to prevent
-       * registration of two functions with the exact same signatures
-       */
-      template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
-        bool compare_types_cast(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)),
-            const std::vector<Boxed_Value> & BOOST_PP_IF(n, params, ))
-        {
-          try {
-            BOOST_PP_REPEAT(n, trycast, ~);
-          } catch (const exception::bad_boxed_cast &) {
-            return false;
+            return Call_Func<Ret, sizeof...(Params), Params...>::do_call(f, params);
           }
 
-          return true;
+          throw exception::arity_error(static_cast<int>(params.size()), sizeof...(Params));
         }
+          
     }
   }
+
+
 }
 
-#undef n
-
-#endif
-
-
-#ifndef BOOST_PP_IS_ITERATING
 
 namespace chaiscript
 {
