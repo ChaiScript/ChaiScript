@@ -4,87 +4,130 @@
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
-#include <boost/preprocessor.hpp>
-#include <boost/preprocessor/arithmetic/inc.hpp>
-
-#define param(z,n,text) BOOST_PP_CAT(text, BOOST_PP_INC(n)) 
-
-#ifndef  BOOST_PP_IS_ITERATING
 #ifndef CHAISCRIPT_BIND_FIRST_HPP_
 #define CHAISCRIPT_BIND_FIRST_HPP_
 
-
-#define BOOST_PP_ITERATION_LIMITS ( 0, 8 )
-#define BOOST_PP_FILENAME_1 <chaiscript/dispatchkit/bind_first.hpp>
-
-#include BOOST_PP_ITERATE()
-
-
-# endif
-#else
-# define n BOOST_PP_ITERATION()
-# define m BOOST_PP_INC(n)
+#include <functional>
 
 namespace chaiscript
 {
   namespace detail
-  { 
-    /// \brief Helper function for binding the first parameter of a class method pointer. Used in chaiscript::fun overloads
-    ///        that take 1 or 2 parameters to pre-bind to the function.
-    ///
-    /// \param[in] f method pointer to bind
-    /// \param[in] o object to bind as first parameter 
-    /// \returns a new std::function object with one fewer parameters than the function passed in. 
-    template<typename Ret, typename O, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-      std::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> 
-      bind_first(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)), const O &o)
+  {
+
+    template<int>
+      struct Placeholder
       {
-        return std::bind(std::mem_fn(f), o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, std::placeholders::_));
+      };
+
+    template<>
+      struct Placeholder<1>
+      {
+        static decltype(std::placeholders::_1) value() { return std::placeholders::_1; }
+      };
+
+    template<>
+      struct Placeholder<2>
+      {
+        static decltype(std::placeholders::_2) value() { return std::placeholders::_2; }
+      };
+
+    template<>
+      struct Placeholder<3>
+      {
+        static decltype(std::placeholders::_3) value() { return std::placeholders::_3; }
+      };
+
+    template<>
+      struct Placeholder<4>
+      {
+        static decltype(std::placeholders::_4) value() { return std::placeholders::_4; }
+      };
+
+    template<>
+      struct Placeholder<5>
+      {
+        static decltype(std::placeholders::_5) value() { return std::placeholders::_5; }
+      };
+
+    template<>
+      struct Placeholder<6>
+      {
+        static decltype(std::placeholders::_6) value() { return std::placeholders::_6; }
+      };
+
+    template<>
+      struct Placeholder<7>
+      {
+        static decltype(std::placeholders::_7) value() { return std::placeholders::_7; }
+      };
+
+    template<>
+      struct Placeholder<8>
+      {
+        static decltype(std::placeholders::_8) value() { return std::placeholders::_8; }
+      };
+
+    template<>
+      struct Placeholder<9>
+      {
+        static decltype(std::placeholders::_9) value() { return std::placeholders::_9; }
+      };
+
+    template<>
+      struct Placeholder<10>
+      {
+        static decltype(std::placeholders::_10) value() { return std::placeholders::_10; }
+      };
+
+
+    template<int count, int maxcount, typename Sig>
+      struct Bind_First
+      {
+        template<typename F, typename ... InnerParams>
+          static std::function<Sig> bind(F f, InnerParams ... innerparams)
+          {
+            return Bind_First<count - 1, maxcount, Sig>::bind(f, innerparams..., Placeholder<maxcount - count + 1>::value());
+          } 
+      };
+
+    template<int maxcount, typename Sig>
+      struct Bind_First<0, maxcount, Sig>
+      {
+        template<typename F, typename ... InnerParams>
+          static std::function<Sig> bind(F f, InnerParams ... innerparams)
+          {
+            return std::bind(f, innerparams...);
+          }
+      };
+
+
+    template<typename O, typename Ret, typename P1, typename ... Param>
+      std::function<Ret (Param...)> bind_first(Ret (*f)(P1, Param...), O o)
+      {
+        return Bind_First<sizeof...(Param), sizeof...(Param), Ret (Param...)>::bind(f, o);
       }
 
-    /// \brief Helper function for binding the first parameter of a const class method pointer. Used in chaiscript::fun overloads
-    ///        that take 1 or 2 parameters to pre-bind to the function.
-    ///
-    /// \param[in] f method pointer to bind
-    /// \param[in] o object to bind as first parameter 
-    /// \returns a new std::function object with one fewer parameters than the function passed in. 
-    template<typename Ret, typename O, typename Class BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
-      std::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> 
-      bind_first(Ret (Class::*f)(BOOST_PP_ENUM_PARAMS(n, Param)) const, const O &o)
+    template<typename O, typename Ret, typename Class, typename ... Param>
+      std::function<Ret (Param...)> bind_first(Ret (Class::*f)(Param...), O o)
       {
-        return std::bind(std::mem_fn(f), o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, std::placeholders::_));
+        return Bind_First<sizeof...(Param), sizeof...(Param), Ret (Param...)>::bind(f, o);
       }
 
-    /// \brief Helper function for binding the first parameter of a function pointer. Used in chaiscript::fun overloads
-    ///        that take 1 or 2 parameters to pre-bind to the function.
-    ///
-    /// \param[in] f method pointer to bind
-    /// \param[in] o object to bind as first parameter 
-    /// \returns a new std::function object with one fewer parameters than the function passed in. 
-    template<typename Ret,typename O BOOST_PP_COMMA_IF(m) BOOST_PP_ENUM_PARAMS(m, typename Param) >
-      std::function<Ret (BOOST_PP_ENUM(n, param, Param))> 
-      bind_first(Ret (*f)(BOOST_PP_ENUM_PARAMS(m, Param)), const O &o)
+    template<typename O, typename Ret, typename Class, typename ... Param>
+      std::function<Ret (Param...)> bind_first(Ret (Class::*f)(Param...) const, O o)
       {
-        return std::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, std::placeholders::_));
+        return Bind_First<sizeof...(Param), sizeof...(Param), Ret (Param...)>::bind(f, o);
       }
 
-    /// \brief Helper function for binding the first parameter of a std::function object. Used in chaiscript::fun overloads
-    ///        that take 1 or 2 parameters to pre-bind to the function.
-    ///
-    /// \param[in] f method pointer to bind
-    /// \param[in] o object to bind as first parameter 
-    /// \returns a new std::function object with one fewer parameters than the function passed in. 
-    template<typename Ret,typename O BOOST_PP_COMMA_IF(m) BOOST_PP_ENUM_PARAMS(m, typename Param) >
-      std::function<Ret (BOOST_PP_ENUM(n, param, Param))> 
-      bind_first(const std::function<Ret (BOOST_PP_ENUM_PARAMS(m, Param))> &f, const O &o)
+    template<typename O, typename Ret, typename P1, typename ... Param>
+      std::function<Ret (Param...)> bind_first(const std::function<Ret (P1, Param...)> &f, O o)
       {
-        return std::bind(f, o BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM(n, param, std::placeholders::_));
+        return Bind_First<sizeof...(Param), sizeof...(Param), Ret (Param...)>::bind(f, o);
       }
+
 
   }
 }
 
-#undef n
-#undef m
 
 #endif
