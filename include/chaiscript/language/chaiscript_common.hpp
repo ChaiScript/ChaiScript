@@ -7,7 +7,7 @@
 #ifndef CHAISCRIPT_COMMON_HPP_
 #define	CHAISCRIPT_COMMON_HPP_
 
-#include <chaiscript/dispatchkit/dispatchkit.hpp>
+#include "../dispatchkit/dispatchkit.hpp"
 
 namespace chaiscript
 {

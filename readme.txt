@@ -13,7 +13,7 @@ ChaiScript is one of the only embedded scripting language designed from the grou
 
 [Requirements]
 
-ChaiScript requires a recent version of Boost (http://www.boost.org) to build.
+ChaiScript requires a C++11 compiler to build with support for variadic templates.
 
 [Usage]
 

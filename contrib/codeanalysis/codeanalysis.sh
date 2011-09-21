@@ -50,7 +50,7 @@ function run_test
     # Run multithreaded tests
     echo "****Building multithreaded test"
     pushd src
-    g++ multithreaded.cpp -lboost_thread-mt -ldl -omultithreaded -I../include -O3
+    g++ multithreaded.cpp -ldl -omultithreaded -I../include -O3
     echo "****Testing 1 thread runtime"
     /usr/bin/time -p ./multithreaded 1 2> ../../r$1-1threadruntime.out
     echo "****Testing 2 thread runtime"

@@ -9,7 +9,7 @@
 
 #include <map>
 
-#include <chaiscript/language/chaiscript_common.hpp>
+#include "chaiscript_common.hpp"
 
 namespace chaiscript
 {

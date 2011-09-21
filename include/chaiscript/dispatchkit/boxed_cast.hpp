@@ -7,6 +7,8 @@
 #ifndef CHAISCRIPT_BOXED_CAST_HPP_
 #define CHAISCRIPT_BOXED_CAST_HPP_
 
+#include "../chaiscript_defines.hpp"
+
 #include "type_info.hpp"
 #include "boxed_value.hpp"
 #include "boxed_cast_helper.hpp"
@@ -66,7 +68,7 @@ namespace chaiscript
       return detail::Cast_Helper<Type>::cast(bv);
     } catch (const chaiscript::detail::exception::bad_any_cast &) {
 
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
       //Thank you MSVC, yes we know that a constant value is being used in the if
       // statment in THIS VERSION of the template instantiation
 #pragma warning(push)
@@ -88,7 +90,7 @@ namespace chaiscript
         throw exception::bad_boxed_cast(bv.get_type_info(), typeid(Type));
       }
 
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)
 #endif
 

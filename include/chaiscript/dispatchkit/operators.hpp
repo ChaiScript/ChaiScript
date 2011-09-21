@@ -7,6 +7,8 @@
 #ifndef CHAISCRIPT_OPERATORS_HPP_
 #define CHAISCRIPT_OPERATORS_HPP_
 
+#include "../chaiscript_defines.hpp"
+
 namespace chaiscript 
 {
   namespace bootstrap
@@ -154,7 +156,7 @@ namespace chaiscript
       template<typename Ret, typename L>
         Ret unary_minus(L l)
         {
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
 #pragma warning(push)
 #pragma warning(disable : 4146)
           return (-l);

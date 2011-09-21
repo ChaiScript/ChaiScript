@@ -20,7 +20,7 @@ char* readline(const char* p)
   std::string retval;
   std::cout << p ;
   std::getline(std::cin, retval);
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
   return std::cin.eof() ? NULL : _strdup(retval.c_str());
 #else
   return std::cin.eof() ? NULL : strdup(retval.c_str());
@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
   std::vector<std::string> modulepaths;
 
   // Disable deprecation warning for getenv call.
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
 #pragma warning(push)
 #pragma warning(disable : 4996)
 #endif
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
   const char *usepath = getenv("CHAI_USE_PATH");
   const char *modulepath = getenv("CHAI_MODULE_PATH");
 
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)
 #endif
 

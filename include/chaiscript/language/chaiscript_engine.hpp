@@ -10,12 +10,13 @@
 #include <exception>
 #include <fstream>
 
-#include <chaiscript/language/chaiscript_common.hpp>
+#include "../chaiscript_defines.hpp"
+#include "chaiscript_common.hpp"
 
 #ifdef _POSIX_VERSION
 #include <dlfcn.h>
 #else
-#ifdef BOOST_WINDOWS
+#ifdef CHAISCRIPT_WINDOWS
 #define VC_EXTRA_LEAN
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -23,8 +24,8 @@
 #endif
 
 
-#include <chaiscript/language/chaiscript_prelude.hpp>
-#include <chaiscript/language/chaiscript_parser.hpp>
+#include "chaiscript_prelude.hpp"
+#include "chaiscript_parser.hpp"
 #include "../dispatchkit/exception_specification.hpp"
 
 namespace chaiscript

@@ -74,16 +74,16 @@
 /// <hr>
 /// \subsection compiling Compiling ChaiScript Applications
 ///
-/// ChaiScript is a header only library with only two dependecies. boost::threads (optional) and the
+/// ChaiScript is a header only library with only one dependecy: The
 /// operating system provided dynamic library loader, which has to be specified on some platforms.
 /// 
 /// \subsubsection compilinggcc Compiling with GCC
 /// 
 /// To compile the above application on a Unix like operating system (MacOS, Linux) with GCC you need to link
-/// both boost::threads and the dynamic loader. For example:
+/// the dynamic loader. For example:
 ///
 /// \code
-/// gcc main.cpp -I/path/to/chaiscript/headers -ldl -lboost_threads
+/// gcc main.cpp -I/path/to/chaiscript/headers -ldl 
 /// \endcode
 ///
 /// Alternatively, you may compile without threading support.
@@ -245,7 +245,9 @@
 ///
 /// std::string append_string_int(const std::string &t_lhs, int t_rhs)
 /// {
-///   return t_lhs + boost::lexical_cast<std::string>(t_rhs);
+///   std::stringstream ss;
+///   ss << t_lhs << t_rhs;
+///   return ss.str();
 /// }
 ///
 /// chai.add(fun(append_string_int), "+");
@@ -407,7 +409,7 @@
 /// 
 /// Thread safety can be disabled by defining CHAISCRIPT_NO_THREADS when using the library.
 ///
-/// Disabling thread safety increases performance and removes the requirement for boost_threads.
+/// Disabling thread safety increases performance in many cases.
 ///
 /// <hr>
 ///
@@ -743,6 +745,8 @@
 /// \namespace chaiscript::detail
 /// \brief Classes and functions reserved for internal use. Items in this namespace are not supported.
 
+#include "chaiscript_defines.hpp"
+
 #include "dispatchkit/dispatchkit.hpp"
 #include "dispatchkit/bootstrap.hpp"
 #include "dispatchkit/bootstrap_stl.hpp"
@@ -750,7 +754,7 @@
 #include "dispatchkit/dynamic_object.hpp"
 #include "dispatchkit/boxed_number.hpp"
 
-#ifdef  BOOST_HAS_DECLSPEC
+#ifdef  CHAISCRIPT_HAS_DECLSPEC
 #define CHAISCRIPT_MODULE_EXPORT extern "C" __declspec(dllexport)
 #else
 #define CHAISCRIPT_MODULE_EXPORT extern "C" 
