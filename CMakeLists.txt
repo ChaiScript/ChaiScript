@@ -24,13 +24,11 @@ set(CPACK_PACKAGE_VENDOR "ChaiScript.com")
 set(CPACK_PACKAGE_CONTACT "contact@chaiscript.com")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "An embedded scripting language for C++")
 
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libboost-dev (>=1.36.0)")
 set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 
 set(CPACK_RPM_PACKAGE_LICENSE "BSD")
 set(CPACK_RPM_PACKAGE_GROUP "Programming")
-set(CPACK_RPM_PACKAGE_REQUIRES "boost-devel >= 1.36.0, boost-thread >= 1.36.0")
 
 set(CHAI_VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH})
 
@@ -64,24 +62,13 @@ else()
   add_definitions(-Wall -Wextra -Wshadow -pedantic -std=c++0x)
 
   if (APPLE)
-    # -Wno-missing-field-initializers is for boost on macos
-    add_definitions(-Wno-missing-field-initializers -Wno-sign-compare)
+    add_definitions(-Wno-sign-compare)
   endif()
 endif()
 
 include_directories(include)
 
-set(Boost_ADDITIONAL_VERSIONS "1.44" "1.44.0" "1.43" "1.43.0" "1.42" "1.42.0" "1.41")
-set(Boost_USE_MULTITHREADED ON)
-
 if (MULTITHREAD_SUPPORT_ENABLED)
-  find_package(Boost 1.36.0 COMPONENTS thread)
-
-  if (Boost_FOUND)
-    link_directories( ${Boost_LIBRARY_DIRS} )
-  else()
-    message(FATAL_ERROR "Can not find Boost")
-  endif(Boost_FOUND)
 else()
   add_definitions(-DCHAISCRIPT_NO_THREADS)
 endif()
@@ -90,20 +77,13 @@ if (CMAKE_HOST_UNIX)
   set(DYNAMIC_LOADER "dl")
 endif(CMAKE_HOST_UNIX)
 
-if (MSVC)
-  # Boost on MSVC does automatic linking
-  set(LIBS ${DYNAMIC_LOADER} ${READLINE_LIB})
-else()
-  set(LIBS ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
-endif()
+set(LIBS ${DYNAMIC_LOADER} ${READLINE_LIB})
 
 if (CMAKE_COMPILER_2005)
   # vs2005 is a bit too loud about possible loss of data warnings
 #  ADD_DEFINITIONS(/wd4244)
 endif()
 
-include_directories(${Boost_INCLUDE_DIRS})
-include_directories(${Boost_INCLUDE_DIR})
 add_executable(chai src/main.cpp)
 target_link_libraries(chai ${LIBS})
 

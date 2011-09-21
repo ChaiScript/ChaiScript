@@ -52,38 +52,44 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflect
 
   chaiscript::bootstrap::standard_library::vector_type<std::vector<std::shared_ptr<chaiscript::AST_Node> > >("AST_NodeVector", m);
 
-  CHAISCRIPT_CLASS_NO_CONSTRUCTOR( m,
-      chaiscript::exception::eval_error,
-      ((reason))
-      ((call_stack))
+  using namespace chaiscript;
+
+  chaiscript::utility::add_class<chaiscript::exception::eval_error>(*m,
+      "eval_error",
+      { },
+      { {fun(&chaiscript::exception::eval_error::reason), "reason"},
+        {fun(&chaiscript::exception::eval_error::call_stack), "call_stack"} }
+      );
+
+  chaiscript::utility::add_class<chaiscript::File_Position>(*m,
+      "File_Position",
+      { constructor<File_Position()>(),
+        constructor<File_Position(int, int)>() },
+      { {fun(&File_Position::line), "line"},
+        {fun(&File_Position::column), "column"} }
+      );
+
+  chaiscript::utility::add_class<AST_Node>(*m,
+      "AST_Node",
+      {  },
+      { {fun(&AST_Node::text), "text"},
+        {fun(&AST_Node::identifier), "identifier"},
+        {fun(&AST_Node::filename), "filename"},
+        {fun(&AST_Node::start), "start"},
+        {fun(&AST_Node::end), "end"},
+        {fun(&AST_Node::internal_to_string), "internal_to_string"},
+        {fun(&AST_Node::children), "children"},
+        {fun(&AST_Node::replace_child), "replace_child"}
+      }
     );
 
-  CHAISCRIPT_CLASS( m,
-      chaiscript::File_Position,
-      (chaiscript::File_Position())
-      (chaiscript::File_Position(int,int)),
-      ((line))
-      ((column))
-    );
+  chaiscript::utility::add_class<parser::ChaiScript_Parser>(*m,
+      "ChaiScript_Parser",
+      { constructor<parser::ChaiScript_Parser ()>() },
+      { {fun(&parser::ChaiScript_Parser::parse), "parse"},
+        {fun(&parser::ChaiScript_Parser::ast), "ast"} }
+      );
 
-  CHAISCRIPT_CLASS_NO_CONSTRUCTOR( m, 
-      chaiscript::AST_Node,
-      ((text))
-      ((identifier))
-      ((filename))
-      ((start))
-      ((end))
-      ((internal_to_string))
-      ((children))
-      ((replace_child))
-    );
-
-  CHAISCRIPT_CLASS( m, 
-      chaiscript::parser::ChaiScript_Parser,
-      (chaiscript::parser::ChaiScript_Parser ()),
-      ((parse))
-      ((ast))
-    );
 
 
   return m;

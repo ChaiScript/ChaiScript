@@ -29,12 +29,12 @@ int main()
 {
   chaiscript::ModulePtr m = chaiscript::ModulePtr(new chaiscript::Module());
 
-  CHAISCRIPT_CLASS( m, 
-      Test,
-      (Test ())
-      (Test (const Test &)),
-      ((count))
-    );
+  chaiscript::utility::add_class<Test>(*m,
+      "Test",
+      { chaiscript::constructor<Test ()>(),
+        chaiscript::constructor<Test (const Test &)>() },
+      { {chaiscript::fun(&Test::count), "count"} }
+      );
 
   chaiscript::ChaiScript chai;
   chai.add(m);

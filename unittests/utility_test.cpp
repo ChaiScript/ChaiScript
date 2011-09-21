@@ -15,17 +15,23 @@ int main()
 
   chaiscript::ModulePtr m = chaiscript::ModulePtr(new chaiscript::Module());
 
-  CHAISCRIPT_CLASS( m, 
-      Test,
-      (Test ())
-      (Test (const Test &)),
-      ((function))
-      ((function2))
-      ((function3))
-      ((functionOverload)(std::string (Test::*)(double)))
-      ((functionOverload)(std::string (Test::*)(int)))
-      ((operator=))
-    );
+  using namespace chaiscript;
+
+  chaiscript::utility::add_class<Test>(*m,
+      "Test",
+      { constructor<Test ()>(),
+        constructor<Test (const Test &)>() },
+      { {fun(&Test::function), "function"},
+        {fun(&Test::function2), "function2"},
+        {fun(&Test::function3), "function3"},
+        {fun<std::string (Test::*)(double)>(&Test::functionOverload), "functionOverload"},
+        {fun<std::string (Test::*)(int)>(&Test::functionOverload), "functionOverload"},
+        {fun<Test & (Test::*)(const Test &)>(&Test::operator=), "="}
+ 
+        }
+      );
+
+
 
   chaiscript::ChaiScript chai;
   chai.add(m);
