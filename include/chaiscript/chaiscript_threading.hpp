@@ -72,10 +72,6 @@ namespace chaiscript
         class Thread_Storage
         {
           public:
-            ~Thread_Storage()
-            {
-            }
-
             inline T *operator->() const
             {
               return get_tls().get();
@@ -92,7 +88,7 @@ namespace chaiscript
             {
               unique_lock<mutex> lock(m_mutex);
              
-              typename std::map<std::thread::id, std::shared_ptr<T> >::iterator itr = m_instances.find(std::this_thread::get_id());
+              auto itr = m_instances.find(std::this_thread::get_id());
 
               if (itr != m_instances.end()) { return itr->second; }
              
