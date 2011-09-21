@@ -188,11 +188,11 @@ namespace chaiscript
     class guard_error : public std::runtime_error
     {
       public:
-        guard_error() throw()
+        guard_error() noexcept
           : std::runtime_error("Guard evaluation failed")
         { }
 
-        virtual ~guard_error() throw()
+        virtual ~guard_error() noexcept
         { }
     };
   }
@@ -587,17 +587,17 @@ namespace chaiscript
     class dispatch_error : public std::runtime_error
     {
       public:
-        dispatch_error() throw()
+        dispatch_error() noexcept
           : std::runtime_error("No matching function to dispatch to")
         {
         }
 
-        dispatch_error(bool is_const) throw()
+        dispatch_error(bool is_const) noexcept
           : std::runtime_error(std::string("No matching function to dispatch to") + (is_const?", parameter is const":""))
           {
           }
 
-        virtual ~dispatch_error() throw() {}
+        virtual ~dispatch_error() noexcept {}
     };
   } 
 

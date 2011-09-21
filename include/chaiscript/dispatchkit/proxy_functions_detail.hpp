@@ -32,7 +32,7 @@ namespace chaiscript
       {
       }
 
-      virtual ~arity_error() throw() {}
+      virtual ~arity_error() noexcept {}
 
       int got;
       int expected;
