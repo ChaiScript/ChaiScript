@@ -3,5 +3,5 @@ assert_equal(false, 1.is_var_reference());
 assert_equal(true, 1.is_var_pointer());
 assert_equal(false, 1.is_var_null());
 assert_equal(false, 1.is_var_undef());
-var i;
+auto i;
 assert_equal(true, i.is_var_undef());

@@ -1,4 +1,4 @@
-var i = 0
+auto i = 0
 while (i < 10) {
 	if (++i == 5) {
 		break

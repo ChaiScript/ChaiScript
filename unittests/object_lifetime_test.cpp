@@ -42,15 +42,15 @@ int main()
 
   int count = chai.eval<int>("count()");
 
-  int count2 = chai.eval<int>("var i = 0; { var t = Test(); } return i;");
+  int count2 = chai.eval<int>("auto i = 0; { auto t = Test(); } return i;");
 
-  int count3 = chai.eval<int>("var i = 0; { var t = Test(); i = count(); } return i;");
+  int count3 = chai.eval<int>("auto i = 0; { auto t = Test(); i = count(); } return i;");
 
-  int count4 = chai.eval<int>("var i = 0; { var t = Test(); { var t2 = Test(); i = count(); } } return i;");
+  int count4 = chai.eval<int>("auto i = 0; { auto t = Test(); { auto t2 = Test(); i = count(); } } return i;");
  
-  int count5 = chai.eval<int>("var i = 0; { var t = Test(); { var t2 = Test(); } i = count(); } return i;");
+  int count5 = chai.eval<int>("auto i = 0; { auto t = Test(); { auto t2 = Test(); } i = count(); } return i;");
 
-  int count6 = chai.eval<int>("var i = 0; { var t = Test(); { var t2 = Test(); }  } i = count(); return i;");
+  int count6 = chai.eval<int>("auto i = 0; { auto t = Test(); { auto t2 = Test(); }  } i = count(); return i;");
 
   if (count == 0
       && count2 == 0

@@ -1,5 +1,5 @@
-var i = 3
-var j := i
+auto i = 3
+auto j := i
 j = 4
 
 assert_equal(4, i)

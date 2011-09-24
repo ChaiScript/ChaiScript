@@ -1,4 +1,4 @@
-var caught = false
+auto caught = false
 
 try {
   throw(runtime_error("error"))

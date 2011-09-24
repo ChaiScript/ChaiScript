@@ -1,6 +1,6 @@
-var results = [];
+auto results = [];
 
-for (var i = 2; i < 6; ++i) {
+for (auto i = 2; i < 6; ++i) {
   try {
     throw(i)
   }
