@@ -1545,7 +1545,7 @@ namespace chaiscript
           if (Keyword("auto")) {
             retval = true;
 
-            if (!Id(true)) {
+            if (!(Reference() || Id(true))) {
               throw exception::eval_error("Incomplete variable declaration", File_Position(m_line, m_col), *m_filename);
             }
 
@@ -1622,6 +1622,22 @@ namespace chaiscript
           return retval;
         }
 
+        bool Reference() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Symbol("&", false)) {
+            retval = true;
+
+            if (!Id(true)) {
+              throw exception::eval_error("Incomplete '&' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            build_match(AST_NodePtr(new eval::Reference_Node()), prev_stack_top);
+          }
+        }
+
         /**
          * Reads a unary prefixed expression from input
          */
@@ -1676,6 +1692,15 @@ namespace chaiscript
             build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
           }
           else if (Char('~', true)) {
+            retval = true;
+
+            if (!Operator(m_operators.size()-1)) {
+              throw exception::eval_error("Incomplete '~' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
+          }
+          else if (Char('&', true)) {
             retval = true;
 
             if (!Operator(m_operators.size()-1)) {

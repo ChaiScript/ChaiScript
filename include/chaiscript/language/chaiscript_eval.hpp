@@ -848,6 +848,18 @@ namespace chaiscript
         }
     };
 
+    struct Reference_Node : public AST_Node {
+      public:
+        Reference_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Prefix, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
+        { }
+
+        virtual ~Reference_Node() {}
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
+          return Boxed_Value();
+        }
+    };
+
     struct Prefix_AST_Node : public AST_Node {
       public:
         Prefix_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Prefix, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
