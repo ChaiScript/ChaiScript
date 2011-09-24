@@ -1119,7 +1119,11 @@ namespace chaiscript
 
           size_t prev_stack_top = m_match_stack.size();
 
-          if (Keyword("fun")) {
+          //if (Keyword("fun")) {
+          if (Char('[')) {
+            if (!Char(']')) {
+              throw exception::eval_error("Closure list not currently supported", File_Position(m_line, m_col), *m_filename);
+            }
             retval = true;
 
             if (Char('(')) {

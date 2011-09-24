@@ -4,6 +4,6 @@ auto x = {1, 2,
 assert_equal(1, x[0])
 
 auto y = map(x, 
- fun(x) { x + 1 })
+ [](x) { x + 1 })
 
 assert_equal(2, y[0])
