@@ -112,7 +112,7 @@ namespace chaiscript
   struct AST_Node : std::enable_shared_from_this<AST_Node> {
     public:
       const std::string text;
-      const int identifier;
+      const int identifier; //< \todo shouldn't this be a strongly typed enum value?
       std::shared_ptr<const std::string> filename;
       File_Position start, end;
       std::vector<AST_NodePtr> children;

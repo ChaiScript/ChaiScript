@@ -295,7 +295,16 @@ namespace chaiscript
             } else if (this->children[1]->text == "=") {
               try {
                 if (lhs.is_undef()) {
-                  retval = t_ss.call_function("clone", retval);
+                  if (!this->children.empty() && 
+                      !this->children[0]->children.empty() 
+                      && this->children[0]->children[0]->identifier == AST_Node_Type::Reference)
+                  {
+                    /// \todo This does not handle the case of an unassigned reference variable
+                    ///       being assigned outside of its declaration
+                    lhs.assign(retval);
+                  } else {
+                    retval = t_ss.call_function("clone", retval);
+                  }
                   retval.clear_dependencies();
                 }
 
@@ -335,13 +344,21 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Var_Decl_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
-          try {
-            t_ss.add_object(this->children[0]->text, Boxed_Value());
+          if (this->children[0]->identifier == AST_Node_Type::Reference)
+          {
+            return this->children[0]->eval(t_ss);
+          } else {
+            std::string idname = this->children[0]->text;
+
+            try {
+              t_ss.add_object(idname, Boxed_Value());
+            }
+            catch (const exception::reserved_word_error &) {
+              throw exception::eval_error("Reserved word used as variable '" + idname + "'");
+            }
+            return t_ss.get_object(idname);
           }
-          catch (const exception::reserved_word_error &) {
-            throw exception::eval_error("Reserved word used as variable '" + this->children[0]->text + "'");
-          }
-          return t_ss.get_object(this->children[0]->text);
+
         }
 
     };
@@ -848,16 +865,23 @@ namespace chaiscript
         }
     };
 
-    struct Reference_Node : public AST_Node {
+    struct Reference_AST_Node : public AST_Node {
       public:
-        Reference_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Prefix, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Reference_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Reference, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
         { }
 
-        virtual ~Reference_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
-          return Boxed_Value();
+          try {
+            t_ss.add_object(this->children[0]->text, Boxed_Value());
+          }
+          catch (const exception::reserved_word_error &) {
+            throw exception::eval_error("Reserved word used as variable '" + this->children[0]->text + "'");
+          }
+          return t_ss.get_object(this->children[0]->text);
         }
+
+        virtual ~Reference_AST_Node() {}
     };
 
     struct Prefix_AST_Node : public AST_Node {

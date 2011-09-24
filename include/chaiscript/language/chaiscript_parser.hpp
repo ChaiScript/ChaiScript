@@ -1634,8 +1634,11 @@ namespace chaiscript
               throw exception::eval_error("Incomplete '&' expression", File_Position(m_line, m_col), *m_filename);
             }
 
-            build_match(AST_NodePtr(new eval::Reference_Node()), prev_stack_top);
+            build_match(AST_NodePtr(
+                  new eval::Reference_AST_Node()), prev_stack_top);
           }
+
+          return retval;
         }
 
         /**
