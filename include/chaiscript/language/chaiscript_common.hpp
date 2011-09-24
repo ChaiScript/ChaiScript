@@ -70,17 +70,17 @@ namespace chaiscript
       std::string filename;
       std::vector<AST_NodePtr> call_stack;
 
-      eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) throw() :
+      eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) noexcept :
         std::runtime_error(format(t_why, t_where, t_fname)),
         reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname)
         { }
 
-      eval_error(const std::string &t_why) throw()
+      eval_error(const std::string &t_why) noexcept
         : std::runtime_error("Error: \"" + t_why + "\" "),
         reason(t_why) 
       {}
 
-      virtual ~eval_error() throw() {}
+      virtual ~eval_error() noexcept {}
 
     private:
       static std::string format(const std::string &t_why, const File_Position &t_where, const std::string &t_fname)
@@ -98,11 +98,11 @@ namespace chaiscript
      * Errors generated when loading a file
      */
     struct file_not_found_error : public std::runtime_error {
-      file_not_found_error(const std::string &t_filename) throw()
+      file_not_found_error(const std::string &t_filename) noexcept
         : std::runtime_error("File Not Found: " + t_filename)
       { }
 
-      virtual ~file_not_found_error() throw() {}
+      virtual ~file_not_found_error() noexcept {}
     };
 
   }

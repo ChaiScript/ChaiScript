@@ -1,6 +1,6 @@
-var i = 1.0;
-var j = 2.0;
-var k = 3.0;
+auto i = 1.0;
+auto j = 2.0;
+auto k = 3.0;
 
 assert_equal(3, i + j)
 assert_equal(1.0, +i)

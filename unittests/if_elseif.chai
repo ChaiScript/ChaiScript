@@ -1,8 +1,8 @@
-var b1 = false;
-var b2 = false;
-var b3 = false;
+auto b1 = false;
+auto b2 = false;
+auto b3 = false;
 
-var i = 3
+auto i = 3
 if (i == 2) {
   b1 = true;
 }

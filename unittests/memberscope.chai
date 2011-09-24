@@ -8,5 +8,5 @@ def Vector3::Vector3(x, y, z) {
     this.z = z
 }
 
-var v = Vector3(1,2,3);
+auto v = Vector3(1,2,3);
 assert_equal(1, v.x);

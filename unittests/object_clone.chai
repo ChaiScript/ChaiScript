@@ -1,10 +1,10 @@
 attr bob::z
 def bob::bob() { }
 
-var x = bob();
+auto x = bob();
 x.z = 10;
 
-var y = clone(x);
+auto y = clone(x);
 y.z = 20;
 
 assert_equal(10, x.z)

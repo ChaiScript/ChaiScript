@@ -289,7 +289,7 @@ namespace chaiscript
 
       static bool has_guard(const Const_Proxy_Function &t_pf)
       {
-        std::shared_ptr<const dispatch::Dynamic_Proxy_Function> pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
+        auto pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
         if (pf)
         {
           return bool(pf->get_guard());
@@ -300,7 +300,7 @@ namespace chaiscript
 
       static Const_Proxy_Function get_guard(const Const_Proxy_Function &t_pf)
       {
-        std::shared_ptr<const dispatch::Dynamic_Proxy_Function> pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
+        auto pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
         if (pf)
         {
           if (pf->get_guard())
@@ -318,7 +318,9 @@ namespace chaiscript
         throw bv;
       }
       
-      static std::shared_ptr<chaiscript::detail::Dispatch_Engine> bootstrap2(std::shared_ptr<chaiscript::detail::Dispatch_Engine> e = std::shared_ptr<chaiscript::detail::Dispatch_Engine> (new chaiscript::detail::Dispatch_Engine()))
+      static std::shared_ptr<chaiscript::detail::Dispatch_Engine> bootstrap2(
+          std::shared_ptr<chaiscript::detail::Dispatch_Engine> e 
+             = std::shared_ptr<chaiscript::detail::Dispatch_Engine> (new chaiscript::detail::Dispatch_Engine()))
       {
         e->add(user_type<void>(), "void");
         return e;

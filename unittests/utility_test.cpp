@@ -35,9 +35,9 @@ int main()
 
   chaiscript::ChaiScript chai;
   chai.add(m);
-  if (chai.eval<std::string>("var t = Test(); t.function2(); ") == "Function2"
-      && chai.eval<std::string>("var t = Test(); t.functionOverload(1); ") == "int"
-      && chai.eval<std::string>("var t = Test(); t.functionOverload(1.1); ") == "double")
+  if (chai.eval<std::string>("auto t = Test(); t.function2(); ") == "Function2"
+      && chai.eval<std::string>("auto t = Test(); t.functionOverload(1); ") == "int"
+      && chai.eval<std::string>("auto t = Test(); t.functionOverload(1.1); ") == "double")
   {
     chai.eval("t = Test();");
     return EXIT_SUCCESS;

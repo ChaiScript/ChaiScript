@@ -1,8 +1,8 @@
 load_module("test_module")
 
-var i = 1;
-var t0 = TestBaseType(i);
+auto i = 1;
+auto t0 = TestBaseType(i);
 
-var t1 = TestBaseType(get_new_int())
+auto t1 = TestBaseType(get_new_int())
 
 

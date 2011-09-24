@@ -1,8 +1,8 @@
 def Bob::Bob() { }
 attr Bob::x
 def `-`(a, b) : is_type(a, "Bob") && is_type(b, "Bob") { a.x - b.x }
-var b = Bob()
-var c = Bob()
+auto b = Bob()
+auto c = Bob()
 b.x = 4
 c.x = 5
 

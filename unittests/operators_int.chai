@@ -1,6 +1,6 @@
-var i = 1;
-var j = 2;
-var k = 3;
+auto i = 1;
+auto j = 2;
+auto k = 3;
 
 assert_equal(3, i + j);
 assert_equal(1, +i);

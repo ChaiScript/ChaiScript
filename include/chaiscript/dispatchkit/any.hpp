@@ -19,15 +19,15 @@ namespace chaiscript {
       class bad_any_cast : public std::bad_cast
       {
         public:
-          bad_any_cast() throw()
+          bad_any_cast() noexcept
             : m_what("bad any cast")
           {
           }
 
-          virtual ~bad_any_cast() throw() {}
+          virtual ~bad_any_cast() noexcept {}
 
           /// \brief Description of what error occured
-          virtual const char * what() const throw()
+          virtual const char * what() const noexcept
           {
             return m_what.c_str();
           }
@@ -79,7 +79,7 @@ namespace chaiscript {
 
       public:
         // construct/copy/destruct
-        Any() {}
+        Any() = default;
 
         Any(const Any &t_any) 
         { 

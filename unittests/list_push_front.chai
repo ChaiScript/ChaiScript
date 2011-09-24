@@ -1,6 +1,6 @@
 load_module("stl_extra")
 
-var x = List()
+auto x = List()
 x.push_front(3)
 x.push_front("A")
 
