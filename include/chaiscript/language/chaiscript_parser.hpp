@@ -1542,7 +1542,7 @@ namespace chaiscript
 
           size_t prev_stack_top = m_match_stack.size();
 
-          if (Keyword("var")) {
+          if (Keyword("auto")) {
             retval = true;
 
             if (!Id(true)) {

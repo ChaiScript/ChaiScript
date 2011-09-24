@@ -336,7 +336,7 @@ namespace chaiscript
       m_engine.add_reserved_word("||");
       m_engine.add_reserved_word(",");
       m_engine.add_reserved_word(":=");
-      m_engine.add_reserved_word("var");
+      m_engine.add_reserved_word("auto");
       m_engine.add_reserved_word("return");
       m_engine.add_reserved_word("break");
       m_engine.add_reserved_word("true");
