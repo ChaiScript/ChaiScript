@@ -1,4 +1,4 @@
-auto v = [2, 1, "Hi", 5.5]
+auto v = {2, 1, "Hi", 5.5}
 auto r = v.find("Hi");
 
 assert_equal("Hi", r.front())

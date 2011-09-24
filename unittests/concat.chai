@@ -1,4 +1,4 @@
-auto v = concat([1, 2], [3, 4]);
+auto v = concat({1, 2}, {3, 4});
 
 assert_equal(4, v.size());
 assert_equal(1, v[0]);

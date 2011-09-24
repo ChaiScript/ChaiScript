@@ -1,4 +1,4 @@
 // Don't bother checking the output from this one, just makes sure it executes
-auto v = [1,2,3];
+auto v = {1,2,3};
 auto r = retro(range(v));
 for_each(r, print)

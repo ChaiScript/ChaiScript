@@ -406,7 +406,7 @@ namespace chaiscript
         m->add(fun(&dispatch::Dynamic_Object::get_attrs), "get_attrs");
         m->add(fun(&dispatch::Dynamic_Object::get_attr), "get_attr");
 
-        m->eval("def Dynamic_Object::clone() { auto &new_o = Dynamic_Object(this.get_type_name()); for_each(this.get_attrs(), bind(fun(new_o, x) { new_o.get_attr(x.first) = x.second; }, new_o, _) ); return new_o; }");
+        m->eval("def Dynamic_Object::clone() { auto &new_o = Dynamic_Object(this.get_type_name()); for_each(this.get_attrs(), bind([](new_o, x) { new_o.get_attr(x.first) = x.second; }, new_o, _) ); return new_o; }");
 
         m->add(fun(&has_guard), "has_guard");
         m->add(fun(&get_guard), "get_guard");

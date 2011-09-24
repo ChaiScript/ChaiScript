@@ -34,6 +34,6 @@ def while_doing()
   }
 }
 
-auto f = fun() { while_doing(); }
+auto f = []() { while_doing(); }
 
 assert_equal(get_eval_error(f).call_stack.size(), 16)

@@ -1,2 +1,2 @@
-auto x = [1]
+auto x = {1}
 assert_equal(1, x[0])

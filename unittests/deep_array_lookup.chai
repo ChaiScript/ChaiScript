@@ -1,9 +1,9 @@
-auto a = [1,2,3, [4,5,6] ]
+auto a = {1,2,3, {4,5,6} }
 
 assert_equal(a[3][0], 4)
 
 
-def Test::Test() { this.a = [1,2,3]; }
+def Test::Test() { this.a = {1,2,3}; }
 attr Test::a;
 
 auto t = Test();
