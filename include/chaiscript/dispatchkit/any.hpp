@@ -114,7 +114,7 @@ namespace chaiscript {
         template<typename ToType>
           ToType &cast() const
           {
-            if (typeid(ToType) == m_data->type())
+            if (m_data && typeid(ToType) == m_data->type())
             {
               return *static_cast<ToType *>(m_data->data());
             } else {
