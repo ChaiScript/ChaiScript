@@ -302,10 +302,11 @@ namespace chaiscript
                     /// \todo This does not handle the case of an unassigned reference variable
                     ///       being assigned outside of its declaration
                     lhs.assign(retval);
+                    return retval;
                   } else {
                     retval = t_ss.call_function("clone", retval);
+                    retval.clear_dependencies();
                   }
-                  retval.clear_dependencies();
                 }
 
                 try {
@@ -317,13 +318,6 @@ namespace chaiscript
               }
               catch(const exception::dispatch_error &){
                 throw exception::eval_error("Can not clone right hand side of equation");
-              }
-            }
-            else if (this->children[1]->text == ":=") {
-              if (lhs.is_undef() || type_match(lhs, retval)) {
-                lhs.assign(retval);
-              } else {
-                throw exception::eval_error("Mismatched types in equation");
               }
             }
             else {

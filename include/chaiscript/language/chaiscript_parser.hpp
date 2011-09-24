@@ -1889,7 +1889,7 @@ namespace chaiscript
 
           if (Operator()) {
             retval = true;
-            if (Symbol("=", true, true) || Symbol(":=", true, true) || Symbol("+=", true, true) ||
+            if (Symbol("=", true, true) ||  Symbol("+=", true, true) ||
                 Symbol("-=", true, true) || Symbol("*=", true, true) || Symbol("/=", true, true) ||
                 Symbol("%=", true, true) || Symbol("<<=", true, true) || Symbol(">>=", true, true) ||
                 Symbol("&=", true, true) || Symbol("^=", true, true) || Symbol("|=", true, true)) {
