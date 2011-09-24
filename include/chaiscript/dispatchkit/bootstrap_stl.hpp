@@ -464,8 +464,8 @@ namespace chaiscript
                        if ( rhs.size() != this.size() ) {    \
                          return false;  \
                        } else {  \
-                         var r1 = range(this); \
-                         var r2 = range(rhs);  \
+                         auto r1 = range(this); \
+                         auto r2 = range(rhs);  \
                          while (!r1.empty()) \
                          {  \
                            if (!eq(r1.front(), r2.front())) \

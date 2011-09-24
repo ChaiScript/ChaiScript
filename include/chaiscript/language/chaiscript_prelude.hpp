@@ -54,8 +54,8 @@ def push_front(container, x) : call_exists(push_front_ref, container, x) { conta
 def insert_at(container, pos, x) { container.insert_ref_at(pos, clone(x)); } \n\
 # Returns the reverse of the given container\n\
 def reverse(container) {\n\
-  var retval = new(container); \n\
-  var r = range(container); \n\
+  auto retval = new(container); \n\
+  auto r = range(container); \n\
   while (!r.empty()) { \n\
     retval.push_back(r.back()); \n\
     r.pop_back(); \n\
@@ -82,7 +82,7 @@ def retro::pop_front()  { pop_back(this.m_range) } \n\
 def retro::empty() { empty(this.m_range); } \n\
 # Performs the second value function over the container first value\n\
 def for_each(container, func) : call_exists(range, container) { \n\
-  var t_range = range(container); \n\
+  auto t_range = range(container); \n\
   while (!t_range.empty()) { \n\
     func(t_range.front()); \n\
     t_range.pop_front(); \n\
@@ -93,7 +93,7 @@ def back_inserter(container) { \n\
 }\n\
 \n\
 def contains(container, item, compare_func) : call_exists(range, container) { \n\
-  var t_range = range(container); \n\
+  auto t_range = range(container); \n\
   while (!t_range.empty()) { \n\
     if ( compare_func(t_range.front(), item) ) { return true; } \n\
     t_range.pop_front(); \n\
@@ -102,7 +102,7 @@ def contains(container, item, compare_func) : call_exists(range, container) { \n
 } \n\
 def contains(container, item) { return contains(container, item, eq) } \n\
 def map(container, func, inserter) : call_exists(range, container) { \n\
-  var range = range(container); \n\
+  auto range = range(container); \n\
   while (!range.empty()) { \n\
     inserter(func(range.front())); \n\
     range.pop_front(); \n\
@@ -110,14 +110,14 @@ def map(container, func, inserter) : call_exists(range, container) { \n\
 } \n\
 # Performs the second value function over the container first value. Creates a new container with the results\n\
 def map(container, func) { \n\
-  var retval = new(container); \n\
+  auto retval = new(container); \n\
   map(container, func, back_inserter(retval));\n\
   retval;\n\
 }\n\
 # Performs the second value function over the container first value. Starts with initial and continues with each element.\n\
 def foldl(container, func, initial) : call_exists(range, container){ \n\
-  var retval = initial; \n\
-  var range = range(container); \n\
+  auto retval = initial; \n\
+  auto range = range(container); \n\
   while (!range.empty()) { \n\
     retval = (func(range.front(), retval)); \n\
     range.pop_front(); \n\
@@ -130,9 +130,9 @@ def sum(container) { foldl(container, `+`, 0.0) } \n\
 def product(container) { foldl(container, `*`, 1.0) } \n\
 # Returns a new container with the elements of the first value concatenated with the elements of the second value\n\
 def concat(x, y) : call_exists(clone, x) { \n\
-  var retval = x; \n\
-  var inserter = back_inserter(retval); \n\
-  var range = range(y); \n\
+  auto retval = x; \n\
+  auto inserter = back_inserter(retval); \n\
+  auto range = range(y); \n\
   while (!range.empty()) { \n\
     inserter(range.front()); \n\
     range.pop_front(); \n\
@@ -140,8 +140,8 @@ def concat(x, y) : call_exists(clone, x) { \n\
   retval; \n\
 } \n\
 def take(container, num, inserter) : call_exists(range, container) { \n\
-  var r = range(container); \n\
-  var i = num; \n\
+  auto r = range(container); \n\
+  auto i = num; \n\
   while ((i > 0) && (!r.empty())) { \n\
     inserter(r.front()); \n\
     r.pop_front(); \n\
@@ -150,12 +150,12 @@ def take(container, num, inserter) : call_exists(range, container) { \n\
 } \n\
 # Returns a new container with the given number of elements taken from the container\n\
 def take(container, num) {\n\
-  var retval = new(container); \n\
+  auto retval = new(container); \n\
   take(container, num, back_inserter(retval)); \n\
   retval; \n\
 }\n\
 def take_while(container, f, inserter) : call_exists(range, container) { \n\
-  var r = range(container); \n\
+  auto r = range(container); \n\
   while ((!r.empty()) && f(r.front())) { \n\
     inserter(r.front()); \n\
     r.pop_front(); \n\
@@ -163,13 +163,13 @@ def take_while(container, f, inserter) : call_exists(range, container) { \n\
 } \n\
 # Returns a new container with the given elements match the second value function\n\
 def take_while(container, f) {\n\
-  var retval = new(container); \n\
+  auto retval = new(container); \n\
   take_while(container, f, back_inserter(retval)); \n\
   retval;\n\
 }\n\
 def drop(container, num, inserter) : call_exists(range, container) { \n\
-  var r = range(container); \n\
-  var i = num; \n\
+  auto r = range(container); \n\
+  auto i = num; \n\
   while ((i > 0) && (!r.empty())) { \n\
     r.pop_front(); \n\
     --i; \n\
@@ -181,12 +181,12 @@ def drop(container, num, inserter) : call_exists(range, container) { \n\
 } \n\
 # Returns a new container with the given number of elements dropped from the given container \n\
 def drop(container, num) {\n\
-  var retval = new(container); \n\
+  auto retval = new(container); \n\
   drop(container, num, back_inserter(retval)); \n\
   retval; \n\
 }\n\
 def drop_while(container, f, inserter) : call_exists(range, container) { \n\
-  var r = range(container); \n\
+  auto r = range(container); \n\
   while ((!r.empty())&& f(r.front())) { \n\
     r.pop_front(); \n\
   } \n\
@@ -197,14 +197,14 @@ def drop_while(container, f, inserter) : call_exists(range, container) { \n\
 } \n\
 # Returns a new container with the given elements dropped that match the second value function\n\
 def drop_while(container, f) {\n\
-  var retval = new(container); \n\
+  auto retval = new(container); \n\
   drop_while(container, f, back_inserter(retval)); \n\
   retval; \n\
 }\n\
 # Applies the second value function to the container. Starts with the first two elements. Expects at least 2 elements.\n\
 def reduce(container, func) : container.size() >= 2 && call_exists(range, container) { \n\
-  var r = range(container); \n\
-  var retval = r.front(); \n\
+  auto r = range(container); \n\
+  auto retval = r.front(); \n\
   r.pop_front(); \n\
   retval = func(retval, r.front()); \n\
   r.pop_front(); \n\
@@ -216,8 +216,8 @@ def reduce(container, func) : container.size() >= 2 && call_exists(range, contai
 } \n\
 # Returns a string of the elements in container delimited by the second value string\n\
 def join(container, delim) { \n\
-  var retval = ""; \n\
-  var range = range(container); \n\
+  auto retval = ""; \n\
+  auto range = range(container); \n\
   if (!range.empty()) { \n\
     retval += to_string(range.front()); \n\
     range.pop_front(); \n\
@@ -230,7 +230,7 @@ def join(container, delim) { \n\
   retval; \n\
 } \n\
 def filter(container, f, inserter) : call_exists(range, container) { \n\
-  var r = range(container); \n\
+  auto r = range(container); \n\
   while (!r.empty()) { \n\
     if (f(r.front())) { \n\
       inserter(r.front()); \n\
@@ -240,12 +240,12 @@ def filter(container, f, inserter) : call_exists(range, container) { \n\
 } \n\
 # Returns a new Vector which match the second value function\n\
 def filter(container, f) { \n\
-  var retval = new(container); \n\
+  auto retval = new(container); \n\
   filter(container, f, back_inserter(retval));\n\
   retval;\n\
 }\n\
 def generate_range(x, y, inserter) { \n\
-  var i = x; \n\
+  auto i = x; \n\
   while (i <= y) { \n\
     inserter(i); \n\
     ++i; \n\
@@ -253,7 +253,7 @@ def generate_range(x, y, inserter) { \n\
 } \n\
 # Returns a new Vector which represents the range from the first value to the second value\n\
 def generate_range(x, y) { \n\
-  var retval = Vector(); \n\
+  auto retval = Vector(); \n\
   generate_range(x,y,back_inserter(retval)); \n\
   retval; \n\
 }\n\
@@ -262,8 +262,8 @@ def collate(x, y) { \n\
   [x, y]; \n\
 } \n\
 def zip_with(f, x, y, inserter) : call_exists(range, x) && call_exists(range, y) { \n\
-  var r_x = range(x); \n\
-  var r_y = range(y); \n\
+  auto r_x = range(x); \n\
+  auto r_y = range(y); \n\
   while (!r_x.empty() && !r_y.empty()) { \n\
     inserter(f(r_x.front(), r_y.front())); \n\
     r_x.pop_front(); \n\
@@ -272,7 +272,7 @@ def zip_with(f, x, y, inserter) : call_exists(range, x) && call_exists(range, y)
 } \n\
 # Returns a new Vector which joins matching elements of the second and third value with the first value function\n\
 def zip_with(f, x, y) { \n\
-  var retval = Vector(); \n\
+  auto retval = Vector(); \n\
   zip_with(f,x,y,back_inserter(retval)); \n\
   retval;\n\
 }\n\
@@ -314,7 +314,7 @@ def string::trim() { \n\
   ltrim(rtrim(this)); \n\
 } \n\
 def find(container, value, compare_func) : call_exists(range, container) && is_type(compare_func, "Function") { \n\
-  var range = range(container); \n\
+  auto range = range(container); \n\
   while (!range.empty()) { \n\
     if (compare_func(range.front(), value)) { \n\
       return range; \n\
