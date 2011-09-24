@@ -1,7 +1,7 @@
 
 // tests more complex parses of the index operator
 
-def Bob::bob3() { return [1,2,3]; }
+def Bob::bob3() { return {1,2,3}; }
 def Bob::Bob() {}
 auto b = Bob();
 

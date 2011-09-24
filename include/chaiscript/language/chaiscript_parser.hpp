@@ -1597,10 +1597,10 @@ namespace chaiscript
 
           size_t prev_stack_top = m_match_stack.size();
 
-          if (Char('[')) {
+          if (Char('{')) {
             retval = true;
             Container_Arg_List();
-            if (!Char(']')) {
+            if (!Char('}')) {
               throw exception::eval_error("Missing closing square bracket", File_Position(m_line, m_col), *m_filename);
             }
             if ((prev_stack_top != m_match_stack.size()) && (m_match_stack.back()->children.size() > 0)) {
