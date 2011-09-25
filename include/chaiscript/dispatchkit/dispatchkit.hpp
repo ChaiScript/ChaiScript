@@ -780,10 +780,9 @@ namespace chaiscript
         /**
          * Dump object info to stdout
          */
-        void dump_object(Boxed_Value o) const
+        void dump_object(const Boxed_Value &o) const
         {
-          Type_Info ti = o.get_type_info();
-          std::cout << (ti.is_const()?"const ":"") << get_type_name(ti) << std::endl;
+          std::cout << (o.is_const()?"const ":"") << type_name(o) << std::endl;
         }
 
         /**
@@ -875,7 +874,7 @@ namespace chaiscript
           return false;
         }
 
-        std::string type_name(Boxed_Value obj) const
+        std::string type_name(const Boxed_Value &obj) const
         {
           return get_type_name(obj.get_type_info());
         }

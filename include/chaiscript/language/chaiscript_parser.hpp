@@ -1672,7 +1672,7 @@ namespace chaiscript
               throw exception::eval_error("Incomplete expression", File_Position(m_line, m_col), *m_filename);
             }
             if (!Char(')')) {
-              throw exception::eval_error("Missing closing parenthesis", File_Position(m_line, m_col), *m_filename);
+              throw exception::eval_error("Missing closing parenthesis ')'", File_Position(m_line, m_col), *m_filename);
             }
           }
           return retval;
@@ -1690,7 +1690,7 @@ namespace chaiscript
             retval = true;
             Container_Arg_List();
             if (!Char(']')) {
-              throw exception::eval_error("Missing closing square bracket", File_Position(m_line, m_col), *m_filename);
+              throw exception::eval_error("Missing closing square bracket ']' in container initializer", File_Position(m_line, m_col), *m_filename);
             }
             if ((prev_stack_top != m_match_stack.size()) && (m_match_stack.back()->children.size() > 0)) {
               if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Value_Range) {

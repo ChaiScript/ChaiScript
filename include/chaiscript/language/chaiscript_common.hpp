@@ -71,9 +71,22 @@ namespace chaiscript
       std::string filename;
       std::vector<AST_NodePtr> call_stack;
 
-      eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) throw()
-        : std::runtime_error(format(t_why, t_where, t_fname)),        
-          reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname)      
+      eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname,
+          const std::vector<Boxed_Value> &t_parameters, const chaiscript::detail::Dispatch_Engine &t_ss)  :
+        std::runtime_error(format(t_why, t_where, t_fname, t_parameters, t_ss)),
+        reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname)
+      {}
+
+      eval_error(const std::string &t_why, 
+           const std::vector<Boxed_Value> &t_parameters, const chaiscript::detail::Dispatch_Engine &t_ss) :
+        std::runtime_error(format(t_why, t_parameters, t_ss)),
+        reason(t_why)
+      {}
+
+
+      eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) :
+        std::runtime_error(format(t_why, t_where, t_fname)),
+        reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname)
       {}
 
       eval_error(const std::string &t_why) throw()
@@ -84,39 +97,104 @@ namespace chaiscript
       virtual ~eval_error() throw() {}
 
     private:
-      static std::string format_why(const std::string &t_why)   
+      static std::string format_why(const std::string &t_why)
       {
-        return "Error: \"" + t_why + "\"";     
-      }     
-
-      static std::string format_filename(const std::string &t_fname)  
-      {  
-        std::stringstream ss;       
-        if (t_fname != "__EVAL__")       
-        {     
-          ss << "in '" << t_fname << "' ";      
-        } else {      
-          ss << "during evaluation ";    
-        }       
-        return ss.str();  
-      }   
-
-      static std::string format_location(const File_Position &t_where) 
-      {       
-        std::stringstream ss;  
-        ss << "at (" << t_where.line << ", " << t_where.column << ")";        
-        return ss.str();    
+        return "Error: \"" + t_why + "\"";
       }
 
-      static std::string format(const std::string &t_why, const File_Position &t_where, const std::string &t_fname)      
-      {        
-        std::stringstream ss;        
-        ss << format_why(t_why);        
-        ss << " ";        
-        ss << format_filename(t_fname);        
-        ss << " ";        
-        ss << format_location(t_where);        
-        return ss.str();      
+      static std::string format_parameters(const std::vector<Boxed_Value> &t_parameters,
+          const chaiscript::detail::Dispatch_Engine &t_ss)
+      {
+        std::stringstream ss;
+        ss << "With parameters: (";
+
+        if (!t_parameters.empty())
+        {
+          std::string paramstr;
+
+          for (std::vector<Boxed_Value>::const_iterator itr = t_parameters.begin();
+               itr != t_parameters.end();
+               ++itr)
+          {
+            paramstr += (itr->is_const()?"const ":"");
+            paramstr += t_ss.type_name(*itr);
+            paramstr += ", ";
+          }
+
+          ss << paramstr.substr(0, paramstr.size() - 2);
+        }
+        ss << ")";
+
+        return ss.str();
+      }
+
+      static std::string format_filename(const std::string &t_fname)
+      {
+        std::stringstream ss;
+
+        if (t_fname != "__EVAL__")
+        {
+          ss << "in '" << t_fname << "' ";
+        } else {
+          ss << "during evaluation ";
+        }
+
+        return ss.str();
+      }
+
+      static std::string format_location(const File_Position &t_where)
+      {
+        std::stringstream ss;
+        ss << "at (" << t_where.line << ", " << t_where.column << ")";
+        return ss.str();
+      }
+
+      static std::string format(const std::string &t_why, const File_Position &t_where, const std::string &t_fname,
+          const std::vector<Boxed_Value> &t_parameters, const chaiscript::detail::Dispatch_Engine &t_ss)
+      {
+        std::stringstream ss;
+
+        ss << format_why(t_why);
+        ss << " ";
+
+        ss << format_parameters(t_parameters, t_ss);
+        ss << " ";
+
+        ss << format_filename(t_fname);
+        ss << " ";
+
+        ss << format_location(t_where);
+
+        return ss.str();
+      }
+
+      static std::string format(const std::string &t_why, 
+          const std::vector<Boxed_Value> &t_parameters, const chaiscript::detail::Dispatch_Engine &t_ss)
+      {
+        std::stringstream ss;
+
+        ss << format_why(t_why);
+        ss << " ";
+
+        ss << format_parameters(t_parameters, t_ss);
+        ss << " ";
+
+        return ss.str();
+      }
+
+      static std::string format(const std::string &t_why, const File_Position &t_where, const std::string &t_fname)
+      {
+        std::stringstream ss;
+
+        ss << format_why(t_why);
+        ss << " ";
+
+        ss << format_filename(t_fname);
+        ss << " ";
+
+        ss << format_location(t_where);
+
+        return ss.str();
       }
     };
 
