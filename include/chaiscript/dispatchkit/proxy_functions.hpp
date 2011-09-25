@@ -587,17 +587,14 @@ namespace chaiscript
     class dispatch_error : public std::runtime_error
     {
       public:
-        dispatch_error() noexcept
-          : std::runtime_error("No matching function to dispatch to")
+        dispatch_error(const std::vector<Boxed_Value> &t_bvs)
+          : std::runtime_error("Error with function dispatch"), parameters(t_bvs)
         {
         }
 
-        dispatch_error(bool is_const) noexcept
-          : std::runtime_error(std::string("No matching function to dispatch to") + (is_const?", parameter is const":""))
-          {
-          }
-
         virtual ~dispatch_error() noexcept {}
+
+        std::vector<Boxed_Value> parameters;
     };
   } 
 
@@ -631,7 +628,7 @@ namespace chaiscript
           ++begin;
         }
 
-        throw exception::dispatch_error(plist.empty()?false:plist[0].is_const());
+        throw exception::dispatch_error(plist);
       }
 
     /**
