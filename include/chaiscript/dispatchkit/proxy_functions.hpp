@@ -51,7 +51,7 @@ namespace chaiscript
         /// if the function is variadic or takes no arguments (arity of 0 or -1), the returned
         /// value containes exactly 1 Type_Info object: the return type
         /// \returns the types of all parameters. 
-        std::vector<Type_Info> get_param_types() const { return m_types; }
+        const std::vector<Type_Info> &get_param_types() const { return m_types; }
 
         virtual bool operator==(const Proxy_Function_Base &) const = 0;
         virtual bool call_match(const std::vector<Boxed_Value> &vals) const = 0;
@@ -262,7 +262,7 @@ namespace chaiscript
           // For the return type
           types.push_back(chaiscript::detail::Get_Type_Info<Boxed_Value>::get());
 
-          if (arity >= 0)
+          if (arity > 0)
           {
             for (int i = 0; i < arity; ++i)
             {
@@ -378,6 +378,7 @@ namespace chaiscript
             const std::vector<Boxed_Value> &t_args)
         {
           assert(t_f->get_arity() < 0 || t_f->get_arity() == static_cast<int>(t_args.size()));
+
           if (t_f->get_arity() < 0) { return std::vector<Type_Info>(); }
 
           std::vector<Type_Info> types = t_f->get_param_types();
@@ -419,8 +420,8 @@ namespace chaiscript
         Proxy_Function_Impl(const std::function<Func> &f)
           : Proxy_Function_Base(detail::build_param_type_list(static_cast<Func *>(0))),
           m_f(f), m_dummy_func(0)
-      {
-      }
+        {
+        }
 
         virtual ~Proxy_Function_Impl() {}
 
@@ -430,12 +431,10 @@ namespace chaiscript
           return pimpl != 0;
         }
 
-
         virtual int get_arity() const
         {
           return static_cast<int>(m_types.size()) - 1;
         }
-
 
         virtual bool call_match(const std::vector<Boxed_Value> &vals) const
         {
@@ -478,8 +477,8 @@ namespace chaiscript
         Attribute_Access(T Class::* t_attr)
           : Proxy_Function_Base(param_types()),
           m_attr(t_attr)
-      {
-      }
+        {
+        }
 
         virtual ~Attribute_Access() {}
 
@@ -487,6 +486,7 @@ namespace chaiscript
         {
           const Attribute_Access<T, Class> * aa 
             = dynamic_cast<const Attribute_Access<T, Class> *>(&t_func);
+
           if (aa) {
             return m_attr == aa->m_attr;
           } else {
@@ -537,11 +537,9 @@ namespace chaiscript
       private:
         static std::vector<Type_Info> param_types()
         {
-          std::vector<Type_Info> v;
-          v.push_back(user_type<T>());
-          v.push_back(user_type<Class>());
-          return v;
+          return {user_type<T>(), user_type<Class>()};
         }
+
         T Class::* m_attr;
     };
   }
@@ -576,7 +574,7 @@ namespace chaiscript
      * function is found or throw dispatch_error if no matching function is found
      */
     template<typename InItr>
-      Boxed_Value dispatch(InItr begin, InItr end,
+      Boxed_Value dispatch(InItr begin, const InItr &end,
           const std::vector<Boxed_Value> &plist)
       {
         while (begin != end)
