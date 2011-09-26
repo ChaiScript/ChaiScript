@@ -29,37 +29,6 @@ namespace chaiscript
   namespace dispatch
   {
     /**
-     * Helper for building a list of parameters for calling a Proxy_Function
-     * it does automatic conversion to Boxed_Value types via operator<<
-     *
-     * example usage:
-     * Boxed_Value retval = dispatch(dispatchengine.get_function("+"), 
-     *                               chaiscript::Param_List_Builder() << 5 << 6);
-     */
-    struct Param_List_Builder
-    {
-      Param_List_Builder &operator<<(const Boxed_Value &so)
-      {
-        objects.push_back(so);
-        return *this;
-      }
-
-      template<typename T>
-        Param_List_Builder &operator<<(T t)
-        {
-          objects.push_back(Boxed_Value(t));
-          return *this;
-        }
-
-      operator const std::vector<Boxed_Value> &() const
-      {
-        return objects;
-      }
-
-      std::vector<Boxed_Value> objects;
-    };
-
-    /**
      * Pure virtual base class for all Proxy_Function implementations
      * Proxy_Functions are a type erasure of type safe C++
      * function calls. At runtime parameter types are expected to be

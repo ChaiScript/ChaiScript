@@ -182,11 +182,11 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Fun_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
-          dispatch::Param_List_Builder plb;
+          std::vector<Boxed_Value> params;
 
           if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
             for (size_t i = 0; i < this->children[1]->children.size(); ++i) {
-              plb << this->children[1]->children[i]->eval(t_ss);
+              params.push_back(this->children[1]->children[i]->eval(t_ss));
             }
           }
 
@@ -198,7 +198,7 @@ namespace chaiscript
 
             try {
               t_ss.set_stack(new_stack);
-              const Boxed_Value &retval = (*boxed_cast<const Const_Proxy_Function &>(fn))(plb);
+              const Boxed_Value &retval = (*boxed_cast<const Const_Proxy_Function &>(fn))(params);
               t_ss.set_stack(prev_stack);
               return retval;
             }
@@ -230,16 +230,16 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inplace_Fun_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
-          dispatch::Param_List_Builder plb;
+          std::vector<Boxed_Value> params;
 
           if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
             for (size_t i = 0; i < this->children[1]->children.size(); ++i) {
-              plb << this->children[1]->children[i]->eval(t_ss);
+              params.push_back(this->children[1]->children[i]->eval(t_ss));
             }
           }
 
           try {
-            return (*boxed_cast<const Const_Proxy_Function &>(this->children[0]->eval(t_ss)))(plb);
+            return (*boxed_cast<const Const_Proxy_Function &>(this->children[0]->eval(t_ss)))(params);
           }
           catch(const exception::dispatch_error &e){
             throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, t_ss);
@@ -458,12 +458,12 @@ namespace chaiscript
 
           if (this->children.size() > 1) {
             for (size_t i = 2; i < this->children.size(); i+=2) {
-              dispatch::Param_List_Builder plb;
-              plb << retval;
+              std::vector<Boxed_Value> params;
+              params.push_back(retval);
 
               if (this->children[i]->children.size() > 1) {
                 for (size_t j = 0; j < this->children[i]->children[1]->children.size(); ++j) {
-                  plb << this->children[i]->children[1]->children[j]->eval(t_ss);
+                  params.push_back(this->children[i]->children[1]->children[j]->eval(t_ss));
                 }
               }
 
@@ -480,7 +480,7 @@ namespace chaiscript
 
               try {
                 t_ss.set_stack(new_stack);
-                retval = t_ss.call_function(fun_name, plb);
+                retval = t_ss.call_function(fun_name, params);
                 t_ss.set_stack(prev_stack);
               }
               catch(const exception::dispatch_error &e){
