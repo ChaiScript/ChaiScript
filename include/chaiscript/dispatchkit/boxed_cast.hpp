@@ -68,6 +68,7 @@ namespace chaiscript
       return detail::Cast_Helper<Type>::cast(bv);
     } catch (const chaiscript::detail::exception::bad_any_cast &) {
 
+
 #ifdef CHAISCRIPT_MSVC
       //Thank you MSVC, yes we know that a constant value is being used in the if
       // statment in THIS VERSION of the template instantiation

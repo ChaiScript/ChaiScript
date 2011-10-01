@@ -23,7 +23,7 @@ def assert_true(f)
 {
   if (!f)
   {
-    print("assert_false failure");
+    print("assert_true failure");
     exit(-1);
   }
 }

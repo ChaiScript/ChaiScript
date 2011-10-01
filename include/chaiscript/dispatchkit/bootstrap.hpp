@@ -348,17 +348,13 @@ namespace chaiscript
         static std::vector<Boxed_Value> do_return_boxed_value_vector(FunctionType f,
             const dispatch::Proxy_Function_Base *b)
         {
-          typedef decltype(std::mem_fn(f)) MemFunType;
-          typedef typename MemFunType::result_type Vector;
-
-          Vector v = (b->*f)();
+          auto v = (b->*f)();
  
           std::vector<Boxed_Value> vbv;
-          for (typename Vector::const_iterator itr = v.begin();
-               itr != v.end();
-               ++itr)
+
+          for (const auto &o: v)
           {
-            vbv.push_back(const_var(*itr));
+            vbv.push_back(const_var(o));
           }
 
           return vbv;

@@ -111,9 +111,7 @@ namespace chaiscript
 
           virtual std::vector<Const_Proxy_Function> get_contained_functions() const
           {
-            std::vector<Const_Proxy_Function> fs;
-            fs.push_back(m_func);
-            return fs;
+            return {m_func};
           }
 
 

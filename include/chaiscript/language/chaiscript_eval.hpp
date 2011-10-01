@@ -67,8 +67,8 @@ namespace chaiscript
               return t_ss.call_function(t_oper_string, t_lhs, t_rhs);
             }
           }
-          catch(const exception::dispatch_error &){
-            throw exception::eval_error("Can not find appropriate '" + t_oper_string + "'");
+          catch(const exception::dispatch_error &e){
+            throw exception::eval_error("Can not find appropriate '" + t_oper_string + "' operator.", e.parameters, t_ss);
           }
         }
     };
@@ -182,11 +182,11 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Fun_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
-          dispatch::Param_List_Builder plb;
+          std::vector<Boxed_Value> params;
 
           if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
             for (size_t i = 0; i < this->children[1]->children.size(); ++i) {
-              plb << this->children[1]->children[i]->eval(t_ss);
+              params.push_back(this->children[1]->children[i]->eval(t_ss));
             }
           }
 
@@ -198,13 +198,13 @@ namespace chaiscript
 
             try {
               t_ss.set_stack(new_stack);
-              const Boxed_Value &retval = (*boxed_cast<const Const_Proxy_Function &>(fn))(plb);
+              const Boxed_Value &retval = (*boxed_cast<const Const_Proxy_Function &>(fn))(params);
               t_ss.set_stack(prev_stack);
               return retval;
             }
             catch(const exception::dispatch_error &e){
               t_ss.set_stack(prev_stack);
-              throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
+              throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, t_ss);
             }
             catch(detail::Return_Value &rv) {
               t_ss.set_stack(prev_stack);
@@ -230,19 +230,19 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inplace_Fun_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
-          dispatch::Param_List_Builder plb;
+          std::vector<Boxed_Value> params;
 
           if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
             for (size_t i = 0; i < this->children[1]->children.size(); ++i) {
-              plb << this->children[1]->children[i]->eval(t_ss);
+              params.push_back(this->children[1]->children[i]->eval(t_ss));
             }
           }
 
           try {
-            return (*boxed_cast<const Const_Proxy_Function &>(this->children[0]->eval(t_ss)))(plb);
+            return (*boxed_cast<const Const_Proxy_Function &>(this->children[0]->eval(t_ss)))(params);
           }
           catch(const exception::dispatch_error &e){
-            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, t_ss);
           }
           catch(detail::Return_Value &rv) {
             return rv.retval;
@@ -312,19 +312,19 @@ namespace chaiscript
                 try {
                   retval = t_ss.call_function(this->children[1]->text, lhs, retval);
                 }
-                catch(const exception::dispatch_error &){
-                  throw exception::eval_error(std::string("Mismatched types in equation") + (lhs.is_const()?", lhs is const.":"."));
+                catch(const exception::dispatch_error &e){
+                  throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, t_ss);
                 }
               }
-              catch(const exception::dispatch_error &){
-                throw exception::eval_error("Can not clone right hand side of equation");
+              catch(const exception::dispatch_error &e){
+                throw exception::eval_error("Missing clone or copy constructor for right hand side of equation", e.parameters, t_ss);
               }
             }
             else {
               try {
                 retval = t_ss.call_function(this->children[1]->text, lhs, retval);
-              } catch(const exception::dispatch_error &){
-                throw exception::eval_error("Can not find appropriate '" + this->children[1]->text + "'");
+              } catch(const exception::dispatch_error &e){
+                  throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, t_ss);
               }
             }
           }
@@ -439,8 +439,8 @@ namespace chaiscript
             catch(std::out_of_range &) {
               throw exception::eval_error("Out of bounds exception");
             }
-            catch(const exception::dispatch_error &){
-              throw exception::eval_error("Can not find appropriate array lookup '[]' ");
+            catch(const exception::dispatch_error &e){
+              throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, t_ss );
             }
           }
 
@@ -458,12 +458,12 @@ namespace chaiscript
 
           if (this->children.size() > 1) {
             for (size_t i = 2; i < this->children.size(); i+=2) {
-              dispatch::Param_List_Builder plb;
-              plb << retval;
+              std::vector<Boxed_Value> params;
+              params.push_back(retval);
 
               if (this->children[i]->children.size() > 1) {
                 for (size_t j = 0; j < this->children[i]->children[1]->children.size(); ++j) {
-                  plb << this->children[i]->children[1]->children[j]->eval(t_ss);
+                  params.push_back(this->children[i]->children[1]->children[j]->eval(t_ss));
                 }
               }
 
@@ -480,12 +480,12 @@ namespace chaiscript
 
               try {
                 t_ss.set_stack(new_stack);
-                retval = t_ss.call_function(fun_name, plb);
+                retval = t_ss.call_function(fun_name, params);
                 t_ss.set_stack(prev_stack);
               }
               catch(const exception::dispatch_error &e){
                 t_ss.set_stack(prev_stack);
-                throw exception::eval_error(std::string(e.what()) + " for function: " + fun_name);
+                throw exception::eval_error(std::string(e.what()) + " for function: " + fun_name, e.parameters, t_ss);
               }
               catch(detail::Return_Value &rv) {
                 t_ss.set_stack(prev_stack);
@@ -503,8 +503,8 @@ namespace chaiscript
                   catch(std::out_of_range &) {
                     throw exception::eval_error("Out of bounds exception");
                   }
-                  catch(const exception::dispatch_error &){
-                    throw exception::eval_error("Can not find appropriate array lookup '[]' ");
+                  catch(const exception::dispatch_error &e){
+                    throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, t_ss);
                   }
                 }
               }
@@ -819,8 +819,8 @@ namespace chaiscript
             }
             return const_var(retval);
           }
-          catch (const exception::dispatch_error &) {
-            throw exception::eval_error("Can not find appropriate 'Map()'");
+          catch (const exception::dispatch_error &e) {
+            throw exception::eval_error("Can not find appropriate copy constructor or clone while inserting into Map.", e.parameters, t_ss);
           }
         }
 
@@ -896,8 +896,8 @@ namespace chaiscript
             } else {
               return t_ss.call_function(this->children[0]->text, bv);
             }
-          } catch (const exception::dispatch_error &) {
-            throw exception::eval_error("Error with prefix operator evaluation: " + children[0]->text);
+          } catch (const exception::dispatch_error &e) {
+            throw exception::eval_error("Error with prefix operator evaluation: '" + children[0]->text + "'", e.parameters, t_ss);
           }
         }
 
@@ -938,8 +938,8 @@ namespace chaiscript
                 this->children[0]->children[0]->children[0]->eval(t_ss),
                 this->children[0]->children[0]->children[1]->eval(t_ss));
           }
-          catch (const exception::dispatch_error &) {
-            throw exception::eval_error("Unable to generate range vector");
+          catch (const exception::dispatch_error &e) {
+            throw exception::eval_error("Unable to generate range vector, while calling 'generate_range'", e.parameters, t_ss);
           }
         }
 

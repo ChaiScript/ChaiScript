@@ -29,37 +29,6 @@ namespace chaiscript
   namespace dispatch
   {
     /**
-     * Helper for building a list of parameters for calling a Proxy_Function
-     * it does automatic conversion to Boxed_Value types via operator<<
-     *
-     * example usage:
-     * Boxed_Value retval = dispatch(dispatchengine.get_function("+"), 
-     *                               chaiscript::Param_List_Builder() << 5 << 6);
-     */
-    struct Param_List_Builder
-    {
-      Param_List_Builder &operator<<(const Boxed_Value &so)
-      {
-        objects.push_back(so);
-        return *this;
-      }
-
-      template<typename T>
-        Param_List_Builder &operator<<(T t)
-        {
-          objects.push_back(Boxed_Value(t));
-          return *this;
-        }
-
-      operator const std::vector<Boxed_Value> &() const
-      {
-        return objects;
-      }
-
-      std::vector<Boxed_Value> objects;
-    };
-
-    /**
      * Pure virtual base class for all Proxy_Function implementations
      * Proxy_Functions are a type erasure of type safe C++
      * function calls. At runtime parameter types are expected to be
@@ -82,7 +51,7 @@ namespace chaiscript
         /// if the function is variadic or takes no arguments (arity of 0 or -1), the returned
         /// value containes exactly 1 Type_Info object: the return type
         /// \returns the types of all parameters. 
-        std::vector<Type_Info> get_param_types() const { return m_types; }
+        const std::vector<Type_Info> &get_param_types() const { return m_types; }
 
         virtual bool operator==(const Proxy_Function_Base &) const = 0;
         virtual bool call_match(const std::vector<Boxed_Value> &vals) const = 0;
@@ -293,7 +262,7 @@ namespace chaiscript
           // For the return type
           types.push_back(chaiscript::detail::Get_Type_Info<Boxed_Value>::get());
 
-          if (arity >= 0)
+          if (arity > 0)
           {
             for (int i = 0; i < arity; ++i)
             {
@@ -409,6 +378,7 @@ namespace chaiscript
             const std::vector<Boxed_Value> &t_args)
         {
           assert(t_f->get_arity() < 0 || t_f->get_arity() == static_cast<int>(t_args.size()));
+
           if (t_f->get_arity() < 0) { return std::vector<Type_Info>(); }
 
           std::vector<Type_Info> types = t_f->get_param_types();
@@ -450,8 +420,8 @@ namespace chaiscript
         Proxy_Function_Impl(const std::function<Func> &f)
           : Proxy_Function_Base(detail::build_param_type_list(static_cast<Func *>(0))),
           m_f(f), m_dummy_func(0)
-      {
-      }
+        {
+        }
 
         virtual ~Proxy_Function_Impl() {}
 
@@ -461,12 +431,10 @@ namespace chaiscript
           return pimpl != 0;
         }
 
-
         virtual int get_arity() const
         {
           return static_cast<int>(m_types.size()) - 1;
         }
-
 
         virtual bool call_match(const std::vector<Boxed_Value> &vals) const
         {
@@ -509,8 +477,8 @@ namespace chaiscript
         Attribute_Access(T Class::* t_attr)
           : Proxy_Function_Base(param_types()),
           m_attr(t_attr)
-      {
-      }
+        {
+        }
 
         virtual ~Attribute_Access() {}
 
@@ -518,6 +486,7 @@ namespace chaiscript
         {
           const Attribute_Access<T, Class> * aa 
             = dynamic_cast<const Attribute_Access<T, Class> *>(&t_func);
+
           if (aa) {
             return m_attr == aa->m_attr;
           } else {
@@ -568,11 +537,9 @@ namespace chaiscript
       private:
         static std::vector<Type_Info> param_types()
         {
-          std::vector<Type_Info> v;
-          v.push_back(user_type<T>());
-          v.push_back(user_type<Class>());
-          return v;
+          return {user_type<T>(), user_type<Class>()};
         }
+
         T Class::* m_attr;
     };
   }
@@ -587,17 +554,14 @@ namespace chaiscript
     class dispatch_error : public std::runtime_error
     {
       public:
-        dispatch_error() noexcept
-          : std::runtime_error("No matching function to dispatch to")
+        dispatch_error(const std::vector<Boxed_Value> &t_bvs)
+          : std::runtime_error("Error with function dispatch"), parameters(t_bvs)
         {
         }
 
-        dispatch_error(bool is_const) noexcept
-          : std::runtime_error(std::string("No matching function to dispatch to") + (is_const?", parameter is const":""))
-          {
-          }
-
         virtual ~dispatch_error() noexcept {}
+
+        std::vector<Boxed_Value> parameters;
     };
   } 
 
@@ -610,7 +574,7 @@ namespace chaiscript
      * function is found or throw dispatch_error if no matching function is found
      */
     template<typename InItr>
-      Boxed_Value dispatch(InItr begin, InItr end,
+      Boxed_Value dispatch(InItr begin, const InItr &end,
           const std::vector<Boxed_Value> &plist)
       {
         while (begin != end)
@@ -631,7 +595,7 @@ namespace chaiscript
           ++begin;
         }
 
-        throw exception::dispatch_error(plist.empty()?false:plist[0].is_const());
+        throw exception::dispatch_error(plist);
       }
 
     /**
