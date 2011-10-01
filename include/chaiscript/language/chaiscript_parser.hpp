@@ -1605,7 +1605,7 @@ namespace chaiscript
             retval = true;
             Container_Arg_List();
             if (!Char('}')) {
-              throw exception::eval_error("Missing closing square bracket", File_Position(m_line, m_col), *m_filename);
+              throw exception::eval_error("Missing closing curly bracket", File_Position(m_line, m_col), *m_filename);
             }
             if ((prev_stack_top != m_match_stack.size()) && (m_match_stack.back()->children.size() > 0)) {
               if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Value_Range) {
@@ -1977,6 +1977,11 @@ namespace chaiscript
               retval = true;
               saw_eol = false;
             }
+            else if (Block()) {
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            }
             else if (Equation()) {
               if (!saw_eol) {
                 throw exception::eval_error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
@@ -1986,11 +1991,6 @@ namespace chaiscript
               saw_eol = false;
             }
             else if (Eol()) {
-              has_more = true;
-              retval = true;
-              saw_eol = true;
-            }
-            else if (Block()) {
               has_more = true;
               retval = true;
               saw_eol = true;
