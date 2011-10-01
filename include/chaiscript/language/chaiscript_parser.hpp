@@ -1977,6 +1977,11 @@ namespace chaiscript
               retval = true;
               saw_eol = false;
             }
+            else if (Block()) {
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            }
             else if (Equation()) {
               if (!saw_eol) {
                 throw exception::eval_error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
@@ -1986,11 +1991,6 @@ namespace chaiscript
               saw_eol = false;
             }
             else if (Eol()) {
-              has_more = true;
-              retval = true;
-              saw_eol = true;
-            }
-            else if (Block()) {
               has_more = true;
               retval = true;
               saw_eol = true;

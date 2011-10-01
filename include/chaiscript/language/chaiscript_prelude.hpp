@@ -259,7 +259,7 @@ def generate_range(x, y) { \n\
 }\n\
 # Returns a new Vector with the first value to the second value as its elements\n\
 def collate(x, y) { \n\
-  {x, y}; \n\
+  return {x, y}; \n\
 } \n\
 def zip_with(f, x, y, inserter) : call_exists(range, x) && call_exists(range, y) { \n\
   auto r_x = range(x); \n\
