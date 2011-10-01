@@ -1,1 +1,0 @@
-assert_equal(1, {"bob":1,"fred":2}["bob"])
