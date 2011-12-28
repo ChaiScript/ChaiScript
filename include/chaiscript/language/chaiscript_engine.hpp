@@ -324,8 +324,7 @@ namespace chaiscript
     /**
      * Builds all the requirements for ChaiScript, including its evaluator and a run of its prelude.
      */
-    void build_eval_system() {
-      using namespace bootstrap;
+    void build_eval_system(const ModulePtr &t_lib) {
       m_engine.add_reserved_word("def");
       m_engine.add_reserved_word("fun");
       m_engine.add_reserved_word("while");
@@ -342,7 +341,7 @@ namespace chaiscript
       m_engine.add_reserved_word("false");
       m_engine.add_reserved_word("_");
 
-      add(Bootstrap::bootstrap());
+      add(t_lib);
 
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::dump_system, std::ref(m_engine)), "dump_system");
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::dump_object, std::ref(m_engine)), "dump_object");
@@ -358,11 +357,6 @@ namespace chaiscript
 
       m_engine.add(fun(static_cast<load_mod_1>(&ChaiScript::load_module), this), "load_module");
       m_engine.add(fun(static_cast<load_mod_2>(&ChaiScript::load_module), this), "load_module");
-
-      add(standard_library::vector_type<std::vector<Boxed_Value> >("Vector"));
-      add(standard_library::string_type<std::string>("string"));
-      add(standard_library::map_type<std::map<std::string, Boxed_Value> >("Map"));
-      add(standard_library::pair_type<std::pair<Boxed_Value, Boxed_Value > >("Pair"));
 
       m_engine.add(fun(&ChaiScript::use, this), "use");
       m_engine.add(fun(&ChaiScript::internal_eval, this), "eval");
@@ -398,9 +392,11 @@ namespace chaiscript
 
   public:
     /// \brief Constructor for ChaiScript
+    /// \param[in] t_lib Standard library to apply to this ChaiScript instance
     /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
     /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
-    ChaiScript(const std::vector<std::string> &t_modulepaths = std::vector<std::string>(),
+    ChaiScript(const ModulePtr &t_lib,
+               const std::vector<std::string> &t_modulepaths = std::vector<std::string>(),
                       const std::vector<std::string> &t_usepaths = std::vector<std::string>())
       : m_modulepaths(t_modulepaths), m_usepaths(t_usepaths) 
     {
@@ -414,7 +410,7 @@ namespace chaiscript
         m_usepaths.push_back("");
       }
 
-      build_eval_system();
+      build_eval_system(t_lib);
     }
 
     /// \brief Adds a constant object that is available in all contexts and to all threads

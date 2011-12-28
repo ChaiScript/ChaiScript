@@ -1,10 +1,11 @@
 // Tests to make sure that the order in which function dispatches occur is correct
 
 #include <chaiscript/chaiscript.hpp>
+#include <chaiscript/chaiscript_stdlib.hpp>
 
 int test_generic()
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
   
   try {
     chai.eval("throw(runtime_error(\"error\"));");
@@ -22,7 +23,7 @@ int test_generic()
 
 int test_1()
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
   
   try {
     chai.eval("throw(1)", chaiscript::exception_specification<int>());
@@ -39,7 +40,7 @@ int test_1()
 
 int test_2()
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
   
   try {
     chai.eval("throw(1.0)", chaiscript::exception_specification<int, double>());
@@ -56,7 +57,7 @@ int test_2()
 
 int test_5()
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
 
   try {
     chai.eval("throw(runtime_error(\"error\"))", chaiscript::exception_specification<int, double, float, const std::string &, const std::exception &>());
@@ -82,7 +83,7 @@ int test_5()
 
 int test_unhandled()
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
 
   try {
     chai.eval("throw(\"error\")", chaiscript::exception_specification<int, double, float, const std::exception &>());

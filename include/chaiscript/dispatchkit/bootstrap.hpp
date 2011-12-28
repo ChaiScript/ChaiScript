@@ -478,7 +478,7 @@ namespace chaiscript
         m->add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(std::bind(&call_exists, std::placeholders::_1))), 
           "call_exists");
 
-        m->add(fun(&type_match), "type_match");
+        m->add(fun(&Boxed_Value::type_match), "type_match");
 
         return m;
       }

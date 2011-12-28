@@ -748,8 +748,6 @@
 #include "chaiscript_defines.hpp"
 
 #include "dispatchkit/dispatchkit.hpp"
-#include "dispatchkit/bootstrap.hpp"
-#include "dispatchkit/bootstrap_stl.hpp"
 #include "dispatchkit/function_call.hpp"
 #include "dispatchkit/dynamic_object.hpp"
 #include "dispatchkit/boxed_number.hpp"

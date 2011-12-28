@@ -1,3 +1,4 @@
+#include <chaiscript/chaiscript_stdlib.hpp>
 #include <chaiscript/utility/utility.hpp>
 
 class Test
@@ -33,7 +34,7 @@ int main()
 
 
 
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());;
   chai.add(m);
   if (chai.eval<std::string>("auto t = Test(); t.function2(); ") == "Function2"
       && chai.eval<std::string>("auto t = Test(); t.functionOverload(1); ") == "int"

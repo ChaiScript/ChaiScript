@@ -1,6 +1,7 @@
 // Tests to make sure that the order in which function dispatches occur is correct
 
 #include <chaiscript/utility/utility.hpp>
+#include <chaiscript/chaiscript_stdlib.hpp>
 
 int test_one(const int &)
 {
@@ -14,7 +15,7 @@ int test_two(int &)
 
 int main()
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
   chai.eval("def test_fun(x) { return 3; }");
   chai.eval("def test_fun(x) : x == \"hi\" { return 4; }");
   chai.eval("def test_fun(x) { return 5; }");

@@ -263,6 +263,12 @@ namespace chaiscript
         return m_data->m_const_data_ptr;
       }
 
+      /// \returns true if the two Boxed_Values share the same internal type
+      static bool type_match(Boxed_Value l, Boxed_Value r)
+      {
+        return l.get_type_info() == r.get_type_info();
+      }
+
     private:
       std::shared_ptr<Data> m_data;
   };
@@ -361,11 +367,6 @@ namespace chaiscript
 
 
 
-  /// \returns true if the two Boxed_Values share the same internal type
-  static bool type_match(Boxed_Value l, Boxed_Value r)
-  {
-    return l.get_type_info() == r.get_type_info();
-  }
 }
 
 #endif

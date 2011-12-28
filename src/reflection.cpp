@@ -1,5 +1,7 @@
 
 #include <chaiscript/chaiscript.hpp>
+#include <chaiscript/dispatchkit/bootstrap.hpp>
+#include <chaiscript/dispatchkit/bootstrap_stl.hpp>
 #include <chaiscript/utility/utility.hpp>
 #include <string>
 

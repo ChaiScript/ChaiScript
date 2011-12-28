@@ -1,9 +1,11 @@
 #include <chaiscript/utility/utility.hpp>
 
+#include <chaiscript/chaiscript_stdlib.hpp>
+
 int main()
 {
 
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
 
   chai.eval("def func() { print(\"Hello World\"); } ");
 

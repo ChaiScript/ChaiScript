@@ -17,6 +17,7 @@
 #define CHAISCRIPT_BOOTSTRAP_STL_HPP_
 
 #include "dispatchkit.hpp"
+#include "bootstrap.hpp"
 #include "register_function.hpp"
 
 namespace chaiscript 

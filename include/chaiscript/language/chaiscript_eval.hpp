@@ -10,6 +10,7 @@
 #include <map>
 
 #include "chaiscript_common.hpp"
+#include "../dispatchkit/register_function.hpp"
 
 namespace chaiscript
 {

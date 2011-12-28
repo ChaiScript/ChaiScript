@@ -1,13 +1,14 @@
 #include <iostream>
 
-#include "chaiscript/chaiscript.hpp"
+#include <chaiscript/chaiscript.hpp>
+#include <chaiscript/chaiscript_stdlib.hpp>
+
 #ifdef READLINE_AVAILABLE
 #include <readline/readline.h>
 #include <readline/history.h>
 #endif
 
 
-using namespace chaiscript;
 
 std::string get_next_command() {
 #ifdef READLINE_AVAILABLE
@@ -30,30 +31,32 @@ void fuction(void)
 
 class test
 {
-  ChaiScript chai;
-  ChaiScript::State backupState;
+  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript::State backupState;
+
   public:
-  test()
-  {		
-    backupState = chai.get_state();
-  }
-  ~test(){}
-
-  void ResetState()
-  {
-    chai.set_state(backupState);
-    chai.add(fun(&fuction),"Whatever()");
-  }
-
-  void RunFile(std::string sFile)
-  {
-    try {
-      chaiscript::Boxed_Value val = chai.eval_file(sFile);
+    test()
+      : chai(chaiscript::Std_Lib::library())
+    {		
+      backupState = chai.get_state();
     }
-    catch (std::exception &e) {
-      std::cout << e.what() << std::endl;
+    ~test(){}
+
+    void ResetState()
+    {
+      chai.set_state(backupState);
+      chai.add(chaiscript::fun(&fuction),"Whatever()");
     }
-  }
+
+    void RunFile(std::string sFile)
+    {
+      try {
+        chaiscript::Boxed_Value val = chai.eval_file(sFile);
+      }
+      catch (std::exception &e) {
+        std::cout << e.what() << std::endl;
+      }
+    }
 
 };
 
