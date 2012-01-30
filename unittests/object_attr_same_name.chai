@@ -4,6 +4,6 @@ def bob::bob() { this.z = 10 }
 attr bob2::z
 def bob2::bob2() { this.z = 12 }
 
-var b = bob();
-var b2 = bob2();
+auto b = bob();
+auto b2 = bob2();
 
