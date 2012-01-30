@@ -285,33 +285,6 @@ namespace chaiscript
       return do_eval(t_e, "__EVAL__", true);
     }
 
-    void use(const std::string &t_filename)
-    {
-      for (size_t i = 0; i < m_usepaths.size(); ++i)
-      {
-
-        try {
-          const std::string appendedpath = m_usepaths[i] + t_filename;
-
-          chaiscript::detail::threading::lock_guard<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
-          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l2(m_mutex);
-
-          if (m_used_files.count(appendedpath) == 0)
-          {
-            m_used_files.insert(appendedpath);
-            l2.unlock();
-            eval_file(appendedpath);
-          }
-        } catch (const exception::file_not_found_error &) {
-          if (i == m_usepaths.size() - 1)
-          {
-            throw exception::file_not_found_error(t_filename);
-          }
-
-          // failed to load, try the next path
-        }
-      }
-    }
 
     /**
      * Returns the current evaluation m_engine
@@ -415,6 +388,40 @@ namespace chaiscript
       }
 
       build_eval_system();
+    }
+
+    /// \brief Loads and parses a file. If the file is already, it is not reloaded
+    /// The use paths specified at ChaiScript construction time are searched for the 
+    /// requested file.
+    ///
+    /// \param[in] t_filename Filename to load and evaluate
+    void use(const std::string &t_filename)
+    {
+      for (size_t i = 0; i < m_usepaths.size(); ++i)
+      {
+        try {
+          const std::string appendedpath = m_usepaths[i] + t_filename;
+
+          chaiscript::detail::threading::lock_guard<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l2(m_mutex);
+
+          if (m_used_files.count(appendedpath) == 0)
+          {
+            m_used_files.insert(appendedpath);
+            l2.unlock();
+            eval_file(appendedpath);
+          }
+
+          return; // return, we loaded it, or it was already loaded
+        } catch (const exception::file_not_found_error &) {
+          if (i == m_usepaths.size() - 1)
+          {
+            throw exception::file_not_found_error(t_filename);
+          }
+
+          // failed to load, try the next path
+        }
+      }
     }
 
     /// \brief Adds a constant object that is available in all contexts and to all threads
