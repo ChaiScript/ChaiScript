@@ -192,8 +192,8 @@
 /// Overloaded methods will need some help, to hint the compiler as to which overload you want:
 ///
 /// \code
-/// chai.add(fun<void (MyClass::*)()>(&MyClass::overloadedmethod), "overloadedmethod"));
-/// chai.add(fun<void (MyClass::*)(const std::string &)>(&MyClass::overloadedmethod, "overloadedmethod"));
+/// chai.add(fun<void (MyClass::*)()>(&MyClass::overloadedmethod), "overloadedmethod");
+/// chai.add(fun<void (MyClass::*)(const std::string &)>(&MyClass::overloadedmethod), "overloadedmethod");
 /// \endcode
 ///
 /// There are also shortcuts built into chaiscript::fun for binding up to the first two parameters of the function.
