@@ -1158,9 +1158,6 @@ namespace chaiscript
                      )
                 ), this->children[1]->text);
 
-//            t_ss.add(fun(boost::function<Boxed_Value (dispatch::Dynamic_Object &)>(boost::bind(&dispatch::detail::Dynamic_Object_Attribute::func, this->children[0]->text,
-  //                    this->children[1]->text, _1))), this->children[1]->text);
-
           }
           catch (const exception::reserved_word_error &) {
             throw exception::eval_error("Reserved word used as attribute '" + this->children[1]->text + "'");
