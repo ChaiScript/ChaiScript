@@ -1182,8 +1182,16 @@ namespace chaiscript
         virtual ~Attr_Decl_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
           try {
-            t_ss.add(fun(std::function<Boxed_Value (dispatch::Dynamic_Object &)>(std::bind(&dispatch::detail::Dynamic_Object_Attribute::func, this->children[0]->text,
-                      this->children[1]->text, std::placeholders::_1))), this->children[1]->text);
+
+            t_ss.add(Proxy_Function
+                (new dispatch::detail::Dynamic_Object_Function(
+                     this->children[0]->text,
+                     fun(std::function<Boxed_Value (dispatch::Dynamic_Object &)>(std::bind(&dispatch::Dynamic_Object::get_attr, 
+                                                                                   std::placeholders::_1,
+                                                                                   this->children[1]->text
+                                                                                   )))
+                     )
+                ), this->children[1]->text);
 
           }
           catch (const exception::reserved_word_error &) {
