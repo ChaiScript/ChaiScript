@@ -68,6 +68,11 @@ endif()
 
 include_directories(include)
 
+
+set (Chai_INCLUDES include/chaiscript/chaiscript.hpp include/chaiscript/chaiscript_threading.hpp include/chaiscript/dispatchkit/bad_boxed_cast.hpp include/chaiscript/dispatchkit/bind_first.hpp include/chaiscript/dispatchkit/bootstrap.hpp include/chaiscript/dispatchkit/bootstrap_stl.hpp include/chaiscript/dispatchkit/boxed_cast.hpp include/chaiscript/dispatchkit/boxed_cast_helper.hpp include/chaiscript/dispatchkit/boxed_number.hpp include/chaiscript/dispatchkit/boxed_value.hpp include/chaiscript/dispatchkit/dispatchkit.hpp include/chaiscript/dispatchkit/dynamic_cast_conversion.hpp include/chaiscript/dispatchkit/dynamic_object.hpp include/chaiscript/dispatchkit/exception_specification.hpp include/chaiscript/dispatchkit/function_call.hpp include/chaiscript/dispatchkit/function_call_detail.hpp include/chaiscript/dispatchkit/handle_return.hpp include/chaiscript/dispatchkit/operators.hpp include/chaiscript/dispatchkit/proxy_constructors.hpp include/chaiscript/dispatchkit/proxy_functions.hpp include/chaiscript/dispatchkit/proxy_functions_detail.hpp include/chaiscript/dispatchkit/register_function.hpp include/chaiscript/dispatchkit/type_info.hpp include/chaiscript/language/chaiscript_algebraic.hpp include/chaiscript/language/chaiscript_common.hpp include/chaiscript/language/chaiscript_engine.hpp include/chaiscript/language/chaiscript_eval.hpp include/chaiscript/language/chaiscript_parser.hpp include/chaiscript/language/chaiscript_prelude.hpp include/chaiscript/language/chaiscript_prelude_docs.hpp include/chaiscript/utility/utility.hpp)
+
+set_source_files_properties(${Chai_INCLUDES} PROPERTIES HEADER_FILE_ONLY TRUE)
+
 if (MULTITHREAD_SUPPORT_ENABLED)
 else()
   add_definitions(-DCHAISCRIPT_NO_THREADS)
@@ -84,7 +89,7 @@ if (CMAKE_COMPILER_2005)
 #  ADD_DEFINITIONS(/wd4244)
 endif()
 
-add_executable(chai src/main.cpp)
+add_executable(chai src/main.cpp ${Chai_INCLUDES})
 target_link_libraries(chai ${LIBS})
 
 if (BUILD_SAMPLES)
@@ -158,6 +163,11 @@ if(BUILD_TESTING)
     add_executable(eval_catch_exception_test unittests/eval_catch_exception_test.cpp)
     target_link_libraries(eval_catch_exception_test ${LIBS})
     add_test(NAME Eval_Catch_Exception_Test COMMAND eval_catch_exception_test)
+
+    add_executable(short_comparison_test unittests/short_comparison_test.cpp)
+    target_link_libraries(short_comparison_test ${LIBS})
+    add_test(NAME short_comparison_test COMMAND short_comparison_test)
+
 
     add_executable(multifile_test unittests/multifile_test_main.cpp unittests/multifile_test_chai.cpp
       unittests/multifile_test_module.cpp)
