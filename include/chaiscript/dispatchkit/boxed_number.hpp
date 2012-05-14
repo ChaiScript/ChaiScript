@@ -276,7 +276,7 @@ namespace chaiscript
           } else if (inp_ == typeid(boost::int8_t)) {
             return oper_rhs<boost::int8_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::int16_t)) {
-            return oper_rhs<boost::int32_t, false>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<boost::int16_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::int32_t)) {
             return oper_rhs<boost::int32_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::int64_t)) {
