@@ -105,9 +105,9 @@ namespace chaiscript
 
           template<typename ... InnerParams>
           static Ret do_call(const std::function<Ret (Params...)> &f,
-              const std::vector<Boxed_Value> &params, InnerParams ... innerparams)
+              const std::vector<Boxed_Value> &params, InnerParams &&... innerparams)
           {
-            return Call_Func<Ret, count - 1, Params...>::do_call(f, params, innerparams..., params[sizeof...(Params) - count]);
+            return Call_Func<Ret, count - 1, Params...>::do_call(f, params, std::forward<InnerParams>(innerparams)..., params[sizeof...(Params) - count]);
           } 
         };
 
@@ -116,9 +116,9 @@ namespace chaiscript
         {
           template<typename ... InnerParams>
             static Ret do_call(const std::function<Ret (Params...)> &f,
-                const std::vector<Boxed_Value> &, InnerParams ... innerparams)
+                const std::vector<Boxed_Value> &, InnerParams &&... innerparams)
             {
-              return f(boxed_cast<Params>(innerparams)...);
+              return f(boxed_cast<Params>(std::forward<InnerParams>(innerparams))...);
             }
         };
 

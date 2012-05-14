@@ -59,7 +59,7 @@ namespace chaiscript
           Ret operator()(Param...param)
           {
             return Function_Caller_Ret<Ret>::call(m_funcs, { 
-(std::is_reference<Param>::value&&!(std::is_same<chaiscript::Boxed_Value, typename std::remove_const<typename std::remove_reference<Param>::type>::type>::value))?Boxed_Value(std::ref(param)):Boxed_Value(param)...                         
+(std::is_reference<Param>::value&&!(std::is_same<chaiscript::Boxed_Value, typename std::remove_const<typename std::remove_reference<Param>::type>::type>::value))?Boxed_Value(std::ref(param)):Boxed_Value(param)... 
           }
           
           );
