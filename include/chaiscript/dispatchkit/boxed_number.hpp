@@ -297,19 +297,14 @@ namespace chaiscript
 
       
     public:
-      Boxed_Number(const Boxed_Value &v)
-        : bv(v)
+      Boxed_Number()
+        : bv(Boxed_Value(0))
       {
-        const Type_Info &inp_ = v.get_type_info();
-        if (inp_ == typeid(bool))
-        {
-          throw boost::bad_any_cast();
-        }
+      }
 
-        if (!inp_.is_arithmetic())
-        {
-          throw boost::bad_any_cast();
-        }
+      Boxed_Number(const Boxed_Value &v)
+      {
+        operator=(v);
       }
 
 
@@ -376,6 +371,24 @@ namespace chaiscript
       Boxed_Number operator&=(const Boxed_Number &t_rhs)
       {
         return oper(Operators::assign_bitwise_and, this->bv, t_rhs.bv);
+      }
+
+      Boxed_Number operator=(const Boxed_Value &v)
+      {
+        bv = v;
+
+        const Type_Info &inp_ = v.get_type_info();
+        if (inp_ == typeid(bool))
+        {
+          throw boost::bad_any_cast();
+        }
+
+        if (!inp_.is_arithmetic())
+        {
+          throw boost::bad_any_cast();
+        }
+
+        return *this;
       }
 
       Boxed_Number operator=(const Boxed_Number &t_rhs) const
