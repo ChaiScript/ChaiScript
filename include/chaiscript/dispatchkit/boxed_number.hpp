@@ -297,6 +297,11 @@ namespace chaiscript
 
       
     public:
+      Boxed_Number()
+        : bv(Boxed_Value(0))
+      {
+      }
+
       Boxed_Number(const Boxed_Value &v)
         : bv(v)
       {
