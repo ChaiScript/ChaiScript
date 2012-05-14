@@ -71,12 +71,12 @@ namespace chaiscript
       {
         static std::shared_ptr<Data> get(Boxed_Value::Void_Type)
         {
-          return std::shared_ptr<Data> (new Data(
+          return std::make_shared<Data>(
                 detail::Get_Type_Info<void>::get(),
                 chaiscript::detail::Any(), 
                 false,
-                0)
-              );
+                nullptr)
+              ;
         }
 
         template<typename T>
@@ -88,11 +88,11 @@ namespace chaiscript
         template<typename T>
           static std::shared_ptr<Data> get(const std::shared_ptr<T> &obj)
           {
-            return std::shared_ptr<Data>(new Data(
+            return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(), 
                   chaiscript::detail::Any(obj), 
                   false,
-                  obj.get())
+                  obj.get()
                 );
           }
 
@@ -105,33 +105,33 @@ namespace chaiscript
         template<typename T>
           static std::shared_ptr<Data> get(std::reference_wrapper<T> obj)
           {
-            return std::shared_ptr<Data>(new Data(
+            return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(),
                   chaiscript::detail::Any(obj),
                   true,
-                  &obj.get())
+                  &obj.get()
                 );
           }
 
         template<typename T>
           static std::shared_ptr<Data> get(const T& t)
           {
-            std::shared_ptr<T> p(new T(t));
-            return std::shared_ptr<Data>(new Data(
+            auto p = std::make_shared<T>(t);
+            return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(), 
                   chaiscript::detail::Any(p), 
                   false,
-                  p.get())
+                  p.get()
                 );
           }
 
         static std::shared_ptr<Data> get()
         {
-          return std::shared_ptr<Data> (new Data(
+          return std::make_shared<Data>(
                 Type_Info(),
                 chaiscript::detail::Any(),
                 false,
-                0)
+                nullptr 
               );
         }
 
