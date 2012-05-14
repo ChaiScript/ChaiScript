@@ -352,6 +352,8 @@ namespace chaiscript
           std::map<std::string, Boxed_Value> m_global_objects;
           Type_Name_Map m_types;
           std::set<std::string> m_reserved_words;
+
+          State &operator=(const State &) = default;
         };
 
         Dispatch_Engine()
