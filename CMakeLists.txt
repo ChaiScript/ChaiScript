@@ -183,6 +183,11 @@ if(BUILD_TESTING)
     target_link_libraries(eval_catch_exception_test ${LIBS})
     add_test(NAME Eval_Catch_Exception_Test COMMAND eval_catch_exception_test)
 
+    add_executable(short_comparison_test unittests/short_comparison_test.cpp)
+    target_link_libraries(short_comparison_test ${LIBS})
+    add_test(NAME short_comparison_test COMMAND short_comparison_test)
+
+
     add_executable(multifile_test unittests/multifile_test_main.cpp unittests/multifile_test_chai.cpp
       unittests/multifile_test_module.cpp)
     target_link_libraries(multifile_test ${LIBS})
