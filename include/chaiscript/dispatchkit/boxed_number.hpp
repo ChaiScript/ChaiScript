@@ -303,8 +303,9 @@ namespace chaiscript
       }
 
       Boxed_Number(const Boxed_Value &v)
+        : bv(v)
       {
-        operator=(v);
+        validate_boxed_number(v);
       }
 
 
@@ -373,10 +374,8 @@ namespace chaiscript
         return oper(Operators::assign_bitwise_and, this->bv, t_rhs.bv);
       }
 
-      Boxed_Number operator=(const Boxed_Value &v)
+      void validate_boxed_number(const Boxed_Value &v)
       {
-        bv = v;
-
         const Type_Info &inp_ = v.get_type_info();
         if (inp_ == typeid(bool))
         {
@@ -387,7 +386,12 @@ namespace chaiscript
         {
           throw boost::bad_any_cast();
         }
+      }
 
+      Boxed_Number operator=(const Boxed_Value &v)
+      {
+        validate_boxed_number(v);
+        bv = v;
         return *this;
       }
 
