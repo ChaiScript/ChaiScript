@@ -165,7 +165,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   //Dynamic objects test
   chai.add(chaiscript::Proxy_Function(new dispatch::detail::Dynamic_Object_Function("TestType", fun(&hello_world))), "hello_world");
   chai.add(chaiscript::Proxy_Function(new dispatch::detail::Dynamic_Object_Constructor("TestType", fun(&hello_constructor))), "TestType");
-  chai.add(fun(std::function<Boxed_Value (dispatch::Dynamic_Object &)>(std::bind(&dispatch::detail::Dynamic_Object_Attribute::func, "TestType", "attr", std::placeholders::_1))), "attr");
+//  chai.add(fun(std::function<Boxed_Value (dispatch::Dynamic_Object &)>(std::bind(&dispatch::detail::Dynamic_Object_Attribute::func, "TestType", "attr", std::placeholders::_1))), "attr");
 
   chai.eval("var x = TestType()");
 //  chai.eval("x.attr = \"hi\"");
