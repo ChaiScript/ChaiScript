@@ -13,6 +13,10 @@
 #include "../chaiscript_defines.hpp"
 #include "chaiscript_common.hpp"
 
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+#include <unistd.h>
+#endif
+
 #ifdef _POSIX_VERSION
 #include <dlfcn.h>
 #else
