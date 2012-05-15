@@ -66,6 +66,14 @@ else()
   endif()
 endif()
 
+if (CMAKE_CXX_COMPILER MATCHES ".*clang")
+  message(STATUS "Using clang's libcxx")
+  add_definitions(-stdlib=libc++)
+  set (EXTRA_LINKER_FLAGS -std=c++0x -stdlib=libc++)
+else()
+  set (EXTRA_LINKER_FLAGS )
+endif()
+
 include_directories(include)
 
 
@@ -90,22 +98,22 @@ if (CMAKE_COMPILER_2005)
 endif()
 
 add_executable(chai src/main.cpp ${Chai_INCLUDES})
-target_link_libraries(chai ${LIBS})
+target_link_libraries(chai ${LIBS} ${EXTRA_LINKER_FLAGS})
 
 if (BUILD_SAMPLES)
   add_executable(example samples/example.cpp)
-  target_link_libraries(example ${LIBS})
+  target_link_libraries(example ${LIBS} ${EXTRA_LINKER_FLAGS})
   add_executable(memory_leak_test samples/memory_leak_test.cpp)
-  target_link_libraries(memory_leak_test ${LIBS})
+  target_link_libraries(memory_leak_test ${LIBS} ${EXTRA_LINKER_FLAGS})
 endif()
 
 
 if (BUILD_MODULES)
   add_library(stl_extra MODULE src/stl_extra.cpp)
-  target_link_libraries(stl_extra ${LIBS})
+  target_link_libraries(stl_extra ${LIBS} ${EXTRA_LINKER_FLAGS})
 
   add_library(reflection MODULE src/reflection.cpp)
-  target_link_libraries(reflection ${LIBS})
+  target_link_libraries(reflection ${LIBS} ${EXTRA_LINKER_FLAGS})
   set(MODULES stl_extra reflection)
 endif()
 
@@ -129,53 +137,53 @@ if(BUILD_TESTING)
 
   if (NOT UNIT_TEST_LIGHT)
     add_executable(utility_test unittests/utility_test.cpp)
-    target_link_libraries(utility_test ${LIBS})
+    target_link_libraries(utility_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Utility_Test COMMAND utility_test)
 
     add_executable(dynamic_object_test unittests/dynamic_object_test.cpp)
-    target_link_libraries(dynamic_object_test ${LIBS})
+    target_link_libraries(dynamic_object_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Dynamic_Object_Test COMMAND dynamic_object_test)
 
     add_executable(functor_creation_test unittests/functor_creation_test.cpp)
-    target_link_libraries(functor_creation_test ${LIBS})
+    target_link_libraries(functor_creation_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Functor_Creation_Test COMMAND functor_creation_test)
 
     add_executable(functor_cast_test unittests/functor_cast_test.cpp)
-    target_link_libraries(functor_cast_test ${LIBS})
+    target_link_libraries(functor_cast_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Functor_Cast_Test COMMAND functor_cast_test)
 
     add_executable(boxed_cast_test unittests/boxed_cast_test.cpp)
-    target_link_libraries(boxed_cast_test ${LIBS})
+    target_link_libraries(boxed_cast_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Boxed_Cast_Test COMMAND boxed_cast_test)
 
     add_executable(object_lifetime_test unittests/object_lifetime_test.cpp)
-    target_link_libraries(object_lifetime_test ${LIBS})
+    target_link_libraries(object_lifetime_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Object_Lifetime_Test COMMAND object_lifetime_test)
 
     add_executable(function_ordering_test unittests/function_ordering_test.cpp)
-    target_link_libraries(function_ordering_test ${LIBS})
+    target_link_libraries(function_ordering_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Function_Ordering_Test COMMAND function_ordering_test)
 
     add_executable(type_info_test unittests/type_info_test.cpp)
-    target_link_libraries(type_info_test ${LIBS})
+    target_link_libraries(type_info_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Type_Info_Test COMMAND type_info_test)
 
     add_executable(eval_catch_exception_test unittests/eval_catch_exception_test.cpp)
-    target_link_libraries(eval_catch_exception_test ${LIBS})
+    target_link_libraries(eval_catch_exception_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Eval_Catch_Exception_Test COMMAND eval_catch_exception_test)
 
     add_executable(short_comparison_test unittests/short_comparison_test.cpp)
-    target_link_libraries(short_comparison_test ${LIBS})
+    target_link_libraries(short_comparison_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME short_comparison_test COMMAND short_comparison_test)
 
 
     add_executable(multifile_test unittests/multifile_test_main.cpp unittests/multifile_test_chai.cpp
       unittests/multifile_test_module.cpp)
-    target_link_libraries(multifile_test ${LIBS})
+    target_link_libraries(multifile_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME MultiFile_Test COMMAND multifile_test)
 
     add_library(test_module MODULE src/test_module.cpp)
-    target_link_libraries(test_module ${LIBS})
+    target_link_libraries(test_module ${LIBS} ${EXTRA_LINKER_FLAGS})
 
     install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript)
   endif()
