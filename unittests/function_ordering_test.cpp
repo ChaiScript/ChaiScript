@@ -17,7 +17,7 @@ int main()
   chaiscript::ChaiScript chai;
   chai.eval("def test_fun(x) { return 3; }");
   chai.eval("def test_fun(x) : x == \"hi\" { return 4; }");
-  chai.eval("def test_fun(x) { return 5; }");
+//  chai.eval("def test_fun(x) { return 5; }");
   chai.add(chaiscript::fun(&test_one), "test_fun");
   chai.add(chaiscript::fun(&test_two), "test_fun");
 

@@ -219,7 +219,12 @@ namespace chaiscript
 
         virtual bool operator==(const Proxy_Function_Base &rhs) const
         {
-          return this == &rhs;
+          const Dynamic_Proxy_Function *prhs = dynamic_cast<const Dynamic_Proxy_Function *>(&rhs);
+
+          return this == &rhs
+            || (prhs
+                && this->m_arity == prhs->m_arity
+                && !this->m_guard && !prhs->m_guard);
         }
 
         virtual bool call_match(const std::vector<Boxed_Value> &vals) const

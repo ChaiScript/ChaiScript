@@ -1,0 +1,2 @@
+assert_throws("Variable already defined", fun() { var y = 10; var y = 20; })
+
