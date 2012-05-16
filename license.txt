@@ -1,4 +1,4 @@
-Copyright 2009-2011 Jason Turner and Jonathan Turner. All Rights Reserved.
+Copyright 2009-2012 Jason Turner and Jonathan Turner. All Rights Reserved.
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
 met:
