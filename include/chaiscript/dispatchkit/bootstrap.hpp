@@ -428,9 +428,6 @@ namespace chaiscript
         m->add(fun(&Type_Info::name), "cpp_name");
         m->add(fun(&Type_Info::bare_name), "cpp_bare_name");
         m->add(fun(&Type_Info::bare_equal), "bare_equal");
-        typedef bool (Type_Info::*typeinfocompare)(const Type_Info &) const;
-        m->add(fun(typeinfocompare(&Type_Info::operator==)), "==");
-        m->add(fun(&Type_Info::bare_equal), "bare_equal");
 
 
         basic_constructors<bool>("bool", m);

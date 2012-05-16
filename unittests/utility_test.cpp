@@ -37,8 +37,8 @@ int main()
   chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());;
   chai.add(m);
   if (chai.eval<std::string>("auto t = Test(); t.function2(); ") == "Function2"
-      && chai.eval<std::string>("auto t = Test(); t.functionOverload(1); ") == "int"
-      && chai.eval<std::string>("auto t = Test(); t.functionOverload(1.1); ") == "double")
+      && chai.eval<std::string>("auto t2 = Test(); t2.functionOverload(1); ") == "int"
+      && chai.eval<std::string>("auto t3 = Test(); t3.functionOverload(1.1); ") == "double")
   {
     chai.eval("t = Test();");
     return EXIT_SUCCESS;

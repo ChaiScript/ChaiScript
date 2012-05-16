@@ -1,0 +1,2 @@
+assert_throws("Variable already defined", []() { auto y = 10; auto y = 20; })
+

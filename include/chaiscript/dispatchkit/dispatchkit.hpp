@@ -33,10 +33,7 @@ namespace chaiscript
   namespace exception
   {
     /**
-     * Exception thrown in the case that a multi method dispatch fails
-     * because no matching function was found
-     * at runtime due to either an arity_error, a guard_error or a bad_boxed_cast
-     * exception
+     * Exception thrown in the case that an object name is invalid because it is a reserved word
      */
     class reserved_word_error : public std::runtime_error
     {
@@ -57,6 +54,30 @@ namespace chaiscript
         std::string m_word;
 
     };
+
+    /**
+     * Exception thrown in the case that an object name is invalid because it already exists in current context
+     */
+    class name_conflict_error : public std::runtime_error
+    {
+      public:
+        name_conflict_error(const std::string &t_name) throw()
+          : std::runtime_error("Name already exists in current context " + t_name), m_name(t_name)
+        {
+        }
+
+        virtual ~name_conflict_error() throw() {}
+
+        std::string name() const
+        {
+          return m_name;
+        }
+
+      private:
+        std::string m_name;
+
+    };
+
 
     /**
      * Exception thrown in the case that a non-const object was added as a shared object
@@ -144,7 +165,12 @@ namespace chaiscript
         {
           while (begin != end)
           {
-            t.add(begin->first, begin->second);
+            try {
+              t.add(begin->first, begin->second);
+            } catch (const chaiscript::exception::name_conflict_error &) {
+              /// \todo Should we throw an error if there's a name conflict 
+              ///       while applying a module?
+            }
             ++begin;
           }
         }
@@ -378,16 +404,17 @@ namespace chaiscript
         /**
          * Add a new named Proxy_Function to the system
          */
-        bool add(const Proxy_Function &f, const std::string &name)
+        void add(const Proxy_Function &f, const std::string &name)
         {
           validate_object_name(name);
-          return add_function(f, name);
+          add_function(f, name);
         }
 
         /**
          * Set the value of an object, by name. If the object
          * is not available in the current scope it is created
          */
+        /*
         void add(const Boxed_Value &obj, const std::string &name)
         {
           validate_object_name(name);
@@ -405,6 +432,7 @@ namespace chaiscript
 
           add_object(name, obj);
         }
+        */
 
         /**
          * Adds a named object to the current scope
@@ -413,7 +441,15 @@ namespace chaiscript
         {
           StackData &stack = get_stack_data();
           validate_object_name(name);
-          stack.back()[name] = obj;
+          
+          Scope &scope = stack.back();
+          Scope::iterator itr = scope.find(name);
+          if (itr != stack.back().end())
+          {
+            throw chaiscript::exception::name_conflict_error(name);
+          } else {
+            stack.back().insert(std::make_pair(name, obj));
+          }
         }
 
         /**
@@ -429,7 +465,12 @@ namespace chaiscript
 
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_global_object_mutex);
 
-          m_state.m_global_objects[name] = obj;
+          if (m_state.m_global_objects.find(name) != m_state.m_global_objects.end())
+          {
+            throw chaiscript::exception::name_conflict_error(name);
+          } else {
+            m_state.m_global_objects.insert(std::make_pair(name, obj));
+          }
         }
 
         /**
@@ -935,11 +976,10 @@ namespace chaiscript
         }
 
         /**
-         * Implementation detail for adding a function. Returns
-         * true if the function was added, false if a function with the
-         * same signature and name already exists.
+         * Implementation detail for adding a function. 
+         * \throws exception::name_conflict_error if there's a function matching the given one being added
          */
-        bool add_function(const Proxy_Function &t_f, const std::string &t_name)
+        void add_function(const Proxy_Function &t_f, const std::string &t_name)
         {
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
@@ -957,7 +997,7 @@ namespace chaiscript
             {
               if ((*t_f) == *(*itr2))
               {
-                return false;
+                throw chaiscript::exception::name_conflict_error(t_name);
               }
             }
 
@@ -968,8 +1008,6 @@ namespace chaiscript
             vec.push_back(t_f);
             funcs.insert(std::make_pair(t_name, vec));
           }
-
-          return true;
         }
 
         mutable chaiscript::detail::threading::shared_mutex m_mutex;
