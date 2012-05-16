@@ -24,11 +24,13 @@ set(CPACK_PACKAGE_VENDOR "ChaiScript.com")
 set(CPACK_PACKAGE_CONTACT "contact@chaiscript.com")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "An embedded scripting language for C++")
 
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libboost-dev (>=1.36.0)")
 set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 
 set(CPACK_RPM_PACKAGE_LICENSE "BSD")
 set(CPACK_RPM_PACKAGE_GROUP "Programming")
+set(CPACK_RPM_PACKAGE_REQUIRES "boost-devel >= 1.36.0, boost-thread >= 1.36.0")
 
 set(CHAI_VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH})
 
@@ -59,29 +61,31 @@ if(MSVC)
     add_definitions(/bigobj)
    endif()
 else()
-  add_definitions(-Wall -Wextra -Wshadow -pedantic -std=c++0x)
+  add_definitions(-Wall -Wextra -Wshadow -pedantic)
 
   if (APPLE)
-    add_definitions(-Wno-sign-compare)
+    # -Wno-missing-field-initializers is for boost on macos
+    add_definitions(-Wno-missing-field-initializers -Wno-sign-compare)
   endif()
-endif()
-
-if (CMAKE_CXX_COMPILER MATCHES ".*clang")
-  message(STATUS "Using clang's libcxx")
-  add_definitions(-stdlib=libc++)
-  set (EXTRA_LINKER_FLAGS -std=c++0x -stdlib=libc++)
-else()
-  set (EXTRA_LINKER_FLAGS )
 endif()
 
 include_directories(include)
 
+set(Boost_ADDITIONAL_VERSIONS "1.44" "1.44.0" "1.43" "1.43.0" "1.42" "1.42.0" "1.41")
+set(Boost_USE_MULTITHREADED ON)
 
 set (Chai_INCLUDES include/chaiscript/chaiscript.hpp include/chaiscript/chaiscript_threading.hpp include/chaiscript/dispatchkit/bad_boxed_cast.hpp include/chaiscript/dispatchkit/bind_first.hpp include/chaiscript/dispatchkit/bootstrap.hpp include/chaiscript/dispatchkit/bootstrap_stl.hpp include/chaiscript/dispatchkit/boxed_cast.hpp include/chaiscript/dispatchkit/boxed_cast_helper.hpp include/chaiscript/dispatchkit/boxed_number.hpp include/chaiscript/dispatchkit/boxed_value.hpp include/chaiscript/dispatchkit/dispatchkit.hpp include/chaiscript/dispatchkit/dynamic_cast_conversion.hpp include/chaiscript/dispatchkit/dynamic_object.hpp include/chaiscript/dispatchkit/exception_specification.hpp include/chaiscript/dispatchkit/function_call.hpp include/chaiscript/dispatchkit/function_call_detail.hpp include/chaiscript/dispatchkit/handle_return.hpp include/chaiscript/dispatchkit/operators.hpp include/chaiscript/dispatchkit/proxy_constructors.hpp include/chaiscript/dispatchkit/proxy_functions.hpp include/chaiscript/dispatchkit/proxy_functions_detail.hpp include/chaiscript/dispatchkit/register_function.hpp include/chaiscript/dispatchkit/type_info.hpp include/chaiscript/language/chaiscript_algebraic.hpp include/chaiscript/language/chaiscript_common.hpp include/chaiscript/language/chaiscript_engine.hpp include/chaiscript/language/chaiscript_eval.hpp include/chaiscript/language/chaiscript_parser.hpp include/chaiscript/language/chaiscript_prelude.hpp include/chaiscript/language/chaiscript_prelude_docs.hpp include/chaiscript/utility/utility.hpp)
 
 set_source_files_properties(${Chai_INCLUDES} PROPERTIES HEADER_FILE_ONLY TRUE)
 
 if (MULTITHREAD_SUPPORT_ENABLED)
+  find_package(Boost 1.36.0 COMPONENTS thread)
+
+  if (Boost_FOUND)
+    link_directories( ${Boost_LIBRARY_DIRS} )
+  else()
+    message(FATAL_ERROR "Can not find Boost")
+  endif(Boost_FOUND)
 else()
   add_definitions(-DCHAISCRIPT_NO_THREADS)
 endif()
@@ -90,30 +94,37 @@ if (CMAKE_HOST_UNIX)
   set(DYNAMIC_LOADER "dl")
 endif(CMAKE_HOST_UNIX)
 
-set(LIBS ${DYNAMIC_LOADER} ${READLINE_LIB})
+if (MSVC)
+  # Boost on MSVC does automatic linking
+  set(LIBS ${DYNAMIC_LOADER} ${READLINE_LIB})
+else()
+  set(LIBS ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
+endif()
 
 if (CMAKE_COMPILER_2005)
   # vs2005 is a bit too loud about possible loss of data warnings
 #  ADD_DEFINITIONS(/wd4244)
 endif()
 
+include_directories(${Boost_INCLUDE_DIRS})
+include_directories(${Boost_INCLUDE_DIR})
 add_executable(chai src/main.cpp ${Chai_INCLUDES})
-target_link_libraries(chai ${LIBS} ${EXTRA_LINKER_FLAGS})
+target_link_libraries(chai ${LIBS})
 
 if (BUILD_SAMPLES)
   add_executable(example samples/example.cpp)
-  target_link_libraries(example ${LIBS} ${EXTRA_LINKER_FLAGS})
+  target_link_libraries(example ${LIBS})
   add_executable(memory_leak_test samples/memory_leak_test.cpp)
-  target_link_libraries(memory_leak_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+  target_link_libraries(memory_leak_test ${LIBS})
 endif()
 
 
 if (BUILD_MODULES)
   add_library(stl_extra MODULE src/stl_extra.cpp)
-  target_link_libraries(stl_extra ${LIBS} ${EXTRA_LINKER_FLAGS})
+  target_link_libraries(stl_extra ${LIBS})
 
   add_library(reflection MODULE src/reflection.cpp)
-  target_link_libraries(reflection ${LIBS} ${EXTRA_LINKER_FLAGS})
+  target_link_libraries(reflection ${LIBS})
   set(MODULES stl_extra reflection)
 endif()
 
@@ -137,53 +148,53 @@ if(BUILD_TESTING)
 
   if (NOT UNIT_TEST_LIGHT)
     add_executable(utility_test unittests/utility_test.cpp)
-    target_link_libraries(utility_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(utility_test ${LIBS})
     add_test(NAME Utility_Test COMMAND utility_test)
 
     add_executable(dynamic_object_test unittests/dynamic_object_test.cpp)
-    target_link_libraries(dynamic_object_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(dynamic_object_test ${LIBS})
     add_test(NAME Dynamic_Object_Test COMMAND dynamic_object_test)
 
     add_executable(functor_creation_test unittests/functor_creation_test.cpp)
-    target_link_libraries(functor_creation_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(functor_creation_test ${LIBS})
     add_test(NAME Functor_Creation_Test COMMAND functor_creation_test)
 
     add_executable(functor_cast_test unittests/functor_cast_test.cpp)
-    target_link_libraries(functor_cast_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(functor_cast_test ${LIBS})
     add_test(NAME Functor_Cast_Test COMMAND functor_cast_test)
 
     add_executable(boxed_cast_test unittests/boxed_cast_test.cpp)
-    target_link_libraries(boxed_cast_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(boxed_cast_test ${LIBS})
     add_test(NAME Boxed_Cast_Test COMMAND boxed_cast_test)
 
     add_executable(object_lifetime_test unittests/object_lifetime_test.cpp)
-    target_link_libraries(object_lifetime_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(object_lifetime_test ${LIBS})
     add_test(NAME Object_Lifetime_Test COMMAND object_lifetime_test)
 
     add_executable(function_ordering_test unittests/function_ordering_test.cpp)
-    target_link_libraries(function_ordering_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(function_ordering_test ${LIBS})
     add_test(NAME Function_Ordering_Test COMMAND function_ordering_test)
 
     add_executable(type_info_test unittests/type_info_test.cpp)
-    target_link_libraries(type_info_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(type_info_test ${LIBS})
     add_test(NAME Type_Info_Test COMMAND type_info_test)
 
     add_executable(eval_catch_exception_test unittests/eval_catch_exception_test.cpp)
-    target_link_libraries(eval_catch_exception_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(eval_catch_exception_test ${LIBS})
     add_test(NAME Eval_Catch_Exception_Test COMMAND eval_catch_exception_test)
 
     add_executable(short_comparison_test unittests/short_comparison_test.cpp)
-    target_link_libraries(short_comparison_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(short_comparison_test ${LIBS})
     add_test(NAME short_comparison_test COMMAND short_comparison_test)
 
 
     add_executable(multifile_test unittests/multifile_test_main.cpp unittests/multifile_test_chai.cpp
       unittests/multifile_test_module.cpp)
-    target_link_libraries(multifile_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(multifile_test ${LIBS})
     add_test(NAME MultiFile_Test COMMAND multifile_test)
 
     add_library(test_module MODULE src/test_module.cpp)
-    target_link_libraries(test_module ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(test_module ${LIBS})
 
     install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript)
   endif()
