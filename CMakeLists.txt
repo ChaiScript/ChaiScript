@@ -67,9 +67,15 @@ else()
 endif()
 
 if (CMAKE_CXX_COMPILER MATCHES ".*clang")
-  message(STATUS "Using clang's libcxx")
-  add_definitions(-stdlib=libc++)
-  set (EXTRA_LINKER_FLAGS -std=c++0x -stdlib=libc++)
+
+  option(USE_LIBCXX "Use clang's libcxx" TRUE)
+
+  if (USE_LIBCXX)
+    add_definitions(-stdlib=libc++)
+    set (EXTRA_LINKER_FLAGS -std=c++0x -stdlib=libc++)
+  else ()
+    set (EXTRA_LINKER_FLAGS -std=c++0x )
+  endif()
 else()
   set (EXTRA_LINKER_FLAGS )
 endif()
