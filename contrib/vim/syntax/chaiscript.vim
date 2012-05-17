@@ -49,7 +49,7 @@ syn keyword chaiscriptExceptions   try catch throw
 syn keyword chaiscriptKeyword      def true false attr
 
 "Built in types
-syn keyword chaiscriptType         fun var
+syn keyword chaiscriptType         fun var auto
 
 "Built in funcs, keep it simple
 syn keyword chaiscriptFunc         eval throw
