@@ -1417,6 +1417,92 @@ namespace chaiscript
         }
 
         /**
+         * Reads a case block from input
+         */
+        bool Case() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Keyword("case")) {
+            retval = true;
+            
+            if (!Char('(')) {
+              throw exception::eval_error("Incomplete 'case' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            if (!(Operator() && Char(')'))) {
+              throw exception::eval_error("Incomplete 'case' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            while (Eol()) {}
+
+            if (!Block()) {
+              throw exception::eval_error("Incomplete 'case' block", File_Position(m_line, m_col), *m_filename);
+            }
+            
+            build_match(AST_NodePtr(new eval::Case_AST_Node()), prev_stack_top);
+          }
+          else if (Keyword("default")) {
+            while (Eol()) {}
+
+            if (!Block()) {
+              throw exception::eval_error("Incomplete 'default' block", File_Position(m_line, m_col), *m_filename);
+            }
+            
+            build_match(AST_NodePtr(new eval::Default_AST_Node()), prev_stack_top);
+          }            
+          
+          return retval;
+        }
+      
+        /**
+         * Reads a switch statement from input
+         */
+        bool Switch() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Keyword("switch")) {
+            retval = true;
+
+            if (!Char('(')) {
+              throw exception::eval_error("Incomplete 'switch' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            if (!(Operator() && Char(')'))) {
+              throw exception::eval_error("Incomplete 'switch' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            while (Eol()) {}
+
+            if (Char('{')) {
+              retval = true;
+            
+              while (Eol()) {}
+              
+              while (Case()) {
+                while (Eol());
+              }
+
+              while (Eol());
+
+              if (!Char('}')) {
+                throw exception::eval_error("Incomplete block", File_Position(m_line, m_col), *m_filename);
+              }
+            }
+            else {
+              throw exception::eval_error("Incomplete block", File_Position(m_line, m_col), *m_filename);
+            }
+            
+            build_match(AST_NodePtr(new eval::Switch_AST_Node()), prev_stack_top);
+          }
+
+          return retval;
+        }
+
+        /**
          * Reads a curly-brace C-style block from input
          */
         bool Block() {
@@ -1950,6 +2036,14 @@ namespace chaiscript
               saw_eol = true;
             }
             else if (For()) {
+              if (!saw_eol) {
+                throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
+              }
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            }
+            else if (Switch()) {
               if (!saw_eol) {
                 throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
               }
