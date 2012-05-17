@@ -795,7 +795,7 @@ namespace chaiscript
 
           match_value = this->children[0]->eval(t_ss);
 
-          while (!breaking) {
+          while (!breaking && (currentCase < this->children.size())) {
             try {
               if (this->children[currentCase]->identifier == AST_Node_Type::Case) {
                 //This is a little odd, but because want to see both the switch and the case simultaneously, I do a downcast here.
@@ -818,8 +818,6 @@ namespace chaiscript
               breaking = true;
             }
             ++currentCase;
-            if (currentCase == this->children.size())
-              breaking = true;
           }
           return Boxed_Value();
         }
