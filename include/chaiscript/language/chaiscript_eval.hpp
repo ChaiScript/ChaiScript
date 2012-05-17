@@ -780,6 +780,79 @@ namespace chaiscript
 
     };
 
+    struct Switch_AST_Node : public AST_Node {
+      public:
+        Switch_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Switch, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        virtual ~Switch_AST_Node() {}
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
+          Boxed_Value match_value;
+          bool breaking = false;
+          int currentCase = 1;
+          bool hasMatched = false;
+
+          chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+
+          match_value = this->children[0]->eval(t_ss);
+
+          while (!breaking) {
+            try {
+              if (this->children[currentCase]->identifier == AST_Node_Type::Case) {
+                //This is a little odd, but because want to see both the switch and the case simultaneously, I do a downcast here.
+                try {
+                  if (hasMatched || boxed_cast<bool>(t_ss.call_function("==", match_value, this->children[currentCase]->children[0]->eval(t_ss)))) {
+                    this->children[currentCase]->eval(t_ss);
+                    hasMatched = true;
+                  }
+                }
+                catch (const exception::bad_boxed_cast &) {
+                  throw exception::eval_error("Internal error: case guard evaluation not boolean");
+                }
+              }
+              else if (this->children[currentCase]->identifier == AST_Node_Type::Default) {
+                this->children[currentCase]->eval(t_ss);
+                breaking = true;
+              }
+            }
+            catch (detail::Break_Loop &) {
+              breaking = true;
+            }
+            ++currentCase;
+            if (currentCase == this->children.size())
+              breaking = true;
+          }
+          return Boxed_Value();
+        }
+    };
+
+    struct Case_AST_Node : public AST_Node {
+      public:
+        Case_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Case, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        virtual ~Case_AST_Node() {}
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
+          chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+
+          this->children[1]->eval(t_ss);
+          
+          return Boxed_Value();
+        }
+    };
+   
+    struct Default_AST_Node : public AST_Node {
+      public:
+        Default_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Default, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        virtual ~Default_AST_Node() {}
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
+          chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+
+          this->children[0]->eval(t_ss);
+
+          return Boxed_Value();
+        }
+    };
+       
     struct Inline_Array_AST_Node : public AST_Node {
       public:
         Inline_Array_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inline_Array, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
