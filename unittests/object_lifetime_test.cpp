@@ -39,19 +39,20 @@ int main()
 
   chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
   chai.add(m);
-  chai.add(chaiscript::fun(&Test::count), "count");
+//  chai.add(chaiscript::fun(&Test::count), "count");
 
   int count = chai.eval<int>("count()");
 
   int count2 = chai.eval<int>("auto i = 0; { auto t = Test(); } return i;");
 
-  int count3 = chai.eval<int>("auto i = 0; { auto t = Test(); i = count(); } return i;");
+  int count3 = chai.eval<int>("i = 0; { auto t = Test(); i = count(); } return i;");
 
-  int count4 = chai.eval<int>("auto i = 0; { auto t = Test(); { auto t2 = Test(); i = count(); } } return i;");
+  int count4 = chai.eval<int>("i = 0; { auto t = Test(); { auto t2 = Test(); i = count(); } } return i;");
  
-  int count5 = chai.eval<int>("auto i = 0; { auto t = Test(); { auto t2 = Test(); } i = count(); } return i;");
+  int count5 = chai.eval<int>("i = 0; { auto t = Test(); { auto t2 = Test(); } i = count(); } return i;");
 
-  int count6 = chai.eval<int>("auto i = 0; { auto t = Test(); { auto t2 = Test(); }  } i = count(); return i;");
+  int count6 = chai.eval<int>("i = 0; { auto t = Test(); { auto t2 = Test(); }  } i = count(); return i;");
+
 
   if (count == 0
       && count2 == 0

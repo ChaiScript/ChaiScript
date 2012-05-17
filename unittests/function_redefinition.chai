@@ -1,0 +1,2 @@
+assert_throws("Function already defined", [](){ def foo(x) { x + 1 }; def foo(x) { x + 1 } } );
+

@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -427,9 +427,6 @@ namespace chaiscript
         m->add(fun(&Type_Info::is_pointer), "is_type_pointer");
         m->add(fun(&Type_Info::name), "cpp_name");
         m->add(fun(&Type_Info::bare_name), "cpp_bare_name");
-        m->add(fun(&Type_Info::bare_equal), "bare_equal");
-        typedef bool (Type_Info::*typeinfocompare)(const Type_Info &) const;
-        m->add(fun(typeinfocompare(&Type_Info::operator==)), "==");
         m->add(fun(&Type_Info::bare_equal), "bare_equal");
 
 

@@ -182,6 +182,10 @@ if(BUILD_TESTING)
     target_link_libraries(short_comparison_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME short_comparison_test COMMAND short_comparison_test)
 
+    add_executable(cpp_lambda_test unittests/cpp_lambda_test.cpp)
+    target_link_libraries(cpp_lambda_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    add_test(NAME cpp_lambda_test COMMAND cpp_lambda_test)
+
 
     add_executable(multifile_test unittests/multifile_test_main.cpp unittests/multifile_test_chai.cpp
       unittests/multifile_test_module.cpp)
