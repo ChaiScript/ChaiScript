@@ -42,7 +42,7 @@ syn match  chaiscriptNumber        "\<0b[01]\+\>"
 " Various language features
 syn keyword chaiscriptCond         if else
 syn keyword chaiscriptRepeat       while for do
-syn keyword chaiscriptStatement    break continue return
+syn keyword chaiscriptStatement    break continue return switch case default
 syn keyword chaiscriptExceptions   try catch throw
 
 "Keyword
