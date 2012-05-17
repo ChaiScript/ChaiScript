@@ -1,0 +1,3 @@
+var v = [1,2,3];
+var r = range(v);
+for_each(r, fun(x) { assert_equal(true, x>0); } )

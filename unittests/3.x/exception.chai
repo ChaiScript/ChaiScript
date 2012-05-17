@@ -1,0 +1,9 @@
+var x = 1
+try {
+  throw(x)
+  x = 2
+}
+catch(e) {
+  x = e + 3
+}
+assert_equal(4, x);

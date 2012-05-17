@@ -1,7 +1,7 @@
-auto ret = {}
+auto ret = []
 
 for (auto i = 0; i < 5; ++i) {
   ret.push_back(i);
 }
 
-assert_equal({0,1,2,3,4}, ret);
+assert_equal([0,1,2,3,4], ret);

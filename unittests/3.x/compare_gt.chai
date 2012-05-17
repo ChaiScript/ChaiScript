@@ -1,0 +1,1 @@
+assert_equal(false, 1 > 2);

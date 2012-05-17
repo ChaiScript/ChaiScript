@@ -123,7 +123,7 @@ if (BUILD_MODULES)
   set(MODULES stl_extra reflection)
 endif()
 
-file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.chai)
+file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.chai ${CMAKE_CURRENT_SOURCE_DIR}/unittests/3.x/*.chai)
 
 list(SORT UNIT_TESTS)
 

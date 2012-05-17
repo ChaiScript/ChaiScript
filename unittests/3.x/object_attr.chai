@@ -1,0 +1,6 @@
+attr bob::z
+def bob::bob() { this.z = 10 }
+var x = bob()
+def bob::fred(x) { this.z - x }
+
+assert_equal(7, x.fred(3))

@@ -1,0 +1,9 @@
+def bob(x, y) : x > 10 { x - y }
+
+def bob(x, y) : x > 5 { x - y + 10 }
+
+def bob(x, y) { x + y }
+
+assert_equal(7, bob(3,4))
+assert_equal(9, bob(6,7))
+assert_equal(-1, bob(11,12))

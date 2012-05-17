@@ -1,0 +1,11 @@
+attr bob::z
+def bob::bob() { }
+
+var x = bob();
+x.z = 10;
+
+var y = clone(x);
+y.z = 20;
+
+assert_equal(10, x.z)
+assert_equal(20, y.z)

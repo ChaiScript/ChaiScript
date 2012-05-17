@@ -1,0 +1,9 @@
+use("use.inc")
+
+assert_equal("hello", greet())
+
+// Include it a second time and see if there are any errors
+use("use.inc")
+
+assert_equal("hello", greet())
+

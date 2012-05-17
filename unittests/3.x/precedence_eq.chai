@@ -1,0 +1,3 @@
+var x = var y = 4
+assert_equal(4, x);
+assert_equal(4, y);

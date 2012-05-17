@@ -321,6 +321,13 @@ namespace chaiscript
                 throw exception::eval_error("Missing clone or copy constructor for right hand side of equation", e.parameters, t_ss);
               }
             }
+            else if (this->children[1]->text == ":=") {
+              if (lhs.is_undef() || Boxed_Value::type_match(lhs, retval)) {
+                lhs.assign(retval);
+              } else {
+                throw exception::eval_error("Mismatched types in equation");
+              }
+            }
             else {
               try {
                 retval = t_ss.call_function(this->children[1]->text, lhs, retval);

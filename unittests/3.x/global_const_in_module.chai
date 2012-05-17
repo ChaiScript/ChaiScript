@@ -1,0 +1,7 @@
+load_module("test_module")
+
+
+assert_equal(to_int(TestValue1), 1)
+
+assert_equal(TestValue1.type_name(), "TestEnum")
+

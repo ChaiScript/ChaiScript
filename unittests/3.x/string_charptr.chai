@@ -1,0 +1,6 @@
+assert_equal(true, "hello".c_str().is_var_const())
+assert_equal("char", "hello".c_str().type_name())
+
+assert_equal(true, "hello".data().is_var_const())
+assert_equal("char", "hello".data().type_name())
+

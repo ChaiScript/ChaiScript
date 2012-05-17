@@ -1,0 +1,1 @@
+assert_equal(8, "4".to_int() + 4)

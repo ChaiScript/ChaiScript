@@ -1119,11 +1119,7 @@ namespace chaiscript
 
           size_t prev_stack_top = m_match_stack.size();
 
-          //if (Keyword("fun")) {
-          if (Char('[')) {
-            if (!Char(']')) {
-              throw exception::eval_error("Closure list not currently supported", File_Position(m_line, m_col), *m_filename);
-            }
+          if (Keyword("fun")) {
             retval = true;
 
             if (Char('(')) {
@@ -1546,7 +1542,7 @@ namespace chaiscript
 
           size_t prev_stack_top = m_match_stack.size();
 
-          if (Keyword("auto")) {
+          if (Keyword("auto") || Keyword("var")) {
             retval = true;
 
             if (!(Reference() || Id(true))) {
@@ -1601,10 +1597,10 @@ namespace chaiscript
 
           size_t prev_stack_top = m_match_stack.size();
 
-          if (Char('{')) {
+          if (Char('[')) {
             retval = true;
             Container_Arg_List();
-            if (!Char('}')) {
+            if (!Char(']')) {
               throw exception::eval_error("Missing closing brace '}' in container initializer", File_Position(m_line, m_col), *m_filename);
             }
             if ((prev_stack_top != m_match_stack.size()) && (m_match_stack.back()->children.size() > 0)) {
@@ -1893,7 +1889,7 @@ namespace chaiscript
 
           if (Operator()) {
             retval = true;
-            if (Symbol("=", true, true) ||  Symbol("+=", true, true) ||
+            if (Symbol("=", true, true) || Symbol(":=", true, true) || Symbol("+=", true, true) ||
                 Symbol("-=", true, true) || Symbol("*=", true, true) || Symbol("/=", true, true) ||
                 Symbol("%=", true, true) || Symbol("<<=", true, true) || Symbol(">>=", true, true) ||
                 Symbol("&=", true, true) || Symbol("^=", true, true) || Symbol("|=", true, true)) {

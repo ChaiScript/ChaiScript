@@ -28,7 +28,7 @@ def my_fun()
 assert_equal(true, my_fun.has_parse_tree());
 assert_equal(false, `+`.has_parse_tree());
 
-assert_throws("Function does not have a parse tree", []() { `+`.get_parse_tree(); } );
+assert_throws("Function does not have a parse tree", fun() { `+`.get_parse_tree(); } );
 
 auto& parsetree = my_fun.get_parse_tree();
 

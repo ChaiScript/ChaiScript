@@ -1,0 +1,37 @@
+load_module("reflection")
+var parser := ChaiScript_Parser()
+var parse_success = parser.parse("3 + 4", "INPUT")
+var a := parser.ast()
+
+assert_equal(eval(a), 7)
+
+var childs := a.children.front().children
+var node := childs[0]
+
+var parser2 := ChaiScript_Parser()
+parser2.parse("9", "INPUT")
+
+
+a.children.front().replace_child(childs[0], parser2.ast())
+
+assert_equal(eval(a), 13)
+assert_equal(node.filename, "INPUT")
+
+
+
+def my_fun()
+{
+  return 1;
+}
+
+
+assert_equal(true, my_fun.has_parse_tree());
+assert_equal(false, `+`.has_parse_tree());
+
+assert_throws("Function does not have a parse tree", fun() { `+`.get_parse_tree(); } );
+
+var parsetree := my_fun.get_parse_tree();
+
+assert_equal(1, eval(parsetree));
+
+print(parsetree.text());

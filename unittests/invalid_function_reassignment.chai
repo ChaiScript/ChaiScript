@@ -1,1 +1,1 @@
-assert_throws("Invalid function reassignment", []() { auto x = 5; x = `-`; } );
+assert_throws("Invalid function reassignment", fun() { auto x = 5; x = `-`; } );

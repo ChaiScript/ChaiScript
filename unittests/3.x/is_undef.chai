@@ -1,0 +1,4 @@
+var i;
+assert_equal(true, i.is_var_undef());
+i = 5;
+assert_equal(false, i.is_var_undef());

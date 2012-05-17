@@ -7,7 +7,7 @@
 #ifndef CHAISCRIPT_PRELUDE_HPP_
 #define CHAISCRIPT_PRELUDE_HPP_
 
-//Note, the expression "{x,y}" in "collate" is parsed as two separate expressions
+//Note, the expression "[x,y]" in "collate" is parsed as two separate expressions
 //by C++, so CODE_STRING, takes two expressions and adds in the missing comma
 #define CODE_STRING(x, y) #x ", " #y 
 
@@ -23,7 +23,7 @@ def to_string(x) : call_exists(first, x) && call_exists(second, x) { \n\
 }\n\
 # to_string for containers\n\
 def to_string(x) : call_exists(range, x) && !x.is_type("string"){ \n\
-  "{" + x.join(", ") + "}"; \n\
+  "[" + x.join(", ") + "]"; \n\
 }\n\
 # Basic to_string function\n\
 def to_string(x) { \n\
@@ -259,7 +259,7 @@ def generate_range(x, y) { \n\
 }\n\
 # Returns a new Vector with the first value to the second value as its elements\n\
 def collate(x, y) { \n\
-  return {x, y}; \n\
+  return [x, y]; \n\
 } \n\
 def zip_with(f, x, y, inserter) : call_exists(range, x) && call_exists(range, y) { \n\
   auto r_x = range(x); \n\
@@ -305,10 +305,10 @@ def string::find_last_not_of(list) : is_type(list, "string") { \n\
   int(find_last_not_of(this, list, -1)); \n\
 } \n\
 def string::ltrim() { \n\
-  drop_while(this, [](x) { x == ' ' || x == '\t' || x == '\r' || x == '\n'}); \n\
+  drop_while(this, fun(x) { x == ' ' || x == '\t' || x == '\r' || x == '\n'}); \n\
 } \n\
 def string::rtrim() { \n\
-  reverse(drop_while(reverse(this), [](x) { x == ' ' || x == '\t' || x == '\r' || x == '\n'})); \n\
+  reverse(drop_while(reverse(this), fun(x) { x == ' ' || x == '\t' || x == '\r' || x == '\n'})); \n\
 } \n\
 def string::trim() { \n\
   ltrim(rtrim(this)); \n\

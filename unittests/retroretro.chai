@@ -1,4 +1,4 @@
-auto x = {1, 2, 3, 4}
+auto x = [1, 2, 3, 4]
 auto r = retro(range(x))
 r.pop_back()
 auto r2 = retro(r)

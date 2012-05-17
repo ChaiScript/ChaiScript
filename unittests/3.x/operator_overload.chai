@@ -1,0 +1,9 @@
+def Bob::`+`(y) { this.x + y.x }
+def Bob::Bob() { }
+attr Bob::x
+var b = Bob()
+var c = Bob()
+b.x = 4
+c.x = 5
+
+assert_equal(9, b+c)

@@ -1,0 +1,10 @@
+
+// tests more complex parses of the index operator
+
+def Bob::bob3() { return [1,2,3]; }
+def Bob::Bob() {}
+var b = Bob();
+
+
+assert_equal(b.bob3()[0], 1);
+assert_equal((b.bob3())[1], 2);

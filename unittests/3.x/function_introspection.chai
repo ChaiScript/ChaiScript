@@ -1,0 +1,76 @@
+
+#Test Function Description
+def test_function(a)
+{
+  return a;
+}
+
+
+
+
+// test_function tests
+assert_equal(test_function.get_arity(), 1);
+assert_equal(trim(test_function.get_annotation()), "#Test Function Description");
+assert_equal(test_function.get_contained_functions().size(), 0);
+assert_equal(test_function.get_param_types().size(), 2);
+
+assert_equal(test_function, test_function);
+
+assert_not_equal(test_function, `+`);
+
+assert_equal(test_function.call([1]), 1);
+
+// dynamic object function tests
+
+def int::test_fun()
+{
+  return this;
+}
+
+assert_equal(test_fun.get_arity(), 1);
+assert_equal(test_fun.get_contained_functions.size(), 1);
+assert_equal(test_fun.get_param_types().size(), 2);
+assert_equal(test_fun, test_fun);
+var test_fun_types = test_fun.get_param_types();
+assert_equal(true, test_fun_types[0].bare_equal(Object_type));
+assert_equal(true, test_fun_types[1].bare_equal(int_type));
+
+
+// built-ins tests
+
+assert_equal(2, `==`.get_arity());
+
+// < should be the merging of two functions bool <(PODObject, PODObject) and bool <(string, string)
+// we want to peel it apart and make sure that's true
+var types = `<`.get_param_types();
+assert_equal(3, types.size());
+assert_equal(true, types[0].bare_equal(bool_type));
+assert_equal(true, types[1].bare_equal(Object_type));
+assert_equal(true, types[2].bare_equal(Object_type));
+assert_equal(2, `<`.get_contained_functions().size());
+
+
+// guard existence tests
+
+def with_guard(x) : x > 3 {}
+def without_guard(x) {}
+
+def group_guard(x) {}
+def group_guard(x) : x > 3 {}
+
+assert_equal(true, with_guard.has_guard());
+assert_equal(false, without_guard.has_guard());
+
+assert_equal(2, group_guard.get_contained_functions().size());
+var group = group_guard.get_contained_functions();
+
+assert_equal(true, group[0].has_guard())
+assert_equal(false, group[1].has_guard())
+
+assert_throws("Function does not have a guard", fun() { group[0].get_guard(); } );
+assert_throws("Function does not have a guard", fun() { without_guard.get_guard(); } );
+
+var guard = with_guard.get_guard();
+
+assert_equal(false, guard.has_guard());
+assert_throws("Function does not have a guard", fun() { guard.get_guard(); } );

@@ -1,0 +1,11 @@
+assert_equal("string", string_type.name());
+assert_equal(false, string_type.is_type_const());
+assert_equal(false, string_type.is_type_reference());
+assert_equal(false, string_type.is_type_void());
+assert_equal(false, string_type.is_type_undef());
+assert_equal(false, string_type.is_type_pointer());
+assert_equal("string", "string".get_type_info().name());
+assert_equal(true, string_type.bare_equal("string".get_type_info()));
+
+assert_equal(true, "bob".is_type(string_type));
+

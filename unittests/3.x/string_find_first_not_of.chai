@@ -1,0 +1,1 @@
+assert_equal(2, find_first_not_of("abcd", "abd"))

@@ -1,0 +1,34 @@
+var results = [];
+
+for (var i = 2; i < 6; ++i) {
+  try {
+    throw(i)
+  }
+  catch(e) : e < 2 {
+    results.push_back("c1: " + e.to_string());
+  }
+  catch(e) : e < 4 {
+    results.push_back("c2: " + e.to_string());
+  }
+  catch(e) {
+    results.push_back("c3: " + e.to_string());
+  }
+  catch {
+    // Should never get called
+    assert_equal(false, true)
+  }
+}
+
+try {
+  throw(3)
+}
+catch(e) : e < 3 
+{
+  // Should never get called
+  assert_equal(false, true);
+}
+catch {
+  results.push_back("defaultcatch");
+}
+
+assert_equal(["c2: 2", "c2: 3", "c3: 4", "c3: 5", "defaultcatch"], results);

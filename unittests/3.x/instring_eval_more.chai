@@ -1,0 +1,4 @@
+assert_equal("\$ {4 + 5}", "$ {4 + 5}")
+assert_equal("\$9", "$${4+5}")
+assert_equal("Value: \${4 + 5}", "Value: \${4 + 5}")
+assert_equal("Value: \$9", "Value: \$${4 + 5}")

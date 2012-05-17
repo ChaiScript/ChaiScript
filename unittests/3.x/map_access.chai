@@ -1,0 +1,2 @@
+var x = ["bob":2, "fred":3]
+assert_equal(3, x["fred"])

@@ -1,0 +1,1 @@
+assert_equal(3, find_last_not_of("abab", "ac"))

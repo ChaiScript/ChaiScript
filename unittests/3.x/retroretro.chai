@@ -1,0 +1,7 @@
+var x = [1, 2, 3, 4]
+var r = retro(range(x))
+r.pop_back()
+var r2 = retro(r)
+r2.pop_front()
+assert_equal(2, r.back())
+assert_equal(3, r2.front())

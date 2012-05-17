@@ -1,0 +1,2 @@
+load_module("test_module")
+assert_equal("Hello World", hello_world());

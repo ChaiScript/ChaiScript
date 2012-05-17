@@ -1,0 +1,7 @@
+assert_equal(true, 1.2 < 2)
+assert_equal(true, 1.2 > 1)
+assert_equal(1.2, 1.2)
+
+assert_equal(true, .5 > 0)
+assert_equal(true, .5 < 1)
+assert_equal(0.5, .5)

@@ -1,0 +1,1 @@
+assert_equal("hello, there", "hello, " + "there")

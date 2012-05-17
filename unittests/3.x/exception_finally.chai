@@ -1,0 +1,32 @@
+var finallyone = false;
+
+try {
+  throw(3)
+}
+catch(x) { 
+  assert_equal(3, x)
+}
+finally {
+  finallyone = true;
+}
+
+assert_equal(true, finallyone);
+
+var try2 = false;
+var catch2 = false;
+var finally2 = false;
+
+
+try {
+  try2 = true;
+}
+catch {
+  catch2 = true;
+}
+finally {
+  finally2 = true;
+}
+
+assert_equal(true, try2);
+assert_equal(false, catch2);
+assert_equal(true, finally2);

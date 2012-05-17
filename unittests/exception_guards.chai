@@ -1,4 +1,4 @@
-auto results = {};
+auto results = [];
 
 for (auto i = 2; i < 6; ++i) {
   try {
@@ -31,4 +31,4 @@ catch {
   results.push_back("defaultcatch");
 }
 
-assert_equal({"c2: 2", "c2: 3", "c3: 4", "c3: 5", "defaultcatch"}, results);
+assert_equal(["c2: 2", "c2: 3", "c3: 4", "c3: 5", "defaultcatch"], results);

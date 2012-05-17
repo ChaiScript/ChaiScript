@@ -1,0 +1,4 @@
+// Don't bother checking the output from this one, just makes sure it executes
+var v = [1,2,3];
+var r = retro(range(v));
+for_each(r, print)
