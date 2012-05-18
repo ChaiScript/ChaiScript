@@ -13,7 +13,7 @@ ChaiScript is one of the only embedded scripting language designed from the grou
 
 [Requirements]
 
-ChaiScript requires a C++11 compiler to build with support for variadic templates.
+ChaiScript requires a C++11 compiler to build with support for variadic templates.  It has been tested with gcc 4.7 and clang 3.1 (with libcxx).
 
 [Usage]
 
