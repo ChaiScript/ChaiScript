@@ -1,0 +1,4 @@
+#!/usr/bin/env chai
+
+//We just have to reach this point for success
+assert_equal(true, true);
