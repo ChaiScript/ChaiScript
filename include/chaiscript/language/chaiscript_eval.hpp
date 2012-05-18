@@ -190,28 +190,19 @@ namespace chaiscript
             }
           }
 
+          Boxed_Value fn = this->children[0]->eval(t_ss);
+
           try {
-            Boxed_Value fn = this->children[0]->eval(t_ss);
-
-            try {
-              chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
-              const Boxed_Value &retval = (*boxed_cast<const Const_Proxy_Function &>(fn))(plb);
-              return retval;
-            }
-            catch(const exception::dispatch_error &e){
-              throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
-            }
-            catch(detail::Return_Value &rv) {
-              return rv.retval;
-            }
-            catch(...) {
-              throw;
-            }
+            chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
+            const Boxed_Value &retval = (*boxed_cast<const Const_Proxy_Function &>(fn))(plb);
+            return retval;
           }
-          catch(exception::eval_error &) {
-            throw;
+          catch(const exception::dispatch_error &e){
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
           }
-
+          catch(detail::Return_Value &rv) {
+            return rv.retval;
+          }
         }
 
     };
@@ -468,9 +459,7 @@ namespace chaiscript
               catch(detail::Return_Value &rv) {
                 retval = rv.retval;
               }
-              catch(...) {
-                throw;
-              }
+
               if (this->children[i]->identifier == AST_Node_Type::Array_Call) {
                 for (size_t j = 1; j < this->children[i]->children.size(); ++j) {
                   try {
