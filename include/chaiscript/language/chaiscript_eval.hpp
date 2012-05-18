@@ -870,6 +870,7 @@ namespace chaiscript
         }
     };
 
+
     struct Inline_Array_AST_Node : public AST_Node {
       public:
         Inline_Array_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Inline_Array, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
