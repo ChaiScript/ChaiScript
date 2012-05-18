@@ -213,6 +213,29 @@ namespace chaiscript
 
         chaiscript::detail::Dispatch_Engine &m_de;
       };
+
+      /// Creates a new scope then pops it on destruction
+      struct Stack_Push_Pop
+      {
+        Stack_Push_Pop(chaiscript::detail::Dispatch_Engine &t_de)
+          : m_de(t_de)
+        {
+          m_de.new_stack();
+        }
+
+        ~Stack_Push_Pop()
+        {
+          m_de.pop_stack();
+        }
+
+
+        private:
+        // explicitly unimplemented copy and assignment
+        Stack_Push_Pop(const Scope_Push_Pop &);
+        Stack_Push_Pop& operator=(const Scope_Push_Pop &);
+
+        chaiscript::detail::Dispatch_Engine &m_de;
+      };
     }
   }
 }

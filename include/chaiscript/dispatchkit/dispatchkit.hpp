@@ -496,28 +496,24 @@ namespace chaiscript
           }
         }
 
-        /**
-         * Swaps out the stack with a new stack
-         * \returns the old stack
-         * \param[in] s The new stack
-         */
-        Stack set_stack(const Stack &s)
-        {
-          Stack old = m_stack_holder->stack;
-          m_stack_holder->stack = s;
-          return old;
-        }
 
-        Stack new_stack() const
+        /// Pushes a new stack on to the list of stacks
+        void new_stack()
         {
           Stack s(new Stack::element_type());
           s->push_back(Scope());
-          return s;
+          m_stack_holder->stacks.push_back(s);
         }
 
+        void pop_stack()
+        {
+          m_stack_holder->stacks.pop_back();
+        }
+
+        /// \returns the current stack
         Stack get_stack() const
         {
-          return m_stack_holder->stack;
+          return m_stack_holder->stacks.back();
         }
 
         /**
@@ -674,7 +670,8 @@ namespace chaiscript
         ///
         std::map<std::string, Boxed_Value> get_scripting_objects() const
         {
-          StackData &stack = get_stack_data();
+          // We don't want the current context, but one up if it exists
+          StackData &stack = (m_stack_holder->stacks.size()==1)?(*(m_stack_holder->stacks.back())):(*m_stack_holder->stacks[m_stack_holder->stacks.size()-2]);
 
           std::map<std::string, Boxed_Value> retval;
 
@@ -914,7 +911,7 @@ namespace chaiscript
          */
         StackData &get_stack_data() const
         {
-          return *(m_stack_holder->stack);
+          return *(m_stack_holder->stacks.back());
         }
 
         const std::map<std::string, std::vector<Proxy_Function> > &get_functions_int() const
@@ -1076,12 +1073,13 @@ namespace chaiscript
         struct Stack_Holder
         {
           Stack_Holder()
-            : stack(new StackData())
           {
-            stack->push_back(Scope());
+            Stack s(new StackData());
+            s->push_back(Scope());
+            stacks.push_back(s);
           }
 
-          Stack stack;
+          std::deque<Stack> stacks;
         };  
 
         std::vector<Dynamic_Cast_Conversion> m_conversions;
