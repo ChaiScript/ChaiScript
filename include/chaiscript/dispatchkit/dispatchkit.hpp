@@ -566,8 +566,8 @@ namespace chaiscript
             if (funcs.size() == 1)
             {
               // Return the first item if there is only one,
-              // no reason to take the cast of the extra level of dispatch
-              return const_var(*funcs.begin());
+              // no reason to take the cost of the extra level of dispatch
+              return const_var(funcs.front());
             } else {
               return Boxed_Value(Const_Proxy_Function(new Dispatch_Function(funcs)));
             }
@@ -667,6 +667,65 @@ namespace chaiscript
           const std::map<std::string, std::vector<Proxy_Function> > &functions = get_functions_int();
           return functions.find(name) != functions.end();
         }
+
+
+        ///
+        /// Get a map of all objects that can be seen from the current scope in a scripting context
+        ///
+        std::map<std::string, Boxed_Value> get_scripting_objects() const
+        {
+          StackData &stack = get_stack_data();
+
+          std::map<std::string, Boxed_Value> retval;
+
+          // note: map insert doesn't overwrite existing values, which is why this works
+         
+          for (StackData::reverse_iterator itr = stack.rbegin(); itr != stack.rend(); ++itr)
+          {
+            retval.insert(itr->begin(), itr->end());
+          } 
+
+          // add the global values
+          {
+            chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_global_object_mutex);
+
+            retval.insert(m_state.m_global_objects.begin(), m_state.m_global_objects.end());
+          }
+
+          return retval;
+        }
+
+
+        ///
+        /// Get a map of all functions that can be seen from a scripting context
+        ///
+        std::map<std::string, Boxed_Value> get_scripting_functions() const
+        {
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+
+          std::vector<std::pair<std::string, Proxy_Function> > rets;
+
+          const std::map<std::string, std::vector<Proxy_Function> > &functions = get_functions_int();
+
+          std::map<std::string, Boxed_Value> retval;
+
+          for (std::map<std::string, std::vector<Proxy_Function> >::const_iterator itr = functions.begin();
+               itr != functions.end();
+               ++itr)
+          {
+            if (itr->second.size() == 1)
+            {
+              // Return the first item if there is only one,
+              // no reason to take the cost of the extra level of dispatch
+              retval.insert(std::make_pair(itr->first, const_var(itr->second.front())));
+            } else {
+              retval.insert(std::make_pair(itr->first, Boxed_Value(Const_Proxy_Function(new Dispatch_Function(itr->second)))));
+            }
+          }
+
+          return retval;
+        }
+
 
         /**
          * Get a vector of all registered functions
