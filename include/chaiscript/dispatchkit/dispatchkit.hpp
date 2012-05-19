@@ -375,7 +375,7 @@ namespace chaiscript
         struct State
         {
           std::map<std::string, std::vector<Proxy_Function> > m_functions;
-          std::map<std::string, Boxed_Value> m_function_objects;
+          std::map<std::string, Proxy_Function> m_function_objects;
           std::map<std::string, Boxed_Value> m_global_objects;
           Type_Name_Map m_types;
           std::set<std::string> m_reserved_words;
@@ -645,16 +645,16 @@ namespace chaiscript
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-          const std::map<std::string, Boxed_Value > &funs = get_function_objects_int();
+          const std::map<std::string, Proxy_Function> &funs = get_function_objects_int();
 
-          std::map<std::string, Boxed_Value>::const_iterator itr = funs.find(t_name);
+          std::map<std::string, Proxy_Function>::const_iterator itr = funs.find(t_name);
 
           if (itr != funs.end())
           {
-            return itr->second;
+            return const_var(itr->second);
           } else {
             throw std::range_error("Object not found: " + t_name);
-            }
+          }
         }
 
         /**
@@ -704,7 +704,18 @@ namespace chaiscript
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-          return get_function_objects_int();
+          const std::map<std::string, Proxy_Function> &funs = get_function_objects_int();
+
+          std::map<std::string, Boxed_Value> objs;
+
+          for (std::map<std::string, Proxy_Function>::const_iterator itr = funs.begin();
+               itr != funs.end();
+               ++itr)
+          {
+            objs.insert(std::make_pair(itr->first, const_var(itr->second)));
+          }
+
+          return objs;
         }
 
 
@@ -897,12 +908,12 @@ namespace chaiscript
           return *(m_stack_holder->stacks.back());
         }
 
-        const std::map<std::string, Boxed_Value> &get_function_objects_int() const
+        const std::map<std::string, Proxy_Function> &get_function_objects_int() const
         {
           return m_state.m_function_objects;
         }
 
-        std::map<std::string, Boxed_Value> &get_function_objects_int() 
+        std::map<std::string, Proxy_Function> &get_function_objects_int() 
         {
           return m_state.m_function_objects;
         }
@@ -1038,7 +1049,7 @@ namespace chaiscript
           std::map<std::string, std::vector<Proxy_Function> >::iterator itr
             = funcs.find(t_name);
 
-          std::map<std::string, Boxed_Value> &func_objs = get_function_objects_int();
+          std::map<std::string, Proxy_Function> &func_objs = get_function_objects_int();
 
           if (itr != funcs.end())
           {
@@ -1055,12 +1066,12 @@ namespace chaiscript
 
             vec.push_back(t_f);
             std::stable_sort(vec.begin(), vec.end(), &function_less_than);
-            func_objs[t_name] = Boxed_Value(Const_Proxy_Function(new Dispatch_Function(vec)));
+            func_objs[t_name] = Proxy_Function(new Dispatch_Function(vec));
           } else {
             std::vector<Proxy_Function> vec;
             vec.push_back(t_f);
             funcs.insert(std::make_pair(t_name, vec));
-            func_objs[t_name] = const_var(t_f);
+            func_objs[t_name] = t_f;
           }
 
 

@@ -1460,12 +1460,9 @@ namespace chaiscript
          * Reads a switch statement from input
          */
         bool Switch() {
-          bool retval = false;
-
           size_t prev_stack_top = m_match_stack.size();
 
           if (Keyword("switch")) {
-            retval = true;
 
             if (!Char('(')) {
               throw exception::eval_error("Incomplete 'switch' expression", File_Position(m_line, m_col), *m_filename);
@@ -1478,8 +1475,6 @@ namespace chaiscript
             while (Eol()) {}
 
             if (Char('{')) {
-              retval = true;
-            
               while (Eol()) {}
               
               while (Case()) {
@@ -1497,9 +1492,12 @@ namespace chaiscript
             }
             
             build_match(AST_NodePtr(new eval::Switch_AST_Node()), prev_stack_top);
+            return true;
+
+          } else {
+            return false;
           }
 
-          return retval;
         }
 
         /**
@@ -2000,7 +1998,6 @@ namespace chaiscript
           bool saw_eol = true;
 
           while (has_more) {
-            has_more = false;
             int prev_line = m_line;
             int prev_col = m_col;
             if (Def()) {
