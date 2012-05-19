@@ -324,7 +324,7 @@ namespace chaiscript
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::is_type, std::ref(m_engine)), "is_type");
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::type_name, std::ref(m_engine)), "type_name");
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::function_exists, std::ref(m_engine)), "function_exists");
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_scripting_functions, std::ref(m_engine)), "get_functions");
+      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_function_objects, std::ref(m_engine)), "get_functions");
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_scripting_objects, std::ref(m_engine)), "get_objects");
 
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type_name, std::ref(m_engine)), "name");
