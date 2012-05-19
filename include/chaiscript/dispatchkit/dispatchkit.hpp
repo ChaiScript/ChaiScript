@@ -377,6 +377,7 @@ namespace chaiscript
         struct State
         {
           std::map<std::string, std::vector<Proxy_Function> > m_functions;
+          std::map<std::string, Boxed_Value> m_function_objects;
           std::map<std::string, Boxed_Value> m_global_objects;
           Type_Name_Map m_types;
           std::set<std::string> m_reserved_words;
@@ -553,21 +554,7 @@ namespace chaiscript
           }
 
           // If all that failed, then check to see if it's a function
-          std::vector<Proxy_Function> funcs = get_function(name);
-
-          if (funcs.empty())
-          {
-            throw std::range_error("Object not known: " + name);
-          } else {
-            if (funcs.size() == 1)
-            {
-              // Return the first item if there is only one,
-              // no reason to take the cost of the extra level of dispatch
-              return const_var(funcs.front());
-            } else {
-              return Boxed_Value(Const_Proxy_Function(new Dispatch_Function(funcs)));
-            }
-          }
+          return get_function_object(name);
         }
 
         /**
@@ -650,8 +637,25 @@ namespace chaiscript
             } else {
               return std::vector<Proxy_Function>();
             }
-
           }
+
+        /// \returns a function object (Boxed_Value wrapper) if it exists
+        /// \throws std::range_error if it does not
+        Boxed_Value get_function_object(const std::string &t_name) const
+        {
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+
+          const std::map<std::string, Boxed_Value > &funs = get_function_objects_int();
+
+          std::map<std::string, Boxed_Value>::const_iterator itr = funs.find(t_name);
+
+          if (itr != funs.end())
+          {
+            return itr->second;
+          } else {
+            throw std::range_error("Object not found: " + t_name);
+            }
+        }
 
         /**
          * Return true if a function exists
@@ -696,31 +700,11 @@ namespace chaiscript
         ///
         /// Get a map of all functions that can be seen from a scripting context
         ///
-        std::map<std::string, Boxed_Value> get_scripting_functions() const
+        std::map<std::string, Boxed_Value> get_function_objects() const
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-          std::vector<std::pair<std::string, Proxy_Function> > rets;
-
-          const std::map<std::string, std::vector<Proxy_Function> > &functions = get_functions_int();
-
-          std::map<std::string, Boxed_Value> retval;
-
-          for (std::map<std::string, std::vector<Proxy_Function> >::const_iterator itr = functions.begin();
-               itr != functions.end();
-               ++itr)
-          {
-            if (itr->second.size() == 1)
-            {
-              // Return the first item if there is only one,
-              // no reason to take the cost of the extra level of dispatch
-              retval.insert(std::make_pair(itr->first, const_var(itr->second.front())));
-            } else {
-              retval.insert(std::make_pair(itr->first, Boxed_Value(Const_Proxy_Function(new Dispatch_Function(itr->second)))));
-            }
-          }
-
-          return retval;
+          return get_function_objects_int();
         }
 
 
@@ -914,6 +898,16 @@ namespace chaiscript
           return *(m_stack_holder->stacks.back());
         }
 
+        const std::map<std::string, Boxed_Value> &get_function_objects_int() const
+        {
+          return m_state.m_function_objects;
+        }
+
+        std::map<std::string, Boxed_Value> &get_function_objects_int() 
+        {
+          return m_state.m_function_objects;
+        }
+
         const std::map<std::string, std::vector<Proxy_Function> > &get_functions_int() const
         {
           return m_state.m_functions;
@@ -1045,6 +1039,8 @@ namespace chaiscript
           std::map<std::string, std::vector<Proxy_Function> >::iterator itr
             = funcs.find(t_name);
 
+          std::map<std::string, Boxed_Value> &func_objs = get_function_objects_int();
+
           if (itr != funcs.end())
           {
             std::vector<Proxy_Function> &vec = itr->second;
@@ -1060,11 +1056,15 @@ namespace chaiscript
 
             vec.push_back(t_f);
             std::stable_sort(vec.begin(), vec.end(), &function_less_than);
+            func_objs[t_name] = Boxed_Value(Const_Proxy_Function(new Dispatch_Function(vec)));
           } else {
             std::vector<Proxy_Function> vec;
             vec.push_back(t_f);
             funcs.insert(std::make_pair(t_name, vec));
+            func_objs[t_name] = const_var(t_f);
           }
+
+
         }
 
         mutable chaiscript::detail::threading::shared_mutex m_mutex;
