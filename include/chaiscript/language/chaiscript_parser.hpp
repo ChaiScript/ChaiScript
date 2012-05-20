@@ -1837,6 +1837,7 @@ namespace chaiscript
               retval = true;
               if (Operator_Helper(t_precedence)) {
                 do {
+                  while (Eol()) {}
                   if (!Operator(t_precedence+1)) {
                     throw exception::eval_error("Incomplete "
                         + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
