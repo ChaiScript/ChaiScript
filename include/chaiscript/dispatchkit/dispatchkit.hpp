@@ -377,6 +377,7 @@ namespace chaiscript
         struct State
         {
           std::map<std::string, std::vector<Proxy_Function> > m_functions;
+          std::map<std::string, Proxy_Function> m_function_objects;
           std::map<std::string, Boxed_Value> m_global_objects;
           Type_Name_Map m_types;
           std::set<std::string> m_reserved_words;
@@ -414,7 +415,6 @@ namespace chaiscript
          * Set the value of an object, by name. If the object
          * is not available in the current scope it is created
          */
-        /*
         void add(const Boxed_Value &obj, const std::string &name)
         {
           validate_object_name(name);
@@ -432,7 +432,7 @@ namespace chaiscript
 
           add_object(name, obj);
         }
-        */
+        
 
         /**
          * Adds a named object to the current scope
@@ -496,28 +496,24 @@ namespace chaiscript
           }
         }
 
-        /**
-         * Swaps out the stack with a new stack
-         * \returns the old stack
-         * \param[in] s The new stack
-         */
-        Stack set_stack(const Stack &s)
-        {
-          Stack old = m_stack_holder->stack;
-          m_stack_holder->stack = s;
-          return old;
-        }
 
-        Stack new_stack() const
+        /// Pushes a new stack on to the list of stacks
+        void new_stack()
         {
           Stack s(new Stack::element_type());
           s->push_back(Scope());
-          return s;
+          m_stack_holder->stacks.push_back(s);
         }
 
+        void pop_stack()
+        {
+          m_stack_holder->stacks.pop_back();
+        }
+
+        /// \returns the current stack
         Stack get_stack() const
         {
-          return m_stack_holder->stack;
+          return m_stack_holder->stacks.back();
         }
 
         /**
@@ -557,21 +553,7 @@ namespace chaiscript
           }
 
           // If all that failed, then check to see if it's a function
-          std::vector<Proxy_Function> funcs = get_function(name);
-
-          if (funcs.empty())
-          {
-            throw std::range_error("Object not known: " + name);
-          } else {
-            if (funcs.size() == 1)
-            {
-              // Return the first item if there is only one,
-              // no reason to take the cast of the extra level of dispatch
-              return const_var(*funcs.begin());
-            } else {
-              return Boxed_Value(Const_Proxy_Function(new Dispatch_Function(funcs)));
-            }
-          }
+          return get_function_object(name);
         }
 
         /**
@@ -654,8 +636,25 @@ namespace chaiscript
             } else {
               return std::vector<Proxy_Function>();
             }
-
           }
+
+        /// \returns a function object (Boxed_Value wrapper) if it exists
+        /// \throws std::range_error if it does not
+        Boxed_Value get_function_object(const std::string &t_name) const
+        {
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+
+          const std::map<std::string, Proxy_Function> &funs = get_function_objects_int();
+
+          std::map<std::string, Proxy_Function>::const_iterator itr = funs.find(t_name);
+
+          if (itr != funs.end())
+          {
+            return const_var(itr->second);
+          } else {
+            throw std::range_error("Object not found: " + t_name);
+          }
+        }
 
         /**
          * Return true if a function exists
@@ -667,6 +666,57 @@ namespace chaiscript
           const std::map<std::string, std::vector<Proxy_Function> > &functions = get_functions_int();
           return functions.find(name) != functions.end();
         }
+
+
+        ///
+        /// Get a map of all objects that can be seen from the current scope in a scripting context
+        ///
+        std::map<std::string, Boxed_Value> get_scripting_objects() const
+        {
+          // We don't want the current context, but one up if it exists
+          StackData &stack = (m_stack_holder->stacks.size()==1)?(*(m_stack_holder->stacks.back())):(*m_stack_holder->stacks[m_stack_holder->stacks.size()-2]);
+
+          std::map<std::string, Boxed_Value> retval;
+
+          // note: map insert doesn't overwrite existing values, which is why this works
+         
+          for (StackData::reverse_iterator itr = stack.rbegin(); itr != stack.rend(); ++itr)
+          {
+            retval.insert(itr->begin(), itr->end());
+          } 
+
+          // add the global values
+          {
+            chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_global_object_mutex);
+
+            retval.insert(m_state.m_global_objects.begin(), m_state.m_global_objects.end());
+          }
+
+          return retval;
+        }
+
+
+        ///
+        /// Get a map of all functions that can be seen from a scripting context
+        ///
+        std::map<std::string, Boxed_Value> get_function_objects() const
+        {
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+
+          const std::map<std::string, Proxy_Function> &funs = get_function_objects_int();
+
+          std::map<std::string, Boxed_Value> objs;
+
+          for (std::map<std::string, Proxy_Function>::const_iterator itr = funs.begin();
+               itr != funs.end();
+               ++itr)
+          {
+            objs.insert(std::make_pair(itr->first, const_var(itr->second)));
+          }
+
+          return objs;
+        }
+
 
         /**
          * Get a vector of all registered functions
@@ -855,7 +905,17 @@ namespace chaiscript
          */
         StackData &get_stack_data() const
         {
-          return *(m_stack_holder->stack);
+          return *(m_stack_holder->stacks.back());
+        }
+
+        const std::map<std::string, Proxy_Function> &get_function_objects_int() const
+        {
+          return m_state.m_function_objects;
+        }
+
+        std::map<std::string, Proxy_Function> &get_function_objects_int() 
+        {
+          return m_state.m_function_objects;
         }
 
         const std::map<std::string, std::vector<Proxy_Function> > &get_functions_int() const
@@ -989,6 +1049,8 @@ namespace chaiscript
           std::map<std::string, std::vector<Proxy_Function> >::iterator itr
             = funcs.find(t_name);
 
+          std::map<std::string, Proxy_Function> &func_objs = get_function_objects_int();
+
           if (itr != funcs.end())
           {
             std::vector<Proxy_Function> &vec = itr->second;
@@ -1004,11 +1066,15 @@ namespace chaiscript
 
             vec.push_back(t_f);
             std::stable_sort(vec.begin(), vec.end(), &function_less_than);
+            func_objs[t_name] = Proxy_Function(new Dispatch_Function(vec));
           } else {
             std::vector<Proxy_Function> vec;
             vec.push_back(t_f);
             funcs.insert(std::make_pair(t_name, vec));
+            func_objs[t_name] = t_f;
           }
+
+
         }
 
         mutable chaiscript::detail::threading::shared_mutex m_mutex;
@@ -1017,12 +1083,13 @@ namespace chaiscript
         struct Stack_Holder
         {
           Stack_Holder()
-            : stack(new StackData())
           {
-            stack->push_back(Scope());
+            Stack s(new StackData());
+            s->push_back(Scope());
+            stacks.push_back(s);
           }
 
-          Stack stack;
+          std::deque<Stack> stacks;
         };  
 
         std::vector<Dynamic_Cast_Conversion> m_conversions;

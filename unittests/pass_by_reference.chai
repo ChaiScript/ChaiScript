@@ -1,0 +1,19 @@
+def f(x) { x+= 2; }
+
+var i = 1;
+
+assert_equal(i, 1);
+
+f(i);
+
+assert_equal(i, 3);
+
+def g(x) { x+= " World"; }
+
+var s = "Hello";
+
+assert_equal(s, "Hello");
+
+g(s);
+
+assert_equal(s, "Hello World");

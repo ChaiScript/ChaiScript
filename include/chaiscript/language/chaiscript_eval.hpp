@@ -190,36 +190,19 @@ namespace chaiscript
             }
           }
 
-          chaiscript::detail::Dispatch_Engine::Stack prev_stack = t_ss.get_stack();
-          chaiscript::detail::Dispatch_Engine::Stack new_stack = t_ss.new_stack();
+          Boxed_Value fn = this->children[0]->eval(t_ss);
 
           try {
-            Boxed_Value fn = this->children[0]->eval(t_ss);
-
-            try {
-              t_ss.set_stack(new_stack);
-              const Boxed_Value &retval = (*boxed_cast<const Const_Proxy_Function &>(fn))(plb);
-              t_ss.set_stack(prev_stack);
-              return retval;
-            }
-            catch(const exception::dispatch_error &e){
-              t_ss.set_stack(prev_stack);
-              throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
-            }
-            catch(detail::Return_Value &rv) {
-              t_ss.set_stack(prev_stack);
-              return rv.retval;
-            }
-            catch(...) {
-              t_ss.set_stack(prev_stack);
-              throw;
-            }
+            chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
+            const Boxed_Value &retval = (*boxed_cast<const Const_Proxy_Function &>(fn))(plb);
+            return retval;
           }
-          catch(exception::eval_error &) {
-            t_ss.set_stack(prev_stack);
-            throw;
+          catch(const exception::dispatch_error &e){
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
           }
-
+          catch(detail::Return_Value &rv) {
+            return rv.retval;
+          }
         }
 
     };
@@ -466,26 +449,17 @@ namespace chaiscript
                 fun_name = this->children[i]->text;
               }
 
-              chaiscript::detail::Dispatch_Engine::Stack prev_stack = t_ss.get_stack();
-              chaiscript::detail::Dispatch_Engine::Stack new_stack = t_ss.new_stack();
-
               try {
-                t_ss.set_stack(new_stack);
+                chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
                 retval = t_ss.call_function(fun_name, plb);
-                t_ss.set_stack(prev_stack);
               }
               catch(const exception::dispatch_error &e){
-                t_ss.set_stack(prev_stack);
                 throw exception::eval_error(std::string(e.what()) + " for function: " + fun_name);
               }
               catch(detail::Return_Value &rv) {
-                t_ss.set_stack(prev_stack);
                 retval = rv.retval;
               }
-              catch(...) {
-                t_ss.set_stack(prev_stack);
-                throw;
-              }
+
               if (this->children[i]->identifier == AST_Node_Type::Array_Call) {
                 for (size_t j = 1; j < this->children[i]->children.size(); ++j) {
                   try {
