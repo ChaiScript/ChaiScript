@@ -66,6 +66,11 @@ namespace chaiscript
 
       void setup_operators()
       {
+        m_operators.push_back(AST_Node_Type::Ternary_Cond);
+        std::vector<std::string> ternary_cond;
+        ternary_cond.push_back("?");
+        m_operator_matches.push_back(ternary_cond);
+
         m_operators.push_back(AST_Node_Type::Logical_Or);
         std::vector<std::string> logical_or;
         logical_or.push_back("||");
@@ -131,6 +136,7 @@ namespace chaiscript
             m_alphabet[a][c]=false;
           }
         }
+        m_alphabet[detail::symbol_alphabet][static_cast<int>('?')]=true;
         m_alphabet[detail::symbol_alphabet][static_cast<int>('+')]=true;
         m_alphabet[detail::symbol_alphabet][static_cast<int>('-')]=true;
         m_alphabet[detail::symbol_alphabet][static_cast<int>('*')]=true;
@@ -1813,6 +1819,23 @@ namespace chaiscript
                   switch (m_operators[t_precedence]) {
                     case(AST_Node_Type::Comparison) :
                       build_match(AST_NodePtr(new eval::Comparison_AST_Node()), prev_stack_top);
+                      break;
+                    case(AST_Node_Type::Ternary_Cond) :
+                      m_match_stack.erase(m_match_stack.begin() + m_match_stack.size() - 2,
+                          m_match_stack.begin() + m_match_stack.size() - 1);
+                      if (Symbol(":")) {
+                        if (!Operator(t_precedence+1)) {
+                          throw exception::eval_error("Incomplete "
+                              + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
+                              File_Position(m_line, m_col), *m_filename);
+                        }
+                        build_match(AST_NodePtr(new eval::Ternary_Cond_AST_Node()), prev_stack_top);
+                      }
+                      else {
+                        throw exception::eval_error("Incomplete "
+                            + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
+                            File_Position(m_line, m_col), *m_filename);
+                      }
                       break;
                     case(AST_Node_Type::Addition) :
                       oper = m_match_stack.at(m_match_stack.size()-2);
