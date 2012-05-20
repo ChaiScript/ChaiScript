@@ -185,7 +185,7 @@ if(BUILD_TESTING)
 
     add_executable(short_comparison_test unittests/short_comparison_test.cpp)
     target_link_libraries(short_comparison_test ${LIBS})
-    add_test(NAME short_comparison_test COMMAND short_comparison_test)
+    add_test(NAME Short_Comparison_Test COMMAND short_comparison_test)
 
 
     add_executable(multifile_test unittests/multifile_test_main.cpp unittests/multifile_test_chai.cpp

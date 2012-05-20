@@ -831,14 +831,21 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inline_Array_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
-          std::vector<Boxed_Value> vec;
-          if (this->children.size() > 0) {
-            for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
-              vec.push_back(this->children[0]->children[i]->eval(t_ss));
+          try {
+            std::vector<Boxed_Value> vec;
+            if (this->children.size() > 0) {
+              for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
+                Boxed_Value bv = t_ss.call_function("clone", this->children[0]->children[i]->eval(t_ss));
+                bv.clear_dependencies();
+                vec.push_back(bv);
+              }
             }
+            return const_var(vec);
+          }
+          catch (const exception::dispatch_error &) {
+            throw exception::eval_error("Can not find appropriate 'clone' or copy constructor for vector elements");
           }
 
-          return const_var(vec);
         }
 
     };
@@ -852,13 +859,15 @@ namespace chaiscript
           try {
             std::map<std::string, Boxed_Value> retval;
             for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
+              Boxed_Value bv = t_ss.call_function("clone", this->children[0]->children[i]->children[1]->eval(t_ss));
+              bv.clear_dependencies();
               retval[boxed_cast<std::string>(this->children[0]->children[i]->children[0]->eval(t_ss))] 
-                = t_ss.call_function("clone", this->children[0]->children[i]->children[1]->eval(t_ss));
+                = bv;
             }
             return const_var(retval);
           }
           catch (const exception::dispatch_error &) {
-            throw exception::eval_error("Can not find appropriate 'Map()'");
+            throw exception::eval_error("Can not find appropriate 'clone' or copy constructor for map elements");
           }
         }
 
