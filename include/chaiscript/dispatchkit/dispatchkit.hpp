@@ -415,7 +415,6 @@ namespace chaiscript
          * Set the value of an object, by name. If the object
          * is not available in the current scope it is created
          */
-        /*
         void add(const Boxed_Value &obj, const std::string &name)
         {
           validate_object_name(name);
@@ -433,7 +432,7 @@ namespace chaiscript
 
           add_object(name, obj);
         }
-        */
+        
 
         /**
          * Adds a named object to the current scope
