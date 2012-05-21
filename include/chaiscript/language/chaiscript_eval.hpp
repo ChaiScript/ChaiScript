@@ -664,6 +664,29 @@ namespace chaiscript
 
     };
 
+    struct Ternary_Cond_AST_Node : public AST_Node {
+      public:
+        Ternary_Cond_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::If, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        virtual ~Ternary_Cond_AST_Node() {}
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
+          bool cond;
+          try {
+            cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
+          }
+          catch (const exception::bad_boxed_cast &) {
+            throw exception::eval_error("If condition not boolean");
+          }
+
+          if (cond) {
+            return this->children[1]->eval(t_ss);
+          }
+          else {
+            return this->children[2]->eval(t_ss);
+          }
+        }
+    };
+
     struct If_AST_Node : public AST_Node {
       public:
         If_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::If, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
