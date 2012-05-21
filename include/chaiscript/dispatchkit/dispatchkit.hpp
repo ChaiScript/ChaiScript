@@ -897,6 +897,29 @@ namespace chaiscript
           m_state = t_state;
         }
 
+        void save_function_params(const std::vector<Boxed_Value> &t_params)
+        {
+          m_stack_holder->call_params.insert(m_stack_holder->call_params.begin(), t_params.begin(), t_params.end());
+        }
+
+        void new_function_call()
+        {
+          ++m_stack_holder->call_depth;
+        }
+
+        void pop_function_call()
+        {
+          --m_stack_holder->call_depth;
+
+          assert(m_stack_holder->call_depth >= 0);
+
+          if (m_stack_holder->call_depth == 0)
+          {
+            /// \todo Critical: this needs to be smarter, memory can expand quickly
+            ///       in tight loops involving function calls
+            m_stack_holder->call_params.clear();
+          }
+        }
 
       private:
         /**
@@ -1083,6 +1106,7 @@ namespace chaiscript
         struct Stack_Holder
         {
           Stack_Holder()
+            : call_depth(0)
           {
             Stack s(new StackData());
             s->push_back(Scope());
@@ -1090,6 +1114,9 @@ namespace chaiscript
           }
 
           std::deque<Stack> stacks;
+
+          std::list<Boxed_Value> call_params;
+          int call_depth;
         };  
 
         std::vector<Dynamic_Cast_Conversion> m_conversions;

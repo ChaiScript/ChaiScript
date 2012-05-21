@@ -182,6 +182,7 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Fun_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
+          chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
           dispatch::Param_List_Builder plb;
 
           if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
@@ -189,6 +190,8 @@ namespace chaiscript
               plb << this->children[1]->children[i]->eval(t_ss);
             }
           }
+
+          fpp.save_params(plb.objects);
 
           Boxed_Value fn = this->children[0]->eval(t_ss);
 
@@ -431,6 +434,7 @@ namespace chaiscript
 
           if (this->children.size() > 1) {
             for (size_t i = 2; i < this->children.size(); i+=2) {
+              chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               dispatch::Param_List_Builder plb;
               plb << retval;
 
@@ -439,6 +443,8 @@ namespace chaiscript
                   plb << this->children[i]->children[1]->children[j]->eval(t_ss);
                 }
               }
+
+              fpp.save_params(plb.objects);
 
               std::string fun_name;
               if ((this->children[i]->identifier == AST_Node_Type::Fun_Call) || (this->children[i]->identifier == AST_Node_Type::Array_Call)) {
