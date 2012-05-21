@@ -323,6 +323,34 @@ namespace chaiscript
         chaiscript::detail::Dispatch_Engine &m_de;
       };
 
+      /// Creates a new functon call and pops it on destruction
+      struct Function_Push_Pop
+      {
+        Function_Push_Pop(chaiscript::detail::Dispatch_Engine &t_de)
+          : m_de(t_de)
+        {
+          m_de.new_function_call();
+        }
+
+        ~Function_Push_Pop()
+        {
+          m_de.pop_function_call();
+        }
+
+        void save_params(const std::vector<Boxed_Value> &t_params)
+        {
+          m_de.save_function_params(t_params);
+        }
+
+
+        private:
+        // explicitly unimplemented copy and assignment
+        Function_Push_Pop(const Function_Push_Pop &);
+        Function_Push_Pop& operator=(const Function_Push_Pop &);
+
+        chaiscript::detail::Dispatch_Engine &m_de;
+      };
+
       /// Creates a new scope then pops it on destruction
       struct Stack_Push_Pop
       {
@@ -340,8 +368,8 @@ namespace chaiscript
 
         private:
         // explicitly unimplemented copy and assignment
-        Stack_Push_Pop(const Scope_Push_Pop &);
-        Stack_Push_Pop& operator=(const Scope_Push_Pop &);
+        Stack_Push_Pop(const Stack_Push_Pop &);
+        Stack_Push_Pop& operator=(const Stack_Push_Pop &);
 
         chaiscript::detail::Dispatch_Engine &m_de;
       };

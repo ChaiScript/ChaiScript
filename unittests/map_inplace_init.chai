@@ -1,3 +1,14 @@
 auto x = ["bob":1, "fred":2]
 
 assert_equal(2, x.size());
+
+
+// Make sure vector elements are copied into place for consistency with
+// map inplace construction
+var i = 1;
+var y = ["a":i];
+
+assert_equal(1, y["a"]);
+i = 3;
+assert_equal(3, i);
+assert_equal(1, y["a"]);

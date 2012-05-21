@@ -180,7 +180,7 @@ if(BUILD_TESTING)
 
     add_executable(short_comparison_test unittests/short_comparison_test.cpp)
     target_link_libraries(short_comparison_test ${LIBS} ${EXTRA_LINKER_FLAGS})
-    add_test(NAME short_comparison_test COMMAND short_comparison_test)
+    add_test(NAME Short_Comparison_Test COMMAND short_comparison_test)
 
     add_executable(cpp_lambda_test unittests/cpp_lambda_test.cpp)
     target_link_libraries(cpp_lambda_test ${LIBS} ${EXTRA_LINKER_FLAGS})

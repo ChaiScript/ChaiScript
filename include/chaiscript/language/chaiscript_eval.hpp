@@ -183,6 +183,7 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Fun_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
+          chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
           std::vector<Boxed_Value> params;
 
           if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
@@ -190,6 +191,8 @@ namespace chaiscript
               params.push_back(this->children[1]->children[i]->eval(t_ss));
             }
           }
+
+          fpp.save_params(params);
 
 
           try {
@@ -298,7 +301,6 @@ namespace chaiscript
                     return retval;
                   } else {
                     retval = t_ss.call_function("clone", retval);
-                    retval.clear_dependencies();
                   }
                 }
 
@@ -460,6 +462,7 @@ namespace chaiscript
 
           if (this->children.size() > 1) {
             for (size_t i = 2; i < this->children.size(); i+=2) {
+              chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               std::vector<Boxed_Value> params;
               params.push_back(retval);
 
@@ -468,6 +471,8 @@ namespace chaiscript
                   params.push_back(this->children[i]->children[1]->children[j]->eval(t_ss));
                 }
               }
+
+              fpp.save_params(params);
 
               std::string fun_name;
               if ((this->children[i]->identifier == AST_Node_Type::Fun_Call) || (this->children[i]->identifier == AST_Node_Type::Array_Call)) {
@@ -883,14 +888,20 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inline_Array_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
-          std::vector<Boxed_Value> vec;
-          if (this->children.size() > 0) {
-            for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
-              vec.push_back(this->children[0]->children[i]->eval(t_ss));
+          try {
+            std::vector<Boxed_Value> vec;
+            if (this->children.size() > 0) {
+              for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
+                Boxed_Value bv = t_ss.call_function("clone", this->children[0]->children[i]->eval(t_ss));
+                vec.push_back(bv);
+              }
             }
+            return const_var(vec);
+          }
+          catch (const exception::dispatch_error &) {
+            throw exception::eval_error("Can not find appropriate 'clone' or copy constructor for vector elements");
           }
 
-          return const_var(vec);
         }
 
     };
@@ -904,8 +915,9 @@ namespace chaiscript
           try {
             std::map<std::string, Boxed_Value> retval;
             for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
+              Boxed_Value bv = t_ss.call_function("clone", this->children[0]->children[i]->children[1]->eval(t_ss));
               retval[boxed_cast<std::string>(this->children[0]->children[i]->children[0]->eval(t_ss))] 
-                = t_ss.call_function("clone", this->children[0]->children[i]->children[1]->eval(t_ss));
+                = bv;
             }
             return const_var(retval);
           }

@@ -1,0 +1,14 @@
+def `+`(x, y)
+{
+  print(i);
+}
+
+auto i = 10;
+
+
+// It should fail because `+` should not be able to see the i
+
+"1" + 1;
+assert_false(true);
+
+
