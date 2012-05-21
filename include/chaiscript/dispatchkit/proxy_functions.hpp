@@ -74,7 +74,6 @@ namespace chaiscript
         Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
         {
           Boxed_Value bv = do_call(params);
-          bv.add_dependencies(params.begin(), params.end());
           return bv;
         }
 

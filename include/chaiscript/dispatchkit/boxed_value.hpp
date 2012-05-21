@@ -71,7 +71,6 @@ namespace chaiscript
         void *m_data_ptr;
         const void *m_const_data_ptr;
         bool m_is_ref;
-        std::vector<boost::shared_ptr<Data> > m_dependencies;
       };
 
       struct Object_Data
@@ -241,24 +240,6 @@ namespace chaiscript
       {
         return !is_ref();
       }
-
-      void clear_dependencies()
-      {
-        m_data->m_dependencies.clear();
-      }
-
-      template<typename InItr>
-        void add_dependencies(InItr begin, const InItr &end)
-        {
-          while (begin != end)
-          {
-            if (begin->m_data != m_data)
-            {
-              m_data->m_dependencies.push_back(begin->m_data);
-            }
-            ++begin;
-          }
-        }
 
       void *get_ptr() const
       {

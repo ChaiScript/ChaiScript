@@ -279,7 +279,6 @@ namespace chaiscript
               try {
                 if (lhs.is_undef()) {
                   retval = t_ss.call_function("clone", retval);
-                  retval.clear_dependencies();
                 }
 
                 try {
@@ -836,7 +835,6 @@ namespace chaiscript
             if (this->children.size() > 0) {
               for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
                 Boxed_Value bv = t_ss.call_function("clone", this->children[0]->children[i]->eval(t_ss));
-                bv.clear_dependencies();
                 vec.push_back(bv);
               }
             }
@@ -860,7 +858,6 @@ namespace chaiscript
             std::map<std::string, Boxed_Value> retval;
             for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
               Boxed_Value bv = t_ss.call_function("clone", this->children[0]->children[i]->children[1]->eval(t_ss));
-              bv.clear_dependencies();
               retval[boxed_cast<std::string>(this->children[0]->children[i]->children[0]->eval(t_ss))] 
                 = bv;
             }
