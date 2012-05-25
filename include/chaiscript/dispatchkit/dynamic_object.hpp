@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -44,20 +44,6 @@ namespace chaiscript
 
     namespace detail
     {
-      struct Dynamic_Object_Attribute
-      {
-        static Boxed_Value func(const std::string &t_type_name, const std::string &t_attr_name,
-            Dynamic_Object &t_do)
-        {
-          if (t_do.get_type_name() != t_type_name) 
-          {
-            throw exception::bad_boxed_cast("Dynamic object type mismatch");
-          }
-
-          return t_do.get_attr(t_attr_name);
-        }
-      };
-
       /**
        * A Proxy_Function implementation designed for calling a function
        * that is automatically guarded based on the first param based on the

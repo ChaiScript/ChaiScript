@@ -1,0 +1,18 @@
+
+var funcs = get_functions();
+
+assert_true(funcs.size() > 0);
+assert_true(funcs["to_string"].get_type_info().bare_equal(Function_type));
+
+
+var i = 1;
+var objs = get_objects();
+
+assert_true(objs.size() > 0);
+assert_true(objs["i"].get_type_info().bare_equal(int_type));
+assert_true(objs.count("j") == 0);
+
+
+
+
+

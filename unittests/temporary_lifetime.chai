@@ -1,0 +1,3 @@
+for_each(range([1..10]), fun(x) {print(x);} );
+
+assert_true(true);

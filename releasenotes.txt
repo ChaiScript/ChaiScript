@@ -1,3 +1,31 @@
+Changes since 3.1.0
+* svenstaro: Unused variables and CMake consistency fixes
+* Added support for returning pointers from functions (#13)
+* Compile with -pedantic (#9)
+* Fix issues with multiple ChaiScript object types having the same attribute name (#15)
+* Prevent variable redeclaration in same scope (#22)
+* mgee: Boxed_Number improvements (#27)
+* Support switch statements (#34)
+* Fix uint16 comparions (#26)
+* Add ability to add const_var globals in Module objects (#14)
+* Add support for ternary operators ?:
+* Add headers to CMakeLists so they show up in IDEs
+* Add ability to get vector of defined objects and vector of defined functions
+* Fix memory leak in cyclical references
+* Clean up static analysis issues discovered
+* Fix vector construction to be consistent with map construction
+* Increased unit tests to 161
+* Performance enhancements
+
+Changes since 3.0.0
+* Numeric operations performance increased approximately 10x
+* Looping operations performance increased up to 2x
+* Engine start up time decreased
+* Several parsing bugs related to index operators fixed
+* Added full support for all C algebraic types: double, long double, float, int, long, char,
+  uint8_t, uint16_t, uint32_t, uint64_t, int8_t, int16_t, int32_t, int64_t
+* Enhanced support for capturing of exceptions thrown from ChaiScript in C++
+
 Changes since 2.3.3
 
 * Code simplifications

@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -71,7 +71,6 @@ namespace chaiscript
         void *m_data_ptr;
         const void *m_const_data_ptr;
         bool m_is_ref;
-        std::vector<boost::shared_ptr<Data> > m_dependencies;
       };
 
       struct Object_Data
@@ -241,24 +240,6 @@ namespace chaiscript
       {
         return !is_ref();
       }
-
-      void clear_dependencies()
-      {
-        m_data->m_dependencies.clear();
-      }
-
-      template<typename InItr>
-        void add_dependencies(InItr begin, const InItr &end)
-        {
-          while (begin != end)
-          {
-            if (begin->m_data != m_data)
-            {
-              m_data->m_dependencies.push_back(begin->m_data);
-            }
-            ++begin;
-          }
-        }
 
       void *get_ptr() const
       {

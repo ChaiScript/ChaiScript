@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -76,12 +76,25 @@ namespace chaiscript
         struct DLSym
         {
           DLSym(DLModule &t_mod, const std::string &t_symbol)
-            : m_symbol(reinterpret_cast<T>(dlsym(t_mod.m_data, t_symbol.c_str())))
+            : m_symbol(cast_symbol(dlsym(t_mod.m_data, t_symbol.c_str())))
           {
             if (!m_symbol)
             {
               throw exception::load_module_error(dlerror());
             }
+          }
+
+          static T cast_symbol(void *p)
+          {
+            union cast_union
+            {
+              T func_ptr;
+              void *in_ptr;
+            };
+
+            cast_union c;
+            c.in_ptr = p;
+            return c.func_ptr;
           }
 
           T m_symbol;
@@ -261,7 +274,11 @@ namespace chaiscript
 
     const Boxed_Value internal_eval_ast(const AST_NodePtr &t_ast)
     {
-      return t_ast->eval(m_engine);
+      try {
+        return t_ast->eval(m_engine);
+      } catch (const exception::eval_error &t_ee) {
+        throw Boxed_Value(t_ee);
+      }
     }
 
 
@@ -269,36 +286,13 @@ namespace chaiscript
      * Evaluates the given string, used during eval() inside of a script
      */
     const Boxed_Value internal_eval(const std::string &t_e) {
-      return do_eval(t_e, "__EVAL__", true);
-    }
-
-    void use(const std::string &t_filename)
-    {
-      for (size_t i = 0; i < m_usepaths.size(); ++i)
-      {
-
-        try {
-          const std::string appendedpath = m_usepaths[i] + t_filename;
-
-          chaiscript::detail::threading::lock_guard<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
-          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l2(m_mutex);
-
-          if (m_used_files.count(appendedpath) == 0)
-          {
-            m_used_files.insert(appendedpath);
-            l2.unlock();
-            eval_file(appendedpath);
-          }
-        } catch (const exception::file_not_found_error &) {
-          if (i == m_usepaths.size() - 1)
-          {
-            throw exception::file_not_found_error(t_filename);
-          }
-
-          // failed to load, try the next path
-        }
+      try {
+        return do_eval(t_e, "__EVAL__", true);
+      } catch (const exception::eval_error &t_ee) {
+        throw Boxed_Value(t_ee);
       }
     }
+
 
     /**
      * Returns the current evaluation m_engine
@@ -312,6 +306,7 @@ namespace chaiscript
      */
     void build_eval_system() {
       using namespace bootstrap;
+      m_engine.add_reserved_word("auto");
       m_engine.add_reserved_word("def");
       m_engine.add_reserved_word("fun");
       m_engine.add_reserved_word("while");
@@ -336,6 +331,8 @@ namespace chaiscript
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::is_type, boost::ref(m_engine)), "is_type");
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::type_name, boost::ref(m_engine)), "type_name");
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::function_exists, boost::ref(m_engine)), "function_exists");
+      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_function_objects, boost::ref(m_engine)), "get_functions");
+      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_scripting_objects, boost::ref(m_engine)), "get_objects");
 
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type_name, boost::ref(m_engine)), "name");
 
@@ -402,6 +399,40 @@ namespace chaiscript
       }
 
       build_eval_system();
+    }
+
+    /// \brief Loads and parses a file. If the file is already, it is not reloaded
+    /// The use paths specified at ChaiScript construction time are searched for the 
+    /// requested file.
+    ///
+    /// \param[in] t_filename Filename to load and evaluate
+    void use(const std::string &t_filename)
+    {
+      for (size_t i = 0; i < m_usepaths.size(); ++i)
+      {
+        try {
+          const std::string appendedpath = m_usepaths[i] + t_filename;
+
+          chaiscript::detail::threading::lock_guard<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l2(m_mutex);
+
+          if (m_used_files.count(appendedpath) == 0)
+          {
+            m_used_files.insert(appendedpath);
+            l2.unlock();
+            eval_file(appendedpath);
+          }
+
+          return; // return, we loaded it, or it was already loaded
+        } catch (const exception::file_not_found_error &) {
+          if (i == m_usepaths.size() - 1)
+          {
+            throw exception::file_not_found_error(t_filename);
+          }
+
+          // failed to load, try the next path
+        }
+      }
     }
 
     /// \brief Adds a constant object that is available in all contexts and to all threads

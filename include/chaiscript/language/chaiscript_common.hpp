@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -23,7 +23,7 @@ namespace chaiscript
                 Comparison, Addition, Subtraction, Multiplication, Division, Modulus, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
                 Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Map_Pair, Value_Range,
                 Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, 
-                Logical_And, Logical_Or
+                Logical_And, Logical_Or, Switch, Case, Default, Ternary_Cond
     };
   };
 
@@ -37,7 +37,7 @@ namespace chaiscript
                                     "Comparison", "Addition", "Subtraction", "Multiplication", "Division", "Modulus", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
                                     "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Map_Pair", "Value_Range",
                                     "Inline_Range", "Annotation", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Shift", "Equality", "Bitwise_And", "Bitwise_Xor", "Bitwise_Or", 
-                                    "Logical_And", "Logical_Or"};
+                                    "Logical_And", "Logical_Or", "Switch", "Case", "Default", "Ternary Condition"};
 
       return ast_node_types[ast_node_type];
     }
@@ -210,6 +210,57 @@ namespace chaiscript
         // explicitly unimplemented copy and assignment
         Scope_Push_Pop(const Scope_Push_Pop &);
         Scope_Push_Pop& operator=(const Scope_Push_Pop &);
+
+        chaiscript::detail::Dispatch_Engine &m_de;
+      };
+
+      /// Creates a new functon call and pops it on destruction
+      struct Function_Push_Pop
+      {
+        Function_Push_Pop(chaiscript::detail::Dispatch_Engine &t_de)
+          : m_de(t_de)
+        {
+          m_de.new_function_call();
+        }
+
+        ~Function_Push_Pop()
+        {
+          m_de.pop_function_call();
+        }
+
+        void save_params(const std::vector<Boxed_Value> &t_params)
+        {
+          m_de.save_function_params(t_params);
+        }
+
+
+        private:
+        // explicitly unimplemented copy and assignment
+        Function_Push_Pop(const Function_Push_Pop &);
+        Function_Push_Pop& operator=(const Function_Push_Pop &);
+
+        chaiscript::detail::Dispatch_Engine &m_de;
+      };
+
+      /// Creates a new scope then pops it on destruction
+      struct Stack_Push_Pop
+      {
+        Stack_Push_Pop(chaiscript::detail::Dispatch_Engine &t_de)
+          : m_de(t_de)
+        {
+          m_de.new_stack();
+        }
+
+        ~Stack_Push_Pop()
+        {
+          m_de.pop_stack();
+        }
+
+
+        private:
+        // explicitly unimplemented copy and assignment
+        Stack_Push_Pop(const Stack_Push_Pop &);
+        Stack_Push_Pop& operator=(const Stack_Push_Pop &);
 
         chaiscript::detail::Dispatch_Engine &m_de;
       };

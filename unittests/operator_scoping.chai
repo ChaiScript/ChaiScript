@@ -1,0 +1,8 @@
+load_module("reflection")
+
+try {
+  eval("def `+`(x, y) \n { \n print(i); \n } \n \n var i = 10; \n \"1\" + 1;\n")
+  assert_false(true); // we should never get here
+} catch (e) {
+  assert_equal("Error: \"Can not find object: i\" ", e.what()); 
+}

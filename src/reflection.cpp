@@ -49,12 +49,12 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflect
   m->add(chaiscript::fun(&has_parse_tree), "has_parse_tree");
   m->add(chaiscript::fun(&get_parse_tree), "get_parse_tree");
 
+  m->add(chaiscript::base_class<std::exception, chaiscript::exception::eval_error>());
 
   chaiscript::bootstrap::standard_library::vector_type<std::vector<boost::shared_ptr<chaiscript::AST_Node> > >("AST_NodeVector", m);
 
-  CHAISCRIPT_CLASS( m,
+  CHAISCRIPT_CLASS_NO_CONSTRUCTOR( m,
       chaiscript::exception::eval_error,
-      ,
       ((reason))
       ((call_stack))
     );
@@ -67,9 +67,8 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflect
       ((column))
     );
 
-  CHAISCRIPT_CLASS( m, 
+  CHAISCRIPT_CLASS_NO_CONSTRUCTOR( m, 
       chaiscript::AST_Node,
-      ,
       ((text))
       ((identifier))
       ((filename))

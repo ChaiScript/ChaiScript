@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -32,6 +32,71 @@
 
 namespace chaiscript
 {
+  namespace exception
+  {
+    /**
+     * Exception thrown in the case that an object name is invalid because it is a reserved word
+     */
+    class reserved_word_error : public std::runtime_error
+    {
+      public:
+        reserved_word_error(const std::string &t_word) throw()
+          : std::runtime_error("Reserved word not allowed in object name: " + t_word), m_word(t_word)
+        {
+        }
+
+        virtual ~reserved_word_error() throw() {}
+
+        std::string word() const
+        {
+          return m_word;
+        }
+
+      private:
+        std::string m_word;
+
+    };
+
+    /**
+     * Exception thrown in the case that an object name is invalid because it already exists in current context
+     */
+    class name_conflict_error : public std::runtime_error
+    {
+      public:
+        name_conflict_error(const std::string &t_name) throw()
+          : std::runtime_error("Name already exists in current context " + t_name), m_name(t_name)
+        {
+        }
+
+        virtual ~name_conflict_error() throw() {}
+
+        std::string name() const
+        {
+          return m_name;
+        }
+
+      private:
+        std::string m_name;
+
+    };
+
+
+    /**
+     * Exception thrown in the case that a non-const object was added as a shared object
+     */
+    class global_non_const : public std::runtime_error
+    {
+      public:
+        global_non_const() throw()
+          : std::runtime_error("a global object must be const")
+        {
+        }
+
+        virtual ~global_non_const() throw() {}
+    };
+  }
+
+
   /// \brief Holds a collection of ChaiScript settings which can be applied to the ChaiScript runtime.
   ///        Used to implement loadable module support.
   class Module
@@ -52,6 +117,17 @@ namespace chaiscript
       Module &add(const Proxy_Function &f, const std::string &name)
       {
         m_funcs.push_back(std::make_pair(f, name));
+        return *this;
+      }
+
+      Module &add_global_const(const Boxed_Value &t_bv, const std::string &t_name)
+      {
+        if (!t_bv.is_const())
+        {
+          throw exception::global_non_const();
+        }
+
+        m_globals.push_back(std::make_pair(t_bv, t_name));
         return *this;
       }
 
@@ -76,11 +152,13 @@ namespace chaiscript
           apply(m_funcs.begin(), m_funcs.end(), t_engine);
           apply_eval(m_evals.begin(), m_evals.end(), t_eval);
           apply_single(m_conversions.begin(), m_conversions.end(), t_engine);
+          apply_globals(m_globals.begin(), m_globals.end(), t_engine);
         }
 
     private:
       std::vector<std::pair<Type_Info, std::string> > m_typeinfos;
       std::vector<std::pair<Proxy_Function, std::string> > m_funcs;
+      std::vector<std::pair<Boxed_Value, std::string> > m_globals;
       std::vector<std::string> m_evals;
       std::vector<Dynamic_Cast_Conversion> m_conversions;
 
@@ -89,7 +167,22 @@ namespace chaiscript
         {
           while (begin != end)
           {
-            t.add(begin->first, begin->second);
+            try {
+              t.add(begin->first, begin->second);
+            } catch (const exception::name_conflict_error &) {
+              /// \todo Should we throw an error if there's a name conflict 
+              ///       while applying a module?
+            }
+            ++begin;
+          }
+        }
+
+      template<typename T, typename InItr>
+        void apply_globals(InItr begin, InItr end, T &t) const
+        {
+          while (begin != end)
+          {
+            t.add_global_const(begin->first, begin->second);
             ++begin;
           }
         }
@@ -266,48 +359,6 @@ namespace chaiscript
     };  
   }
 
-  namespace exception
-  {
-    /**
-     * Exception thrown in the case that a multi method dispatch fails
-     * because no matching function was found
-     * at runtime due to either an arity_error, a guard_error or a bad_boxed_cast
-     * exception
-     */
-    class reserved_word_error : public std::runtime_error
-    {
-      public:
-        reserved_word_error(const std::string &t_word) throw()
-          : std::runtime_error("Reserved word not allowed in object name: " + t_word), m_word(t_word)
-        {
-        }
-
-        virtual ~reserved_word_error() throw() {}
-
-        std::string word() const
-        {
-          return m_word;
-        }
-
-      private:
-        std::string m_word;
-
-    };
-
-    /**
-     * Exception thrown in the case that a non-const object was added as a shared object
-     */
-    class global_non_const : public std::runtime_error
-    {
-      public:
-        global_non_const() throw()
-          : std::runtime_error("a global object must be const")
-        {
-        }
-
-        virtual ~global_non_const() throw() {}
-    };
-  }
 
   namespace detail
   {
@@ -326,6 +377,7 @@ namespace chaiscript
         struct State
         {
           std::map<std::string, std::vector<Proxy_Function> > m_functions;
+          std::map<std::string, Proxy_Function> m_function_objects;
           std::map<std::string, Boxed_Value> m_global_objects;
           Type_Name_Map m_types;
           std::set<std::string> m_reserved_words;
@@ -353,10 +405,10 @@ namespace chaiscript
         /**
          * Add a new named Proxy_Function to the system
          */
-        bool add(const Proxy_Function &f, const std::string &name)
+        void add(const Proxy_Function &f, const std::string &name)
         {
           validate_object_name(name);
-          return add_function(f, name);
+          add_function(f, name);
         }
 
         /**
@@ -380,6 +432,7 @@ namespace chaiscript
 
           add_object(name, obj);
         }
+        
 
         /**
          * Adds a named object to the current scope
@@ -388,7 +441,15 @@ namespace chaiscript
         {
           StackData &stack = get_stack_data();
           validate_object_name(name);
-          stack.back()[name] = obj;
+          
+          Scope &scope = stack.back();
+          Scope::iterator itr = scope.find(name);
+          if (itr != stack.back().end())
+          {
+            throw exception::name_conflict_error(name);
+          } else {
+            stack.back().insert(std::make_pair(name, obj));
+          }
         }
 
         /**
@@ -404,7 +465,12 @@ namespace chaiscript
 
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_global_object_mutex);
 
-          m_state.m_global_objects[name] = obj;
+          if (m_state.m_global_objects.find(name) != m_state.m_global_objects.end())
+          {
+            throw exception::name_conflict_error(name);
+          } else {
+            m_state.m_global_objects.insert(std::make_pair(name, obj));
+          }
         }
 
         /**
@@ -430,28 +496,24 @@ namespace chaiscript
           }
         }
 
-        /**
-         * Swaps out the stack with a new stack
-         * \returns the old stack
-         * \param[in] s The new stack
-         */
-        Stack set_stack(const Stack &s)
-        {
-          Stack old = m_stack_holder->stack;
-          m_stack_holder->stack = s;
-          return old;
-        }
 
-        Stack new_stack() const
+        /// Pushes a new stack on to the list of stacks
+        void new_stack()
         {
           Stack s(new Stack::element_type());
           s->push_back(Scope());
-          return s;
+          m_stack_holder->stacks.push_back(s);
         }
 
+        void pop_stack()
+        {
+          m_stack_holder->stacks.pop_back();
+        }
+
+        /// \returns the current stack
         Stack get_stack() const
         {
-          return m_stack_holder->stack;
+          return m_stack_holder->stacks.back();
         }
 
         /**
@@ -491,21 +553,7 @@ namespace chaiscript
           }
 
           // If all that failed, then check to see if it's a function
-          std::vector<Proxy_Function> funcs = get_function(name);
-
-          if (funcs.empty())
-          {
-            throw std::range_error("Object not known: " + name);
-          } else {
-            if (funcs.size() == 1)
-            {
-              // Return the first item if there is only one,
-              // no reason to take the cast of the extra level of dispatch
-              return const_var(*funcs.begin());
-            } else {
-              return Boxed_Value(Const_Proxy_Function(new Dispatch_Function(funcs)));
-            }
-          }
+          return get_function_object(name);
         }
 
         /**
@@ -588,8 +636,25 @@ namespace chaiscript
             } else {
               return std::vector<Proxy_Function>();
             }
-
           }
+
+        /// \returns a function object (Boxed_Value wrapper) if it exists
+        /// \throws std::range_error if it does not
+        Boxed_Value get_function_object(const std::string &t_name) const
+        {
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+
+          const std::map<std::string, Proxy_Function> &funs = get_function_objects_int();
+
+          std::map<std::string, Proxy_Function>::const_iterator itr = funs.find(t_name);
+
+          if (itr != funs.end())
+          {
+            return const_var(itr->second);
+          } else {
+            throw std::range_error("Object not found: " + t_name);
+          }
+        }
 
         /**
          * Return true if a function exists
@@ -601,6 +666,57 @@ namespace chaiscript
           const std::map<std::string, std::vector<Proxy_Function> > &functions = get_functions_int();
           return functions.find(name) != functions.end();
         }
+
+
+        ///
+        /// Get a map of all objects that can be seen from the current scope in a scripting context
+        ///
+        std::map<std::string, Boxed_Value> get_scripting_objects() const
+        {
+          // We don't want the current context, but one up if it exists
+          StackData &stack = (m_stack_holder->stacks.size()==1)?(*(m_stack_holder->stacks.back())):(*m_stack_holder->stacks[m_stack_holder->stacks.size()-2]);
+
+          std::map<std::string, Boxed_Value> retval;
+
+          // note: map insert doesn't overwrite existing values, which is why this works
+         
+          for (StackData::reverse_iterator itr = stack.rbegin(); itr != stack.rend(); ++itr)
+          {
+            retval.insert(itr->begin(), itr->end());
+          } 
+
+          // add the global values
+          {
+            chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_global_object_mutex);
+
+            retval.insert(m_state.m_global_objects.begin(), m_state.m_global_objects.end());
+          }
+
+          return retval;
+        }
+
+
+        ///
+        /// Get a map of all functions that can be seen from a scripting context
+        ///
+        std::map<std::string, Boxed_Value> get_function_objects() const
+        {
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+
+          const std::map<std::string, Proxy_Function> &funs = get_function_objects_int();
+
+          std::map<std::string, Boxed_Value> objs;
+
+          for (std::map<std::string, Proxy_Function>::const_iterator itr = funs.begin();
+               itr != funs.end();
+               ++itr)
+          {
+            objs.insert(std::make_pair(itr->first, const_var(itr->second)));
+          }
+
+          return objs;
+        }
+
 
         /**
          * Get a vector of all registered functions
@@ -781,6 +897,29 @@ namespace chaiscript
           m_state = t_state;
         }
 
+        void save_function_params(const std::vector<Boxed_Value> &t_params)
+        {
+          m_stack_holder->call_params.insert(m_stack_holder->call_params.begin(), t_params.begin(), t_params.end());
+        }
+
+        void new_function_call()
+        {
+          ++m_stack_holder->call_depth;
+        }
+
+        void pop_function_call()
+        {
+          --m_stack_holder->call_depth;
+
+          assert(m_stack_holder->call_depth >= 0);
+
+          if (m_stack_holder->call_depth == 0)
+          {
+            /// \todo Critical: this needs to be smarter, memory can expand quickly
+            ///       in tight loops involving function calls
+            m_stack_holder->call_params.clear();
+          }
+        }
 
       private:
         /**
@@ -789,7 +928,17 @@ namespace chaiscript
          */
         StackData &get_stack_data() const
         {
-          return *(m_stack_holder->stack);
+          return *(m_stack_holder->stacks.back());
+        }
+
+        const std::map<std::string, Proxy_Function> &get_function_objects_int() const
+        {
+          return m_state.m_function_objects;
+        }
+
+        std::map<std::string, Proxy_Function> &get_function_objects_int() 
+        {
+          return m_state.m_function_objects;
         }
 
         const std::map<std::string, std::vector<Proxy_Function> > &get_functions_int() const
@@ -911,11 +1060,10 @@ namespace chaiscript
         }
 
         /**
-         * Implementation detail for adding a function. Returns
-         * true if the function was added, false if a function with the
-         * same signature and name already exists.
+         * Implementation detail for adding a function. 
+         * \throws exception::name_conflict_error if there's a function matching the given one being added
          */
-        bool add_function(const Proxy_Function &t_f, const std::string &t_name)
+        void add_function(const Proxy_Function &t_f, const std::string &t_name)
         {
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
@@ -923,6 +1071,8 @@ namespace chaiscript
 
           std::map<std::string, std::vector<Proxy_Function> >::iterator itr
             = funcs.find(t_name);
+
+          std::map<std::string, Proxy_Function> &func_objs = get_function_objects_int();
 
           if (itr != funcs.end())
           {
@@ -933,19 +1083,21 @@ namespace chaiscript
             {
               if ((*t_f) == *(*itr2))
               {
-                return false;
+                throw exception::name_conflict_error(t_name);
               }
             }
 
             vec.push_back(t_f);
             std::stable_sort(vec.begin(), vec.end(), &function_less_than);
+            func_objs[t_name] = Proxy_Function(new Dispatch_Function(vec));
           } else {
             std::vector<Proxy_Function> vec;
             vec.push_back(t_f);
             funcs.insert(std::make_pair(t_name, vec));
+            func_objs[t_name] = t_f;
           }
 
-          return true;
+
         }
 
         mutable chaiscript::detail::threading::shared_mutex m_mutex;
@@ -954,12 +1106,17 @@ namespace chaiscript
         struct Stack_Holder
         {
           Stack_Holder()
-            : stack(new StackData())
+            : call_depth(0)
           {
-            stack->push_back(Scope());
+            Stack s(new StackData());
+            s->push_back(Scope());
+            stacks.push_back(s);
           }
 
-          Stack stack;
+          std::deque<Stack> stacks;
+
+          std::list<Boxed_Value> call_params;
+          int call_depth;
         };  
 
         std::vector<Dynamic_Cast_Conversion> m_conversions;

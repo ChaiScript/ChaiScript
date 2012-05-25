@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -74,7 +74,6 @@ namespace chaiscript
         Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
         {
           Boxed_Value bv = do_call(params);
-          bv.add_dependencies(params.begin(), params.end());
           return bv;
         }
 
@@ -219,7 +218,12 @@ namespace chaiscript
 
         virtual bool operator==(const Proxy_Function_Base &rhs) const
         {
-          return this == &rhs;
+          const Dynamic_Proxy_Function *prhs = dynamic_cast<const Dynamic_Proxy_Function *>(&rhs);
+
+          return this == &rhs
+            || (prhs
+                && this->m_arity == prhs->m_arity
+                && !this->m_guard && !prhs->m_guard);
         }
 
         virtual bool call_match(const std::vector<Boxed_Value> &vals) const

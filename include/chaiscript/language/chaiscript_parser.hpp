@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -66,6 +66,11 @@ namespace chaiscript
 
       void setup_operators()
       {
+        m_operators.push_back(AST_Node_Type::Ternary_Cond);
+        std::vector<std::string> ternary_cond;
+        ternary_cond.push_back("?");
+        m_operator_matches.push_back(ternary_cond);
+
         m_operators.push_back(AST_Node_Type::Logical_Or);
         std::vector<std::string> logical_or;
         logical_or.push_back("||");
@@ -131,6 +136,7 @@ namespace chaiscript
             m_alphabet[a][c]=false;
           }
         }
+        m_alphabet[detail::symbol_alphabet][static_cast<int>('?')]=true;
         m_alphabet[detail::symbol_alphabet][static_cast<int>('+')]=true;
         m_alphabet[detail::symbol_alphabet][static_cast<int>('-')]=true;
         m_alphabet[detail::symbol_alphabet][static_cast<int>('*')]=true;
@@ -322,7 +328,6 @@ namespace chaiscript
        */
       bool Float_() {
         bool retval = false;
-        std::string::const_iterator start = m_input_pos;
 
         if (has_more_input() && char_in_alphabet(*m_input_pos,detail::float_alphabet) ) {
           while (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet) ) {
@@ -1417,6 +1422,90 @@ namespace chaiscript
         }
 
         /**
+         * Reads a case block from input
+         */
+        bool Case() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Keyword("case")) {
+            retval = true;
+            
+            if (!Char('(')) {
+              throw exception::eval_error("Incomplete 'case' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            if (!(Operator() && Char(')'))) {
+              throw exception::eval_error("Incomplete 'case' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            while (Eol()) {}
+
+            if (!Block()) {
+              throw exception::eval_error("Incomplete 'case' block", File_Position(m_line, m_col), *m_filename);
+            }
+            
+            build_match(AST_NodePtr(new eval::Case_AST_Node()), prev_stack_top);
+          }
+          else if (Keyword("default")) {
+            while (Eol()) {}
+
+            if (!Block()) {
+              throw exception::eval_error("Incomplete 'default' block", File_Position(m_line, m_col), *m_filename);
+            }
+            
+            build_match(AST_NodePtr(new eval::Default_AST_Node()), prev_stack_top);
+          }            
+          
+          return retval;
+        }
+      
+        /**
+         * Reads a switch statement from input
+         */
+        bool Switch() {
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Keyword("switch")) {
+
+            if (!Char('(')) {
+              throw exception::eval_error("Incomplete 'switch' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            if (!(Operator() && Char(')'))) {
+              throw exception::eval_error("Incomplete 'switch' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            while (Eol()) {}
+
+            if (Char('{')) {
+              while (Eol()) {}
+              
+              while (Case()) {
+                while (Eol());
+              }
+
+              while (Eol());
+
+              if (!Char('}')) {
+                throw exception::eval_error("Incomplete block", File_Position(m_line, m_col), *m_filename);
+              }
+            }
+            else {
+              throw exception::eval_error("Incomplete block", File_Position(m_line, m_col), *m_filename);
+            }
+            
+            build_match(AST_NodePtr(new eval::Switch_AST_Node()), prev_stack_top);
+            return true;
+
+          } else {
+            return false;
+          }
+
+        }
+      
+        /**
          * Reads a curly-brace C-style block from input
          */
         bool Block() {
@@ -1478,7 +1567,6 @@ namespace chaiscript
          */
         bool Dot_Fun_Array() {
           bool retval = false;
-          std::string::const_iterator prev_pos = m_input_pos;
 
           size_t prev_stack_top = m_match_stack.size();
           if (Lambda() || Num(true) || Quoted_String(true) || Single_Quoted_String(true) ||
@@ -1720,6 +1808,7 @@ namespace chaiscript
               retval = true;
               if (Operator_Helper(t_precedence)) {
                 do {
+                  while (Eol()) {}
                   if (!Operator(t_precedence+1)) {
                     throw exception::eval_error("Incomplete "
                         + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
@@ -1729,6 +1818,23 @@ namespace chaiscript
                   switch (m_operators[t_precedence]) {
                     case(AST_Node_Type::Comparison) :
                       build_match(AST_NodePtr(new eval::Comparison_AST_Node()), prev_stack_top);
+                      break;
+                    case(AST_Node_Type::Ternary_Cond) :
+                      m_match_stack.erase(m_match_stack.begin() + m_match_stack.size() - 2,
+                          m_match_stack.begin() + m_match_stack.size() - 1);
+                      if (Symbol(":")) {
+                        if (!Operator(t_precedence+1)) {
+                          throw exception::eval_error("Incomplete "
+                              + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
+                              File_Position(m_line, m_col), *m_filename);
+                        }
+                        build_match(AST_NodePtr(new eval::Ternary_Cond_AST_Node()), prev_stack_top);
+                      }
+                      else {
+                        throw exception::eval_error("Incomplete "
+                            + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
+                            File_Position(m_line, m_col), *m_filename);
+                      }
                       break;
                     case(AST_Node_Type::Addition) :
                       oper = m_match_stack.at(m_match_stack.size()-2);
@@ -1887,7 +1993,6 @@ namespace chaiscript
           bool saw_eol = true;
 
           while (has_more) {
-            has_more = false;
             int prev_line = m_line;
             int prev_col = m_col;
             if (Def()) {
@@ -1923,6 +2028,14 @@ namespace chaiscript
               saw_eol = true;
             }
             else if (For()) {
+              if (!saw_eol) {
+                throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
+              }
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            }
+            else if (Switch()) {
               if (!saw_eol) {
                 throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
               }

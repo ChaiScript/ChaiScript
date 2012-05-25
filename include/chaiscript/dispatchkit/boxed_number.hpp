@@ -1,6 +1,6 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
-// Copyright 2009-2011, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
@@ -281,7 +281,7 @@ namespace chaiscript
           } else if (inp_ == typeid(boost::int8_t)) {
             return oper_rhs<boost::int8_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::int16_t)) {
-            return oper_rhs<boost::int32_t, false>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<boost::int16_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::int32_t)) {
             return oper_rhs<boost::int32_t, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(boost::int64_t)) {
@@ -302,19 +302,15 @@ namespace chaiscript
 
       
     public:
+      Boxed_Number()
+        : bv(Boxed_Value(0))
+      {
+      }
+
       Boxed_Number(const Boxed_Value &v)
         : bv(v)
       {
-        const Type_Info &inp_ = v.get_type_info();
-        if (inp_ == typeid(bool))
-        {
-          throw boost::bad_any_cast();
-        }
-
-        if (!inp_.is_arithmetic())
-        {
-          throw boost::bad_any_cast();
-        }
+        validate_boxed_number(v);
       }
 
 
@@ -381,6 +377,27 @@ namespace chaiscript
       Boxed_Number operator&=(const Boxed_Number &t_rhs)
       {
         return oper(Operators::assign_bitwise_and, this->bv, t_rhs.bv);
+      }
+
+      void validate_boxed_number(const Boxed_Value &v)
+      {
+        const Type_Info &inp_ = v.get_type_info();
+        if (inp_ == typeid(bool))
+        {
+          throw boost::bad_any_cast();
+        }
+
+        if (!inp_.is_arithmetic())
+        {
+          throw boost::bad_any_cast();
+        }
+      }
+
+      Boxed_Number operator=(const Boxed_Value &v)
+      {
+        validate_boxed_number(v);
+        bv = v;
+        return *this;
       }
 
       Boxed_Number operator=(const Boxed_Number &t_rhs) const

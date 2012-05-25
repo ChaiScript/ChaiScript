@@ -38,19 +38,19 @@ int main()
 
   chaiscript::ChaiScript chai;
   chai.add(m);
-  chai.add(chaiscript::fun(&Test::count), "count");
+//  chai.add(chaiscript::fun(&Test::count), "count");
 
   int count = chai.eval<int>("count()");
 
   int count2 = chai.eval<int>("var i = 0; { var t = Test(); } return i;");
 
-  int count3 = chai.eval<int>("var i = 0; { var t = Test(); i = count(); } return i;");
+  int count3 = chai.eval<int>("i = 0; { var t = Test(); i = count(); } return i;");
 
-  int count4 = chai.eval<int>("var i = 0; { var t = Test(); { var t2 = Test(); i = count(); } } return i;");
+  int count4 = chai.eval<int>("i = 0; { var t = Test(); { var t2 = Test(); i = count(); } } return i;");
  
-  int count5 = chai.eval<int>("var i = 0; { var t = Test(); { var t2 = Test(); } i = count(); } return i;");
+  int count5 = chai.eval<int>("i = 0; { var t = Test(); { var t2 = Test(); } i = count(); } return i;");
 
-  int count6 = chai.eval<int>("var i = 0; { var t = Test(); { var t2 = Test(); }  } i = count(); return i;");
+  int count6 = chai.eval<int>("i = 0; { var t = Test(); { var t2 = Test(); }  } i = count(); return i;");
 
   if (count == 0
       && count2 == 0

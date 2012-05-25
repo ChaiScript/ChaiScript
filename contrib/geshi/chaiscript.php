@@ -48,7 +48,7 @@ $language_data = array (
     'ESCAPE_CHAR' => '\\',
     'KEYWORDS' => array(
         1 => array(
-            'break', 'else', 'else if', 'eval', 'for', 'if', 'return', 'while', 'try', 'catch', 'finally',
+            'break', 'else', 'else if', 'eval', 'for', 'if', 'return', 'while', 'try', 'catch', 'finally', 'case', 'switch', 'default',
             ),
         2 => array(
             'def', 'false', 'fun', 'true', 'var', 'attr',
