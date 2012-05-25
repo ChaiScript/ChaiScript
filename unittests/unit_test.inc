@@ -5,7 +5,7 @@ def assert_equal(x, y)
     // Passes
   } else {
     // Fails
-    print("assert_equal failure: got " + to_string(y) + " expected " + to_string(x));
+    print("assert_equal failure: got '" + to_string(y) + "' expected '" + to_string(x) + "'");
     exit(-1);
   }
 }
