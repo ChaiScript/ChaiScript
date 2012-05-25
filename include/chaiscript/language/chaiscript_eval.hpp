@@ -54,6 +54,12 @@ namespace chaiscript
             Operators::Opers t_oper, const std::string &t_oper_string, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
         {
           try {
+            chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
+            std::vector<Boxed_Value> params(2);
+            params.push_back(t_lhs);
+            params.push_back(t_rhs);
+            fpp.save_params(params);
+           
             if (t_oper != Operators::invalid && t_lhs.get_type_info().is_arithmetic() && t_rhs.get_type_info().is_arithmetic())
             {
               // If it's an arithmetic operation we want to short circuit dispatch
@@ -64,6 +70,7 @@ namespace chaiscript
               }
 
             } else {
+              chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
               return t_ss.call_function(t_oper_string, t_lhs, t_rhs);
             }
           }
@@ -406,11 +413,20 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Array_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
+          chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
           Boxed_Value retval = this->children[0]->eval(t_ss);
+          std::vector<Boxed_Value> params;
+          params.push_back(retval);
 
           for (size_t i = 1; i < this->children.size(); ++i) {
             try {
-              retval = t_ss.call_function("[]", retval, this->children[i]->eval(t_ss));
+              Boxed_Value p1(this->children[i]->eval(t_ss));
+
+              chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
+              params.push_back(p1);
+              fpp.save_params(params);
+              params.clear();
+              retval = t_ss.call_function("[]", retval, p1);
             }
             catch(std::out_of_range &) {
               throw exception::eval_error("Out of bounds exception");
@@ -940,6 +956,7 @@ namespace chaiscript
 
         virtual ~Prefix_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
+          chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
           Boxed_Value bv(this->children[1]->eval(t_ss));
 
           Operators::Opers oper = Operators::to_operator(children[0]->text, true);
@@ -948,6 +965,10 @@ namespace chaiscript
             {
               return Boxed_Number::do_oper(oper, bv);
             } else {
+              chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
+              std::vector<Boxed_Value> params;
+              params.push_back(bv);
+              fpp.save_params(params);
               return t_ss.call_function(this->children[0]->text, bv);
             }
           } catch (const exception::dispatch_error &) {

@@ -274,7 +274,11 @@ namespace chaiscript
 
     const Boxed_Value internal_eval_ast(const AST_NodePtr &t_ast)
     {
-      return t_ast->eval(m_engine);
+      try {
+        return t_ast->eval(m_engine);
+      } catch (const exception::eval_error &t_ee) {
+        throw Boxed_Value(t_ee);
+      }
     }
 
 
@@ -282,7 +286,11 @@ namespace chaiscript
      * Evaluates the given string, used during eval() inside of a script
      */
     const Boxed_Value internal_eval(const std::string &t_e) {
-      return do_eval(t_e, "__EVAL__", true);
+      try {
+        return do_eval(t_e, "__EVAL__", true);
+      } catch (const exception::eval_error &t_ee) {
+        throw Boxed_Value(t_ee);
+      }
     }
 
 
@@ -298,6 +306,7 @@ namespace chaiscript
      */
     void build_eval_system() {
       using namespace bootstrap;
+      m_engine.add_reserved_word("auto");
       m_engine.add_reserved_word("def");
       m_engine.add_reserved_word("fun");
       m_engine.add_reserved_word("while");
