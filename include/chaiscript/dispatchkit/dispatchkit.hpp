@@ -18,6 +18,7 @@
 #include <vector>
 #include <iostream>
 #include <deque>
+#include <list>
 
 #include "boxed_value.hpp"
 #include "type_info.hpp"

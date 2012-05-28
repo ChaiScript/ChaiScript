@@ -60,7 +60,7 @@ int test_5()
 
   try {
     chai.eval("throw(runtime_error(\"error\"))", chaiscript::exception_specification<int, double, float, const std::string &, const std::exception &>());
-  } catch (const double e) {
+  } catch (const double) {
     std::cout << "test_5 failed with double" << std::endl;
     return EXIT_FAILURE;
   } catch (int) {
@@ -72,7 +72,7 @@ int test_5()
   } catch (const std::string &) {
     std::cout << "test_5 failed with string" << std::endl;
     return EXIT_FAILURE;
-  } catch (const std::exception &e) {
+  } catch (const std::exception &) {
     return EXIT_SUCCESS;
   }
 
@@ -95,10 +95,10 @@ int test_unhandled()
   } catch (float) {
     std::cout << "test_unhandled failed with float" << std::endl;
     return EXIT_FAILURE;
-  } catch (const std::exception &e) {
+  } catch (const std::exception &) {
     std::cout << "test_unhandled failed with std::exception" << std::endl;
     return EXIT_FAILURE;
-  } catch (const chaiscript::Boxed_Value &bv) {
+  } catch (const chaiscript::Boxed_Value &) {
     return EXIT_SUCCESS;
   }
 
