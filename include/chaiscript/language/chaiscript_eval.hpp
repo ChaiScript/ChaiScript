@@ -834,7 +834,7 @@ namespace chaiscript
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
           Boxed_Value match_value;
           bool breaking = false;
-          int currentCase = 1;
+          size_t currentCase = 1;
           bool hasMatched = false;
 
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
