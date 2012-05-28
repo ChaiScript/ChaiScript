@@ -26,7 +26,7 @@ namespace chaiscript
       struct boolean
       {
 
-#ifdef BOOST_GCC
+#ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #endif
         template<typename T, typename U>
