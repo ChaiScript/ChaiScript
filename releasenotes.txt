@@ -1,3 +1,7 @@
+Changes since 4.0.0
+* Dropped boost in favor of C++11
+* Separated out stdlib to make more options for compile time improvements
+
 Changes since 3.1.0
 * svenstaro: Unused variables and CMake consistency fixes
 * Added support for returning pointers from functions (#13)
