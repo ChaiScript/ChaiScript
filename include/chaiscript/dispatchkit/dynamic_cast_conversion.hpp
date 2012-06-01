@@ -48,6 +48,7 @@ namespace chaiscript
     {
       public:
         virtual Boxed_Value convert(const Boxed_Value &derived) = 0;
+
         const Type_Info &base()
         {
           return m_base;
@@ -62,6 +63,8 @@ namespace chaiscript
           : m_base(t_base), m_derived(t_derived)
         {
         }
+
+        virtual ~Dynamic_Conversion() {} 
 
       private:
         Type_Info m_base;

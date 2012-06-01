@@ -39,39 +39,40 @@ namespace chaiscript
     public:
       Type_Info(bool t_is_const, bool t_is_reference, bool t_is_pointer, bool t_is_void, 
           bool t_is_arithmetic, const std::type_info *t_ti, const std::type_info *t_bareti)
-        : m_is_const(t_is_const), m_is_reference(t_is_reference), m_is_pointer(t_is_pointer),
+        : m_type_info(t_ti), m_bare_type_info(t_bareti),
+        m_is_const(t_is_const), m_is_reference(t_is_reference), m_is_pointer(t_is_pointer),
         m_is_void(t_is_void), m_is_arithmetic(t_is_arithmetic),
-        m_type_info(t_ti), m_bare_type_info(t_bareti),
         m_is_undef(false)
       {
       }
 
       Type_Info()
-        : m_is_const(false), m_is_reference(false), m_is_pointer(false),
-        m_is_void(false), m_is_arithmetic(false), m_type_info(0), m_bare_type_info(0),
+        : m_type_info(0), m_bare_type_info(0),
+        m_is_const(false), m_is_reference(false), m_is_pointer(false),
+        m_is_void(false), m_is_arithmetic(false), 
         m_is_undef(true)
       {
       }
 
       Type_Info(const Type_Info &ti)
-        : m_is_const(ti.m_is_const), m_is_reference(ti.m_is_reference), 
+        : m_type_info(ti.m_type_info), 
+        m_bare_type_info(ti.m_bare_type_info),
+        m_is_const(ti.m_is_const), m_is_reference(ti.m_is_reference), 
         m_is_pointer(ti.m_is_pointer),
         m_is_void(ti.m_is_void), m_is_arithmetic(ti.m_is_arithmetic),
-        m_type_info(ti.m_type_info), 
-        m_bare_type_info(ti.m_bare_type_info),
         m_is_undef(ti.m_is_undef)
       {
       }
 
       Type_Info &operator=(const Type_Info &ti)
       {
+        m_type_info = ti.m_type_info;
+        m_bare_type_info = ti.m_bare_type_info;
         m_is_const = ti.m_is_const;
         m_is_reference = ti.m_is_reference;
         m_is_pointer = ti.m_is_pointer;
         m_is_void = ti.m_is_void;
         m_is_arithmetic = ti.m_is_arithmetic;
-        m_type_info = ti.m_type_info;
-        m_bare_type_info = ti.m_bare_type_info;
         m_is_undef = ti.m_is_undef;
         return *this;
       }
@@ -126,13 +127,13 @@ namespace chaiscript
       }
 
     private:
+      const std::type_info *m_type_info;
+      const std::type_info *m_bare_type_info;
       bool m_is_const;
       bool m_is_reference;
       bool m_is_pointer;
       bool m_is_void;
       bool m_is_arithmetic;
-      const std::type_info *m_type_info;
-      const std::type_info *m_bare_type_info;
       bool m_is_undef;
   };
 

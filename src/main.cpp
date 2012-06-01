@@ -215,6 +215,7 @@ int main(int argc, char *argv[])
         case eInteractive : interactive(chai); break;
         case eCommand     : val = chai.eval(arg); break;
         case eFile        : val = chai.eval_file(arg); break;
+        default           : std::cout << "Unrecognized execution mode" << std::endl; return EXIT_FAILURE;
       }
     }
     catch (const chaiscript::exception::eval_error &ee) {
