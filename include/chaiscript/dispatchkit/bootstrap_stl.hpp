@@ -148,6 +148,7 @@ namespace chaiscript
         };
 
       namespace detail {
+
         /**
          * Add Bidir_Range support for the given ContainerType
          */
@@ -259,7 +260,6 @@ namespace chaiscript
           m->add(fun( std::function<int (const ContainerType *)>( [](const ContainerType *a) { return a->size(); } ) ), "size");
           m->add(fun( std::function<bool (const ContainerType *)>( [](const ContainerType *a) { return a->empty(); } ) ), "empty");
           m->add(fun( std::function<void (ContainerType *)>( [](ContainerType *a) { a->clear(); } ) ), "clear");
-
           return m;
         }
 
@@ -391,7 +391,7 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr unique_associative_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
-          m->add(fun(std::function<int (const ContainerType *, const typename ContainerType::key_type &)>(std::mem_fn(&ContainerType::count))), "count");
+          m->add(fun<int (const ContainerType *, const typename ContainerType::key_type &)>(&ContainerType::count), "count");
 
           return m;
         }
