@@ -147,6 +147,64 @@ namespace chaiscript
         };
 
       namespace detail {
+        template<typename T>
+          int return_int_impl(const boost::function<typename T::size_type (const T *)> &t_func, const T *t_obj)
+          {
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4267)
+#endif
+            return t_func(t_obj);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
+          }
+
+        template<typename T>
+        boost::function<int (const T *)> return_int(size_t (T::*t_func)() const)
+          {
+            return boost::bind(&return_int_impl<T>, boost::function<size_t (const T *)>(boost::mem_fn(t_func)), _1);
+          }
+
+        template<typename T, typename P1>
+          int return_int_impl(const boost::function<typename T::size_type (const T *, P1)> &t_func, const T *t_obj, P1 p1)
+          {
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4267)
+#endif
+            return t_func(t_obj, p1);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
+          }
+
+        template<typename T, typename P1>
+        boost::function<int (const T *, P1)> return_int(size_t (T::*t_func)(P1) const)
+          {
+            return boost::bind(&return_int_impl<T, P1>, boost::function<size_t (const T *, P1)>(boost::mem_fn(t_func)), _1, _2);
+          }
+
+        template<typename T, typename P1, typename P2>
+          int return_int_impl(const boost::function<typename T::size_type (const T *, P1, P2)> &t_func, const T *t_obj, P1 p1, P2 p2)
+          {
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4267)
+#endif
+            return t_func(t_obj, p1, p2);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
+          }
+
+        template<typename T, typename P1, typename P2>
+        boost::function<int (const T *, P1, P2)> return_int(size_t (T::*t_func)(P1, P2) const)
+          {
+            return boost::bind(&return_int_impl<T, P1, P2>, boost::function<size_t (const T *, P1, P2)>(boost::mem_fn(t_func)), _1, _2, _3);
+          }
+
+
         /**
          * Add Bidir_Range support for the given ContainerType
          */
@@ -255,7 +313,9 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
-          m->add(fun(boost::function<int (const ContainerType *)>(boost::mem_fn(&ContainerType::size))), "size");
+          boost::function<int (const ContainerType *)> f = detail::return_int(&ContainerType::size);
+          m->add(fun(f), "size");
+//          m->add(fun(boost::function<int (const ContainerType *)>(boost::mem_fn(&ContainerType::size))), "size");
           m->add(fun<bool (ContainerType::*)() const>(&ContainerType::empty), "empty");
           m->add(fun<void (ContainerType::*)()>(&ContainerType::clear), "clear");
 
@@ -390,7 +450,7 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr unique_associative_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
-          m->add(fun(boost::function<int (const ContainerType *, const typename ContainerType::key_type &)>(boost::mem_fn(&ContainerType::count))), "count");
+          m->add(fun(boost::function<int (const ContainerType *, const typename ContainerType::key_type &)>(detail::return_int(&ContainerType::count))), "count");
 
           return m;
         }
@@ -512,15 +572,14 @@ namespace chaiscript
           m->add(fun(&String::push_back), push_back_name);
 
           typedef typename String::size_type (String::*find_func_ptr)(const String &, typename String::size_type) const;
-
           typedef boost::function<int (const String *, const String &, int)> find_func;
 
-          m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::find)))), "find");
-          m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::rfind)))), "rfind");
-          m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::find_first_of)))), "find_first_of");
-          m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::find_last_of)))), "find_last_of");
-          m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::find_first_not_of)))), "find_first_not_of");
-          m->add(fun(find_func(boost::mem_fn(static_cast<find_func_ptr>(&String::find_last_not_of)))), "find_last_not_of");
+          m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find)))), "find");
+          m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::rfind)))), "rfind");
+          m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find_first_of)))), "find_first_of");
+          m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find_last_of)))), "find_last_of");
+          m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find_first_not_of)))), "find_first_not_of");
+          m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find_last_not_of)))), "find_last_not_of");
 
           m->add(fun(&String::c_str), "c_str");
           m->add(fun(&String::data), "data");
