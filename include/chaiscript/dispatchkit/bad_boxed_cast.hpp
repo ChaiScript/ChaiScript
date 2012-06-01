@@ -33,7 +33,7 @@ namespace chaiscript
         }
 
         bad_boxed_cast(const std::string &t_what) noexcept
-          : m_what(t_what)
+          : to(0), m_what(t_what)
         {
         }
 
