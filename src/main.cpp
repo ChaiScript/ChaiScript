@@ -80,7 +80,18 @@ std::string get_next_command() {
     char *input_raw = readline("eval> ");
     if ( input_raw ) {
       add_history(input_raw);
-      retval = boost::trim_copy_if(std::string(input_raw),boost::is_any_of(" \t"));
+      std::string val(input_raw);     
+      size_t pos = val.find_first_not_of("\t \n");    
+      if (pos != std::string::npos)   
+      {      
+        val.erase(0, pos);  
+      }    
+      pos = val.find_last_not_of("\t \n");   
+      if (pos != std::string::npos)   
+      {      
+        val.erase(pos+1, std::string::npos);    
+      }   
+      retval = val;
       ::free(input_raw);
     }
   }

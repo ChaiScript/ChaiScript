@@ -71,13 +71,10 @@ namespace chaiscript
       std::string filename;
       std::vector<AST_NodePtr> call_stack;
 
-      eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) throw() :
-        std::runtime_error("Error: \"" + t_why + "\" " +
-            (t_fname != "__EVAL__" ? ("in '" + t_fname + "' ") : "during evaluation ") +
-            + "at (" + boost::lexical_cast<std::string>(t_where.line) + ", " +
-            boost::lexical_cast<std::string>(t_where.column) + ")"),
-        reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname)
-        { }
+      eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) throw()
+        : std::runtime_error(format(t_why, t_where, t_fname)),        
+          reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname)      
+      {}
 
       eval_error(const std::string &t_why) throw()
         : std::runtime_error("Error: \"" + t_why + "\" "),
@@ -85,6 +82,42 @@ namespace chaiscript
       {}
 
       virtual ~eval_error() throw() {}
+
+    private:
+      static std::string format_why(const std::string &t_why)   
+      {
+        return "Error: \"" + t_why + "\"";     
+      }     
+
+      static std::string format_filename(const std::string &t_fname)  
+      {  
+        std::stringstream ss;       
+        if (t_fname != "__EVAL__")       
+        {     
+          ss << "in '" << t_fname << "' ";      
+        } else {      
+          ss << "during evaluation ";    
+        }       
+        return ss.str();  
+      }   
+
+      static std::string format_location(const File_Position &t_where) 
+      {       
+        std::stringstream ss;  
+        ss << "at (" << t_where.line << ", " << t_where.column << ")";        
+        return ss.str();    
+      }
+
+      static std::string format(const std::string &t_why, const File_Position &t_where, const std::string &t_fname)      
+      {        
+        std::stringstream ss;        
+        ss << format_why(t_why);        
+        ss << " ";        
+        ss << format_filename(t_fname);        
+        ss << " ";        
+        ss << format_location(t_where);        
+        return ss.str();      
+      }
     };
 
     /**
