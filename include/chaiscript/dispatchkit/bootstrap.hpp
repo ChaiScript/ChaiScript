@@ -94,8 +94,8 @@ namespace chaiscript
 
 
     /**
-    * to_string function for internal use. Uses ostream operator<<
-    */
+     * to_string function for internal use. Uses ostream operator<<
+     */
     template<typename Input>
     std::string to_string(Input i)
     {
@@ -104,11 +104,10 @@ namespace chaiscript
       return ss.str();
     }
 
-
     /**
-    * Internal function for converting from a string to a value
-    * uses ostream operator >> to perform the conversion
-    */
+     * Internal function for converting from a string to a value
+     * uses ostream operator >> to perform the conversion
+     */
     template<typename Input>
     Input parse_string(const std::string &i)
     {
@@ -117,9 +116,8 @@ namespace chaiscript
       ss >> t;
       return t;
     }
-
-
-
+      
+            
     /**
     * Add all common functions for a POD type. All operators, and
     * common conversions
