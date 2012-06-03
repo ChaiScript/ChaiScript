@@ -325,7 +325,10 @@ namespace chaiscript
       m_engine.add_reserved_word("false");
       m_engine.add_reserved_word("_");
 
-      add(t_lib);
+      if (t_lib)
+      {
+        add(t_lib);
+      }
 
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::dump_system, std::ref(m_engine)), "dump_system");
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::dump_object, std::ref(m_engine)), "dump_object");
@@ -398,6 +401,71 @@ namespace chaiscript
 
       build_eval_system(t_lib);
     }
+
+    /// \brief Constructor for ChaiScript.
+    /// 
+    /// This version of the ChaiScript constructor attempts to find the stdlib module to load
+    /// at runtime generates an error if it cannot be found.
+    ///
+    /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
+    /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
+    ChaiScript( const std::vector<std::string> &t_modulepaths = std::vector<std::string>(),
+                      const std::vector<std::string> &t_usepaths = std::vector<std::string>())
+      : m_modulepaths(t_modulepaths), m_usepaths(t_usepaths) 
+    {
+      if (m_modulepaths.empty())
+      {
+        m_modulepaths.push_back("");
+      }
+
+      if (m_usepaths.empty())
+      {
+        m_usepaths.push_back("");
+      }
+
+
+#ifdef _POSIX_VERSION
+      // If on Unix, add the path of the current executable to the module search path
+      // as windows would do
+
+      union cast_union
+      {
+        void (ChaiScript::*in_ptr)(const std::string&);
+        void *out_ptr;
+      };
+
+      Dl_info rInfo; 
+      memset( &rInfo, 0, sizeof(rInfo) ); 
+      cast_union u;
+      u.in_ptr = &ChaiScript::use;
+      if ( dladdr((void*)(u.out_ptr), &rInfo) && rInfo.dli_fname ) { 
+        std::string dllpath(rInfo.dli_fname);
+        size_t lastslash = dllpath.rfind('/');
+        if (lastslash != std::string::npos)
+        {
+          dllpath.erase(lastslash);
+        }
+
+        // Let's see if this is a link that we should expand
+        std::vector<char> buf(2048);
+        size_t pathlen = readlink(dllpath.c_str(), &buf.front(), buf.size());
+        if (pathlen > 0 && pathlen < buf.size())
+        {
+          dllpath = std::string(&buf.front(), pathlen);
+        }
+
+        m_modulepaths.push_back(dllpath+"/");
+      } 
+#endif    
+
+
+      // attempt to load the stdlib
+      load_module("chaiscript_stdlib");
+
+      build_eval_system(ModulePtr());
+    }
+
+
 
     /// \brief Loads and parses a file. If the file is already, it is not reloaded
     /// The use paths specified at ChaiScript construction time are searched for the 

@@ -103,8 +103,12 @@ if (CMAKE_COMPILER_2005)
 #  ADD_DEFINITIONS(/wd4244)
 endif()
 
+add_library(chaiscript_stdlib MODULE src/chaiscript_stdlib.cpp)
+target_link_libraries(chaiscript_stdlib ${LIBS} ${EXTRA_LINKER_FLAGS})
+
 add_executable(chai src/main.cpp ${Chai_INCLUDES})
 target_link_libraries(chai ${LIBS} ${EXTRA_LINKER_FLAGS})
+add_dependencies(chai chaiscript_stdlib)
 
 if (BUILD_SAMPLES)
   add_executable(example samples/example.cpp)

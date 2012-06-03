@@ -752,13 +752,9 @@
 #include "dispatchkit/dynamic_object.hpp"
 #include "dispatchkit/boxed_number.hpp"
 
-#ifdef  CHAISCRIPT_HAS_DECLSPEC
-#define CHAISCRIPT_MODULE_EXPORT extern "C" __declspec(dllexport)
-#else
-#define CHAISCRIPT_MODULE_EXPORT extern "C" 
-#endif
-
 #include "language/chaiscript_eval.hpp"
 #include "language/chaiscript_engine.hpp"
+
+
 
 #endif /* CHAISCRIPT_HPP_ */

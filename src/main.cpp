@@ -10,7 +10,6 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 #include <chaiscript/chaiscript.hpp>
-#include <chaiscript/chaiscript_stdlib.hpp>
 
 #ifdef READLINE_AVAILABLE
 #include <readline/readline.h>
@@ -177,7 +176,7 @@ int main(int argc, char *argv[])
     modulepaths.push_back(modulepath);
   }
 
-  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library(), modulepaths,usepaths);
+  chaiscript::ChaiScript chai(modulepaths,usepaths);
 
   chai.add(chaiscript::fun(&myexit), "exit");
   chai.add(chaiscript::fun(&myexit), "quit");

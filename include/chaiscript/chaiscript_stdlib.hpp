@@ -7,6 +7,7 @@
 #ifndef CHAISCRIPT_STDLIB_HPP_
 #define CHAISCRIPT_STDLIB_HPP_
 
+#include "chaiscript_defines.hpp"
 #include "dispatchkit/bootstrap.hpp"
 #include "dispatchkit/bootstrap_stl.hpp"
 
