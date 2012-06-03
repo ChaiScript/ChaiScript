@@ -141,7 +141,9 @@ int main(int /*argc*/, char * /*argv*/[]) {
   //Creating a functor on the stack and using it immediatly 
   int x = chai.eval<boost::function<int (int, int)> >("fun (x, y) { return x + y; }")(5, 6);
 
-  log("Functor test output", boost::lexical_cast<std::string>(x));
+  std::stringstream ss;
+  ss << x;
+  log("Functor test output", ss.str());
 
   chai.add(var(boost::shared_ptr<int>()), "nullvar");
   chai("print(\"This should be true.\"); print(nullvar.is_var_null())");

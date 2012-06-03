@@ -93,27 +93,34 @@ namespace chaiscript
 
 
     /**
-    * to_string function for internal use. Uses ostream operator<<
-    */
+     * to_string function for internal use. Uses ostream operator<<
+     */
     template<typename Input>
-    std::string to_string(Input i)
-    {
-      return boost::lexical_cast<std::string>(i);
-    }
-
+      std::string to_string(Input i)
+      {
+        std::stringstream ss;
+        ss << i;
+        return ss.str();
+      }
 
     /**
-    * Internal function for converting from a string to a value
-    * uses ostream operator >> to perform the conversion
-    */
+     * Internal function for converting from a string to a value
+     * uses ostream operator >> to perform the conversion
+     */
     template<typename Input>
-    Input parse_string(const std::string &i)
-    {
-      return boost::lexical_cast<Input>(i);
-    }
+      Input parse_string(const std::string &i)
+      {
+        std::stringstream ss(i);
+        Input t;
+        ss >> t;
+        return t;
+      }
 
 
 
+     
+      
+            
     /**
     * Add all common functions for a POD type. All operators, and
     * common conversions

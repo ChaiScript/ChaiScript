@@ -21,7 +21,6 @@
 #include <string>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include <stdexcept>
 #include <vector>
