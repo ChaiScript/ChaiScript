@@ -1484,10 +1484,10 @@ namespace chaiscript
               while (Eol()) {}
               
               while (Case()) {
-                while (Eol());
+                while (Eol()) { } // eat
               }
 
-              while (Eol());
+              while (Eol()) { } // eat
 
               if (!Char('}')) {
                 throw exception::eval_error("Incomplete block", File_Position(m_line, m_col), *m_filename);
