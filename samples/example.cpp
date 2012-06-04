@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include <chaiscript/chaiscript.hpp>
-#include <chaiscript/chaiscript_stdlib.hpp>
+#include <chaiscript/dispatchkit/bootstrap_stl.hpp>
 #include <chaiscript/dispatchkit/function_call.hpp>
 
 void log(const std::string &msg)
@@ -67,7 +67,7 @@ void take_shared_ptr(const std::shared_ptr<const std::string> &p)
 int main(int /*argc*/, char * /*argv*/[]) {
   using namespace chaiscript;
 
-  ChaiScript chai(Std_Lib::library());
+  ChaiScript chai;
 
   //Create a new system object and share it with the chaiscript engine
   System system;

@@ -1,5 +1,4 @@
 #include <chaiscript/utility/utility.hpp>
-#include <chaiscript/chaiscript_stdlib.hpp>
 
 double test_call(const std::function<double (int)> &f, int val)
 {
@@ -9,7 +8,7 @@ double test_call(const std::function<double (int)> &f, int val)
 int main()
 {
 
-  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
+  chaiscript::ChaiScript chai;
   
   chai.add(chaiscript::fun(&test_call), "test_call");
 

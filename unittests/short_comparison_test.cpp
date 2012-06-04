@@ -1,5 +1,4 @@
 #include <chaiscript/utility/utility.hpp>
-#include <chaiscript/chaiscript_stdlib.hpp>
 
 class Test {
  public:
@@ -13,7 +12,7 @@ class Test {
 int main()
 {
 
-  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
+  chaiscript::ChaiScript chai;
   chai.add(chaiscript::user_type<Test>(), "Test");
   chai.add(chaiscript::constructor<Test()>(), "Test");
 

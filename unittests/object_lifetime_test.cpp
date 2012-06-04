@@ -1,5 +1,4 @@
 #include <chaiscript/utility/utility.hpp>
-#include <chaiscript/chaiscript_stdlib.hpp>
 
 class Test
 {
@@ -37,7 +36,7 @@ int main()
       { {chaiscript::fun(&Test::count), "count"} }
       );
 
-  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
+  chaiscript::ChaiScript chai;
   chai.add(m);
 //  chai.add(chaiscript::fun(&Test::count), "count");
 

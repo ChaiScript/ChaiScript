@@ -1,6 +1,5 @@
 #include <chaiscript/utility/utility.hpp>
 
-#include <chaiscript/chaiscript_stdlib.hpp>
 
 int main()
 {
@@ -9,7 +8,7 @@ int main()
   // in an std::function or provide the signature
   
 
-  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
+  chaiscript::ChaiScript chai;
 
   // provide the signature
   chai.add(chaiscript::fun<std::string ()>([] { return "hello"; } ), "f1");

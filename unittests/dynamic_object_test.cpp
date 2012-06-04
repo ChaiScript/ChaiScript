@@ -1,5 +1,4 @@
 
-#include <chaiscript/chaiscript_stdlib.hpp>
 #include <chaiscript/utility/utility.hpp>
 
 template<typename LHS, typename RHS>
@@ -16,7 +15,7 @@ void assert_equal(const LHS &lhs, const RHS &rhs)
 
 int main()
 {
-  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
+  chaiscript::ChaiScript chai;
 
   chai("attr bob::z; def bob::bob() { this.z = 10 }; auto x = bob()");
 
