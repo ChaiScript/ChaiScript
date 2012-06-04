@@ -154,6 +154,11 @@ namespace chaiscript
           apply_globals(m_globals.begin(), m_globals.end(), t_engine);
         }
 
+      ~Module()
+      {
+        detail::Dynamic_Conversions::get().cleanup(m_conversions.begin(), m_conversions.end());
+      }
+
     private:
       std::vector<std::pair<Type_Info, std::string> > m_typeinfos;
       std::vector<std::pair<Proxy_Function, std::string> > m_funcs;
