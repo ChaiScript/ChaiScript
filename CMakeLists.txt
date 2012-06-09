@@ -86,19 +86,24 @@ if (MULTITHREAD_SUPPORT_ENABLED)
   else()
     message(FATAL_ERROR "Can not find Boost")
   endif(Boost_FOUND)
+
+  if (CMAKE_HOST_UNIX)
+    add_definitions(-pthread)
+    list(APPEND LIBS "pthread")
+  endif()
 else()
   add_definitions(-DCHAISCRIPT_NO_THREADS)
 endif()
 
 if (CMAKE_HOST_UNIX)
-  set(DYNAMIC_LOADER "dl")
+  list(APPEND LIBS "dl")
 endif(CMAKE_HOST_UNIX)
+  
+list(APPEND LIBS ${READLINE_LIB})
 
-if (MSVC)
+if (NOT MSVC)
   # Boost on MSVC does automatic linking
-  set(LIBS ${DYNAMIC_LOADER} ${READLINE_LIB})
-else()
-  set(LIBS ${DYNAMIC_LOADER} ${Boost_LIBRARIES} ${READLINE_LIB})
+  list(APPEND LIBS ${Boost_LIBRARIES})
 endif()
 
 if (CMAKE_COMPILER_2005)
