@@ -37,7 +37,15 @@ configure_file(Doxyfile.in ${CMAKE_BINARY_DIR}/Doxyfile)
 include(CTest)
 include(CPack)
 
+include(cmake/CheckCXX11Features.cmake)
+
 find_library(READLINE_LIBRARY NAMES readline PATH /usr/lib /usr/local/lib /opt/local/lib)
+
+if(HAS_CXX11_VARIADIC_TEMPLATES)
+  message(STATUS "Variadic Template support detected")
+else()
+  message(SEND_ERROR "The selected compiler does not support the C++11 feature Variadic Templates.")
+endif()
 
 enable_testing()
 
@@ -93,10 +101,11 @@ else()
 endif()
 
 if (CMAKE_HOST_UNIX)
-  set(DYNAMIC_LOADER "dl")
+  list(APPEND LIBS "dl")
 endif(CMAKE_HOST_UNIX)
+  
+list(APPEND LIBS ${READLINE_LIB})
 
-set(LIBS ${DYNAMIC_LOADER} ${READLINE_LIB})
 
 if (CMAKE_COMPILER_2005)
   # vs2005 is a bit too loud about possible loss of data warnings
@@ -137,7 +146,7 @@ if(BUILD_TESTING)
   foreach(filename ${UNIT_TESTS})
     message(STATUS "Adding test ${filename}")
     add_test(${filename} chai ${CMAKE_CURRENT_SOURCE_DIR}/unittests/unit_test.inc ${CMAKE_CURRENT_SOURCE_DIR}/unittests/${filename})
-  endforeach(filename)
+ endforeach(filename)
 
   set_property(TEST ${UNIT_TESTS}
    PROPERTY ENVIRONMENT
