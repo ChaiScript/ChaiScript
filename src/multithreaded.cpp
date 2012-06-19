@@ -11,6 +11,9 @@
 #include <chaiscript/chaiscript.hpp>
 #include <thread>
 
+
+
+
 void do_work(chaiscript::ChaiScript &c)
 {
 //  c("use(\"work.chai\"); do_chai_work(num_iterations);"); 
@@ -30,7 +33,8 @@ int main(int argc, char *argv[]) {
 
   for (int i = 0; i < argc - 1; ++i)
   {
-    threads.push_back(std::shared_ptr<std::thread>(new std::thread(std::bind(do_work, std::ref(chai)))));
+//    std::thread t(&do_work, std::ref(chai));
+    threads.push_back(std::shared_ptr<std::thread>(new std::thread(&do_work, std::ref(chai))));
   }
 
   for (int i = 0; i < argc - 1; ++i)
