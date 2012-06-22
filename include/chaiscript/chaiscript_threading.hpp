@@ -7,6 +7,8 @@
 #ifndef CHAISCRIPT_THREADING_HPP_
 #define CHAISCRIPT_THREADING_HPP_
 
+#include <unordered_map>
+
 #ifndef CHAISCRIPT_NO_THREADS
 #include <thread>
 #include <mutex>
@@ -86,6 +88,7 @@ namespace chaiscript
           private:
             std::shared_ptr<T> get_tls() const
             {
+              
               unique_lock<mutex> lock(m_mutex);
              
               auto itr = m_instances.find(std::this_thread::get_id());
@@ -97,10 +100,20 @@ namespace chaiscript
               m_instances.insert(std::make_pair(std::this_thread::get_id(), new_instance));
 
               return new_instance;
+              
+
+              /*
+              static __thread std::shared_ptr<T> *m_data = 0;
+              
+              if (!m_data) { m_data = new std::shared_ptr<T>(new T()); }
+
+              return *m_data;
+              */
             }
 
+
             mutable mutex m_mutex;
-            mutable std::map<std::thread::id, std::shared_ptr<T> > m_instances;
+            mutable std::unordered_map<std::thread::id, std::shared_ptr<T> > m_instances;
         };
 
 #else

@@ -102,6 +102,11 @@ endif()
 
 if (CMAKE_HOST_UNIX)
   list(APPEND LIBS "dl")
+
+  if (MULTITHREAD_SUPPORT_ENABLED)
+    list(APPEND LIBS "pthread")
+    add_definitions(-pthread)
+  endif()
 endif(CMAKE_HOST_UNIX)
   
 list(APPEND LIBS ${READLINE_LIB})
