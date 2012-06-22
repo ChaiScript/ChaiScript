@@ -138,7 +138,7 @@ namespace chaiscript
       {
         typedef T type;
 
-        static Type_Info get()
+        constexpr static Type_Info get()
         {
           return Type_Info(std::is_const<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
@@ -153,7 +153,7 @@ namespace chaiscript
       {
         typedef T type;
 
-        static Type_Info get()
+        constexpr static Type_Info get()
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
@@ -168,7 +168,7 @@ namespace chaiscript
       {
         typedef T type;
 
-        static Type_Info get()
+        constexpr static Type_Info get()
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
@@ -183,7 +183,7 @@ namespace chaiscript
       {
         typedef T type;
 
-        static Type_Info get()
+        constexpr static Type_Info get()
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
@@ -198,7 +198,7 @@ namespace chaiscript
       {
         typedef T type;
 
-        static Type_Info get()
+        constexpr static Type_Info get()
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
@@ -225,7 +225,7 @@ namespace chaiscript
   /// chaiscript::Type_Info ti = chaiscript::user_type(i);
   /// \endcode
   template<typename T>
-  Type_Info user_type(const T &/*t*/)
+  constexpr Type_Info user_type(const T &/*t*/)
   {
     return detail::Get_Type_Info<T>::get();
   }
@@ -240,7 +240,7 @@ namespace chaiscript
   /// chaiscript::Type_Info ti = chaiscript::user_type<int>();
   /// \endcode
   template<typename T>
-  Type_Info user_type()
+  constexpr Type_Info user_type()
   {
     return detail::Get_Type_Info<T>::get();
   }
