@@ -218,7 +218,7 @@ namespace chaiscript
             }
           }
           catch(const exception::dispatch_error &e){
-            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, t_ss);
           }
           catch(detail::Return_Value &rv) {
             return rv.retval;
@@ -938,7 +938,7 @@ namespace chaiscript
             return const_var(retval);
           }
           catch (const exception::dispatch_error &e) {
-            throw exception::eval_error("Can not find appropriate copy constructor or clone while inserting into Map.", e.parameters, t_ss);
+            throw exception::eval_error("Can not find appropriate copy constructor or 'clone' while inserting into Map.", e.parameters, t_ss);
           }
         }
 
