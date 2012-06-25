@@ -233,7 +233,7 @@ namespace chaiscript
               funcs.push_back(f);
               throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", plb.objects, funcs, false, t_ss);
             } catch (const exception::bad_boxed_cast &) {
-              throw exception::eval_error("'" + this->children[0]->text + "' is not a function.");
+              throw exception::eval_error("'" + this->children[0]->pretty_print() + "' does not evaluate to a function.");
             }
           }
           catch(const exception::arity_error &e){
@@ -289,7 +289,7 @@ namespace chaiscript
             try {
               fn = boxed_cast<const Const_Proxy_Function &>(bv);
             } catch (const exception::bad_boxed_cast &) {
-              throw exception::eval_error("'" + this->children[0]->text + "' is not a function.");
+              throw exception::eval_error("'" + this->children[0]->pretty_print() + "' does not evaluate to a function.");
             }
             return (*fn)(plb);
           }
