@@ -423,6 +423,7 @@ namespace chaiscript
         m->add(fun(&Type_Info::is_void), "is_type_void");
         m->add(fun(&Type_Info::is_undef), "is_type_undef");
         m->add(fun(&Type_Info::is_pointer), "is_type_pointer");
+        m->add(fun(&Type_Info::is_arithmetic), "is_type_arithmetic");
         m->add(fun(&Type_Info::name), "cpp_name");
         m->add(fun(&Type_Info::bare_name), "cpp_bare_name");
         m->add(fun(&Type_Info::bare_equal), "bare_equal");

@@ -69,18 +69,23 @@ namespace chaiscript
       File_Position start_position;
       File_Position end_position;
       std::string filename;
+      std::string detail;
       std::vector<AST_NodePtr> call_stack;
 
       eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname,
-          const std::vector<Boxed_Value> &t_parameters, const chaiscript::detail::Dispatch_Engine &t_ss) noexcept :
-        std::runtime_error(format(t_why, t_where, t_fname, t_parameters, t_ss)),
-        reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname)
+          const std::vector<Boxed_Value> &t_parameters, const std::vector<chaiscript::Const_Proxy_Function> &t_functions,
+          bool t_dot_notation,
+          const chaiscript::detail::Dispatch_Engine &t_ss) noexcept :
+        std::runtime_error(format(t_why, t_where, t_fname, t_parameters, t_dot_notation, t_ss)),
+        reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname), detail(format_detail(t_functions, t_dot_notation, t_ss)) 
       {}
 
       eval_error(const std::string &t_why, 
-           const std::vector<Boxed_Value> &t_parameters, const chaiscript::detail::Dispatch_Engine &t_ss) noexcept :
-        std::runtime_error(format(t_why, t_parameters, t_ss)),
-        reason(t_why)
+           const std::vector<Boxed_Value> &t_parameters, const std::vector<chaiscript::Const_Proxy_Function> &t_functions,
+           bool t_dot_notation,
+           const chaiscript::detail::Dispatch_Engine &t_ss) noexcept :
+        std::runtime_error(format(t_why, t_parameters, t_dot_notation, t_ss)),
+        reason(t_why), detail(format_detail(t_functions, t_dot_notation, t_ss))
       {}
 
 
@@ -94,29 +99,203 @@ namespace chaiscript
         reason(t_why) 
       {}
 
+      std::string pretty_print() const
+      {
+        std::ostringstream ss;
+
+        ss << what();
+        if (call_stack.size() > 0) {
+          ss << "during evaluation at (" << fname(call_stack[0]) << " " << startpos(call_stack[0]) << ")" << std::endl;
+          ss << std::endl << detail << std::endl;
+          ss << "  " << fname(call_stack[0]) << " (" << startpos(call_stack[0]) << ") '" << pretty(call_stack[0]) << "'";
+          for (size_t j = 1; j < call_stack.size(); ++j) {
+            if (id(call_stack[j]) != chaiscript::AST_Node_Type::Block
+                && id(call_stack[j]) != chaiscript::AST_Node_Type::File)
+            {
+              ss << std::endl;
+              ss << "  from " << fname(call_stack[j]) << " (" << startpos(call_stack[j]) << ") '" << pretty(call_stack[j]) << "'";
+            }
+          }
+        }
+        ss << std::endl;
+        return ss.str();
+      }
+
       virtual ~eval_error() noexcept {}
 
     private:
+
+      template<typename T>
+        static int id(const T& t)
+        {
+          return t->identifier;
+        }
+
+      template<typename T>
+        static std::string pretty(const T& t)
+        {
+          return t->pretty_print();
+        }
+
+      template<typename T>
+        static std::string fname(const T& t)
+        {
+          return *t->filename;
+        }
+
+      template<typename T>
+        static std::string startpos(const T& t)
+        {
+          std::ostringstream oss;
+          oss << t->start.line << ", " << t->start.column;
+          return oss.str();
+        }
+
       static std::string format_why(const std::string &t_why)
       {
         return "Error: \"" + t_why + "\"";
       }
 
-      static std::string format_parameters(const std::vector<Boxed_Value> &t_parameters,
+      static std::string format_types(const Const_Proxy_Function &t_func,
+          bool t_dot_notation,
+          const chaiscript::detail::Dispatch_Engine &t_ss)
+      {
+        int arity = t_func->get_arity();
+        std::vector<Type_Info> types = t_func->get_param_types();
+
+        std::string retval;
+        if (arity == -1)
+        {
+          retval = "(...)";
+          if (t_dot_notation)
+          {
+            retval = "(Object)." + retval;
+          }
+        } else if (types.size() <= 1) {
+          retval = "()";
+        } else {
+          std::stringstream ss;
+          ss << "(";
+
+          std::string paramstr;
+
+          for (size_t index = 1;
+               index != types.size();
+               ++index)
+          {
+            paramstr += (types[index].is_const()?"const ":"");
+            paramstr += t_ss.get_type_name(types[index]);
+
+            if (index == 1 && t_dot_notation)
+            {
+              paramstr += ").(";
+              if (types.size() == 2)
+              {
+                paramstr += ", ";
+              }
+            } else {
+              paramstr += ", ";
+            }
+          }
+
+          ss << paramstr.substr(0, paramstr.size() - 2);
+
+          ss << ")";
+          retval = ss.str();
+        }
+
+
+        std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynfun 
+          = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_func);
+
+        if (dynfun)
+        {
+          Proxy_Function f = dynfun->get_guard();
+
+          if (f)
+          {
+            std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynfunguard 
+              = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(f);
+            if (dynfunguard)
+            {
+              retval += " : " + format_guard(dynfunguard->get_parse_tree());
+            }
+          }
+
+          retval += "\n          Defined at " + format_location(dynfun->get_parse_tree());        
+        }
+
+        return retval;
+      }
+
+      template<typename T>
+        static std::string format_guard(const T &t)
+        {
+          return t->pretty_print();
+        }
+
+      template<typename T>
+        static std::string format_location(const T &t)
+        {
+          std::ostringstream oss;
+          oss << "(" << *t->filename << " " << t->start.line << ", " << t->start.column << ")"; 
+
+          return oss.str();
+
+        }
+
+      static std::string format_detail(const std::vector<chaiscript::Const_Proxy_Function> &t_functions,
+          bool t_dot_notation,
           const chaiscript::detail::Dispatch_Engine &t_ss)
       {
         std::stringstream ss;
-        ss << "With parameters: (";
+        if (t_functions.size() == 1)
+        {
+          ss << "  Expected: " << format_types(t_functions[0], t_dot_notation, t_ss) << std::endl;
+        } else {
+          ss << "  " << t_functions.size() << " overloads available:" << std::endl;
+
+          for (std::vector<chaiscript::Const_Proxy_Function>::const_iterator itr = t_functions.begin();
+               itr != t_functions.end();
+               ++itr)
+          {
+            ss << "      " << format_types((*itr), t_dot_notation, t_ss) << std::endl;
+          }
+
+        }
+
+        return ss.str();
+
+      }
+
+      static std::string format_parameters(const std::vector<Boxed_Value> &t_parameters,
+          bool t_dot_notation,
+          const chaiscript::detail::Dispatch_Engine &t_ss)
+      {
+        std::stringstream ss;
+        ss << "(";
 
         if (!t_parameters.empty())
         {
           std::string paramstr;
 
-          for (const Boxed_Value &bv: t_parameters)
+          for (std::vector<Boxed_Value>::const_iterator itr = t_parameters.begin();
+               itr != t_parameters.end();
+               ++itr)
           {
-            paramstr += (bv.is_const()?"const ":"");
-            paramstr += t_ss.type_name(bv);
-            paramstr += ", ";
+            paramstr += (itr->is_const()?"const ":"");
+            paramstr += t_ss.type_name(*itr);
+
+            if (itr == t_parameters.begin() && t_dot_notation)
+            {
+              paramstr += ").(";
+              if (t_parameters.size() == 1)
+              {
+                paramstr += ", ";
+              }
+            } else {
+              paramstr += ", ";
+            }
           }
 
           ss << paramstr.substr(0, paramstr.size() - 2);
@@ -148,14 +327,14 @@ namespace chaiscript
       }
 
       static std::string format(const std::string &t_why, const File_Position &t_where, const std::string &t_fname,
-          const std::vector<Boxed_Value> &t_parameters, const chaiscript::detail::Dispatch_Engine &t_ss)
+          const std::vector<Boxed_Value> &t_parameters, bool t_dot_notation, const chaiscript::detail::Dispatch_Engine &t_ss)
       {
         std::stringstream ss;
 
         ss << format_why(t_why);
         ss << " ";
 
-        ss << format_parameters(t_parameters, t_ss);
+        ss << "With parameters: " << format_parameters(t_parameters, t_dot_notation, t_ss);
         ss << " ";
 
         ss << format_filename(t_fname);
@@ -167,14 +346,16 @@ namespace chaiscript
       }
 
       static std::string format(const std::string &t_why, 
-          const std::vector<Boxed_Value> &t_parameters, const chaiscript::detail::Dispatch_Engine &t_ss)
+          const std::vector<Boxed_Value> &t_parameters, 
+          bool t_dot_notation,
+          const chaiscript::detail::Dispatch_Engine &t_ss)
       {
         std::stringstream ss;
 
         ss << format_why(t_why);
         ss << " ";
 
-        ss << format_parameters(t_parameters, t_ss);
+        ss << "With parameters: " << format_parameters(t_parameters, t_dot_notation, t_ss);
         ss << " ";
 
         return ss.str();
@@ -219,6 +400,19 @@ namespace chaiscript
       File_Position start, end;
       std::vector<AST_NodePtr> children;
       AST_NodePtr annotation;
+
+      virtual std::string pretty_print() const
+      {
+        std::ostringstream oss;
+
+        oss << text;
+
+        for (unsigned int j = 0; j < this->children.size(); ++j) {
+          oss << this->children[j]->pretty_print();
+        }
+
+        return oss.str();
+      }
 
       /**
        * Prints the contents of an AST node, including its children, recursively

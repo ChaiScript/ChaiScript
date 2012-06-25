@@ -25,7 +25,6 @@ namespace chaiscript
 
   typedef std::shared_ptr<struct AST_Node> AST_NodePtr;
 
-
   namespace dispatch
   {
     /**
@@ -558,14 +557,16 @@ namespace chaiscript
     class dispatch_error : public std::runtime_error
     {
       public:
-        dispatch_error(const std::vector<Boxed_Value> &t_bvs)
-          : std::runtime_error("Error with function dispatch"), parameters(t_bvs)
+        dispatch_error(const std::vector<Boxed_Value> &t_parameters, 
+            const std::vector<Const_Proxy_Function> &t_functions)
+          : std::runtime_error("Error with function dispatch"), parameters(t_parameters), functions(t_functions)
         {
         }
 
         virtual ~dispatch_error() noexcept {}
 
         std::vector<Boxed_Value> parameters;
+        std::vector<Const_Proxy_Function> functions;
     };
   } 
 
@@ -581,6 +582,7 @@ namespace chaiscript
       Boxed_Value dispatch(InItr begin, const InItr &end,
           const std::vector<Boxed_Value> &plist)
       {
+        InItr orig(begin);
         while (begin != end)
         {
           try {
@@ -599,7 +601,7 @@ namespace chaiscript
           ++begin;
         }
 
-        throw exception::dispatch_error(plist);
+        throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(orig, end));
       }
 
     /**

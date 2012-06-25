@@ -233,18 +233,7 @@ int main(int argc, char *argv[])
       }
     }
     catch (const chaiscript::exception::eval_error &ee) {
-      std::cout << ee.what();
-      if (ee.call_stack.size() > 0) {
-        std::cout << "during evaluation at (" << *(ee.call_stack[0]->filename) << " " << ee.call_stack[0]->start.line << ", " << ee.call_stack[0]->start.column << ")";
-        for (size_t j = 1; j < ee.call_stack.size(); ++j) {
-          if (ee.call_stack[j]->identifier != chaiscript::AST_Node_Type::Block
-              && ee.call_stack[j]->identifier != chaiscript::AST_Node_Type::File)
-          {
-            std::cout << std::endl;
-            std::cout << "  from " << *(ee.call_stack[j]->filename) << " (" << ee.call_stack[j]->start.line << ", " << ee.call_stack[j]->start.column << ")";
-          }
-        }
-      }
+      std::cout << ee.pretty_print();
       std::cout << std::endl;
       return EXIT_FAILURE;
     }

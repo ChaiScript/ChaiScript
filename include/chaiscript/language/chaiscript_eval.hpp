@@ -50,6 +50,16 @@ namespace chaiscript
               this->children[2]->eval(t_ss));
         }
 
+        virtual std::string pretty_print() const 
+        {
+          if (children.size() == 3)
+          {
+            return "(" + this->children[0]->pretty_print() + " " + this->children[1]->text + " " + this->children[2]->pretty_print() + ")";
+          } else {
+            return "(" + this->children[0]->pretty_print() + " " + text + " " + this->children[1]->pretty_print() + ")";
+          }
+        }
+
       protected:
         Boxed_Value do_oper(chaiscript::detail::Dispatch_Engine &t_ss, 
             Operators::Opers t_oper, const std::string &t_oper_string, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
@@ -76,7 +86,7 @@ namespace chaiscript
             }
           }
           catch(const exception::dispatch_error &e){
-            throw exception::eval_error("Can not find appropriate '" + t_oper_string + "' operator.", e.parameters, t_ss);
+            throw exception::eval_error("Can not find appropriate '" + t_oper_string + "' operator.", e.parameters, e.functions, false, t_ss);
           }
         }
     };
@@ -182,6 +192,11 @@ namespace chaiscript
         Eol_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Eol, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Eol_AST_Node() {}
+
+        virtual std::string pretty_print() const 
+        {
+          return "\n";
+        }
     };
 
     struct Fun_Call_AST_Node : public AST_Node {
@@ -202,27 +217,53 @@ namespace chaiscript
           fpp.save_params(params);
 
 
+          Boxed_Value fn = this->children[0]->eval(t_ss);
           try {
-            Boxed_Value fn = this->children[0]->eval(t_ss);
-
-            try {
-              chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
-              const Boxed_Value &retval = (*boxed_cast<const Const_Proxy_Function &>(fn))(params);
-              return retval;
-            }
-            catch(const exception::dispatch_error &e){
-              throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, t_ss);
-            }
-            catch(detail::Return_Value &rv) {
-              return rv.retval;
-            }
+            chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
+            const Boxed_Value &retval = (*boxed_cast<const Const_Proxy_Function &>(fn))(params);
+            return retval;
           }
           catch(const exception::dispatch_error &e){
-            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, t_ss);
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, e.functions, false, t_ss);
+          }
+          catch(const exception::bad_boxed_cast &){
+            try {
+              Const_Proxy_Function f = boxed_cast<const Const_Proxy_Function &>(fn);
+              // handle the case where there is only 1 function to try to call and dispatch fails on it
+              std::vector<Const_Proxy_Function> funcs;
+              funcs.push_back(f);
+              throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, funcs, false, t_ss);
+            } catch (const exception::bad_boxed_cast &) {
+              throw exception::eval_error("'" + this->children[0]->pretty_print() + "' does not evaluate to a function.");
+            }
+          }
+          catch(const exception::arity_error &e){
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
+          }
+          catch(const exception::guard_error &e){
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
           }
           catch(detail::Return_Value &rv) {
             return rv.retval;
           }
+        }
+
+        virtual std::string pretty_print() const 
+        {
+          std::ostringstream oss;
+
+          for (unsigned int j = 0; j < this->children.size(); ++j) {
+            oss << this->children[j]->pretty_print();
+
+            if (j == 0)
+            {
+              oss << "(";
+            }
+          }
+
+          oss << ")";
+
+          return oss.str();
         }
 
     };
@@ -241,18 +282,53 @@ namespace chaiscript
             }
           }
 
+          Boxed_Value bv;
+          Const_Proxy_Function fn;
+
           try {
-            return (*boxed_cast<const Const_Proxy_Function &>(this->children[0]->eval(t_ss)))(params);
+            bv = this->children[0]->eval(t_ss);
+            try {
+              fn = boxed_cast<const Const_Proxy_Function &>(bv);
+            } catch (const exception::bad_boxed_cast &) {
+              throw exception::eval_error("'" + this->children[0]->pretty_print() + "' does not evaluate to a function.");
+            }
+            return (*fn)(params);
           }
           catch(const exception::dispatch_error &e){
-            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, t_ss);
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, e.functions, false, t_ss);
+          }
+          catch(const exception::bad_boxed_cast &){
+            // handle the case where there is only 1 function to try to call and dispatch fails on it
+            std::vector<Const_Proxy_Function> funcs;
+            funcs.push_back(fn);
+            throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, funcs, false, t_ss);
+          }
+          catch(const exception::arity_error &e){
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
+          }
+          catch(const exception::guard_error &e){
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
           }
           catch(detail::Return_Value &rv) {
             return rv.retval;
           }
-          catch(...) {
-            throw;
+        }
+
+        virtual std::string pretty_print() const 
+        {
+          std::ostringstream oss;
+          for (unsigned int j = 0; j < this->children.size(); ++j) {
+            oss << this->children[j]->pretty_print();
+
+            if (j == 0)
+            {
+              oss << "(";
+            }
           }
+
+          oss << ")";
+
+          return oss.str();
         }
 
     };
@@ -262,6 +338,21 @@ namespace chaiscript
         Arg_List_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Arg_List, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Arg_List_AST_Node() {}
+
+        virtual std::string pretty_print() const 
+        {
+          std::ostringstream oss;
+          for (unsigned int j = 0; j < this->children.size(); ++j) {
+            if (j != 0)
+            {
+              oss << ", ";
+            }
+
+            oss << this->children[j]->pretty_print();
+          }
+
+          return oss.str();
+        }
     };
 
     struct Variable_AST_Node : public AST_Node {
@@ -315,11 +406,11 @@ namespace chaiscript
                   retval = t_ss.call_function(this->children[1]->text, lhs, retval);
                 }
                 catch(const exception::dispatch_error &e){
-                  throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, t_ss);
+                  throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, t_ss);
                 }
               }
               catch(const exception::dispatch_error &e){
-                throw exception::eval_error("Missing clone or copy constructor for right hand side of equation", e.parameters, t_ss);
+                throw exception::eval_error("Missing clone or copy constructor for right hand side of equation", e.parameters, e.functions, false, t_ss);
               }
             }
             else if (this->children[1]->text == ":=") {
@@ -333,7 +424,7 @@ namespace chaiscript
               try {
                 retval = t_ss.call_function(this->children[1]->text, lhs, retval);
               } catch(const exception::dispatch_error &e){
-                  throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, t_ss);
+                  throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, t_ss);
               }
             }
           }
@@ -366,6 +457,11 @@ namespace chaiscript
 
         }
 
+        virtual std::string pretty_print() const 
+        {
+          return "var " + this->children[0]->text;
+        }
+
     };
 
     struct Comparison_AST_Node : public Binary_Operator_AST_Node {
@@ -377,7 +473,7 @@ namespace chaiscript
 
     struct Addition_AST_Node : public Binary_Operator_AST_Node {
       public:
-        Addition_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Addition,
+        Addition_AST_Node(const std::string &t_ast_node_text = "+", int t_id = AST_Node_Type::Addition,
             const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(),
             int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
@@ -389,7 +485,7 @@ namespace chaiscript
 
     struct Subtraction_AST_Node : public Binary_Operator_AST_Node {
       public:
-        Subtraction_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Subtraction,
+        Subtraction_AST_Node(const std::string &t_ast_node_text = "-", int t_id = AST_Node_Type::Subtraction,
             const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0,
             int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
@@ -401,7 +497,7 @@ namespace chaiscript
 
     struct Multiplication_AST_Node : public Binary_Operator_AST_Node {
       public:
-        Multiplication_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Multiplication,
+        Multiplication_AST_Node(const std::string &t_ast_node_text = "*", int t_id = AST_Node_Type::Multiplication,
             const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0,
             int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
@@ -413,7 +509,7 @@ namespace chaiscript
 
     struct Division_AST_Node : public Binary_Operator_AST_Node {
       public:
-        Division_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Division,
+        Division_AST_Node(const std::string &t_ast_node_text = "/", int t_id = AST_Node_Type::Division,
             const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0,
             int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
@@ -425,7 +521,7 @@ namespace chaiscript
 
     struct Modulus_AST_Node : public Binary_Operator_AST_Node {
       public:
-        Modulus_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Modulus,
+        Modulus_AST_Node(const std::string &t_ast_node_text = "%", int t_id = AST_Node_Type::Modulus,
             const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0,
             int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
@@ -460,11 +556,26 @@ namespace chaiscript
               throw exception::eval_error("Out of bounds exception");
             }
             catch(const exception::dispatch_error &e){
-              throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, t_ss );
+              throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, false, t_ss );
             }
           }
 
           return retval;
+        }
+
+        virtual std::string pretty_print() const 
+        {
+          std::ostringstream oss;
+          oss << this->children[0]->pretty_print();
+
+          for (size_t i = 1; i < this->children.size(); ++i)
+          {
+            oss << "[";
+            oss << this->children[i]->pretty_print();
+            oss << "]";
+          }
+
+          return oss.str();
         }
     };
 
@@ -503,7 +614,12 @@ namespace chaiscript
                 retval = t_ss.call_function(fun_name, params);
               }
               catch(const exception::dispatch_error &e){
-                throw exception::eval_error(std::string(e.what()) + " for function: " + fun_name, e.parameters, t_ss);
+                if (e.functions.empty())
+                {
+                  throw exception::eval_error("'" + fun_name + "' is not a function.");
+                } else {
+                  throw exception::eval_error(std::string(e.what()) + " for function '" + fun_name + "'", e.parameters, e.functions, true, t_ss);
+                }
               }
               catch(detail::Return_Value &rv) {
                 retval = rv.retval;
@@ -518,7 +634,7 @@ namespace chaiscript
                     throw exception::eval_error("Out of bounds exception");
                   }
                   catch(const exception::dispatch_error &e){
-                    throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, t_ss);
+                    throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, true, t_ss);
                   }
                 }
               }
@@ -540,6 +656,11 @@ namespace chaiscript
           return m_value;
         }
 
+        virtual std::string pretty_print() const 
+        {
+          return "\"" + text + "\"";
+        }
+
       private:
         Boxed_Value m_value;
 
@@ -553,6 +674,11 @@ namespace chaiscript
         virtual ~Single_Quoted_String_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &){
           return m_value;
+        }
+
+        virtual std::string pretty_print() const 
+        {
+          return "'" + text + "'";
         }
 
       private:
@@ -938,7 +1064,7 @@ namespace chaiscript
             return const_var(retval);
           }
           catch (const exception::dispatch_error &e) {
-            throw exception::eval_error("Can not find appropriate copy constructor or 'clone' while inserting into Map.", e.parameters, t_ss);
+            throw exception::eval_error("Can not find appropriate copy constructor or 'clone' while inserting into Map.", e.parameters, e.functions, false, t_ss);
           }
         }
 
@@ -1020,7 +1146,7 @@ namespace chaiscript
               return t_ss.call_function(this->children[0]->text, bv);
             }
           } catch (const exception::dispatch_error &e) {
-            throw exception::eval_error("Error with prefix operator evaluation: '" + children[0]->text + "'", e.parameters, t_ss);
+            throw exception::eval_error("Error with prefix operator evaluation: '" + children[0]->text + "'", e.parameters, e.functions, false, t_ss);
           }
         }
 
@@ -1062,7 +1188,7 @@ namespace chaiscript
                 this->children[0]->children[0]->children[1]->eval(t_ss));
           }
           catch (const exception::dispatch_error &e) {
-            throw exception::eval_error("Unable to generate range vector, while calling 'generate_range'", e.parameters, t_ss);
+            throw exception::eval_error("Unable to generate range vector, while calling 'generate_range'", e.parameters, e.functions, false, t_ss);
           }
         }
 
@@ -1392,6 +1518,11 @@ namespace chaiscript
           }
           return retval;
         }
+
+        virtual std::string pretty_print() const
+        {
+          return "(" + AST_Node::pretty_print() + ")";
+        }
     };
 
     struct Logical_Or_AST_Node : public AST_Node {
@@ -1417,6 +1548,11 @@ namespace chaiscript
             }
           }
           return retval;
+        }
+
+        virtual std::string pretty_print() const
+        {
+          return "(" + AST_Node::pretty_print() + ")";
         }
 
     };
