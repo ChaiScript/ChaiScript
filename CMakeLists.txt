@@ -192,6 +192,10 @@ if(BUILD_TESTING)
     target_link_libraries(short_comparison_test ${LIBS})
     add_test(NAME Short_Comparison_Test COMMAND short_comparison_test)
 
+    add_executable(expected_eval_errors_test unittests/expected_eval_errors_test.cpp)
+    target_link_libraries(expected_eval_errors_test ${LIBS})
+    add_test(NAME Expected_Eval_Errors_Test COMMAND expected_eval_errors_test)
+
 
     add_executable(multifile_test unittests/multifile_test_main.cpp unittests/multifile_test_chai.cpp
       unittests/multifile_test_module.cpp)
