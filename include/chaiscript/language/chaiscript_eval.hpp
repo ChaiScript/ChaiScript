@@ -239,6 +239,9 @@ namespace chaiscript
           catch(const exception::arity_error &e){
             throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
           }
+          catch(const exception::guard_error &e){
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
+          }
           catch(detail::Return_Value &rv) {
             return rv.retval;
           }
@@ -300,6 +303,9 @@ namespace chaiscript
             throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", plb.objects, funcs, false, t_ss);
           }
           catch(const exception::arity_error &e){
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
+          }
+          catch(const exception::guard_error &e){
             throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
           }
           catch(detail::Return_Value &rv) {
