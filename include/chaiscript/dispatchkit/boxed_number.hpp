@@ -298,7 +298,12 @@ namespace chaiscript
             throw boost::bad_any_cast();
           }
         }
-      
+
+        template<typename Target, typename Source>
+          Target getAsAux()
+        {
+          return static_cast<Target>(*static_cast<const Source *>(bv.get_const_ptr()));
+        }
 
       
     public:
@@ -317,6 +322,47 @@ namespace chaiscript
         : bv(Boxed_Value(t))
       {
         validate_boxed_number(bv);
+      }
+
+      template<typename Target> Target getAs()
+      {
+        const Type_Info &inp_ = bv.get_type_info();
+
+        if (inp_ == typeid(int)) {
+          return getAsAux<Target, int>();
+        } else if (inp_ == typeid(double)) {
+          return getAsAux<Target, double>();
+        } else if (inp_ == typeid(float)) {
+          return getAsAux<Target, float>();
+        } else if (inp_ == typeid(long double)) {
+          return getAsAux<Target, long double>();
+        } else if (inp_ == typeid(char)) {
+          return getAsAux<Target, char>();
+        } else if (inp_ == typeid(unsigned int)) {
+          return getAsAux<Target, unsigned int>();
+        } else if (inp_ == typeid(long)) {
+          return getAsAux<Target, long>();
+        } else if (inp_ == typeid(unsigned long)) {
+          return getAsAux<Target, unsigned long>();
+        } else if (inp_ == typeid(boost::int8_t)) {
+          return getAsAux<Target, boost::int8_t>();
+        } else if (inp_ == typeid(boost::int16_t)) {
+          return getAsAux<Target, boost::int16_t>();
+        } else if (inp_ == typeid(boost::int32_t)) {
+          return getAsAux<Target, boost::int32_t>();
+        } else if (inp_ == typeid(boost::int64_t)) {
+          return getAsAux<Target, boost::int64_t>();
+        } else if (inp_ == typeid(boost::uint8_t)) {
+          return getAsAux<Target, boost::uint8_t>();
+        } else if (inp_ == typeid(boost::uint16_t)) {
+          return getAsAux<Target, boost::uint16_t>();
+        } else if (inp_ == typeid(boost::uint32_t)) {
+          return getAsAux<Target, boost::uint32_t>();
+        } else if (inp_ == typeid(boost::uint64_t)) {
+          return getAsAux<Target, boost::uint64_t>();
+        } else {
+          throw boost::bad_any_cast();
+        }
       }
 
       bool operator==(const Boxed_Number &t_rhs) const
