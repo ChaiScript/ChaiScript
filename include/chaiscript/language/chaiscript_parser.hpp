@@ -12,7 +12,6 @@
 #include <sstream>
 #include <cstring>
 
-#include "chaiscript_prelude.hpp"
 #include "chaiscript_common.hpp"
 
 namespace chaiscript

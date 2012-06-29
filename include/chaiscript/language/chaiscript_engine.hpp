@@ -28,7 +28,7 @@
 #endif
 
 
-#include "chaiscript_prelude.hpp"
+#include "chaiscript_prelude.chai"
 #include "chaiscript_parser.hpp"
 #include "../dispatchkit/exception_specification.hpp"
 
@@ -351,7 +351,7 @@ namespace chaiscript
       m_engine.add(fun(&ChaiScript::internal_eval, this), "eval");
       m_engine.add(fun(&ChaiScript::internal_eval_ast, this), "eval");
 
-      do_eval(chaiscript_prelude, "standard prelude");
+      do_eval(ChaiScript_Prelude::chaiscript_prelude, "standard prelude");
     }
 
     /**
