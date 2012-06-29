@@ -313,6 +313,11 @@ namespace chaiscript
         validate_boxed_number(v);
       }
 
+      template<typename T> explicit Boxed_Number(T t)
+        : bv(Boxed_Value(t))
+      {
+        validate_boxed_number(bv);
+      }
 
       bool operator==(const Boxed_Number &t_rhs) const
       {
