@@ -306,7 +306,7 @@ namespace chaiscript
         }
 
         template<typename Source>
-          std::string toStringAux(const Boxed_Value &v)
+          std::string to_string_aux(const Boxed_Value &v)
         {
           std::ostringstream oss;
           oss << *static_cast<const Source *>(v.get_const_ptr());
@@ -373,42 +373,42 @@ namespace chaiscript
         }
       }
 
-      std::string toString()
+      std::string to_string()
       {
         const Type_Info &inp_ = bv.get_type_info();
 
         if (inp_ == typeid(int)) {
-          return toStringAux<int>(bv);
+          return to_string_aux<int>(bv);
         } else if (inp_ == typeid(double)) {
-          return toStringAux<double>(bv);
+          return to_string_aux<double>(bv);
         } else if (inp_ == typeid(float)) {
-          return toStringAux<float>(bv);
+          return to_string_aux<float>(bv);
         } else if (inp_ == typeid(long double)) {
-          return toStringAux<long double>(bv);
+          return to_string_aux<long double>(bv);
         } else if (inp_ == typeid(char)) {
-          return toStringAux<int>(Boxed_Value(getAsAux<int, char>()));
+          return to_string_aux<int>(Boxed_Value(get_as_aux<int, char>()));
         } else if (inp_ == typeid(unsigned int)) {
-          return toStringAux<unsigned int>(bv);
+          return to_string_aux<unsigned int>(bv);
         } else if (inp_ == typeid(long)) {
-          return toStringAux<long>(bv);
+          return to_string_aux<long>(bv);
         } else if (inp_ == typeid(unsigned long)) {
-          return toStringAux<unsigned long>(bv);
+          return to_string_aux<unsigned long>(bv);
         } else if (inp_ == typeid(boost::int8_t)) {
-          return toStringAux<int>(Boxed_Value(getAsAux<int, boost::int8_t>()));
+          return to_string_aux<int>(Boxed_Value(get_as_aux<int, boost::int8_t>()));
         } else if (inp_ == typeid(boost::int16_t)) {
-          return toStringAux<boost::int16_t>(bv);
+          return to_string_aux<boost::int16_t>(bv);
         } else if (inp_ == typeid(boost::int32_t)) {
-          return toStringAux<boost::int32_t>(bv);
+          return to_string_aux<boost::int32_t>(bv);
         } else if (inp_ == typeid(boost::int64_t)) {
-          return toStringAux<boost::int64_t>(bv);
+          return to_string_aux<boost::int64_t>(bv);
         } else if (inp_ == typeid(boost::uint8_t)) {
-          return toStringAux<unsigned int>(Boxed_Value(getAsAux<unsigned int, boost::uint8_t>()));
+          return to_string_aux<unsigned int>(Boxed_Value(get_as_aux<unsigned int, boost::uint8_t>()));
         } else if (inp_ == typeid(boost::uint16_t)) {
-          return toStringAux<boost::uint16_t>(bv);
+          return to_string_aux<boost::uint16_t>(bv);
         } else if (inp_ == typeid(boost::uint32_t)) {
-          return toStringAux<boost::uint32_t>(bv);
+          return to_string_aux<boost::uint32_t>(bv);
         } else if (inp_ == typeid(boost::uint64_t)) {
-          return toStringAux<boost::uint64_t>(bv);
+          return to_string_aux<boost::uint64_t>(bv);
         } else {
           throw boost::bad_any_cast();
         }
