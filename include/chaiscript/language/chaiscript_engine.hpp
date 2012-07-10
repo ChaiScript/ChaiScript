@@ -10,7 +10,7 @@
 #include <exception>
 #include <fstream>
 
-#include <chaiscript/language/chaiscript_common.hpp>
+#include "chaiscript_common.hpp"
 
 #ifdef _POSIX_VERSION
 #include <dlfcn.h>
@@ -23,8 +23,8 @@
 #endif
 
 
-#include <chaiscript/language/chaiscript_prelude.hpp>
-#include <chaiscript/language/chaiscript_parser.hpp>
+#include "chaiscript_prelude.hpp"
+#include "chaiscript_parser.hpp"
 #include "../dispatchkit/exception_specification.hpp"
 
 namespace chaiscript
