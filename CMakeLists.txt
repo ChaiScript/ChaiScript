@@ -196,6 +196,18 @@ if(BUILD_TESTING)
     target_link_libraries(expected_eval_errors_test ${LIBS})
     add_test(NAME Expected_Eval_Errors_Test COMMAND expected_eval_errors_test)
 
+    if (MULTITHREAD_SUPPORT_ENABLED)
+      add_executable(multithreaded_test unittests/multithreaded_test.cpp)
+      target_link_libraries(multithreaded_test ${LIBS})
+      add_test(NAME Multithreaded_Test COMMAND multithreaded_test)
+    endif()
+
+    set_property(TEST Multithreaded_Test
+      PROPERTY ENVIRONMENT
+      "CHAI_USE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/unittests/"
+      "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
+      )
+
 
     add_executable(multifile_test unittests/multifile_test_main.cpp unittests/multifile_test_chai.cpp
       unittests/multifile_test_module.cpp)
