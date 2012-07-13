@@ -13,6 +13,7 @@
 
 #include <map>
 #include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <boost/any.hpp>
 #include <boost/function.hpp>
 #include <boost/ref.hpp>
@@ -77,12 +78,11 @@ namespace chaiscript
       {
         static boost::shared_ptr<Data> get(Boxed_Value::Void_Type)
         {
-          return boost::shared_ptr<Data> (new Data(
+          return boost::make_shared<Data>(
                 detail::Get_Type_Info<void>::get(),
                 boost::any(), 
                 false,
-                0)
-              );
+                static_cast<void *>(0));
         }
 
         template<typename T>
@@ -94,12 +94,11 @@ namespace chaiscript
         template<typename T>
           static boost::shared_ptr<Data> get(const boost::shared_ptr<T> &obj)
           {
-            return boost::shared_ptr<Data>(new Data(
+            return boost::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(), 
                   boost::any(obj), 
                   false,
-                  obj.get())
-                );
+                  obj.get());
           }
 
         template<typename T>
@@ -111,34 +110,31 @@ namespace chaiscript
         template<typename T>
           static boost::shared_ptr<Data> get(boost::reference_wrapper<T> obj)
           {
-            return boost::shared_ptr<Data>(new Data(
+            return boost::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(),
                   boost::any(obj),
                   true,
-                  obj.get_pointer())
-                );
+                  obj.get_pointer());
           }
 
         template<typename T>
           static boost::shared_ptr<Data> get(const T& t)
           {
             boost::shared_ptr<T> p(new T(t));
-            return boost::shared_ptr<Data>(new Data(
+            return boost::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(), 
                   boost::any(p), 
                   false,
-                  p.get())
-                );
+                  p.get());
           }
 
         static boost::shared_ptr<Data> get()
         {
-          return boost::shared_ptr<Data> (new Data(
+          return boost::make_shared<Data>(
                 Type_Info(),
                 boost::any(),
                 false,
-                0)
-              );
+                static_cast<void *>(0));
         }
 
       };
