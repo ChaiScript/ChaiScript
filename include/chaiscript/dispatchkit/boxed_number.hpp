@@ -9,6 +9,7 @@
 
 #include "boxed_value.hpp"
 #include "../language/chaiscript_algebraic.hpp"
+#include <sstream>
 
 namespace chaiscript 
 {
@@ -354,24 +355,24 @@ namespace chaiscript
           return get_as_aux<Target, long>();
         } else if (inp_ == typeid(unsigned long)) {
           return get_as_aux<Target, unsigned long>();
-        } else if (inp_ == typeid(boost::int8_t)) {
-          return get_as_aux<Target, boost::int8_t>();
-        } else if (inp_ == typeid(boost::int16_t)) {
-          return get_as_aux<Target, boost::int16_t>();
-        } else if (inp_ == typeid(boost::int32_t)) {
-          return get_as_aux<Target, boost::int32_t>();
-        } else if (inp_ == typeid(boost::int64_t)) {
-          return get_as_aux<Target, boost::int64_t>();
-        } else if (inp_ == typeid(boost::uint8_t)) {
-          return get_as_aux<Target, boost::uint8_t>();
-        } else if (inp_ == typeid(boost::uint16_t)) {
-          return get_as_aux<Target, boost::uint16_t>();
-        } else if (inp_ == typeid(boost::uint32_t)) {
-          return get_as_aux<Target, boost::uint32_t>();
-        } else if (inp_ == typeid(boost::uint64_t)) {
-          return get_as_aux<Target, boost::uint64_t>();
+        } else if (inp_ == typeid(std::int8_t)) {
+          return get_as_aux<Target, std::int8_t>();
+        } else if (inp_ == typeid(std::int16_t)) {
+          return get_as_aux<Target, std::int16_t>();
+        } else if (inp_ == typeid(std::int32_t)) {
+          return get_as_aux<Target, std::int32_t>();
+        } else if (inp_ == typeid(std::int64_t)) {
+          return get_as_aux<Target, std::int64_t>();
+        } else if (inp_ == typeid(std::uint8_t)) {
+          return get_as_aux<Target, std::uint8_t>();
+        } else if (inp_ == typeid(std::uint16_t)) {
+          return get_as_aux<Target, std::uint16_t>();
+        } else if (inp_ == typeid(std::uint32_t)) {
+          return get_as_aux<Target, std::uint32_t>();
+        } else if (inp_ == typeid(std::uint64_t)) {
+          return get_as_aux<Target, std::uint64_t>();
         } else {
-          throw boost::bad_any_cast();
+          throw chaiscript::detail::exception::bad_any_cast();
         }
       }
 
@@ -395,24 +396,24 @@ namespace chaiscript
           return to_string_aux<long>(bv);
         } else if (inp_ == typeid(unsigned long)) {
           return to_string_aux<unsigned long>(bv);
-        } else if (inp_ == typeid(boost::int8_t)) {
-          return to_string_aux<int>(Boxed_Value(get_as_aux<int, boost::int8_t>()));
-        } else if (inp_ == typeid(boost::int16_t)) {
-          return to_string_aux<boost::int16_t>(bv);
-        } else if (inp_ == typeid(boost::int32_t)) {
-          return to_string_aux<boost::int32_t>(bv);
-        } else if (inp_ == typeid(boost::int64_t)) {
-          return to_string_aux<boost::int64_t>(bv);
-        } else if (inp_ == typeid(boost::uint8_t)) {
-          return to_string_aux<unsigned int>(Boxed_Value(get_as_aux<unsigned int, boost::uint8_t>()));
-        } else if (inp_ == typeid(boost::uint16_t)) {
-          return to_string_aux<boost::uint16_t>(bv);
-        } else if (inp_ == typeid(boost::uint32_t)) {
-          return to_string_aux<boost::uint32_t>(bv);
-        } else if (inp_ == typeid(boost::uint64_t)) {
-          return to_string_aux<boost::uint64_t>(bv);
+        } else if (inp_ == typeid(std::int8_t)) {
+          return to_string_aux<int>(Boxed_Value(get_as_aux<int, std::int8_t>()));
+        } else if (inp_ == typeid(std::int16_t)) {
+          return to_string_aux<std::int16_t>(bv);
+        } else if (inp_ == typeid(std::int32_t)) {
+          return to_string_aux<std::int32_t>(bv);
+        } else if (inp_ == typeid(std::int64_t)) {
+          return to_string_aux<std::int64_t>(bv);
+        } else if (inp_ == typeid(std::uint8_t)) {
+          return to_string_aux<unsigned int>(Boxed_Value(get_as_aux<unsigned int, std::uint8_t>()));
+        } else if (inp_ == typeid(std::uint16_t)) {
+          return to_string_aux<std::uint16_t>(bv);
+        } else if (inp_ == typeid(std::uint32_t)) {
+          return to_string_aux<std::uint32_t>(bv);
+        } else if (inp_ == typeid(std::uint64_t)) {
+          return to_string_aux<std::uint64_t>(bv);
         } else {
-          throw boost::bad_any_cast();
+          throw chaiscript::detail::exception::bad_any_cast();
         }
       }
 
