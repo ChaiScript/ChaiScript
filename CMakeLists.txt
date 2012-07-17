@@ -204,6 +204,10 @@ if(BUILD_TESTING)
     target_link_libraries(simultaneous_chaiscript_test ${LIBS})
     add_test(NAME Simultaneous_Chaiscript_Test COMMAND simultaneous_chaiscript_test)
 
+    add_executable(c_linkage_test unittests/c_linkage_test.cpp)
+    target_link_libraries(c_linkage_test ${LIBS})
+    add_test(NAME C_Linkage_Test COMMAND c_linkage_test)
+
     if (MULTITHREAD_SUPPORT_ENABLED)
       add_executable(multithreaded_test unittests/multithreaded_test.cpp)
       target_link_libraries(multithreaded_test ${LIBS})
