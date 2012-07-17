@@ -200,6 +200,10 @@ if(BUILD_TESTING)
     target_link_libraries(set_state_test ${LIBS})
     add_test(NAME Set_State_Test COMMAND set_state_test)
 
+    add_executable(simultaneous_chaiscript_test unittests/simultaneous_chaiscript_test.cpp)
+    target_link_libraries(simultaneous_chaiscript_test ${LIBS})
+    add_test(NAME Simultaneous_Chaiscript_Test COMMAND simultaneous_chaiscript_test)
+
     if (MULTITHREAD_SUPPORT_ENABLED)
       add_executable(multithreaded_test unittests/multithreaded_test.cpp)
       target_link_libraries(multithreaded_test ${LIBS})
