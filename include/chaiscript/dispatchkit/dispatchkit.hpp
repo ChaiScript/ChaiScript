@@ -673,6 +673,27 @@ namespace chaiscript
           return functions.find(name) != functions.end();
         }
 
+        /// \returns All values in the local thread state, added through the add() function
+        std::map<std::string, Boxed_Value> get_locals() const
+        {
+          StackData &stack = get_stack_data();
+          Scope &scope = stack.front();
+          return scope;
+        }
+
+        /// \brief Sets all of the locals for the current thread state.
+        ///
+        /// \param[in] t_locals The map<name, value> set of variables to replace the current state with
+        ///
+        /// Any existing locals are removed and the given set of variables is added
+        void set_locals(const std::map<std::string, Boxed_Value> &t_locals)
+        {
+          StackData &stack = get_stack_data();
+          Scope &scope = stack.front();
+          scope = t_locals;
+        }
+
+
 
         ///
         /// Get a map of all objects that can be seen from the current scope in a scripting context

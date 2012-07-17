@@ -522,8 +522,12 @@ namespace chaiscript
       std::set<std::string> active_loaded_modules;
     };
 
-    /// \brief Returns a state object that represents the current state of the system
-    /// \return Current state of the system
+    /// \brief Returns a state object that represents the current state of the global system
+    ///
+    /// The global system includes the reserved words, global const objects, functions and types.
+    /// local variables are thread specific and not included.
+    ///
+    /// \return Current state of the global system
     ///
     /// \b Example:
     ///
@@ -544,6 +548,10 @@ namespace chaiscript
     }
 
     /// \brief Sets the state of the system
+    ///
+    /// The global system includes the reserved words, global objects, functions and types.
+    /// local variables are thread specific and not included.
+    ///
     /// \param[in] t_state New state to set
     ///
     /// \b Example:
@@ -563,7 +571,23 @@ namespace chaiscript
       m_engine.set_state(t_state.engine_state);
     }
 
-    /// \brief Adds a type, function or object to ChaiScript
+    /// \returns All values in the local thread state, added through the add() function
+    std::map<std::string, Boxed_Value> get_locals() const
+    {
+      return m_engine.get_locals();
+    }
+
+    /// \brief Sets all of the locals for the current thread state.
+    ///
+    /// \param[in] t_locals The map<name, value> set of variables to replace the current state with
+    ///
+    /// Any existing locals are removed and the given set of variables is added
+    void set_locals(const std::map<std::string, Boxed_Value> &t_locals)
+    {
+      m_engine.set_locals(t_locals);
+    }
+
+    /// \brief Adds a type, function or object to ChaiScript. Objects are added to the local thread state.
     /// \param[in] t_t Item to add
     /// \param[in] t_name Name of item to add
     /// \returns Reference to current ChaiScript object

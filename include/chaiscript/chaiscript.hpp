@@ -140,7 +140,10 @@
 ///
 /// \subsubsection addingobjects Adding Objects
 ///
-/// Named objects can be created with the chaiscript::var function.
+/// Named objects can be created with the chaiscript::var function. Note: adding a object
+/// adds it to the current thread scope, not to a global scope. If you have multiple 
+/// threads that need to access the same variables you will need to add them
+/// separately for each thread, from the thread itself.
 /// 
 /// \code
 /// using namespace chaiscript;
