@@ -300,13 +300,13 @@ namespace chaiscript
         }
 
         template<typename Target, typename Source>
-          Target get_as_aux()
+          Target get_as_aux() const
         {
           return static_cast<Target>(*static_cast<const Source *>(bv.get_const_ptr()));
         }
 
         template<typename Source>
-          std::string to_string_aux(const Boxed_Value &v)
+          std::string to_string_aux(const Boxed_Value &v) const
         {
           std::ostringstream oss;
           oss << *static_cast<const Source *>(v.get_const_ptr());
@@ -332,7 +332,7 @@ namespace chaiscript
         validate_boxed_number(bv);
       }
 
-      template<typename Target> Target get_as()
+      template<typename Target> Target get_as() const
       {
         const Type_Info &inp_ = bv.get_type_info();
 
@@ -373,7 +373,7 @@ namespace chaiscript
         }
       }
 
-      std::string to_string()
+      std::string to_string() const
       {
         const Type_Info &inp_ = bv.get_type_info();
 
