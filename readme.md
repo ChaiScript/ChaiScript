@@ -35,9 +35,9 @@ Usage
 =====
 
 * Add the ChaiScript include directory to your project's header search path
-* Add "#include <chaiscript/chaiscript.hpp> to your source file
+* Add `#include <chaiscript/chaiscript.hpp>` to your source file
 * Instantiate the ChaiScript engine in your application.  For example, create a 
-  new engine with the name 'chai' like so: "chaiscript::ChaiScript chai"
+  new engine with the name `chai` like so: `chaiscript::ChaiScript chai`
 * The default behavior is to load the ChaiScript standard library from a 
   loadable module. A second option is to compile the library into your code,
   see below for an example.
