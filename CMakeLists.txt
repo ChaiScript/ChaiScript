@@ -79,7 +79,7 @@ set (Chai_INCLUDES include/chaiscript/chaiscript.hpp include/chaiscript/chaiscri
 set_source_files_properties(${Chai_INCLUDES} PROPERTIES HEADER_FILE_ONLY TRUE)
 
 if (MULTITHREAD_SUPPORT_ENABLED)
-  find_package(Boost 1.36.0 COMPONENTS thread)
+  find_package(Boost 1.36.0 COMPONENTS thread system)
 
   if (Boost_FOUND)
     link_directories( ${Boost_LIBRARY_DIRS} )
