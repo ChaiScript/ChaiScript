@@ -1,7 +1,11 @@
 ChaiScript
+
 http://www.chaiscript.com
+
 (c) 2009-2012 Jason Turner and Jonathan Turner
+
 Release under the BSD license, see "license.txt" for details.
+
 
 Introduction
 ============
@@ -40,12 +44,12 @@ Usage
 
 Once instantiated, the engine is ready to start running ChaiScript source.  You
 have two main options for processing ChaiScript source: a line at a time using 
-"chai.eval(string)" and a file at a time using "chai.eval_file(fname)"
+`chai.eval(string)` and a file at a time using `chai.eval_file(fname)`
 
 To make functions in your C++ code visible to scripts, they must be registered 
 with the scripting engine.  To do so, call add:
 
-chai.add(chaiscript::fun(&my_function), "my_function_name");
+    chai.add(chaiscript::fun(&my_function), "my_function_name");
 
 Once registered the function will be visible to scripts as "my_function_name"
 
