@@ -64,7 +64,9 @@ directory, and for more in-depth look at the language, the unit tests in the
 For examples of how to register parts of your C++ application, see 
 "example.cpp" in the "src" directory. Example.cpp is verbose and shows every 
 possible way of working with the library. For further documentation generate 
-the doxygen documentation in the build folder or see the website http://www.chaiscript.com.
+the doxygen documentation in the build folder or see the website 
+http://www.chaiscript.com.
+
 
 The shortest complete example possible follows:
 
