@@ -180,10 +180,30 @@ namespace chaiscript
           }
 
         template<typename T, typename P1>
+          int return_int_impl_non_const(const boost::function<typename T::size_type (T *, P1)> &t_func, T *t_obj, P1 p1)
+          {
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4267)
+#endif
+            return t_func(t_obj, p1);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
+          }
+
+        template<typename T, typename P1>
         boost::function<int (const T *, P1)> return_int(size_t (T::*t_func)(P1) const)
           {
             return boost::bind(&return_int_impl<T, P1>, boost::function<size_t (const T *, P1)>(boost::mem_fn(t_func)), _1, _2);
           }
+
+        template<typename T, typename P1>
+        boost::function<int (T *, P1)> return_int(size_t (T::*t_func)(P1) )
+          {
+            return boost::bind(&return_int_impl_non_const<T, P1>, boost::function<size_t (T*, P1)>(boost::mem_fn(t_func)), _1, _2);
+          }
+
 
         template<typename T, typename P1, typename P2>
           int return_int_impl(const boost::function<typename T::size_type (const T *, P1, P2)> &t_func, const T *t_obj, P1 p1, P2 p2)
@@ -452,6 +472,11 @@ namespace chaiscript
         {
           m->add(fun(boost::function<int (const ContainerType *, const typename ContainerType::key_type &)>(detail::return_int(&ContainerType::count))), "count");
 
+
+          typedef size_t (ContainerType::*erase)(const typename ContainerType::key_type &);
+          erase eraseptr(&ContainerType::erase);
+
+          m->add(fun(boost::function<int (ContainerType *, const typename ContainerType::key_type &)>(detail::return_int(eraseptr))), "erase");
           return m;
         }
 

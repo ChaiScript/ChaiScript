@@ -1,1 +1,13 @@
 assert_equal([true, false, true], map([1,2,3], odd))
+
+
+
+var m = ["a":1, "b":2];
+
+assert_equal(1, m.count("a"))
+assert_equal(0, m.count("c"))
+assert_equal(1, m.erase("a"))
+assert_equal(1, m.size())
+assert_equal(0, m.erase("a"))
+
+
