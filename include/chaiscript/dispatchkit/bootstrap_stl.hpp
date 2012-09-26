@@ -224,6 +224,20 @@ namespace chaiscript
             return boost::bind(&return_int_impl<T, P1, P2>, boost::function<size_t (const T *, P1, P2)>(boost::mem_fn(t_func)), _1, _2, _3);
           }
 
+        template<typename T>
+          void insert(T &t_target, const T &t_other)
+          {
+            t_target.insert(t_other.begin(), t_other.end());
+          }
+
+        template<typename T>
+          void insert_ref(T &t_target, const typename T::value_type &t_val)
+          {
+            t_target.insert(t_val);
+          }
+
+
+
 
         /**
          * Add Bidir_Range support for the given ContainerType
@@ -477,6 +491,18 @@ namespace chaiscript
           erase eraseptr(&ContainerType::erase);
 
           m->add(fun(boost::function<int (ContainerType *, const typename ContainerType::key_type &)>(detail::return_int(eraseptr))), "erase");
+
+          m->add(fun(&detail::insert<ContainerType>), "insert");
+
+          std::string insert_name;
+          if (typeid(typename ContainerType::mapped_type) == typeid(Boxed_Value))
+          {
+            insert_name = "insert_ref";
+          } else {
+            insert_name = "insert";
+          }
+
+          m->add(fun(&detail::insert_ref<ContainerType>), insert_name);
           return m;
         }
 
