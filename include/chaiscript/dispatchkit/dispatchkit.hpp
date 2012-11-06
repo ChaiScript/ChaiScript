@@ -472,6 +472,22 @@ namespace chaiscript
           }
         }
 
+
+		void add_global(const Boxed_Value &obj, const std::string &name)
+        {
+          validate_object_name(name);
+
+          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_global_object_mutex);
+
+          if (m_state.m_global_objects.find(name) != m_state.m_global_objects.end())
+          {
+            throw exception::name_conflict_error(name);
+          } else {
+            m_state.m_global_objects.insert(std::make_pair(name, obj));
+          }
+        }
+
+
         /**
          * Adds a new scope to the stack
          */
