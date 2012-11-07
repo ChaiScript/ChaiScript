@@ -625,12 +625,17 @@ namespace chaiscript
           typedef typename String::size_type (String::*find_func_ptr)(const String &, typename String::size_type) const;
           typedef boost::function<int (const String *, const String &, int)> find_func;
 
+          typedef String (String::*substr_ptr)(typename String::size_type, typename String::size_type) const;
+          typedef boost::function<String (const String *, int, int)> substr_func;
+
           m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find)))), "find");
           m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::rfind)))), "rfind");
           m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find_first_of)))), "find_first_of");
           m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find_last_of)))), "find_last_of");
           m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find_first_not_of)))), "find_first_not_of");
           m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find_last_not_of)))), "find_last_not_of");
+
+          m->add(fun(substr_func(static_cast<substr_ptr>(&String::substr))), "substr");
 
           m->add(fun(&String::c_str), "c_str");
           m->add(fun(&String::data), "data");
