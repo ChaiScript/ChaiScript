@@ -447,6 +447,7 @@ namespace chaiscript
         bootstrap_pod_type<long double>("long_double", m);
         bootstrap_pod_type<float>("float", m);
         bootstrap_pod_type<int>("int", m);
+        bootstrap_pod_type<long>("long", m);
         bootstrap_pod_type<unsigned int>("unsigned_int", m);
         bootstrap_pod_type<unsigned long>("unsigned_long", m);
         bootstrap_pod_type<size_t>("size_t", m);
