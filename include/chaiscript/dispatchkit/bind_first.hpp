@@ -89,5 +89,6 @@ namespace chaiscript
 
 #undef n
 #undef m
+#undef param
 
 #endif

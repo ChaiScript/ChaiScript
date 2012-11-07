@@ -114,6 +114,8 @@ namespace chaiscript
   }
 }
 #undef n
+#undef addparam
+#undef curry 
 
 #endif
 

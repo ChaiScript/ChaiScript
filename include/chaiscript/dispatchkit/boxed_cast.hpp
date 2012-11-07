@@ -4,8 +4,8 @@
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
-#ifndef __boxed_cast_hpp__
-#define __boxed_cast_hpp__
+#ifndef CHAISCRIPT_BOXED_CAST_HPP_
+#define CHAISCRIPT_BOXED_CAST_HPP_
 
 #include "type_info.hpp"
 #include "boxed_value.hpp"

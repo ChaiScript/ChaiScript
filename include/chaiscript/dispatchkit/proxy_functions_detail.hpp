@@ -120,6 +120,10 @@ namespace chaiscript
 }
 
 #undef n
+#undef gettypeinfo
+#undef casthelper
+#undef trycast
+
 
 #endif
 
