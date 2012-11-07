@@ -33,6 +33,8 @@ namespace chaiscript
           ,   bin_alphabet
           ,   id_alphabet
           ,   white_alphabet
+          ,   int_suffix_alphabet
+          ,   float_suffix_alphabet
           ,   max_alphabet
           ,   lengthof_alphabet = 256
       };
@@ -175,6 +177,17 @@ namespace chaiscript
 
         m_alphabet[detail::white_alphabet][static_cast<int>(' ')]=true;
         m_alphabet[detail::white_alphabet][static_cast<int>('\t')]=true;
+
+        m_alphabet[detail::int_suffix_alphabet][static_cast<int>('l')] = true;
+        m_alphabet[detail::int_suffix_alphabet][static_cast<int>('L')] = true;
+        m_alphabet[detail::int_suffix_alphabet][static_cast<int>('u')] = true;
+        m_alphabet[detail::int_suffix_alphabet][static_cast<int>('U')] = true;
+
+        m_alphabet[detail::float_suffix_alphabet][static_cast<int>('l')] = true;
+        m_alphabet[detail::float_suffix_alphabet][static_cast<int>('L')] = true;
+        m_alphabet[detail::float_suffix_alphabet][static_cast<int>('f')] = true;
+        m_alphabet[detail::float_suffix_alphabet][static_cast<int>('F')] = true;
+
       }
 
       /**
@@ -343,6 +356,12 @@ namespace chaiscript
                 ++m_input_pos;
                 ++m_col;
               }
+
+              while (has_more_input() && char_in_alphabet(*m_input_pos, detail::float_suffix_alphabet))
+              {
+                ++m_input_pos;
+                ++m_col;
+              }
             }
             else {
               --m_input_pos;
@@ -371,6 +390,11 @@ namespace chaiscript
                 ++m_input_pos;
                 ++m_col;
               }
+              while (has_more_input() && char_in_alphabet(*m_input_pos, detail::int_suffix_alphabet))
+              {
+                ++m_input_pos;
+                ++m_col;
+              }
             }
             else {
               --m_input_pos;
@@ -384,6 +408,14 @@ namespace chaiscript
         }
 
         return retval;
+      }
+
+      void IntSuffix_() {
+        while (has_more_input() && char_in_alphabet(*m_input_pos, detail::int_suffix_alphabet))
+        {
+          ++m_input_pos;
+          ++m_col;
+        }
       }
 
       /**
@@ -419,6 +451,110 @@ namespace chaiscript
         return retval;
       }
 
+      Boxed_Value buildFloat(const std::string &t_val)
+      {
+        bool float_ = false;
+        bool long_ = false;
+
+        size_t i = t_val.size();
+
+        for (; i > 0; --i)
+        {
+          char val = t_val[i-1];
+
+          if (val == 'f' || val == 'F')
+          {
+            float_ = true;
+          } else if (val == 'l' || val == 'L') {
+            long_ = true;
+          } else {
+            break;
+          }
+        }
+
+        std::stringstream ss(t_val.substr(0, i));
+
+        if (float_)
+        {
+          float f;
+          ss >> f;   
+          return Boxed_Value(const_var(f));
+        } else if (long_) {
+          long double f;
+          ss >> f;   
+          return Boxed_Value(const_var(f));
+        } else {
+          double f;
+          ss >> f;   
+          return Boxed_Value(const_var(f));
+        }
+      }
+
+      template<typename IntType>
+      Boxed_Value buildInt(const IntType &t_type, const std::string &t_val)
+      {
+        bool unsigned_ = false;
+        bool long_ = false;
+        bool longlong_ = false;
+
+        size_t i = t_val.size();
+
+        for (; i > 0; --i)
+        {
+          char val = t_val[i-1];
+
+          if (val == 'u' || val == 'U')
+          {
+            unsigned_ = true;
+          } else if (val == 'l' || val == 'L') {
+            if (long_)
+            {
+              longlong_ = true;
+            }
+
+            long_ = true;
+          } else {
+            break;
+          }
+        }
+
+        std::stringstream ss(t_val.substr(0, i));
+        ss >> t_type;
+
+        if (unsigned_)
+        {
+          if (longlong_)
+          {
+            uint64_t val;
+            ss >> val;   
+            return Boxed_Value(const_var(val));
+          } else if (long_) {
+            unsigned long val;
+            ss >> val;
+            return Boxed_Value(const_var(val));
+          } else {
+            unsigned int val;
+            ss >> val;
+            return Boxed_Value(const_var(val));
+          }
+        } else {
+          if (longlong_)
+          {
+            int64_t val;
+            ss >> val;   
+            return Boxed_Value(const_var(val));
+          } else if (long_) {
+            long val;
+            ss >> val;
+            return Boxed_Value(const_var(val));
+          } else {
+            int val;
+            ss >> val;
+            return Boxed_Value(const_var(val));
+          }
+        }
+      }
+
       /**
        * Reads a number from the input, detecting if it's an integer or floating point
        */
@@ -435,19 +571,14 @@ namespace chaiscript
           if (has_more_input() && char_in_alphabet(*m_input_pos, detail::float_alphabet) ) {
             if (Hex_()) {
               std::string match(start, m_input_pos);
-              std::stringstream ss(match);
-              unsigned int temp_int;
-              ss >> std::hex >> temp_int;
-
-              std::ostringstream out_int;
-              out_int << static_cast<int>(temp_int);
-              AST_NodePtr t(new eval::Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+              Boxed_Value i = buildInt(std::hex, match);
+              AST_NodePtr t(new eval::Int_AST_Node(match, i, AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
               return true;
             }
             if (Binary_()) {
               std::string match(start, m_input_pos);
-              int temp_int = 0;
+              int64_t temp_int = 0;
               size_t pos = 0, end = match.length();
 
               while ((pos < end) && (pos < (2 + sizeof(int) * 8))) {
@@ -458,32 +589,36 @@ namespace chaiscript
                 ++pos;
               }
 
-              std::ostringstream out_int;
-              out_int << temp_int;
-              AST_NodePtr t(new eval::Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+              Boxed_Value i;
+              if (match.length() <= sizeof(int) * 8)
+              {
+                i = Boxed_Value(const_var(int(temp_int)));
+              } else {
+                i = Boxed_Value(const_var(temp_int));
+              }
+
+              AST_NodePtr t(new eval::Int_AST_Node(match, i, AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
               return true;
             }
             if (Float_()) {
               std::string match(start, m_input_pos);
-              AST_NodePtr t(new eval::Float_AST_Node(match, AST_Node_Type::Float, m_filename, prev_line, prev_col, m_line, m_col));
+              Boxed_Value f = buildFloat(match);
+              AST_NodePtr t(new eval::Float_AST_Node(match, f, AST_Node_Type::Float, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
               return true;
             }
             else {
+              IntSuffix_();
               std::string match(start, m_input_pos);
               if ((match.size() > 0) && (match[0] == '0')) {
-                std::stringstream ss(match);
-                unsigned int temp_int;
-                ss >> std::oct >> temp_int;
-
-                std::ostringstream out_int;
-                out_int << int(temp_int);
-                AST_NodePtr t(new eval::Int_AST_Node(out_int.str(), AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+                Boxed_Value i = buildInt(std::oct, match);
+                AST_NodePtr t(new eval::Int_AST_Node(match, i, AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
                 m_match_stack.push_back(t);
               }
               else {
-                AST_NodePtr t(new eval::Int_AST_Node(match, AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+                Boxed_Value i = buildInt(std::dec, match);
+                AST_NodePtr t(new eval::Int_AST_Node(match, i, AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
                 m_match_stack.push_back(t);
               }
               return true;

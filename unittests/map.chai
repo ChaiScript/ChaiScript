@@ -1,1 +1,29 @@
 assert_equal([true, false, true], map([1,2,3], odd))
+
+
+
+var m = ["a":1, "b":2];
+
+assert_equal(1, m.count("a"))
+assert_equal(0, m.count("c"))
+assert_equal(1, m.erase("a"))
+assert_equal(1, m.size())
+assert_equal(0, m.erase("a"))
+
+assert_equal(1, m.size());
+
+var m2 = ["c":3, "b":4]
+m.insert(m2);
+
+assert_equal(3, m["c"])
+// The inserted values do not overwrite the existing ones
+assert_equal(2, m["b"])
+assert_equal(2, m.size())
+
+var v = "bob";
+
+m.insert_ref(Map_Pair("d", v))
+
+assert_equal("bob", m["d"])
+v = "bob2"
+assert_equal("bob2", m["d"])

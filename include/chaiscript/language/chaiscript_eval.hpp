@@ -104,6 +104,9 @@ namespace chaiscript
         Int_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Int, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col), 
           m_value(const_var(int(atoi(t_ast_node_text.c_str())))) { }
+        Int_AST_Node(const std::string &t_ast_node_text = "", const Boxed_Value &t_bv = const_var(0), int t_id = AST_Node_Type::Int, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col), 
+          m_value(t_bv) { }
         virtual ~Int_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &){
           return m_value;
@@ -119,6 +122,9 @@ namespace chaiscript
         Float_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Float, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
           m_value(const_var(double(atof(t_ast_node_text.c_str())))) { }
+        Float_AST_Node(const std::string &t_ast_node_text = "", const Boxed_Value &t_bv = const_var(0), int t_id = AST_Node_Type::Float, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
+          m_value(t_bv) { }
         virtual ~Float_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &){
           return m_value;

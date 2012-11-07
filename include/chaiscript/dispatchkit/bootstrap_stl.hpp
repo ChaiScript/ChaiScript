@@ -148,6 +148,96 @@ namespace chaiscript
         };
 
       namespace detail {
+        template<typename T>
+          int return_int_impl(const std::function<typename T::size_type (const T *)> &t_func, const T *t_obj)
+          {
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4267)
+#endif
+            return t_func(t_obj);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
+          }
+
+        template<typename T>
+        std::function<int (const T *)> return_int(size_t (T::*t_func)() const)
+          {
+            return std::bind(&return_int_impl<T>, std::function<size_t (const T *)>(std::mem_fn(t_func)), std::placeholders::_1);
+          }
+
+        template<typename T, typename P1>
+          int return_int_impl(const std::function<typename T::size_type (const T *, P1)> &t_func, const T *t_obj, P1 p1)
+          {
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4267)
+#endif
+            return t_func(t_obj, p1);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
+          }
+
+        template<typename T, typename P1>
+          int return_int_impl_non_const(const std::function<typename T::size_type (T *, P1)> &t_func, T *t_obj, P1 p1)
+          {
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4267)
+#endif
+            return t_func(t_obj, p1);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
+          }
+
+        template<typename T, typename P1>
+        std::function<int (const T *, P1)> return_int(size_t (T::*t_func)(P1) const)
+          {
+            return std::bind(&return_int_impl<T, P1>, std::function<size_t (const T *, P1)>(std::mem_fn(t_func)), std::placeholders::_1, std::placeholders::_2);
+          }
+
+        template<typename T, typename P1>
+        std::function<int (T *, P1)> return_int(size_t (T::*t_func)(P1) )
+          {
+            return std::bind(&return_int_impl_non_const<T, P1>, std::function<size_t (T*, P1)>(std::mem_fn(t_func)), std::placeholders::_1, std::placeholders::_2);
+          }
+
+
+        template<typename T, typename P1, typename P2>
+          int return_int_impl(const std::function<typename T::size_type (const T *, P1, P2)> &t_func, const T *t_obj, P1 p1, P2 p2)
+          {
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4267)
+#endif
+            return t_func(t_obj, p1, p2);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
+          }
+
+        template<typename T, typename P1, typename P2>
+        std::function<int (const T *, P1, P2)> return_int(size_t (T::*t_func)(P1, P2) const)
+          {
+            return std::bind(&return_int_impl<T, P1, P2>, std::function<size_t (const T *, P1, P2)>(std::mem_fn(t_func)), std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+          }
+
+        template<typename T>
+          void insert(T &t_target, const T &t_other)
+          {
+            t_target.insert(t_other.begin(), t_other.end());
+          }
+
+        template<typename T>
+          void insert_ref(T &t_target, const typename T::value_type &t_val)
+          {
+            t_target.insert(t_val);
+          }
+
+
 
         /**
          * Add Bidir_Range support for the given ContainerType
@@ -393,6 +483,23 @@ namespace chaiscript
         {
           m->add(fun<int (const ContainerType *, const typename ContainerType::key_type &)>(&ContainerType::count), "count");
 
+
+          typedef size_t (ContainerType::*erase)(const typename ContainerType::key_type &);
+          erase eraseptr(&ContainerType::erase);
+
+          m->add(fun(std::function<int (ContainerType *, const typename ContainerType::key_type &)>(detail::return_int(eraseptr))), "erase");
+
+          m->add(fun(&detail::insert<ContainerType>), "insert");
+
+          std::string insert_name;
+          if (typeid(typename ContainerType::mapped_type) == typeid(Boxed_Value))
+          {
+            insert_name = "insert_ref";
+          } else {
+            insert_name = "insert";
+          }
+
+          m->add(fun(&detail::insert_ref<ContainerType>), insert_name);
           return m;
         }
 
