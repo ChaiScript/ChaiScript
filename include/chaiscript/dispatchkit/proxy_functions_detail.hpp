@@ -143,7 +143,6 @@ namespace chaiscript
     }
   }
 
-
 }
 
 

@@ -1,0 +1,11 @@
+assert_equal(true, int_type.bare_equal(1.get_type_info()))
+assert_equal(true, unsigned_int_type.bare_equal(1u.get_type_info()))
+assert_equal(true, unsigned_long_type.bare_equal(1lu.get_type_info()))
+assert_equal(true, long_type.bare_equal(1l.get_type_info()))
+assert_equal(true, int64_t_type.bare_equal(1ll.get_type_info()))
+assert_equal(true, uint64_t_type.bare_equal(1ull.get_type_info()))
+
+assert_equal(true, double_type.bare_equal(1.6.get_type_info()))
+assert_equal(true, float_type.bare_equal(1.6f.get_type_info()))
+assert_equal(true, long_double_type.bare_equal(1.6l.get_type_info()))
+
