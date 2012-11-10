@@ -208,6 +208,10 @@ if(BUILD_TESTING)
     target_link_libraries(c_linkage_test ${LIBS})
     add_test(NAME C_Linkage_Test COMMAND c_linkage_test)
 
+    add_executable(integer_literal_test unittests/integer_literal_test.cpp)
+    target_link_libraries(integer_literal_test ${LIBS})
+    add_test(NAME Integer_Literal_Test COMMAND integer_literal_test)
+
     if (MULTITHREAD_SUPPORT_ENABLED)
       add_executable(multithreaded_test unittests/multithreaded_test.cpp)
       target_link_libraries(multithreaded_test ${LIBS})
