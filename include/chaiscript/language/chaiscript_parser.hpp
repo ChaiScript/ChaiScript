@@ -490,6 +490,8 @@ namespace chaiscript
         }
       }
 
+
+
       template<typename IntType>
       Boxed_Value buildInt(const IntType &t_type, const std::string &t_val)
       {
@@ -520,6 +522,57 @@ namespace chaiscript
 
         std::stringstream ss(t_val.substr(0, i));
         ss >> t_type;
+
+        std::stringstream testu(t_val.substr(0, i));
+        uint64_t u;
+        testu >> t_type >> u;
+
+        bool unsignedrequired = false;
+        size_t size = sizeof(int) * 8;
+
+        if ((u >> (sizeof(int) * 8)) > 0)
+        {
+          //requires something bigger than int
+          long_ = true;
+        }
+
+        static_assert(sizeof(long) == sizeof(uint64_t) || sizeof(long) * 2 == sizeof(uint64_t), "Unexpected sizing of integer types");
+
+        if ((sizeof(long) < sizeof(uint64_t)) 
+            && (u >> ((sizeof(uint64_t) - sizeof(long)) * 8)) > 0)
+        {
+          //requires something bigger than long
+          longlong_ = true;
+        }
+
+        if (longlong_)
+        {
+          size = sizeof(int64_t) * 8;
+        } else if (long_) {
+          size = sizeof(long) * 8;
+        } 
+
+        if ( (u >> (size - 1)) > 0)
+        {
+          unsignedrequired = true;
+        }
+
+        if (unsignedrequired && !unsigned_)
+        {
+          if (t_type == std::hex || t_type == std::oct)
+          {
+            // with hex and octal we are happy to just make it unsigned
+            unsigned_ = true;
+          } else {
+            // with decimal we must bump it up to the next size
+            if (long_)
+            {
+              longlong_ = true;
+            } else if (!long_ && !longlong_) {
+              long_ = true;
+            }
+          }
+        }
 
         if (unsigned_)
         {
