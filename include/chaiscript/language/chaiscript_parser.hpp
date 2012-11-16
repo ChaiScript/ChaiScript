@@ -569,7 +569,7 @@ namespace chaiscript
 
         if (unsignedrequired && !unsigned_)
         {
-          if (t_type == std::hex || t_type == std::oct)
+          if (t_type == &std::hex || t_type == &std::oct)
           {
             // with hex and octal we are happy to just make it unsigned
             unsigned_ = true;
