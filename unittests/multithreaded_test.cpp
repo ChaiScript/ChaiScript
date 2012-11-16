@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include <list>
+#include <algorithm>
 
 #include <chaiscript/chaiscript.hpp>
 
