@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include <list>
+#include <algorithm>
 
 #include <chaiscript/chaiscript.hpp>
 #include <boost/thread.hpp>
@@ -67,7 +68,7 @@ int main()
   std::vector<boost::shared_ptr<boost::thread> > threads;
 
   // Ensure at least two, but say only 7 on an 8 core processor
-  int num_threads = std::max(boost::thread::hardware_concurrency() - 1, 2u);
+  int num_threads = std::max<unsigned int>(boost::thread::hardware_concurrency() - 1, 2u);
 
   for (int i = 0; i < num_threads; ++i)
   {

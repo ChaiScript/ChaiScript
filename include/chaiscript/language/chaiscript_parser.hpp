@@ -538,12 +538,22 @@ namespace chaiscript
 
         BOOST_ASSERT(sizeof(long) == sizeof(boost::uint64_t) || sizeof(long) * 2 == sizeof(boost::uint64_t));
 
-        if ((sizeof(long) < sizeof(boost::uint64_t)) 
-            && (u >> ((sizeof(uint64_t) - sizeof(long)) * 8)) > 0)
+#ifdef BOOST_MSVC
+		//Thank you MSVC, yes we know that a constant value is being used in the if
+		// statment in this compiler / architecture
+#pragma warning(push)
+#pragma warning(disable : 4127)
+#endif
+
+        if ( sizeof(long) < sizeof(boost::uint64_t) && (u >> ((sizeof(boost::uint64_t) - sizeof(long)) * 8)) > 0)
         {
           //requires something bigger than long
           longlong_ = true;
         }
+
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
 
         if (longlong_)
         {
@@ -631,7 +641,7 @@ namespace chaiscript
             }
             if (Binary_()) {
               std::string match(start, m_input_pos);
-              int64_t temp_int = 0;
+			  boost::int64_t temp_int = 0;
               size_t pos = 0, end = match.length();
 
               while ((pos < end) && (pos < (2 + sizeof(int) * 8))) {
