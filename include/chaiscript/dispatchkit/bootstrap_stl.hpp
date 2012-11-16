@@ -218,6 +218,12 @@ namespace chaiscript
 #endif
           }
 
+        template<typename StringType, StringType (StringType::*Func)(typename StringType::size_type, typename StringType::size_type) const >
+        StringType substr_helper(const StringType &str, int begin, int end)
+        {
+          return (str.*Func)(begin, end);
+        }
+
         template<typename T, typename P1, typename P2>
         boost::function<int (const T *, P1, P2)> return_int(size_t (T::*t_func)(P1, P2) const)
           {
@@ -635,7 +641,8 @@ namespace chaiscript
           m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find_first_not_of)))), "find_first_not_of");
           m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find_last_not_of)))), "find_last_not_of");
 
-          m->add(fun(substr_func(static_cast<substr_ptr>(&String::substr))), "substr");
+
+          m->add(fun(&detail::substr_helper<String, static_cast<substr_ptr>(&String::substr)>), "substr");
 
           m->add(fun(&String::c_str), "c_str");
           m->add(fun(&String::data), "data");
