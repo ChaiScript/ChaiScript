@@ -1,3 +1,8 @@
+Changes since 5.0.0
+* Fix sizing of numeric constants to match that of the C++ standard
+* Add support for u,ll,l,f suffixes for numeric constants
+* Siginificant improvement in error reporting
+
 Changes since 4.0.0
 * Dropped boost in favor of C++11
 * Separated out stdlib to make more options for compile time improvements
