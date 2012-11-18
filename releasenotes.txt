@@ -1,3 +1,6 @@
+Changes since 4.1.0
+* Fix missed gcc build error in 4.1.0
+
 Changes since 4.0.0
 * Fix sizing of numeric constants to match that of the C++ standard
 * Add support for u,ll,l,f suffixes for numeric constants
