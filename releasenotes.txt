@@ -1,3 +1,8 @@
+Changes since 4.0.0
+* Fix sizing of numeric constants to match that of the C++ standard
+* Add support for u,ll,l,f suffixes for numeric constants
+* Siginificant improvement in error reporting
+
 Changes since 3.1.0
 * svenstaro: Unused variables and CMake consistency fixes
 * Added support for returning pointers from functions (#13)
