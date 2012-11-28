@@ -15,16 +15,20 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #else
+
+char *mystrdup (const char *s) {
+    char *d = static_cast<char*>(malloc (strlen (s) + 1));   // Space for length plus nul
+    if (d == nullptr) return nullptr;          // No memory
+    strcpy (d,s);                        // Copy the characters
+    return d;                            // Return the new string
+}
+
 char* readline(const char* p)
 {
   std::string retval;
   std::cout << p ;
   std::getline(std::cin, retval);
-#ifdef CHAISCRIPT_MSVC
-  return std::cin.eof() ? NULL : _strdup(retval.c_str());
-#else
-  return std::cin.eof() ? NULL : strdup(retval.c_str());
-#endif
+  return std::cin.eof() ? NULL : mystrdup(retval.c_str());
 }
 void add_history(const char*){}
 void using_history(){}

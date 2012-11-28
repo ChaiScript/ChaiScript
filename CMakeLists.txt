@@ -2,7 +2,13 @@ cmake_minimum_required(VERSION 2.8)
 
 project(chaiscript)
 
-option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" TRUE)
+# MINGW does not yet support C++11's concurrency features
+if (MINGW)
+  option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" FALSE)
+else()
+  option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" TRUE)
+endif()
+
 option(BUILD_MODULES "Build Extra Modules (stl, reflection)" TRUE)
 option(BUILD_SAMPLES "Build Samples Folder" FALSE)
 
@@ -39,7 +45,9 @@ include(CPack)
 
 include(cmake/CheckCXX11Features.cmake)
 
-find_library(READLINE_LIBRARY NAMES readline PATH /usr/lib /usr/local/lib /opt/local/lib)
+if(NOT MINGW)
+  find_library(READLINE_LIBRARY NAMES readline PATH /usr/lib /usr/local/lib /opt/local/lib)
+endif()
 
 if(HAS_CXX11_VARIADIC_TEMPLATES)
   message(STATUS "Variadic Template support detected")
@@ -68,7 +76,7 @@ if(MSVC)
    endif()
 else()
   add_definitions(-Wall -Wextra -Wshadow -pedantic -std=c++0x)
-
+  
   if (APPLE)
     add_definitions(-Wno-sign-compare)
   endif()
@@ -86,6 +94,12 @@ if (CMAKE_CXX_COMPILER MATCHES ".*clang")
   endif()
 else()
   set (EXTRA_LINKER_FLAGS )
+endif()
+
+# limitations in MinGW require us to make an optimized build
+# for the sake of object sizes or something
+if (MINGW)
+  add_definitions(-O3)
 endif()
 
 include_directories(include)

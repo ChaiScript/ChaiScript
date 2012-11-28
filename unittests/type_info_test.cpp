@@ -1,6 +1,7 @@
 // Tests to make sure that the order in which function dispatches occur is correct
 
 #include <chaiscript/dispatchkit/type_info.hpp>
+#include <cstdlib>
 
 void test_type(const chaiscript::Type_Info &ti, bool t_is_const, bool t_is_pointer, bool t_is_reference, bool t_is_void,
     bool t_is_undef)

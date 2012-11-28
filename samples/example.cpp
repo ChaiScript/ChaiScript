@@ -5,6 +5,7 @@
 // http://www.chaiscript.com
 
 #include <iostream>
+#include <ctime>
 
 #include <chaiscript/chaiscript.hpp>
 #include <chaiscript/dispatchkit/bootstrap_stl.hpp>
