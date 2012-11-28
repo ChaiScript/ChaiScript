@@ -18,7 +18,7 @@ set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/description.txt"
 
 set(CPACK_PACKAGE_VERSION_MAJOR 5)
 set(CPACK_PACKAGE_VERSION_MINOR 1)
-set(CPACK_PACKAGE_VERSION_PATCH 0)
+set(CPACK_PACKAGE_VERSION_PATCH 1)
 set(CPACK_PACKAGE_EXECUTABLES "chai;ChaiScript Eval")
 set(CPACK_PACKAGE_VENDOR "ChaiScript.com")
 set(CPACK_PACKAGE_CONTACT "contact@chaiscript.com")
@@ -223,6 +223,10 @@ if(BUILD_TESTING)
     add_executable(integer_literal_test unittests/integer_literal_test.cpp)
     target_link_libraries(integer_literal_test ${LIBS})
     add_test(NAME Integer_Literal_Test COMMAND integer_literal_test)
+
+    add_executable(arithmetic_conversions_test unittests/arithmetic_conversions_test.cpp)
+    target_link_libraries(arithmetic_conversions_test ${LIBS})
+    add_test(NAME Arithmetic_Conversions_Test COMMAND arithmetic_conversions_test)
 
     if (MULTITHREAD_SUPPORT_ENABLED)
       add_executable(multithreaded_test unittests/multithreaded_test.cpp)

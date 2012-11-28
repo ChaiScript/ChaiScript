@@ -335,6 +335,46 @@ namespace chaiscript
         validate_boxed_number(bv);
       }
 
+      Boxed_Number get_as(const Type_Info &inp_) const
+      {
+        if (inp_.bare_equal_type_info(typeid(int))) {
+          return Boxed_Number(get_as<int>());
+        } else if (inp_.bare_equal_type_info(typeid(double))) {
+          return Boxed_Number(get_as<double>());
+        } else if (inp_.bare_equal_type_info(typeid(float))) {
+          return Boxed_Number(get_as<float>());
+        } else if (inp_.bare_equal_type_info(typeid(long double))) {
+          return Boxed_Number(get_as<long double>());
+        } else if (inp_.bare_equal_type_info(typeid(char))) {
+          return Boxed_Number(get_as<char>());
+        } else if (inp_.bare_equal_type_info(typeid(unsigned int))) {
+          return Boxed_Number(get_as<unsigned int>());
+        } else if (inp_.bare_equal_type_info(typeid(long))) {
+          return Boxed_Number(get_as<long>());
+        } else if (inp_.bare_equal_type_info(typeid(unsigned long))) {
+          return Boxed_Number(get_as<unsigned long>());
+        } else if (inp_.bare_equal_type_info(typeid(int8_t))) {
+          return Boxed_Number(get_as<int8_t>());
+        } else if (inp_.bare_equal_type_info(typeid(int16_t))) {
+          return Boxed_Number(get_as<int16_t>());
+        } else if (inp_.bare_equal_type_info(typeid(int32_t))) {
+          return Boxed_Number(get_as<int32_t>());
+        } else if (inp_.bare_equal_type_info(typeid(int64_t))) {
+          return Boxed_Number(get_as<int64_t>());
+        } else if (inp_.bare_equal_type_info(typeid(uint8_t))) {
+          return Boxed_Number(get_as<uint8_t>());
+        } else if (inp_.bare_equal_type_info(typeid(uint16_t))) {
+          return Boxed_Number(get_as<uint16_t>());
+        } else if (inp_.bare_equal_type_info(typeid(uint32_t))) {
+          return Boxed_Number(get_as<uint32_t>());
+        } else if (inp_.bare_equal_type_info(typeid(uint64_t))) {
+          return Boxed_Number(get_as<uint64_t>());
+        } else {
+          throw chaiscript::detail::exception::bad_any_cast();
+        }
+
+      }
+
       template<typename Target> Target get_as() const
       {
         const Type_Info &inp_ = bv.get_type_info();

@@ -90,6 +90,12 @@ namespace chaiscript
           || (ti.m_bare_type_info && m_bare_type_info && *ti.m_bare_type_info == *m_bare_type_info);
       }
 
+      bool bare_equal_type_info(const std::type_info &ti) const
+      {
+        return m_bare_type_info != 0 
+          && (*m_bare_type_info) == ti;
+      }
+
       bool is_const() const { return m_is_const; }
       bool is_reference() const { return m_is_reference; }
       bool is_void() const { return m_is_void; }
