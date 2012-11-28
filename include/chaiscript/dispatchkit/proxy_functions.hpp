@@ -85,6 +85,11 @@ namespace chaiscript
         virtual bool operator==(const Proxy_Function_Base &) const = 0;
         virtual bool call_match(const std::vector<Boxed_Value> &vals) const = 0;
 
+        bool has_arithmetic_param() const 
+        {
+          return m_has_arithmetic_param;
+        }
+
         virtual std::vector<boost::shared_ptr<const Proxy_Function_Base> > get_contained_functions() const
         {
           return std::vector<boost::shared_ptr<const Proxy_Function_Base> >();
@@ -117,23 +122,8 @@ namespace chaiscript
 
         virtual std::string annotation() const = 0;
 
-      protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const = 0;
-
-        Proxy_Function_Base(const std::vector<Type_Info> &t_types)
-          : m_types(t_types)
+        static bool compare_type_to_param(const Type_Info &ti, const Boxed_Value &bv)
         {
-        }
-
-        virtual bool compare_first_type(const Boxed_Value &bv) const
-        {
-          const std::vector<Type_Info> &types = get_param_types();
-
-          if (types.size() < 2)
-          {
-            return true;
-          }
-          const Type_Info &ti = types[1];
           if (ti.is_undef() 
               || ti.bare_equal(user_type<Boxed_Value>())
               || (!bv.get_type_info().is_undef()
@@ -149,6 +139,36 @@ namespace chaiscript
           } else {
             return false;
           }
+        }
+      protected:
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const = 0;
+
+        Proxy_Function_Base(const std::vector<Type_Info> &t_types)
+          : m_types(t_types), m_has_arithmetic_param(false)
+        {
+          for (int i = 1; i < m_types.size(); ++i)
+          {
+            if (m_types[i].is_arithmetic())
+            {
+              m_has_arithmetic_param = true;
+              return;
+            }
+          }
+
+        }
+
+        virtual bool compare_first_type(const Boxed_Value &bv) const
+        {
+          const std::vector<Type_Info> &types = get_param_types();
+
+          if (types.size() < 2)
+          {
+            return true;
+          }
+
+          const Type_Info &ti = types[1];
+          return compare_type_to_param(ti, bv);
+
         }
 
         bool compare_types(const std::vector<Type_Info> &tis, const std::vector<Boxed_Value> &bvs) const
@@ -170,6 +190,8 @@ namespace chaiscript
         }
 
         std::vector<Type_Info> m_types;
+        bool m_has_arithmetic_param;
+
     };
   }
 
@@ -605,6 +627,92 @@ namespace chaiscript
 
   namespace dispatch
   {
+    namespace detail 
+    {
+      template<typename FuncType>
+        bool types_match_except_for_arithmetic(const FuncType &t_func, const std::vector<Boxed_Value> &plist)
+        {
+          if (t_func->get_arity() != plist.size())
+          {
+            return false;
+          }
+
+          const std::vector<Type_Info> &types = t_func->get_param_types();
+
+          assert(plist.size() == types.size() - 1);
+
+          for (int i = 0; i < plist.size(); ++i)
+          {
+            if (Proxy_Function_Base::compare_type_to_param(types[i+1], plist[i])
+                || (types[i+1].is_arithmetic() && plist[i].get_type_info().is_arithmetic()))
+            {
+              // types continue to match
+            } else {
+              return false;
+            }
+          }
+
+          // all types match
+          return true;
+        }
+
+      template<typename InItr>
+        Boxed_Value dispatch_with_conversions(InItr begin, const InItr &end, const std::vector<Boxed_Value> &plist)
+        {
+          InItr orig(begin);
+
+          InItr matching_func(end);
+
+          while (begin != end)
+          {
+            if (types_match_except_for_arithmetic(*begin, plist))
+            {
+              if (matching_func == end)
+              {
+                matching_func = begin;
+              } else {
+                // More than one function matches, not attempting
+                throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(orig, end));
+              }
+            }
+
+            ++begin;
+          }
+
+          if (matching_func == end)
+          {
+            // no appropriate function to attempt arithmetic type conversion on
+            throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(orig, end));
+          }
+
+
+          std::vector<Boxed_Value> newplist;
+          const std::vector<Type_Info> &tis = (*matching_func)->get_param_types();
+
+          for (int i = 0; i < plist.size(); ++i)
+          {
+            if (tis[i+1].is_arithmetic()
+                && plist[i].get_type_info().is_arithmetic()) {
+              newplist.push_back(Boxed_Number(plist[i]).get_as(tis[i+1]).bv);
+            } else {
+              newplist.push_back(plist[i]);
+            }
+          }
+
+          try {
+            return (*(*matching_func))(newplist);
+          } catch (const exception::bad_boxed_cast &) {
+            //parameter failed to cast
+          } catch (const exception::arity_error &) {
+            //invalid num params
+          } catch (const exception::guard_error &) {
+            //guard failed to allow the function to execute
+          }
+
+          throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(orig, end));
+
+        }
+    }
 
     /**
      * Take a vector of functions and a vector of parameters. Attempt to execute
@@ -634,7 +742,7 @@ namespace chaiscript
           ++begin;
         }
 
-        throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(orig, end));
+        return detail::dispatch_with_conversions(orig, end, plist);
       }
 
     /**

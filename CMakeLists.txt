@@ -212,6 +212,10 @@ if(BUILD_TESTING)
     target_link_libraries(integer_literal_test ${LIBS})
     add_test(NAME Integer_Literal_Test COMMAND integer_literal_test)
 
+    add_executable(arithmetic_conversions_test unittests/arithmetic_conversions_test.cpp)
+    target_link_libraries(arithmetic_conversions_test ${LIBS})
+    add_test(NAME Arithmetic_Conversions_Test COMMAND arithmetic_conversions_test)
+
     if (MULTITHREAD_SUPPORT_ENABLED)
       add_executable(multithreaded_test unittests/multithreaded_test.cpp)
       target_link_libraries(multithreaded_test ${LIBS})

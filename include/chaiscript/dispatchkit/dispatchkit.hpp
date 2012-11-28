@@ -1109,6 +1109,14 @@ namespace chaiscript
             vec.push_back(t_f);
             std::stable_sort(vec.begin(), vec.end(), &function_less_than);
             func_objs[t_name] = Proxy_Function(new Dispatch_Function(vec));
+          } else if (t_f->has_arithmetic_param()) {
+            // if the function is the only function but it also contains
+            // arithmetic operators, we must wrap it in a dispatch function
+            // to allow for automatic arithmetic type conversions
+            std::vector<Proxy_Function> vec;
+            vec.push_back(t_f);
+            funcs.insert(std::make_pair(t_name, vec));
+            func_objs[t_name] = Proxy_Function(new Dispatch_Function(vec));
           } else {
             std::vector<Proxy_Function> vec;
             vec.push_back(t_f);
