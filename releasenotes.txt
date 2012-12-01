@@ -1,3 +1,7 @@
+Changes since 4.1.1
+* Add support for automatic conversion of arithmetic types when possible
+  and when no ambiguous method dispatch exists.
+
 Changes since 4.1.0
 * Fix missed gcc build error in 4.1.0
 
