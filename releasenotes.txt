@@ -1,3 +1,7 @@
+Changes since 5.1.0
+* Add support for automatic conversion of arithmetic types when possible
+  and when no ambiguous method dispatch exists.
+
 Changes since 5.0.0
 * Fix sizing of numeric constants to match that of the C++ standard
 * Add support for u,ll,l,f suffixes for numeric constants
