@@ -1,0 +1,2 @@
+var x = [1, 2u]
+assert_equal(2u, x[0])
