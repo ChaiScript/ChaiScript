@@ -1,0 +1,10 @@
+
+var my_array=["1", 4, 6.6, 10, "1000", 100, 10.9 ];
+
+for (var j = 0; j < 10000; ++j)
+{
+  for (var i = 0; i < 6; ++i)
+  {
+    to_string(my_array[i]);
+  }
+}
