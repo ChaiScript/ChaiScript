@@ -1761,6 +1761,23 @@ namespace chaiscript
         }
 
         /**
+         * Reads a continue statement from input
+         */
+        bool Continue() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Keyword("continue")) {
+            retval = true;
+
+            build_match(AST_NodePtr(new eval::Continue_AST_Node()), prev_stack_top);
+          }
+
+          return retval;
+        }
+
+        /**
          * Reads a dot expression(member access), then proceeds to check if it's a function or array call
          */
         bool Dot_Fun_Array() {
@@ -2250,6 +2267,14 @@ namespace chaiscript
               saw_eol = false;
             }
             else if (Break()) {
+              if (!saw_eol) {
+                throw exception::eval_error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
+              }
+              has_more = true;
+              retval = true;
+              saw_eol = false;
+            }
+            else if (Continue()) {
               if (!saw_eol) {
                 throw exception::eval_error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
               }

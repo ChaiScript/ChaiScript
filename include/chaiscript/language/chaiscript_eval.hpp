@@ -803,7 +803,13 @@ namespace chaiscript
           }
           while (cond) {
             try {
-              this->children[1]->eval(t_ss);
+              try {
+                this->children[1]->eval(t_ss);
+              } catch (detail::Continue_Loop &) {
+                // we got a continue exception, which means all of the remaining 
+                // loop implementation is skipped and we just need to continue to
+                // the next condition test
+              }
 
               try {
                 cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
@@ -914,13 +920,27 @@ namespace chaiscript
           while (cond) {
             try {
               if (this->children.size() == 4) {
-                this->children[3]->eval(t_ss);
-                this->children[2]->eval(t_ss);
+ 
+                try {
+                  this->children[3]->eval(t_ss);
+                } catch (detail::Continue_Loop &) {
+                  // we got a continue exception, which means all of the remaining 
+                  // loop implementation is skipped and we just need to continue to
+                  // the next iteration step
+                }
+
+		this->children[2]->eval(t_ss);
 
                 cond = boxed_cast<bool>(this->children[1]->eval(t_ss));
               }
               else {
-                this->children[2]->eval(t_ss);
+                try {
+                  this->children[2]->eval(t_ss);
+                } catch (detail::Continue_Loop &) {
+                  // we got a continue exception, which means all of the remaining 
+                  // loop implementation is skipped and we just need to continue to
+                  // the next iteration step
+                }
 
                 this->children[1]->eval(t_ss);
 
@@ -1126,6 +1146,16 @@ namespace chaiscript
         virtual ~Break_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &){
           throw detail::Break_Loop();
+        }
+    };
+
+    struct Continue_AST_Node : public AST_Node {
+      public:
+        Continue_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Break, const boost::shared_ptr<std::string> &t_fname=boost::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        virtual ~Continue_AST_Node() {}
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &){
+          throw detail::Continue_Loop();
         }
     };
 

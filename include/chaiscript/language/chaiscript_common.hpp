@@ -494,6 +494,14 @@ namespace chaiscript
         Break_Loop() { }
       };
 
+      /**
+       * Special type indicating a call to 'continue'
+       */
+      struct Continue_Loop {
+        Continue_Loop() { }
+      };
+
+
       /// Creates a new scope then pops it on destruction
       struct Scope_Push_Pop
       {
