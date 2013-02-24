@@ -21,9 +21,9 @@ namespace chaiscript
   public:
     enum Type { Error, Int, Float, Id, Char, Str, Eol, Fun_Call, Inplace_Fun_Call, Arg_List, Variable, Equation, Var_Decl,
                 Comparison, Addition, Subtraction, Multiplication, Division, Modulus, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
-                Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Map_Pair, Value_Range,
+                Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
                 Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, 
-                Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond
+                Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop
     };
   };
 
@@ -35,9 +35,9 @@ namespace chaiscript
     const char *ast_node_type_to_string(int ast_node_type) {
       const char *ast_node_types[] = { "Internal Parser Error", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Inplace_Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
                                     "Comparison", "Addition", "Subtraction", "Multiplication", "Division", "Modulus", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
-                                    "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Map_Pair", "Value_Range",
+                                    "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
                                     "Inline_Range", "Annotation", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Shift", "Equality", "Bitwise_And", "Bitwise_Xor", "Bitwise_Or", 
-                                    "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Ternary Condition"};
+                                    "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Ternary Condition", "Noop"};
 
       return ast_node_types[ast_node_type];
     }
@@ -493,6 +493,14 @@ namespace chaiscript
       struct Break_Loop {
         Break_Loop() { }
       };
+
+      /**
+       * Special type indicating a call to 'continue'
+       */
+      struct Continue_Loop {
+        Continue_Loop() { }
+      };
+
 
       /// Creates a new scope then pops it on destruction
       struct Scope_Push_Pop

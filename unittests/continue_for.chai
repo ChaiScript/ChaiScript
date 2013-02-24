@@ -1,0 +1,16 @@
+var j = 0;
+var k = 0;
+
+for (var i = 0; i < 10; ++i)
+{
+  j = i
+  if (i > 5)
+  {
+    continue
+  } 
+
+  k = i
+}
+
+assert_equal(5, k);
+assert_equal(9, j);

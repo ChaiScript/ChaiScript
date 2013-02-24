@@ -1565,18 +1565,40 @@ namespace chaiscript
           return retval;
         }
 
+
         /**
          * Reads the C-style for conditions from input
          */
         bool For_Guards() {
-          Equation();
+          if (!(Equation() && Eol()))
+          {
+            if (!Eol())
+            {
+              throw exception::eval_error("'for' loop initial statment missing", File_Position(m_line, m_col), *m_filename);          
+            } else {
+              AST_NodePtr t(new eval::Noop_AST_Node());
+              m_match_stack.push_back(t);
+            }
+          }
 
-          if (Char(';') && Operator() && Char(';') && Equation()) {
-            return true;
+          if (!(Equation() && Eol()))
+          {
+            if (!Eol())
+            {
+              throw exception::eval_error("'for' loop condition missing", File_Position(m_line, m_col), *m_filename);          
+            } else {
+              AST_NodePtr t(new eval::Noop_AST_Node());
+              m_match_stack.push_back(t);
+            }
           }
-          else {
-            throw exception::eval_error("Incomplete conditions in 'for' loop", File_Position(m_line, m_col), *m_filename);
+
+          if (!Equation())
+          {
+            AST_NodePtr t(new eval::Noop_AST_Node());
+            m_match_stack.push_back(t);
           }
+
+          return true; 
         }
 
         /**
@@ -1746,6 +1768,23 @@ namespace chaiscript
             retval = true;
 
             build_match(AST_NodePtr(new eval::Break_AST_Node()), prev_stack_top);
+          }
+
+          return retval;
+        }
+
+        /**
+         * Reads a continue statement from input
+         */
+        bool Continue() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Keyword("continue")) {
+            retval = true;
+
+            build_match(AST_NodePtr(new eval::Continue_AST_Node()), prev_stack_top);
           }
 
           return retval;
@@ -2269,6 +2308,14 @@ namespace chaiscript
               saw_eol = false;
             }
             else if (Break()) {
+              if (!saw_eol) {
+                throw exception::eval_error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
+              }
+              has_more = true;
+              retval = true;
+              saw_eol = false;
+            }
+            else if (Continue()) {
               if (!saw_eol) {
                 throw exception::eval_error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
               }

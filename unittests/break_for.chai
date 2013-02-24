@@ -1,0 +1,11 @@
+var j = 0;
+
+for (var i = 0; i < 10; ++i) {
+  if (i == 5) {
+    break
+  }
+
+  j = i
+}
+
+assert_equal(4, j);
