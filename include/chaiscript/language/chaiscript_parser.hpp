@@ -635,7 +635,7 @@ namespace chaiscript
             if (Hex_()) {
               std::string match(start, m_input_pos);
               Boxed_Value i = buildInt(std::hex, match);
-              AST_NodePtr t(new eval::Int_AST_Node(match, i, AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+              AST_NodePtr t(new eval::Int_AST_Node(match, i, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
               return true;
             }
@@ -660,14 +660,14 @@ namespace chaiscript
                 i = Boxed_Value(const_var(temp_int));
               }
 
-              AST_NodePtr t(new eval::Int_AST_Node(match, i, AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+              AST_NodePtr t(new eval::Int_AST_Node(match, i, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
               return true;
             }
             if (Float_()) {
               std::string match(start, m_input_pos);
               Boxed_Value f = buildFloat(match);
-              AST_NodePtr t(new eval::Float_AST_Node(match, f, AST_Node_Type::Float, m_filename, prev_line, prev_col, m_line, m_col));
+              AST_NodePtr t(new eval::Float_AST_Node(match, f, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
               return true;
             }
@@ -676,12 +676,12 @@ namespace chaiscript
               std::string match(start, m_input_pos);
               if ((match.size() > 0) && (match[0] == '0')) {
                 Boxed_Value i = buildInt(std::oct, match);
-                AST_NodePtr t(new eval::Int_AST_Node(match, i, AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+                AST_NodePtr t(new eval::Int_AST_Node(match, i, m_filename, prev_line, prev_col, m_line, m_col));
                 m_match_stack.push_back(t);
               }
               else {
                 Boxed_Value i = buildInt(std::dec, match);
-                AST_NodePtr t(new eval::Int_AST_Node(match, i, AST_Node_Type::Int, m_filename, prev_line, prev_col, m_line, m_col));
+                AST_NodePtr t(new eval::Int_AST_Node(match, i, m_filename, prev_line, prev_col, m_line, m_col));
                 m_match_stack.push_back(t);
               }
               return true;
@@ -751,13 +751,13 @@ namespace chaiscript
             if (*start == '`') {
               //Id Literal
               std::string match(start+1, m_input_pos-1);
-              AST_NodePtr t(new eval::Id_AST_Node(match, AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
+              AST_NodePtr t(new eval::Id_AST_Node(match, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
               return true;
             }
             else {
               std::string match(start, m_input_pos);
-              AST_NodePtr t(new eval::Id_AST_Node(match, AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
+              AST_NodePtr t(new eval::Id_AST_Node(match, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
               return true;
             }
@@ -790,7 +790,7 @@ namespace chaiscript
           } while (Symbol("#"));
 
           std::string match(start, m_input_pos);
-          AST_NodePtr t(new eval::Annotation_AST_Node(match, AST_Node_Type::Annotation, m_filename, prev_line, prev_col, m_line, m_col));
+          AST_NodePtr t(new eval::Annotation_AST_Node(match, m_filename, prev_line, prev_col, m_line, m_col));
           m_match_stack.push_back(t);
           return true;
         }
@@ -865,13 +865,13 @@ namespace chaiscript
                   if (is_interpolated) {
                     //If we've seen previous interpolation, add on instead of making a new one
 
-                    AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+                    AST_NodePtr t(new eval::Quoted_String_AST_Node(match, m_filename, prev_line, prev_col, m_line, m_col));
                     m_match_stack.push_back(t);
 
                     build_match(AST_NodePtr(new eval::Addition_AST_Node()), prev_stack_top);
                   }
                   else {
-                    AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+                    AST_NodePtr t(new eval::Quoted_String_AST_Node(match, m_filename, prev_line, prev_col, m_line, m_col));
                     m_match_stack.push_back(t);
                   }
 
@@ -891,17 +891,17 @@ namespace chaiscript
 
                     size_t tostr_stack_top = m_match_stack.size();
 
-                    AST_NodePtr tostr(new eval::Id_AST_Node("to_string", AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
+                    AST_NodePtr tostr(new eval::Id_AST_Node("to_string", m_filename, prev_line, prev_col, m_line, m_col));
                     m_match_stack.push_back(tostr);
 
                     size_t ev_stack_top = m_match_stack.size();
 
-                    AST_NodePtr ev(new eval::Id_AST_Node("eval", AST_Node_Type::Id, m_filename, prev_line, prev_col, m_line, m_col));
+                    AST_NodePtr ev(new eval::Id_AST_Node("eval", m_filename, prev_line, prev_col, m_line, m_col));
                     m_match_stack.push_back(ev);
 
                     size_t arg_stack_top = m_match_stack.size();
 
-                    AST_NodePtr t(new eval::Quoted_String_AST_Node(eval_match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+                    AST_NodePtr t(new eval::Quoted_String_AST_Node(eval_match, m_filename, prev_line, prev_col, m_line, m_col));
                     m_match_stack.push_back(t);
 
                     build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), arg_stack_top);
@@ -959,13 +959,13 @@ namespace chaiscript
               }
             }
             if (is_interpolated) {
-              AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+              AST_NodePtr t(new eval::Quoted_String_AST_Node(match, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
 
               build_match(AST_NodePtr(new eval::Addition_AST_Node()), prev_stack_top);
             }
             else {
-              AST_NodePtr t(new eval::Quoted_String_AST_Node(match, AST_Node_Type::Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+              AST_NodePtr t(new eval::Quoted_String_AST_Node(match, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
             }
             return true;
@@ -1057,7 +1057,7 @@ namespace chaiscript
                   is_escaped = false;
                 }
               }
-              AST_NodePtr t(new eval::Single_Quoted_String_AST_Node(match, AST_Node_Type::Single_Quoted_String, m_filename, prev_line, prev_col, m_line, m_col));
+              AST_NodePtr t(new eval::Single_Quoted_String_AST_Node(match, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
               return true;
             }
@@ -1096,7 +1096,7 @@ namespace chaiscript
             int prev_line = m_line;
             if (Char_(t_c)) {
               std::string match(start, m_input_pos);
-              AST_NodePtr t(new eval::Char_AST_Node(match, AST_Node_Type::Char, m_filename, prev_line, prev_col, m_line, m_col));
+              AST_NodePtr t(new eval::Char_AST_Node(match, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
               return true;
             }
@@ -1148,7 +1148,7 @@ namespace chaiscript
 
           if ( t_capture && retval ) {
             std::string match(start, m_input_pos);
-            AST_NodePtr t(new eval::Str_AST_Node(match, AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
+            AST_NodePtr t(new eval::Str_AST_Node(match, m_filename, prev_line, prev_col, m_line, m_col));
             m_match_stack.push_back(t);
           }
           return retval;
@@ -1196,7 +1196,7 @@ namespace chaiscript
 
           if ( t_capture && retval ) {
             std::string match(start, m_input_pos);
-            AST_NodePtr t(new eval::Str_AST_Node(match, AST_Node_Type::Str, m_filename, prev_line, prev_col, m_line, m_col));
+            AST_NodePtr t(new eval::Str_AST_Node(match, m_filename, prev_line, prev_col, m_line, m_col));
             m_match_stack.push_back(t);
           }
 
@@ -1236,7 +1236,7 @@ namespace chaiscript
             int prev_line = m_line;
             if (Eol_()) {
               std::string match(start, m_input_pos);
-              AST_NodePtr t(new eval::Eol_AST_Node(match, AST_Node_Type::Eol, m_filename, prev_line, prev_col, m_line, m_col));
+              AST_NodePtr t(new eval::Eol_AST_Node(match, m_filename, prev_line, prev_col, m_line, m_col));
               m_match_stack.push_back(t);
               return true;
             }
@@ -1506,7 +1506,7 @@ namespace chaiscript
               if (Keyword("else", true)) {
                 if (Keyword("if")) {
                   AST_NodePtr back(m_match_stack.back());
-                  m_match_stack.back() = AST_NodePtr(new eval::If_AST_Node("else if", back->identifier)); 
+                  m_match_stack.back() = AST_NodePtr(new eval::If_AST_Node("else if"));
                   m_match_stack.back()->start = back->start;
                   m_match_stack.back()->end = back->end;
                   m_match_stack.back()->children = back->children;
