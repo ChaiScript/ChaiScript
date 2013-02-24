@@ -6,3 +6,12 @@ var t = TestDerivedType();
 assert_equal(t0.func(), 0);
 assert_equal(t.func(), 1);
 
+assert_equal(10, t0.val);
+assert_equal(15, t0.const_val);
+
+assert_equal(10, t.val);
+assert_equal(15, t.const_val);
+
+t.val = 23;
+assert_equal(23, t.val)
+
