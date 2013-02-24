@@ -791,18 +791,10 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~While_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) {
-          bool cond;
-
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
           try {
-            cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
-          }
-          catch (const exception::bad_boxed_cast &) {
-            throw exception::eval_error("While condition not boolean");
-          }
-          while (cond) {
-            try {
+            while (boxed_cast<bool>(this->children[0]->eval(t_ss))) {
               try {
                 this->children[1]->eval(t_ss);
               } catch (detail::Continue_Loop &) {
@@ -810,18 +802,13 @@ namespace chaiscript
                 // loop implementation is skipped and we just need to continue to
                 // the next condition test
               }
-
-              try {
-                cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
-              }
-              catch (const exception::bad_boxed_cast &) {
-                throw exception::eval_error("While condition not boolean");
-              }
-            }
-            catch (detail::Break_Loop &) {
-              cond = false;
-            }
+            } 
+          } catch (const exception::bad_boxed_cast &) {
+            throw exception::eval_error("While condition not boolean");
+          } catch (detail::Break_Loop &) {
+            // loop was broken intentionally
           }
+
           return Boxed_Value();
         }
 
@@ -838,7 +825,7 @@ namespace chaiscript
             cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
           }
           catch (const exception::bad_boxed_cast &) {
-            throw exception::eval_error("If condition not boolean");
+            throw exception::eval_error("Ternary if condition not boolean");
           }
 
           if (cond) {
@@ -901,59 +888,34 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~For_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss){
-          bool cond;
-
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
-          try {
-            if (this->children.size() == 4) {
-              this->children[0]->eval(t_ss);
+          // initial expression
+          this->children[0]->eval(t_ss);
 
-              cond = boxed_cast<bool>(this->children[1]->eval(t_ss));
-            } else {
-              cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
+          try {
+            // while condition evals to true
+            while (boxed_cast<bool>(this->children[1]->eval(t_ss))) {
+              try {
+                // Body of Loop
+                this->children[3]->eval(t_ss);
+              } catch (detail::Continue_Loop &) {
+                // we got a continue exception, which means all of the remaining 
+                // loop implementation is skipped and we just need to continue to
+                // the next iteration step
+              }
+
+              // loop expression
+              this->children[2]->eval(t_ss);
             }
           }
           catch (const exception::bad_boxed_cast &) {
             throw exception::eval_error("For condition not boolean");
           }
-          while (cond) {
-            try {
-              if (this->children.size() == 4) {
- 
-                try {
-                  this->children[3]->eval(t_ss);
-                } catch (detail::Continue_Loop &) {
-                  // we got a continue exception, which means all of the remaining 
-                  // loop implementation is skipped and we just need to continue to
-                  // the next iteration step
-                }
-
-		this->children[2]->eval(t_ss);
-
-                cond = boxed_cast<bool>(this->children[1]->eval(t_ss));
-              }
-              else {
-                try {
-                  this->children[2]->eval(t_ss);
-                } catch (detail::Continue_Loop &) {
-                  // we got a continue exception, which means all of the remaining 
-                  // loop implementation is skipped and we just need to continue to
-                  // the next iteration step
-                }
-
-                this->children[1]->eval(t_ss);
-
-                cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
-              }
-            }
-            catch (const exception::bad_boxed_cast &) {
-              throw exception::eval_error("For condition not boolean");
-            }
-            catch (detail::Break_Loop &) {
-              cond = false;
-            }
+          catch (detail::Break_Loop &) {
+            // loop broken
           }
+
           return Boxed_Value();
         }
 
@@ -1122,6 +1084,7 @@ namespace chaiscript
 
           Operators::Opers oper = Operators::to_operator(children[0]->text, true);
           try {
+            // short circuit arithmetic operations
             if (bv.get_type_info().is_arithmetic() && oper != Operators::invalid)
             {
               return Boxed_Number::do_oper(oper, bv);
