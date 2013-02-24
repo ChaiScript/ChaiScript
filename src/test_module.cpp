@@ -5,12 +5,14 @@
 class TestBaseType
 {
   public:
-    TestBaseType() {}
-    TestBaseType(int) {}
-    TestBaseType(int *) {}
+    TestBaseType() : val(10), const_val(15) { }
+    TestBaseType(int) : val(10), const_val(15) {}
+    TestBaseType(int *) : val(10), const_val(15) {}
     virtual ~TestBaseType() {}
     virtual int func() { return 0; }
 
+    int val;
+    const int const_val;
 };
 
 enum TestEnum
@@ -68,6 +70,8 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::base_class<TestBaseType, TestDerivedType>());
 
   m->add(chaiscript::fun(&TestBaseType::func), "func");
+  m->add(chaiscript::fun(&TestBaseType::val), "val");
+  m->add(chaiscript::fun(&TestBaseType::const_val), "const_val");
 
   m->add(chaiscript::fun(&get_new_int), "get_new_int");
 
