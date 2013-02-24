@@ -1574,18 +1574,40 @@ namespace chaiscript
           return retval;
         }
 
+
         /**
          * Reads the C-style for conditions from input
          */
         bool For_Guards() {
-          Equation();
+          if (!(Equation() && Eol()))
+          {
+            if (!Eol())
+            {
+              throw exception::eval_error("'for' loop initial statment missing", File_Position(m_line, m_col), *m_filename);          
+            } else {
+              AST_NodePtr t(new eval::Noop_AST_Node());
+              m_match_stack.push_back(t);
+            }
+          }
 
-          if (Char(';') && Operator() && Char(';') && Equation()) {
-            return true;
+          if (!(Equation() && Eol()))
+          {
+            if (!Eol())
+            {
+              throw exception::eval_error("'for' loop condition missing", File_Position(m_line, m_col), *m_filename);          
+            } else {
+              AST_NodePtr t(new eval::Noop_AST_Node());
+              m_match_stack.push_back(t);
+            }
           }
-          else {
-            throw exception::eval_error("Incomplete conditions in 'for' loop", File_Position(m_line, m_col), *m_filename);
+
+          if (!Equation())
+          {
+            AST_NodePtr t(new eval::Noop_AST_Node());
+            m_match_stack.push_back(t);
           }
+
+          return true; 
         }
 
         /**

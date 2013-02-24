@@ -40,9 +40,9 @@ for (;;l = 1)
 
 assert_equal(0, l)
 
-def isTrue(x)
+def isNotFive(x)
 {
-  if (x == 5) 
+  if (x != 5) 
   {
     return true
   } else {
@@ -50,7 +50,9 @@ def isTrue(x)
   }
 }
 
-for (var m = 0; isTrue(m); m = m + 1)
+var m;
+
+for (m = 0; isNotFive(m); m = m + 1)
 {
   
 }
