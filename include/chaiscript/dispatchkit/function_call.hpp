@@ -29,10 +29,10 @@ namespace chaiscript
      */
     template<typename FunctionType>
       std::function<FunctionType>
-      functor(const std::vector<Const_Proxy_Function> &funcs)
+      functor(const std::vector<Const_Proxy_Function> &funcs, const Dynamic_Cast_Conversions &t_conversions)
       {
         FunctionType *p=0;
-        return detail::build_function_caller_helper(p, funcs);
+        return detail::build_function_caller_helper(p, funcs, t_conversions);
       }
 
     /**
@@ -50,11 +50,11 @@ namespace chaiscript
      */
     template<typename FunctionType>
       std::function<FunctionType>
-      functor(Const_Proxy_Function func)
+      functor(Const_Proxy_Function func, const Dynamic_Cast_Conversions &t_conversions)
       {
         std::vector<Const_Proxy_Function> funcs;
         funcs.push_back(func);
-        return functor<FunctionType>(funcs);
+        return functor<FunctionType>(funcs, t_conversions);
       }
 
     /**
@@ -63,9 +63,9 @@ namespace chaiscript
      */
     template<typename FunctionType>
       std::function<FunctionType>
-      functor(const Boxed_Value &bv)
+      functor(const Boxed_Value &bv, const Dynamic_Cast_Conversions &t_conversions)
       {
-        return functor<FunctionType>(boxed_cast<Const_Proxy_Function >(bv));
+        return functor<FunctionType>(boxed_cast<Const_Proxy_Function >(bv, t_conversions), t_conversions);
       }
   }
 
@@ -78,13 +78,13 @@ namespace chaiscript
       {
         typedef std::function<Signature> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &t_conversions)
         {
           if (ob.get_type_info().bare_equal(user_type<Const_Proxy_Function>()))
           {
-            return dispatch::functor<Signature>(ob);
+            return dispatch::functor<Signature>(ob, t_conversions);
           } else {
-            return Cast_Helper_Inner<const std::function<Signature> &>::cast(ob);
+            return Cast_Helper_Inner<const std::function<Signature> &>::cast(ob, t_conversions);
           }
         }
       };
@@ -97,13 +97,13 @@ namespace chaiscript
       {
         typedef std::function<Signature> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &t_conversions)
         {
           if (ob.get_type_info().bare_equal(user_type<Const_Proxy_Function>()))
           {
-            return dispatch::functor<Signature>(ob);
+            return dispatch::functor<Signature>(ob, t_conversions);
           } else {
-            return Cast_Helper_Inner<std::function<Signature> >::cast(ob);
+            return Cast_Helper_Inner<std::function<Signature> >::cast(ob, t_conversions);
           }
         }
       };
@@ -116,13 +116,13 @@ namespace chaiscript
       {
         typedef std::function<Signature> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &t_conversions)
         {
           if (ob.get_type_info().bare_equal(user_type<Const_Proxy_Function>()))
           {
-            return dispatch::functor<Signature>(ob);
+            return dispatch::functor<Signature>(ob, t_conversions);
           } else {
-            return Cast_Helper_Inner<const std::function<Signature> >::cast(ob);
+            return Cast_Helper_Inner<const std::function<Signature> >::cast(ob, t_conversions);
           }
         }
       };

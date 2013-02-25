@@ -42,9 +42,9 @@ struct System
   std::map<std::string, std::function<std::string (const std::string &) > > m_callbacks;
 
   void add_callback(const std::string &t_name, 
-      const chaiscript::Proxy_Function &t_func)
+      const std::function<std::string (const std::string &)> &t_func)
   {
-    m_callbacks[t_name] = chaiscript::dispatch::functor<std::string (const std::string &)>(t_func);
+    m_callbacks[t_name] = t_func;
   }
 
 

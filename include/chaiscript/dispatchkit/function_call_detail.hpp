@@ -26,9 +26,9 @@ namespace chaiscript
         struct Function_Caller_Ret
         {
           static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
-              const std::vector<Boxed_Value> &params)
+              const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
           {
-            return boxed_cast<Ret>(dispatch::dispatch(t_funcs, params));
+            return boxed_cast<Ret>(dispatch::dispatch(t_funcs, params, t_conversions));
           }
         };
 
@@ -39,9 +39,9 @@ namespace chaiscript
         struct Function_Caller_Ret<void>
         {
           static void call(const std::vector<Const_Proxy_Function> &t_funcs, 
-              const std::vector<Boxed_Value> &params)
+              const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
           {
-            dispatch::dispatch(t_funcs, params);
+            dispatch::dispatch(t_funcs, params, t_conversions);
           }
         };
 
@@ -51,8 +51,9 @@ namespace chaiscript
       template<typename Ret, typename ... Param>
         struct Build_Function_Caller_Helper
         {
-          Build_Function_Caller_Helper(const std::vector<Const_Proxy_Function> &t_funcs)
-            : m_funcs(t_funcs)
+          Build_Function_Caller_Helper(const std::vector<Const_Proxy_Function> &t_funcs, const Dynamic_Cast_Conversions &t_conversions)
+            : m_funcs(t_funcs),
+              m_conversions(t_conversions)
           {
           }
 
@@ -60,19 +61,20 @@ namespace chaiscript
           {
             return Function_Caller_Ret<Ret>::call(m_funcs, { 
 (std::is_reference<Param>::value&&!(std::is_same<chaiscript::Boxed_Value, typename std::remove_const<typename std::remove_reference<Param>::type>::type>::value))?Boxed_Value(std::ref(param)):Boxed_Value(param)... 
-          }
+          }, m_conversions
           
           );
 
           }
 
           std::vector<Const_Proxy_Function> m_funcs;
+          Dynamic_Cast_Conversions m_conversions;
         };
 
 
 
       template<typename Ret, typename ... Params>
-        std::function<Ret (Params...)> build_function_caller_helper(Ret (Params...), const std::vector<Const_Proxy_Function> &funcs)
+        std::function<Ret (Params...)> build_function_caller_helper(Ret (Params...), const std::vector<Const_Proxy_Function> &funcs, const Dynamic_Cast_Conversions &t_conversions)
         {
           if (funcs.size() == 1)
           {
@@ -88,7 +90,7 @@ namespace chaiscript
             // we cannot make any other guesses or assumptions really, so continuing
           }
 
-          return std::function<Ret (Params...)>(Build_Function_Caller_Helper<Ret, Params...>(funcs));
+          return std::function<Ret (Params...)>(Build_Function_Caller_Helper<Ret, Params...>(funcs, t_conversions));
         }
     }
   }

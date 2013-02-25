@@ -13,6 +13,8 @@
 
 namespace chaiscript 
 {
+  class Dynamic_Cast_Conversions;
+
   namespace detail
   {
     // Cast_Helper_Inner helper classes
@@ -25,7 +27,7 @@ namespace chaiscript
       {
         typedef typename std::reference_wrapper<typename std::add_const<Result>::type > Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &)
         {
           if (ob.is_ref())
           {
@@ -67,7 +69,7 @@ namespace chaiscript
       {
         typedef const Result * Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &)
         {
           if (ob.is_ref())
           {
@@ -96,7 +98,7 @@ namespace chaiscript
       {
         typedef Result * Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &)
         {
           if (ob.is_ref())
           {
@@ -115,7 +117,7 @@ namespace chaiscript
       {
         typedef Result& Result_Type;
 
-        static Result &cast(const Boxed_Value &ob)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &)
         {
           if (ob.is_ref())
           {
@@ -135,7 +137,7 @@ namespace chaiscript
       {
         typedef typename std::shared_ptr<Result> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &)
         {
           return ob.get().cast<std::shared_ptr<Result> >();
         }
@@ -149,7 +151,7 @@ namespace chaiscript
       {
         typedef typename std::shared_ptr<const Result> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &)
         {
           if (!ob.get_type_info().is_const())
           {
@@ -197,7 +199,7 @@ namespace chaiscript
       {
         typedef const Boxed_Value & Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &)
         {
           return ob;    
         }
@@ -258,9 +260,9 @@ namespace chaiscript
       {
         typedef typename Cast_Helper_Inner<T>::Result_Type Result_Type;
         
-        static Result_Type cast(const Boxed_Value &ob)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &t_conversions)
         {
-          return Cast_Helper_Inner<T>::cast(ob);
+          return Cast_Helper_Inner<T>::cast(ob, t_conversions);
         }
       };
   }

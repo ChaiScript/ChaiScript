@@ -15,65 +15,65 @@ namespace chaiscript
   {
     struct Exception_Handler_Base
     {
-      virtual void handle(const Boxed_Value &bv) = 0;
+      virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) = 0;
 
       protected:
         template<typename T>
-        void throw_type(const Boxed_Value &bv)
+        void throw_type(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
         {
-          try { T t = boxed_cast<T>(bv); throw t; } catch (const chaiscript::exception::bad_boxed_cast &) {}
+          try { T t = t_engine.boxed_cast<T>(bv); throw t; } catch (const chaiscript::exception::bad_boxed_cast &) {}
         }
     };
 
     template<typename T1>
       struct Exception_Handler_Impl1 : Exception_Handler_Base
       {
-        virtual void handle(const Boxed_Value &bv)
+        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
         {
-          throw_type<T1>(bv);
+          throw_type<T1>(bv, t_engine);
         }
       };
     template<typename T1, typename T2>
       struct Exception_Handler_Impl2 : Exception_Handler_Base
       {
-        virtual void handle(const Boxed_Value &bv)
+        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
         {
-          throw_type<T1>(bv);
-          throw_type<T2>(bv);
+          throw_type<T1>(bv, t_engine);
+          throw_type<T2>(bv, t_engine);
         }
       };
 
     template<typename T1, typename T2, typename T3>
       struct Exception_Handler_Impl3 : Exception_Handler_Base
       {
-        virtual void handle(const Boxed_Value &bv)
+        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
         {
-          throw_type<T1>(bv);
-          throw_type<T2>(bv);
-          throw_type<T3>(bv);
+          throw_type<T1>(bv, t_engine);
+          throw_type<T2>(bv, t_engine);
+          throw_type<T3>(bv, t_engine);
         }
       };
     template<typename T1, typename T2, typename T3, typename T4>
       struct Exception_Handler_Impl4 : Exception_Handler_Base
       {
-        virtual void handle(const Boxed_Value &bv)
+        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
         {
-          throw_type<T1>(bv);
-          throw_type<T2>(bv);
-          throw_type<T3>(bv);
-          throw_type<T4>(bv);
+          throw_type<T1>(bv, t_engine);
+          throw_type<T2>(bv, t_engine);
+          throw_type<T3>(bv, t_engine);
+          throw_type<T4>(bv, t_engine);
         }
       };
     template<typename T1, typename T2, typename T3, typename T4, typename T5>
       struct Exception_Handler_Impl5 : Exception_Handler_Base
       {
-        virtual void handle(const Boxed_Value &bv)
+        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
         {
-          throw_type<T1>(bv);
-          throw_type<T2>(bv);
-          throw_type<T3>(bv);
-          throw_type<T4>(bv);
-          throw_type<T5>(bv);
+          throw_type<T1>(bv, t_engine);
+          throw_type<T2>(bv, t_engine);
+          throw_type<T3>(bv, t_engine);
+          throw_type<T4>(bv, t_engine);
+          throw_type<T5>(bv, t_engine);
         }
       };
   }

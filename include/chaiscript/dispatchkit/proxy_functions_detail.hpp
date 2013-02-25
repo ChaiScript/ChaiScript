@@ -63,10 +63,10 @@ namespace chaiscript
       template<typename Param, typename ... Rest>
         struct Try_Cast<Param, Rest...>
         {
-          static void do_try(const std::vector<Boxed_Value> &params, int generation)
+          static void do_try(const std::vector<Boxed_Value> &params, int generation, const Dynamic_Cast_Conversions &t_conversions)
           {
-            boxed_cast<Param>(params[generation]);
-            Try_Cast<Rest...>::do_try(params, generation+1);
+            boxed_cast<Param>(params[generation], t_conversions);
+            Try_Cast<Rest...>::do_try(params, generation+1, t_conversions);
           }
         };
 
@@ -74,7 +74,7 @@ namespace chaiscript
       template<>
         struct Try_Cast<>
         {
-          static void do_try(const std::vector<Boxed_Value> &, int)
+          static void do_try(const std::vector<Boxed_Value> &, int, const Dynamic_Cast_Conversions &)
           {
           }
         };
@@ -88,10 +88,10 @@ namespace chaiscript
        */
       template<typename Ret, typename ... Params>
         bool compare_types_cast(Ret (*)(Params...),
-             const std::vector<Boxed_Value> &params)
+             const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
         {
           try {
-            Try_Cast<Params...>::do_try(params, 0);
+            Try_Cast<Params...>::do_try(params, 0, t_conversions);
           } catch (const exception::bad_boxed_cast &) {
             return false;
           }
@@ -105,9 +105,9 @@ namespace chaiscript
 
           template<typename ... InnerParams>
           static Ret do_call(const std::function<Ret (Params...)> &f,
-              const std::vector<Boxed_Value> &params, InnerParams &&... innerparams)
+              const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions, InnerParams &&... innerparams)
           {
-            return Call_Func<Ret, count - 1, Params...>::do_call(f, params, std::forward<InnerParams>(innerparams)..., params[sizeof...(Params) - count]);
+            return Call_Func<Ret, count - 1, Params...>::do_call(f, params, t_conversions, std::forward<InnerParams>(innerparams)..., params[sizeof...(Params) - count]);
           } 
         };
 
@@ -116,9 +116,9 @@ namespace chaiscript
         {
           template<typename ... InnerParams>
             static Ret do_call(const std::function<Ret (Params...)> &f,
-                const std::vector<Boxed_Value> &, InnerParams &&... innerparams)
+                const std::vector<Boxed_Value> &, const Dynamic_Cast_Conversions &t_conversions, InnerParams &&... innerparams)
             {
-              return f(boxed_cast<Params>(std::forward<InnerParams>(innerparams))...);
+              return f(boxed_cast<Params>(std::forward<InnerParams>(innerparams), t_conversions)...);
             }
         };
 
@@ -130,11 +130,11 @@ namespace chaiscript
        */
       template<typename Ret, typename ... Params>
         Ret call_func(const std::function<Ret (Params...)> &f,
-            const std::vector<Boxed_Value> &params)
+            const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
         {
           if (params.size() == sizeof...(Params))
           {
-            return Call_Func<Ret, sizeof...(Params), Params...>::do_call(f, params);
+            return Call_Func<Ret, sizeof...(Params), Params...>::do_call(f, params, t_conversions);
           }
 
           throw exception::arity_error(static_cast<int>(params.size()), sizeof...(Params));
@@ -156,9 +156,9 @@ namespace chaiscript
       struct Do_Call
       {
         template<typename Fun>
-          static Boxed_Value go(const std::function<Fun> &fun, const std::vector<Boxed_Value> &params)
+          static Boxed_Value go(const std::function<Fun> &fun, const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
           {
-            return Handle_Return<Ret>::handle(call_func(fun, params));
+            return Handle_Return<Ret>::handle(call_func(fun, params, t_conversions));
           }
       };
 
@@ -166,9 +166,9 @@ namespace chaiscript
       struct Do_Call<void>
       {
         template<typename Fun>
-          static Boxed_Value go(const std::function<Fun> &fun, const std::vector<Boxed_Value> &params)
+          static Boxed_Value go(const std::function<Fun> &fun, const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
           {
-            call_func(fun, params);
+            call_func(fun, params, t_conversions);
             return Handle_Return<void>::handle();
           }
       };

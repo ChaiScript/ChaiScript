@@ -156,7 +156,6 @@ namespace chaiscript
 
       ~Module()
       {
-        detail::Dynamic_Conversions::get().cleanup(m_conversions.begin(), m_conversions.end());
       }
 
     private:
@@ -227,9 +226,9 @@ namespace chaiscript
       public:
         Dispatch_Function(const std::vector<Proxy_Function> &t_funcs)
           : Proxy_Function_Base(build_type_infos(t_funcs)),
-          m_funcs(t_funcs)
-      {
-      }
+            m_funcs(t_funcs)
+        {
+        }
 
         virtual bool operator==(const dispatch::Proxy_Function_Base &rhs) const
         {
@@ -279,7 +278,7 @@ namespace chaiscript
           return -1; // unknown arity
         }
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals) const
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const
         {
           typedef std::vector<Proxy_Function> function_vec;
 
@@ -288,7 +287,7 @@ namespace chaiscript
 
           while (begin != end)
           {
-            if ((*begin)->call_match(vals))
+            if ((*begin)->call_match(vals, t_conversions))
             {
               return true;
             } else {
@@ -305,9 +304,9 @@ namespace chaiscript
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const
         {
-          return dispatch::dispatch(m_funcs.begin(), m_funcs.end(), params);
+          return dispatch::dispatch(m_funcs.begin(), m_funcs.end(), params, t_conversions);
         }
 
       private:
@@ -396,16 +395,21 @@ namespace chaiscript
 
         ~Dispatch_Engine()
         {
-          detail::Dynamic_Conversions::get().cleanup(m_conversions.begin(), m_conversions.end());
         }
+
+        /// \brief casts an object while applying any Dynamic_Conversion available
+        template<typename Type>
+          typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv) const
+          {
+            return chaiscript::boxed_cast<Type>(bv, m_conversions);
+          }
 
         /**
          * Add a new conversion for upcasting to a base class
          */
         void add(const Dynamic_Cast_Conversion &d)
         {
-          m_conversions.push_back(d);
-          return detail::Dynamic_Conversions::get().add_conversion(d);
+          m_conversions.add_conversion(d);
         }
 
         /**
@@ -778,11 +782,16 @@ namespace chaiscript
           m_state.m_reserved_words.insert(name);
         }
 
+        const Dynamic_Cast_Conversions &conversions() const
+        {
+          return m_conversions;
+        }
+
         Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params) const
         {
           std::vector<Proxy_Function> functions = get_function(t_name);
 
-          return dispatch::dispatch(functions.begin(), functions.end(), params);
+          return dispatch::dispatch(functions.begin(), functions.end(), params, m_conversions);
         }
 
         Boxed_Value call_function(const std::string &t_name) const
@@ -849,6 +858,22 @@ namespace chaiscript
           }
 
           std::cout << ") " << std::endl;
+        }
+
+        /**
+         * Returns true if a call can be made that consists of the first parameter
+         * (the function) with the remaining parameters as its arguments.
+         */
+        Boxed_Value call_exists(const std::vector<Boxed_Value> &params)
+        {
+          if (params.size() < 1)
+          {
+            throw chaiscript::exception::arity_error(static_cast<int>(params.size()), 1);
+          }
+
+          Const_Proxy_Function f = this->boxed_cast<Const_Proxy_Function>(params[0]);
+
+          return Boxed_Value(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end()), m_conversions));
         }
 
         /**
@@ -1153,7 +1178,7 @@ namespace chaiscript
           int call_depth;
         };  
 
-        std::vector<Dynamic_Cast_Conversion> m_conversions;
+        Dynamic_Cast_Conversions m_conversions;
         chaiscript::detail::threading::Thread_Storage<Stack_Holder> m_stack_holder;
 
 

@@ -66,7 +66,7 @@ namespace chaiscript
               const Proxy_Function &t_func,
               const Type_Info &t_ti)
             : Proxy_Function_Base(build_param_types(t_func->get_param_types(), t_ti)),
-            m_type_name(t_type_name), m_func(t_func), m_ti(new Type_Info(t_ti))
+              m_type_name(t_type_name), m_func(t_func), m_ti(new Type_Info(t_ti))
           {
             assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
                 && "Programming error, Dynamic_Object_Function must have at least one parameter (this)");
@@ -85,11 +85,11 @@ namespace chaiscript
             }
           }
 
-          virtual bool call_match(const std::vector<Boxed_Value> &vals) const
+          virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const
           {
             if (dynamic_object_typename_match(vals, m_type_name, m_ti))
             {
-              return m_func->call_match(vals);
+              return m_func->call_match(vals, t_conversions);
             } else {
               return false;
             }
@@ -113,11 +113,11 @@ namespace chaiscript
 
 
         protected:
-          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
+          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const
           {
             if (dynamic_object_typename_match(params, m_type_name, m_ti))
             {
-              return (*m_func)(params);
+              return (*m_func)(params, t_conversions);
             } else {
               throw exception::guard_error();
             } 
@@ -194,7 +194,7 @@ namespace chaiscript
               const std::string &t_type_name,
               const Proxy_Function &t_func)
             : Proxy_Function_Base(build_type_list(t_func->get_param_types())),
-            m_type_name(t_type_name), m_func(t_func)
+              m_type_name(t_type_name), m_func(t_func)
           {
             assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
                 && "Programming error, Dynamic_Object_Function must have at least one parameter (this)");
@@ -226,13 +226,13 @@ namespace chaiscript
             }
           }
 
-          virtual bool call_match(const std::vector<Boxed_Value> &vals) const
+          virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const
           {
             std::vector<Boxed_Value> new_vals;
             new_vals.push_back(Boxed_Value(Dynamic_Object(m_type_name)));
             new_vals.insert(new_vals.end(), vals.begin(), vals.end());
 
-            return m_func->call_match(new_vals);
+            return m_func->call_match(new_vals, t_conversions);
           }    
 
 
@@ -248,14 +248,14 @@ namespace chaiscript
           }
 
         protected:
-          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
+          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const
           {
             std::vector<Boxed_Value> new_params;
             chaiscript::Boxed_Value bv = var(Dynamic_Object(m_type_name));
             new_params.push_back(bv);
             new_params.insert(new_params.end(), params.begin(), params.end());
 
-            (*m_func)(new_params);
+            (*m_func)(new_params, t_conversions);
 
             return bv;
           }

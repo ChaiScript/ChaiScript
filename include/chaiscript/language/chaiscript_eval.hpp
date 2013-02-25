@@ -226,7 +226,7 @@ namespace chaiscript
           Boxed_Value fn = this->children[0]->eval(t_ss);
           try {
             chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
-            const Boxed_Value &retval = (*boxed_cast<const Const_Proxy_Function &>(fn))(params);
+            const Boxed_Value &retval = (*t_ss.boxed_cast<const Const_Proxy_Function &>(fn))(params, t_ss.conversions());
             return retval;
           }
           catch(const exception::dispatch_error &e){
@@ -234,7 +234,7 @@ namespace chaiscript
           }
           catch(const exception::bad_boxed_cast &){
             try {
-              Const_Proxy_Function f = boxed_cast<const Const_Proxy_Function &>(fn);
+              Const_Proxy_Function f = t_ss.boxed_cast<const Const_Proxy_Function &>(fn);
               // handle the case where there is only 1 function to try to call and dispatch fails on it
               std::vector<Const_Proxy_Function> funcs;
               funcs.push_back(f);
@@ -294,11 +294,11 @@ namespace chaiscript
           try {
             bv = this->children[0]->eval(t_ss);
             try {
-              fn = boxed_cast<const Const_Proxy_Function &>(bv);
+              fn = t_ss.boxed_cast<const Const_Proxy_Function &>(bv);
             } catch (const exception::bad_boxed_cast &) {
               throw exception::eval_error("'" + this->children[0]->pretty_print() + "' does not evaluate to a function.");
             }
-            return (*fn)(params);
+            return (*fn)(params, t_ss.conversions());
           }
           catch(const exception::dispatch_error &e){
             throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, e.functions, false, t_ss);
@@ -1046,7 +1046,7 @@ namespace chaiscript
             std::map<std::string, Boxed_Value> retval;
             for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
               Boxed_Value bv = t_ss.call_function("clone", this->children[0]->children[i]->children[1]->eval(t_ss));
-              retval[boxed_cast<std::string>(this->children[0]->children[i]->children[0]->eval(t_ss))] 
+              retval[t_ss.boxed_cast<std::string>(this->children[0]->children[i]->children[0]->eval(t_ss))] 
                 = bv;
             }
             return const_var(retval);

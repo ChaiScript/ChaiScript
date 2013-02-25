@@ -9,7 +9,7 @@ int test_generic()
   try {
     chai.eval("throw(runtime_error(\"error\"));");
   } catch (const chaiscript::Boxed_Value &bv) {
-    const std::exception &e = chaiscript::boxed_cast<const std::exception &>(bv);
+    const std::exception &e = chai.boxed_cast<const std::exception &>(bv);
     if (e.what() == std::string("error"))
     {
       return EXIT_SUCCESS;
