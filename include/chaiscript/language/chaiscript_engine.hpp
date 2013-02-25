@@ -334,6 +334,13 @@ namespace chaiscript
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_function_objects, boost::ref(m_engine)), "get_functions");
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_scripting_objects, boost::ref(m_engine)), "get_objects");
 
+
+      m_engine.add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(boost::bind(&chaiscript::detail::Dispatch_Engine::call_exists, boost::ref(m_engine), _1))), 
+          "call_exists");
+      m_engine.add(fun<Boxed_Value (const dispatch::Proxy_Function_Base *, const std::vector<Boxed_Value> &)>(boost::bind(&chaiscript::dispatch::Proxy_Function_Base::operator(), _1, _2, boost::ref(m_engine.conversions()))), "call");
+
+
+
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type_name, boost::ref(m_engine)), "name");
 
 
@@ -665,7 +672,7 @@ namespace chaiscript
         return do_eval(t_script);
       } catch (Boxed_Value &bv) {
         if (t_handler) {
-          t_handler->handle(bv);
+          t_handler->handle(bv, m_engine);
         }
         throw bv;
       }
@@ -688,14 +695,22 @@ namespace chaiscript
     T eval(const std::string &t_input, const Exception_Handler &t_handler = Exception_Handler(), const std::string &t_filename="__EVAL__")
     {
       try {
-        return boxed_cast<T>(do_eval(t_input, t_filename));
+        return m_engine.boxed_cast<T>(do_eval(t_input, t_filename));
       } catch (Boxed_Value &bv) {
         if (t_handler) {
-          t_handler->handle(bv);
+          t_handler->handle(bv, m_engine);
         }
         throw bv;
       }
     }
+
+    /// \brief casts an object while applying any Dynamic_Conversion available
+    template<typename Type>
+      typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv) const
+      {
+        return m_engine.boxed_cast<Type>(bv);
+      }
+ 
 
     /// \brief Evaluates a string.
     ///
@@ -713,7 +728,7 @@ namespace chaiscript
         return do_eval(t_input, t_filename);
       } catch (Boxed_Value &bv) {
         if (t_handler) {
-          t_handler->handle(bv);
+          t_handler->handle(bv, m_engine);
         }
         throw bv;
       }
@@ -729,7 +744,7 @@ namespace chaiscript
         return do_eval(load_file(t_filename), t_filename);
       } catch (Boxed_Value &bv) {
         if (t_handler) {
-          t_handler->handle(bv);
+          t_handler->handle(bv, m_engine);
         }
         throw bv;
       }
@@ -746,10 +761,10 @@ namespace chaiscript
     template<typename T>
     T eval_file(const std::string &t_filename, const Exception_Handler &t_handler = Exception_Handler()) {
       try {
-        return boxed_cast<T>(do_eval(load_file(t_filename), t_filename));
+        return m_engine.boxed_cast<T>(do_eval(load_file(t_filename), t_filename));
       } catch (Boxed_Value &bv) {
         if (t_handler) {
-          t_handler->handle(bv);
+          t_handler->handle(bv, m_engine);
         }
         throw bv;
       }

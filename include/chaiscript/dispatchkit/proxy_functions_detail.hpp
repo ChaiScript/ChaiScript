@@ -7,8 +7,8 @@
 #include <boost/preprocessor.hpp>
 
 #define gettypeinfo(z,n,text)  ti.push_back(chaiscript::detail::Get_Type_Info<Param ## n>::get());
-#define casthelper(z,n,text) BOOST_PP_COMMA_IF(n) chaiscript::boxed_cast< Param ## n >(params[n])
-#define trycast(z,n,text) chaiscript::boxed_cast<Param ## n>(params[n]);
+#define casthelper(z,n,text) BOOST_PP_COMMA_IF(n) chaiscript::boxed_cast< Param ## n >(params[n], t_conversions)
+#define trycast(z,n,text) chaiscript::boxed_cast<Param ## n>(params[n], t_conversions);
 
 #ifndef  BOOST_PP_IS_ITERATING
 #ifndef CHAISCRIPT_PROXY_FUNCTIONS_DETAIL_HPP_
@@ -88,7 +88,7 @@ namespace chaiscript
        */
       template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
         Ret call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f,
-            const std::vector<Boxed_Value> &params)
+            const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions & BOOST_PP_IF(n, t_conversions, ))
         {
           if (params.size() != n)
           {
@@ -105,7 +105,7 @@ namespace chaiscript
        */
       template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
         bool compare_types_cast(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)),
-            const std::vector<Boxed_Value> & BOOST_PP_IF(n, params, ))
+            const std::vector<Boxed_Value> & BOOST_PP_IF(n, params, ), const Dynamic_Cast_Conversions &t_conversions)
         {
           try {
             BOOST_PP_REPEAT(n, trycast, ~);
@@ -140,9 +140,9 @@ namespace chaiscript
       struct Do_Call
       {
         template<typename Fun>
-          static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
+          static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
           {
-            return Handle_Return<Ret>::handle(call_func(fun, params));
+            return Handle_Return<Ret>::handle(call_func(fun, params, t_conversions));
           }
       };
 
@@ -150,9 +150,9 @@ namespace chaiscript
       struct Do_Call<void>
       {
         template<typename Fun>
-          static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params)
+          static Boxed_Value go(const boost::function<Fun> &fun, const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
           {
-            call_func(fun, params);
+            call_func(fun, params, t_conversions);
             return Handle_Return<void>::handle();
           }
       };

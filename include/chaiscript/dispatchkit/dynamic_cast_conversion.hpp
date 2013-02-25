@@ -47,7 +47,7 @@ namespace chaiscript
     class Dynamic_Conversion
     {
       public:
-        virtual Boxed_Value convert(const Boxed_Value &derived) = 0;
+        virtual Boxed_Value convert(const Boxed_Value &derived) const = 0;
 
         const Type_Info &base()
         {
@@ -73,7 +73,7 @@ namespace chaiscript
     };
 
     template<typename Base, typename Derived>
-    class Dynamic_Conversion_Impl : public Dynamic_Conversion
+      class Dynamic_Conversion_Impl : public Dynamic_Conversion
     {
       public:
         Dynamic_Conversion_Impl()
@@ -81,7 +81,7 @@ namespace chaiscript
         {
         }
 
-        virtual Boxed_Value convert(const Boxed_Value &t_derived)
+        virtual Boxed_Value convert(const Boxed_Value &t_derived) const
         {
           if (t_derived.get_type_info().bare_equal(user_type<Derived>()))
           {
@@ -91,7 +91,7 @@ namespace chaiscript
               if (t_derived.is_const())
               {
                 boost::shared_ptr<const Base> data 
-                  = boost::dynamic_pointer_cast<const Base>(detail::Cast_Helper<boost::shared_ptr<const Derived> >::cast(t_derived));
+                  = boost::dynamic_pointer_cast<const Base>(detail::Cast_Helper<boost::shared_ptr<const Derived> >::cast(t_derived, Dynamic_Cast_Conversions()));
                 if (!data)
                 {
                   throw std::bad_cast();
@@ -100,7 +100,7 @@ namespace chaiscript
                 return Boxed_Value(data);
               } else {
                 boost::shared_ptr<Base> data 
-                  = boost::dynamic_pointer_cast<Base>(detail::Cast_Helper<boost::shared_ptr<Derived> >::cast(t_derived));
+                  = boost::dynamic_pointer_cast<Base>(detail::Cast_Helper<boost::shared_ptr<Derived> >::cast(t_derived, Dynamic_Cast_Conversions()));
 
                 if (!data)
                 {
@@ -113,11 +113,11 @@ namespace chaiscript
               // Pull the reference out of the contained boxed value, which we know is the type we want
               if (t_derived.is_const())
               {
-                const Derived &d = detail::Cast_Helper<const Derived &>::cast(t_derived);
+                const Derived &d = detail::Cast_Helper<const Derived &>::cast(t_derived, Dynamic_Cast_Conversions());
                 const Base &data = dynamic_cast<const Base &>(d);
                 return Boxed_Value(boost::cref(data));
               } else {
-                Derived &d = detail::Cast_Helper<Derived &>::cast(t_derived);
+                Derived &d = detail::Cast_Helper<Derived &>::cast(t_derived, Dynamic_Cast_Conversions());
                 Base &data = dynamic_cast<Base &>(d);
                 return Boxed_Value(boost::ref(data));
               }
@@ -127,100 +127,97 @@ namespace chaiscript
           }
         }
     };
-
-
-    class Dynamic_Conversions
-    {
-      public:
-        static inline Dynamic_Conversions &get()
-        {
-          static Dynamic_Conversions obj;
-          return obj;
-        }
-
-        template<typename Base, typename Derived>
-        static boost::shared_ptr<Dynamic_Conversion> create()
-        {
-          boost::shared_ptr<Dynamic_Conversion> conversion(new Dynamic_Conversion_Impl<Base, Derived>());
-
-          /// \todo this is a hack and a kludge. The idea is to make sure that
-          ///       the conversion is registered both in the module's notion of the static conversion object
-          ///       and in the global notion of the static conversion object
-          ///       someday this will almost certainly have to change. Maybe it is time for ChaiScript
-          ///       to become a library?
-          Dynamic_Conversions::get().add_conversion(conversion);
-          return conversion;
-        }
-
-        template<typename InItr>
-        void cleanup(InItr begin, const InItr &end)
-        {
-          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
-
-          while (begin != end)
-          {
-            if (begin->unique())
-            {
-              m_conversions.erase(begin->get());
-            }
-
-            ++begin;
-          }
-        }
-
-        void add_conversion(const boost::shared_ptr<Dynamic_Conversion> &conversion)
-        {
-          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
-
-          m_conversions.insert(conversion.get());
-        }
-
-        bool has_conversion(const Type_Info &base, const Type_Info &derived) const
-        {
-          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
-
-          return find(base, derived) != m_conversions.end();
-        }
-
-
-        Dynamic_Conversion *get_conversion(const Type_Info &base, const Type_Info &derived) const
-        {
-          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
-
-          std::set<Dynamic_Conversion *>::const_iterator itr =
-            find(base, derived);
-
-          if (itr != m_conversions.end())
-          {
-            return *itr;
-          } else {
-            throw std::out_of_range("No such conversion exists from " + derived.bare_name() + " to " + base.bare_name());
-          }
-        }
-
-      private:
-        Dynamic_Conversions() {}
-
-        std::set<Dynamic_Conversion *>::const_iterator find(
-            const Type_Info &base, const Type_Info &derived) const
-        {
-          for (std::set<Dynamic_Conversion *>::const_iterator itr = m_conversions.begin();
-               itr != m_conversions.end();
-               ++itr)
-          {
-            if ((*itr)->base().bare_equal(base) && (*itr)->derived().bare_equal(derived))
-            {
-              return itr;
-            }
-          }
-
-          return m_conversions.end();
-        }
-
-        mutable chaiscript::detail::threading::shared_mutex m_mutex;
-        std::set<Dynamic_Conversion *> m_conversions;
-    };
   }
+
+  class Dynamic_Cast_Conversions
+  {
+    public:
+      Dynamic_Cast_Conversions()
+      {
+      }
+
+      Dynamic_Cast_Conversions(const Dynamic_Cast_Conversions &t_other)
+        : m_conversions(t_other.get_conversions())
+      {
+      }
+
+      void add_conversion(const boost::shared_ptr<detail::Dynamic_Conversion> &conversion)
+      {
+        chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+        m_conversions.insert(conversion);
+      }
+
+      template<typename Base, typename Derived>
+        bool dynamic_cast_converts() const
+        {
+          return dynamic_cast_converts(user_type<Base>(), user_type<Derived>());
+        }
+
+      bool dynamic_cast_converts(const Type_Info &base, const Type_Info &derived) const
+      {
+        return has_conversion(base, derived);
+      }
+
+      template<typename Base>
+        Boxed_Value boxed_dynamic_cast(const Boxed_Value &derived) const
+        {
+          try {
+            return get_conversion(user_type<Base>(), derived.get_type_info())->convert(derived);
+          } catch (const std::out_of_range &) {
+            throw exception::bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "No known conversion");
+          } catch (const std::bad_cast &) {
+            throw exception::bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "Unable to perform dynamic_cast operation");
+          }
+        }
+
+      bool has_conversion(const Type_Info &base, const Type_Info &derived) const
+      {
+        chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+        return find(base, derived) != m_conversions.end();
+      }
+
+      boost::shared_ptr<detail::Dynamic_Conversion> get_conversion(const Type_Info &base, const Type_Info &derived) const
+      {
+        chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+
+        std::set<boost::shared_ptr<detail::Dynamic_Conversion> >::const_iterator itr =
+          find(base, derived);
+
+        if (itr != m_conversions.end())
+        {
+          return *itr;
+        } else {
+          throw std::out_of_range("No such conversion exists from " + derived.bare_name() + " to " + base.bare_name());
+        }
+      }
+
+    private:
+      std::set<boost::shared_ptr<detail::Dynamic_Conversion> >::const_iterator find(
+          const Type_Info &base, const Type_Info &derived) const
+      {
+        for (std::set<boost::shared_ptr<detail::Dynamic_Conversion> >::const_iterator itr = m_conversions.begin();
+            itr != m_conversions.end();
+            ++itr)
+        {
+          if ((*itr)->base().bare_equal(base) && (*itr)->derived().bare_equal(derived))
+          {
+            return itr;
+          }
+        }
+
+        return m_conversions.end();
+      }
+
+      std::set<boost::shared_ptr<detail::Dynamic_Conversion> > get_conversions() const
+      {
+        chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+
+        return m_conversions;
+      }
+
+      mutable chaiscript::detail::threading::shared_mutex m_mutex;
+      std::set<boost::shared_ptr<detail::Dynamic_Conversion> > m_conversions;
+  };
 
   typedef boost::shared_ptr<chaiscript::detail::Dynamic_Conversion> Dynamic_Cast_Conversion;
 
@@ -248,42 +245,17 @@ namespace chaiscript
   /// \todo Move share static type registration code into a mechanism that allows it to be properly
   ///       shared by all modules
   template<typename Base, typename Derived>
-  Dynamic_Cast_Conversion base_class()
-  {
-    //Can only be used with related polymorphic types
-    //may be expanded some day to support conversions other than child -> parent
-    BOOST_STATIC_ASSERT((boost::is_base_of<Base,Derived>::value));
-    BOOST_STATIC_ASSERT(boost::is_polymorphic<Base>::value);
-    BOOST_STATIC_ASSERT(boost::is_polymorphic<Derived>::value);
-
-    return detail::Dynamic_Conversions::create<Base, Derived>();
-  }
-
-  namespace detail
-  {
-    template<typename Base, typename Derived>
-      bool dynamic_cast_converts()
-      {
-        return dynamic_cast_converts(user_type<Base>(), user_type<Derived>());
-      }
-
-    static bool dynamic_cast_converts(const Type_Info &base, const Type_Info &derived)
+    Dynamic_Cast_Conversion base_class()
     {
-      return detail::Dynamic_Conversions::get().has_conversion(base, derived);
+      //Can only be used with related polymorphic types
+      //may be expanded some day to support conversions other than child -> parent
+      BOOST_STATIC_ASSERT((boost::is_base_of<Base,Derived>::value));
+      BOOST_STATIC_ASSERT(boost::is_polymorphic<Base>::value);
+      BOOST_STATIC_ASSERT(boost::is_polymorphic<Derived>::value);
+
+      return boost::shared_ptr<detail::Dynamic_Conversion>(new detail::Dynamic_Conversion_Impl<Base, Derived>());
     }
 
-    template<typename Base>
-      Boxed_Value boxed_dynamic_cast(const Boxed_Value &derived)
-      {
-        try {
-          return detail::Dynamic_Conversions::get().get_conversion(user_type<Base>(), derived.get_type_info())->convert(derived);
-        } catch (const std::out_of_range &) {
-          throw exception::bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "No known conversion");
-        } catch (const std::bad_cast &) {
-          throw exception::bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "Unable to perform dynamic_cast operation");
-        }
-      }
-  }
 }
 
 

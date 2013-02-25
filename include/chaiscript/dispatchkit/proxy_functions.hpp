@@ -70,9 +70,9 @@ namespace chaiscript
     {
       public:
         virtual ~Proxy_Function_Base() {}
-        Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
+        Boxed_Value operator()(const std::vector<Boxed_Value> &params, const chaiscript::Dynamic_Cast_Conversions &t_conversions) const
         {
-          Boxed_Value bv = do_call(params);
+          Boxed_Value bv = do_call(params, t_conversions);
           return bv;
         }
 
@@ -83,7 +83,7 @@ namespace chaiscript
         std::vector<Type_Info> get_param_types() const { return m_types; }
 
         virtual bool operator==(const Proxy_Function_Base &) const = 0;
-        virtual bool call_match(const std::vector<Boxed_Value> &vals) const = 0;
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const = 0;
 
         bool has_arithmetic_param() const 
         {
@@ -98,7 +98,7 @@ namespace chaiscript
 
         //! Return true if the function is a possible match
         //! to the passed in values
-        bool filter(const std::vector<Boxed_Value> &vals) const
+        bool filter(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const
         {
           int arity = get_arity();
 
@@ -110,7 +110,7 @@ namespace chaiscript
             {
               return true;
             } else {
-              return compare_first_type(vals[0]);
+              return compare_first_type(vals[0], t_conversions);
             }
           } else {
             return false;
@@ -122,15 +122,15 @@ namespace chaiscript
 
         virtual std::string annotation() const = 0;
 
-        static bool compare_type_to_param(const Type_Info &ti, const Boxed_Value &bv)
+        static bool compare_type_to_param(const Type_Info &ti, const Boxed_Value &bv, const Dynamic_Cast_Conversions &t_conversions)
         {
           if (ti.is_undef() 
               || ti.bare_equal(user_type<Boxed_Value>())
               || (!bv.get_type_info().is_undef()
                 && (ti.bare_equal(user_type<Boxed_Number>())
                   || ti.bare_equal(bv.get_type_info())
-                  || chaiscript::detail::dynamic_cast_converts(ti, bv.get_type_info()) 
                   || bv.get_type_info().bare_equal(user_type<boost::shared_ptr<const Proxy_Function_Base> >())
+                  || t_conversions.dynamic_cast_converts(ti, bv.get_type_info()) 
                   )
                 )
              )
@@ -141,7 +141,7 @@ namespace chaiscript
           }
         }
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const = 0;
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const = 0;
 
         Proxy_Function_Base(const std::vector<Type_Info> &t_types)
           : m_types(t_types), m_has_arithmetic_param(false)
@@ -157,7 +157,7 @@ namespace chaiscript
 
         }
 
-        virtual bool compare_first_type(const Boxed_Value &bv) const
+        virtual bool compare_first_type(const Boxed_Value &bv, const Dynamic_Cast_Conversions &t_conversions) const
         {
           const std::vector<Type_Info> &types = get_param_types();
 
@@ -167,11 +167,11 @@ namespace chaiscript
           }
 
           const Type_Info &ti = types[1];
-          return compare_type_to_param(ti, bv);
+          return compare_type_to_param(ti, bv, t_conversions);
 
         }
 
-        bool compare_types(const std::vector<Type_Info> &tis, const std::vector<Boxed_Value> &bvs) const
+        static bool compare_types(const std::vector<Type_Info> &tis, const std::vector<Boxed_Value> &bvs)
         {
           if (tis.size() - 1 != bvs.size())
           {
@@ -247,10 +247,10 @@ namespace chaiscript
                 && !this->m_guard && !prhs->m_guard);
         }
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals) const
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const
         {
           return (m_arity < 0 || vals.size() == size_t(m_arity))
-            && test_guard(vals);
+            && test_guard(vals, t_conversions);
         }    
 
         virtual ~Dynamic_Proxy_Function() {}
@@ -277,12 +277,12 @@ namespace chaiscript
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const
         {
           if (m_arity < 0 || params.size() == size_t(m_arity))
           {
 
-            if (test_guard(params))
+            if (test_guard(params, t_conversions))
             {
               return m_f(params);
             } else {
@@ -295,12 +295,12 @@ namespace chaiscript
         }
 
       private:
-        bool test_guard(const std::vector<Boxed_Value> &params) const
+        bool test_guard(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const
         {
           if (m_guard)
           {
             try {
-              return boxed_cast<bool>((*m_guard)(params));
+              return boxed_cast<bool>((*m_guard)(params, t_conversions));
             } catch (const exception::arity_error &) {
               return false;
             } catch (const exception::bad_boxed_cast &) {
@@ -356,7 +356,7 @@ namespace chaiscript
         Bound_Function(const Const_Proxy_Function &t_f, 
             const std::vector<Boxed_Value> &t_args)
           : Proxy_Function_Base(build_param_type_info(t_f, t_args)),
-          m_f(t_f), m_args(t_args), m_arity(t_f->get_arity()<0?-1:static_cast<int>(get_param_types().size())-1)
+            m_f(t_f), m_args(t_args), m_arity(t_f->get_arity()<0?-1:static_cast<int>(get_param_types().size())-1)
         {
           assert(m_f->get_arity() < 0 || m_f->get_arity() == static_cast<int>(m_args.size()));
         }
@@ -368,14 +368,9 @@ namespace chaiscript
 
         virtual ~Bound_Function() {}
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals) const
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const
         {
-          return m_f->call_match(build_param_list(vals));
-        }
-
-        virtual Boxed_Value operator()(const std::vector<Boxed_Value> &params) const
-        {
-          return (*m_f)(build_param_list(params));
+          return m_f->call_match(build_param_list(vals), t_conversions);
         }
 
         virtual std::vector<Const_Proxy_Function> get_contained_functions() const
@@ -452,9 +447,9 @@ namespace chaiscript
           return retval;
         }
 
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const
         {
-          return (*m_f)(build_param_list(params));
+          return (*m_f)(build_param_list(params), t_conversions);
         }
 
       private:
@@ -475,8 +470,8 @@ namespace chaiscript
         Proxy_Function_Impl(const boost::function<Func> &f)
           : Proxy_Function_Base(detail::build_param_type_list(static_cast<Func *>(0))),
           m_f(f), m_dummy_func(0)
-      {
-      }
+        {
+        }
 
         virtual ~Proxy_Function_Impl() {}
 
@@ -493,14 +488,14 @@ namespace chaiscript
         }
 
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals) const
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const
         {
           if (int(vals.size()) != get_arity()) 
           {
             return false;
           }
 
-          return compare_types(m_types, vals) || detail::compare_types_cast(m_dummy_func, vals);
+          return compare_types(m_types, vals) || detail::compare_types_cast(m_dummy_func, vals, t_conversions);
         }
 
         virtual std::string annotation() const
@@ -514,9 +509,9 @@ namespace chaiscript
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const
         {
-          return detail::Do_Call<typename boost::function<Func>::result_type>::go(m_f, params);
+          return detail::Do_Call<typename boost::function<Func>::result_type>::go(m_f, params, t_conversions);
         }
 
       private:
@@ -534,8 +529,8 @@ namespace chaiscript
         Attribute_Access(T Class::* t_attr)
           : Proxy_Function_Base(param_types()),
           m_attr(t_attr)
-      {
-      }
+        {
+        }
 
         virtual ~Attribute_Access() {}
 
@@ -556,7 +551,7 @@ namespace chaiscript
           return 1;
         }
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals) const
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &) const
         {
           if (vals.size() != 1)
           {
@@ -572,17 +567,17 @@ namespace chaiscript
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params) const
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const
         {
           if (params.size() == 1)
           {
             const Boxed_Value &bv = params[0];
             if (bv.is_const())
             {
-              const Class *o = boxed_cast<const Class *>(bv);
+              const Class *o = boxed_cast<const Class *>(bv, t_conversions);
               return detail::Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
             } else {
-              Class *o = boxed_cast<Class *>(bv);
+              Class *o = boxed_cast<Class *>(bv, t_conversions);
               return detail::Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
             }
           } else {
@@ -630,7 +625,8 @@ namespace chaiscript
     namespace detail 
     {
       template<typename FuncType>
-        bool types_match_except_for_arithmetic(const FuncType &t_func, const std::vector<Boxed_Value> &plist)
+        bool types_match_except_for_arithmetic(const FuncType &t_func, const std::vector<Boxed_Value> &plist,
+            const Dynamic_Cast_Conversions &t_conversions)
         {
           if (t_func->get_arity() != plist.size())
           {
@@ -643,7 +639,7 @@ namespace chaiscript
 
           for (int i = 0; i < plist.size(); ++i)
           {
-            if (Proxy_Function_Base::compare_type_to_param(types[i+1], plist[i])
+            if (Proxy_Function_Base::compare_type_to_param(types[i+1], plist[i], t_conversions)
                 || (types[i+1].is_arithmetic() && plist[i].get_type_info().is_arithmetic()))
             {
               // types continue to match
@@ -657,7 +653,8 @@ namespace chaiscript
         }
 
       template<typename InItr>
-        Boxed_Value dispatch_with_conversions(InItr begin, const InItr &end, const std::vector<Boxed_Value> &plist)
+        Boxed_Value dispatch_with_conversions(InItr begin, const InItr &end, const std::vector<Boxed_Value> &plist, 
+            const Dynamic_Cast_Conversions &t_conversions)
         {
           InItr orig(begin);
 
@@ -665,7 +662,7 @@ namespace chaiscript
 
           while (begin != end)
           {
-            if (types_match_except_for_arithmetic(*begin, plist))
+            if (types_match_except_for_arithmetic(*begin, plist, t_conversions))
             {
               if (matching_func == end)
               {
@@ -700,7 +697,7 @@ namespace chaiscript
           }
 
           try {
-            return (*(*matching_func))(newplist);
+            return (*(*matching_func))(newplist, t_conversions);
           } catch (const exception::bad_boxed_cast &) {
             //parameter failed to cast
           } catch (const exception::arity_error &) {
@@ -721,15 +718,15 @@ namespace chaiscript
      */
     template<typename InItr>
       Boxed_Value dispatch(InItr begin, const InItr &end,
-          const std::vector<Boxed_Value> &plist)
+          const std::vector<Boxed_Value> &plist, const Dynamic_Cast_Conversions &t_conversions)
       {
         InItr orig(begin);
         while (begin != end)
         {
           try {
-            if ((*begin)->filter(plist))
+            if ((*begin)->filter(plist, t_conversions))
             {
-              return (*(*begin))(plist);
+              return (*(*begin))(plist, t_conversions);
             }
           } catch (const exception::bad_boxed_cast &) {
             //parameter failed to cast, try again
@@ -742,7 +739,7 @@ namespace chaiscript
           ++begin;
         }
 
-        return detail::dispatch_with_conversions(orig, end, plist);
+        return detail::dispatch_with_conversions(orig, end, plist, t_conversions);
       }
 
     /**
@@ -752,9 +749,9 @@ namespace chaiscript
      */
     template<typename Funcs>
       Boxed_Value dispatch(const Funcs &funcs,
-          const std::vector<Boxed_Value> &plist)
+          const std::vector<Boxed_Value> &plist, const Dynamic_Cast_Conversions &t_conversions)
       {
-        return dispatch::dispatch(funcs.begin(), funcs.end(), plist);
+        return dispatch::dispatch(funcs.begin(), funcs.end(), plist, t_conversions);
       }
   }
 }

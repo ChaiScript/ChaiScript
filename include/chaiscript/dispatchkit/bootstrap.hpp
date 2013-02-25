@@ -273,21 +273,6 @@ namespace chaiscript
           std::vector<Boxed_Value>(params.begin() + 1, params.end()))));
       }
 
-      /**
-      * Returns true if a call can be made that consists of the first parameter
-      * (the function) with the remaining parameters as its arguments.
-      */
-      static Boxed_Value call_exists(const std::vector<Boxed_Value> &params)
-      {
-        if (params.size() < 1)
-        {
-          throw exception::arity_error(static_cast<int>(params.size()), 1);
-        }
-
-        Const_Proxy_Function f = boxed_cast<Const_Proxy_Function>(params[0]);
-
-        return Boxed_Value(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end())));
-      }
 
       static bool has_guard(const Const_Proxy_Function &t_pf)
       {
@@ -383,7 +368,6 @@ namespace chaiscript
 
         m->add(fun(&dispatch::Proxy_Function_Base::get_arity), "get_arity");
         m->add(fun(&dispatch::Proxy_Function_Base::annotation), "get_annotation");
-        m->add(fun(&dispatch::Proxy_Function_Base::operator()), "call");
         m->add(fun(&dispatch::Proxy_Function_Base::operator==), "==");
 
         
@@ -475,9 +459,6 @@ namespace chaiscript
         m->add(fun(&shared_ptr_unconst_clone<dispatch::Proxy_Function_Base>), "clone");
         m->add(fun(&ptr_assign<boost::remove_const<dispatch::Proxy_Function_Base>::type>), "=");
         m->add(fun(&ptr_assign<boost::add_const<dispatch::Proxy_Function_Base>::type>), "=");
-
-        m->add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(boost::bind(&call_exists, _1))), 
-          "call_exists");
 
         m->add(fun(&type_match), "type_match");
 
