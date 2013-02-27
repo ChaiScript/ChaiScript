@@ -28,7 +28,7 @@ namespace chaiscript
   class Type_Info
   {
     public:
-      Type_Info(bool t_is_const, bool t_is_reference, bool t_is_pointer, bool t_is_void, 
+      constexpr Type_Info(bool t_is_const, bool t_is_reference, bool t_is_pointer, bool t_is_void, 
           bool t_is_arithmetic, const std::type_info *t_ti, const std::type_info *t_bareti)
         : m_type_info(t_ti), m_bare_type_info(t_bareti),
         m_is_const(t_is_const), m_is_reference(t_is_reference), m_is_pointer(t_is_pointer),
