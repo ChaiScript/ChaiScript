@@ -95,9 +95,9 @@ else()
   add_definitions(-DCHAISCRIPT_NO_THREADS)
 endif()
 
-if (CMAKE_HOST_UNIX)
+if (CMAKE_HOST_UNIX AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
   list(APPEND LIBS "dl")
-endif(CMAKE_HOST_UNIX)
+endif()
   
 list(APPEND LIBS ${READLINE_LIB})
 
