@@ -1034,6 +1034,10 @@ namespace chaiscript
 
         }
 
+        virtual std::string pretty_print() const
+        {
+          return "[" + AST_Node::pretty_print() + "]";
+        }
     };
 
     struct Inline_Map_AST_Node : public AST_Node {
