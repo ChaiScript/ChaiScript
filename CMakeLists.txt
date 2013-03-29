@@ -116,7 +116,9 @@ else()
 endif()
 
 if (CMAKE_HOST_UNIX)
-  list(APPEND LIBS "dl")
+  if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
+    list(APPEND LIBS "dl")
+  endif(NOT ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
 
   if (MULTITHREAD_SUPPORT_ENABLED)
     list(APPEND LIBS "pthread")
