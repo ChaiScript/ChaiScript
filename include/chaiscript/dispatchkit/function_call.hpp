@@ -32,7 +32,7 @@ namespace chaiscript
      */
     template<typename FunctionType>
       boost::function<FunctionType>
-      functor(const std::vector<Const_Proxy_Function> &funcs, const Dynamic_Cast_Conversions &t_conversions)
+      functor(const std::vector<Const_Proxy_Function> &funcs, const Dynamic_Cast_Conversions *t_conversions)
       {
         FunctionType *p=0;
         return detail::build_function_caller_helper(p, funcs, t_conversions);
@@ -53,7 +53,7 @@ namespace chaiscript
      */
     template<typename FunctionType>
       boost::function<FunctionType>
-      functor(Const_Proxy_Function func, const Dynamic_Cast_Conversions &t_conversions)
+      functor(Const_Proxy_Function func, const Dynamic_Cast_Conversions *t_conversions)
       {
         std::vector<Const_Proxy_Function> funcs;
         funcs.push_back(func);
@@ -66,7 +66,7 @@ namespace chaiscript
      */
     template<typename FunctionType>
       boost::function<FunctionType>
-      functor(const Boxed_Value &bv, const Dynamic_Cast_Conversions &t_conversions)
+      functor(const Boxed_Value &bv, const Dynamic_Cast_Conversions *t_conversions)
       {
         return functor<FunctionType>(boxed_cast<Const_Proxy_Function >(bv, t_conversions), t_conversions);
       }
@@ -81,7 +81,7 @@ namespace chaiscript
       {
         typedef boost::function<Signature> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &t_conversions)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *t_conversions)
         {
           if (ob.get_type_info().bare_equal(user_type<Const_Proxy_Function>()))
           {
@@ -100,7 +100,7 @@ namespace chaiscript
       {
         typedef boost::function<Signature> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &t_conversions)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *t_conversions)
         {
           if (ob.get_type_info().bare_equal(user_type<Const_Proxy_Function>()))
           {
@@ -119,7 +119,7 @@ namespace chaiscript
       {
         typedef boost::function<Signature> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &t_conversions)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *t_conversions)
         {
           if (ob.get_type_info().bare_equal(user_type<Const_Proxy_Function>()))
           {

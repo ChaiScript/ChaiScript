@@ -91,7 +91,7 @@ namespace chaiscript
               if (t_derived.is_const())
               {
                 boost::shared_ptr<const Base> data 
-                  = boost::dynamic_pointer_cast<const Base>(detail::Cast_Helper<boost::shared_ptr<const Derived> >::cast(t_derived, Dynamic_Cast_Conversions()));
+                  = boost::dynamic_pointer_cast<const Base>(detail::Cast_Helper<boost::shared_ptr<const Derived> >::cast(t_derived, 0));
                 if (!data)
                 {
                   throw std::bad_cast();
@@ -100,7 +100,7 @@ namespace chaiscript
                 return Boxed_Value(data);
               } else {
                 boost::shared_ptr<Base> data 
-                  = boost::dynamic_pointer_cast<Base>(detail::Cast_Helper<boost::shared_ptr<Derived> >::cast(t_derived, Dynamic_Cast_Conversions()));
+                  = boost::dynamic_pointer_cast<Base>(detail::Cast_Helper<boost::shared_ptr<Derived> >::cast(t_derived, 0));
 
                 if (!data)
                 {
@@ -113,11 +113,11 @@ namespace chaiscript
               // Pull the reference out of the contained boxed value, which we know is the type we want
               if (t_derived.is_const())
               {
-                const Derived &d = detail::Cast_Helper<const Derived &>::cast(t_derived, Dynamic_Cast_Conversions());
+                const Derived &d = detail::Cast_Helper<const Derived &>::cast(t_derived, 0);
                 const Base &data = dynamic_cast<const Base &>(d);
                 return Boxed_Value(boost::cref(data));
               } else {
-                Derived &d = detail::Cast_Helper<Derived &>::cast(t_derived, Dynamic_Cast_Conversions());
+                Derived &d = detail::Cast_Helper<Derived &>::cast(t_derived, 0);
                 Base &data = dynamic_cast<Base &>(d);
                 return Boxed_Value(boost::ref(data));
               }

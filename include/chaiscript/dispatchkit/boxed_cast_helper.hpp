@@ -31,7 +31,7 @@ namespace chaiscript
       {
         typedef typename boost::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
           if (ob.is_ref())
           {
@@ -73,7 +73,7 @@ namespace chaiscript
       {
         typedef const Result * Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
           if (ob.is_ref())
           {
@@ -102,7 +102,7 @@ namespace chaiscript
       {
         typedef Result * Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
           if (ob.is_ref())
           {
@@ -121,7 +121,7 @@ namespace chaiscript
       {
         typedef typename boost::reference_wrapper<Result> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
           if (ob.is_ref())
           {
@@ -140,7 +140,7 @@ namespace chaiscript
       {
         typedef typename boost::shared_ptr<Result> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
           return boost::any_cast<boost::shared_ptr<Result> >(ob.get());
         }
@@ -154,7 +154,7 @@ namespace chaiscript
       {
         typedef typename boost::shared_ptr<const Result> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
           if (!ob.get_type_info().is_const())
           {
@@ -202,7 +202,7 @@ namespace chaiscript
       {
         typedef const Boxed_Value & Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
           return ob;    
         }
@@ -263,7 +263,7 @@ namespace chaiscript
       {
         typedef typename Cast_Helper_Inner<T>::Result_Type Result_Type;
         
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions &t_conversions)
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *t_conversions)
         {
           return Cast_Helper_Inner<T>::cast(ob, t_conversions);
         }

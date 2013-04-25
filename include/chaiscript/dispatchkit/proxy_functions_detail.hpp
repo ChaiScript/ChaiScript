@@ -7,8 +7,8 @@
 #include <boost/preprocessor.hpp>
 
 #define gettypeinfo(z,n,text)  ti.push_back(chaiscript::detail::Get_Type_Info<Param ## n>::get());
-#define casthelper(z,n,text) BOOST_PP_COMMA_IF(n) chaiscript::boxed_cast< Param ## n >(params[n], t_conversions)
-#define trycast(z,n,text) chaiscript::boxed_cast<Param ## n>(params[n], t_conversions);
+#define casthelper(z,n,text) BOOST_PP_COMMA_IF(n) chaiscript::boxed_cast< Param ## n >(params[n], &t_conversions)
+#define trycast(z,n,text) chaiscript::boxed_cast<Param ## n>(params[n], &t_conversions);
 
 #ifndef  BOOST_PP_IS_ITERATING
 #ifndef CHAISCRIPT_PROXY_FUNCTIONS_DETAIL_HPP_

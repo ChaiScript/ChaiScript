@@ -81,9 +81,9 @@ namespace chaiscript
         {
           std::vector<Boxed_Value> params;
 
-          BOOST_PP_REPEAT(n, addparam, ~)
+          BOOST_PP_REPEAT(n, addparam, ~);
 
-            return Function_Caller_Ret<Ret>::call(funcs, params, t_conversions);
+          return Function_Caller_Ret<Ret>::call(funcs, params, t_conversions);
         }
 
       /**
@@ -92,7 +92,7 @@ namespace chaiscript
       template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param) >
         boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param)) > 
         build_function_caller_helper(Ret (BOOST_PP_ENUM_PARAMS(n, Param)), const std::vector<Const_Proxy_Function> &funcs, 
-            const Dynamic_Cast_Conversions &t_conversions)
+            const Dynamic_Cast_Conversions *t_conversions)
         {
           if (funcs.size() == 1)
           {
@@ -108,7 +108,7 @@ namespace chaiscript
             // we cannot make any other guesses or assumptions really, so continuing
           }
 
-          return boost::bind(&function_caller<Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>, funcs, t_conversions
+          return boost::bind(&function_caller<Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Param)>, funcs, (t_conversions?*t_conversions:Dynamic_Cast_Conversions())
               BOOST_PP_ENUM_TRAILING(n, curry, ~));
         }
     }
