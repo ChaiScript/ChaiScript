@@ -88,7 +88,7 @@ namespace chaiscript
        */
       template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
         Ret call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f,
-            const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions & BOOST_PP_IF(n, t_conversions, BOOST_PP_EMPTY))
+            const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions & BOOST_PP_IF(n, t_conversions, ))
         {
           if (params.size() != n)
           {
@@ -105,9 +105,10 @@ namespace chaiscript
        */
       template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
         bool compare_types_cast(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)),
-            const std::vector<Boxed_Value> & BOOST_PP_IF(n, params, BOOST_PP_EMPTY), const Dynamic_Cast_Conversions &t_conversions)
+            const std::vector<Boxed_Value> & BOOST_PP_IF(n, params, ), const Dynamic_Cast_Conversions &t_conversions)
         {
           try {
+            (void)t_conversions;
             BOOST_PP_REPEAT(n, trycast, ~);
           } catch (const exception::bad_boxed_cast &) {
             return false;

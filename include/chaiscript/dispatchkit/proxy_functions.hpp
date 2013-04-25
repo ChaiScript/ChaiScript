@@ -146,7 +146,7 @@ namespace chaiscript
         Proxy_Function_Base(const std::vector<Type_Info> &t_types)
           : m_types(t_types), m_has_arithmetic_param(false)
         {
-          for (int i = 1; i < m_types.size(); ++i)
+          for (size_t i = 1; i < m_types.size(); ++i)
           {
             if (m_types[i].is_arithmetic())
             {
@@ -628,7 +628,7 @@ namespace chaiscript
         bool types_match_except_for_arithmetic(const FuncType &t_func, const std::vector<Boxed_Value> &plist,
             const Dynamic_Cast_Conversions &t_conversions)
         {
-          if (t_func->get_arity() != plist.size())
+          if (t_func->get_arity() != static_cast<int>(plist.size()))
           {
             return false;
           }
@@ -637,7 +637,7 @@ namespace chaiscript
 
           assert(plist.size() == types.size() - 1);
 
-          for (int i = 0; i < plist.size(); ++i)
+          for (size_t i = 0; i < plist.size(); ++i)
           {
             if (Proxy_Function_Base::compare_type_to_param(types[i+1], plist[i], t_conversions)
                 || (types[i+1].is_arithmetic() && plist[i].get_type_info().is_arithmetic()))
@@ -686,7 +686,7 @@ namespace chaiscript
           std::vector<Boxed_Value> newplist;
           const std::vector<Type_Info> &tis = (*matching_func)->get_param_types();
 
-          for (int i = 0; i < plist.size(); ++i)
+          for (size_t i = 0; i < plist.size(); ++i)
           {
             if (tis[i+1].is_arithmetic()
                 && plist[i].get_type_info().is_arithmetic()) {
