@@ -59,7 +59,6 @@ namespace chaiscript
       template<typename ... Rest> 
         struct Try_Cast; 
 
-      // implementation
       template<typename Param, typename ... Rest>
         struct Try_Cast<Param, Rest...>
         {
