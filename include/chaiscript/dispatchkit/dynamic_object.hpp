@@ -87,7 +87,7 @@ namespace chaiscript
 
           virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const
           {
-            if (dynamic_object_typename_match(vals, m_type_name, m_ti))
+            if (dynamic_object_typename_match(vals, m_type_name, m_ti, t_conversions))
             {
               return m_func->call_match(vals, t_conversions);
             } else {
@@ -115,7 +115,7 @@ namespace chaiscript
         protected:
           virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const
           {
-            if (dynamic_object_typename_match(params, m_type_name, m_ti))
+            if (dynamic_object_typename_match(params, m_type_name, m_ti, t_conversions))
             {
               return (*m_func)(params, t_conversions);
             } else {
@@ -123,9 +123,9 @@ namespace chaiscript
             } 
           }
 
-          virtual bool compare_first_type(const Boxed_Value &bv) const
+          virtual bool compare_first_type(const Boxed_Value &bv, const Dynamic_Cast_Conversions &t_conversions) const
           {
-            return dynamic_object_typename_match(bv, m_type_name, m_ti);
+            return dynamic_object_typename_match(bv, m_type_name, m_ti, t_conversions);
           }
 
         private:
@@ -141,13 +141,13 @@ namespace chaiscript
           }
 
           static bool dynamic_object_typename_match(const Boxed_Value &bv, const std::string &name,
-              const std::shared_ptr<Type_Info> &ti)
+              const std::shared_ptr<Type_Info> &ti, const Dynamic_Cast_Conversions &t_conversions)
           {
             static Type_Info doti = user_type<Dynamic_Object>();
             if (bv.get_type_info().bare_equal(doti))
             {
               try {
-                const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bv);
+                const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bv, &t_conversions);
                 return name == "Dynamic_Object" || d.get_type_name() == name;
               } catch (const std::bad_cast &) {
                 return false;
@@ -164,11 +164,11 @@ namespace chaiscript
           }
 
           static bool dynamic_object_typename_match(const std::vector<Boxed_Value> &bvs, const std::string &name,
-              const std::shared_ptr<Type_Info> &ti) 
+              const std::shared_ptr<Type_Info> &ti, const Dynamic_Cast_Conversions &t_conversions) 
           {
             if (bvs.size() > 0)
             {
-              return dynamic_object_typename_match(bvs[0], name, ti);
+              return dynamic_object_typename_match(bvs[0], name, ti, t_conversions);
             } else {
               return false;
             }
