@@ -83,7 +83,7 @@ else()
   endif()
 endif()
 
-if (CMAKE_CXX_COMPILER MATCHES ".*clang")
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
   option(USE_LIBCXX "Use clang's libcxx" TRUE)
 
