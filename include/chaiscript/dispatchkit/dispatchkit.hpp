@@ -401,7 +401,7 @@ namespace chaiscript
         template<typename Type>
           typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv) const
           {
-            return chaiscript::boxed_cast<Type>(bv, m_conversions);
+            return chaiscript::boxed_cast<Type>(bv, &m_conversions);
           }
 
         /**

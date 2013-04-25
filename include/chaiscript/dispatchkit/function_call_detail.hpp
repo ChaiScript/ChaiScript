@@ -74,7 +74,7 @@ namespace chaiscript
 
 
       template<typename Ret, typename ... Params>
-        std::function<Ret (Params...)> build_function_caller_helper(Ret (Params...), const std::vector<Const_Proxy_Function> &funcs, const Dynamic_Cast_Conversions &t_conversions)
+        std::function<Ret (Params...)> build_function_caller_helper(Ret (Params...), const std::vector<Const_Proxy_Function> &funcs, const Dynamic_Cast_Conversions *t_conversions)
         {
           if (funcs.size() == 1)
           {
@@ -90,7 +90,7 @@ namespace chaiscript
             // we cannot make any other guesses or assumptions really, so continuing
           }
 
-          return std::function<Ret (Params...)>(Build_Function_Caller_Helper<Ret, Params...>(funcs, t_conversions));
+          return std::function<Ret (Params...)>(Build_Function_Caller_Helper<Ret, Params...>(funcs, t_conversions?*t_conversions:Dynamic_Cast_Conversions()));
         }
     }
   }

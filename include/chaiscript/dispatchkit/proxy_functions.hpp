@@ -542,10 +542,10 @@ namespace chaiscript
             const Boxed_Value &bv = params[0];
             if (bv.is_const())
             {
-              const Class *o = boxed_cast<const Class *>(bv, t_conversions);
+              const Class *o = boxed_cast<const Class *>(bv, &t_conversions);
               return detail::Handle_Return<typename std::add_lvalue_reference<T>::type>::handle(o->*m_attr);
             } else {
-              Class *o = boxed_cast<Class *>(bv, t_conversions);
+              Class *o = boxed_cast<Class *>(bv, &t_conversions);
               return detail::Handle_Return<typename std::add_lvalue_reference<T>::type>::handle(o->*m_attr);
             }
           } else {

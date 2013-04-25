@@ -65,7 +65,7 @@ namespace chaiscript
         {
           static void do_try(const std::vector<Boxed_Value> &params, int generation, const Dynamic_Cast_Conversions &t_conversions)
           {
-            boxed_cast<Param>(params[generation], t_conversions);
+            boxed_cast<Param>(params[generation], &t_conversions);
             Try_Cast<Rest...>::do_try(params, generation+1, t_conversions);
           }
         };
@@ -118,7 +118,7 @@ namespace chaiscript
             static Ret do_call(const std::function<Ret (Params...)> &f,
                 const std::vector<Boxed_Value> &, const Dynamic_Cast_Conversions &t_conversions, InnerParams &&... innerparams)
             {
-              return f(boxed_cast<Params>(std::forward<InnerParams>(innerparams), t_conversions)...);
+              return f(boxed_cast<Params>(std::forward<InnerParams>(innerparams), &t_conversions)...);
             }
         };
 

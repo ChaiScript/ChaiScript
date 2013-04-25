@@ -62,7 +62,7 @@ namespace chaiscript
   /// assert(i == 5);
   /// \endcode
   template<typename Type>
-  typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv, const Dynamic_Cast_Conversions &t_conversions = Dynamic_Cast_Conversions())
+  typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv, const Dynamic_Cast_Conversions *t_conversions = nullptr)
   {
     try {
       return detail::Cast_Helper<Type>::cast(bv, t_conversions);
@@ -76,12 +76,12 @@ namespace chaiscript
 #pragma warning(disable : 4127)
 #endif
 
-      if (std::is_polymorphic<typename detail::Stripped_Type<Type>::type>::value)
+      if (std::is_polymorphic<typename detail::Stripped_Type<Type>::type>::value && t_conversions)
       {
         try {
           // We will not catch any bad_boxed_dynamic_cast that is thrown, let the user get it
           // either way, we are not responsible if it doesn't work
-          return detail::Cast_Helper<Type>::cast(t_conversions.boxed_dynamic_cast<Type>(bv), t_conversions);
+          return detail::Cast_Helper<Type>::cast(t_conversions->boxed_dynamic_cast<Type>(bv), t_conversions);
         } catch (const chaiscript::detail::exception::bad_any_cast &) {
           throw exception::bad_boxed_cast(bv.get_type_info(), typeid(Type));
         }
