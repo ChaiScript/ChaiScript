@@ -88,7 +88,7 @@ namespace chaiscript
       template<typename Ret, typename ... Params>
         bool compare_types_cast(Ret (*)(Params...),
              const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
-        {
+       {
           try {
             Try_Cast<Params...>::do_try(params, 0, t_conversions);
           } catch (const exception::bad_boxed_cast &) {

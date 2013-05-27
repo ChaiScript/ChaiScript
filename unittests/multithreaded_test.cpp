@@ -24,13 +24,17 @@ int expected_value(int num_iters)
 
 void do_work(chaiscript::ChaiScript &c, int id)
 {
-  std::stringstream ss;
-  ss << "MyVar" << rand();
-  c.add(chaiscript::var(5), ss.str());
-  ss.str("");
-  ss << id;
-  c.use("multithreaded_work.inc");
-  c("do_chai_work(4000, " + ss.str() + ");");
+  try{
+    std::stringstream ss;
+    ss << "MyVar" << rand();
+    c.add(chaiscript::var(5), ss.str());
+    ss.str("");
+    ss << id;
+    c.use("multithreaded_work.inc");
+    c("do_chai_work(4000, " + ss.str() + ");");
+  } catch (const std::exception &e) {
+    std::cout << "exception: " << e.what() << " thread:  " << id;
+  }
 }
 
 int main()
@@ -78,6 +82,7 @@ int main()
   {
     threads[i]->join();
   }
+
 
 
   for (int i = 0; i < num_threads; ++i)
