@@ -25,13 +25,17 @@ int expected_value(int num_iters)
 
 void do_work(chaiscript::ChaiScript &c, int id)
 {
-  std::stringstream ss;
-  ss << "MyVar" << rand();
-  c.add(chaiscript::var(5), ss.str());
-  ss.str("");
-  ss << id;
-  c.use("multithreaded_work.inc");
-  c("do_chai_work(4000, " + ss.str() + ");");
+  try{
+    std::stringstream ss;
+    ss << "MyVar" << rand();
+    c.add(chaiscript::var(5), ss.str());
+    ss.str("");
+    ss << id;
+    c.use("multithreaded_work.inc");
+    c("do_chai_work(4000, " + ss.str() + ");");
+  } catch (const std::exception &e) {
+    std::cout << "exception: " << e.what() << " thread:  " << id;
+  }
 }
 
 int main()
@@ -65,20 +69,17 @@ int main()
 
   chaiscript::ChaiScript chai(modulepaths,usepaths);
 
-  std::vector<boost::shared_ptr<boost::thread> > threads;
+  boost::thread_group threads;
 
   // Ensure at least two, but say only 7 on an 8 core processor
   int num_threads = std::max<unsigned int>(boost::thread::hardware_concurrency() - 1, 2u);
 
   for (int i = 0; i < num_threads; ++i)
   {
-    threads.push_back(boost::shared_ptr<boost::thread>(new boost::thread(boost::bind(do_work, boost::ref(chai), i))));
+    threads.create_thread(boost::bind(&do_work, boost::ref(chai), i));
   }
 
-  for (int i = 0; i < num_threads; ++i)
-  {
-    threads[i]->join();
-  }
+  threads.join_all();
 
 
   for (int i = 0; i < num_threads; ++i)

@@ -49,6 +49,10 @@ int *get_new_int()
 #pragma warning(disable : 4190)
 #endif
 
+#ifdef __llvm__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif
 
 CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_module()
 {
@@ -85,6 +89,10 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   return m;
 }
 
+
+#ifdef __llvm__
+#pragma clang diagnostic pop
+#endif
 
 #ifdef BOOST_MSVC
 #pragma warning(pop)

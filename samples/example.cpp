@@ -9,7 +9,18 @@
 #include <chaiscript/chaiscript.hpp>
 #include <chaiscript/dispatchkit/function_call.hpp>
 #include <boost/function.hpp>
+
+#ifdef __llvm__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
+#endif
+
 #include <boost/date_time/posix_time/posix_time.hpp>
+
+#ifdef __llvm__
+#pragma clang diagnostic pop
+#endif
+
 #include <boost/regex.hpp>
 
 void log(const std::string &msg)

@@ -42,6 +42,12 @@ chaiscript::AST_NodePtr get_parse_tree(const chaiscript::Const_Proxy_Function &t
 }
 
 
+#ifdef __llvm__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#endif
+
+
 CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflection()
 {
   chaiscript::ModulePtr m(new chaiscript::Module());
@@ -89,6 +95,11 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflect
 
   return m;
 }
+
+#ifdef __llvm__
+#pragma clang diagnostic pop
+#endif
+
 
 
 #ifdef BOOST_MSVC

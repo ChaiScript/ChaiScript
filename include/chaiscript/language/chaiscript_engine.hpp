@@ -420,19 +420,20 @@ namespace chaiscript
         try {
           const std::string appendedpath = m_usepaths[i] + t_filename;
 
-          chaiscript::detail::threading::lock_guard<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
-          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l2(m_mutex);
+          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
+          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l2(m_mutex);
 
           if (m_used_files.count(appendedpath) == 0)
           {
-            m_used_files.insert(appendedpath);
             l2.unlock();
             eval_file(appendedpath);
-          }
+            l2.lock();
+            m_used_files.insert(appendedpath);
+           }
 
           return; // return, we loaded it, or it was already loaded
         } catch (const exception::file_not_found_error &) {
-          if (i == m_usepaths.size() - 1)
+           if (i == m_usepaths.size() - 1)
           {
             throw exception::file_not_found_error(t_filename);
           }

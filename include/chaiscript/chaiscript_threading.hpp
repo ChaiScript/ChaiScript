@@ -8,7 +8,16 @@
 #define CHAISCRIPT_THREADING_HPP_
 
 #ifndef CHAISCRIPT_NO_THREADS
+
+#ifdef __llvm__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc++11-long-long"
+#pragma clang diagnostic ignored "-Wshadow"
+#endif
 #include <boost/thread.hpp>
+#ifdef __llvm__
+#pragma clang diagnostic pop
+#endif
 #else
 #pragma message ("ChaiScript is compiling without thread safety.")
 #endif

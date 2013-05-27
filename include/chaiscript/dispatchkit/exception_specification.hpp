@@ -17,6 +17,8 @@ namespace chaiscript
     {
       virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) = 0;
 
+      virtual ~Exception_Handler_Base() {}
+
       protected:
         template<typename T>
         void throw_type(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
@@ -28,6 +30,8 @@ namespace chaiscript
     template<typename T1>
       struct Exception_Handler_Impl1 : Exception_Handler_Base
       {
+        virtual ~Exception_Handler_Impl1() {}
+
         virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
         {
           throw_type<T1>(bv, t_engine);
@@ -36,6 +40,8 @@ namespace chaiscript
     template<typename T1, typename T2>
       struct Exception_Handler_Impl2 : Exception_Handler_Base
       {
+        virtual ~Exception_Handler_Impl2() {}
+
         virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
         {
           throw_type<T1>(bv, t_engine);
@@ -46,6 +52,8 @@ namespace chaiscript
     template<typename T1, typename T2, typename T3>
       struct Exception_Handler_Impl3 : Exception_Handler_Base
       {
+        virtual ~Exception_Handler_Impl3() {}
+
         virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
         {
           throw_type<T1>(bv, t_engine);
@@ -56,6 +64,8 @@ namespace chaiscript
     template<typename T1, typename T2, typename T3, typename T4>
       struct Exception_Handler_Impl4 : Exception_Handler_Base
       {
+        virtual ~Exception_Handler_Impl4() {}
+
         virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
         {
           throw_type<T1>(bv, t_engine);
@@ -67,6 +77,8 @@ namespace chaiscript
     template<typename T1, typename T2, typename T3, typename T4, typename T5>
       struct Exception_Handler_Impl5 : Exception_Handler_Base
       {
+        virtual ~Exception_Handler_Impl5() {}
+
         virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
         {
           throw_type<T1>(bv, t_engine);
