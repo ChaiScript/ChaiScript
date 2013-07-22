@@ -7,6 +7,9 @@
 #ifndef CHAISCRIPT_DYNAMIC_CAST_CONVERSION_HPP_
 #define CHAISCRIPT_DYNAMIC_CAST_CONVERSION_HPP_
 
+#include <memory>
+#include <set>
+
 #include "type_info.hpp"
 #include "boxed_value.hpp"
 #include "boxed_cast_helper.hpp"
