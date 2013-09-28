@@ -11,6 +11,8 @@ class TestBaseType
     virtual ~TestBaseType() {}
     virtual int func() { return 0; }
 
+    const TestBaseType &constMe() const { return *this; }
+
     int val;
     const int const_val;
 };
@@ -84,6 +86,7 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::user_type<TestEnum>(), "TestEnum");
 
   m->add(chaiscript::fun(&to_int), "to_int");
+  m->add(chaiscript::fun(&TestBaseType::constMe), "constMe");
 
 
   return m;

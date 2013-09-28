@@ -1,0 +1,11 @@
+load_module("test_module")
+
+var t0 = TestBaseType()
+t0.val = 13
+
+assert_equal(15, t0.const_val)
+assert_equal(13, t0.val)
+assert_equal(15, t0.constMe().const_val)
+assert_equal(13, t0.constMe().val)
+
+
