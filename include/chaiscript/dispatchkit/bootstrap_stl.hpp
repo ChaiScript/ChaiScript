@@ -150,6 +150,12 @@ namespace chaiscript
       namespace detail {
 
         template<typename T>
+        size_t count(T &t_target, const typename T::key_type &t_key)
+        {
+          return t_target.count(t_key);
+        }
+
+        template<typename T>
           void insert(T &t_target, const T &t_other)
           {
             t_target.insert(t_other.begin(), t_other.end());
@@ -405,11 +411,11 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr unique_associative_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
-          m->add(fun<int (const ContainerType *, const typename ContainerType::key_type &)>(&ContainerType::count), "count");
+          m->add(fun(detail::count<ContainerType>), "count");
 
           typedef size_t (ContainerType::*erase_ptr)(const typename ContainerType::key_type &);
 
-          m->add(fun<int (ContainerType *, const typename ContainerType::key_type &)>(static_cast<erase_ptr>(&ContainerType::erase)), "erase");
+          m->add(fun(static_cast<erase_ptr>(&ContainerType::erase)), "erase");
 
           m->add(fun(&detail::insert<ContainerType>), "insert");
 

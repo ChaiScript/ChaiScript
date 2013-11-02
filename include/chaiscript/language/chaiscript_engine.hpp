@@ -39,12 +39,12 @@ namespace chaiscript
     /// \brief Thrown if an error occurs while attempting to load a binary module
     struct load_module_error : std::runtime_error
     {
-      load_module_error(const std::string &t_reason) noexcept
+      load_module_error(const std::string &t_reason) CHAISCRIPT_NOEXCEPT
         : std::runtime_error(t_reason)
       {
       }
 
-      virtual ~load_module_error() noexcept
+      virtual ~load_module_error() CHAISCRIPT_NOEXCEPT
       {
       }
     };
@@ -355,7 +355,7 @@ namespace chaiscript
       m_engine.add(fun(&ChaiScript::internal_eval, this), "eval");
       m_engine.add(fun(&ChaiScript::internal_eval_ast, this), "eval");
 
-      do_eval(ChaiScript_Prelude::chaiscript_prelude, "standard prelude");
+      do_eval(ChaiScript_Prelude::chaiscript_prelude(), "standard prelude");
     }
 
     /**

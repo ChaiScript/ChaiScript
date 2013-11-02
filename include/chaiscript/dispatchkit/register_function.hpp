@@ -36,13 +36,17 @@ namespace chaiscript
       template<typename Ret, typename Class, typename ... Args> 
         std::function<Ret (Class &, Args...) > to_function(Ret (Class::*func)(Args...))
         {
-          return std::function<Ret (Class &, Args...)>(func);
+          /// \todo this std::mem_fn wrap shouldn't be necessary but type conversions for 
+          ///       std::function for member function pointers seems to be broken in MSVC
+          return std::function<Ret(Class &, Args...)>(std::mem_fn(func));
         }
 
       template<typename Ret, typename Class, typename ... Args> 
         std::function<Ret (const Class &, Args...) > to_function(Ret (Class::*func)(Args...) const)
         {
-          return std::function<Ret (const Class &, Args...)>(func);
+          /// \todo this std::mem_fn wrap shouldn't be necessary but type conversions for 
+          ///       std::function for member function pointers seems to be broken in MSVC
+          return std::function<Ret (const Class &, Args...)>(std::mem_fn(func));
         }
 
       template<bool Object>
@@ -51,6 +55,7 @@ namespace chaiscript
           template<typename T>
             static Proxy_Function go(T t)
             {
+              /// \todo is it possible to reduce the number of templates generated here?
               return Proxy_Function(
                   new Proxy_Function_Impl<typename FunctionSignature<decltype(to_function(t)) >::Signature>(to_function(t)));
             }      

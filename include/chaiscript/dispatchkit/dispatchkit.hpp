@@ -39,12 +39,12 @@ namespace chaiscript
     class reserved_word_error : public std::runtime_error
     {
       public:
-        reserved_word_error(const std::string &t_word) noexcept
+        reserved_word_error(const std::string &t_word) CHAISCRIPT_NOEXCEPT
           : std::runtime_error("Reserved word not allowed in object name: " + t_word), m_word(t_word)
         {
         }
 
-        virtual ~reserved_word_error() noexcept {}
+        virtual ~reserved_word_error() CHAISCRIPT_NOEXCEPT {}
 
         std::string word() const
         {
@@ -86,12 +86,12 @@ namespace chaiscript
     class global_non_const : public std::runtime_error
     {
       public:
-        global_non_const() noexcept
+        global_non_const() CHAISCRIPT_NOEXCEPT
           : std::runtime_error("a global object must be const")
         {
         }
 
-        virtual ~global_non_const() noexcept {}
+        virtual ~global_non_const() CHAISCRIPT_NOEXCEPT {}
     };
   }
 

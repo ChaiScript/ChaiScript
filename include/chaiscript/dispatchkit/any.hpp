@@ -19,15 +19,15 @@ namespace chaiscript {
       class bad_any_cast : public std::bad_cast
       {
         public:
-          bad_any_cast() noexcept
+          bad_any_cast() CHAISCRIPT_NOEXCEPT
             : m_what("bad any cast")
           {
           }
 
-          virtual ~bad_any_cast() noexcept {}
+          virtual ~bad_any_cast() CHAISCRIPT_NOEXCEPT {}
 
           /// \brief Description of what error occured
-          virtual const char * what() const noexcept
+          virtual const char * what() const CHAISCRIPT_NOEXCEPT
           {
             return m_what.c_str();
           }
@@ -71,6 +71,8 @@ namespace chaiscript {
               return std::shared_ptr<Data>(new Data_Impl<T>(m_data));
             }
 
+            Data_Impl &operator=(const Data_Impl&) = delete;
+              
             const std::type_info &m_type;
             T m_data;
           };

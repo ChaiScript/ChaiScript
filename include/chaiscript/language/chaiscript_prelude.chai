@@ -9,7 +9,7 @@
 
 namespace chaiscript {
 struct ChaiScript_Prelude { 
-  constexpr static const char *chaiscript_prelude=R""(
+  static std::string chaiscript_prelude() {  return R""(
 
 def lt(l, r) { 
   if (call_exists(`<`, l, r)) { 
@@ -523,6 +523,7 @@ def find(container, value) {
 
 
 )"";
+}
 
 };
 }

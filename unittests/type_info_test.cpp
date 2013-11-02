@@ -1,5 +1,6 @@
 // Tests to make sure that the order in which function dispatches occur is correct
 
+#include <chaiscript/chaiscript_defines.hpp>
 #include <chaiscript/dispatchkit/type_info.hpp>
 #include <cstdlib>
 

@@ -10,11 +10,13 @@
 #include "boxed_value.hpp"
 #include "../language/chaiscript_algebraic.hpp"
 #include <sstream>
+#include <cstdint>
+
 
 namespace chaiscript 
 {
  
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
 #pragma warning(push)
 #pragma warning(disable : 4244 4018 4389 4146)
 #endif
@@ -846,7 +848,7 @@ namespace chaiscript
       };  
   }
 
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)
 #endif
 

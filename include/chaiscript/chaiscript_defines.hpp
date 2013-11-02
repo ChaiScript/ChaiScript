@@ -9,7 +9,7 @@
 
 #ifdef _MSC_VER
 #define CHAISCRIPT_MSVC _MSC_VER
-#define CHAISCRIPT_HAS_DECLSPEc
+#define CHAISCRIPT_HAS_DECLSPEC
 #endif
 
 #ifdef _WIN32
@@ -22,6 +22,15 @@
 #else
 #define CHAISCRIPT_MODULE_EXPORT extern "C" 
 #endif
+
+#ifdef CHAISCRIPT_MSVC
+#define CHAISCRIPT_NOEXCEPT throw()
+#define CHAISCRIPT_CONSTEXPR 
+#else
+#define CHAISCRIPT_NOEXCEPT noexcept
+#define CHAISCRIPT_CONSTEXPR constexpr
+#endif
+
 
 
 #endif

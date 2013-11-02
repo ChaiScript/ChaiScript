@@ -20,22 +20,22 @@ namespace chaiscript
     {
       public:
         bad_boxed_dynamic_cast(const Type_Info &t_from, const std::type_info &t_to,
-            const std::string &t_what) noexcept
+            const std::string &t_what) CHAISCRIPT_NOEXCEPT
           : bad_boxed_cast(t_from, t_to, t_what)
         {
         }
 
-        bad_boxed_dynamic_cast(const Type_Info &t_from, const std::type_info &t_to) noexcept
+        bad_boxed_dynamic_cast(const Type_Info &t_from, const std::type_info &t_to) CHAISCRIPT_NOEXCEPT
           : bad_boxed_cast(t_from, t_to)
         {
         }
 
-        bad_boxed_dynamic_cast(const std::string &w) noexcept
+        bad_boxed_dynamic_cast(const std::string &w) CHAISCRIPT_NOEXCEPT
           : bad_boxed_cast(w)
         {
         }
 
-        virtual ~bad_boxed_dynamic_cast() noexcept {}
+        virtual ~bad_boxed_dynamic_cast() CHAISCRIPT_NOEXCEPT {}
     };
   }
 

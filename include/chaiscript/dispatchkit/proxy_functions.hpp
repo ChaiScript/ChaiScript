@@ -176,11 +176,11 @@ namespace chaiscript
     class guard_error : public std::runtime_error
     {
       public:
-        guard_error() noexcept
+        guard_error() CHAISCRIPT_NOEXCEPT
           : std::runtime_error("Guard evaluation failed")
         { }
 
-        virtual ~guard_error() noexcept
+        virtual ~guard_error() CHAISCRIPT_NOEXCEPT
         { }
     };
   }
@@ -579,7 +579,7 @@ namespace chaiscript
         {
         }
 
-        virtual ~dispatch_error() noexcept {}
+        virtual ~dispatch_error() CHAISCRIPT_NOEXCEPT {}
 
         std::vector<Boxed_Value> parameters;
         std::vector<Const_Proxy_Function> functions;

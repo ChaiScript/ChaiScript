@@ -32,7 +32,7 @@ namespace chaiscript
       {
       }
 
-      virtual ~arity_error() noexcept {}
+      virtual ~arity_error() CHAISCRIPT_NOEXCEPT {}
 
       int got;
       int expected;
@@ -43,6 +43,29 @@ namespace chaiscript
   {
     namespace detail
     {
+      template<typename ... Rest>
+      struct Build_Param_Type_List;
+
+      template<typename Param, typename ... Rest>
+      struct Build_Param_Type_List<Param, Rest...>
+      {
+        static void build(std::vector<Type_Info> &t_params)
+        {
+          t_params.push_back(chaiscript::detail::Get_Type_Info<Param>::get());
+          Build_Param_Type_List<Rest...>::build(t_params);
+        }
+      };
+
+      // 0th case
+      template<>
+      struct Build_Param_Type_List<>
+      {
+        static void build(std::vector<Type_Info> &)
+        {
+        }
+      };
+
+
       /**
        * Used by Proxy_Function_Impl to return a list of all param types
        * it contains.
@@ -50,8 +73,12 @@ namespace chaiscript
       template<typename Ret, typename ... Params>
         std::vector<Type_Info> build_param_type_list(Ret (*)(Params...))
         {
-          return std::vector<Type_Info> { chaiscript::detail::Get_Type_Info<Ret>::get(),
-              chaiscript::detail::Get_Type_Info<Params>::get()... };
+          /// \todo this code was previously using { chaiscript::detail::Get_Type_Info<Ret>::get()... }
+          ///       but this seems to indicate another bug with MSVC's uniform initializer lists
+          std::vector<Type_Info> params;
+          params.push_back(chaiscript::detail::Get_Type_Info<Ret>::get());
+          Build_Param_Type_List<Params...>::build(params);
+          return params;
         }
 
 

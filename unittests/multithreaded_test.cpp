@@ -40,7 +40,10 @@ void do_work(chaiscript::ChaiScript &c, int id)
 int main()
 {
   // Disable deprecation warning for getenv call.
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
+#ifdef max // Why microsoft? why?
+#undef max
+#endif
 #pragma warning(push)
 #pragma warning(disable : 4996)
 #endif
@@ -48,7 +51,7 @@ int main()
   const char *usepath = getenv("CHAI_USE_PATH");
   const char *modulepath = getenv("CHAI_MODULE_PATH");
 
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)
 #endif
 
