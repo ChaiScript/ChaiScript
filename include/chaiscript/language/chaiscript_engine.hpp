@@ -157,9 +157,9 @@ namespace chaiscript
         typedef LPSTR StringType;
         std::string retval = "Unknown Error";
 #endif
-        StringType lpMsgBuf = 0;
+        StringType lpMsgBuf = nullptr;
 
-        FormatMessage(
+        if (FormatMessage(
             FORMAT_MESSAGE_ALLOCATE_BUFFER | 
             FORMAT_MESSAGE_FROM_SYSTEM |
             FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -167,14 +167,12 @@ namespace chaiscript
             t_err,
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             (StringType)&lpMsgBuf,
-            0, NULL );        
-
-        if (lpMsgBuf)
+            0, NULL ) != 0 && lpMsgBuf)
         {
           retval = lpMsgBuf;
+          LocalFree(lpMsgBuf);
         }
 
-        LocalFree(lpMsgBuf);
         return tostring(retval);
       }
 
