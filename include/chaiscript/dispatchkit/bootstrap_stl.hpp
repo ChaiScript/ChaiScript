@@ -150,7 +150,7 @@ namespace chaiscript
       namespace detail {
 
         template<typename T>
-        size_t count(T &t_target, const typename T::key_type &t_key)
+        size_t count(const T &t_target, const typename T::key_type &t_key)
         {
           return t_target.count(t_key);
         }
