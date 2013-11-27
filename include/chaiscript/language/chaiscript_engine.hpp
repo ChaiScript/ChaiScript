@@ -454,7 +454,12 @@ namespace chaiscript
       return *this;
     }
 
-	ChaiScript &add_global(const Boxed_Value &t_bv, const std::string &t_name)
+    /// \brief Adds a mutable object that is available in all contexts and to all threads
+    /// \param[in] t_bv Boxed_Value to add as a global
+    /// \param[in] t_name Name of the value to add
+    /// \warning The user is responsible for making sure the object is thread-safe if necessary
+    ///          ChaiScript is thread-safe but provides no threading locking mechanism to the script
+    ChaiScript &add_global(const Boxed_Value &t_bv, const std::string &t_name)
     {
       m_engine.add_global(t_bv, t_name);
       return *this;

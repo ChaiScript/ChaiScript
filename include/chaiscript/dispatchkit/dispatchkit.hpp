@@ -478,7 +478,10 @@ namespace chaiscript
         }
 
 
-		void add_global(const Boxed_Value &obj, const std::string &name)
+        /**
+         * Adds a new global (non-const) shared object, between all the threads
+         */
+        void add_global(const Boxed_Value &obj, const std::string &name)
         {
           validate_object_name(name);
 
