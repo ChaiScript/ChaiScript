@@ -10,6 +10,7 @@
 #include "boxed_value.hpp"
 #include "../language/chaiscript_algebraic.hpp"
 #include <boost/cstdint.hpp>
+#include <sstream>
 
 namespace chaiscript 
 {

@@ -84,6 +84,8 @@ namespace chaiscript
       {
         public:
           unique_lock(T &) {}
+          void lock() {}
+          void unlock() {}
       };
 
       template<typename T>
@@ -91,6 +93,7 @@ namespace chaiscript
       {
         public:
           shared_lock(T &) {}
+          void lock() {}
           void unlock() {}
       };
 

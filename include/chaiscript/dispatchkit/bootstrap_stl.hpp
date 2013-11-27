@@ -355,10 +355,8 @@ namespace chaiscript
         {
           boost::function<int (const ContainerType *)> f = detail::return_int(&ContainerType::size);
           m->add(fun(f), "size");
-//          m->add(fun(boost::function<int (const ContainerType *)>(boost::mem_fn(&ContainerType::size))), "size");
           m->add(fun<bool (ContainerType::*)() const>(&ContainerType::empty), "empty");
           m->add(fun<void (ContainerType::*)()>(&ContainerType::clear), "clear");
-
           return m;
         }
 
@@ -600,6 +598,31 @@ namespace chaiscript
           return m;
         }
 
+        namespace detail {
+          template<typename String>
+          struct apple_string_workarounds
+          {
+            /// The latest version of MacOS has a broken std::string implementation which will not allow
+            /// us to take pointers to the members. Code compiles, but does not link
+            /// \todo re-evaluate at some point
+
+            static size_t find(const String *s, const String &w, int pos) { return s->find(w, pos); }
+            static size_t rfind(const String *s, const String &w, size_t pos) { return s->rfind(w, pos); }
+            static size_t find_first_of(const String *s, const String &w, size_t pos) { return s->find_first_of(w, pos); }
+            static size_t find_last_of(const String *s, const String &w, size_t pos) { return s->find_last_of(w, pos); }
+            static size_t find_first_not_of(const String *s, const String &w, size_t pos) { return s->find_first_not_of(w, pos); }
+            static size_t find_last_not_of(const String *s, const String &w, size_t pos) { return s->find_last_not_of(w, pos); }
+
+            static void clear(String *s) { s->clear(); }
+            static bool empty(const String *s) { return s->empty(); }
+            static size_t size(const String *s) { return s->size(); }
+ 
+            static std::string substr(const String *s, size_t pos, size_t len) { return s->substr(pos,len); }
+            static const char *c_str(const String *s) {  return s->c_str(); }
+            static const char *data(const String *s) { return s->data(); }
+          };
+        }
+
       /**
        * Add a String container
        * http://www.sgi.com/tech/stl/basic_string.html
@@ -614,7 +637,7 @@ namespace chaiscript
           random_access_container_type<String>(type, m);
           sequence_type<String>(type, m);
           default_constructible_type<String>(type, m);
-          container_type<String>(type, m);
+          // container_type<String>(type, m);
           assignable_type<String>(type, m);
           input_range_type<String>(type, m);
 
@@ -628,20 +651,19 @@ namespace chaiscript
           }
           m->add(fun(&String::push_back), push_back_name);
 
-          typedef typename String::size_type (String::*find_func_ptr)(const String &, typename String::size_type) const;
-          typedef boost::function<int (const String *, const String &, int)> find_func;
-
-          m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find)))), "find");
-          m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::rfind)))), "rfind");
-          m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find_first_of)))), "find_first_of");
-          m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find_last_of)))), "find_last_of");
-          m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find_first_not_of)))), "find_first_not_of");
-          m->add(fun(find_func(detail::return_int(static_cast<find_func_ptr>(&String::find_last_not_of)))), "find_last_not_of");
-
-          m->add(fun(&detail::substr_helper<String, &String::substr>), "substr");
-
-          m->add(fun(&String::c_str), "c_str");
-          m->add(fun(&String::data), "data");
+            
+          m->add(fun(&detail::apple_string_workarounds<String>::find), "find");
+          m->add(fun(&detail::apple_string_workarounds<String>::rfind), "rfind");
+          m->add(fun(&detail::apple_string_workarounds<String>::find_first_of), "find_first_of");
+          m->add(fun(&detail::apple_string_workarounds<String>::find_last_of), "find_last_of");
+          m->add(fun(&detail::apple_string_workarounds<String>::find_first_not_of), "find_first_not_of");
+          m->add(fun(&detail::apple_string_workarounds<String>::find_last_not_of), "find_last_not_of");
+          m->add(fun(&detail::apple_string_workarounds<String>::clear), "clear");
+          m->add(fun(&detail::apple_string_workarounds<String>::size), "size");
+          m->add(fun(&detail::apple_string_workarounds<String>::empty), "empty");
+          m->add(fun(&detail::apple_string_workarounds<String>::substr), "substr");
+          m->add(fun(&detail::apple_string_workarounds<String>::c_str), "c_str");
+          m->add(fun(&detail::apple_string_workarounds<String>::data), "data");
 
 
           return m;
