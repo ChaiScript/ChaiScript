@@ -53,8 +53,30 @@ namespace chaiscript
 
       private:
         std::string m_word;
-
     };
+
+    /**
+     * Exception thrown in the case that an object name is invalid because it contains illegal characters
+     */
+    class illegal_name_error : public std::runtime_error
+    {
+      public:
+        illegal_name_error(const std::string &t_name) throw()
+          : std::runtime_error("Reserved name not allowed in object name: " + t_name), m_name(t_name)
+        {
+        }
+
+        virtual ~illegal_name_error() throw() {}
+
+        std::string name() const
+        {
+          return m_name;
+        }
+
+      private:
+        std::string m_name;
+    };
+
 
     /**
      * Exception thrown in the case that an object name is invalid because it already exists in current context
@@ -1115,6 +1137,10 @@ namespace chaiscript
          */
         void validate_object_name(const std::string &name) const
         {
+          if (name.find("::") != std::string::npos) {
+            throw exception::illegal_name_error(name);
+          }
+
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           if (m_state.m_reserved_words.find(name) != m_state.m_reserved_words.end())
