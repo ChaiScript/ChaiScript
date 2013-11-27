@@ -1,0 +1,5 @@
+
+assert_equal(1, ["a":1].count("a"))
+assert_equal(0, ["A":1].count("a"))
+
+
