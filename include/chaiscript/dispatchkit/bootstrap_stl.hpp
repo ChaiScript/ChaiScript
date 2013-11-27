@@ -519,6 +519,31 @@ namespace chaiscript
           return m;
         }
 
+        namespace detail {
+          template<typename String>
+          struct apple_string_workarounds
+          {
+            /// The latest version of MacOS has a broken std::string implementation which will not allow
+            /// us to take pointers to the members. Code compiles, but does not link
+            /// \todo re-evaluate at some point
+
+            static size_t find(const String *s, const String &w, int pos) { return s->find(w, pos); }
+            static size_t rfind(const String *s, const String &w, size_t pos) { return s->rfind(w, pos); }
+            static size_t find_first_of(const String *s, const String &w, size_t pos) { return s->find_first_of(w, pos); }
+            static size_t find_last_of(const String *s, const String &w, size_t pos) { return s->find_last_of(w, pos); }
+            static size_t find_first_not_of(const String *s, const String &w, size_t pos) { return s->find_first_not_of(w, pos); }
+            static size_t find_last_not_of(const String *s, const String &w, size_t pos) { return s->find_last_not_of(w, pos); }
+
+            static void clear(String *s) { s->clear(); }
+            static bool empty(const String *s) { return s->empty(); }
+            static size_t size(const String *s) { return s->size(); }
+ 
+            static std::string substr(const String *s, size_t pos, size_t len) { return s->substr(pos,len); }
+            static const char *c_str(const String *s) {  return s->c_str(); }
+            static const char *data(const String *s) { return s->data(); }
+          };
+        }
+
       /**
        * Add a String container
        * http://www.sgi.com/tech/stl/basic_string.html
@@ -533,7 +558,7 @@ namespace chaiscript
           random_access_container_type<String>(type, m);
           sequence_type<String>(type, m);
           default_constructible_type<String>(type, m);
-          container_type<String>(type, m);
+          // container_type<String>(type, m);
           assignable_type<String>(type, m);
           input_range_type<String>(type, m);
 

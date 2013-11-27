@@ -12,7 +12,6 @@
 #include <sstream>
 #include <cstdint>
 
-
 namespace chaiscript 
 {
  
