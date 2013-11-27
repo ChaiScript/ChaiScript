@@ -454,6 +454,12 @@ namespace chaiscript
       return *this;
     }
 
+	ChaiScript &add_global(const Boxed_Value &t_bv, const std::string &t_name)
+    {
+      m_engine.add_global(t_bv, t_name);
+      return *this;
+    }
+
     /// \brief Represents the current state of the ChaiScript system. State and be saved and restored
     /// \sa ChaiScript::get_state
     /// \sa ChaiScript::set_state
