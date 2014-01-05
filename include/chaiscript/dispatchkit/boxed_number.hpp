@@ -50,7 +50,6 @@ namespace chaiscript
             default:
               throw chaiscript::detail::exception::bad_any_cast();        
           }
-          throw chaiscript::detail::exception::bad_any_cast();        
         }
       };
 
@@ -146,7 +145,6 @@ namespace chaiscript
             default:
               throw chaiscript::detail::exception::bad_any_cast();        
           }
-          throw chaiscript::detail::exception::bad_any_cast();        
         }
       };
 
@@ -172,7 +170,6 @@ namespace chaiscript
             default:
               throw chaiscript::detail::exception::bad_any_cast();        
           }
-          throw chaiscript::detail::exception::bad_any_cast();        
         }
       };
 
