@@ -15,6 +15,86 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #else
+
+void *cast_module_symbol(std::string (*t_path)())
+{
+  union cast_union
+  {
+    std::string (*in_ptr)();
+    void *out_ptr;
+  };
+
+  cast_union c;
+  c.in_ptr = t_path;
+  return c.out_ptr;
+}
+
+std::string default_search_path()
+{
+#ifdef CHAISCRIPT_WINDOWS
+  TCHAR path[2048];
+  int size = GetModuleFileName(0, path, sizeof(path)-1);
+
+  std::string exepath(path, size);
+
+  size_t secondtolastslash = exepath.rfind('\\', exepath.rfind('\\') - 1);
+  if (secondtolastslash != std::string::npos)
+  {
+    return exepath.substr(0, secondtolastslash) + "\\lib\\chaiscript\\";
+  } else {
+    return "";
+  }
+
+
+#else
+  std::string exepath;
+
+  std::vector<char> buf(2048);
+  ssize_t size = -1;
+
+  if ((size = readlink("/proc/self/exe", &buf.front(), buf.size())) != -1)
+  {
+    exepath = std::string(&buf.front(), size);
+  }
+
+  if (exepath.empty())
+  {
+    if ((size = readlink("/proc/curproc/file", &buf.front(), buf.size())) != -1)
+    {
+      exepath = std::string(&buf.front(), size);
+    }
+  }
+
+  if (exepath.empty())
+  {
+    if ((size = readlink("/proc/self/path/a.out", &buf.front(), buf.size())) != -1)
+    {
+      exepath = std::string(&buf.front(), size);
+    }
+  }
+
+  if (exepath.empty())
+  {
+    Dl_info rInfo; 
+    memset( &rInfo, 0, sizeof(rInfo) ); 
+    if ( !dladdr(cast_module_symbol(&default_search_path), &rInfo)  || !rInfo.dli_fname ) { 
+      return "";
+    }
+
+    exepath = std::string(rInfo.dli_fname);
+  }
+
+  size_t secondtolastslash = exepath.rfind('/', exepath.rfind('/') - 1);
+  if (secondtolastslash != std::string::npos)
+  {
+    return exepath.substr(0, secondtolastslash) + "/lib/chaiscript/";
+  } else {
+    return "";
+  }
+#endif
+}
+
+
 char* readline(const char* p)
 {
   std::string retval;
@@ -167,6 +247,8 @@ int main(int argc, char *argv[])
     usepaths.push_back(usepath);
   }
 
+  std::string searchpath = default_search_path();
+  modulepaths.push_back(searchpath);
   modulepaths.push_back("");
   if (modulepath)
   {

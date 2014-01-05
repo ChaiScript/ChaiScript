@@ -242,6 +242,7 @@ if(BUILD_TESTING)
 endif(BUILD_TESTING)
 
 install(TARGETS chai ${MODULES} RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript )
+
 install(DIRECTORY include/chaiscript DESTINATION include
    PATTERN "*.hpp"
    PATTERN "*/.svn*" EXCLUDE
