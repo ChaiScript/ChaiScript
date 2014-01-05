@@ -1,0 +1,2 @@
+assert_equal(true, "".empty())
+assert_equal(3, "123".size())
