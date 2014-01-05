@@ -519,31 +519,6 @@ namespace chaiscript
           return m;
         }
 
-        namespace detail {
-          template<typename String>
-          struct apple_string_workarounds
-          {
-            /// The latest version of MacOS has a broken std::string implementation which will not allow
-            /// us to take pointers to the members. Code compiles, but does not link
-            /// \todo re-evaluate at some point
-
-            static size_t find(const String *s, const String &w, int pos) { return s->find(w, pos); }
-            static size_t rfind(const String *s, const String &w, size_t pos) { return s->rfind(w, pos); }
-            static size_t find_first_of(const String *s, const String &w, size_t pos) { return s->find_first_of(w, pos); }
-            static size_t find_last_of(const String *s, const String &w, size_t pos) { return s->find_last_of(w, pos); }
-            static size_t find_first_not_of(const String *s, const String &w, size_t pos) { return s->find_first_not_of(w, pos); }
-            static size_t find_last_not_of(const String *s, const String &w, size_t pos) { return s->find_last_not_of(w, pos); }
-
-            static void clear(String *s) { s->clear(); }
-            static bool empty(const String *s) { return s->empty(); }
-            static size_t size(const String *s) { return s->size(); }
- 
-            static std::string substr(const String *s, size_t pos, size_t len) { return s->substr(pos,len); }
-            static const char *c_str(const String *s) {  return s->c_str(); }
-            static const char *data(const String *s) { return s->data(); }
-          };
-        }
-
       /**
        * Add a String container
        * http://www.sgi.com/tech/stl/basic_string.html
@@ -581,6 +556,10 @@ namespace chaiscript
           m->add(fun(find_func( [](const String *s, const String &f, int pos) { return s->find_last_of(f, pos); } ) ), "find_last_of");
           m->add(fun(find_func( [](const String *s, const String &f, int pos) { return s->find_last_not_of(f, pos); } ) ), "find_last_not_of");
           m->add(fun(find_func( [](const String *s, const String &f, int pos) { return s->find_first_not_of(f, pos); } ) ), "find_first_not_of");
+
+	  m->add(fun( std::function<void (String *)>( [](String *s) { return s->clear(); } ) ), "clear");
+	  m->add(fun( std::function<bool (const String *)>( [](const String *s) { return s->empty(); } ) ), "empty");
+	  m->add(fun( std::function<size_t (const String *)>( [](const String *s) { return s->size(); } ) ), "size");
 
           m->add(fun( std::function<const char *(const String *)>( [](const String *s) { return s->c_str(); } ) ), "c_str");
           m->add(fun( std::function<const char *(const String *)>( [](const String *s) { return s->data(); } ) ), "data");
