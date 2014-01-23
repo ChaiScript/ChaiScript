@@ -15,6 +15,21 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #else
+char* readline(const char* p)
+{
+  std::string retval;
+  std::cout << p ;
+  std::getline(std::cin, retval);
+#ifdef BOOST_MSVC
+  return std::cin.eof() ? NULL : _strdup(retval.c_str());
+#else
+  return std::cin.eof() ? NULL : strdup(retval.c_str());
+#endif
+}
+void add_history(const char*){}
+void using_history(){}
+#endif
+
 
 void *cast_module_symbol(std::string (*t_path)())
 {
@@ -94,21 +109,6 @@ std::string default_search_path()
 #endif
 }
 
-
-char* readline(const char* p)
-{
-  std::string retval;
-  std::cout << p ;
-  std::getline(std::cin, retval);
-#ifdef BOOST_MSVC
-  return std::cin.eof() ? NULL : _strdup(retval.c_str());
-#else
-  return std::cin.eof() ? NULL : strdup(retval.c_str());
-#endif
-}
-void add_history(const char*){}
-void using_history(){}
-#endif
 
 void help(int n) {
   if ( n >= 0 ) {
