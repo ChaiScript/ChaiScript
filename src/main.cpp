@@ -31,9 +31,12 @@ char* readline(const char* p)
   return std::cin.eof() ? NULL : mystrdup(retval.c_str());
 }
 
+
 void add_history(const char*){}
 void using_history(){}
 #endif
+
+
 
 void *cast_module_symbol(std::string (*t_path)())
 {
