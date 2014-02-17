@@ -2,7 +2,8 @@ ChaiScript
 
 http://www.chaiscript.com
 
-(c) 2009-2012 Jason Turner and Jonathan Turner
+(c) 2009-2012 Jonathan Turner
+(c) 2009-2014 Jason Turner
 
 Release under the BSD license, see "license.txt" for details.
 

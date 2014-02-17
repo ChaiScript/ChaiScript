@@ -1,3 +1,9 @@
+// This file is distributed under the BSD License.
+// See "license.txt" for details.
+// Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
+// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// http://www.chaiscript.com
+
 
 #include <chaiscript/chaiscript.hpp>
 #include <chaiscript/dispatchkit/bootstrap.hpp>

@@ -1,5 +1,3 @@
-// Tests to make sure that the order in which function dispatches occur is correct
-
 #include <chaiscript/chaiscript.hpp>
 
 #define TEST_LITERAL(v) test_literal(v, #v)

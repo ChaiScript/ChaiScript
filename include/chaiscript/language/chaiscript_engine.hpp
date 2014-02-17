@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// and Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_ENGINE_HPP_
@@ -254,9 +254,8 @@ namespace chaiscript
     chaiscript::detail::Dispatch_Engine m_engine;
 
 
-    /**
-     * Evaluates the given string in by parsing it and running the results through the evaluator
-     */
+
+    /// Evaluates the given string in by parsing it and running the results through the evaluator
     Boxed_Value do_eval(const std::string &t_input, const std::string &t_filename = "__EVAL__", bool /* t_internal*/  = false) 
     {
       try {
@@ -285,9 +284,8 @@ namespace chaiscript
     }
 
 
-    /**
-     * Evaluates the given string, used during eval() inside of a script
-     */
+
+    /// Evaluates the given string, used during eval() inside of a script
     const Boxed_Value internal_eval(const std::string &t_e) {
       try {
         return do_eval(t_e, "__EVAL__", true);
@@ -296,16 +294,12 @@ namespace chaiscript
       }
     }
 
-    /**
-     * Returns the current evaluation m_engine
-     */
+    /// Returns the current evaluation m_engine
     chaiscript::detail::Dispatch_Engine &get_eval_engine() {
       return m_engine;
     }
 
-    /**
-     * Builds all the requirements for ChaiScript, including its evaluator and a run of its prelude.
-     */
+    /// Builds all the requirements for ChaiScript, including its evaluator and a run of its prelude.
     void build_eval_system(const ModulePtr &t_lib) {
       m_engine.add_reserved_word("def");
       m_engine.add_reserved_word("fun");
@@ -356,9 +350,8 @@ namespace chaiscript
       do_eval(ChaiScript_Prelude::chaiscript_prelude(), "standard prelude");
     }
 
-    /**
-     * Helper function for loading a file
-     */
+
+    /// Helper function for loading a file
     std::string load_file(const std::string &t_filename) {
       std::ifstream infile(t_filename.c_str(), std::ios::in | std::ios::ate | std::ios::binary );
 
