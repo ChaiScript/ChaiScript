@@ -1,16 +1,13 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// and Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
-/**
- * \file
- * This file contains utility functions for registration of STL container
- * classes. The methodology used is based on the SGI STL concepts.
- * http://www.sgi.com/tech/stl/table_of_contents.html
- */
-
+/// \file
+/// This file contains utility functions for registration of STL container
+/// classes. The methodology used is based on the SGI STL concepts.
+/// http://www.sgi.com/tech/stl/table_of_contents.html
 
 
 #ifndef CHAISCRIPT_BOOTSTRAP_STL_HPP_
@@ -25,11 +22,10 @@ namespace chaiscript
   {
     namespace standard_library
     {
-      /**
-       * Bidir_Range, based on the D concept of ranges.
-       * \todo Update the Range code to base its capabilities on
-       *       the user_typetraits of the iterator passed in
-       */
+
+      /// Bidir_Range, based on the D concept of ranges.
+      /// \todo Update the Range code to base its capabilities on
+      ///       the user_typetraits of the iterator passed in
       template<typename Container>
         struct Bidir_Range
         {
@@ -245,9 +241,8 @@ namespace chaiscript
 
 
 
-        /**
-         * Add Bidir_Range support for the given ContainerType
-         */
+
+        /// Add Bidir_Range support for the given ContainerType
         template<typename Bidir_Type>
           ModulePtr input_range_type_impl(const std::string &type, ModulePtr m = ModulePtr(new Module()))
           {
@@ -266,9 +261,8 @@ namespace chaiscript
             return m;
           } 
 
-        /**
-         * Algorithm for inserting at a specific position into a container
-         */
+
+        /// Algorithm for inserting at a specific position into a container
         template<typename Type>
           void insert_at(Type &container, int pos, const typename Type::value_type &v)
           {
@@ -284,9 +278,8 @@ namespace chaiscript
             container.insert(itr, v);
           }
 
-        /**
-         * Algorithm for erasing a specific position from a container
-         */
+
+        /// Algorithm for erasing a specific position from a container
         template<typename Type>
           void erase_at(Type &container, int pos)
           {
@@ -312,10 +305,9 @@ namespace chaiscript
           return m;
         }
 
-      /**
-       * Add random_access_container concept to the given ContainerType
-       * http://www.sgi.com/tech/stl/RandomAccessContainer.html
-       */
+
+      /// Add random_access_container concept to the given ContainerType
+      /// http://www.sgi.com/tech/stl/RandomAccessContainer.html
       template<typename ContainerType>
         ModulePtr random_access_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
@@ -334,10 +326,9 @@ namespace chaiscript
           return m;
         }
 
-      /**
-       * Add assignable concept to the given ContainerType
-       * http://www.sgi.com/tech/stl/Assignable.html
-       */
+
+      /// Add assignable concept to the given ContainerType
+      /// http://www.sgi.com/tech/stl/Assignable.html
       template<typename ContainerType>
         ModulePtr assignable_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
         {
@@ -346,10 +337,9 @@ namespace chaiscript
           return m;
         }
 
-      /**
-       * Add container concept to the given ContainerType
-       * http://www.sgi.com/tech/stl/Container.html
-       */
+
+      /// Add container concept to the given ContainerType
+      /// http://www.sgi.com/tech/stl/Container.html
       template<typename ContainerType>
         ModulePtr container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
@@ -360,10 +350,9 @@ namespace chaiscript
           return m;
         }
 
-      /**
-       * Add default constructable concept to the given Type
-       * http://www.sgi.com/tech/stl/DefaultConstructible.html
-       */
+
+      /// Add default constructable concept to the given Type
+      /// http://www.sgi.com/tech/stl/DefaultConstructible.html
       template<typename Type>
         ModulePtr default_constructible_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
         {
@@ -373,10 +362,9 @@ namespace chaiscript
 
 
 
-      /**
-       * Add sequence concept to the given ContainerType
-       * http://www.sgi.com/tech/stl/Sequence.html
-       */
+
+      /// Add sequence concept to the given ContainerType
+      /// http://www.sgi.com/tech/stl/Sequence.html
       template<typename ContainerType>
         ModulePtr sequence_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
@@ -394,10 +382,9 @@ namespace chaiscript
           return m;
         }
 
-      /**
-       * Add back insertion sequence concept to the given ContainerType
-       * http://www.sgi.com/tech/stl/BackInsertionSequence.html
-       */
+
+      /// Add back insertion sequence concept to the given ContainerType
+      /// http://www.sgi.com/tech/stl/BackInsertionSequence.html
       template<typename ContainerType>
         ModulePtr back_insertion_sequence_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
@@ -420,10 +407,9 @@ namespace chaiscript
         }
 
 
-      /**
-       *Front insertion sequence
-       *http://www.sgi.com/tech/stl/FrontInsertionSequence.html
-       */
+
+      /// Front insertion sequence
+      /// http://www.sgi.com/tech/stl/FrontInsertionSequence.html
       template<typename ContainerType>
         ModulePtr front_insertion_sequence_type(const std::string &, ModulePtr m = ModulePtr(new Module()))
         {
@@ -446,10 +432,9 @@ namespace chaiscript
           return m;
         }
 
-      /**
-       * bootstrap a given PairType
-       * http://www.sgi.com/tech/stl/pair.html
-       */
+
+      /// bootstrap a given PairType
+      /// http://www.sgi.com/tech/stl/pair.html
       template<typename PairType>
         ModulePtr pair_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
         {
@@ -469,10 +454,10 @@ namespace chaiscript
         }
 
 
-      /**
-       * Add pair associative container concept to the given ContainerType
-       * http://www.sgi.com/tech/stl/PairAssociativeContainer.html
-       */
+
+      /// Add pair associative container concept to the given ContainerType
+      /// http://www.sgi.com/tech/stl/PairAssociativeContainer.html
+
       template<typename ContainerType>
         ModulePtr pair_associative_container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
         {
@@ -481,10 +466,9 @@ namespace chaiscript
           return m;
         }
 
-      /**
-       * Add unique associative container concept to the given ContainerType
-       * http://www.sgi.com/tech/stl/UniqueAssociativeContainer.html
-       */
+
+      /// Add unique associative container concept to the given ContainerType
+      /// http://www.sgi.com/tech/stl/UniqueAssociativeContainer.html
       template<typename ContainerType>
         ModulePtr unique_associative_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
@@ -510,10 +494,9 @@ namespace chaiscript
           return m;
         }
 
-      /**
-       * Add a MapType container
-       * http://www.sgi.com/tech/stl/Map.html
-       */
+
+      /// Add a MapType container
+      /// http://www.sgi.com/tech/stl/Map.html
       template<typename MapType>
         ModulePtr map_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
         {
@@ -532,10 +515,9 @@ namespace chaiscript
           return m;
         }
 
-      /**
-       * hopefully working List type
-       * http://www.sgi.com/tech/stl/List.html
-       */
+
+      /// hopefully working List type
+      /// http://www.sgi.com/tech/stl/List.html
       template<typename ListType>
         ModulePtr list_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
         {
@@ -552,10 +534,9 @@ namespace chaiscript
           return m;
         }
 
-      /**
-       * Create a vector type with associated concepts
-       * http://www.sgi.com/tech/stl/Vector.html
-       */
+
+      /// Create a vector type with associated concepts
+      /// http://www.sgi.com/tech/stl/Vector.html
       template<typename VectorType>
         ModulePtr vector_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
         {
@@ -623,10 +604,9 @@ namespace chaiscript
           };
         }
 
-      /**
-       * Add a String container
-       * http://www.sgi.com/tech/stl/basic_string.html
-       */
+
+      /// Add a String container
+      /// http://www.sgi.com/tech/stl/basic_string.html
       template<typename String>
         ModulePtr string_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
         {

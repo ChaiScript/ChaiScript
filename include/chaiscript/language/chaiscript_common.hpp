@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// and Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_COMMON_HPP_
@@ -29,9 +29,8 @@ namespace chaiscript
 
   namespace
   {
-    /**
-     * Helper lookup to get the name of each node type
-     */
+
+    /// Helper lookup to get the name of each node type
     const char *ast_node_type_to_string(int ast_node_type) {
       const char *ast_node_types[] = { "Internal Parser Error", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Inplace_Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
                                     "Comparison", "Addition", "Subtraction", "Multiplication", "Division", "Modulus", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
@@ -61,9 +60,8 @@ namespace chaiscript
   /// \brief Classes which may be thrown during error cases when ChaiScript is executing.
   namespace exception
   {
-    /**
-     * Errors generated during parsing or evaluation
-     */
+
+    /// Errors generated during parsing or evaluation
     struct eval_error : public std::runtime_error {
       std::string reason;
       File_Position start_position;
@@ -377,9 +375,8 @@ namespace chaiscript
       }
     };
 
-    /**
-     * Errors generated when loading a file
-     */
+
+    /// Errors generated when loading a file
     struct file_not_found_error : public std::runtime_error {
       file_not_found_error(const std::string &t_filename) throw()
         : std::runtime_error("File Not Found: " + t_filename)
@@ -414,9 +411,8 @@ namespace chaiscript
         return oss.str();
       }
 
-      /**
-       * Prints the contents of an AST node, including its children, recursively
-       */
+
+      /// Prints the contents of an AST node, including its children, recursively
       std::string to_string(std::string t_prepend = "") {
         std::ostringstream oss;
 
@@ -478,25 +474,22 @@ namespace chaiscript
   {
     namespace detail
     {
-      /**
-       * Special type for returned values
-       */
+
+      /// Special type for returned values
       struct Return_Value {
         Boxed_Value retval;
 
         Return_Value(const Boxed_Value &t_return_value) : retval(t_return_value) { }
       };
 
-      /**
-       * Special type indicating a call to 'break'
-       */
+
+      /// Special type indicating a call to 'break'
       struct Break_Loop {
         Break_Loop() { }
       };
 
-      /**
-       * Special type indicating a call to 'continue'
-       */
+
+      /// Special type indicating a call to 'continue'
       struct Continue_Loop {
         Continue_Loop() { }
       };

@@ -1,9 +1,3 @@
-// This file is distributed under the BSD License.
-// See "license.txt" for details.
-// Copyright 2009-2010, Jonathan Turner (jonathan@emptycrate.com)
-// and Jason Turner (jason@emptycrate.com)
-// http://www.chaiscript.com
-
 #include <iostream>
 
 #include <list>
