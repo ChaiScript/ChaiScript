@@ -23,6 +23,21 @@ char *mystrdup (const char *s) {
     return d;                            // Return the new string
 }
 
+char* readline(const char* p)
+{
+  std::string retval;
+  std::cout << p ;
+  std::getline(std::cin, retval);
+  return std::cin.eof() ? NULL : mystrdup(retval.c_str());
+}
+
+
+void add_history(const char*){}
+void using_history(){}
+#endif
+
+
+
 void *cast_module_symbol(std::string (*t_path)())
 {
   union cast_union
@@ -38,9 +53,9 @@ void *cast_module_symbol(std::string (*t_path)())
 
 std::string default_search_path()
 {
-#ifdef CHAISCRIPT_WINDOWS
-  TCHAR path[2048];
-  int size = GetModuleFileName(0, path, sizeof(path)-1);
+#ifdef CHAISCRIPT_WINDOWS  // force no unicode
+  CHAR path[4096];
+  int size = GetModuleFileNameA(0, path, sizeof(path)-1);
 
   std::string exepath(path, size);
 
@@ -100,19 +115,6 @@ std::string default_search_path()
   }
 #endif
 }
-
-
-char* readline(const char* p)
-{
-  std::string retval;
-  std::cout << p ;
-  std::getline(std::cin, retval);
-  return std::cin.eof() ? NULL : mystrdup(retval.c_str());
-}
-
-void add_history(const char*){}
-void using_history(){}
-#endif
 
 void help(int n) {
   if ( n >= 0 ) {
