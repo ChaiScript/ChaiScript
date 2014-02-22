@@ -67,8 +67,8 @@ std::string default_search_path()
     return "";
   }
 
-
 #else
+
   std::string exepath;
 
   std::vector<char> buf(2048);

@@ -275,7 +275,11 @@ namespace chaiscript
         auto pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
         if (pf)
         {
-          return bool(pf->get_guard());
+          if (pf->get_guard()) {
+            return true;
+          } else {
+            return false;
+          }
         } else {
           return false;
         }
