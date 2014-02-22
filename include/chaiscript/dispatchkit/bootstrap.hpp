@@ -279,7 +279,11 @@ namespace chaiscript
         boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> pf = boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
         if (pf)
         {
-          return pf->get_guard();
+          if (pf->get_guard()) {
+            return true;
+          } else {
+            return false;
+          }
         } else {
           return false;
         }

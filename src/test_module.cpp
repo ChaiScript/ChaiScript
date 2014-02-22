@@ -15,6 +15,9 @@ class TestBaseType
 
     int val;
     const int const_val;
+
+  private:
+    TestBaseType &operator=(const TestBaseType &);
 };
 
 enum TestEnum
@@ -32,6 +35,9 @@ class TestDerivedType : public TestBaseType
   public:
     virtual ~TestDerivedType() {}
     virtual int func() { return 1; }
+
+  private:
+    TestDerivedType &operator=(const TestDerivedType &);
 };
 
 std::string hello_world()

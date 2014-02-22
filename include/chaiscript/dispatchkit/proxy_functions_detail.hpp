@@ -86,13 +86,20 @@ namespace chaiscript
        * if any unboxing fails the execution of the function fails and
        * the bad_boxed_cast is passed up to the caller.
        */
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4100)
+#endif
+
 #ifdef __llvm__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #endif
+
       template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
         Ret call_func(const boost::function<Ret (BOOST_PP_ENUM_PARAMS(n, Param))> &f,
             const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions & BOOST_PP_IF(n, t_conversions, BOOST_PP_EMPTY))
+
 #ifdef __llvm__
 #pragma clang diagnostic pop
 #endif
@@ -105,19 +112,31 @@ namespace chaiscript
           }
         }
 
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
+
       /**
        * Used by Proxy_Function_Impl to determine if it is equivalent to another
        * Proxy_Function_Impl object. This function is primarly used to prevent
        * registration of two functions with the exact same signatures
        */
 
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4100)
+#endif
+
 #ifdef __llvm__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #endif
+
        template<typename Ret BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, typename Param)>
         bool compare_types_cast(Ret (*)(BOOST_PP_ENUM_PARAMS(n, Param)),
             const std::vector<Boxed_Value> & BOOST_PP_IF(n, params, BOOST_PP_EMPTY), const Dynamic_Cast_Conversions &t_conversions)
+
+
 #ifdef __llvm__
 #pragma clang diagnostic pop
 #endif
@@ -131,6 +150,11 @@ namespace chaiscript
 
           return true;
         }
+
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
+
     }
   }
 }

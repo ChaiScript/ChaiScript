@@ -46,7 +46,7 @@ void *cast_module_symbol(std::string (*t_path)())
 
 std::string default_search_path()
 {
-#ifdef CHAISCRIPT_WINDOWS  // force no unicode
+#ifdef BOOST_WINDOWS  // force no unicode
   CHAR path[4096];
   int size = GetModuleFileNameA(0, path, sizeof(path)-1);
 
@@ -60,8 +60,8 @@ std::string default_search_path()
     return "";
   }
 
-
 #else
+
   std::string exepath;
 
   std::vector<char> buf(2048);
