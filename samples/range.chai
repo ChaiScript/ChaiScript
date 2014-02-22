@@ -5,7 +5,7 @@ def for_each(container, function)
   while (!range.empty())
   {
     function(range.front());
-    range.popFront();
+    range.pop_front();
   }
 }
 
