@@ -107,6 +107,10 @@ namespace chaiscript
       
 
 
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
+
       /**
        * Used by Proxy_Function_Impl to determine if it is equivalent to another
        * Proxy_Function_Impl object. This function is primarly used to prevent
