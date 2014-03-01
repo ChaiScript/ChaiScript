@@ -75,6 +75,7 @@ if (CMAKE_COMPILER_IS_GNUCC)
   execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
     OUTPUT_VARIABLE GCC_VERSION)
 
+
   if (GCC_VERSION VERSION_LESS 4.8)
     SET(CPP11_FLAG "-std=c++0x")
   else()
@@ -101,12 +102,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
   if (USE_LIBCXX)
     add_definitions(-stdlib=libc++)
-    set (EXTRA_LINKER_FLAGS ${CPP11_FLAG}-stdlib=libc++)
+    set (EXTRA_LINKER_FLAGS ${CPP11_FLAG} -stdlib=libc++)
   else ()
-    set (EXTRA_LINKER_FLAGS ${CPP11_FLAG} )
+    set (EXTRA_LINKER_FLAGS ${CPP11_FLAG})
   endif()
 else()
-  set (EXTRA_LINKER_FLAGS )
+  set (EXTRA_LINKER_FLAGS ${CPP11_FLAG})
 endif()
 
 # limitations in MinGW require us to make an optimized build
@@ -133,9 +134,20 @@ if (CMAKE_HOST_UNIX)
   endif(NOT ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
 
   if (MULTITHREAD_SUPPORT_ENABLED)
-    list(APPEND LIBS "pthread")
+    if (CMAKE_COMPILER_IS_GNUCC)
+      execute_process(COMMAND ${CMAKE_C_COMPILER} --version OUTPUT_VARIABLE GCC_FULL_VERSION)
+      if (GCC_FULL_VERSION MATCHES "4.8.1.*ubuntu")
+        set (EXTRA_LINKER_FLAGS ${EXTRA_LINKER_FLAGS} -Wl,--no-as-needed -pthread )
+      else()
+        set (EXTRA_LINKER_FLAGS ${EXTRA_LINKER_FLAGS} -pthread )
+      endif()
+    else()
+      set (EXTRA_LINKER_FLAGS ${EXTRA_LINKER_FLAGS} -pthread )
+    endif()
+
     add_definitions(-pthread)
   endif()
+
 endif(CMAKE_HOST_UNIX)
   
 list(APPEND LIBS ${READLINE_LIB})
@@ -147,7 +159,7 @@ if (CMAKE_COMPILER_2005)
 endif()
 
 add_library(chaiscript_stdlib MODULE src/chaiscript_stdlib.cpp)
-target_link_libraries(chaiscript_stdlib ${LIBS} ${EXTRA_LINKER_FLAGS})
+target_link_libraries(chaiscript_stdlib ${LIBS} ${EXTRA_LINKER_FLAGS} ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(chai src/main.cpp ${Chai_INCLUDES})
 target_link_libraries(chai ${LIBS} ${EXTRA_LINKER_FLAGS})
