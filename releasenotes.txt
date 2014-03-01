@@ -21,6 +21,7 @@ Notes:
 * Fix various string / map / vector `size` and `count` calls for compilers which have weird overloads for them. #90 #93 #95
 * Make module search path relative to the currently running executable
 * Build and work with wstring windows builds
+* fix for some new line cases in the middle of a vector initialization from jespada
 
 ### Changes since 5.1.0
 * Add support for automatic conversion of arithmetic types when possible

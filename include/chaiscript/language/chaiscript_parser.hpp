@@ -317,13 +317,21 @@ namespace chaiscript
 
       /**
        * Skips ChaiScript whitespace, which means space and tab, but not cr/lf
+       * jespada: Modified SkipWS to skip optionally CR ('\n')
        */
-      bool SkipWS() {
+      bool SkipWS(bool skip_cr=false) {
         bool retval = false;
         while (has_more_input()) {
-          if ( char_in_alphabet(*m_input_pos,detail::white_alphabet) ) {
+          if ( char_in_alphabet(*m_input_pos,detail::white_alphabet) || (skip_cr && (*m_input_pos == '\n'))) {
+            if(*m_input_pos == '\n') {
+              m_col = 1;
+              ++m_line;
+            }
+            else {
+              ++m_col;
+            }
             ++m_input_pos;
-            ++m_col;
+
             retval = true;
           }
           else if (SkipComment()) {
@@ -1241,6 +1249,8 @@ namespace chaiscript
          * Reads a comma-separated list of values from input
          */
         bool Arg_List() {
+
+          SkipWS(true);
           bool retval = false;
 
           size_t prev_stack_top = m_match_stack.size();
@@ -1259,6 +1269,8 @@ namespace chaiscript
             build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
           }
 
+          SkipWS(true);
+
           return retval;
         }
 
@@ -1267,6 +1279,7 @@ namespace chaiscript
          */
         bool Container_Arg_List() {
           bool retval = false;
+          SkipWS(true);
 
           size_t prev_stack_top = m_match_stack.size();
 
@@ -1300,6 +1313,8 @@ namespace chaiscript
             }
             build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
           }
+
+          SkipWS(true);
 
           return retval;
 
@@ -1917,6 +1932,7 @@ namespace chaiscript
           if (Char('[')) {
             retval = true;
             Container_Arg_List();
+
             if (!Char(']')) {
               throw exception::eval_error("Missing closing square bracket ']' in container initializer", File_Position(m_line, m_col), *m_filename);
             }
@@ -2228,6 +2244,7 @@ namespace chaiscript
                 Symbol("-=", true, true) || Symbol("*=", true, true) || Symbol("/=", true, true) ||
                 Symbol("%=", true, true) || Symbol("<<=", true, true) || Symbol(">>=", true, true) ||
                 Symbol("&=", true, true) || Symbol("^=", true, true) || Symbol("|=", true, true)) {
+              SkipWS(true);
               if (!Equation()) {
                 throw exception::eval_error("Incomplete equation", File_Position(m_line, m_col), *m_filename);
               }
