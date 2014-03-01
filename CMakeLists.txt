@@ -70,11 +70,25 @@ else(READLINE_LIBRARY)
     set (READLINE_FLAG )
 endif(READLINE_LIBRARY)
 
+
+if (CMAKE_COMPILER_IS_GNUCC)
+  execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
+    OUTPUT_VARIABLE GCC_VERSION)
+
+  if (GCC_VERSION VERSION_LESS 4.8)
+    SET(CPP11_FLAG "-std=c++0x")
+  else()
+    SET(CPP11_FLAG "-std=c++11")
+  endif()
+else()
+  SET(CPP11_FLAG "-std=c++11")
+endif()
+
 if(MSVC)
   add_definitions(/W4)
   add_definitions(/bigobj)
 else()
-  add_definitions(-Wall -Wextra -Wshadow -pedantic -std=c++11)
+  add_definitions(-Wall -Wextra -Wshadow -pedantic ${CPP11_FLAG})
   
   if (APPLE)
     add_definitions(-Wno-sign-compare)
@@ -87,9 +101,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
   if (USE_LIBCXX)
     add_definitions(-stdlib=libc++)
-    set (EXTRA_LINKER_FLAGS -std=c++11 -stdlib=libc++)
+    set (EXTRA_LINKER_FLAGS ${CPP11_FLAG}-stdlib=libc++)
   else ()
-    set (EXTRA_LINKER_FLAGS -std=c++11 )
+    set (EXTRA_LINKER_FLAGS ${CPP11_FLAG} )
   endif()
 else()
   set (EXTRA_LINKER_FLAGS )
