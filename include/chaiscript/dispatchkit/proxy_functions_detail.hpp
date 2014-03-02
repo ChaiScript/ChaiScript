@@ -106,11 +106,6 @@ namespace chaiscript
         };
       
 
-
-#ifdef BOOST_MSVC
-#pragma warning(pop)
-#endif
-
       /**
        * Used by Proxy_Function_Impl to determine if it is equivalent to another
        * Proxy_Function_Impl object. This function is primarly used to prevent
@@ -144,12 +139,19 @@ namespace chaiscript
       template<typename Ret, typename ... Params>
         struct Call_Func<Ret, 0, Params...>
         {
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4100) /// Disable unreferenced formal parameter warning, which only shows up in MSVC I don't think there's any way around it \todo evaluate this
+#endif
           template<typename ... InnerParams>
             static Ret do_call(const std::function<Ret (Params...)> &f,
                 const std::vector<Boxed_Value> &, const Dynamic_Cast_Conversions &t_conversions, 	InnerParams &&... innerparams)
             {
               return f(boxed_cast<Params>(std::forward<InnerParams>(innerparams), &t_conversions)...);
             }
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(pop)
+#endif
         };
 
       /**

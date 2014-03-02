@@ -266,7 +266,7 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
-          m->add(fun( std::function<int (const ContainerType *)>( [](const ContainerType *a) { return a->size(); } ) ), "size");
+          m->add(fun( std::function<size_t (const ContainerType *)>( [](const ContainerType *a) { return a->size(); } ) ), "size");
           m->add(fun( std::function<bool (const ContainerType *)>( [](const ContainerType *a) { return a->empty(); } ) ), "empty");
           m->add(fun( std::function<void (ContainerType *)>( [](ContainerType *a) { a->clear(); } ) ), "clear");
           return m;
@@ -525,19 +525,19 @@ namespace chaiscript
           }
           m->add(fun(&String::push_back), push_back_name);
 
-          typedef std::function<int (const String *, const String &, int)> find_func;
+          typedef std::function<size_t (const String *, const String &, size_t)> find_func;
 
 
-          m->add(fun(find_func( [](const String *s, const String &f, int pos) { return s->find(f, pos); } )), "find");
-          m->add(fun(find_func( [](const String *s, const String &f, int pos) { return s->rfind(f, pos); } ) ), "rfind");
-          m->add(fun(find_func( [](const String *s, const String &f, int pos) { return s->find_first_of(f, pos); } ) ), "find_first_of");
-          m->add(fun(find_func( [](const String *s, const String &f, int pos) { return s->find_last_of(f, pos); } ) ), "find_last_of");
-          m->add(fun(find_func( [](const String *s, const String &f, int pos) { return s->find_last_not_of(f, pos); } ) ), "find_last_not_of");
-          m->add(fun(find_func( [](const String *s, const String &f, int pos) { return s->find_first_not_of(f, pos); } ) ), "find_first_not_of");
+          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find(f, pos); } )), "find");
+          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->rfind(f, pos); } ) ), "rfind");
+          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find_first_of(f, pos); } ) ), "find_first_of");
+          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find_last_of(f, pos); } ) ), "find_last_of");
+          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find_last_not_of(f, pos); } ) ), "find_last_not_of");
+          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find_first_not_of(f, pos); } ) ), "find_first_not_of");
 
-	  m->add(fun( std::function<void (String *)>( [](String *s) { return s->clear(); } ) ), "clear");
-	  m->add(fun( std::function<bool (const String *)>( [](const String *s) { return s->empty(); } ) ), "empty");
-	  m->add(fun( std::function<size_t (const String *)>( [](const String *s) { return s->size(); } ) ), "size");
+	        m->add(fun( std::function<void (String *)>( [](String *s) { return s->clear(); } ) ), "clear");
+	        m->add(fun( std::function<bool (const String *)>( [](const String *s) { return s->empty(); } ) ), "empty");
+	        m->add(fun( std::function<size_t (const String *)>( [](const String *s) { return s->size(); } ) ), "size");
 
           m->add(fun( std::function<const char *(const String *)>( [](const String *s) { return s->c_str(); } ) ), "c_str");
           m->add(fun( std::function<const char *(const String *)>( [](const String *s) { return s->data(); } ) ), "data");
@@ -551,3 +551,5 @@ namespace chaiscript
 
 
 #endif
+
+
