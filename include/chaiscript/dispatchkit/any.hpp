@@ -42,6 +42,7 @@ namespace chaiscript {
       private:
         struct Data
         {
+          virtual ~Data() {}
           virtual void *data() = 0;
           virtual const std::type_info &type() const = 0;
           virtual std::shared_ptr<Data> clone() const = 0;
@@ -55,6 +56,8 @@ namespace chaiscript {
                 m_data(t_type)
             {
             }
+
+            virtual ~Data_Impl() {}
 
             virtual void *data()
             {
@@ -94,9 +97,9 @@ namespace chaiscript {
         }
 
         template<typename ValueType> 
-          Any(const ValueType &t_value)
+        Any(const ValueType &t_value)
+          : m_data(std::shared_ptr<Data>(new Data_Impl<ValueType>(t_value)))
         {
-          m_data = std::shared_ptr<Data>(new Data_Impl<ValueType>(t_value));
         }
 
         Any & operator=(const Any &t_any)

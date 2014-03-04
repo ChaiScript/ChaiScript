@@ -89,7 +89,7 @@ if(MSVC)
   add_definitions(/W4)
   add_definitions(/bigobj)
 else()
-  add_definitions(-Wall -Wextra -Wshadow -pedantic ${CPP11_FLAG})
+  add_definitions(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic ${CPP11_FLAG})
   
   if (APPLE)
     add_definitions(-Wno-sign-compare)

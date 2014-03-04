@@ -39,6 +39,7 @@ namespace chaiscript
     {
       public:
         virtual ~Proxy_Function_Base() {}
+
         Boxed_Value operator()(const std::vector<Boxed_Value> &params, const chaiscript::Dynamic_Cast_Conversions &t_conversions) const
         {
           Boxed_Value bv = do_call(params, t_conversions);
@@ -205,6 +206,8 @@ namespace chaiscript
         {
         }
 
+        virtual ~Dynamic_Proxy_Function() {}
+
         virtual bool operator==(const Proxy_Function_Base &rhs) const
         {
           const Dynamic_Proxy_Function *prhs = dynamic_cast<const Dynamic_Proxy_Function *>(&rhs);
@@ -220,9 +223,6 @@ namespace chaiscript
           return (m_arity < 0 || vals.size() == size_t(m_arity))
             && test_guard(vals, t_conversions);
         }    
-
-        virtual ~Dynamic_Proxy_Function() {}
-
 
         virtual int get_arity() const
         {
