@@ -88,6 +88,14 @@ endif()
 if(MSVC)
   add_definitions(/W4)
   add_definitions(/bigobj)
+  # Note on MSVC compiler flags.
+  # The code base selective disables warnings as necessary when the compiler is complaining too much
+  # about something that is perfectly valid, or there is simply no technical way around it
+  # This particular warning, C4503 is in regards to the decorated names that MSVC generates internally.
+  # The error did not come up until the move to C++11, but the compiler doesn't give enough information
+  # to determine where the error is coming from, and the internet provides no real information for
+  # how to workaround or fix the error. So I'm disabling it globally.
+  ADD_DEFINITIONS(/wd4503)
 else()
   add_definitions(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic ${CPP11_FLAG})
   
@@ -106,7 +114,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   else ()
     set (EXTRA_LINKER_FLAGS ${CPP11_FLAG})
   endif()
-else()
+elseif(CMAKE_COMPILER_IS_GNUCC)
   set (EXTRA_LINKER_FLAGS ${CPP11_FLAG})
 endif()
 
@@ -153,10 +161,6 @@ endif(CMAKE_HOST_UNIX)
 list(APPEND LIBS ${READLINE_LIB})
 
 
-if (CMAKE_COMPILER_2005)
-  # vs2005 is a bit too loud about possible loss of data warnings
-#  ADD_DEFINITIONS(/wd4244)
-endif()
 
 add_library(chaiscript_stdlib MODULE src/chaiscript_stdlib.cpp)
 target_link_libraries(chaiscript_stdlib ${LIBS} ${EXTRA_LINKER_FLAGS} ${CMAKE_THREAD_LIBS_INIT})

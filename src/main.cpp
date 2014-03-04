@@ -17,10 +17,15 @@
 #else
 
 char *mystrdup (const char *s) {
-    char *d = static_cast<char*>(malloc (strlen (s) + 1));   // Space for length plus nul
-    if (d == nullptr) return nullptr;          // No memory
-    strcpy (d,s);                        // Copy the characters
-    return d;                            // Return the new string
+  size_t len = strlen(s) + 1; // Space for length plus nul
+  char *d = static_cast<char*>(malloc (len));   
+  if (d == nullptr) return nullptr;          // No memory
+#ifdef CHAISCRIPT_MSVC
+  strcpy_s(d, len, s);                        // Copy the characters
+#else
+  strcpy(d,s);                        // Copy the characters
+#endif
+  return d;                            // Return the new string
 }
 
 char* readline(const char* p)
