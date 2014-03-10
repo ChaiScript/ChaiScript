@@ -3,7 +3,7 @@ compiler:
   - gcc
   - clang
 before_install:
-  - sudo apt-get install libboost-dev
+  - sudo apt-get install libboost-dev libboost-all-dev
 script: 
   - mkdir build
   - cd build
