@@ -1,0 +1,16 @@
+language: cpp
+compiler:
+  - gcc
+  - clang
+script: 
+  - mkdir build
+  - cd build
+  - cmake ../build
+  - make test
+notifications:
+  recipients:
+    - jason@emptycrate.com
+  email:
+    on_success: always
+    on_failure: always
+
