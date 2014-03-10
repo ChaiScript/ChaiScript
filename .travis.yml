@@ -1,7 +1,6 @@
 language: cpp
 compiler:
   - gcc
-  - clang
 script: 
   - mkdir build
   - cd build
