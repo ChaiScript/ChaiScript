@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ChaiScript/ChaiScript.png?branch=ChaiScript_5_0_CPP_11)](https://travis-ci.org/ChaiScript/ChaiScript)
+
 ChaiScript
 
 http://www.chaiscript.com
