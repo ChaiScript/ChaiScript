@@ -17,7 +17,7 @@ namespace chaiscript
   {
 
     /// \todo Use of this utility, and uniform initializer lists, is causing memory errors in MSVC
-    /*
+    
     template<typename Class, typename ModuleType>
       void add_class(ModuleType &t_module,
           const std::string &t_classname,
@@ -37,7 +37,7 @@ namespace chaiscript
         }
         
       }
-      */
+      
   }
 }
 

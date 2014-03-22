@@ -73,26 +73,15 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflect
   chaiscript::bootstrap::standard_library::vector_type<std::vector<std::shared_ptr<chaiscript::AST_Node> > >("AST_NodeVector", m);
 
   using namespace chaiscript;
-
-  m->add(chaiscript::user_type<chaiscript::exception::eval_error>(), "eval_error");
-  m->add(chaiscript::fun(&chaiscript::exception::eval_error::reason), "reason");
-  m->add(chaiscript::fun(&chaiscript::exception::eval_error::call_stack), "call_stack");
-  /*
+  
   chaiscript::utility::add_class<chaiscript::exception::eval_error>(*m,
       "eval_error",
       { },
       { {fun(&chaiscript::exception::eval_error::reason), "reason"},
         {fun(&chaiscript::exception::eval_error::call_stack), "call_stack"} }
       );
-      */
-
-  m->add(chaiscript::user_type<chaiscript::File_Position>(), "File_Position");
-  m->add(chaiscript::constructor<File_Position()>(), "File_Position");
-  m->add(chaiscript::constructor<File_Position(int, int)>(), "File_Position");
-  m->add(chaiscript::fun(&File_Position::line), "line");
-  m->add(chaiscript::fun(&File_Position::column), "column");
-
-  /*
+      
+  
   chaiscript::utility::add_class<chaiscript::File_Position>(*m,
       "File_Position",
       { constructor<File_Position()>(),
@@ -100,19 +89,8 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflect
       { {fun(&File_Position::line), "line"},
         {fun(&File_Position::column), "column"} }
       );
-      */
-
-  m->add(chaiscript::user_type<AST_Node>(), "AST_Node");
-  m->add(chaiscript::fun(&AST_Node::text), "text");
-  m->add(chaiscript::fun(&AST_Node::identifier), "identifier");
-  m->add(chaiscript::fun(&AST_Node::filename), "filename");
-  m->add(chaiscript::fun(&AST_Node::start), "start");
-  m->add(chaiscript::fun(&AST_Node::end), "end");
-  m->add(chaiscript::fun(&AST_Node::internal_to_string), "internal_to_string");
-  m->add(chaiscript::fun(&AST_Node::children), "children");
-  m->add(chaiscript::fun(&AST_Node::replace_child), "replace_child");
-
-  /*
+      
+  
   chaiscript::utility::add_class<AST_Node>(*m, 
   "AST_Node",
   {  },
@@ -126,21 +104,15 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_reflect
     {fun(&AST_Node::replace_child), "replace_child"}
   }
   );
-  */
-
-  m->add(chaiscript::user_type<parser::ChaiScript_Parser>(), "ChaiScript_Parser");
-  m->add(chaiscript::constructor<parser::ChaiScript_Parser()>(), "ChaiScript_Parser");
-  m->add(chaiscript::fun(&parser::ChaiScript_Parser::parse), "parse");
-  m->add(chaiscript::fun(&parser::ChaiScript_Parser::ast), "ast");
-
-  /*
+  
+  
   chaiscript::utility::add_class<parser::ChaiScript_Parser>(*m,
       "ChaiScript_Parser",
       { constructor<parser::ChaiScript_Parser ()>() },
       { {fun(&parser::ChaiScript_Parser::parse), "parse"},
         {fun(&parser::ChaiScript_Parser::ast), "ast"} }
       );
-      */
+      
 
 
   return m;
