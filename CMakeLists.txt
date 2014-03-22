@@ -39,6 +39,38 @@ set(CPACK_RPM_PACKAGE_GROUP "Programming")
 
 set(CHAI_VERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH})
 
+
+if (${CMAKE_CL_64})
+  set(PLATFORM_NAME "x64")
+else()
+  if(MSVC)
+     set(PLATFORM_NAME "Win32")
+  else()
+     set(PLATFORM_NAME "x86")
+  endif()
+endif()
+
+if(MSVC)
+set(CHAI_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output/${PLATFORM_NAME}")
+else()
+set(CHAI_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/output")
+endif()
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CHAI_OUTPUT_DIRECTORY}")
+set(CMAKE_PDB_OUTPUT_DIRECTORY     "${CHAI_OUTPUT_DIRECTORY}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CHAI_OUTPUT_DIRECTORY}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CHAI_OUTPUT_DIRECTORY}")
+
+if(MSVC)
+  set(CHAI_INSTALL_BIN       "bin/${PLATFORM_NAME}/${CMAKE_BUILD_TYPE}")
+  set(CHAI_INSTALL_LIB       "lib/${PLATFORM_NAME}/${CMAKE_BUILD_TYPE}")
+  set(CHAI_INSTALL_PKGCONFIG "lib/${PLATFORM_NAME}/${CMAKE_BUILD_TYPE}/pkgconfig")
+else()
+  set(CHAI_INSTALL_BIN       "bin")
+  set(CHAI_INSTALL_LIB       "lib/chaiscript")
+  set(CHAI_INSTALL_PKGCONFIG "lib/pkgconfig")
+endif()
+
 configure_file(Doxyfile.in ${CMAKE_BINARY_DIR}/Doxyfile)
 
 include(CTest)
@@ -85,8 +117,22 @@ else()
   SET(CPP11_FLAG "-std=c++11")
 endif()
 
+
+IF(MSVC)
+  #    force warning level 4
+  #
+  FOREACH(lang C CXX)
+    IF("${CMAKE_${lang}_FLAGS}" MATCHES "/W[1-3]")
+      STRING(REGEX REPLACE "/W[1-3]" "/W4" CMAKE_${lang}_FLAGS
+"${CMAKE_${lang}_FLAGS}")
+    ELSE("${CMAKE_${lang}_FLAGS}" MATCHES "/W[1-3]")
+      SET(CMAKE_${lang}_FLAGS "${CMAKE_${lang}_FLAGS} /W4")
+    ENDIF("${CMAKE_${lang}_FLAGS}" MATCHES "/W[1-3]")
+  ENDFOREACH(lang)
+ENDIF(MSVC)
+
+
 if(MSVC)
-  add_definitions(/W4)
   add_definitions(/bigobj)
   # Note on MSVC compiler flags.
   # The code base selective disables warnings as necessary when the compiler is complaining too much
@@ -164,6 +210,7 @@ list(APPEND LIBS ${READLINE_LIB})
 
 add_library(chaiscript_stdlib MODULE src/chaiscript_stdlib.cpp)
 target_link_libraries(chaiscript_stdlib ${LIBS} ${EXTRA_LINKER_FLAGS} ${CMAKE_THREAD_LIBS_INIT})
+set(MODULES ${MODULES} chaiscript_stdlib)
 
 add_executable(chai src/main.cpp ${Chai_INCLUDES})
 target_link_libraries(chai ${LIBS} ${EXTRA_LINKER_FLAGS})
@@ -180,10 +227,11 @@ endif()
 if (BUILD_MODULES)
   add_library(stl_extra MODULE src/stl_extra.cpp)
   target_link_libraries(stl_extra ${LIBS} ${EXTRA_LINKER_FLAGS})
+  set(MODULES ${MODULES} stl_extra)
 
   add_library(reflection MODULE src/reflection.cpp)
   target_link_libraries(reflection ${LIBS} ${EXTRA_LINKER_FLAGS})
-  set(MODULES stl_extra reflection)
+  set(MODULES ${MODULES} reflection)
 endif()
 
 file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.chai ${CMAKE_CURRENT_SOURCE_DIR}/unittests/3.x/*.chai)
@@ -195,13 +243,13 @@ if(BUILD_TESTING)
 
   foreach(filename ${UNIT_TESTS})
     message(STATUS "Adding test ${filename}")
-    add_test(${filename} chai ${CMAKE_CURRENT_SOURCE_DIR}/unittests/unit_test.inc ${CMAKE_CURRENT_SOURCE_DIR}/unittests/${filename})
+    add_test(${filename} ${CHAI_OUTPUT_DIRECTORY}/chai ${CMAKE_CURRENT_SOURCE_DIR}/unittests/unit_test.inc ${CMAKE_CURRENT_SOURCE_DIR}/unittests/${filename})
  endforeach(filename)
 
   set_property(TEST ${UNIT_TESTS}
    PROPERTY ENVIRONMENT
     "CHAI_USE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/unittests/"
-    "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
+    "CHAI_MODULE_PATH=${CHAI_OUTPUT_DIRECTORY}/"
   )
 
   if (NOT UNIT_TEST_LIGHT)
@@ -285,7 +333,7 @@ if(BUILD_TESTING)
       set_property(TEST Multithreaded_Test
         PROPERTY ENVIRONMENT
         "CHAI_USE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/unittests/"
-        "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
+        "CHAI_MODULE_PATH=${CHAI_OUTPUT_DIRECTORY}/"
         )
 
     endif()
@@ -298,12 +346,30 @@ if(BUILD_TESTING)
 
     add_library(test_module MODULE src/test_module.cpp)
     target_link_libraries(test_module ${LIBS} ${EXTRA_LINKER_FLAGS})
+    set(MODULES ${MODULES} test_module)
 
-    install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript)
+    install(TARGETS test_module RUNTIME DESTINATION ${CHAI_INSTALL_BIN} LIBRARY DESTINATION ${CHAI_INSTALL_LIB})
   endif()
 endif(BUILD_TESTING)
 
-install(TARGETS chai chaiscript_stdlib ${MODULES} RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript )
+install(TARGETS chai ${MODULES} RUNTIME DESTINATION ${CHAI_INSTALL_BIN} LIBRARY DESTINATION ${CHAI_INSTALL_LIB})
+
+IF(MSVC)
+FOREACH (MODULE ${MODULES})
+
+  INSTALL(
+    FILES ${CHAI_OUTPUT_DIRECTORY}/${MODULE}.exp ${CHAI_OUTPUT_DIRECTORY}/${MODULE}.lib
+    DESTINATION ${CHAI_INSTALL_LIB}
+    )
+
+  INSTALL(
+    FILES ${CHAI_OUTPUT_DIRECTORY}/${MODULE}.ilk ${CHAI_OUTPUT_DIRECTORY}/${MODULE}.pdb
+    DESTINATION ${CHAI_INSTALL_LIB}
+    CONFIGURATIONS Debug
+    )
+
+ENDFOREACH(MODULE)
+ENDIF(MSVC)
 
 install(DIRECTORY include/chaiscript DESTINATION include
    PATTERN "*.hpp"
@@ -323,6 +389,6 @@ install(DIRECTORY samples DESTINATION share/chaiscript
    PATTERN "*~" EXCLUDE)
 
 configure_file(contrib/pkgconfig/chaiscript.pc.in lib/pkgconfig/chaiscript.pc @ONLY)
-install(FILES "${chaiscript_BINARY_DIR}/lib/pkgconfig/chaiscript.pc"
-        DESTINATION lib/pkgconfig)
+install(FILES "${chaiscript_BINARY_DIR}/lib/pkgconfig/chaiscript.pc" DESTINATION ${CHAI_INSTALL_PKGCONFIG})
+
 
