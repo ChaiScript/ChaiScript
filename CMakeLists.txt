@@ -9,6 +9,12 @@ else()
   option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" TRUE)
 endif()
 
+if (CMAKE_COMPILER_IS_GNUCC)
+  option(ENABLE_COVERAGE "Enable Coverage Reporting in GCC" FALSE)
+endif()
+
+
+
 option(BUILD_MODULES "Build Extra Modules (stl, reflection)" TRUE)
 option(BUILD_SAMPLES "Build Samples Folder" FALSE)
 
@@ -70,17 +76,24 @@ else(READLINE_LIBRARY)
     set (READLINE_FLAG )
 endif(READLINE_LIBRARY)
 
+SET(EXTRA_LINKER_FLAGS "")
 
 if (CMAKE_COMPILER_IS_GNUCC)
-  execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
-    OUTPUT_VARIABLE GCC_VERSION)
-
+  execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
 
   if (GCC_VERSION VERSION_LESS 4.8)
     SET(CPP11_FLAG "-std=c++0x")
   else()
     SET(CPP11_FLAG "-std=c++11")
   endif()
+
+  if (ENABLE_COVERAGE)
+    add_definitions(-fprofile-arcs -ftest-coverage)
+    SET(EXTRA_LINKER_FLAGS ${EXTRA_LINKER_FLAGS} "-fprofile-arcs -ftest-coverage")
+    #    SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "-fprofile-arcs -ftest-coverage")
+  endif()
+   
+
 else()
   SET(CPP11_FLAG "-std=c++11")
 endif()
@@ -105,17 +118,16 @@ else()
 endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-
   option(USE_LIBCXX "Use clang's libcxx" TRUE)
 
   if (USE_LIBCXX)
     add_definitions(-stdlib=libc++)
-    set (EXTRA_LINKER_FLAGS ${CPP11_FLAG} -stdlib=libc++)
+    set (EXTRA_LINKER_FLAGS  ${EXTRA_LINKER_FLAGS} ${CPP11_FLAG} -stdlib=libc++)
   else ()
-    set (EXTRA_LINKER_FLAGS ${CPP11_FLAG})
+    set (EXTRA_LINKER_FLAGS  ${EXTRA_LINKER_FLAGS} ${CPP11_FLAG})
   endif()
 elseif(CMAKE_COMPILER_IS_GNUCC)
-  set (EXTRA_LINKER_FLAGS ${CPP11_FLAG})
+  set (EXTRA_LINKER_FLAGS  ${EXTRA_LINKER_FLAGS} ${CPP11_FLAG})
 endif()
 
 # limitations in MinGW require us to make an optimized build

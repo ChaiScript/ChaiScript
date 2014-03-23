@@ -43,11 +43,11 @@ void using_history(){}
 
 
 
-void *cast_module_symbol(std::string (*t_path)())
+void *cast_module_symbol(std::vector<std::string> (*t_path)())
 {
   union cast_union
   {
-    std::string (*in_ptr)();
+    std::vector<std::string> (*in_ptr)();
     void *out_ptr;
   };
 
@@ -56,22 +56,27 @@ void *cast_module_symbol(std::string (*t_path)())
   return c.out_ptr;
 }
 
-std::string default_search_path()
+std::vector<std::string> default_search_paths()
 {
+  std::vector<std::string> paths;
+
 #ifdef CHAISCRIPT_WINDOWS  // force no unicode
   CHAR path[4096];
   int size = GetModuleFileNameA(0, path, sizeof(path)-1);
 
   std::string exepath(path, size);
 
-  size_t secondtolastslash = exepath.rfind('\\', exepath.rfind('\\') - 1);
-  if (secondtolastslash != std::string::npos)
+  size_t lastslash = exepath.rfind('\\');
+  size_t secondtolastslash = exepath.rfind('\\', lastslash - 1);
+  if (lastslash != std::string::npos)
   {
-    return exepath.substr(0, secondtolastslash) + "\\lib\\chaiscript\\";
-  } else {
-    return "";
+    paths.push_back(exepath.substr(0, lastslash));
   }
 
+  if (secondtolastslash != std::string::npos)
+  {
+    return {exepath.substr(0, secondtolastslash) + "\\lib\\chaiscript\\"};
+  }
 #else
 
   std::string exepath;
@@ -102,23 +107,30 @@ std::string default_search_path()
 
   if (exepath.empty())
   {
-    Dl_info rInfo; 
+    Dl_info rInfo;
     memset( &rInfo, 0, sizeof(rInfo) ); 
-    if ( !dladdr(cast_module_symbol(&default_search_path), &rInfo)  || !rInfo.dli_fname ) { 
-      return "";
+    if ( !dladdr(cast_module_symbol(&default_search_paths), &rInfo)  || !rInfo.dli_fname ) { 
+      return paths;
     }
 
     exepath = std::string(rInfo.dli_fname);
   }
 
-  size_t secondtolastslash = exepath.rfind('/', exepath.rfind('/') - 1);
+  size_t lastslash = exepath.rfind('/');
+
+  size_t secondtolastslash = exepath.rfind('/', lastslash - 1);
+  if (lastslash != std::string::npos)
+  {
+    paths.push_back(exepath.substr(0, lastslash));
+  }
+
   if (secondtolastslash != std::string::npos)
   {
-    return exepath.substr(0, secondtolastslash) + "/lib/chaiscript/";
-  } else {
-    return "";
+    paths.push_back(exepath.substr(0, secondtolastslash) + "/lib/chaiscript/");
   }
 #endif
+
+  return paths;
 }
 
 void help(int n) {
@@ -239,8 +251,6 @@ void interactive(chaiscript::ChaiScript& chai)
 
 int main(int argc, char *argv[])
 {
-  std::vector<std::string> usepaths;
-  std::vector<std::string> modulepaths;
 
   // Disable deprecation warning for getenv call.
 #ifdef CHAISCRIPT_MSVC
@@ -255,14 +265,16 @@ int main(int argc, char *argv[])
 #pragma warning(pop)
 #endif
 
+  std::vector<std::string> usepaths;
   usepaths.push_back("");
   if (usepath)
   {
     usepaths.push_back(usepath);
   }
 
-  std::string searchpath = default_search_path();
-  modulepaths.push_back(searchpath);
+  std::vector<std::string> modulepaths;
+  std::vector<std::string> searchpaths = default_search_paths();
+  modulepaths.insert(modulepaths.end(), searchpaths.begin(), searchpaths.end());
   modulepaths.push_back("");
   if (modulepath)
   {

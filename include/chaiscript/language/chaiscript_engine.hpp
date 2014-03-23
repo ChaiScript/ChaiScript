@@ -337,7 +337,7 @@ namespace chaiscript
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type_name, std::ref(m_engine)), "name");
 
 
-      typedef void (ChaiScript::*load_mod_1)(const std::string&);
+      typedef std::string (ChaiScript::*load_mod_1)(const std::string&);
       typedef void (ChaiScript::*load_mod_2)(const std::string&, const std::string&);
 
       m_engine.add(fun(static_cast<load_mod_1>(&ChaiScript::load_module), this), "load_module");
@@ -449,7 +449,7 @@ namespace chaiscript
           dllpath = std::string(&buf.front(), pathlen);
         }
 
-        m_modulepaths.push_back(dllpath+"/");
+        m_modulepaths.insert(m_modulepaths.begin(), dllpath+"/");
       } 
 #endif    
 
@@ -652,7 +652,7 @@ namespace chaiscript
     /// (the symbol mentioned above), an exception is thrown.
     ///
     /// \throw chaiscript::exception::load_module_error In the event that no matching module can be found.
-    void load_module(const std::string &t_module_name)
+    std::string load_module(const std::string &t_module_name)
     {
       std::vector<exception::load_module_error> errors;
 
@@ -665,23 +665,25 @@ namespace chaiscript
       postfixes.push_back(".so");
       postfixes.push_back("");
 
-      for (size_t i = 0; i < m_modulepaths.size(); ++i)
+      for (size_t i = 0; i < m_modulepaths.size(); ++i) 
+      {
+        for (size_t j = 0; j < prefixes.size(); ++j)
         {
-          for (size_t j = 0; j < prefixes.size(); ++j)
-            {
-              for (size_t k = 0; k < postfixes.size(); ++k)
-                {
-                  try {
-                    std::string name = m_modulepaths[i] + prefixes[j] + t_module_name + postfixes[k];
-                    load_module(t_module_name, name);
-                    return;
-                  } catch (const chaiscript::exception::load_module_error &e) {
-                    errors.push_back(e);
-                    // Try next set
-                  }
-                }
+          for (size_t k = 0; k < postfixes.size(); ++k)
+          {
+            try {
+              std::string name = m_modulepaths[i] + prefixes[j] + t_module_name + postfixes[k];
+              // std::cerr << "trying location: " << name << std::endl;
+              load_module(t_module_name, name);
+              return name;
+            } catch (const chaiscript::exception::load_module_error &e) {
+              // std::cerr << "error: " << e.what() << std::endl;
+              errors.push_back(e);
+              // Try next set
             }
+          }
         }
+      }
 
       std::string errstring;
 
