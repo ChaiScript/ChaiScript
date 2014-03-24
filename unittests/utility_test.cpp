@@ -1,5 +1,7 @@
+#include <chaiscript/chaiscript.hpp>
 #include <chaiscript/chaiscript_stdlib.hpp>
 #include <chaiscript/utility/utility.hpp>
+#include <functional>
 
 class Test
 {
@@ -18,6 +20,7 @@ int main()
 
   using namespace chaiscript;
 
+  /// \todo fix overload resolution for fun<>
   chaiscript::utility::add_class<Test>(*m,
       "Test",
       { constructor<Test ()>(),
@@ -25,9 +28,9 @@ int main()
       { {fun(&Test::function), "function"},
         {fun(&Test::function2), "function2"},
         {fun(&Test::function3), "function3"},
-        {fun<std::string (Test::*)(double)>(&Test::functionOverload), "functionOverload"},
-        {fun<std::string (Test::*)(int)>(&Test::functionOverload), "functionOverload"},
-        {fun<Test & (Test::*)(const Test &)>(&Test::operator=), "="}
+        {fun(static_cast<std::string(Test::*)(double)>(&Test::functionOverload)), "functionOverload" },
+        {fun(static_cast<std::string(Test::*)(int)>(&Test::functionOverload)), "functionOverload" },
+        {fun(static_cast<Test & (Test::*)(const Test &)>(&Test::operator=)), "=" }
  
         }
       );

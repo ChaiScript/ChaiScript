@@ -73,23 +73,6 @@ namespace chaiscript
     }
   }
 
-  /// \brief Creates a new Proxy_Function object from a std::function object
-  /// \param[in] f std::function to expose to ChaiScript
-  ///
-  /// \b Example:
-  /// \code
-  /// std::function<int (char, float, std::string)> f = get_some_function();
-  /// chaiscript::ChaiScript chai;
-  /// chai.add(fun(f), "some_function");
-  /// \endcode
-  /// 
-  /// \sa \ref addingfunctions
-  template<typename T>
-    Proxy_Function fun(const std::function<T> &f)
-    {
-      return Proxy_Function(new dispatch::Proxy_Function_Impl<T>(f));
-    }
-
   /// \brief Creates a new Proxy_Function object from a free function, member function or data member
   /// \param[in] t Function / member to expose
   ///
@@ -116,6 +99,25 @@ namespace chaiscript
       return dispatch::detail::Fun_Helper<std::is_member_object_pointer<T>::value>::go(t);
     }
 
+
+  /// \brief Creates a new Proxy_Function object from a std::function object
+  /// \param[in] f std::function to expose to ChaiScript
+  ///
+  /// \b Example:
+  /// \code
+  /// std::function<int (char, float, std::string)> f = get_some_function();
+  /// chaiscript::ChaiScript chai;
+  /// chai.add(fun(f), "some_function");
+  /// \endcode
+  /// 
+  /// \sa \ref addingfunctions
+  template<typename T>
+    Proxy_Function fun(const std::function<T> &f)
+    {
+      return Proxy_Function(new dispatch::Proxy_Function_Impl<T>(f));
+    }
+
+  
   /// \brief Creates a new Proxy_Function object from a free function, member function or data member and binds the first parameter of it
   /// \param[in] t Function / member to expose
   /// \param[in] q Value to bind to first parameter
