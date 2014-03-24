@@ -1,0 +1,5 @@
+var v = [1,2,"hi", "world", 5.5]
+assert_equal(true, v.contains(5.5))
+assert_equal(false, v.contains(0))
+assert_equal(false, v.contains(1, lt))
+assert_equal(true, v.contains(2, `==`))  

@@ -1,0 +1,1 @@
+assert_equal(10, foldl([1, 2, 3, 4], `+`, 0))

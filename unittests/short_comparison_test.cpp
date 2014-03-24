@@ -18,7 +18,7 @@ int main()
 
   chai.add(chaiscript::fun(&Test::get_value), "get_value");
 
-  chai.eval("var t := Test();");
+  chai.eval("auto &t = Test();");
 
   if (chai.eval<bool>("t.get_value() == 5"))
   {

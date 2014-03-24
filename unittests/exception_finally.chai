@@ -1,4 +1,4 @@
-var finallyone = false;
+auto finallyone = false;
 
 try {
   throw(3)
@@ -12,9 +12,9 @@ finally {
 
 assert_equal(true, finallyone);
 
-var try2 = false;
-var catch2 = false;
-var finally2 = false;
+auto try2 = false;
+auto catch2 = false;
+auto finally2 = false;
 
 
 try {

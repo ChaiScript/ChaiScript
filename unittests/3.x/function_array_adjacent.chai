@@ -1,0 +1,1 @@
+assert_equal(2, `+`.get_contained_functions()[0].get_arity())

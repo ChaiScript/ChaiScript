@@ -11,7 +11,6 @@
 #include "boxed_number.hpp"
 #include "type_info.hpp"
 #include <string>
-#include <boost/function.hpp>
 
 #include <stdexcept>
 #include <vector>
@@ -44,27 +43,27 @@ namespace chaiscript
         };
 
       template<typename Ret>
-        struct Handle_Return<boost::shared_ptr<Ret> &>
+        struct Handle_Return<std::shared_ptr<Ret> &>
         {
-          static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
+          static Boxed_Value handle(const std::shared_ptr<Ret> &r)
           {
             return Boxed_Value(r);
           }
         };
 
       template<typename Ret>
-        struct Handle_Return<boost::shared_ptr<Ret> >
+        struct Handle_Return<std::shared_ptr<Ret> >
         {
-          static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
+          static Boxed_Value handle(const std::shared_ptr<Ret> &r)
           {
             return Boxed_Value(r);
           }
         };
 
       template<typename Ret>
-        struct Handle_Return<const boost::shared_ptr<Ret> &>
+        struct Handle_Return<const std::shared_ptr<Ret> &>
         {
-          static Boxed_Value handle(const boost::shared_ptr<Ret> &r)
+          static Boxed_Value handle(const std::shared_ptr<Ret> &r)
           {
             return Boxed_Value(r);
           }
@@ -75,7 +74,7 @@ namespace chaiscript
         {
           static Boxed_Value handle(const Ret &r)
           {
-            return Boxed_Value(boost::cref(r));
+            return Boxed_Value(std::cref(r));
           }
         };
 
@@ -88,12 +87,12 @@ namespace chaiscript
         {
           static Boxed_Value handle(Ret &r)
           {
-            return Boxed_Value(boost::ref(r));
+            return Boxed_Value(std::ref(r));
           }
 
           static Boxed_Value handle(const Ret &r)
           {
-            return Boxed_Value(boost::cref(r));
+            return Boxed_Value(std::cref(r));
           }
         };
 

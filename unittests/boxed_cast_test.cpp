@@ -46,7 +46,7 @@ bool test_type_conversion(const Boxed_Value &bv, bool expectedpass)
     std::cerr << "Error with type conversion test. From: " 
 		<< (bv.is_const()?(std::string("const ")):(std::string())) << bv.get_type_info().name() 
 		<< " To: "  
-		<< (boost::is_const<To>::value?(std::string("const ")):(std::string())) << typeid(To).name() 
+		<< (std::is_const<To>::value?(std::string("const ")):(std::string())) << typeid(To).name() 
       << " test was expected to " << ((expectedpass)?(std::string("succeed")):(std::string("fail"))) << " but did not" << std::endl;
   }
 
@@ -57,8 +57,8 @@ template<typename Type>
 bool do_test(const Boxed_Value &bv, bool T, bool ConstT, bool TRef, bool ConstTRef, bool TPtr, bool ConstTPtr, bool TPtrConst,
     bool ConstTPtrConst, bool SharedPtrT, bool SharedConstPtrT,
     bool ConstSharedPtrT, bool ConstSharedConstPtrT, bool ConstSharedPtrTRef, bool ConstSharedPtrTConstRef,
-    bool BoostRef, bool BoostConstRef, bool ConstBoostRef, bool ConstBoostConstRef,
-    bool ConstBoostRefRef, bool ConstBoostConstRefRef, bool Number,
+    bool WrappedRef, bool WrappedConstRef, bool ConstWrappedRef, bool ConstWrappedConstRef,
+    bool ConstWrappedRefRef, bool ConstWrappedConstRefRef, bool Number,
     bool ConstNumber, bool ConstNumberRef, bool TPtrConstRef, bool ConstTPtrConstRef)
 {
   bool passed = true;
@@ -70,22 +70,22 @@ bool do_test(const Boxed_Value &bv, bool T, bool ConstT, bool TRef, bool ConstTR
   passed &= test_type_conversion<const Type *>(bv, ConstTPtr);
   passed &= test_type_conversion<Type * const>(bv, TPtrConst);
   passed &= test_type_conversion<const Type * const>(bv, ConstTPtrConst);
-  passed &= test_type_conversion<boost::shared_ptr<Type> >(bv, SharedPtrT);
-  passed &= test_type_conversion<boost::shared_ptr<const Type> >(bv, SharedConstPtrT);
-  passed &= test_type_conversion<boost::shared_ptr<Type> &>(bv, false);
-  passed &= test_type_conversion<boost::shared_ptr<const Type> &>(bv, false);
-  passed &= test_type_conversion<const boost::shared_ptr<Type> >(bv, ConstSharedPtrT);
-  passed &= test_type_conversion<const boost::shared_ptr<const Type> >(bv, ConstSharedConstPtrT);
-  passed &= test_type_conversion<const boost::shared_ptr<Type> &>(bv, ConstSharedPtrTRef);
-  passed &= test_type_conversion<const boost::shared_ptr<const Type> &>(bv, ConstSharedPtrTConstRef);
-  passed &= test_type_conversion<boost::reference_wrapper<Type> >(bv, BoostRef);
-  passed &= test_type_conversion<boost::reference_wrapper<const Type> >(bv, BoostConstRef);
-  passed &= test_type_conversion<boost::reference_wrapper<Type> &>(bv, false);
-  passed &= test_type_conversion<boost::reference_wrapper<const Type> &>(bv, false);
-  passed &= test_type_conversion<const boost::reference_wrapper<Type> >(bv, ConstBoostRef);
-  passed &= test_type_conversion<const boost::reference_wrapper<const Type> >(bv, ConstBoostConstRef);
-  passed &= test_type_conversion<const boost::reference_wrapper<Type> &>(bv, ConstBoostRefRef);
-  passed &= test_type_conversion<const boost::reference_wrapper<const Type> &>(bv, ConstBoostConstRefRef);
+  passed &= test_type_conversion<std::shared_ptr<Type> >(bv, SharedPtrT);
+  passed &= test_type_conversion<std::shared_ptr<const Type> >(bv, SharedConstPtrT);
+  passed &= test_type_conversion<std::shared_ptr<Type> &>(bv, false);
+  passed &= test_type_conversion<std::shared_ptr<const Type> &>(bv, false);
+  passed &= test_type_conversion<const std::shared_ptr<Type> >(bv, ConstSharedPtrT);
+  passed &= test_type_conversion<const std::shared_ptr<const Type> >(bv, ConstSharedConstPtrT);
+  passed &= test_type_conversion<const std::shared_ptr<Type> &>(bv, ConstSharedPtrTRef);
+  passed &= test_type_conversion<const std::shared_ptr<const Type> &>(bv, ConstSharedPtrTConstRef);
+  passed &= test_type_conversion<std::reference_wrapper<Type> >(bv, WrappedRef);
+  passed &= test_type_conversion<std::reference_wrapper<const Type> >(bv, WrappedConstRef);
+  passed &= test_type_conversion<std::reference_wrapper<Type> &>(bv, false);
+  passed &= test_type_conversion<std::reference_wrapper<const Type> &>(bv, false);
+  passed &= test_type_conversion<const std::reference_wrapper<Type> >(bv, ConstWrappedRef);
+  passed &= test_type_conversion<const std::reference_wrapper<const Type> >(bv, ConstWrappedConstRef);
+  passed &= test_type_conversion<const std::reference_wrapper<Type> &>(bv, ConstWrappedRefRef);
+  passed &= test_type_conversion<const std::reference_wrapper<const Type> &>(bv, ConstWrappedConstRefRef);
   passed &= test_type_conversion<Boxed_Number>(bv, Number);
   passed &= test_type_conversion<const Boxed_Number>(bv, ConstNumber);
   passed &= test_type_conversion<Boxed_Number &>(bv, false);
@@ -137,13 +137,13 @@ bool built_in_type_test(const T &initial, bool ispod)
                                  true, false, true, false, true,
                                  ispod && true, ispod && true, ispod && true, ispod && false, true);
 
-  passed &= do_test<T>(var(boost::ref(i)), true, true, true, true, true, 
+  passed &= do_test<T>(var(std::ref(i)), true, true, true, true, true, 
                                  true, true, true, false, false,
                                  false, false, false, false, true,
                                  true, true, true, true, true,
                                  ispod && true, ispod && true, ispod && true, true, true);
 
-  passed &= do_test<T>(var(boost::cref(i)), true, true, false, true, false, 
+  passed &= do_test<T>(var(std::cref(i)), true, true, false, true, false, 
                                  true, false, true, false, false,
                                  false, false, false, false, false,
                                  true, false, true, false, true,
@@ -167,7 +167,7 @@ bool built_in_type_test(const T &initial, bool ispod)
                                  true, false, true, false, true,
                                  ispod && true, ispod && true, ispod && true, false, true);
 
-  passed &= do_test<T>(var(boost::ref(ir)), true, true, false, true, false, 
+  passed &= do_test<T>(var(std::ref(ir)), true, true, false, true, false, 
                                  true, false, true, false, false,
                                  false, false, false, false, false,
                                  true, false, true, false, true,
@@ -180,7 +180,7 @@ bool built_in_type_test(const T &initial, bool ispod)
                                  true, false, true, false, true,
                                  ispod && true, ispod && true, ispod && true, false, true);
 
-  passed &= do_test<T>(const_var(boost::ref(ir)), true, true, false, true, false, 
+  passed &= do_test<T>(const_var(std::ref(ir)), true, true, false, true, false, 
                                  true, false, true, false, false,
                                  false, false, false, false, false,
                                  true, false, true, false, true,
@@ -205,7 +205,7 @@ bool built_in_type_test(const T &initial, bool ispod)
 
   /** shared_ptr tests **/
 
-  boost::shared_ptr<T> ip(new T(initial));
+  std::shared_ptr<T> ip(new T(initial));
 
   passed &= do_test<T>(var(ip), true, true, true, true, true, 
                                  true, true, true, true, true,
@@ -220,7 +220,7 @@ bool built_in_type_test(const T &initial, bool ispod)
                                        ispod && true, ispod && true, ispod && true, false, true);
 
   /** const shared_ptr tests **/
-  boost::shared_ptr<const T> ipc(new T(initial));
+  std::shared_ptr<const T> ipc(new T(initial));
 
   passed &= do_test<T>(var(ipc), true, true, false, true, false, 
                                        true, false, true, false, true,
@@ -293,16 +293,16 @@ int main()
   /*
   bool T, bool ConstT, bool TRef, bool ConstTRef, bool TPtr, 
   bool ConstTPtr, bool TPtrConst, bool ConstTPtrConst, bool SharedPtrT, bool SharedConstPtrT,
-    bool ConstSharedPtrT, bool ConstSharedConstPtrT, bool ConstSharedPtrTRef, bool ConstSharedPtrTConstRef, bool BoostRef, 
-    bool BoostConstRef, bool ConstBoostRef, bool ConstBoostConstRef, bool ConstBoostRefRef, bool ConstBoostConstRefRef, 
+    bool ConstSharedPtrT, bool ConstSharedConstPtrT, bool ConstSharedPtrTRef, bool ConstSharedPtrTConstRef, bool WrappedRef, 
+    bool WrappedConstRef, bool ConstWrappedRef, bool ConstWrappedConstRef, bool ConstWrappedRefRef, bool ConstWrappedConstRefRef, 
     bool Number, bool ConstNumber, bool ConstNumberRef
     */
 
   passed &= built_in_type_test<int>(5, true);
   passed &= built_in_type_test<double>(1.1, true);
   passed &= built_in_type_test<char>('a', true);
-  passed &= built_in_type_test<boost::uint8_t>('a', true);
-  passed &= built_in_type_test<boost::int64_t>('a', true);
+  passed &= built_in_type_test<uint8_t>('a', true);
+  passed &= built_in_type_test<int64_t>('a', true);
   passed &= built_in_type_test<bool>(false, false);
   passed &= built_in_type_test<std::string>("Hello World", false);
   

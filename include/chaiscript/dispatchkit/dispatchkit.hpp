@@ -11,12 +11,12 @@
 #include <string>
 #include <map>
 #include <set>
-#include <boost/shared_ptr.hpp>
 #include <stdexcept>
 #include <vector>
 #include <iostream>
 #include <deque>
 #include <list>
+#include <algorithm>
 
 #include "boxed_value.hpp"
 #include "type_info.hpp"
@@ -39,12 +39,12 @@ namespace chaiscript
     class reserved_word_error : public std::runtime_error
     {
       public:
-        reserved_word_error(const std::string &t_word) throw()
+        reserved_word_error(const std::string &t_word) CHAISCRIPT_NOEXCEPT
           : std::runtime_error("Reserved word not allowed in object name: " + t_word), m_word(t_word)
         {
         }
 
-        virtual ~reserved_word_error() throw() {}
+        virtual ~reserved_word_error() CHAISCRIPT_NOEXCEPT {}
 
         std::string word() const
         {
@@ -108,12 +108,12 @@ namespace chaiscript
     class global_non_const : public std::runtime_error
     {
       public:
-        global_non_const() throw()
+        global_non_const() CHAISCRIPT_NOEXCEPT
           : std::runtime_error("a global object must be const")
         {
         }
 
-        virtual ~global_non_const() throw() {}
+        virtual ~global_non_const() CHAISCRIPT_NOEXCEPT {}
     };
   }
 
@@ -145,7 +145,7 @@ namespace chaiscript
       {
         if (!t_bv.is_const())
         {
-          throw exception::global_non_const();
+          throw chaiscript::exception::global_non_const();
         }
 
         m_globals.push_back(std::make_pair(t_bv, t_name));
@@ -160,7 +160,7 @@ namespace chaiscript
         return *this;
       }
 
-      Module &add(const boost::shared_ptr<Module> &m)
+      Module &add(const std::shared_ptr<Module> &m)
       {
         m->apply(*this, *this);
         return *m;
@@ -176,6 +176,10 @@ namespace chaiscript
           apply_globals(m_globals.begin(), m_globals.end(), t_engine);
         }
 
+      ~Module()
+      {
+      }
+
     private:
       std::vector<std::pair<Type_Info, std::string> > m_typeinfos;
       std::vector<std::pair<Proxy_Function, std::string> > m_funcs;
@@ -190,7 +194,7 @@ namespace chaiscript
           {
             try {
               t.add(begin->first, begin->second);
-            } catch (const exception::name_conflict_error &) {
+            } catch (const chaiscript::exception::name_conflict_error &) {
               /// \todo Should we throw an error if there's a name conflict 
               ///       while applying a module?
             }
@@ -230,7 +234,7 @@ namespace chaiscript
   };
 
   /// Convenience typedef for Module objects to be added to the ChaiScript runtime
-  typedef boost::shared_ptr<Module> ModulePtr;
+  typedef std::shared_ptr<Module> ModulePtr;
 
   namespace detail
   {
@@ -393,7 +397,7 @@ namespace chaiscript
         typedef std::map<std::string, chaiscript::Type_Info> Type_Name_Map;
         typedef std::map<std::string, Boxed_Value> Scope;
         typedef std::deque<Scope> StackData;
-        typedef boost::shared_ptr<StackData> Stack;
+        typedef std::shared_ptr<StackData> Stack;
 
         struct State
         {
@@ -402,10 +406,12 @@ namespace chaiscript
           std::map<std::string, Boxed_Value> m_global_objects;
           Type_Name_Map m_types;
           std::set<std::string> m_reserved_words;
+
+          State &operator=(const State &) = default;
         };
 
         Dispatch_Engine()
-          : m_place_holder(boost::shared_ptr<dispatch::Placeholder_Object>(new dispatch::Placeholder_Object()))
+          : m_place_holder(std::shared_ptr<dispatch::Placeholder_Object>(new dispatch::Placeholder_Object()))
         {
         }
 
@@ -472,7 +478,7 @@ namespace chaiscript
           Scope::iterator itr = scope.find(name);
           if (itr != stack.back().end())
           {
-            throw exception::name_conflict_error(name);
+            throw chaiscript::exception::name_conflict_error(name);
           } else {
             stack.back().insert(std::make_pair(name, obj));
           }
@@ -486,14 +492,14 @@ namespace chaiscript
           validate_object_name(name);
           if (!obj.is_const())
           {
-            throw exception::global_non_const();
+            throw chaiscript::exception::global_non_const();
           }
 
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_global_object_mutex);
 
           if (m_state.m_global_objects.find(name) != m_state.m_global_objects.end())
           {
-            throw exception::name_conflict_error(name);
+            throw chaiscript::exception::name_conflict_error(name);
           } else {
             m_state.m_global_objects.insert(std::make_pair(name, obj));
           }
@@ -511,7 +517,7 @@ namespace chaiscript
 
           if (m_state.m_global_objects.find(name) != m_state.m_global_objects.end())
           {
-            throw exception::name_conflict_error(name);
+            throw chaiscript::exception::name_conflict_error(name);
           } else {
             m_state.m_global_objects.insert(std::make_pair(name, obj));
           }
@@ -903,7 +909,7 @@ namespace chaiscript
         {
           if (params.size() < 1)
           {
-            throw exception::arity_error(static_cast<int>(params.size()), 1);
+            throw chaiscript::exception::arity_error(static_cast<int>(params.size()), 1);
           }
 
           Const_Proxy_Function f = this->boxed_cast<Const_Proxy_Function>(params[0]);
@@ -1048,8 +1054,8 @@ namespace chaiscript
           const Type_Info boxed_type = user_type<Boxed_Value>();
           const Type_Info boxed_pod_type = user_type<Boxed_Number>();
 
-          boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynamic_lhs(boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(lhs));
-          boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynamic_rhs(boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(rhs));
+          std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynamic_lhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(lhs));
+          std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynamic_rhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(rhs));
 
           if (dynamic_lhs && dynamic_rhs)
           {
@@ -1138,14 +1144,14 @@ namespace chaiscript
         void validate_object_name(const std::string &name) const
         {
           if (name.find("::") != std::string::npos) {
-            throw exception::illegal_name_error(name);
+            throw chaiscript::exception::illegal_name_error(name);
           }
 
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           if (m_state.m_reserved_words.find(name) != m_state.m_reserved_words.end())
           {
-            throw exception::reserved_word_error(name);
+            throw chaiscript::exception::reserved_word_error(name);
           }
         }
 
@@ -1173,7 +1179,7 @@ namespace chaiscript
             {
               if ((*t_f) == *(*itr2))
               {
-                throw exception::name_conflict_error(t_name);
+                throw chaiscript::exception::name_conflict_error(t_name);
               }
             }
 

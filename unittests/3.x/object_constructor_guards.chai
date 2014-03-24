@@ -1,0 +1,10 @@
+attr bob::val
+
+def bob::bob(x) : x < 10 { this.val = "Less Than Ten: " + x.to_string(); }
+def bob::bob(x) { this.val = "Any Other Value: " + x.to_string(); }
+
+var b = bob(12)
+var c = bob(3)
+
+assert_equal("Any Other Value: 12", b.val )
+assert_equal("Less Than Ten: 3", c.val )

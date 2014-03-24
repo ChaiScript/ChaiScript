@@ -7,20 +7,14 @@
 #ifndef CHAISCRIPT_BOXED_CAST_HPP_
 #define CHAISCRIPT_BOXED_CAST_HPP_
 
+#include "../chaiscript_defines.hpp"
+
 #include "type_info.hpp"
 #include "boxed_value.hpp"
 #include "boxed_cast_helper.hpp"
 #include "dynamic_cast_conversion.hpp"
 
 #include "../chaiscript_threading.hpp"
-#include <boost/shared_ptr.hpp>
-#include <boost/any.hpp>
-#include <boost/function.hpp>
-#include <boost/ref.hpp>
-#include <boost/cstdint.hpp>
-#include <boost/type_traits/add_const.hpp>
-#include <boost/type_traits/is_polymorphic.hpp>
-#include <boost/integer_traits.hpp>
 
 namespace chaiscript 
 {
@@ -31,63 +25,64 @@ namespace chaiscript
   /// \returns Type equivalent to the requested type 
   /// \throws exception::bad_boxed_cast If the requested conversion is not possible
   /// 
-  /// boxed_cast will attempt to make conversions between value, &, *, boost::shared_ptr, boost::reference_wrapper,
-  /// and boost::function (const and non-const) where possible. boxed_cast is used internally during function
+  /// boxed_cast will attempt to make conversions between value, &, *, std::shared_ptr, std::reference_wrapper,
+  /// and std::function (const and non-const) where possible. boxed_cast is used internally during function
   /// dispatch. This means that all of these conversions will be attempted automatically for you during
   /// ChaiScript function calls.
   ///
   /// \li non-const values can be extracted as const or non-const
   /// \li const values can be extracted only as const
-  /// \li Boxed_Value constructed from pointer or boost::reference_wrapper can be extracted as reference,
+  /// \li Boxed_Value constructed from pointer or std::reference_wrapper can be extracted as reference,
   ///     pointer or value types
-  /// \li Boxed_Value constructed from boost::shared_ptr or value types can be extracted as reference,
-  ///     pointer, value, or boost::shared_ptr types
+  /// \li Boxed_Value constructed from std::shared_ptr or value types can be extracted as reference,
+  ///     pointer, value, or std::shared_ptr types
   ///
-  /// Conversions to boost::function objects are attempted as well
+  /// Conversions to std::function objects are attempted as well
   ///
   /// Example:
   /// \code
   /// // All of the following should succeed
   /// chaiscript::Boxed_Value bv(1);
-  /// boost::shared_ptr<int> spi = chaiscript::boxed_cast<boost::shared_ptr<int> >(bv);
+  /// std::shared_ptr<int> spi = chaiscript::boxed_cast<std::shared_ptr<int> >(bv);
   /// int i = chaiscript::boxed_cast<int>(bv);
   /// int *ip = chaiscript::boxed_cast<int *>(bv);
   /// int &ir = chaiscript::boxed_cast<int &>(bv);
-  /// boost::shared_ptr<const int> cspi = chaiscript::boxed_cast<boost::shared_ptr<const int> >(bv);
+  /// std::shared_ptr<const int> cspi = chaiscript::boxed_cast<std::shared_ptr<const int> >(bv);
   /// const int ci = chaiscript::boxed_cast<const int>(bv);
   /// const int *cip = chaiscript::boxed_cast<const int *>(bv);
   /// const int &cir = chaiscript::boxed_cast<const int &>(bv);
   /// \endcode
   ///
-  /// boost::function conversion example
+  /// std::function conversion example
   /// \code
   /// chaiscript::ChaiScript chai;
   /// Boxed_Value bv = chai.eval("`+`"); // Get the functor for the + operator which is built in 
-  /// boost::function<int (int, int)> f = chaiscript::boxed_cast<boost::function<int (int, int)> >(bv);
+  /// std::function<int (int, int)> f = chaiscript::boxed_cast<std::function<int (int, int)> >(bv);
   /// int i = f(2,3);
   /// assert(i == 5);
   /// \endcode
   template<typename Type>
-  typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv, const Dynamic_Cast_Conversions *t_conversions = 0)
+  typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv, const Dynamic_Cast_Conversions *t_conversions = nullptr)
   {
     try {
       return detail::Cast_Helper<Type>::cast(bv, t_conversions);
-    } catch (const boost::bad_any_cast &) {
+    } catch (const chaiscript::detail::exception::bad_any_cast &) {
 
-#ifdef BOOST_MSVC
+
+#ifdef CHAISCRIPT_MSVC
       //Thank you MSVC, yes we know that a constant value is being used in the if
       // statment in THIS VERSION of the template instantiation
 #pragma warning(push)
 #pragma warning(disable : 4127)
 #endif
 
-      if (boost::is_polymorphic<typename detail::Stripped_Type<Type>::type>::value && t_conversions)
+      if (std::is_polymorphic<typename detail::Stripped_Type<Type>::type>::value && t_conversions)
       {
         try {
           // We will not catch any bad_boxed_dynamic_cast that is thrown, let the user get it
           // either way, we are not responsible if it doesn't work
           return detail::Cast_Helper<Type>::cast(t_conversions->boxed_dynamic_cast<Type>(bv), t_conversions);
-        } catch (const boost::bad_any_cast &) {
+        } catch (const chaiscript::detail::exception::bad_any_cast &) {
           throw exception::bad_boxed_cast(bv.get_type_info(), typeid(Type));
         }
       } else {
@@ -96,7 +91,7 @@ namespace chaiscript
         throw exception::bad_boxed_cast(bv.get_type_info(), typeid(Type));
       }
 
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)
 #endif
 

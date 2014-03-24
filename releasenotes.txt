@@ -1,8 +1,11 @@
-Current Version: 4.3.0
+Notes:
 
-Note: this is scheduled to be the last release that requires boost, new releases after this will require a C++11 compiler.
+ * There was overlap during the 5.x and 4.x development cycle, so some of the notes appear twice as the new features were developed for 4.x (which required boost) then ported to 5.x (which requires C++11).
+ * This is the last release of 5.x, all future development will be on the final merged 6.x line.
 
-### Changes since 4.2.0
+
+### Changes since 5.2.0
+* Official support for MSVC with C++11. All major platforms and compilers are now support for C++11 release
 * Enhanced unit tests
 * Add `continue` statement, fix various use cases for `for`  loops
 * Fix use of suffixed numbers in vector initialization
@@ -18,20 +21,22 @@ Note: this is scheduled to be the last release that requires boost, new releases
 * Fix various string / map / vector `size` and `count` calls for compilers which have weird overloads for them. #90 #93 #95
 * Make module search path relative to the currently running executable
 * Build and work with wstring windows builds
+* fix for some new line cases in the middle of a vector initialization from jespada
 
-### Changes since 4.1.1
+### Changes since 5.1.0
 * Add support for automatic conversion of arithmetic types when possible
   and when no ambiguous method dispatch exists.
 
-### Changes since 4.1.0
-* Fix missed gcc build error in 4.1.0
-
-Changes since 4.0.0
+### Changes since 5.0.0
 * Fix sizing of numeric constants to match that of the C++ standard
 * Add support for u,ll,l,f suffixes for numeric constants
 * Siginificant improvement in error reporting
 
-Changes since 3.1.0
+### Changes since 4.0.0
+* Dropped boost in favor of C++11
+* Separated out stdlib to make more options for compile time improvements
+
+### Changes since 3.1.0
 * svenstaro: Unused variables and CMake consistency fixes
 * Added support for returning pointers from functions (#13)
 * Compile with -pedantic (#9)

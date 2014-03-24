@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/ChaiScript/ChaiScript.png?branch=master)](https://travis-ci.org/ChaiScript/ChaiScript)
+[![Build Status](https://travis-ci.org/ChaiScript/ChaiScript.png?branch=ChaiScript_5_0_CPP_11)](https://travis-ci.org/ChaiScript/ChaiScript)
+[![Coverage Status](https://coveralls.io/repos/ChaiScript/ChaiScript/badge.png?branch=ChaiScript_5_0_CPP_11)](https://coveralls.io/r/ChaiScript/ChaiScript?branch=ChaiScript_5_0_CPP_11)
 
 ChaiScript
 
@@ -9,6 +10,7 @@ http://www.chaiscript.com
 
 Release under the BSD license, see "license.txt" for details.
 
+
 Introduction
 ============
 
@@ -18,26 +20,33 @@ techniques, working with the developer like he expects it to work.  Being a
 native C++ application, it has some advantages over existing embedded scripting 
 languages:
 
-1) It uses a header-only approach, which makes it easy to integrate with 
+1. It uses a header-only approach, which makes it easy to integrate with 
    existing projects.
-2) It maintains type safety between your C++ application and the user scripts.
-3) It supports a variety of C++ techniques including callbacks, overloaded 
+2. It maintains type safety between your C++ application and the user scripts.
+3. It supports a variety of C++ techniques including callbacks, overloaded 
    functions, class methods, and stl containers.
+
 
 Requirements
 ============
 
-ChaiScript requires a recent version of Boost (http://www.boost.org) to build.
+ChaiScript requires a C++11 compiler to build with support for variadic 
+templates.  It has been tested with gcc 4.7 and clang 3.1 (with libcxx). MacOS 
+10.8 (Mountain Lion) is also known to support the C++11 build with Apple's 
+clang 4.0.
 
 Usage
 =====
 
 * Add the ChaiScript include directory to your project's header search path
 * Add `#include <chaiscript/chaiscript.hpp>` to your source file
-* Instantiate the ChaiScript engine in your application.  For example, create 
-  a new engine with the name `chai` like so: `chaiscript::ChaiScript chai`
+* Instantiate the ChaiScript engine in your application.  For example, create a 
+  new engine with the name `chai` like so: `chaiscript::ChaiScript chai`
+* The default behavior is to load the ChaiScript standard library from a 
+  loadable module. A second option is to compile the library into your code,
+  see below for an example.
 
-Once instantiated, the engine is ready to start running ChaiScript source.  You 
+Once instantiated, the engine is ready to start running ChaiScript source.  You
 have two main options for processing ChaiScript source: a line at a time using 
 `chai.eval(string)` and a file at a time using `chai.eval_file(fname)`
 
@@ -77,6 +86,29 @@ The shortest complete example possible follows:
     int main()
     {
       chaiscript::ChaiScript chai;
+      chai.add(chaiscript::fun(&function), "function");
+
+      double d = chai.eval<double>("function(3, 4.75);");
+    }
+
+
+
+Or, if you want to compile the std lib into your code, which reduces
+runtime requirements.
+
+    /// main.cpp
+
+    #include <chaiscript/chaiscript.hpp>
+    #include <chaiscript/chaiscript_stdlib.hpp>
+
+    double function(int i, double j)
+    {
+      return i * j;
+    }
+
+    int main()
+    {
+      chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
       chai.add(chaiscript::fun(&function), "function");
 
       double d = chai.eval<double>("function(3, 4.75);");

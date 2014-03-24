@@ -12,10 +12,10 @@
 #include "boxed_value.hpp"
 #include "type_info.hpp"
 #include <string>
-#include <boost/function.hpp>
-#include <boost/type_traits/add_reference.hpp>
+#include <type_traits>
 #include <stdexcept>
 #include <vector>
+#include <cassert>
 #include "proxy_functions_detail.hpp"
 
 namespace chaiscript
@@ -23,41 +23,10 @@ namespace chaiscript
   class Boxed_Number;
   struct AST_Node;
 
-  typedef boost::shared_ptr<struct AST_Node> AST_NodePtr;
+  typedef std::shared_ptr<struct AST_Node> AST_NodePtr;
 
   namespace dispatch
   {
-    /**
-     * Helper for building a list of parameters for calling a Proxy_Function
-     * it does automatic conversion to Boxed_Value types via operator<<
-     *
-     * example usage:
-     * Boxed_Value retval = dispatch(dispatchengine.get_function("+"), 
-     *                               chaiscript::Param_List_Builder() << 5 << 6);
-     */
-    struct Param_List_Builder
-    {
-      Param_List_Builder &operator<<(const Boxed_Value &so)
-      {
-        objects.push_back(so);
-        return *this;
-      }
-
-      template<typename T>
-        Param_List_Builder &operator<<(T t)
-        {
-          objects.push_back(Boxed_Value(t));
-          return *this;
-        }
-
-      operator const std::vector<Boxed_Value> &() const
-      {
-        return objects;
-      }
-
-      std::vector<Boxed_Value> objects;
-    };
-
     /**
      * Pure virtual base class for all Proxy_Function implementations
      * Proxy_Functions are a type erasure of type safe C++
@@ -70,6 +39,7 @@ namespace chaiscript
     {
       public:
         virtual ~Proxy_Function_Base() {}
+
         Boxed_Value operator()(const std::vector<Boxed_Value> &params, const chaiscript::Dynamic_Cast_Conversions &t_conversions) const
         {
           Boxed_Value bv = do_call(params, t_conversions);
@@ -80,7 +50,7 @@ namespace chaiscript
         /// if the function is variadic or takes no arguments (arity of 0 or -1), the returned
         /// value containes exactly 1 Type_Info object: the return type
         /// \returns the types of all parameters. 
-        std::vector<Type_Info> get_param_types() const { return m_types; }
+        const std::vector<Type_Info> &get_param_types() const { return m_types; }
 
         virtual bool operator==(const Proxy_Function_Base &) const = 0;
         virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const = 0;
@@ -90,11 +60,10 @@ namespace chaiscript
           return m_has_arithmetic_param;
         }
 
-        virtual std::vector<boost::shared_ptr<const Proxy_Function_Base> > get_contained_functions() const
+        virtual std::vector<std::shared_ptr<const Proxy_Function_Base> > get_contained_functions() const
         {
-          return std::vector<boost::shared_ptr<const Proxy_Function_Base> >();
+          return std::vector<std::shared_ptr<const Proxy_Function_Base> >();
         }
-
 
         //! Return true if the function is a possible match
         //! to the passed in values
@@ -129,7 +98,7 @@ namespace chaiscript
               || (!bv.get_type_info().is_undef()
                 && (ti.bare_equal(user_type<Boxed_Number>())
                   || ti.bare_equal(bv.get_type_info())
-                  || bv.get_type_info().bare_equal(user_type<boost::shared_ptr<const Proxy_Function_Base> >())
+                  || bv.get_type_info().bare_equal(user_type<std::shared_ptr<const Proxy_Function_Base> >())
                   || t_conversions.dynamic_cast_converts(ti, bv.get_type_info()) 
                   )
                 )
@@ -196,11 +165,11 @@ namespace chaiscript
   }
 
   /// \brief Common typedef used for passing of any registered function in ChaiScript
-  typedef boost::shared_ptr<dispatch::Proxy_Function_Base> Proxy_Function;
+  typedef std::shared_ptr<dispatch::Proxy_Function_Base> Proxy_Function;
 
   /// \brief Const version of Proxy_Function chaiscript. Points to a const Proxy_Function. This is how most registered functions
   ///        are handled internally.
-  typedef boost::shared_ptr<const dispatch::Proxy_Function_Base> Const_Proxy_Function;
+  typedef std::shared_ptr<const dispatch::Proxy_Function_Base> Const_Proxy_Function;
 
   namespace exception
   {
@@ -208,11 +177,11 @@ namespace chaiscript
     class guard_error : public std::runtime_error
     {
       public:
-        guard_error() throw()
+        guard_error() CHAISCRIPT_NOEXCEPT
           : std::runtime_error("Guard evaluation failed")
         { }
 
-        virtual ~guard_error() throw()
+        virtual ~guard_error() CHAISCRIPT_NOEXCEPT
         { }
     };
   }
@@ -227,7 +196,7 @@ namespace chaiscript
     {
       public:
         Dynamic_Proxy_Function(
-            const boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> &t_f, 
+            const std::function<Boxed_Value (const std::vector<Boxed_Value> &)> &t_f, 
             int t_arity=-1,
             const AST_NodePtr &t_parsenode = AST_NodePtr(),
             const std::string &t_description = "",
@@ -236,6 +205,8 @@ namespace chaiscript
             m_f(t_f), m_arity(t_arity), m_description(t_description), m_guard(t_guard), m_parsenode(t_parsenode)
         {
         }
+
+        virtual ~Dynamic_Proxy_Function() {}
 
         virtual bool operator==(const Proxy_Function_Base &rhs) const
         {
@@ -252,9 +223,6 @@ namespace chaiscript
           return (m_arity < 0 || vals.size() == size_t(m_arity))
             && test_guard(vals, t_conversions);
         }    
-
-        virtual ~Dynamic_Proxy_Function() {}
-
 
         virtual int get_arity() const
         {
@@ -318,7 +286,7 @@ namespace chaiscript
           // For the return type
           types.push_back(chaiscript::detail::Get_Type_Info<Boxed_Value>::get());
 
-          if (arity >= 0)
+          if (arity > 0)
           {
             for (int i = 0; i < arity; ++i)
             {
@@ -329,7 +297,7 @@ namespace chaiscript
           return types;
         }
 
-        boost::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
+        std::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
         int m_arity;
         std::string m_description;
         Proxy_Function m_guard;
@@ -429,6 +397,7 @@ namespace chaiscript
             const std::vector<Boxed_Value> &t_args)
         {
           assert(t_f->get_arity() < 0 || t_f->get_arity() == static_cast<int>(t_args.size()));
+
           if (t_f->get_arity() < 0) { return std::vector<Type_Info>(); }
 
           std::vector<Type_Info> types = t_f->get_param_types();
@@ -460,14 +429,14 @@ namespace chaiscript
 
     /**
      * The standard typesafe function call implementation of Proxy_Function
-     * It takes a boost::function<> object and performs runtime 
+     * It takes a std::function<> object and performs runtime 
      * type checking of Boxed_Value parameters, in a type safe manner
      */
     template<typename Func>
       class Proxy_Function_Impl : public Proxy_Function_Base
     {
       public:
-        Proxy_Function_Impl(const boost::function<Func> &f)
+        Proxy_Function_Impl(const std::function<Func> &f)
           : Proxy_Function_Base(detail::build_param_type_list(static_cast<Func *>(0))),
           m_f(f), m_dummy_func(0)
         {
@@ -481,12 +450,10 @@ namespace chaiscript
           return pimpl != 0;
         }
 
-
         virtual int get_arity() const
         {
           return static_cast<int>(m_types.size()) - 1;
         }
-
 
         virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const
         {
@@ -503,7 +470,7 @@ namespace chaiscript
           return "";
         }
 
-        boost::function<Func> internal_function() const
+        std::function<Func> internal_function() const
         {
           return m_f;
         }
@@ -511,11 +478,11 @@ namespace chaiscript
       protected:
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const
         {
-          return detail::Do_Call<typename boost::function<Func>::result_type>::go(m_f, params, t_conversions);
+          return detail::Do_Call<typename std::function<Func>::result_type>::go(m_f, params, t_conversions);
         }
 
       private:
-        boost::function<Func> m_f;
+        std::function<Func> m_f;
         Func *m_dummy_func;
     };
 
@@ -538,6 +505,7 @@ namespace chaiscript
         {
           const Attribute_Access<T, Class> * aa 
             = dynamic_cast<const Attribute_Access<T, Class> *>(&t_func);
+
           if (aa) {
             return m_attr == aa->m_attr;
           } else {
@@ -575,10 +543,10 @@ namespace chaiscript
             if (bv.is_const())
             {
               const Class *o = boxed_cast<const Class *>(bv, &t_conversions);
-              return detail::Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
+              return detail::Handle_Return<typename std::add_lvalue_reference<T>::type>::handle(o->*m_attr);
             } else {
               Class *o = boxed_cast<Class *>(bv, &t_conversions);
-              return detail::Handle_Return<typename boost::add_reference<T>::type>::handle(o->*m_attr);
+              return detail::Handle_Return<typename std::add_lvalue_reference<T>::type>::handle(o->*m_attr);
             }
           } else {
             throw exception::arity_error(static_cast<int>(params.size()), 1);
@@ -588,11 +556,9 @@ namespace chaiscript
       private:
         static std::vector<Type_Info> param_types()
         {
-          std::vector<Type_Info> v;
-          v.push_back(user_type<T>());
-          v.push_back(user_type<Class>());
-          return v;
+          return {user_type<T>(), user_type<Class>()};
         }
+
         T Class::* m_attr;
     };
   }
@@ -613,7 +579,7 @@ namespace chaiscript
         {
         }
 
-        virtual ~dispatch_error() throw() {}
+        virtual ~dispatch_error() CHAISCRIPT_NOEXCEPT {}
 
         std::vector<Boxed_Value> parameters;
         std::vector<Const_Proxy_Function> functions;

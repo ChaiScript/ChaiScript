@@ -12,8 +12,8 @@
 #include "register_function.hpp"
 #include "operators.hpp"
 #include "boxed_number.hpp"
-#include <boost/function_types/result_type.hpp>
 #include <sstream>
+#include <type_traits>
 
 namespace chaiscript 
 {
@@ -26,9 +26,9 @@ namespace chaiscript
       /// \param[in] v Boxed_Number to copy into the new object
       /// \returns The newly created object.
       template<typename P1>
-      boost::shared_ptr<P1> construct_pod(Boxed_Number v)
+      std::shared_ptr<P1> construct_pod(Boxed_Number v)
       {
-        boost::shared_ptr<P1> p(new P1());
+        std::shared_ptr<P1> p(new P1());
         Boxed_Value bv(p);
         Boxed_Number nb(bv);
         nb = v;
@@ -97,29 +97,25 @@ namespace chaiscript
      * to_string function for internal use. Uses ostream operator<<
      */
     template<typename Input>
-      std::string to_string(Input i)
-      {
-        std::stringstream ss;
-        ss << i;
-        return ss.str();
-      }
+    std::string to_string(Input i)
+    {
+      std::stringstream ss;
+      ss << i;
+      return ss.str();
+    }
 
     /**
      * Internal function for converting from a string to a value
      * uses ostream operator >> to perform the conversion
      */
     template<typename Input>
-      Input parse_string(const std::string &i)
-      {
-        std::stringstream ss(i);
-        Input t;
-        ss >> t;
-        return t;
-      }
-
-
-
-     
+    Input parse_string(const std::string &i)
+    {
+      std::stringstream ss(i);
+      Input t;
+      ss >> t;
+      return t;
+    }
       
             
     /**
@@ -147,7 +143,7 @@ namespace chaiscript
     * function variables.
     */
     template<typename Type>
-    boost::shared_ptr<Type> shared_ptr_clone(const boost::shared_ptr<Type> &p)
+    std::shared_ptr<Type> shared_ptr_clone(const std::shared_ptr<Type> &p)
     {
       return p;
     }
@@ -156,10 +152,10 @@ namespace chaiscript
      * Specific version of shared_ptr_clone just for Proxy_Functions
      */
     template<typename Type>
-    boost::shared_ptr<typename boost::remove_const<Type>::type> 
-        shared_ptr_unconst_clone(const boost::shared_ptr<typename boost::add_const<Type>::type> &p)
+    std::shared_ptr<typename std::remove_const<Type>::type> 
+        shared_ptr_unconst_clone(const std::shared_ptr<typename std::add_const<Type>::type> &p)
     {
-      return boost::const_pointer_cast<typename boost::remove_const<Type>::type>(p);
+      return std::const_pointer_cast<typename std::remove_const<Type>::type>(p);
     }
 
 
@@ -170,7 +166,7 @@ namespace chaiscript
     * Similar to shared_ptr_clone. Used for Proxy_Function.
     */
     template<typename Type>
-    Boxed_Value ptr_assign(Boxed_Value lhs, const boost::shared_ptr<Type> &rhs)
+    Boxed_Value ptr_assign(Boxed_Value lhs, const std::shared_ptr<Type> &rhs)
     {
       if (lhs.is_undef() 
           || (!lhs.get_type_info().is_const() && lhs.get_type_info().bare_equal(chaiscript::detail::Get_Type_Info<Type>::get())))
@@ -276,7 +272,7 @@ namespace chaiscript
 
       static bool has_guard(const Const_Proxy_Function &t_pf)
       {
-        boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> pf = boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
+        auto pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
         if (pf)
         {
           if (pf->get_guard()) {
@@ -291,7 +287,7 @@ namespace chaiscript
 
       static Const_Proxy_Function get_guard(const Const_Proxy_Function &t_pf)
       {
-        boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> pf = boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
+        auto pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
         if (pf)
         {
           if (pf->get_guard())
@@ -309,7 +305,9 @@ namespace chaiscript
         throw bv;
       }
       
-      static boost::shared_ptr<chaiscript::detail::Dispatch_Engine> bootstrap2(boost::shared_ptr<chaiscript::detail::Dispatch_Engine> e = boost::shared_ptr<chaiscript::detail::Dispatch_Engine> (new chaiscript::detail::Dispatch_Engine()))
+      static std::shared_ptr<chaiscript::detail::Dispatch_Engine> bootstrap2(
+          std::shared_ptr<chaiscript::detail::Dispatch_Engine> e 
+             = std::shared_ptr<chaiscript::detail::Dispatch_Engine> (new chaiscript::detail::Dispatch_Engine()))
       {
         e->add(user_type<void>(), "void");
         return e;
@@ -337,24 +335,22 @@ namespace chaiscript
         static std::vector<Boxed_Value> do_return_boxed_value_vector(FunctionType f,
             const dispatch::Proxy_Function_Base *b)
         {
-          typedef typename boost::function_types::result_type<FunctionType>::type Vector;
-          Vector v = (b->*f)();
+          auto v = (b->*f)();
  
           std::vector<Boxed_Value> vbv;
-          for (typename Vector::const_iterator itr = v.begin();
-               itr != v.end();
-               ++itr)
+
+          for (const auto &o: v)
           {
-            vbv.push_back(const_var(*itr));
+            vbv.push_back(const_var(o));
           }
 
           return vbv;
         }
 
       template<typename Function>
-      static boost::function<std::vector<Boxed_Value> (const dispatch::Proxy_Function_Base*)> return_boxed_value_vector(const Function &f)
+      static std::function<std::vector<Boxed_Value> (const dispatch::Proxy_Function_Base*)> return_boxed_value_vector(const Function &f)
       {
-        return boost::bind(&do_return_boxed_value_vector<Function>, f, _1);
+        return std::bind(&do_return_boxed_value_vector<Function>, f, std::placeholders::_1);
       }
 
     public:
@@ -384,7 +380,7 @@ namespace chaiscript
  
 
         m->add(constructor<std::runtime_error (const std::string &)>(), "runtime_error");
-        m->add(fun(boost::function<std::string (const std::runtime_error &)>(&what)), "what");     
+        m->add(fun(std::function<std::string (const std::runtime_error &)>(&what)), "what");     
 
         m->add(user_type<dispatch::Dynamic_Object>(), "Dynamic_Object");
         m->add(constructor<dispatch::Dynamic_Object (const std::string &)>(), "Dynamic_Object");
@@ -392,7 +388,7 @@ namespace chaiscript
         m->add(fun(&dispatch::Dynamic_Object::get_attrs), "get_attrs");
         m->add(fun(&dispatch::Dynamic_Object::get_attr), "get_attr");
 
-        m->eval("def Dynamic_Object::clone() { var new_o := Dynamic_Object(this.get_type_name()); for_each(this.get_attrs(), bind(fun(new_o, x) { new_o.get_attr(x.first) = x.second; }, new_o, _) ); return new_o; }");
+        m->eval("def Dynamic_Object::clone() { auto &new_o = Dynamic_Object(this.get_type_name()); for_each(this.get_attrs(), bind(fun(new_o, x) { new_o.get_attr(x.first) = x.second; }, new_o, _) ); return new_o; }");
 
         m->add(fun(&has_guard), "has_guard");
         m->add(fun(&get_guard), "get_guard");
@@ -440,14 +436,14 @@ namespace chaiscript
         bootstrap_pod_type<unsigned long>("unsigned_long", m);
         bootstrap_pod_type<size_t>("size_t", m);
         bootstrap_pod_type<char>("char", m);
-        bootstrap_pod_type<boost::int8_t>("int8_t", m);
-        bootstrap_pod_type<boost::int16_t>("int16_t", m);
-        bootstrap_pod_type<boost::int32_t>("int32_t", m);
-        bootstrap_pod_type<boost::int64_t>("int64_t", m);
-        bootstrap_pod_type<boost::uint8_t>("uint8_t", m);
-        bootstrap_pod_type<boost::uint16_t>("uint16_t", m);
-        bootstrap_pod_type<boost::uint32_t>("uint32_t", m);
-        bootstrap_pod_type<boost::uint64_t>("uint64_t", m);
+        bootstrap_pod_type<std::int8_t>("int8_t", m);
+        bootstrap_pod_type<std::int16_t>("int16_t", m);
+        bootstrap_pod_type<std::int32_t>("int32_t", m);
+        bootstrap_pod_type<std::int64_t>("int64_t", m);
+        bootstrap_pod_type<std::uint8_t>("uint8_t", m);
+        bootstrap_pod_type<std::uint16_t>("uint16_t", m);
+        bootstrap_pod_type<std::uint32_t>("uint32_t", m);
+        bootstrap_pod_type<std::uint64_t>("uint64_t", m);
 
         operators::logical_compliment<bool>(m);
 
@@ -457,14 +453,14 @@ namespace chaiscript
         m->add(fun(&print), "print_string");
         m->add(fun(&println), "println_string");
 
-        m->add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(boost::bind(&bind_function, _1))), 
+        m->add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(std::bind(&bind_function, std::placeholders::_1))), 
           "bind");
 
         m->add(fun(&shared_ptr_unconst_clone<dispatch::Proxy_Function_Base>), "clone");
-        m->add(fun(&ptr_assign<boost::remove_const<dispatch::Proxy_Function_Base>::type>), "=");
-        m->add(fun(&ptr_assign<boost::add_const<dispatch::Proxy_Function_Base>::type>), "=");
+        m->add(fun(&ptr_assign<std::remove_const<dispatch::Proxy_Function_Base>::type>), "=");
+        m->add(fun(&ptr_assign<std::add_const<dispatch::Proxy_Function_Base>::type>), "=");
 
-        m->add(fun(&type_match), "type_match");
+        m->add(fun(&Boxed_Value::type_match), "type_match");
 
         return m;
       }

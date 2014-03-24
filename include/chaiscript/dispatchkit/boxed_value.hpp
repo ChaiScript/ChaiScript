@@ -12,27 +12,7 @@
 #include "../chaiscript_threading.hpp"
 
 #include <map>
-#include <boost/shared_ptr.hpp>
-
-#ifdef __llvm__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshadow"
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#endif
-
-#include <boost/make_shared.hpp>
-
-#ifdef __llvm__
-#pragma clang diagnostic pop
-#endif
-
-#include <boost/any.hpp>
-#include <boost/function.hpp>
-#include <boost/ref.hpp>
-#include <boost/bind.hpp>
-#include <boost/cstdint.hpp>
-#include <boost/type_traits/add_const.hpp>
-#include <boost/integer_traits.hpp>
+#include "any.hpp"
 
 namespace chaiscript 
 {
@@ -56,7 +36,7 @@ namespace chaiscript
       struct Data
       {
         Data(const Type_Info &ti,
-            const boost::any &to,
+            const chaiscript::detail::Any &to,
             bool tr,
             const void *t_void_ptr)
           : m_type_info(ti), m_obj(to), m_data_ptr(ti.is_const()?0:const_cast<void *>(t_void_ptr)), m_const_data_ptr(t_void_ptr),
@@ -80,7 +60,7 @@ namespace chaiscript
         }
 
         Type_Info m_type_info;
-        boost::any m_obj;
+        chaiscript::detail::Any m_obj;
         void *m_data_ptr;
         const void *m_const_data_ptr;
         bool m_is_ref;
@@ -88,65 +68,70 @@ namespace chaiscript
 
       struct Object_Data
       {
-        static boost::shared_ptr<Data> get(Boxed_Value::Void_Type)
+        static std::shared_ptr<Data> get(Boxed_Value::Void_Type)
         {
-          return boost::make_shared<Data>(
+          return std::make_shared<Data>(
                 detail::Get_Type_Info<void>::get(),
-                boost::any(), 
+                chaiscript::detail::Any(), 
                 false,
-                static_cast<void *>(0));
+                nullptr)
+              ;
         }
 
         template<typename T>
-          static boost::shared_ptr<Data> get(const boost::shared_ptr<T> *obj)
+          static std::shared_ptr<Data> get(const std::shared_ptr<T> *obj)
           {
             return get(*obj);
           }
 
         template<typename T>
-          static boost::shared_ptr<Data> get(const boost::shared_ptr<T> &obj)
+          static std::shared_ptr<Data> get(const std::shared_ptr<T> &obj)
           {
-            return boost::make_shared<Data>(
+            return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(), 
-                  boost::any(obj), 
+                  chaiscript::detail::Any(obj), 
                   false,
-                  obj.get());
+                  obj.get()
+                );
           }
 
         template<typename T>
-          static boost::shared_ptr<Data> get(T *t)
+          static std::shared_ptr<Data> get(T *t)
           {
-            return get(boost::ref(*t));
+            return get(std::ref(*t));
           }
 
         template<typename T>
-          static boost::shared_ptr<Data> get(boost::reference_wrapper<T> obj)
+          static std::shared_ptr<Data> get(std::reference_wrapper<T> obj)
           {
-            return boost::make_shared<Data>(
+            return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(),
-                  boost::any(obj),
+                  chaiscript::detail::Any(obj),
                   true,
-                  obj.get_pointer());
+                  &obj.get()
+                );
           }
 
         template<typename T>
-          static boost::shared_ptr<Data> get(const T& t)
+          static std::shared_ptr<Data> get(const T& t)
           {
-            boost::shared_ptr<T> p(new T(t));
-            return boost::make_shared<Data>(
+            auto p = std::make_shared<T>(t);
+            return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(), 
-                  boost::any(p), 
+                  chaiscript::detail::Any(p), 
                   false,
-                  p.get());
+                  p.get()
+                );
           }
 
-        static boost::shared_ptr<Data> get()
+        static std::shared_ptr<Data> get()
         {
-          return boost::make_shared<Data>(
+          return std::make_shared<Data>(
                 Type_Info(),
-                boost::any(),
+                chaiscript::detail::Any(),
                 false,
-                static_cast<void *>(0));
+                nullptr 
+              );
         }
 
       };
@@ -234,7 +219,7 @@ namespace chaiscript
         return (m_data->m_data_ptr == 0 && m_data->m_const_data_ptr == 0);
       }
 
-      const boost::any & get() const
+      const chaiscript::detail::Any & get() const
       {
         return m_data->m_obj;
       }
@@ -259,11 +244,17 @@ namespace chaiscript
         return m_data->m_const_data_ptr;
       }
 
+      /// \returns true if the two Boxed_Values share the same internal type
+      static bool type_match(Boxed_Value l, Boxed_Value r)
+      {
+        return l.get_type_info() == r.get_type_info();
+      }
+
     private:
-      boost::shared_ptr<Data> m_data;
+      std::shared_ptr<Data> m_data;
   };
 
-  /// \brief Creates a Boxed_Value. If the object passed in is a value type, it is copied. If it is a pointer, boost::shared_ptr, or boost::reference_type
+  /// \brief Creates a Boxed_Value. If the object passed in is a value type, it is copied. If it is a pointer, std::shared_ptr, or std::reference_type
   ///        a copy is not made.
   /// \param t The value to box
   /// 
@@ -290,7 +281,7 @@ namespace chaiscript
     template<typename T>
       Boxed_Value const_var_impl(const T &t)
       {
-        return Boxed_Value(boost::shared_ptr<typename boost::add_const<T>::type >(new T(t)));
+        return Boxed_Value(std::shared_ptr<typename std::add_const<T>::type >(new T(t)));
       }
 
     /// \brief Takes a pointer to a value, adds const to the pointed to type and returns an immutable Boxed_Value.
@@ -301,33 +292,33 @@ namespace chaiscript
     template<typename T>
       Boxed_Value const_var_impl(T *t)
       {
-        return Boxed_Value( const_cast<typename boost::add_const<T>::type *>(t) );
+        return Boxed_Value( const_cast<typename std::add_const<T>::type *>(t) );
       }
 
-    /// \brief Takes a boost::shared_ptr to a value, adds const to the pointed to type and returns an immutable Boxed_Value.
+    /// \brief Takes a std::shared_ptr to a value, adds const to the pointed to type and returns an immutable Boxed_Value.
     ///        Does not copy the pointed to value.
     /// \param[in] t Pointer to make immutable
     /// \returns Immutable Boxed_Value
     /// \sa Boxed_Value::is_const
     template<typename T>
-      Boxed_Value const_var_impl(const boost::shared_ptr<T> &t)
+      Boxed_Value const_var_impl(const std::shared_ptr<T> &t)
       {
-        return Boxed_Value( boost::const_pointer_cast<typename boost::add_const<T>::type>(t) );
+        return Boxed_Value( std::const_pointer_cast<typename std::add_const<T>::type>(t) );
       }
 
-    /// \brief Takes a boost::reference_wrapper value, adds const to the referenced type and returns an immutable Boxed_Value.
+    /// \brief Takes a std::reference_wrapper value, adds const to the referenced type and returns an immutable Boxed_Value.
     ///        Does not copy the referenced value.
     /// \param[in] t Reference object to make immutable
     /// \returns Immutable Boxed_Value
     /// \sa Boxed_Value::is_const
     template<typename T>
-      Boxed_Value const_var_impl(const boost::reference_wrapper<T> &t)
+      Boxed_Value const_var_impl(const std::reference_wrapper<T> &t)
       {
-        return Boxed_Value( boost::cref(t.get()) );
+        return Boxed_Value( std::cref(t.get()) );
       }
   }
 
-  /// \brief Takes an object and returns an immutable Boxed_Value. If the object is a boost::reference or pointer type
+  /// \brief Takes an object and returns an immutable Boxed_Value. If the object is a std::reference or pointer type
   ///        the value is not copied. If it is an object type, it is copied.
   /// \param[in] t Object to make immutable
   /// \returns Immutable Boxed_Value
@@ -357,11 +348,6 @@ namespace chaiscript
 
 
 
-  /// \returns true if the two Boxed_Values share the same internal type
-  static bool type_match(Boxed_Value l, Boxed_Value r)
-  {
-    return l.get_type_info() == r.get_type_info();
-  }
 }
 
 #endif

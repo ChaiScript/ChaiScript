@@ -1,0 +1,1 @@
+assert_equal(3, find("123abab", "ab"))

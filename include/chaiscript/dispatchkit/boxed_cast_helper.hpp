@@ -10,10 +10,6 @@
 #include "type_info.hpp"
 #include "boxed_value.hpp"
 
-#include <boost/shared_ptr.hpp>
-#include <boost/any.hpp>
-#include <boost/ref.hpp>
-#include <boost/type_traits/add_const.hpp>
 
 namespace chaiscript 
 {
@@ -29,7 +25,7 @@ namespace chaiscript
     template<typename Result>
       struct Cast_Helper_Inner
       {
-        typedef typename boost::reference_wrapper<typename boost::add_const<Result>::type > Result_Type;
+        typedef typename std::reference_wrapper<typename std::add_const<Result>::type > Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
@@ -37,16 +33,16 @@ namespace chaiscript
           {
             if (!ob.get_type_info().is_const())
             {
-              return boost::cref((boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get());
+              return std::cref((ob.get().cast<std::reference_wrapper<Result> >()).get());
             } else {
-              return boost::any_cast<boost::reference_wrapper<const Result> >(ob.get());
+              return ob.get().cast<std::reference_wrapper<const Result> >();
             }
           } else {
             if (!ob.get_type_info().is_const())
             {
-              return boost::cref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));   
+              return std::cref(*(ob.get().cast<std::shared_ptr<Result> >()));   
             } else {
-              return boost::cref(*(boost::any_cast<boost::shared_ptr<const Result> >(ob.get())));   
+              return std::cref(*(ob.get().cast<std::shared_ptr<const Result> >()));   
             }
           }
         }
@@ -79,16 +75,16 @@ namespace chaiscript
           {
             if (!ob.get_type_info().is_const())
             {
-              return (boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get_pointer();
+              return &(ob.get().cast<std::reference_wrapper<Result> >()).get();
             } else {
-              return (boost::any_cast<boost::reference_wrapper<const Result> >(ob.get())).get_pointer();
+              return &(ob.get().cast<std::reference_wrapper<const Result> >()).get();
             }
           } else {
             if (!ob.get_type_info().is_const())
             {
-              return (boost::any_cast<boost::shared_ptr<Result> >(ob.get())).get();
+              return (ob.get().cast<std::shared_ptr<Result> >()).get();
             } else {
-              return (boost::any_cast<boost::shared_ptr<const Result> >(ob.get())).get();
+              return (ob.get().cast<std::shared_ptr<const Result> >()).get();
             }
           }
         }
@@ -106,9 +102,9 @@ namespace chaiscript
         {
           if (ob.is_ref())
           {
-            return (boost::any_cast<boost::reference_wrapper<Result> >(ob.get())).get_pointer();
+            return &(ob.get().cast<std::reference_wrapper<Result> >()).get();
           } else {
-            return (boost::any_cast<boost::shared_ptr<Result> >(ob.get())).get();
+            return (ob.get().cast<std::shared_ptr<Result> >()).get();
           }
         }
       };
@@ -119,76 +115,77 @@ namespace chaiscript
     template<typename Result>
       struct Cast_Helper_Inner<Result &>
       {
-        typedef typename boost::reference_wrapper<Result> Result_Type;
+        typedef Result& Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
           if (ob.is_ref())
           {
-            return boost::any_cast<boost::reference_wrapper<Result> >(ob.get());
+            return ob.get().cast<std::reference_wrapper<Result> >();
           } else {
-            return boost::ref(*(boost::any_cast<boost::shared_ptr<Result> >(ob.get())));
+            Result &r = *(ob.get().cast<std::shared_ptr<Result> >());
+            return r;
           }
         }
       };
 
     /**
-     * Cast_Helper_Inner for casting to a boost::shared_ptr<> type
+     * Cast_Helper_Inner for casting to a std::shared_ptr<> type
      */
     template<typename Result>
-      struct Cast_Helper_Inner<typename boost::shared_ptr<Result> >
+      struct Cast_Helper_Inner<typename std::shared_ptr<Result> >
       {
-        typedef typename boost::shared_ptr<Result> Result_Type;
+        typedef typename std::shared_ptr<Result> Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
-          return boost::any_cast<boost::shared_ptr<Result> >(ob.get());
+          return ob.get().cast<std::shared_ptr<Result> >();
         }
       };
 
     /**
-     * Cast_Helper_Inner for casting to a boost::shared_ptr<const> type
+     * Cast_Helper_Inner for casting to a std::shared_ptr<const> type
      */
     template<typename Result>
-      struct Cast_Helper_Inner<typename boost::shared_ptr<const Result> >
+      struct Cast_Helper_Inner<typename std::shared_ptr<const Result> >
       {
-        typedef typename boost::shared_ptr<const Result> Result_Type;
+        typedef typename std::shared_ptr<const Result> Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
           if (!ob.get_type_info().is_const())
           {
-            return boost::const_pointer_cast<const Result>(boost::any_cast<boost::shared_ptr<Result> >(ob.get()));
+            return std::const_pointer_cast<const Result>(ob.get().cast<std::shared_ptr<Result> >());
           } else {
-            return boost::any_cast<boost::shared_ptr<const Result> >(ob.get());
+            return ob.get().cast<std::shared_ptr<const Result> >();
           }
         }
       };
 
     /**
-     * Cast_Helper_Inner for casting to a const boost::shared_ptr<> & type
+     * Cast_Helper_Inner for casting to a const std::shared_ptr<> & type
      */
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::shared_ptr<Result> > : Cast_Helper_Inner<boost::shared_ptr<Result> >
+      struct Cast_Helper_Inner<const std::shared_ptr<Result> > : Cast_Helper_Inner<std::shared_ptr<Result> >
       {
       };
 
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::shared_ptr<Result> &> : Cast_Helper_Inner<boost::shared_ptr<Result> >
+      struct Cast_Helper_Inner<const std::shared_ptr<Result> &> : Cast_Helper_Inner<std::shared_ptr<Result> >
       {
       };
 
 
     /**
-     * Cast_Helper_Inner for casting to a const boost::shared_ptr<const> & type
+     * Cast_Helper_Inner for casting to a const std::shared_ptr<const> & type
      */
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::shared_ptr<const Result> > : Cast_Helper_Inner<boost::shared_ptr<const Result> >
+      struct Cast_Helper_Inner<const std::shared_ptr<const Result> > : Cast_Helper_Inner<std::shared_ptr<const Result> >
       {
       };
 
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::shared_ptr<const Result> &> : Cast_Helper_Inner<boost::shared_ptr<const Result> >
+      struct Cast_Helper_Inner<const std::shared_ptr<const Result> &> : Cast_Helper_Inner<std::shared_ptr<const Result> >
       {
       };
 
@@ -223,35 +220,35 @@ namespace chaiscript
     
 
 	/**
-     * Cast_Helper_Inner for casting to a boost::reference_wrapper type
+     * Cast_Helper_Inner for casting to a std::reference_wrapper type
      */
     template<typename Result>
-      struct Cast_Helper_Inner<boost::reference_wrapper<Result> > : Cast_Helper_Inner<Result &>
+      struct Cast_Helper_Inner<std::reference_wrapper<Result> > : Cast_Helper_Inner<Result &>
       {
       };
 
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::reference_wrapper<Result> > : Cast_Helper_Inner<Result &>
+      struct Cast_Helper_Inner<const std::reference_wrapper<Result> > : Cast_Helper_Inner<Result &>
       {
       };
 
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::reference_wrapper<Result> &> : Cast_Helper_Inner<Result &>
+      struct Cast_Helper_Inner<const std::reference_wrapper<Result> &> : Cast_Helper_Inner<Result &>
       {
       };
 
     template<typename Result>
-      struct Cast_Helper_Inner<boost::reference_wrapper<const Result> > : Cast_Helper_Inner<const Result &>
+      struct Cast_Helper_Inner<std::reference_wrapper<const Result> > : Cast_Helper_Inner<const Result &>
       {
       };
 
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::reference_wrapper<const Result> > : Cast_Helper_Inner<const Result &>
+      struct Cast_Helper_Inner<const std::reference_wrapper<const Result> > : Cast_Helper_Inner<const Result &>
       {
       };
 
     template<typename Result>
-      struct Cast_Helper_Inner<const boost::reference_wrapper<const Result> & > : Cast_Helper_Inner<const Result &>
+      struct Cast_Helper_Inner<const std::reference_wrapper<const Result> & > : Cast_Helper_Inner<const Result &>
       {
       };
 

@@ -22,7 +22,7 @@ int main()
   chai.add(chaiscript::fun(&test_two), "test_fun");
 
   int res1 = chai.eval<int>("test_fun(1)");
-  int res2 = chai.eval<int>("var i = 1; test_fun(i)");
+  int res2 = chai.eval<int>("auto i = 1; test_fun(i)");
   int res3 = chai.eval<int>("test_fun(\"bob\")");
   int res4 = chai.eval<int>("test_fun(\"hi\")");
 

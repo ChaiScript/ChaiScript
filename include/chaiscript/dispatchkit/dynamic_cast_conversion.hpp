@@ -7,13 +7,13 @@
 #ifndef CHAISCRIPT_DYNAMIC_CAST_CONVERSION_HPP_
 #define CHAISCRIPT_DYNAMIC_CAST_CONVERSION_HPP_
 
+#include <memory>
+#include <set>
+
 #include "type_info.hpp"
 #include "boxed_value.hpp"
 #include "boxed_cast_helper.hpp"
 #include "bad_boxed_cast.hpp"
-#include <boost/static_assert.hpp>
-#include <boost/type_traits/is_polymorphic.hpp>
-#include <boost/type_traits/is_base_of.hpp>
 
 namespace chaiscript
 {
@@ -23,22 +23,22 @@ namespace chaiscript
     {
       public:
         bad_boxed_dynamic_cast(const Type_Info &t_from, const std::type_info &t_to,
-            const std::string &t_what) throw()
+            const std::string &t_what) CHAISCRIPT_NOEXCEPT
           : bad_boxed_cast(t_from, t_to, t_what)
         {
         }
 
-        bad_boxed_dynamic_cast(const Type_Info &t_from, const std::type_info &t_to) throw()
+        bad_boxed_dynamic_cast(const Type_Info &t_from, const std::type_info &t_to) CHAISCRIPT_NOEXCEPT
           : bad_boxed_cast(t_from, t_to)
         {
         }
 
-        bad_boxed_dynamic_cast(const std::string &w) throw()
+        bad_boxed_dynamic_cast(const std::string &w) CHAISCRIPT_NOEXCEPT
           : bad_boxed_cast(w)
         {
         }
 
-        virtual ~bad_boxed_dynamic_cast() throw() {}
+        virtual ~bad_boxed_dynamic_cast() CHAISCRIPT_NOEXCEPT {}
     };
   }
 
@@ -90,8 +90,8 @@ namespace chaiscript
               // Dynamic cast out the contained boxed value, which we know is the type we want
               if (t_derived.is_const())
               {
-                boost::shared_ptr<const Base> data 
-                  = boost::dynamic_pointer_cast<const Base>(detail::Cast_Helper<boost::shared_ptr<const Derived> >::cast(t_derived, 0));
+                std::shared_ptr<const Base> data 
+                  = std::dynamic_pointer_cast<const Base>(detail::Cast_Helper<std::shared_ptr<const Derived> >::cast(t_derived, nullptr));
                 if (!data)
                 {
                   throw std::bad_cast();
@@ -99,8 +99,8 @@ namespace chaiscript
 
                 return Boxed_Value(data);
               } else {
-                boost::shared_ptr<Base> data 
-                  = boost::dynamic_pointer_cast<Base>(detail::Cast_Helper<boost::shared_ptr<Derived> >::cast(t_derived, 0));
+                std::shared_ptr<Base> data 
+                  = std::dynamic_pointer_cast<Base>(detail::Cast_Helper<std::shared_ptr<Derived> >::cast(t_derived, nullptr));
 
                 if (!data)
                 {
@@ -115,15 +115,15 @@ namespace chaiscript
               {
                 const Derived &d = detail::Cast_Helper<const Derived &>::cast(t_derived, 0);
                 const Base &data = dynamic_cast<const Base &>(d);
-                return Boxed_Value(boost::cref(data));
+                return Boxed_Value(std::cref(data));
               } else {
                 Derived &d = detail::Cast_Helper<Derived &>::cast(t_derived, 0);
                 Base &data = dynamic_cast<Base &>(d);
-                return Boxed_Value(boost::ref(data));
+                return Boxed_Value(std::ref(data));
               }
             }
           } else {
-            throw exception::bad_boxed_dynamic_cast(t_derived.get_type_info(), typeid(Base), "Unknown dynamic_cast_conversion");
+            throw chaiscript::exception::bad_boxed_dynamic_cast(t_derived.get_type_info(), typeid(Base), "Unknown dynamic_cast_conversion");
           }
         }
     };
@@ -141,7 +141,7 @@ namespace chaiscript
       {
       }
 
-      void add_conversion(const boost::shared_ptr<detail::Dynamic_Conversion> &conversion)
+      void add_conversion(const std::shared_ptr<detail::Dynamic_Conversion> &conversion)
       {
         chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
         m_conversions.insert(conversion);
@@ -176,11 +176,11 @@ namespace chaiscript
         return find(base, derived) != m_conversions.end();
       }
 
-      boost::shared_ptr<detail::Dynamic_Conversion> get_conversion(const Type_Info &base, const Type_Info &derived) const
+      std::shared_ptr<detail::Dynamic_Conversion> get_conversion(const Type_Info &base, const Type_Info &derived) const
       {
         chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-        std::set<boost::shared_ptr<detail::Dynamic_Conversion> >::const_iterator itr =
+        std::set<std::shared_ptr<detail::Dynamic_Conversion> >::const_iterator itr =
           find(base, derived);
 
         if (itr != m_conversions.end())
@@ -192,10 +192,10 @@ namespace chaiscript
       }
 
     private:
-      std::set<boost::shared_ptr<detail::Dynamic_Conversion> >::const_iterator find(
+      std::set<std::shared_ptr<detail::Dynamic_Conversion> >::const_iterator find(
           const Type_Info &base, const Type_Info &derived) const
       {
-        for (std::set<boost::shared_ptr<detail::Dynamic_Conversion> >::const_iterator itr = m_conversions.begin();
+        for (std::set<std::shared_ptr<detail::Dynamic_Conversion> >::const_iterator itr = m_conversions.begin();
             itr != m_conversions.end();
             ++itr)
         {
@@ -208,7 +208,7 @@ namespace chaiscript
         return m_conversions.end();
       }
 
-      std::set<boost::shared_ptr<detail::Dynamic_Conversion> > get_conversions() const
+      std::set<std::shared_ptr<detail::Dynamic_Conversion> > get_conversions() const
       {
         chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
@@ -216,10 +216,10 @@ namespace chaiscript
       }
 
       mutable chaiscript::detail::threading::shared_mutex m_mutex;
-      std::set<boost::shared_ptr<detail::Dynamic_Conversion> > m_conversions;
+      std::set<std::shared_ptr<detail::Dynamic_Conversion> > m_conversions;
   };
 
-  typedef boost::shared_ptr<chaiscript::detail::Dynamic_Conversion> Dynamic_Cast_Conversion;
+  typedef std::shared_ptr<chaiscript::detail::Dynamic_Conversion> Dynamic_Cast_Conversion;
 
   /// \brief Used to register a base / parent class relationship with ChaiScript. Necessary if you
   ///        want automatic conversions up your inheritance hierarchy.
@@ -245,16 +245,16 @@ namespace chaiscript
   /// \todo Move share static type registration code into a mechanism that allows it to be properly
   ///       shared by all modules
   template<typename Base, typename Derived>
-    Dynamic_Cast_Conversion base_class()
-    {
-      //Can only be used with related polymorphic types
-      //may be expanded some day to support conversions other than child -> parent
-      BOOST_STATIC_ASSERT((boost::is_base_of<Base,Derived>::value));
-      BOOST_STATIC_ASSERT(boost::is_polymorphic<Base>::value);
-      BOOST_STATIC_ASSERT(boost::is_polymorphic<Derived>::value);
+  Dynamic_Cast_Conversion base_class()
+  {
+    //Can only be used with related polymorphic types
+    //may be expanded some day to support conversions other than child -> parent
+    static_assert(std::is_base_of<Base,Derived>::value, "Classes are not related by inheritance");
+    static_assert(std::is_polymorphic<Base>::value, "Base class must be polymorphic");
+    static_assert(std::is_polymorphic<Derived>::value, "Derived class must be polymorphic");
 
-      return boost::shared_ptr<detail::Dynamic_Conversion>(new detail::Dynamic_Conversion_Impl<Base, Derived>());
-    }
+    return std::shared_ptr<detail::Dynamic_Conversion>(new detail::Dynamic_Conversion_Impl<Base, Derived>());
+  }
 
 }
 

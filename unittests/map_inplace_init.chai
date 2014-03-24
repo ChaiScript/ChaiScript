@@ -1,4 +1,4 @@
-var x = ["bob":1, "fred":2]
+auto x = ["bob":1, "fred":2]
 
 assert_equal(2, x.size());
 

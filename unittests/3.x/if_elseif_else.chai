@@ -1,0 +1,14 @@
+var i = 3
+var b = false
+if (i == 2) {
+  assert_equal(false, true)
+}
+else if (i == 4) {
+  assert_equal(false, true)
+}
+else {
+  assert_equal(true, true)
+  b = true
+}
+
+assert_equal(true, b)

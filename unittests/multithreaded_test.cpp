@@ -4,7 +4,6 @@
 #include <algorithm>
 
 #include <chaiscript/chaiscript.hpp>
-#include <boost/thread.hpp>
 
 int expected_value(int num_iters)
 {
@@ -35,7 +34,10 @@ void do_work(chaiscript::ChaiScript &c, int id)
 int main()
 {
   // Disable deprecation warning for getenv call.
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
+#ifdef max // Why microsoft? why?
+#undef max
+#endif
 #pragma warning(push)
 #pragma warning(disable : 4996)
 #endif
@@ -43,7 +45,7 @@ int main()
   const char *usepath = getenv("CHAI_USE_PATH");
   const char *modulepath = getenv("CHAI_MODULE_PATH");
 
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)
 #endif
 
@@ -63,17 +65,21 @@ int main()
 
   chaiscript::ChaiScript chai(modulepaths,usepaths);
 
-  boost::thread_group threads;
+  std::vector<std::shared_ptr<std::thread> > threads;
 
   // Ensure at least two, but say only 7 on an 8 core processor
-  int num_threads = std::max<unsigned int>(boost::thread::hardware_concurrency() - 1, 2u);
+  int num_threads = std::max(std::thread::hardware_concurrency() - 1, 2u);
 
   for (int i = 0; i < num_threads; ++i)
   {
-    threads.create_thread(boost::bind(&do_work, boost::ref(chai), i));
+    threads.push_back(std::shared_ptr<std::thread>(new std::thread(do_work, std::ref(chai), i)));
   }
 
-  threads.join_all();
+  for (int i = 0; i < num_threads; ++i)
+  {
+    threads[i]->join();
+  }
+
 
 
   for (int i = 0; i < num_threads; ++i)

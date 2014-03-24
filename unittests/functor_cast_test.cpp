@@ -1,6 +1,6 @@
 #include <chaiscript/utility/utility.hpp>
 
-double test_call(const boost::function<double (int)> &f, int val)
+double test_call(const std::function<double (int)> &f, int val)
 {
   return f(val);
 }

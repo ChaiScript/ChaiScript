@@ -29,12 +29,19 @@ int main()
 {
   chaiscript::ModulePtr m = chaiscript::ModulePtr(new chaiscript::Module());
 
-  CHAISCRIPT_CLASS( m, 
-      Test,
-      (Test ())
-      (Test (const Test &)),
-      ((count))
-    );
+  /*
+  chaiscript::utility::add_class<Test>(*m,
+      "Test",
+      { chaiscript::constructor<Test ()>(),
+        chaiscript::constructor<Test (const Test &)>() },
+      { {chaiscript::fun(&Test::count), "count"} }
+      );
+      */
+
+  m->add(chaiscript::user_type<Test>(), "Test");
+  m->add(chaiscript::constructor<Test()>(), "Test");
+  m->add(chaiscript::constructor<Test(const Test &)>(), "Test");
+  m->add(chaiscript::fun(&Test::count), "count");
 
   chaiscript::ChaiScript chai;
   chai.add(m);
@@ -42,15 +49,16 @@ int main()
 
   int count = chai.eval<int>("count()");
 
-  int count2 = chai.eval<int>("var i = 0; { var t = Test(); } return i;");
+  int count2 = chai.eval<int>("auto i = 0; { auto t = Test(); } return i;");
 
-  int count3 = chai.eval<int>("i = 0; { var t = Test(); i = count(); } return i;");
+  int count3 = chai.eval<int>("i = 0; { auto t = Test(); i = count(); } return i;");
 
-  int count4 = chai.eval<int>("i = 0; { var t = Test(); { var t2 = Test(); i = count(); } } return i;");
+  int count4 = chai.eval<int>("i = 0; { auto t = Test(); { auto t2 = Test(); i = count(); } } return i;");
  
-  int count5 = chai.eval<int>("i = 0; { var t = Test(); { var t2 = Test(); } i = count(); } return i;");
+  int count5 = chai.eval<int>("i = 0; { auto t = Test(); { auto t2 = Test(); } i = count(); } return i;");
 
-  int count6 = chai.eval<int>("i = 0; { var t = Test(); { var t2 = Test(); }  } i = count(); return i;");
+  int count6 = chai.eval<int>("i = 0; { auto t = Test(); { auto t2 = Test(); }  } i = count(); return i;");
+
 
   if (count == 0
       && count2 == 0

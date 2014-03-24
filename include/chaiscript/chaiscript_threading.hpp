@@ -7,17 +7,11 @@
 #ifndef CHAISCRIPT_THREADING_HPP_
 #define CHAISCRIPT_THREADING_HPP_
 
-#ifndef CHAISCRIPT_NO_THREADS
+#include <unordered_map>
 
-#ifdef __llvm__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc++11-long-long"
-#pragma clang diagnostic ignored "-Wshadow"
-#endif
-#include <boost/thread.hpp>
-#ifdef __llvm__
-#pragma clang diagnostic pop
-#endif
+#ifndef CHAISCRIPT_NO_THREADS
+#include <thread>
+#include <mutex>
 #else
 #pragma message ("ChaiScript is compiling without thread safety.")
 #endif
@@ -34,48 +28,92 @@ namespace chaiscript
 {
   namespace detail
   {
-    /// If threading is enabled, then this namespace contains boost::thread classes.
+    /// If threading is enabled, then this namespace contains std thread classes.
     /// If threading is not enabled, then stubbed in wrappers that do nothing are provided.
     /// This allows us to avoid \#ifdef code in the sections that need thread safety.
     namespace threading
     {
 
 #ifndef CHAISCRIPT_NO_THREADS
-      using boost::unique_lock; 
-      using boost::shared_lock;
-      using boost::lock_guard;
-      using boost::shared_mutex;
-      using boost::recursive_mutex;
+
+      template<typename T>
+      class unique_lock : public std::unique_lock<T>
+      {
+        public:
+          unique_lock(T &t) : std::unique_lock<T>(t) {}
+      };
+
+      template<typename T>
+      class shared_lock : public std::unique_lock<T>
+      {
+        public:
+          shared_lock(T &t) : std::unique_lock<T>(t) {}
+          void unlock() {}
+      };
+
+      template<typename T>
+      class lock_guard : public std::lock_guard<T>
+      {
+        public:
+          lock_guard(T &t) : std::lock_guard<T>(t) {}
+      };
+
+      class shared_mutex : public std::mutex { };
+
+      using std::mutex;
+
+      using std::recursive_mutex;
 
 
-      /// Typesafe thread specific storage. If threading is enabled, this class uses boost::thread_specific_ptr<T>. If
+
+      /// Typesafe thread specific storage. If threading is enabled, this class uses a mutex protected map. If
       /// threading is not enabled, the class always returns the same data, regardless of which thread it is called from.
+      /// 
+      /// \todo move to thread_local when it exists 
       template<typename T>
         class Thread_Storage
         {
           public:
-            ~Thread_Storage()
-            {
-              m_thread_storage.reset();
-            }
-
             inline T *operator->() const
             {
-              if (!m_thread_storage.get())
-              {
-                m_thread_storage.reset(new T());
-              }
-
-              return m_thread_storage.get();
+              return get_tls().get();
             }
 
             inline T &operator*() const
             {
-              return *(this->operator->());
+              return *get_tls();
             }
 
+
           private:
-            mutable boost::thread_specific_ptr<T> m_thread_storage;
+            std::shared_ptr<T> get_tls() const
+            {
+              
+              unique_lock<mutex> lock(m_mutex);
+             
+              auto itr = m_instances.find(std::this_thread::get_id());
+
+              if (itr != m_instances.end()) { return itr->second; }
+             
+              std::shared_ptr<T> new_instance(new T());
+
+              m_instances.insert(std::make_pair(std::this_thread::get_id(), new_instance));
+
+              return new_instance;
+              
+
+              /*
+              static __thread std::shared_ptr<T> *m_data = 0;
+              
+              if (!m_data) { m_data = new std::shared_ptr<T>(new T()); }
+
+              return *m_data;
+              */
+            }
+
+
+            mutable mutex m_mutex;
+            mutable std::unordered_map<std::thread::id, std::shared_ptr<T> > m_instances;
         };
 
 #else

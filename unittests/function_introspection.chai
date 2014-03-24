@@ -31,7 +31,7 @@ assert_equal(test_fun.get_arity(), 1);
 assert_equal(test_fun.get_contained_functions.size(), 1);
 assert_equal(test_fun.get_param_types().size(), 2);
 assert_equal(test_fun, test_fun);
-var test_fun_types = test_fun.get_param_types();
+auto test_fun_types = test_fun.get_param_types();
 assert_equal(true, test_fun_types[0].bare_equal(Object_type));
 assert_equal(true, test_fun_types[1].bare_equal(int_type));
 
@@ -42,7 +42,7 @@ assert_equal(2, `==`.get_arity());
 
 // < should be the merging of two functions bool <(PODObject, PODObject) and bool <(string, string)
 // we want to peel it apart and make sure that's true
-var types = `<`.get_param_types();
+auto types = `<`.get_param_types();
 assert_equal(3, types.size());
 assert_equal(true, types[0].bare_equal(bool_type));
 assert_equal(true, types[1].bare_equal(Object_type));
@@ -62,7 +62,7 @@ assert_equal(true, with_guard.has_guard());
 assert_equal(false, without_guard.has_guard());
 
 assert_equal(2, group_guard.get_contained_functions().size());
-var group = group_guard.get_contained_functions();
+auto group = group_guard.get_contained_functions();
 
 assert_equal(true, group[0].has_guard())
 assert_equal(false, group[1].has_guard())
@@ -70,7 +70,7 @@ assert_equal(false, group[1].has_guard())
 assert_throws("Function does not have a guard", fun() { group[0].get_guard(); } );
 assert_throws("Function does not have a guard", fun() { without_guard.get_guard(); } );
 
-var guard = with_guard.get_guard();
+auto guard = with_guard.get_guard();
 
 assert_equal(false, guard.has_guard());
 assert_throws("Function does not have a guard", fun() { guard.get_guard(); } );

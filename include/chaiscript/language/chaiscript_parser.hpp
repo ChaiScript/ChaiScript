@@ -10,8 +10,8 @@
 #include <exception>
 #include <fstream>
 #include <sstream>
+#include <cstring>
 
-#include "chaiscript_prelude.hpp"
 #include "chaiscript_common.hpp"
 
 namespace chaiscript
@@ -47,7 +47,7 @@ namespace chaiscript
       std::string m_multiline_comment_begin;
       std::string m_multiline_comment_end;
       std::string m_singleline_comment;
-      boost::shared_ptr<std::string> m_filename;
+      std::shared_ptr<std::string> m_filename;
       std::vector<AST_NodePtr> m_match_stack;
       bool m_alphabet[detail::max_alphabet][detail::lengthof_alphabet];
 
@@ -317,13 +317,21 @@ namespace chaiscript
 
       /**
        * Skips ChaiScript whitespace, which means space and tab, but not cr/lf
+       * jespada: Modified SkipWS to skip optionally CR ('\n')
        */
-      bool SkipWS() {
+      bool SkipWS(bool skip_cr=false) {
         bool retval = false;
         while (has_more_input()) {
-          if ( char_in_alphabet(*m_input_pos,detail::white_alphabet) ) {
+          if ( char_in_alphabet(*m_input_pos,detail::white_alphabet) || (skip_cr && (*m_input_pos == '\n'))) {
+            if(*m_input_pos == '\n') {
+              m_col = 1;
+              ++m_line;
+            }
+            else {
+              ++m_col;
+            }
             ++m_input_pos;
-            ++m_col;
+
             retval = true;
           }
           else if (SkipComment()) {
@@ -524,7 +532,7 @@ namespace chaiscript
         ss >> t_type;
 
         std::stringstream testu(t_val.substr(0, i));
-        boost::uint64_t u;
+        uint64_t u;
         testu >> t_type >> u;
 
         bool unsignedrequired = false;
@@ -536,28 +544,19 @@ namespace chaiscript
           long_ = true;
         }
 
-        BOOST_ASSERT(sizeof(long) == sizeof(boost::uint64_t) || sizeof(long) * 2 == sizeof(boost::uint64_t));
+        static_assert(sizeof(long) == sizeof(uint64_t) || sizeof(long) * 2 == sizeof(uint64_t), "Unexpected sizing of integer types");
 
-#ifdef BOOST_MSVC
-		//Thank you MSVC, yes we know that a constant value is being used in the if
-		// statment in this compiler / architecture
-#pragma warning(push)
-#pragma warning(disable : 4127)
-#endif
-
-        if ( sizeof(long) < sizeof(boost::uint64_t) && (u >> ((sizeof(boost::uint64_t) - sizeof(long)) * 8)) > 0)
+        if ((sizeof(long) < sizeof(uint64_t)) 
+            && (u >> ((sizeof(uint64_t) - sizeof(long)) * 8)) > 0)
         {
           //requires something bigger than long
           longlong_ = true;
         }
 
-#ifdef BOOST_MSVC
-#pragma warning(pop)
-#endif
 
         if (longlong_)
         {
-          size = sizeof(boost::int64_t) * 8;
+          size = sizeof(int64_t) * 8;
         } else if (long_) {
           size = sizeof(long) * 8;
         } 
@@ -588,7 +587,7 @@ namespace chaiscript
         {
           if (longlong_)
           {
-            boost::uint64_t val;
+            uint64_t val;
             ss >> val;   
             return Boxed_Value(const_var(val));
           } else if (long_) {
@@ -603,7 +602,7 @@ namespace chaiscript
         } else {
           if (longlong_)
           {
-            boost::int64_t val;
+            int64_t val;
             ss >> val;   
             return Boxed_Value(const_var(val));
           } else if (long_) {
@@ -641,7 +640,7 @@ namespace chaiscript
             }
             if (Binary_()) {
               std::string match(start, m_input_pos);
-			  boost::int64_t temp_int = 0;
+              int64_t temp_int = 0;
               size_t pos = 0, end = match.length();
 
               while ((pos < end) && (pos < (2 + sizeof(int) * 8))) {
@@ -1250,6 +1249,8 @@ namespace chaiscript
          * Reads a comma-separated list of values from input
          */
         bool Arg_List() {
+
+          SkipWS(true);
           bool retval = false;
 
           size_t prev_stack_top = m_match_stack.size();
@@ -1268,6 +1269,8 @@ namespace chaiscript
             build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
           }
 
+          SkipWS(true);
+
           return retval;
         }
 
@@ -1276,6 +1279,7 @@ namespace chaiscript
          */
         bool Container_Arg_List() {
           bool retval = false;
+          SkipWS(true);
 
           size_t prev_stack_top = m_match_stack.size();
 
@@ -1309,6 +1313,8 @@ namespace chaiscript
             }
             build_match(AST_NodePtr(new eval::Arg_List_AST_Node()), prev_stack_top);
           }
+
+          SkipWS(true);
 
           return retval;
 
@@ -1724,7 +1730,7 @@ namespace chaiscript
           }
 
         }
-      
+
         /**
          * Reads a curly-brace C-style block from input
          */
@@ -1868,10 +1874,10 @@ namespace chaiscript
 
           size_t prev_stack_top = m_match_stack.size();
 
-          if (Keyword("var")) {
+          if (Keyword("auto") || Keyword("var")) {
             retval = true;
 
-            if (!Id(true)) {
+            if (!(Reference() || Id(true))) {
               throw exception::eval_error("Incomplete variable declaration", File_Position(m_line, m_col), *m_filename);
             }
 
@@ -1926,6 +1932,7 @@ namespace chaiscript
           if (Char('[')) {
             retval = true;
             Container_Arg_List();
+
             if (!Char(']')) {
               throw exception::eval_error("Missing closing square bracket ']' in container initializer", File_Position(m_line, m_col), *m_filename);
             }
@@ -1943,6 +1950,25 @@ namespace chaiscript
             else {
               build_match(AST_NodePtr(new eval::Inline_Array_AST_Node()), prev_stack_top);
             }
+          }
+
+          return retval;
+        }
+
+        bool Reference() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Symbol("&", false)) {
+            retval = true;
+
+            if (!Id(true)) {
+              throw exception::eval_error("Incomplete '&' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            build_match(AST_NodePtr(
+                  new eval::Reference_AST_Node()), prev_stack_top);
           }
 
           return retval;
@@ -2002,6 +2028,15 @@ namespace chaiscript
             build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
           }
           else if (Char('~', true)) {
+            retval = true;
+
+            if (!Operator(m_operators.size()-1)) {
+              throw exception::eval_error("Incomplete '~' expression", File_Position(m_line, m_col), *m_filename);
+            }
+
+            build_match(AST_NodePtr(new eval::Prefix_AST_Node()), prev_stack_top);
+          }
+          else if (Char('&', true)) {
             retval = true;
 
             if (!Operator(m_operators.size()-1)) {
@@ -2209,6 +2244,7 @@ namespace chaiscript
                 Symbol("-=", true, true) || Symbol("*=", true, true) || Symbol("/=", true, true) ||
                 Symbol("%=", true, true) || Symbol("<<=", true, true) || Symbol(">>=", true, true) ||
                 Symbol("&=", true, true) || Symbol("^=", true, true) || Symbol("|=", true, true)) {
+              SkipWS(true);
               if (!Equation()) {
                 throw exception::eval_error("Incomplete equation", File_Position(m_line, m_col), *m_filename);
               }
@@ -2304,6 +2340,11 @@ namespace chaiscript
               retval = true;
               saw_eol = false;
             }
+            else if (Block()) {
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            }
             else if (Equation()) {
               if (!saw_eol) {
                 throw exception::eval_error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
@@ -2313,11 +2354,6 @@ namespace chaiscript
               saw_eol = false;
             }
             else if (Eol()) {
-              has_more = true;
-              retval = true;
-              saw_eol = true;
-            }
-            else if (Block()) {
               has_more = true;
               retval = true;
               saw_eol = true;
@@ -2338,7 +2374,7 @@ namespace chaiscript
           m_input_end = t_input.end();
           m_line = 1;
           m_col = 1;
-          m_filename = boost::shared_ptr<std::string>(new std::string(t_fname));
+          m_filename = std::shared_ptr<std::string>(new std::string(t_fname));
 
           if ((t_input.size() > 1) && (t_input[0] == '#') && (t_input[1] == '!')) {
             while ((m_input_pos != m_input_end) && (!Eol())) {

@@ -7,8 +7,8 @@
 #ifndef CHAISCRIPT_COMMON_HPP_
 #define	CHAISCRIPT_COMMON_HPP_
 
-#include <chaiscript/dispatchkit/dispatchkit.hpp>
-#include <boost/enable_shared_from_this.hpp>
+#include <sstream>
+#include "../dispatchkit/dispatchkit.hpp"
 
 namespace chaiscript
 {
@@ -23,7 +23,7 @@ namespace chaiscript
                 Comparison, Addition, Subtraction, Multiplication, Division, Modulus, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
                 Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
                 Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, 
-                Logical_And, Logical_Or, Switch, Case, Default, Ternary_Cond, Noop
+                Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop
     };
   };
 
@@ -36,7 +36,7 @@ namespace chaiscript
                                     "Comparison", "Addition", "Subtraction", "Multiplication", "Division", "Modulus", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
                                     "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
                                     "Inline_Range", "Annotation", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Shift", "Equality", "Bitwise_And", "Bitwise_Xor", "Bitwise_Or", 
-                                    "Logical_And", "Logical_Or", "Switch", "Case", "Default", "Ternary Condition", "Noop"};
+                                    "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Ternary Condition", "Noop"};
 
       return ast_node_types[ast_node_type];
     }
@@ -54,7 +54,7 @@ namespace chaiscript
   };
 
   /// \brief Typedef for pointers to AST_Node objects. Used in building of the AST_Node tree
-  typedef boost::shared_ptr<struct AST_Node> AST_NodePtr;
+  typedef std::shared_ptr<struct AST_Node> AST_NodePtr;
 
 
   /// \brief Classes which may be thrown during error cases when ChaiScript is executing.
@@ -73,26 +73,26 @@ namespace chaiscript
       eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname,
           const std::vector<Boxed_Value> &t_parameters, const std::vector<chaiscript::Const_Proxy_Function> &t_functions,
           bool t_dot_notation,
-          const chaiscript::detail::Dispatch_Engine &t_ss)  :
+          const chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_NOEXCEPT :
         std::runtime_error(format(t_why, t_where, t_fname, t_parameters, t_dot_notation, t_ss)),
-        reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname), detail(format_detail(t_functions, t_dot_notation, t_ss))
+        reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname), detail(format_detail(t_functions, t_dot_notation, t_ss)) 
       {}
 
       eval_error(const std::string &t_why, 
            const std::vector<Boxed_Value> &t_parameters, const std::vector<chaiscript::Const_Proxy_Function> &t_functions,
            bool t_dot_notation,
-           const chaiscript::detail::Dispatch_Engine &t_ss) :
+           const chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_NOEXCEPT :
         std::runtime_error(format(t_why, t_parameters, t_dot_notation, t_ss)),
         reason(t_why), detail(format_detail(t_functions, t_dot_notation, t_ss))
       {}
 
 
-      eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) :
+      eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) CHAISCRIPT_NOEXCEPT :
         std::runtime_error(format(t_why, t_where, t_fname)),
         reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname)
       {}
 
-      eval_error(const std::string &t_why) throw()
+      eval_error(const std::string &t_why) CHAISCRIPT_NOEXCEPT
         : std::runtime_error("Error: \"" + t_why + "\" "),
         reason(t_why) 
       {}
@@ -119,7 +119,7 @@ namespace chaiscript
         return ss.str();
       }
 
-      virtual ~eval_error() throw() {}
+      virtual ~eval_error() CHAISCRIPT_NOEXCEPT {}
 
     private:
 
@@ -203,8 +203,8 @@ namespace chaiscript
         }
 
 
-        boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynfun 
-          = boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_func);
+        std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynfun 
+          = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_func);
 
         if (dynfun)
         {
@@ -212,8 +212,8 @@ namespace chaiscript
 
           if (f)
           {
-            boost::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynfunguard 
-              = boost::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(f);
+            std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynfunguard 
+              = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(f);
             if (dynfunguard)
             {
               retval += " : " + format_guard(dynfunguard->get_parse_tree());
@@ -378,22 +378,22 @@ namespace chaiscript
 
     /// Errors generated when loading a file
     struct file_not_found_error : public std::runtime_error {
-      file_not_found_error(const std::string &t_filename) throw()
+      file_not_found_error(const std::string &t_filename) CHAISCRIPT_NOEXCEPT
         : std::runtime_error("File Not Found: " + t_filename)
       { }
 
-      virtual ~file_not_found_error() throw() {}
+      virtual ~file_not_found_error() CHAISCRIPT_NOEXCEPT {}
     };
 
   }
 
  
   /// \brief Struct that doubles as both a parser ast_node and an AST node.
-  struct AST_Node : boost::enable_shared_from_this<AST_Node> {
+  struct AST_Node : std::enable_shared_from_this<AST_Node> {
     public:
       const std::string text;
-      const int identifier;
-      boost::shared_ptr<const std::string> filename;
+      const int identifier; //< \todo shouldn't this be a strongly typed enum value?
+      std::shared_ptr<const std::string> filename;
       File_Position start, end;
       std::vector<AST_NodePtr> children;
       AST_NodePtr annotation;
@@ -446,14 +446,14 @@ namespace chaiscript
       }
 
     protected:
-      AST_Node(const std::string &t_ast_node_text, int t_id, const boost::shared_ptr<std::string> &t_fname, 
+      AST_Node(const std::string &t_ast_node_text, int t_id, const std::shared_ptr<std::string> &t_fname, 
           int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
         text(t_ast_node_text), identifier(t_id), filename(t_fname),
         start(t_start_line, t_start_col), end(t_end_line, t_end_col)
       {
       }
 
-      AST_Node(const std::string &t_ast_node_text, int t_id, const boost::shared_ptr<std::string> &t_fname) :
+      AST_Node(const std::string &t_ast_node_text, int t_id, const std::shared_ptr<std::string> &t_fname) :
         text(t_ast_node_text), identifier(t_id), filename(t_fname) {}
 
       virtual ~AST_Node() {}

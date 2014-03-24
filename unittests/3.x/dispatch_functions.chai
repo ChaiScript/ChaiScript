@@ -1,0 +1,11 @@
+assert_equal(`==`, `==`);
+assert_not_equal(`==`, `<`);
+assert_equal(`<`.get_arity(), 2);
+assert_equal(`+`.get_annotation(), "Multiple method dispatch function wrapper.");
+assert_equal(get_arity.get_contained_functions().size(), 0);
+assert_equal(get_arity.get_arity(), 1);
+assert_equal(get_arity.get_param_types().size(), 2);
+
+var paramtypes = get_arity.get_param_types();
+
+assert_equal(true, paramtypes[1].bare_equal(Function_type));

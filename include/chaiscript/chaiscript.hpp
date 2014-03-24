@@ -74,16 +74,16 @@
 /// <hr>
 /// \subsection compiling Compiling ChaiScript Applications
 ///
-/// ChaiScript is a header only library with only two dependecies. boost::threads (optional) and the
+/// ChaiScript is a header only library with only one dependecy: The
 /// operating system provided dynamic library loader, which has to be specified on some platforms.
 /// 
 /// \subsubsection compilinggcc Compiling with GCC
 /// 
 /// To compile the above application on a Unix like operating system (MacOS, Linux) with GCC you need to link
-/// both boost::threads and the dynamic loader. For example:
+/// the dynamic loader. For example:
 ///
 /// \code
-/// gcc main.cpp -I/path/to/chaiscript/headers -ldl -lboost_threads
+/// gcc main.cpp -I/path/to/chaiscript/headers -ldl 
 /// \endcode
 ///
 /// Alternatively, you may compile without threading support.
@@ -248,7 +248,9 @@
 ///
 /// std::string append_string_int(const std::string &t_lhs, int t_rhs)
 /// {
-///   return t_lhs + boost::lexical_cast<std::string>(t_rhs);
+///   std::stringstream ss;
+///   ss << t_lhs << t_rhs;
+///   return ss.str();
 /// }
 ///
 /// chai.add(fun(append_string_int), "+");
@@ -300,8 +302,8 @@
 /// <hr>
 /// \subsection pointerconversions Pointer / Object Conversions
 ///
-/// As much as possible, ChaiScript attempts to convert between &, *, const &, const *, boost::shared_ptr<T>,
-/// boost::shared_ptr<const T>, boost::reference_wrapper<T>, boost::reference_wrapper<const T> and value types automatically.
+/// As much as possible, ChaiScript attempts to convert between &, *, const &, const *, std::shared_ptr<T>,
+/// std::shared_ptr<const T>, std::reference_wrapper<T>, std::reference_wrapper<const T> and value types automatically.
 ///
 /// If a chaiscript::var object was created in C++ from a pointer, it cannot be convered to a shared_ptr (this would add invalid reference counting).
 /// Const may be added, but never removed. 
@@ -314,12 +316,12 @@
 /// void fun3(int);
 /// void fun4(int &);
 /// void fun5(const int &);
-/// void fun5(boost::shared_ptr<int>);
-/// void fun6(boost::shared_ptr<const int>);
-/// void fun7(const boost::shared_ptr<int> &);
-/// void fun8(const boost::shared_ptr<const int> &);
-/// void fun9(boost::reference_wrapper<int>);
-/// void fun10(boost::reference_wrapper<const int>);
+/// void fun5(std::shared_ptr<int>);
+/// void fun6(std::shared_ptr<const int>);
+/// void fun7(const std::shared_ptr<int> &);
+/// void fun8(const std::shared_ptr<const int> &);
+/// void fun9(std::reference_wrapper<int>);
+/// void fun10(std::reference_wrapper<const int>);
 ///
 /// int main()
 /// {
@@ -380,10 +382,10 @@
 /// \subsection functionobjects Function Objects
 ///
 /// Functions are first class objects in Chaiscript and ChaiScript supports automatic conversion
-/// between ChaiScript functions and boost::function objects.
+/// between ChaiScript functions and std::function objects.
 ///
 /// \code
-/// void callafunc(const boost::function<void (const std::string &)> &t_func)
+/// void callafunc(const std::function<void (const std::string &)> &t_func)
 /// {
 ///   t_func("bob");
 /// }
@@ -393,9 +395,9 @@
 ///   chaiscript::ChaiScript chai;
 ///   chai.add(chaiscript::fun(&callafunc), "callafunc");
 ///   chai("callafunc(fun(x) { print(x); })"); // pass a lambda function to the registered function
-///                                            // which expects a typed boost::function
+///                                            // which expects a typed std::function
 ///
-///   boost::function<void ()> f = chai.eval<boost::function<void ()> >("dump_system");
+///   std::function<void ()> f = chai.eval<std::function<void ()> >("dump_system");
 ///   f(); // call the ChaiScript function dump_system, from C++
 /// }
 /// \endcode
@@ -410,7 +412,7 @@
 /// 
 /// Thread safety can be disabled by defining CHAISCRIPT_NO_THREADS when using the library.
 ///
-/// Disabling thread safety increases performance and removes the requirement for boost_threads.
+/// Disabling thread safety increases performance in many cases.
 ///
 /// <hr>
 ///
@@ -746,20 +748,16 @@
 /// \namespace chaiscript::detail
 /// \brief Classes and functions reserved for internal use. Items in this namespace are not supported.
 
+#include "chaiscript_defines.hpp"
+
 #include "dispatchkit/dispatchkit.hpp"
-#include "dispatchkit/bootstrap.hpp"
-#include "dispatchkit/bootstrap_stl.hpp"
 #include "dispatchkit/function_call.hpp"
 #include "dispatchkit/dynamic_object.hpp"
 #include "dispatchkit/boxed_number.hpp"
 
-#ifdef  BOOST_HAS_DECLSPEC
-#define CHAISCRIPT_MODULE_EXPORT extern "C" __declspec(dllexport)
-#else
-#define CHAISCRIPT_MODULE_EXPORT extern "C" 
-#endif
-
 #include "language/chaiscript_eval.hpp"
 #include "language/chaiscript_engine.hpp"
+
+
 
 #endif /* CHAISCRIPT_HPP_ */

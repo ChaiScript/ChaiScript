@@ -1,0 +1,19 @@
+auto l = 5
+auto & k = l;
+
+
+assert_equal(l, k)
+
+l = 10
+
+assert_equal(10, l)
+assert_equal(k, l)
+
+auto & j
+j = l // assignment outside of declaration does *not* result in reference assignment
+j = 15
+
+assert_equal(15, j)
+assert_equal(k, l)
+assert_equal(10, l)
+

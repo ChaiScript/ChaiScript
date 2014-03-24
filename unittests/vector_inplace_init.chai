@@ -1,5 +1,6 @@
-var x = [1, 2, 3]
+auto x = [1, 2, 3]
 assert_equal(3, x.size())
+
 
 
 
@@ -12,3 +13,9 @@ assert_equal(1, y[0]);
 i = 3;
 assert_equal(3, i);
 assert_equal(1, y[0]);
+
+
+// make sure initialization with a break in the middle works as expected
+var a = [0.0,0.0,
+  1.0,1.0]
+ 

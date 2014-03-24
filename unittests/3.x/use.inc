@@ -1,0 +1,4 @@
+def greet {
+	return("hello")
+}
+

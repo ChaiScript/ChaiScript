@@ -1,0 +1,13 @@
+var i = 3
+var b1 = false;
+var b2 = false;
+
+if (i == 2) {
+  b1 = true;
+}
+else {
+  b2 = true;
+}
+
+assert_equal(false, b1);
+assert_equal(true, b2);

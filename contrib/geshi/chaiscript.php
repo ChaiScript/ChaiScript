@@ -51,7 +51,7 @@ $language_data = array (
             'break', 'else', 'else if', 'eval', 'for', 'if', 'return', 'while', 'try', 'catch', 'finally', 'case', 'switch', 'default',
             ),
         2 => array(
-            'def', 'false', 'fun', 'true', 'var', 'attr',
+            'def', 'false', 'fun', 'true', 'var', 'auto', 'attr',
             ),
         3 => array(
             // built in functions

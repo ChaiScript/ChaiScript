@@ -1,0 +1,16 @@
+var i = 1.0;
+var j = 2.0;
+var k = 3.0;
+
+assert_equal(3, i + j)
+assert_equal(1.0, +i)
+assert_equal(-1, i-j)
+assert_equal(-1, -i)
+assert_equal(1.5, k/j)
+assert_equal(6, j*k)
+
+assert_equal(0, i -= i)
+assert_equal(3, j *= 1.5)
+assert_equal(1.5, j /= 2)
+assert_equal(2.5, j += 1)
+assert_throws("No modulus for float", fun() { k % 2 } );

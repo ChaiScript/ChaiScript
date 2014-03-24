@@ -14,6 +14,7 @@
 #define CHAISCRIPT_BOOTSTRAP_STL_HPP_
 
 #include "dispatchkit.hpp"
+#include "bootstrap.hpp"
 #include "register_function.hpp"
 
 namespace chaiscript 
@@ -143,88 +144,12 @@ namespace chaiscript
         };
 
       namespace detail {
-        template<typename T>
-          int return_int_impl(const boost::function<typename T::size_type (const T *)> &t_func, const T *t_obj)
-          {
-#ifdef BOOST_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4267)
-#endif
-            return t_func(t_obj);
-#ifdef BOOST_MSVC
-#pragma warning(pop)
-#endif
-          }
 
         template<typename T>
-        boost::function<int (const T *)> return_int(size_t (T::*t_func)() const)
-          {
-            return boost::bind(&return_int_impl<T>, boost::function<size_t (const T *)>(boost::mem_fn(t_func)), _1);
-          }
-
-        template<typename T, typename P1>
-          int return_int_impl(const boost::function<typename T::size_type (const T *, P1)> &t_func, const T *t_obj, P1 p1)
-          {
-#ifdef BOOST_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4267)
-#endif
-            return t_func(t_obj, p1);
-#ifdef BOOST_MSVC
-#pragma warning(pop)
-#endif
-          }
-
-        template<typename T, typename P1>
-          int return_int_impl_non_const(const boost::function<typename T::size_type (T *, P1)> &t_func, T *t_obj, P1 p1)
-          {
-#ifdef BOOST_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4267)
-#endif
-            return t_func(t_obj, p1);
-#ifdef BOOST_MSVC
-#pragma warning(pop)
-#endif
-          }
-
-        template<typename T, typename P1>
-        boost::function<int (const T *, P1)> return_int(size_t (T::*t_func)(P1) const)
-          {
-            return boost::bind(&return_int_impl<T, P1>, boost::function<size_t (const T *, P1)>(boost::mem_fn(t_func)), _1, _2);
-          }
-
-        template<typename T, typename P1>
-        boost::function<int (T *, P1)> return_int(size_t (T::*t_func)(P1) )
-          {
-            return boost::bind(&return_int_impl_non_const<T, P1>, boost::function<size_t (T*, P1)>(boost::mem_fn(t_func)), _1, _2);
-          }
-
-
-        template<typename T, typename P1, typename P2>
-          int return_int_impl(const boost::function<typename T::size_type (const T *, P1, P2)> &t_func, const T *t_obj, P1 p1, P2 p2)
-          {
-#ifdef BOOST_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4267)
-#endif
-            return t_func(t_obj, p1, p2);
-#ifdef BOOST_MSVC
-#pragma warning(pop)
-#endif
-          }
-
-        template<typename StringType, StringType (StringType::*Func)(typename StringType::size_type, typename StringType::size_type) const >
-        StringType substr_helper(const StringType &str, int begin, int end)
+        size_t count(const T &t_target, const typename T::key_type &t_key)
         {
-          return (str.*Func)(begin, end);
+          return t_target.count(t_key);
         }
-
-        template<typename T, typename P1, typename P2>
-        boost::function<int (const T *, P1, P2)> return_int(size_t (T::*t_func)(P1, P2) const)
-          {
-            return boost::bind(&return_int_impl<T, P1, P2>, boost::function<size_t (const T *, P1, P2)>(boost::mem_fn(t_func)), _1, _2, _3);
-          }
 
         template<typename T>
           void insert(T &t_target, const T &t_other)
@@ -237,8 +162,6 @@ namespace chaiscript
           {
             t_target.insert(t_val);
           }
-
-
 
 
 
@@ -317,11 +240,11 @@ namespace chaiscript
           //In the interest of runtime safety for the m, we prefer the at() method for [] access,
           //to throw an exception in an out of bounds condition.
           m->add(
-              fun(boost::function<typename ContainerType::reference (ContainerType *, int)>
-                (boost::mem_fn(static_cast<indexoper>(&ContainerType::at)))), "[]");
+              fun(std::function<typename ContainerType::reference (ContainerType *, int)>
+                (std::mem_fn(static_cast<indexoper>(&ContainerType::at)))), "[]");
           m->add(
-              fun(boost::function<typename ContainerType::const_reference (const ContainerType *, int)>
-                (boost::mem_fn(static_cast<constindexoper>(&ContainerType::at)))), "[]");
+              fun(std::function<typename ContainerType::const_reference (const ContainerType *, int)>
+                (std::mem_fn(static_cast<constindexoper>(&ContainerType::at)))), "[]");
 
           return m;
         }
@@ -343,10 +266,9 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
-          boost::function<int (const ContainerType *)> f = detail::return_int(&ContainerType::size);
-          m->add(fun(f), "size");
-          m->add(fun<bool (ContainerType::*)() const>(&ContainerType::empty), "empty");
-          m->add(fun<void (ContainerType::*)()>(&ContainerType::clear), "clear");
+          m->add(fun( std::function<size_t (const ContainerType *)>( [](const ContainerType *a) { return a->size(); } ) ), "size");
+          m->add(fun( std::function<bool (const ContainerType *)>( [](const ContainerType *a) { return a->empty(); } ) ), "empty");
+          m->add(fun( std::function<void (ContainerType *)>( [](ContainerType *a) { a->clear(); } ) ), "clear");
           return m;
         }
 
@@ -472,13 +394,11 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr unique_associative_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
-          m->add(fun(boost::function<int (const ContainerType *, const typename ContainerType::key_type &)>(detail::return_int(&ContainerType::count))), "count");
+          m->add(fun(detail::count<ContainerType>), "count");
 
+          typedef size_t (ContainerType::*erase_ptr)(const typename ContainerType::key_type &);
 
-          typedef size_t (ContainerType::*erase)(const typename ContainerType::key_type &);
-          erase eraseptr(&ContainerType::erase);
-
-          m->add(fun(boost::function<int (ContainerType *, const typename ContainerType::key_type &)>(detail::return_int(eraseptr))), "erase");
+          m->add(fun(static_cast<erase_ptr>(&ContainerType::erase)), "erase");
 
           m->add(fun(&detail::insert<ContainerType>), "insert");
 
@@ -560,8 +480,8 @@ namespace chaiscript
                        if ( rhs.size() != this.size() ) {    \
                          return false;  \
                        } else {  \
-                         var r1 = range(this); \
-                         var r2 = range(rhs);  \
+                         auto r1 = range(this); \
+                         auto r2 = range(rhs);  \
                          while (!r1.empty()) \
                          {  \
                            if (!eq(r1.front(), r2.front())) \
@@ -578,32 +498,6 @@ namespace chaiscript
 
           return m;
         }
-
-        namespace detail {
-          template<typename String>
-          struct apple_string_workarounds
-          {
-            /// The latest version of MacOS has a broken std::string implementation which will not allow
-            /// us to take pointers to the members. Code compiles, but does not link
-            /// \todo re-evaluate at some point
-
-            static size_t find(const String *s, const String &w, int pos) { return s->find(w, pos); }
-            static size_t rfind(const String *s, const String &w, size_t pos) { return s->rfind(w, pos); }
-            static size_t find_first_of(const String *s, const String &w, size_t pos) { return s->find_first_of(w, pos); }
-            static size_t find_last_of(const String *s, const String &w, size_t pos) { return s->find_last_of(w, pos); }
-            static size_t find_first_not_of(const String *s, const String &w, size_t pos) { return s->find_first_not_of(w, pos); }
-            static size_t find_last_not_of(const String *s, const String &w, size_t pos) { return s->find_last_not_of(w, pos); }
-
-            static void clear(String *s) { s->clear(); }
-            static bool empty(const String *s) { return s->empty(); }
-            static size_t size(const String *s) { return s->size(); }
- 
-            static std::string substr(const String *s, size_t pos, size_t len) { return s->substr(pos,len); }
-            static const char *c_str(const String *s) {  return s->c_str(); }
-            static const char *data(const String *s) { return s->data(); }
-          };
-        }
-
 
       /// Add a String container
       /// http://www.sgi.com/tech/stl/basic_string.html
@@ -631,20 +525,23 @@ namespace chaiscript
           }
           m->add(fun(&String::push_back), push_back_name);
 
-            
-          m->add(fun(&detail::apple_string_workarounds<String>::find), "find");
-          m->add(fun(&detail::apple_string_workarounds<String>::rfind), "rfind");
-          m->add(fun(&detail::apple_string_workarounds<String>::find_first_of), "find_first_of");
-          m->add(fun(&detail::apple_string_workarounds<String>::find_last_of), "find_last_of");
-          m->add(fun(&detail::apple_string_workarounds<String>::find_first_not_of), "find_first_not_of");
-          m->add(fun(&detail::apple_string_workarounds<String>::find_last_not_of), "find_last_not_of");
-          m->add(fun(&detail::apple_string_workarounds<String>::clear), "clear");
-          m->add(fun(&detail::apple_string_workarounds<String>::size), "size");
-          m->add(fun(&detail::apple_string_workarounds<String>::empty), "empty");
-          m->add(fun(&detail::apple_string_workarounds<String>::substr), "substr");
-          m->add(fun(&detail::apple_string_workarounds<String>::c_str), "c_str");
-          m->add(fun(&detail::apple_string_workarounds<String>::data), "data");
+          typedef std::function<size_t (const String *, const String &, size_t)> find_func;
 
+
+          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find(f, pos); } )), "find");
+          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->rfind(f, pos); } ) ), "rfind");
+          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find_first_of(f, pos); } ) ), "find_first_of");
+          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find_last_of(f, pos); } ) ), "find_last_of");
+          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find_last_not_of(f, pos); } ) ), "find_last_not_of");
+          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find_first_not_of(f, pos); } ) ), "find_first_not_of");
+
+	        m->add(fun( std::function<void (String *)>( [](String *s) { return s->clear(); } ) ), "clear");
+	        m->add(fun( std::function<bool (const String *)>( [](const String *s) { return s->empty(); } ) ), "empty");
+	        m->add(fun( std::function<size_t (const String *)>( [](const String *s) { return s->size(); } ) ), "size");
+
+          m->add(fun( std::function<const char *(const String *)>( [](const String *s) { return s->c_str(); } ) ), "c_str");
+          m->add(fun( std::function<const char *(const String *)>( [](const String *s) { return s->data(); } ) ), "data");
+          m->add(fun( std::function<String (const String *, int, int)>( [](const String *s, int pos, int len) { return s->substr(pos, len); } ) ), "substr");          
 
           return m;
         }
@@ -654,3 +551,5 @@ namespace chaiscript
 
 
 #endif
+
+

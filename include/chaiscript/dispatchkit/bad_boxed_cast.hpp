@@ -22,25 +22,25 @@ namespace chaiscript
     {
       public:
         bad_boxed_cast(const Type_Info &t_from, const std::type_info &t_to,
-            const std::string &t_what) throw()
+            const std::string &t_what) CHAISCRIPT_NOEXCEPT
           : from(t_from), to(&t_to), m_what(t_what)
         {
         }
 
-        bad_boxed_cast(const Type_Info &t_from, const std::type_info &t_to) throw()
+        bad_boxed_cast(const Type_Info &t_from, const std::type_info &t_to) CHAISCRIPT_NOEXCEPT
           : from(t_from), to(&t_to), m_what("Cannot perform boxed_cast")
         {
         }
 
-        bad_boxed_cast(const std::string &t_what) throw()
+        bad_boxed_cast(const std::string &t_what) CHAISCRIPT_NOEXCEPT
           : to(0), m_what(t_what)
         {
         }
 
-        virtual ~bad_boxed_cast() throw() {}
+        virtual ~bad_boxed_cast() CHAISCRIPT_NOEXCEPT {} 
 
         /// \brief Description of what error occured
-        virtual const char * what() const throw()
+        virtual const char * what() const CHAISCRIPT_NOEXCEPT
         {
           return m_what.c_str();
         }

@@ -1,0 +1,1 @@
+assert_equal(3, find_last_of("abab", "bec"))

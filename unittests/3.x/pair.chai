@@ -1,0 +1,5 @@
+var p = Pair("Hello", "World")
+
+assert_equal(p.first, "Hello")
+assert_equal(p.second, "World")
+

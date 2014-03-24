@@ -23,7 +23,7 @@ namespace chaiscript
         template<typename T>
         void throw_type(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
         {
-          try { T t = t_engine.boxed_cast<T>(bv); throw t; } catch (const exception::bad_boxed_cast &) {}
+          try { T t = t_engine.boxed_cast<T>(bv); throw t; } catch (const chaiscript::exception::bad_boxed_cast &) {}
         }
     };
 
@@ -140,7 +140,7 @@ namespace chaiscript
   ///
   /// \sa chaiscript::exception_specification for creation of chaiscript::Exception_Handler objects
   /// \sa \ref exceptions
-  typedef boost::shared_ptr<detail::Exception_Handler_Base> Exception_Handler;
+  typedef std::shared_ptr<detail::Exception_Handler_Base> Exception_Handler;
 
   /// \brief creates a chaiscript::Exception_Handler which handles one type of exception unboxing
   /// \sa \ref exceptions

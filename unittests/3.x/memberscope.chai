@@ -1,0 +1,12 @@
+attr Vector3::x
+attr Vector3::y
+attr Vector3::z
+
+def Vector3::Vector3(x, y, z) {
+    this.x = x
+    this.y = y
+    this.z = z
+}
+
+var v = Vector3(1,2,3);
+assert_equal(1, v.x);

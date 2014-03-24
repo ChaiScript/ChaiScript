@@ -1,0 +1,5 @@
+var v = concat([1, 2], [3, 4]);
+
+assert_equal(4, v.size());
+assert_equal(1, v[0]);
+assert_equal(4, v[3]);

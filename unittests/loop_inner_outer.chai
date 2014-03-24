@@ -1,7 +1,7 @@
-var total = 0
+auto total = 0
 
-for (var i = 0; i < 10; ++i) {
-  for (var j = 0; j < 10; ++j) {
+for (auto i = 0; i < 10; ++i) {
+  for (auto j = 0; j < 10; ++j) {
     total += 1
   }
 }

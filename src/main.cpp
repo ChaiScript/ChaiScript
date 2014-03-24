@@ -6,7 +6,7 @@
 
 #include <iostream>
 #include <list>
-#include <boost/algorithm/string/trim.hpp>
+#include <regex>
 
 #define _CRT_SECURE_NO_WARNINGS
 #include <chaiscript/chaiscript.hpp>
@@ -15,27 +15,39 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #else
+
+char *mystrdup (const char *s) {
+  size_t len = strlen(s) + 1; // Space for length plus nul
+  char *d = static_cast<char*>(malloc (len));   
+  if (d == nullptr) return nullptr;          // No memory
+#ifdef CHAISCRIPT_MSVC
+  strcpy_s(d, len, s);                        // Copy the characters
+#else
+  strcpy(d,s);                        // Copy the characters
+#endif
+  return d;                            // Return the new string
+}
+
 char* readline(const char* p)
 {
   std::string retval;
   std::cout << p ;
   std::getline(std::cin, retval);
-#ifdef BOOST_MSVC
-  return std::cin.eof() ? NULL : _strdup(retval.c_str());
-#else
-  return std::cin.eof() ? NULL : strdup(retval.c_str());
-#endif
+  return std::cin.eof() ? NULL : mystrdup(retval.c_str());
 }
+
+
 void add_history(const char*){}
 void using_history(){}
 #endif
 
 
-void *cast_module_symbol(std::string (*t_path)())
+
+void *cast_module_symbol(std::vector<std::string> (*t_path)())
 {
   union cast_union
   {
-    std::string (*in_ptr)();
+    std::vector<std::string> (*in_ptr)();
     void *out_ptr;
   };
 
@@ -44,22 +56,27 @@ void *cast_module_symbol(std::string (*t_path)())
   return c.out_ptr;
 }
 
-std::string default_search_path()
+std::vector<std::string> default_search_paths()
 {
-#ifdef BOOST_WINDOWS  // force no unicode
+  std::vector<std::string> paths;
+
+#ifdef CHAISCRIPT_WINDOWS  // force no unicode
   CHAR path[4096];
   int size = GetModuleFileNameA(0, path, sizeof(path)-1);
 
   std::string exepath(path, size);
 
-  size_t secondtolastslash = exepath.rfind('\\', exepath.rfind('\\') - 1);
-  if (secondtolastslash != std::string::npos)
+  size_t lastslash = exepath.rfind('\\');
+  size_t secondtolastslash = exepath.rfind('\\', lastslash - 1);
+  if (lastslash != std::string::npos)
   {
-    return exepath.substr(0, secondtolastslash) + "\\lib\\chaiscript\\";
-  } else {
-    return "";
+    paths.push_back(exepath.substr(0, lastslash));
   }
 
+  if (secondtolastslash != std::string::npos)
+  {
+    return {exepath.substr(0, secondtolastslash) + "\\lib\\chaiscript\\"};
+  }
 #else
 
   std::string exepath;
@@ -90,25 +107,31 @@ std::string default_search_path()
 
   if (exepath.empty())
   {
-    Dl_info rInfo; 
+    Dl_info rInfo;
     memset( &rInfo, 0, sizeof(rInfo) ); 
-    if ( !dladdr(cast_module_symbol(&default_search_path), &rInfo)  || !rInfo.dli_fname ) { 
-      return "";
+    if ( !dladdr(cast_module_symbol(&default_search_paths), &rInfo)  || !rInfo.dli_fname ) { 
+      return paths;
     }
 
     exepath = std::string(rInfo.dli_fname);
   }
 
-  size_t secondtolastslash = exepath.rfind('/', exepath.rfind('/') - 1);
+  size_t lastslash = exepath.rfind('/');
+
+  size_t secondtolastslash = exepath.rfind('/', lastslash - 1);
+  if (lastslash != std::string::npos)
+  {
+    paths.push_back(exepath.substr(0, lastslash));
+  }
+
   if (secondtolastslash != std::string::npos)
   {
-    return exepath.substr(0, secondtolastslash) + "/lib/chaiscript/";
-  } else {
-    return "";
+    paths.push_back(exepath.substr(0, secondtolastslash) + "/lib/chaiscript/");
   }
 #endif
-}
 
+  return paths;
+}
 
 void help(int n) {
   if ( n >= 0 ) {
@@ -132,7 +155,7 @@ void version(int){
   std::cout << "chai: compiled " << __TIME__ << " " << __DATE__ << std::endl;
 }
 
-bool throws_exception(const boost::function<void ()> &f)
+bool throws_exception(const std::function<void ()> &f)
 {
   try {
     f();
@@ -143,7 +166,7 @@ bool throws_exception(const boost::function<void ()> &f)
   return false;
 }
 
-chaiscript::exception::eval_error get_eval_error(const boost::function<void ()> &f)
+chaiscript::exception::eval_error get_eval_error(const std::function<void ()> &f)
 {
   try {
     f();
@@ -160,18 +183,21 @@ std::string get_next_command() {
     char *input_raw = readline("eval> ");
     if ( input_raw ) {
       add_history(input_raw);
-      std::string val(input_raw);     
-      size_t pos = val.find_first_not_of("\t \n");    
-      if (pos != std::string::npos)   
-      {      
-        val.erase(0, pos);  
-      }    
-      pos = val.find_last_not_of("\t \n");   
-      if (pos != std::string::npos)   
-      {      
-        val.erase(pos+1, std::string::npos);    
-      }   
+
+      std::string val(input_raw);
+      size_t pos = val.find_first_not_of("\t \n");
+      if (pos != std::string::npos)
+      {
+        val.erase(0, pos);
+      }
+      pos = val.find_last_not_of("\t \n");
+      if (pos != std::string::npos)
+      {
+        val.erase(pos+1, std::string::npos);
+      }
+
       retval = val;
+
       ::free(input_raw);
     }
   }
@@ -204,7 +230,7 @@ void interactive(chaiscript::ChaiScript& chai)
       //Then, we try to print the result of the evaluation to the user
       if (!val.get_type_info().bare_equal(chaiscript::user_type<void>())) {
         try {
-          std::cout << chai.eval<boost::function<std::string (const chaiscript::Boxed_Value &bv)> >("to_string")(val) << std::endl;
+          std::cout << chai.eval<std::function<std::string (const chaiscript::Boxed_Value &bv)> >("to_string")(val) << std::endl;
         }
         catch (...) {} //If we can't, do nothing
       }
@@ -225,11 +251,9 @@ void interactive(chaiscript::ChaiScript& chai)
 
 int main(int argc, char *argv[])
 {
-  std::vector<std::string> usepaths;
-  std::vector<std::string> modulepaths;
 
   // Disable deprecation warning for getenv call.
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
 #pragma warning(push)
 #pragma warning(disable : 4996)
 #endif
@@ -237,18 +261,20 @@ int main(int argc, char *argv[])
   const char *usepath = getenv("CHAI_USE_PATH");
   const char *modulepath = getenv("CHAI_MODULE_PATH");
 
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)
 #endif
 
+  std::vector<std::string> usepaths;
   usepaths.push_back("");
   if (usepath)
   {
     usepaths.push_back(usepath);
   }
 
-  std::string searchpath = default_search_path();
-  modulepaths.push_back(searchpath);
+  std::vector<std::string> modulepaths;
+  std::vector<std::string> searchpaths = default_search_paths();
+  modulepaths.insert(modulepaths.end(), searchpaths.begin(), searchpaths.end());
   modulepaths.push_back("");
   if (modulepath)
   {

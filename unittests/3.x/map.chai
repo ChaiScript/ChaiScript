@@ -1,0 +1,1 @@
+assert_equal([true, false, true], map([1,2,3], odd))

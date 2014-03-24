@@ -5,32 +5,20 @@
 // http://www.chaiscript.com
 
 #include <iostream>
+#include <ctime>
 
 #include <chaiscript/chaiscript.hpp>
+#include <chaiscript/dispatchkit/bootstrap_stl.hpp>
 #include <chaiscript/dispatchkit/function_call.hpp>
-#include <boost/function.hpp>
-
-#ifdef __llvm__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#endif
-
-#include <boost/date_time/posix_time/posix_time.hpp>
-
-#ifdef __llvm__
-#pragma clang diagnostic pop
-#endif
-
-#include <boost/regex.hpp>
 
 void log(const std::string &msg)
 {
-  std::cout << "[" << boost::posix_time::microsec_clock::local_time() << "] " << msg << std::endl;
+  std::cout << "[" << time(nullptr) << "] " << msg << std::endl;
 }
 
 void log(const std::string &module, const std::string &msg)
 {
-  std::cout << "[" << boost::posix_time::microsec_clock::local_time() << "] <" << module << "> " << msg << std::endl;
+  std::cout << "[" << time(nullptr) << "] <" << module << "> " << msg << std::endl;
 }
 
 void bound_log(const std::string &msg)
@@ -51,10 +39,10 @@ void hello_constructor(const chaiscript::Boxed_Value & /*o*/)
 
 struct System
 {
-  std::map<std::string, boost::function<std::string (const std::string &) > > m_callbacks;
+  std::map<std::string, std::function<std::string (const std::string &) > > m_callbacks;
 
   void add_callback(const std::string &t_name, 
-      const boost::function<std::string (const std::string &)> &t_func)
+      const std::function<std::string (const std::string &)> &t_func)
   {
     m_callbacks[t_name] = t_func;
   }
@@ -63,7 +51,7 @@ struct System
   void do_callbacks(const std::string &inp)
   {
     log("Running Callbacks: " + inp);
-    for (std::map<std::string, boost::function<std::string (const std::string &)> >::iterator itr = m_callbacks.begin();
+    for (std::map<std::string, std::function<std::string (const std::string &)> >::iterator itr = m_callbacks.begin();
          itr != m_callbacks.end();
          ++itr)
     {
@@ -72,7 +60,7 @@ struct System
   }
 };
 
-void take_shared_ptr(const boost::shared_ptr<const std::string> &p)
+void take_shared_ptr(const std::shared_ptr<const std::string> &p)
 {
   std::cout << *p << std::endl;
 }
@@ -98,7 +86,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   // Let's use chaiscript to add a new lambda callback to our system. 
   // The function "{ 'Callback1' + x }" is created in chaiscript and passed into our C++ application
   // in the "add_callback" function of struct System the chaiscript function is converted into a 
-  // boost::function, so it can be handled and called easily and type-safely
+  // std::function, so it can be handled and called easily and type-safely
   chai.eval("system.add_callback(\"#1\", fun(x) { \"Callback1 \" + x });");
   
   // Because we are sharing the "system" object with the chaiscript engine we have equal
@@ -119,14 +107,14 @@ int main(int /*argc*/, char * /*argv*/[]) {
   // A shortcut to using eval is just to use the chai operator()
   chai("log(\"Test Module\", \"Test Message\");");
 
-  //Finally, it is possible to register any boost::function as a system function, in this 
+  //Finally, it is possible to register any std::function as a system function, in this 
   //way, we can, for instance add a bound member function to the system
-  chai.add(fun(&System::do_callbacks, boost::ref(system), std::string("Bound Test")), "do_callbacks");
+  chai.add(fun(&System::do_callbacks, std::ref(system), std::string("Bound Test")), "do_callbacks");
 
   //Call bound version of do_callbacks
   chai("do_callbacks()");
 
-  boost::function<void ()> caller = chai.eval<boost::function<void ()> >("fun() { system.do_callbacks(\"From Functor\"); }");
+  std::function<void ()> caller = chai.eval<std::function<void ()> >("fun() { system.do_callbacks(\"From Functor\"); }");
   caller();
 
 
@@ -150,13 +138,13 @@ int main(int /*argc*/, char * /*argv*/[]) {
   //To do: Add examples of handling Boxed_Values directly when needed
 
   //Creating a functor on the stack and using it immediatly 
-  int x = chai.eval<boost::function<int (int, int)> >("fun (x, y) { return x + y; }")(5, 6);
+  int x = chai.eval<std::function<int (int, int)> >("fun (x, y) { return x + y; }")(5, 6);
 
   std::stringstream ss;
   ss << x;
   log("Functor test output", ss.str());
 
-  chai.add(var(boost::shared_ptr<int>()), "nullvar");
+  chai.add(var(std::shared_ptr<int>()), "nullvar");
   chai("print(\"This should be true.\"); print(nullvar.is_var_null())");
 
   // test the global const action
@@ -178,7 +166,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   //Dynamic objects test
   chai.add(chaiscript::Proxy_Function(new dispatch::detail::Dynamic_Object_Function("TestType", fun(&hello_world))), "hello_world");
   chai.add(chaiscript::Proxy_Function(new dispatch::detail::Dynamic_Object_Constructor("TestType", fun(&hello_constructor))), "TestType");
-//  chai.add(fun(boost::function<Boxed_Value (dispatch::Dynamic_Object &)>(boost::bind(&dispatch::detail::Dynamic_Object_Attribute::func, "TestType", "attr", _1))), "attr");
+//  chai.add(fun(std::function<Boxed_Value (dispatch::Dynamic_Object &)>(std::bind(&dispatch::detail::Dynamic_Object_Attribute::func, "TestType", "attr", std::placeholders::_1))), "attr");
 
   chai.eval("var x = TestType()");
 //  chai.eval("x.attr = \"hi\"");

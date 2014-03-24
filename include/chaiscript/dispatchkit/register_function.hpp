@@ -9,12 +9,6 @@
 
 #include "dispatchkit.hpp"
 #include "bind_first.hpp"
-#include <boost/function.hpp>
-#include <boost/bind.hpp>
-#include <boost/function_types/components.hpp>
-#include <boost/function_types/function_type.hpp>
-#include <boost/function_types/is_member_object_pointer.hpp>
-#include <boost/function_types/is_member_function_pointer.hpp>
 
 namespace chaiscript
 {
@@ -22,39 +16,53 @@ namespace chaiscript
   {
     namespace detail
     {
-      template<bool Object, bool MemFn>
+      template<typename T>
+        struct FunctionSignature
+        {
+        };
+
+      template<typename Sig>
+        struct FunctionSignature<std::function<Sig> >
+        {
+          typedef Sig Signature;
+        };
+
+      template<typename Ret, typename ... Args> 
+        std::function<Ret (Args...) > to_function(Ret (*func)(Args...))
+        {
+          return std::function<Ret (Args...)>(func);
+        }
+
+      template<typename Ret, typename Class, typename ... Args> 
+        std::function<Ret (Class &, Args...) > to_function(Ret (Class::*func)(Args...))
+        {
+          /// \todo this std::mem_fn wrap shouldn't be necessary but type conversions for 
+          ///       std::function for member function pointers seems to be broken in MSVC
+          return std::function<Ret(Class &, Args...)>(std::mem_fn(func));
+        }
+
+      template<typename Ret, typename Class, typename ... Args> 
+        std::function<Ret (const Class &, Args...) > to_function(Ret (Class::*func)(Args...) const)
+        {
+          /// \todo this std::mem_fn wrap shouldn't be necessary but type conversions for 
+          ///       std::function for member function pointers seems to be broken in MSVC
+          return std::function<Ret (const Class &, Args...)>(std::mem_fn(func));
+        }
+
+      template<bool Object>
         struct Fun_Helper
         {
           template<typename T>
             static Proxy_Function go(T t)
             {
+              /// \todo is it possible to reduce the number of templates generated here?
               return Proxy_Function(
-                  new Proxy_Function_Impl<
-                  typename boost::function_types::function_type<boost::function_types::components<T> >::type> (
-                    boost::function< 
-                    typename boost::function_types::function_type<boost::function_types::components<T> >::type 
-                    >(t)));
+                  new Proxy_Function_Impl<typename FunctionSignature<decltype(to_function(t)) >::Signature>(to_function(t)));
             }      
         };
 
       template<>
-        struct Fun_Helper<false, true>
-        {
-          template<typename T>
-            static Proxy_Function go(T t)
-            {
-              return Proxy_Function(
-                  new Proxy_Function_Impl<
-                  typename boost::function_types::function_type<boost::function_types::components<T> >::type> (
-                    boost::function< 
-                    typename boost::function_types::function_type<boost::function_types::components<T> >::type 
-                    >(boost::mem_fn(t))));
-            }      
-        };
-
-
-      template<>
-        struct Fun_Helper<true, false>
+        struct Fun_Helper<true>
         {
           template<typename T, typename Class>
             static Proxy_Function go(T Class::* m)
@@ -64,23 +72,6 @@ namespace chaiscript
         };
     }
   }
-
-  /// \brief Creates a new Proxy_Function object from a boost::function object
-  /// \param[in] f boost::function to expose to ChaiScript
-  ///
-  /// \b Example:
-  /// \code
-  /// boost::function<int (char, float, std::string)> f = get_some_function();
-  /// chaiscript::ChaiScript chai;
-  /// chai.add(fun(f), "some_function");
-  /// \endcode
-  /// 
-  /// \sa \ref addingfunctions
-  template<typename T>
-    Proxy_Function fun(const boost::function<T> &f)
-    {
-      return Proxy_Function(new dispatch::Proxy_Function_Impl<T>(f));
-    }
 
   /// \brief Creates a new Proxy_Function object from a free function, member function or data member
   /// \param[in] t Function / member to expose
@@ -105,9 +96,28 @@ namespace chaiscript
   template<typename T>
     Proxy_Function fun(T t)
     {
-      return dispatch::detail::Fun_Helper<boost::function_types::is_member_object_pointer<T>::value, boost::function_types::is_member_function_pointer<T>::value>::go(t);
+      return dispatch::detail::Fun_Helper<std::is_member_object_pointer<T>::value>::go(t);
     }
 
+
+  /// \brief Creates a new Proxy_Function object from a std::function object
+  /// \param[in] f std::function to expose to ChaiScript
+  ///
+  /// \b Example:
+  /// \code
+  /// std::function<int (char, float, std::string)> f = get_some_function();
+  /// chaiscript::ChaiScript chai;
+  /// chai.add(fun(f), "some_function");
+  /// \endcode
+  /// 
+  /// \sa \ref addingfunctions
+  template<typename T>
+    Proxy_Function fun(const std::function<T> &f)
+    {
+      return Proxy_Function(new dispatch::Proxy_Function_Impl<T>(f));
+    }
+
+  
   /// \brief Creates a new Proxy_Function object from a free function, member function or data member and binds the first parameter of it
   /// \param[in] t Function / member to expose
   /// \param[in] q Value to bind to first parameter
@@ -122,7 +132,7 @@ namespace chaiscript
   /// MyClass obj;
   /// chaiscript::ChaiScript chai;
   /// // Add function taking only one argument, an int, and permanently bound to "obj"
-  /// chai.add(fun(&MyClass::memberfunction, boost::ref(obj)), "memberfunction"); 
+  /// chai.add(fun(&MyClass::memberfunction, std::ref(obj)), "memberfunction"); 
   /// \endcode
   /// 
   /// \sa \ref addingfunctions
@@ -148,7 +158,7 @@ namespace chaiscript
   /// chaiscript::ChaiScript chai;
   /// // Add function taking only no arguments, and permanently bound to "obj" and "1"
   /// // memberfunction() will be equivalent to obj.memberfunction(1)
-  /// chai.add(fun(&MyClass::memberfunction, boost::ref(obj), 1), "memberfunction"); 
+  /// chai.add(fun(&MyClass::memberfunction, std::ref(obj), 1), "memberfunction"); 
   /// \endcode
   /// 
   /// \sa \ref addingfunctions

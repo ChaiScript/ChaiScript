@@ -9,13 +9,13 @@
 
 #include "boxed_value.hpp"
 #include "../language/chaiscript_algebraic.hpp"
-#include <boost/cstdint.hpp>
 #include <sstream>
+#include <cstdint>
 
 namespace chaiscript 
 {
  
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
 #pragma warning(push)
 #pragma warning(disable : 4244 4018 4389 4146)
 #endif
@@ -48,7 +48,7 @@ namespace chaiscript
             case Operators::not_equal:
               return const_var(t != u);
             default:
-              throw boost::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();        
           }
         }
       };
@@ -82,7 +82,7 @@ namespace chaiscript
               t -= u;
               break;
             default:
-              throw boost::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();        
           }
 
           return t_lhs;
@@ -115,7 +115,7 @@ namespace chaiscript
               t ^= u;
               break;
             default:
-              throw boost::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();        
           }
           return t_lhs;
         }
@@ -143,7 +143,7 @@ namespace chaiscript
             case Operators::bitwise_complement:
               return const_var(~t);
             default:
-              throw boost::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();        
           }
         }
       };
@@ -168,7 +168,7 @@ namespace chaiscript
             case Operators::unary_plus:
               return const_var(+t);
             default:
-              throw boost::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();        
           }
         }
       };
@@ -190,7 +190,7 @@ namespace chaiscript
           } else if (t_oper > Operators::const_flag) {
             return const_binary::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
           } else {
-            throw boost::bad_any_cast();
+            throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -206,13 +206,13 @@ namespace chaiscript
           } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const()) {
             return binary::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
           } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag) {
-            throw boost::bad_any_cast();
+            throw chaiscript::detail::exception::bad_any_cast();
           } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
-            throw boost::bad_any_cast();
+            throw chaiscript::detail::exception::bad_any_cast();
           } else if (t_oper > Operators::const_flag) {
             return const_binary::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
           } else {
-            throw boost::bad_any_cast();
+            throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -238,24 +238,24 @@ namespace chaiscript
             return Go<LHS, long, Float>::go(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(unsigned long)) {
             return Go<LHS, unsigned long, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int8_t)) {
-            return Go<LHS, boost::int8_t, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int16_t)) {
-            return Go<LHS, boost::int16_t, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int32_t)) {
-            return Go<LHS, boost::int32_t, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int64_t)) {
-            return Go<LHS, boost::int64_t, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint8_t)) {
-            return Go<LHS, boost::uint8_t, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint16_t)) {
-            return Go<LHS, boost::uint16_t, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint32_t)) {
-            return Go<LHS, boost::uint32_t, Float>::go(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint64_t)) {
-            return Go<LHS, boost::uint64_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int8_t)) {
+            return Go<LHS, std::int8_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int16_t)) {
+            return Go<LHS, std::int16_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int32_t)) {
+            return Go<LHS, std::int32_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int64_t)) {
+            return Go<LHS, std::int64_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint8_t)) {
+            return Go<LHS, std::uint8_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint16_t)) {
+            return Go<LHS, std::uint16_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint32_t)) {
+            return Go<LHS, std::uint32_t, Float>::go(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint64_t)) {
+            return Go<LHS, std::uint64_t, Float>::go(t_oper, t_lhs, t_rhs);
           } else {
-            throw boost::bad_any_cast();
+            throw chaiscript::detail::exception::bad_any_cast();
           }
         } 
 
@@ -279,24 +279,24 @@ namespace chaiscript
             return oper_rhs<long, false>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(unsigned long)) {
             return oper_rhs<unsigned long, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int8_t)) {
-            return oper_rhs<boost::int8_t, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int16_t)) {
-            return oper_rhs<boost::int16_t, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int32_t)) {
-            return oper_rhs<boost::int32_t, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::int64_t)) {
-            return oper_rhs<boost::int64_t, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint8_t)) {
-            return oper_rhs<boost::uint8_t, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint16_t)) {
-            return oper_rhs<boost::uint16_t, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint32_t)) {
-            return oper_rhs<boost::uint32_t, false>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(boost::uint64_t)) {
-            return oper_rhs<boost::uint64_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int8_t)) {
+            return oper_rhs<std::int8_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int16_t)) {
+            return oper_rhs<std::int16_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int32_t)) {
+            return oper_rhs<std::int32_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int64_t)) {
+            return oper_rhs<std::int64_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint8_t)) {
+            return oper_rhs<std::uint8_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint16_t)) {
+            return oper_rhs<std::uint16_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint32_t)) {
+            return oper_rhs<std::uint32_t, false>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::uint64_t)) {
+            return oper_rhs<std::uint64_t, false>(t_oper, t_lhs, t_rhs);
           } else  {
-            throw boost::bad_any_cast();
+            throw chaiscript::detail::exception::bad_any_cast();
           }
         }
 
@@ -351,24 +351,24 @@ namespace chaiscript
           return Boxed_Number(get_as<long>());
         } else if (inp_.bare_equal_type_info(typeid(unsigned long))) {
           return Boxed_Number(get_as<unsigned long>());
-        } else if (inp_.bare_equal_type_info(typeid(boost::int8_t))) {
-          return Boxed_Number(get_as<boost::int8_t>());
-        } else if (inp_.bare_equal_type_info(typeid(boost::int16_t))) {
-          return Boxed_Number(get_as<boost::int16_t>());
-        } else if (inp_.bare_equal_type_info(typeid(boost::int32_t))) {
-          return Boxed_Number(get_as<boost::int32_t>());
-        } else if (inp_.bare_equal_type_info(typeid(boost::int64_t))) {
-          return Boxed_Number(get_as<boost::int64_t>());
-        } else if (inp_.bare_equal_type_info(typeid(boost::uint8_t))) {
-          return Boxed_Number(get_as<boost::uint8_t>());
-        } else if (inp_.bare_equal_type_info(typeid(boost::uint16_t))) {
-          return Boxed_Number(get_as<boost::uint16_t>());
-        } else if (inp_.bare_equal_type_info(typeid(boost::uint32_t))) {
-          return Boxed_Number(get_as<boost::uint32_t>());
-        } else if (inp_.bare_equal_type_info(typeid(boost::uint64_t))) {
-          return Boxed_Number(get_as<boost::uint64_t>());
+        } else if (inp_.bare_equal_type_info(typeid(int8_t))) {
+          return Boxed_Number(get_as<int8_t>());
+        } else if (inp_.bare_equal_type_info(typeid(int16_t))) {
+          return Boxed_Number(get_as<int16_t>());
+        } else if (inp_.bare_equal_type_info(typeid(int32_t))) {
+          return Boxed_Number(get_as<int32_t>());
+        } else if (inp_.bare_equal_type_info(typeid(int64_t))) {
+          return Boxed_Number(get_as<int64_t>());
+        } else if (inp_.bare_equal_type_info(typeid(uint8_t))) {
+          return Boxed_Number(get_as<uint8_t>());
+        } else if (inp_.bare_equal_type_info(typeid(uint16_t))) {
+          return Boxed_Number(get_as<uint16_t>());
+        } else if (inp_.bare_equal_type_info(typeid(uint32_t))) {
+          return Boxed_Number(get_as<uint32_t>());
+        } else if (inp_.bare_equal_type_info(typeid(uint64_t))) {
+          return Boxed_Number(get_as<uint64_t>());
         } else {
-          throw boost::bad_any_cast();
+          throw chaiscript::detail::exception::bad_any_cast();
         }
 
       }
@@ -393,24 +393,24 @@ namespace chaiscript
           return get_as_aux<Target, long>();
         } else if (inp_ == typeid(unsigned long)) {
           return get_as_aux<Target, unsigned long>();
-        } else if (inp_ == typeid(boost::int8_t)) {
-          return get_as_aux<Target, boost::int8_t>();
-        } else if (inp_ == typeid(boost::int16_t)) {
-          return get_as_aux<Target, boost::int16_t>();
-        } else if (inp_ == typeid(boost::int32_t)) {
-          return get_as_aux<Target, boost::int32_t>();
-        } else if (inp_ == typeid(boost::int64_t)) {
-          return get_as_aux<Target, boost::int64_t>();
-        } else if (inp_ == typeid(boost::uint8_t)) {
-          return get_as_aux<Target, boost::uint8_t>();
-        } else if (inp_ == typeid(boost::uint16_t)) {
-          return get_as_aux<Target, boost::uint16_t>();
-        } else if (inp_ == typeid(boost::uint32_t)) {
-          return get_as_aux<Target, boost::uint32_t>();
-        } else if (inp_ == typeid(boost::uint64_t)) {
-          return get_as_aux<Target, boost::uint64_t>();
+        } else if (inp_ == typeid(std::int8_t)) {
+          return get_as_aux<Target, std::int8_t>();
+        } else if (inp_ == typeid(std::int16_t)) {
+          return get_as_aux<Target, std::int16_t>();
+        } else if (inp_ == typeid(std::int32_t)) {
+          return get_as_aux<Target, std::int32_t>();
+        } else if (inp_ == typeid(std::int64_t)) {
+          return get_as_aux<Target, std::int64_t>();
+        } else if (inp_ == typeid(std::uint8_t)) {
+          return get_as_aux<Target, std::uint8_t>();
+        } else if (inp_ == typeid(std::uint16_t)) {
+          return get_as_aux<Target, std::uint16_t>();
+        } else if (inp_ == typeid(std::uint32_t)) {
+          return get_as_aux<Target, std::uint32_t>();
+        } else if (inp_ == typeid(std::uint64_t)) {
+          return get_as_aux<Target, std::uint64_t>();
         } else {
-          throw boost::bad_any_cast();
+          throw chaiscript::detail::exception::bad_any_cast();
         }
       }
 
@@ -434,24 +434,24 @@ namespace chaiscript
           return to_string_aux<long>(bv);
         } else if (inp_ == typeid(unsigned long)) {
           return to_string_aux<unsigned long>(bv);
-        } else if (inp_ == typeid(boost::int8_t)) {
-          return to_string_aux<int>(Boxed_Value(get_as_aux<int, boost::int8_t>()));
-        } else if (inp_ == typeid(boost::int16_t)) {
-          return to_string_aux<boost::int16_t>(bv);
-        } else if (inp_ == typeid(boost::int32_t)) {
-          return to_string_aux<boost::int32_t>(bv);
-        } else if (inp_ == typeid(boost::int64_t)) {
-          return to_string_aux<boost::int64_t>(bv);
-        } else if (inp_ == typeid(boost::uint8_t)) {
-          return to_string_aux<unsigned int>(Boxed_Value(get_as_aux<unsigned int, boost::uint8_t>()));
-        } else if (inp_ == typeid(boost::uint16_t)) {
-          return to_string_aux<boost::uint16_t>(bv);
-        } else if (inp_ == typeid(boost::uint32_t)) {
-          return to_string_aux<boost::uint32_t>(bv);
-        } else if (inp_ == typeid(boost::uint64_t)) {
-          return to_string_aux<boost::uint64_t>(bv);
+        } else if (inp_ == typeid(std::int8_t)) {
+          return to_string_aux<int>(Boxed_Value(get_as_aux<int, std::int8_t>()));
+        } else if (inp_ == typeid(std::int16_t)) {
+          return to_string_aux<std::int16_t>(bv);
+        } else if (inp_ == typeid(std::int32_t)) {
+          return to_string_aux<std::int32_t>(bv);
+        } else if (inp_ == typeid(std::int64_t)) {
+          return to_string_aux<std::int64_t>(bv);
+        } else if (inp_ == typeid(std::uint8_t)) {
+          return to_string_aux<unsigned int>(Boxed_Value(get_as_aux<unsigned int, std::uint8_t>()));
+        } else if (inp_ == typeid(std::uint16_t)) {
+          return to_string_aux<std::uint16_t>(bv);
+        } else if (inp_ == typeid(std::uint32_t)) {
+          return to_string_aux<std::uint32_t>(bv);
+        } else if (inp_ == typeid(std::uint64_t)) {
+          return to_string_aux<std::uint64_t>(bv);
         } else {
-          throw boost::bad_any_cast();
+          throw chaiscript::detail::exception::bad_any_cast();
         }
       }
 
@@ -525,12 +525,12 @@ namespace chaiscript
         const Type_Info &inp_ = v.get_type_info();
         if (inp_ == typeid(bool))
         {
-          throw boost::bad_any_cast();
+          throw chaiscript::detail::exception::bad_any_cast();
         }
 
         if (!inp_.is_arithmetic())
         {
-          throw boost::bad_any_cast();
+          throw chaiscript::detail::exception::bad_any_cast();
         }
       }
 
@@ -844,7 +844,7 @@ namespace chaiscript
       };  
   }
 
-#ifdef BOOST_MSVC
+#ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)
 #endif
 

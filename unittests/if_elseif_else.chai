@@ -1,5 +1,5 @@
-var i = 3
-var b = false
+auto i = 3
+auto b = false
 if (i == 2) {
   assert_equal(false, true)
 }
