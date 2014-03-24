@@ -1,5 +1,7 @@
-[![Build Status](https://travis-ci.org/ChaiScript/ChaiScript.png?branch=ChaiScript_5_0_CPP_11)](https://travis-ci.org/ChaiScript/ChaiScript)
-[![Coverage Status](https://coveralls.io/repos/ChaiScript/ChaiScript/badge.png?branch=ChaiScript_5_0_CPP_11)](https://coveralls.io/r/ChaiScript/ChaiScript?branch=ChaiScript_5_0_CPP_11)
+Master Status: [![Build Status](https://travis-ci.org/ChaiScript/ChaiScript.png?branch=master)](https://travis-ci.org/ChaiScript/ChaiScript) [![Coverage Status](https://coveralls.io/repos/ChaiScript/ChaiScript/badge.png?branch=master)](https://coveralls.io/r/ChaiScript/ChaiScript?branch=master)
+
+Develop Status: [![Build Status](https://travis-ci.org/ChaiScript/ChaiScript.png?branch=develop)](https://travis-ci.org/ChaiScript/ChaiScript) [![Coverage Status](https://coveralls.io/repos/ChaiScript/ChaiScript/badge.png?branch=develop)](https://coveralls.io/r/ChaiScript/ChaiScript?branch=develop)
+
 
 ChaiScript
 
