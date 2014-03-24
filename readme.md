@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/ChaiScript/ChaiScript.png?branch=ChaiScript_5_0_CPP_11)](https://travis-ci.org/ChaiScript/ChaiScript)
+[![Coverage Status](https://coveralls.io/repos/ChaiScript/ChaiScript/badge.png?branch=ChaiScript_5_0_CPP_11)](https://coveralls.io/r/ChaiScript/ChaiScript?branch=ChaiScript_5_0_CPP_11)
 
 ChaiScript
 

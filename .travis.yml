@@ -1,13 +1,14 @@
-language: cpp clang
+language: cpp
 compiler:
   - gcc
+  - clang
 before_install:
     - sudo pip install cpp-coveralls --use-mirrors
 script: 
-  - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug -D UNIT_TEST_LIGHT:BOOL=TRUE -D USE_LIBCXX:BOOL=FALSE .
+  - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug -D USE_LIBCXX:BOOL=FALSE .
   - make
   - make test
-  - coverall -x hpp
+  - coveralls -x hpp
 notifications:
   recipients:
     - jason@emptycrate.com
