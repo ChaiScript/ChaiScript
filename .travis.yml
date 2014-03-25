@@ -9,7 +9,7 @@ before_install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update
   - sudo apt-get install -qq g++-4.8
-  - if [ "$GCC_VER" = "4.8" ]; then export CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8";  export CXX="g++-4.6" CC="gcc-4.6" GCOV="gcov-4.6"; else  fi
+  - if [ "$GCC_VER" = "4.8" ]; then export CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8"; else export CXX="g++-4.6" CC="gcc-4.6" GCOV="gcov-4.6"; fi
 script: 
   - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug .
   - make -j2
