@@ -7,7 +7,10 @@ script:
   - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug -D USE_LIBCXX:BOOL=FALSE .
   - make
   - make test
-  - coveralls -x hpp
+  - mkdir gcov
+  - find CMakeFiles/ -name "*.gc*" -exec mv {} gcov/ \;
+  - gcov -d gcov/*.gcda
+  - coveralls -n -E ".*\.cpp"
 notifications:
   recipients:
     - jason@emptycrate.com
