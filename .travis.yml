@@ -5,7 +5,7 @@ before_install:
     - sudo pip install cpp-coveralls --use-mirrors
 script: 
   - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug -D USE_LIBCXX:BOOL=FALSE .
-  - make
+  - make -j2
   - make test
   - mkdir gcov
   - find CMakeFiles/ -name "*.gc*" -exec mv {} gcov/ \;
