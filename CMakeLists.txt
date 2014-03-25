@@ -88,8 +88,8 @@ if (CMAKE_COMPILER_IS_GNUCC)
   endif()
 
   if (ENABLE_COVERAGE)
-    add_definitions(-fprofile-arcs -ftest-coverage)
-    SET(EXTRA_LINKER_FLAGS ${EXTRA_LINKER_FLAGS} "-fprofile-arcs -ftest-coverage")
+    add_definitions(--coverage -O0)
+    SET(EXTRA_LINKER_FLAGS ${EXTRA_LINKER_FLAGS} "--coverage")
     #    SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "-fprofile-arcs -ftest-coverage")
   endif()
    

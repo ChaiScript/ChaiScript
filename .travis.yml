@@ -1,15 +1,22 @@
 language: cpp
 compiler:
   - gcc
+env:
+  - GCC_VER=4.6
+  - GCC_VER=4.8
 before_install:
-    - sudo pip install cpp-coveralls
+  - sudo pip install cpp-coveralls
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+  - sudo apt-get update
+  - sudo apt-get install -qq g++-4.8
+  - if [ "$GCC_VER" = "4.8" ]; then export CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8";  export CXX="g++-4.6" CC="gcc-4.6" GCOV="gcov-4.6"; else  fi
 script: 
   - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug .
   - make -j2
   - make test
   - mkdir gcov
   - find CMakeFiles/ -name "*.gc*" -exec mv {} gcov/ \;
-  - gcov -d -o gcov gcov/*.gcda
+  - $GCOV -d -o gcov gcov/*.gcda
   - coveralls -n -E ".*\.cpp"
 notifications:
   recipients:
