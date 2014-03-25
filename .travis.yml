@@ -2,14 +2,14 @@ language: cpp
 compiler:
   - gcc
 before_install:
-    - sudo pip install cpp-coveralls --use-mirrors
+    - sudo pip install cpp-coveralls
 script: 
-  - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug -D USE_LIBCXX:BOOL=FALSE .
+  - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug .
   - make -j2
   - make test
   - mkdir gcov
   - find CMakeFiles/ -name "*.gc*" -exec mv {} gcov/ \;
-  - gcov -d gcov/*.gcda
+  - gcov -d -o gcov gcov/*.gcda
   - coveralls -n -E ".*\.cpp"
 notifications:
   recipients:
