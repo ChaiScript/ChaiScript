@@ -54,7 +54,7 @@ namespace chaiscript
   };
 
   /// \brief Typedef for pointers to AST_Node objects. Used in building of the AST_Node tree
-  typedef boost::shared_ptr<struct AST_Node> AST_NodePtr;
+  typedef boost::shared_ptr<AST_Node> AST_NodePtr;
 
 
   /// \brief Classes which may be thrown during error cases when ChaiScript is executing.
@@ -435,7 +435,7 @@ namespace chaiscript
           return eval_internal(t_e);
         } catch (exception::eval_error &ee) {
           ee.call_stack.push_back(shared_from_this());
-          throw ee;
+          throw;
         }
       }
 

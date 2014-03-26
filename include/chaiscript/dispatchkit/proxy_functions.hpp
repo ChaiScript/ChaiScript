@@ -23,7 +23,7 @@ namespace chaiscript
   class Boxed_Number;
   struct AST_Node;
 
-  typedef boost::shared_ptr<struct AST_Node> AST_NodePtr;
+  typedef boost::shared_ptr<AST_Node> AST_NodePtr;
 
   namespace dispatch
   {

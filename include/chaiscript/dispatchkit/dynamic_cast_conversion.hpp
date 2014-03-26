@@ -50,11 +50,11 @@ namespace chaiscript
         virtual Boxed_Value convert(const Boxed_Value &derived) const = 0;
         virtual Boxed_Value convert_down(const Boxed_Value &base) const = 0;
 
-        const Type_Info &base()
+        const Type_Info &base() const
         {
           return m_base;
         }
-        const Type_Info &derived()
+        const Type_Info &derived() const
         {
           return m_derived;
         }

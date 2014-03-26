@@ -308,12 +308,6 @@ namespace chaiscript
       static void throw_exception(const Boxed_Value &bv) {
         throw bv;
       }
-      
-      static boost::shared_ptr<chaiscript::detail::Dispatch_Engine> bootstrap2(boost::shared_ptr<chaiscript::detail::Dispatch_Engine> e = boost::shared_ptr<chaiscript::detail::Dispatch_Engine> (new chaiscript::detail::Dispatch_Engine()))
-      {
-        e->add(user_type<void>(), "void");
-        return e;
-      }
 
       static std::string what(const std::exception &e)
       {

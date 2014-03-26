@@ -681,7 +681,7 @@ namespace chaiscript
         if (t_handler) {
           t_handler->handle(bv, m_engine);
         }
-        throw bv;
+        throw;
       }
     }
 
@@ -707,7 +707,7 @@ namespace chaiscript
         if (t_handler) {
           t_handler->handle(bv, m_engine);
         }
-        throw bv;
+        throw;
       }
     }
 
@@ -737,7 +737,7 @@ namespace chaiscript
         if (t_handler) {
           t_handler->handle(bv, m_engine);
         }
-        throw bv;
+        throw;
       }
     }
 
@@ -753,7 +753,7 @@ namespace chaiscript
         if (t_handler) {
           t_handler->handle(bv, m_engine);
         }
-        throw bv;
+        throw;
       }
     }
 
@@ -773,7 +773,7 @@ namespace chaiscript
         if (t_handler) {
           t_handler->handle(bv, m_engine);
         }
-        throw bv;
+        throw;
       }
     }
   };
