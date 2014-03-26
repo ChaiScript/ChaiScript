@@ -27,12 +27,11 @@ namespace chaiscript
   {
     namespace detail
     {
-
       /**
        * Internal helper class for handling the return
        * value of a build_function_caller
        */
-      template<typename Ret>
+      template<typename Ret, bool is_arithmetic>
         struct Function_Caller_Ret
         {
           static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
@@ -43,10 +42,24 @@ namespace chaiscript
         };
 
       /**
+       * Specialization for arithmetic return types
+       */
+      template<typename Ret>
+        struct Function_Caller_Ret<Ret, true>
+        {
+          static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
+              const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
+          {
+            return Boxed_Number(dispatch::dispatch(t_funcs, params, t_conversions)).get_as<Ret>();
+          }
+        };
+
+
+      /**
        * Specialization for void return types
        */
       template<>
-        struct Function_Caller_Ret<void>
+        struct Function_Caller_Ret<void, false>
         {
           static void call(const std::vector<Const_Proxy_Function> &t_funcs, 
               const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
@@ -83,7 +96,7 @@ namespace chaiscript
 
           BOOST_PP_REPEAT(n, addparam, ~);
 
-          return Function_Caller_Ret<Ret>::call(funcs, params, t_conversions);
+          return Function_Caller_Ret<Ret, boost::is_arithmetic<Ret>::value>::call(funcs, params, t_conversions);
         }
 
       /**
