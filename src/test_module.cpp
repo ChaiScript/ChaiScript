@@ -35,10 +35,16 @@ class TestDerivedType : public TestBaseType
   public:
     virtual ~TestDerivedType() {}
     virtual int func() { return 1; }
+    int derived_only_func() { return 19; }
 
   private:
     TestDerivedType &operator=(const TestDerivedType &);
 };
+
+boost::shared_ptr<TestBaseType> derived_type_factory()
+{
+  return boost::shared_ptr<TestBaseType>(new TestDerivedType());
+}
 
 std::string hello_world()
 {
@@ -80,6 +86,10 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::constructor<TestDerivedType (const TestDerivedType &)>(), "TestDerivedType");
 
   m->add(chaiscript::base_class<TestBaseType, TestDerivedType>());
+
+  m->add(chaiscript::fun(&TestDerivedType::derived_only_func), "derived_only_func");
+
+  m->add(chaiscript::fun(&derived_type_factory), "derived_type_factory");
 
   m->add(chaiscript::fun(&TestBaseType::func), "func");
   m->add(chaiscript::fun(&TestBaseType::val), "val");

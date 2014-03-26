@@ -242,8 +242,6 @@ namespace chaiscript
   /// chai.add(chaiscript::base_class<Base, Derived>());
   /// \endcode
   /// 
-  /// \todo Move share static type registration code into a mechanism that allows it to be properly
-  ///       shared by all modules
   template<typename Base, typename Derived>
     Dynamic_Cast_Conversion base_class()
     {
