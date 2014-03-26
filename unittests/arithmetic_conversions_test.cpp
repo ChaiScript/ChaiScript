@@ -18,6 +18,11 @@ void f3(double)
 {
 }
 
+void f_func_return(const boost::function<unsigned int (unsigned long)> &f)
+{
+  // test the ability to return an unsigned with auto conversion
+  f(4);
+}
 
 int main()
 {
@@ -28,6 +33,8 @@ int main()
   chai.add(chaiscript::fun(&f3), "f2");
   chai.add(chaiscript::fun(&f1), "f3");
   chai.add(chaiscript::fun(&f4), "f3");
+
+  chai.add(chaiscript::fun(&f_func_return), "func_return");
 
   // no overloads
   chai.eval("f1(0)");
@@ -46,7 +53,12 @@ int main()
   // 1 non-arithmetic overload
   chai.eval("f2(1.0)");
 
-  // this is the one call we expect to fail
+  // various options for returning with conversions from chaiscript
+  chai.eval("func_return(fun(x) { return 5u; })");
+  chai.eval("func_return(fun(x) { return 5; })");
+  chai.eval("func_return(fun(x) { return 5.0f; })");
+
+  // this is the one call we expect to fail, ambiguous overloads
   try {
     chai.eval("f2(1.0l)");
   } catch (const std::exception &) {
