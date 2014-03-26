@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 pushd ..
 wget http://sourceforge.net/projects/cppcheck/files/cppcheck/1.64/cppcheck-1.64.tar.bz2
