@@ -24,7 +24,7 @@ after_script:
 - echo -n '{ "body": " ' > output.json
 - echo -n `awk '{printf "%s\\\\n", $0;}' output` >> output.json 
 - echo -n '"}' >> output.json 
-- if [ "${TRAVIS_PULL_REQUEST}" = "true" ]; then curl -H "Authorization: token ${TOKEN}" --request POST --data @output.json https://api.github.com/repos/ChaiScript/ChaiScript/commits/${TRAVIS_COMMIT}/comments; fi
+- if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then curl -H "Authorization: token ${TOKEN}" --request POST --data @output.json https://api.github.com/repos/ChaiScript/ChaiScript/commits/${TRAVIS_COMMIT}/comments; else  curl -H "Authorization: token ${TOKEN}" --request POST --data @output.json https://api.github.com/repos/ChaiScript/ChaiScript/issues/${TRAVIS_PULL_REQUEST}/comments; fi
 notifications:
   recipients:
   - jason@emptycrate.com
