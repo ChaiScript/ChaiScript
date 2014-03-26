@@ -4,12 +4,15 @@ compiler:
   - clang
 before_install:
   - sudo apt-get install libboost-dev libboost-all-dev
+  - sudo pip install cpp-coveralls
 script: 
-  - mkdir build
-  - cd build
-  - cmake ../
-  - make
+  - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug .
+  - make -j2
   - make test
+  - mkdir gcov
+  - find CMakeFiles/ -name "*.gc*" -exec mv {} gcov/ \;
+  - $GCOV -d -o gcov gcov/*.gcda
+  - coveralls -n -E ".*\.cpp"
 notifications:
   recipients:
     - jason@emptycrate.com

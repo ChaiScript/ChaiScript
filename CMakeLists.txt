@@ -6,6 +6,18 @@ option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" TRUE)
 option(BUILD_MODULES "Build Extra Modules (stl, reflection)" TRUE)
 option(BUILD_SAMPLES "Build Samples Folder" FALSE)
 
+set(EXTRA_LINKER_FLAGS "")
+
+if (CMAKE_COMPILER_IS_GNUCC)
+  option(ENABLE_COVERAGE "Enable Coverage Reporting in GCC" FALSE)
+
+  if (ENABLE_COVERAGE)
+    add_definitions(--coverage -O0)
+    SET(EXTRA_LINKER_FLAGS ${EXTRA_LINKER_FLAGS} "--coverage")
+  endif()
+
+endif()
+
 list(APPEND CPACK_SOURCE_IGNORE_FILES "${CMAKE_CURRENT_BINARY_DIR}")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.svn")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.git")
@@ -114,22 +126,22 @@ endif()
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIR})
 add_executable(chai src/main.cpp ${Chai_INCLUDES})
-target_link_libraries(chai ${LIBS})
+target_link_libraries(chai ${LIBS} ${EXTRA_LINKER_FLAGS})
 
 if (BUILD_SAMPLES)
   add_executable(example samples/example.cpp)
-  target_link_libraries(example ${LIBS})
+  target_link_libraries(example ${LIBS} ${EXTRA_LINKER_FLAGS})
   add_executable(memory_leak_test samples/memory_leak_test.cpp)
-  target_link_libraries(memory_leak_test ${LIBS})
+  target_link_libraries(memory_leak_test ${LIBS} ${EXTRA_LINKER_FLAGS})
 endif()
 
 
 if (BUILD_MODULES)
   add_library(stl_extra MODULE src/stl_extra.cpp)
-  target_link_libraries(stl_extra ${LIBS})
+  target_link_libraries(stl_extra ${LIBS} ${EXTRA_LINKER_FLAGS})
 
   add_library(reflection MODULE src/reflection.cpp)
-  target_link_libraries(reflection ${LIBS})
+  target_link_libraries(reflection ${LIBS} ${EXTRA_LINKER_FLAGS})
   set(MODULES stl_extra reflection)
 endif()
 
@@ -153,72 +165,72 @@ if(BUILD_TESTING)
 
   if (NOT UNIT_TEST_LIGHT)
     add_executable(utility_test unittests/utility_test.cpp)
-    target_link_libraries(utility_test ${LIBS})
+    target_link_libraries(utility_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Utility_Test COMMAND utility_test)
 
     add_executable(dynamic_object_test unittests/dynamic_object_test.cpp)
-    target_link_libraries(dynamic_object_test ${LIBS})
+    target_link_libraries(dynamic_object_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Dynamic_Object_Test COMMAND dynamic_object_test)
 
     add_executable(functor_creation_test unittests/functor_creation_test.cpp)
-    target_link_libraries(functor_creation_test ${LIBS})
+    target_link_libraries(functor_creation_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Functor_Creation_Test COMMAND functor_creation_test)
 
     add_executable(functor_cast_test unittests/functor_cast_test.cpp)
-    target_link_libraries(functor_cast_test ${LIBS})
+    target_link_libraries(functor_cast_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Functor_Cast_Test COMMAND functor_cast_test)
 
     add_executable(boxed_cast_test unittests/boxed_cast_test.cpp)
-    target_link_libraries(boxed_cast_test ${LIBS})
+    target_link_libraries(boxed_cast_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Boxed_Cast_Test COMMAND boxed_cast_test)
 
     add_executable(object_lifetime_test unittests/object_lifetime_test.cpp)
-    target_link_libraries(object_lifetime_test ${LIBS})
+    target_link_libraries(object_lifetime_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Object_Lifetime_Test COMMAND object_lifetime_test)
 
     add_executable(function_ordering_test unittests/function_ordering_test.cpp)
-    target_link_libraries(function_ordering_test ${LIBS})
+    target_link_libraries(function_ordering_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Function_Ordering_Test COMMAND function_ordering_test)
 
     add_executable(type_info_test unittests/type_info_test.cpp)
-    target_link_libraries(type_info_test ${LIBS})
+    target_link_libraries(type_info_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Type_Info_Test COMMAND type_info_test)
 
     add_executable(eval_catch_exception_test unittests/eval_catch_exception_test.cpp)
-    target_link_libraries(eval_catch_exception_test ${LIBS})
+    target_link_libraries(eval_catch_exception_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Eval_Catch_Exception_Test COMMAND eval_catch_exception_test)
 
     add_executable(short_comparison_test unittests/short_comparison_test.cpp)
-    target_link_libraries(short_comparison_test ${LIBS})
+    target_link_libraries(short_comparison_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Short_Comparison_Test COMMAND short_comparison_test)
 
     add_executable(expected_eval_errors_test unittests/expected_eval_errors_test.cpp)
-    target_link_libraries(expected_eval_errors_test ${LIBS})
+    target_link_libraries(expected_eval_errors_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Expected_Eval_Errors_Test COMMAND expected_eval_errors_test)
 
     add_executable(set_state_test unittests/set_state_test.cpp)
-    target_link_libraries(set_state_test ${LIBS})
+    target_link_libraries(set_state_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Set_State_Test COMMAND set_state_test)
 
     add_executable(simultaneous_chaiscript_test unittests/simultaneous_chaiscript_test.cpp)
-    target_link_libraries(simultaneous_chaiscript_test ${LIBS})
+    target_link_libraries(simultaneous_chaiscript_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Simultaneous_Chaiscript_Test COMMAND simultaneous_chaiscript_test)
 
     add_executable(c_linkage_test unittests/c_linkage_test.cpp)
-    target_link_libraries(c_linkage_test ${LIBS})
+    target_link_libraries(c_linkage_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME C_Linkage_Test COMMAND c_linkage_test)
 
     add_executable(integer_literal_test unittests/integer_literal_test.cpp)
-    target_link_libraries(integer_literal_test ${LIBS})
+    target_link_libraries(integer_literal_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Integer_Literal_Test COMMAND integer_literal_test)
 
     add_executable(arithmetic_conversions_test unittests/arithmetic_conversions_test.cpp)
-    target_link_libraries(arithmetic_conversions_test ${LIBS})
+    target_link_libraries(arithmetic_conversions_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME Arithmetic_Conversions_Test COMMAND arithmetic_conversions_test)
 
     if (MULTITHREAD_SUPPORT_ENABLED)
       add_executable(multithreaded_test unittests/multithreaded_test.cpp)
-      target_link_libraries(multithreaded_test ${LIBS})
+      target_link_libraries(multithreaded_test ${LIBS} ${EXTRA_LINKER_FLAGS})
       add_test(NAME Multithreaded_Test COMMAND multithreaded_test)
       set_property(TEST Multithreaded_Test
         PROPERTY ENVIRONMENT
@@ -231,11 +243,11 @@ if(BUILD_TESTING)
 
     add_executable(multifile_test unittests/multifile_test_main.cpp unittests/multifile_test_chai.cpp
       unittests/multifile_test_module.cpp)
-    target_link_libraries(multifile_test ${LIBS})
+    target_link_libraries(multifile_test ${LIBS} ${EXTRA_LINKER_FLAGS})
     add_test(NAME MultiFile_Test COMMAND multifile_test)
 
     add_library(test_module MODULE src/test_module.cpp)
-    target_link_libraries(test_module ${LIBS})
+    target_link_libraries(test_module ${LIBS} ${EXTRA_LINKER_FLAGS})
 
     install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript)
   endif()
