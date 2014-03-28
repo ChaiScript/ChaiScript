@@ -84,13 +84,13 @@ namespace chaiscript
       if (boost::is_polymorphic<typename detail::Stripped_Type<Type>::type>::value && t_conversions)
       {
         try {
-          std::cout << "trying an up conversion " << typeid(Type).name() << std::endl;
+          // std::cout << "trying an up conversion " << typeid(Type).name() << std::endl;
           // We will not catch any bad_boxed_dynamic_cast that is thrown, let the user get it
           // either way, we are not responsible if it doesn't work
           return detail::Cast_Helper<Type>::cast(t_conversions->boxed_dynamic_cast<Type>(bv), t_conversions);
         } catch (...) {
           try {
-            std::cout << "trying a down conversion " << typeid(Type).name() << std::endl;
+          //  std::cout << "trying a down conversion " << typeid(Type).name() << std::endl;
             // try going the other way - down the inheritance graph
             return detail::Cast_Helper<Type>::cast(t_conversions->boxed_dynamic_down_cast<Type>(bv), t_conversions);
           } catch (const boost::bad_any_cast &) {
