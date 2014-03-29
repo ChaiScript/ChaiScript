@@ -15,3 +15,21 @@ assert_equal(15, t.const_val);
 t.val = 23;
 assert_equal(23, t.val)
 
+// test_derived_factory returns a TestDerivedType contained
+// in a shared_ptr<TestBaseType>. This is testing our ability
+// to detect that and do the down casting for the user automatically
+// at runtime
+
+assert_equal(t.derived_only_func(), 19);
+
+var d := derived_type_factory();
+assert_equal(d.derived_only_func(), 19);
+
+var t2 = TestMoreDerivedType();
+assert_equal(t2.derived_only_func(), 19);
+assert_equal(t2.base_only_func(), -9);
+
+var md := more_derived_type_factory();
+assert_equal(md.derived_only_func(), 19);
+assert_equal(md.base_only_func(), -9);
+

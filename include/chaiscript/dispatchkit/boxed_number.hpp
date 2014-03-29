@@ -307,7 +307,7 @@ namespace chaiscript
         }
 
         template<typename Source>
-          std::string to_string_aux(const Boxed_Value &v) const
+         static std::string to_string_aux(const Boxed_Value &v)
         {
           std::ostringstream oss;
           oss << *static_cast<const Source *>(v.get_const_ptr());
@@ -520,7 +520,7 @@ namespace chaiscript
         return oper(Operators::assign_bitwise_and, this->bv, t_rhs.bv);
       }
 
-      void validate_boxed_number(const Boxed_Value &v)
+      static void validate_boxed_number(const Boxed_Value &v)
       {
         const Type_Info &inp_ = v.get_type_info();
         if (inp_ == typeid(bool))

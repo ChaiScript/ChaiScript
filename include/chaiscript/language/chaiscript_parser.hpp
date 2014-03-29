@@ -56,7 +56,8 @@ namespace chaiscript
 
       public:
       ChaiScript_Parser()
-        : m_multiline_comment_begin("/*"),
+        : m_line(-1), m_col(-1),
+        m_multiline_comment_begin("/*"),
           m_multiline_comment_end("*/"),
           m_singleline_comment("//")
       {
@@ -803,10 +804,9 @@ namespace chaiscript
        */
       bool Quoted_String_() {
         bool retval = false;
-        char prev_char = 0;
         if (has_more_input() && (*m_input_pos == '\"')) {
           retval = true;
-          prev_char = *m_input_pos;
+          char prev_char = *m_input_pos;
           ++m_input_pos;
           ++m_col;
 
@@ -980,10 +980,9 @@ namespace chaiscript
          */
         bool Single_Quoted_String_() {
           bool retval = false;
-          char prev_char = 0;
           if (has_more_input() && (*m_input_pos == '\'')) {
             retval = true;
-            prev_char = *m_input_pos;
+            char prev_char = *m_input_pos;
             ++m_input_pos;
             ++m_col;
 
@@ -1356,7 +1355,6 @@ namespace chaiscript
         bool Def() {
           bool retval = false;
           bool is_annotated = false;
-          bool is_method = false;
           AST_NodePtr annotation;
 
           if (Annotation()) {
@@ -1374,6 +1372,8 @@ namespace chaiscript
             if (!Id(true)) {
               throw exception::eval_error("Missing function name in definition", File_Position(m_line, m_col), *m_filename);
             }
+
+            bool is_method = false;
 
             if (Symbol("::", false)) {
               //We're now a method

@@ -17,12 +17,11 @@ namespace chaiscript
   {
     namespace detail
     {
-
       /**
        * Internal helper class for handling the return
        * value of a build_function_caller
        */
-      template<typename Ret>
+      template<typename Ret, bool is_arithmetic>
         struct Function_Caller_Ret
         {
           static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
@@ -33,10 +32,24 @@ namespace chaiscript
         };
 
       /**
+       * Specialization for arithmetic return types
+       */
+      template<typename Ret>
+        struct Function_Caller_Ret<Ret, true>
+        {
+          static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
+              const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
+          {
+            return Boxed_Number(dispatch::dispatch(t_funcs, params, t_conversions)).get_as<Ret>();
+          }
+        };
+
+
+      /**
        * Specialization for void return types
        */
       template<>
-        struct Function_Caller_Ret<void>
+        struct Function_Caller_Ret<void, false>
         {
           static void call(const std::vector<Const_Proxy_Function> &t_funcs, 
               const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
@@ -59,11 +72,11 @@ namespace chaiscript
 
           Ret operator()(Param...param)
           {
-            return Function_Caller_Ret<Ret>::call(m_funcs, { 
-(std::is_reference<Param>::value&&!(std::is_same<chaiscript::Boxed_Value, typename std::remove_const<typename std::remove_reference<Param>::type>::type>::value))?Boxed_Value(std::ref(param)):Boxed_Value(param)... 
-          }, m_conversions
-          
-          );
+            return Function_Caller_Ret<Ret, std::is_arithmetic<Ret>::value>::call(m_funcs, { 
+                (std::is_reference<Param>::value&&!(std::is_same<chaiscript::Boxed_Value, typename std::remove_const<typename std::remove_reference<Param>::type>::type>::value))?Boxed_Value(std::ref(param)):Boxed_Value(param)... 
+                }, m_conversions
+
+                );
 
           }
 

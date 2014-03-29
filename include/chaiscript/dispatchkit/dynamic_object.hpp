@@ -30,7 +30,7 @@ namespace chaiscript
           return m_attrs[t_attr_name];
         }
 
-        std::map<std::string, Boxed_Value> get_attrs()
+        std::map<std::string, Boxed_Value> get_attrs() const
         {
           return m_attrs;
         }

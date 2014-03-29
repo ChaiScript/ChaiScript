@@ -48,12 +48,13 @@ namespace chaiscript
     {
       public:
         virtual Boxed_Value convert(const Boxed_Value &derived) const = 0;
+        virtual Boxed_Value convert_down(const Boxed_Value &base) const = 0;
 
-        const Type_Info &base()
+        const Type_Info &base() const
         {
           return m_base;
         }
-        const Type_Info &derived()
+        const Type_Info &derived() const
         {
           return m_derived;
         }
@@ -72,6 +73,57 @@ namespace chaiscript
 
     };
 
+    template<typename From, typename To> 
+      class Dynamic_Caster
+      {
+        public: 
+          static Boxed_Value cast(const Boxed_Value &t_from)
+          {
+            if (t_from.get_type_info().bare_equal(user_type<From>()))
+            {
+              if (t_from.is_pointer())
+              {
+                // Dynamic cast out the contained boxed value, which we know is the type we want
+                if (t_from.is_const())
+                {
+                  std::shared_ptr<const To> data
+                    = std::dynamic_pointer_cast<const To>(detail::Cast_Helper<std::shared_ptr<const From> >::cast(t_from, nullptr));
+                  if (!data)
+                  {
+                    throw std::bad_cast();
+                  }
+
+                  return Boxed_Value(data);
+                } else {
+                  std::shared_ptr<To> data
+                    = std::dynamic_pointer_cast<To>(detail::Cast_Helper<std::shared_ptr<From> >::cast(t_from, nullptr));
+
+                  if (!data)
+                  {
+                    throw std::bad_cast();
+                  }
+
+                  return Boxed_Value(data);
+                }
+              } else {
+                // Pull the reference out of the contained boxed value, which we know is the type we want
+                if (t_from.is_const())
+                {
+                  const From &d = detail::Cast_Helper<const From &>::cast(t_from, 0);
+                  const To &data = dynamic_cast<const To &>(d);
+                  return Boxed_Value(std::cref(data));
+                } else {
+                  From &d = detail::Cast_Helper<From &>::cast(t_from, 0);
+                  To &data = dynamic_cast<To &>(d);
+                  return Boxed_Value(std::ref(data));
+                }
+              }
+            } else {
+              throw chaiscript::exception::bad_boxed_dynamic_cast(t_from.get_type_info(), typeid(To), "Unknown dynamic_cast_conversion");
+            }
+          }
+      };
+
     template<typename Base, typename Derived>
       class Dynamic_Conversion_Impl : public Dynamic_Conversion
     {
@@ -81,50 +133,14 @@ namespace chaiscript
         {
         }
 
+        virtual Boxed_Value convert_down(const Boxed_Value &t_base) const
+        {
+          return Dynamic_Caster<Base, Derived>::cast(t_base);
+        }
+
         virtual Boxed_Value convert(const Boxed_Value &t_derived) const
         {
-          if (t_derived.get_type_info().bare_equal(user_type<Derived>()))
-          {
-            if (t_derived.is_pointer())
-            {
-              // Dynamic cast out the contained boxed value, which we know is the type we want
-              if (t_derived.is_const())
-              {
-                std::shared_ptr<const Base> data 
-                  = std::dynamic_pointer_cast<const Base>(detail::Cast_Helper<std::shared_ptr<const Derived> >::cast(t_derived, nullptr));
-                if (!data)
-                {
-                  throw std::bad_cast();
-                }
-
-                return Boxed_Value(data);
-              } else {
-                std::shared_ptr<Base> data 
-                  = std::dynamic_pointer_cast<Base>(detail::Cast_Helper<std::shared_ptr<Derived> >::cast(t_derived, nullptr));
-
-                if (!data)
-                {
-                  throw std::bad_cast();
-                }
-
-                return Boxed_Value(data);
-              }
-            } else {
-              // Pull the reference out of the contained boxed value, which we know is the type we want
-              if (t_derived.is_const())
-              {
-                const Derived &d = detail::Cast_Helper<const Derived &>::cast(t_derived, 0);
-                const Base &data = dynamic_cast<const Base &>(d);
-                return Boxed_Value(std::cref(data));
-              } else {
-                Derived &d = detail::Cast_Helper<Derived &>::cast(t_derived, 0);
-                Base &data = dynamic_cast<Base &>(d);
-                return Boxed_Value(std::ref(data));
-              }
-            }
-          } else {
-            throw chaiscript::exception::bad_boxed_dynamic_cast(t_derived.get_type_info(), typeid(Base), "Unknown dynamic_cast_conversion");
-          }
+          return Dynamic_Caster<Derived, Base>::cast(t_derived);
         }
     };
   }
@@ -155,7 +171,7 @@ namespace chaiscript
 
       bool dynamic_cast_converts(const Type_Info &base, const Type_Info &derived) const
       {
-        return has_conversion(base, derived);
+        return has_conversion(base, derived) || has_conversion(derived, base);
       }
 
       template<typename Base>
@@ -169,6 +185,19 @@ namespace chaiscript
             throw exception::bad_boxed_dynamic_cast(derived.get_type_info(), typeid(Base), "Unable to perform dynamic_cast operation");
           }
         }
+
+      template<typename Derived>
+        Boxed_Value boxed_dynamic_down_cast(const Boxed_Value &base) const
+        {
+          try {
+            return get_conversion(base.get_type_info(), user_type<Derived>())->convert_down(base);
+          } catch (const std::out_of_range &) {
+            throw exception::bad_boxed_dynamic_cast(base.get_type_info(), typeid(Derived), "No known conversion");
+          } catch (const std::bad_cast &) {
+            throw exception::bad_boxed_dynamic_cast(base.get_type_info(), typeid(Derived), "Unable to perform dynamic_cast operation");
+          }
+        }
+
 
       bool has_conversion(const Type_Info &base, const Type_Info &derived) const
       {
@@ -242,8 +271,6 @@ namespace chaiscript
   /// chai.add(chaiscript::base_class<Base, Derived>());
   /// \endcode
   /// 
-  /// \todo Move share static type registration code into a mechanism that allows it to be properly
-  ///       shared by all modules
   template<typename Base, typename Derived>
   Dynamic_Cast_Conversion base_class()
   {

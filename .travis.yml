@@ -18,10 +18,14 @@ script:
   - find CMakeFiles/ -name "*.gc*" -exec mv {} gcov/ \;
   - $GCOV -d -o gcov gcov/*.gcda
   - coveralls -n -E ".*\.cpp"
+after_script:
+  - contrib/codeanalysis/runcppcheck.sh
 notifications:
-  recipients:
-    - jason@emptycrate.com
   email:
+    recipients:
+      - jason@emptycrate.com
     on_success: always
     on_failure: always
-
+env:
+  global:
+    secure: LCUAKUCRtFp2ak81nVLR+jx0C9+Drwx1OR4VzuvH+HNGWFdUZmAIV3R84euDqFC5cUhYYipaeMbiSOJUHE4MNlL58eQZryED6KSL7k7SgxOLpFSspMvuMjIYZLlBWpBneCR/EMDilu+zXEnASfVUMPuLmtY1GAyfSoZboqFProc=

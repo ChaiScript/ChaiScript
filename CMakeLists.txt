@@ -18,6 +18,18 @@ endif()
 option(BUILD_MODULES "Build Extra Modules (stl, reflection)" TRUE)
 option(BUILD_SAMPLES "Build Samples Folder" FALSE)
 
+set(EXTRA_LINKER_FLAGS "")
+
+if (CMAKE_COMPILER_IS_GNUCC)
+  option(ENABLE_COVERAGE "Enable Coverage Reporting in GCC" FALSE)
+
+  if (ENABLE_COVERAGE)
+    add_definitions(--coverage -O0)
+    SET(EXTRA_LINKER_FLAGS ${EXTRA_LINKER_FLAGS} "--coverage")
+  endif()
+
+endif()
+
 list(APPEND CPACK_SOURCE_IGNORE_FILES "${CMAKE_CURRENT_BINARY_DIR}")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.svn")
 list(APPEND CPACK_SOURCE_IGNORE_FILES "\\\\.git")
@@ -30,7 +42,7 @@ set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/description.txt"
 
 set(CPACK_PACKAGE_VERSION_MAJOR 5)
 set(CPACK_PACKAGE_VERSION_MINOR 3)
-set(CPACK_PACKAGE_VERSION_PATCH 0)
+set(CPACK_PACKAGE_VERSION_PATCH 1)
 
 set(CPACK_PACKAGE_EXECUTABLES "chai;ChaiScript Eval")
 set(CPACK_PACKAGE_VENDOR "ChaiScript.com")
