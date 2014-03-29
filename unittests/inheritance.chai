@@ -25,3 +25,11 @@ assert_equal(t.derived_only_func(), 19);
 var d := derived_type_factory();
 assert_equal(d.derived_only_func(), 19);
 
+var t2 = TestMoreDerivedType();
+assert_equal(t2.derived_only_func(), 19);
+assert_equal(t2.base_only_func(), -9);
+
+var md := more_derived_type_factory();
+assert_equal(md.derived_only_func(), 19);
+assert_equal(md.base_only_func(), -9);
+

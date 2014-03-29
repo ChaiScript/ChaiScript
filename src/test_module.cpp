@@ -11,6 +11,8 @@ class TestBaseType
     virtual ~TestBaseType() {}
     virtual int func() { return 0; }
 
+    int base_only_func() { return -9; }
+
     const TestBaseType &constMe() const { return *this; }
 
     int val;
@@ -41,9 +43,20 @@ class TestDerivedType : public TestBaseType
     TestDerivedType &operator=(const TestDerivedType &);
 };
 
+class TestMoreDerivedType : public TestDerivedType
+{
+  public:
+    virtual ~TestMoreDerivedType() {}
+};
+
 boost::shared_ptr<TestBaseType> derived_type_factory()
 {
   return boost::shared_ptr<TestBaseType>(new TestDerivedType());
+}
+
+boost::shared_ptr<TestBaseType> more_derived_type_factory()
+{
+  return boost::shared_ptr<TestBaseType>(new TestMoreDerivedType());
 }
 
 std::string hello_world()
@@ -76,6 +89,7 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
 
   m->add(chaiscript::user_type<TestBaseType>(), "TestBaseType");
   m->add(chaiscript::user_type<TestDerivedType>(), "TestDerivedType");
+  m->add(chaiscript::user_type<TestMoreDerivedType>(), "TestMoreDerivedType");
 
   m->add(chaiscript::constructor<TestBaseType ()>(), "TestBaseType");
 //  m->add(chaiscript::constructor<TestBaseType (int)>(), "TestBaseType");
@@ -85,15 +99,23 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::constructor<TestDerivedType ()>(), "TestDerivedType");
   m->add(chaiscript::constructor<TestDerivedType (const TestDerivedType &)>(), "TestDerivedType");
 
+  m->add(chaiscript::constructor<TestMoreDerivedType ()>(), "TestMoreDerivedType");
+  m->add(chaiscript::constructor<TestMoreDerivedType (const TestMoreDerivedType &)>(), "TestMoreDerivedType");
+
+  /// \todo automatic chaining of base classes?
   m->add(chaiscript::base_class<TestBaseType, TestDerivedType>());
+  m->add(chaiscript::base_class<TestBaseType, TestMoreDerivedType>());
+  m->add(chaiscript::base_class<TestDerivedType, TestMoreDerivedType>());
 
   m->add(chaiscript::fun(&TestDerivedType::derived_only_func), "derived_only_func");
 
   m->add(chaiscript::fun(&derived_type_factory), "derived_type_factory");
+  m->add(chaiscript::fun(&more_derived_type_factory), "more_derived_type_factory");
 
   m->add(chaiscript::fun(&TestBaseType::func), "func");
   m->add(chaiscript::fun(&TestBaseType::val), "val");
   m->add(chaiscript::fun(&TestBaseType::const_val), "const_val");
+  m->add(chaiscript::fun(&TestBaseType::base_only_func), "base_only_func");
 
   m->add(chaiscript::fun(&get_new_int), "get_new_int");
 
