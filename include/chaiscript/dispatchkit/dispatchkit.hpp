@@ -411,7 +411,9 @@ namespace chaiscript
         };
 
         Dispatch_Engine()
-          : m_place_holder(std::shared_ptr<dispatch::Placeholder_Object>(new dispatch::Placeholder_Object()))
+          : m_stack_holder(this),
+            m_place_holder(std::shared_ptr<dispatch::Placeholder_Object>(new dispatch::Placeholder_Object()))
+            
         {
         }
 
@@ -745,8 +747,10 @@ namespace chaiscript
         ///
         std::map<std::string, Boxed_Value> get_scripting_objects() const
         {
+          Stack_Holder &s = *m_stack_holder;
+
           // We don't want the current context, but one up if it exists
-          StackData &stack = (m_stack_holder->stacks.size()==1)?(*(m_stack_holder->stacks.back())):(*m_stack_holder->stacks[m_stack_holder->stacks.size()-2]);
+          StackData &stack = (s.stacks.size()==1)?(*(s.stacks.back())):(*s.stacks[s.stacks.size()-2]);
 
           std::map<std::string, Boxed_Value> retval;
 
@@ -991,7 +995,8 @@ namespace chaiscript
 
         void save_function_params(const std::vector<Boxed_Value> &t_params)
         {
-          m_stack_holder->call_params.insert(m_stack_holder->call_params.begin(), t_params.begin(), t_params.end());
+          Stack_Holder &s = *m_stack_holder;
+          s.call_params.insert(s.call_params.begin(), t_params.begin(), t_params.end());
         }
 
         void new_function_call()
@@ -1001,15 +1006,16 @@ namespace chaiscript
 
         void pop_function_call()
         {
-          --m_stack_holder->call_depth;
+          Stack_Holder &s = *m_stack_holder;
+          --s.call_depth;
 
-          assert(m_stack_holder->call_depth >= 0);
+          assert(s.call_depth >= 0);
 
-          if (m_stack_holder->call_depth == 0)
+          if (s.call_depth == 0)
           {
             /// \todo Critical: this needs to be smarter, memory can expand quickly
             ///       in tight loops involving function calls
-            m_stack_holder->call_params.clear();
+            s.call_params.clear();
           }
         }
 
