@@ -33,3 +33,8 @@ var md := more_derived_type_factory();
 assert_equal(md.derived_only_func(), 19);
 assert_equal(md.base_only_func(), -9);
 
+assert_equal(md.func(), 1);
+assert_equal(t2.func(), 1);
+assert_equal(d.func(), 1);
+
+
