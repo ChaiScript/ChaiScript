@@ -1,6 +1,6 @@
 def isprime(n)
 {
-  for (auto i = 2; i < n; ++i)
+  for (var i = 2; i < n; ++i)
   {
     if (n % i == 0) {return false}
   }
@@ -11,8 +11,8 @@ def isprime(n)
 
 def primes(n)
 {
-  auto count = 0
-  for (auto i = 2; i <= n; ++i)
+  var count = 0
+  for (var i = 2; i <= n; ++i)
   {
     if (isprime(i)) {++count}
   }
@@ -21,6 +21,6 @@ def primes(n)
 }
 
 
-auto N = 5000
+var N = 5000
 
 print("primes: " + primes(N).to_string())
