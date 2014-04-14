@@ -9,8 +9,8 @@
 
 
 
-/// \mainpage
-/// <a href="http://www.chaiscript.com">ChaiScript</a> is a scripting language designed specifically for integration with C++. It provides
+/// @mainpage
+/// [ChaiScript](http://www.chaiscript.com") is a scripting language designed specifically for integration with C++. It provides
 /// seamless integration with C++ on all levels, including shared_ptr objects, functors and exceptions.
 /// 
 /// The parts of the ChaiScript API that the average user will be concerned with are contained in the 
@@ -18,42 +18,42 @@
 ///
 /// The end user parts of the API are extremely simple both in size and ease of use.
 ///
-/// Currently, all source control and project management aspects of ChaiScript occur on <a href="http://www.github.com/ChaiScript/ChaiScript">github</a>.
+/// Currently, all source control and project management aspects of ChaiScript occur on [github](http://www.github.com/ChaiScript/ChaiScript").
 ///
-/// <hr>
+/// ------------------------------------------------------------
 /// 
-/// \sa chaiscript
-/// \sa chaiscript::ChaiScript
-/// \sa ChaiScript_Language for Built in Functions
-/// \sa \ref LangGettingStarted
-/// \sa \ref LangKeywordRef
-/// \sa \ref LangInPlaceRef
-/// \sa \ref LangObjectSystemRef
-/// \sa http://www.chaiscript.com
-/// \sa http://www.github.com/ChaiScript/ChaiScript
+/// @sa chaiscript
+/// @sa chaiscript::ChaiScript
+/// @sa ChaiScript_Language for Built in Functions
+/// @sa @ref LangGettingStarted
+/// @sa @ref LangKeywordRef
+/// @sa @ref LangInPlaceRef
+/// @sa @ref LangObjectSystemRef
+/// @sa http://www.chaiscript.com
+/// @sa http://www.github.com/ChaiScript/ChaiScript
 ///
-/// <hr>
+/// -----------------------------------------------------------
 ///
-/// \section gettingstarted API Getting Started
+/// @section gettingstarted API Getting Started
 ///
-/// \li \ref basics
-/// \li \ref compiling
-/// \li \ref eval
-/// \li \ref addingitems
-/// \li \ref operatoroverloading
-/// \li \ref helpermacro
-/// \li \ref pointerconversions
-/// \li \ref baseclasses
-/// \li \ref functionobjects
-/// \li \ref threading
-/// \li \ref exceptions
+/// - @ref basics
+/// - @ref compiling
+/// - @ref eval
+/// - @ref addingitems
+/// - @ref operatoroverloading
+/// - @ref add_class
+/// - @ref pointerconversions
+/// - @ref baseclasses
+/// - @ref functionobjects
+/// - @ref threading
+/// - @ref exceptions
 /// 
 /// 
-/// \subsection basics Basics
+/// @subsection basics Basics
 /// 
 /// Basic simple example:
 ///
-/// \code
+/// ~~~~~~~{.cpp}
 /// //main.cpp
 /// #include <chaiscript/chaiscript.hpp>
 /// 
@@ -69,111 +69,115 @@
 ///
 ///   double d = chai.eval<double>("function(3, 4.75);");
 /// } 
-/// \endcode
+/// ~~~~~~~
 ///
-/// <hr>
-/// \subsection compiling Compiling ChaiScript Applications
+/// ------------------------------------------------------
+///
+/// @subsection compiling Compiling ChaiScript Applications
 ///
 /// ChaiScript is a header only library with only one dependecy: The
 /// operating system provided dynamic library loader, which has to be specified on some platforms.
 /// 
-/// \subsubsection compilinggcc Compiling with GCC
+/// @subsubsection compilinggcc Compiling with GCC
 /// 
 /// To compile the above application on a Unix like operating system (MacOS, Linux) with GCC you need to link
 /// the dynamic loader. For example:
 ///
-/// \code
+/// ~~~~~~~~
 /// gcc main.cpp -I/path/to/chaiscript/headers -ldl 
-/// \endcode
+/// ~~~~~~~~
 ///
 /// Alternatively, you may compile without threading support.
 ///
-/// \code
+/// ~~~~~~~~
 /// gcc main.cpp -I/path/to/chaiscript/headers -ldl -DCHAISCRIPT_NO_THREADS
-/// \endcode
-/// 
-/// <hr>
-/// \subsection eval Evaluating Scripts
+/// ~~~~~~~~
+///
+/// ------------------------------------------
+///
+/// @subsection eval Evaluating Scripts
 ///
 /// Scripts can be evaluated with the () operator, eval method or eval_file method.
 ///
-/// \subsubsection parenoperator () Operator
+/// @subsubsection parenoperator () Operator
 ///
 /// operator() can be used as a handy shortcut for evaluating ChaiScript snippets.
-/// \code
-/// chaiscript::ChaiScript chai;
-/// chai("print(\"hello world\")");
-/// \endcode
-/// 
-/// \sa chaiscript::ChaiScript::operator()(const std::string &)
 ///
-/// \subsubsection evalmethod Method 'eval'
+/// ~~~~~~~~{.cpp}
+/// chaiscript::ChaiScript chai;
+/// chai("print(@"hello world@")");
+/// ~~~~~~~~
+/// 
+/// @sa chaiscript::ChaiScript::operator()(const std::string &)
+///
+/// @subsubsection evalmethod Method 'eval'
 /// 
 /// The eval method is somewhat more verbose and can be used to get typesafely return values
 /// from the script.
 ///
-/// \code
+/// ~~~~~~~~{.cpp}
 /// chaiscript::ChaiScript chai;
 /// chai.eval("callsomefunc()");
 /// int result = chai.eval<int>("1 + 3");
 /// // result now equals 4
-/// \endcode
+/// ~~~~~~~~
 ///
-/// \sa chaiscript::ChaiScript::eval
+/// @sa chaiscript::ChaiScript::eval
 ///
-/// \subsubsection evalfilemethod Method 'eval_file'
+/// @subsubsection evalfilemethod Method 'eval_file'
 /// 
 /// The 'eval_file' method loads a file from disk and executes the script in it
 /// 
-/// \code
+/// ~~~~~~~~{.cpp}
 /// chaiscript::ChaiScript chai;
 /// chai.eval_file("myfile.chai");
 /// std::string result = chai.eval_file<std::string>("myfile.chai") // extract the last value returned from the file
-/// \endcode
+/// ~~~~~~~~
 /// 
-/// \sa chaiscript::ChaiScript::eval_file
+/// @sa chaiscript::ChaiScript::eval_file
 ///
-/// <hr>
-/// \subsection addingitems Adding Items to ChaiScript
+/// --------------------------------------------------
+///
+/// @subsection addingitems Adding Items to ChaiScript
 ///
 /// ChaiScript supports 4 basic things that can be added: objects, functions, type infos and Modules
 ///
-/// \subsubsection addingobjects Adding Objects
+/// @subsubsection addingobjects Adding Objects
 ///
 /// Named objects can be created with the chaiscript::var function. Note: adding a object
 /// adds it to the current thread scope, not to a global scope. If you have multiple 
 /// threads that need to access the same variables you will need to add them
 /// separately for each thread, from the thread itself.
 /// 
-/// \code
+/// ~~~~~~~~~{.cpp}
 /// using namespace chaiscript;
 /// ChaiScript chai;
 /// int i = 5;
 /// chai.add(var(i), "i");
 /// chai("print(i)");
-/// \endcode
+/// ~~~~~~~~~
 ///
 /// Immutable objects can be created with the chaiscript::const_var function.
 ///
-/// \code
+/// ~~~~~~~~~{.cpp}
 /// chai.add(const_var(i), "i");
 /// chai("i = 5"); // exception throw, cannot assign const var
-/// \endcode
+/// ~~~~~~~~~
 /// 
 /// Named variables can only be accessed from the context they are created in.
 /// If you want a global variable, it must be const, and created with the 
 /// chaiscript::ChaiScript::add_global_const function.
 ///
-/// \code
+/// ~~~~~~~~~{.cpp}
 /// chai.add_global_const(const_var(i), "i");
 /// chai("def somefun() { print(i); }; sumfun();");
-/// \endcode
+/// ~~~~~~~~~
 /// 
-/// \subsubsection addingfunctions Adding Functions
+/// @subsubsection addingfunctions Adding Functions
 /// 
 /// Functions, methods and members are all added using the same function: chaiscript::fun.
 ///
-/// \code
+/// ~~~~~~~~~{.cpp}
 /// using namespace chaiscript;
 /// 
 /// class MyClass {
@@ -190,26 +194,26 @@
 /// chai.add(fun(&MyClass::memberdata), "memberdata");
 /// chai.add(fun(&MyClass::method), "method");
 /// chai.add(fun(&MyClass::staticmethod), "staticmethod");
-/// \endcode
+/// ~~~~~~~~~
 ///
 /// Overloaded methods will need some help, to hint the compiler as to which overload you want:
 ///
-/// \code
+/// ~~~~~~~~~{.cpp}
 /// chai.add(fun<void (MyClass::*)()>(&MyClass::overloadedmethod), "overloadedmethod");
 /// chai.add(fun<void (MyClass::*)(const std::string &)>(&MyClass::overloadedmethod), "overloadedmethod");
-/// \endcode
+/// ~~~~~~~~~
 ///
 /// There are also shortcuts built into chaiscript::fun for binding up to the first two parameters of the function.
 /// 
-/// \code
+/// ~~~~~~~~~{.cpp}
 /// MyClass obj;
 /// chai.add(fun(&MyClass::method, &obj), "method");
 /// chai("method()"); // equiv to obj.method()
 /// chai.add(fun(&MyClass::method2, &obj, 3), "method2");
 /// chai("method2()"); // equiv to obj.method2(3)
-/// \endcode
+/// ~~~~~~~~~
 ///
-/// \subsubsection addingtypeinfo Adding Type Info
+/// @subsubsection addingtypeinfo Adding Type Info
 ///
 /// ChaiScript will automatically support any type implicitly provided to it in the form
 /// of objects and function parameters / return types. However, it can be nice to let ChaiScript 
@@ -219,27 +223,28 @@
 ///
 /// Continuing with the example "MyClass" from above:
 ///
-/// \code
+/// ~~~~~~~~{.cpp}
 /// chai.add(user_type<MyClass>(), "MyClass");
-/// \endcode
+/// ~~~~~~~~
 ///
-/// \subsubsection addingmodules Adding Modules
+/// @subsubsection addingmodules Adding Modules
 /// 
 /// Modules are holders for collections of ChaiScript registrations.
 ///
-/// \code
+/// ~~~~~~~~{.cpp}
 /// ModulePtr module = get_sum_module();
 /// chai.add(module);
-/// \endcode
+/// ~~~~~~~~
 /// 
-/// \sa chaiscript::Module
+/// @sa chaiscript::Module
 ///
-/// <hr>
-/// \subsection operatoroverloading Operator Overloading
+/// -----------------------------------------------------------------------
+///
+/// @subsection operatoroverloading Operator Overloading
 /// 
 /// Operators are just like any other function in ChaiScript, to overload an operator, simply register it.
 /// 
-/// \code 
+/// ~~~~~~~~{.cpp} 
 /// class MyClass {
 ///   MyClass operator+(const MyClass &) const;
 /// };
@@ -254,17 +259,18 @@
 /// }
 ///
 /// chai.add(fun(append_string_int), "+");
-/// \endcode
+/// ~~~~~~~~
 ///
-/// \sa \ref addingfunctions
+/// @sa @ref addingfunctions
 ///
-/// <hr>
-/// \subsection helpermacro Class Helper Macro
+/// -----------------------------------------------------------------------
+///
+/// @subsection add_class Class Helper Utility
 /// 
 /// Much of the work of adding new classes to ChaiScript can be reduced with the help
-/// of the CHAISCRIPT_CLASS helper macro.
+/// of the add_class helper utility.
 ///
-/// \code
+/// ~~~~~~~~{.cpp}
 /// class Test
 /// {
 ///   public:
@@ -277,30 +283,30 @@
 ///
 /// int main()
 /// {
-///
 ///   chaiscript::ModulePtr m = chaiscript::ModulePtr(new chaiscript::Module());
 ///
-///   CHAISCRIPT_CLASS( m, 
-///       Test,
-///       (Test ())
-///       (Test (const Test &)),
-///       ((function))
-///       ((function2))
-///       ((function3))
-///       ((functionOverload)(std::string (Test::*)(double)))
-///       ((functionOverload)(std::string (Test::*)(int)))
-///       ((operator=))
-///     );
-/// 
+///   chaiscript::utility::add_class<chaiscript::Test>(*m,
+///      "Test",
+///      { constructor<Test()>(),
+///        constructor<Test(const Test &)>() },
+///      { {fun(&Test::function), "function"},
+///        {fun(&Test::function2), "function2"},
+///        {fun(&Test::function2), "function3"} 
+///        {fun(static_cast<std::string Test::*(double)>(&Test::functionOverload)), "functionOverload"} 
+///        {fun(static_cast<std::string Test::*(int)>(&Test::functionOverload)), "functionOverload"} }
+///      );
+///
+///
 ///   chaiscript::ChaiScript chai;
 ///   chai.add(m);
 /// }
-/// \endcode
+/// ~~~~~~~~
 /// 
-/// \sa \ref addingmodules
+/// @sa @ref addingmodules
 ///
-/// <hr>
-/// \subsection pointerconversions Pointer / Object Conversions
+/// -----------------------------------------------------------------------
+///
+/// @subsection pointerconversions Pointer / Object Conversions
 ///
 /// As much as possible, ChaiScript attempts to convert between &, *, const &, const *, std::shared_ptr<T>,
 /// std::shared_ptr<const T>, std::reference_wrapper<T>, std::reference_wrapper<const T> and value types automatically.
@@ -310,7 +316,7 @@
 ///
 /// The take away is that you can pretty much expect function calls to Just Work when you need them to.
 ///
-/// \code
+/// ~~~~~~~~{.cpp}
 /// void fun1(const int *);
 /// void fun2(int *);
 /// void fun3(int);
@@ -350,18 +356,19 @@
 ///   chai("fun9(i)");
 ///   chai("fun10(i)");
 /// }  
-/// \endcode
+/// ~~~~~~~~
 ///
 /// See the unit test unittests/boxed_cast_test.cpp for a complete breakdown of the automatic casts that 
 /// available and tested.
 /// 
-/// <hr>
-/// \subsection baseclasses Base Classes
+/// -----------------------------------------------------------------------
+///
+/// @subsection baseclasses Base Classes
 /// 
 /// ChaiScript supports handling of passing a derived class object to a function expecting a base class object.
 /// For the process to work, the base/derived relationship must be registered with the engine.
 ///
-/// \code
+/// ~~~~~~~~{.cpp}
 /// class Base {};
 /// class Derived : public Base {};
 /// void myfunction(Base *b);
@@ -375,16 +382,17 @@
 ///   chai.add(chaiscript::fun(&myfunction), "myfunction");
 ///   chai("myfunction(d)");
 /// }
-/// \endcode
+/// ~~~~~~~~
 /// 
-/// <hr>
+/// -----------------------------------------------------------------------
 ///
-/// \subsection functionobjects Function Objects
+///
+/// @subsection functionobjects Function Objects
 ///
 /// Functions are first class objects in Chaiscript and ChaiScript supports automatic conversion
 /// between ChaiScript functions and std::function objects.
 ///
-/// \code
+/// ~~~~~~~~{.cpp}
 /// void callafunc(const std::function<void (const std::string &)> &t_func)
 /// {
 ///   t_func("bob");
@@ -400,11 +408,12 @@
 ///   std::function<void ()> f = chai.eval<std::function<void ()> >("dump_system");
 ///   f(); // call the ChaiScript function dump_system, from C++
 /// }
-/// \endcode
+/// ~~~~~~~~
 /// 
-/// <hr>
+/// -----------------------------------------------------------------------
 ///
-/// \subsection threading Threading
+///
+/// @subsection threading Threading
 /// 
 /// Thread safety is automatically handled within the ChaiScript system. Objects can be added
 /// and scripts executed from multiple threads. For each thread that executes scripts, a new
@@ -414,16 +423,17 @@
 ///
 /// Disabling thread safety increases performance in many cases.
 ///
-/// <hr>
+/// -----------------------------------------------------------------------
 ///
-/// \subsection exceptions Exception Handling
+///
+/// @subsection exceptions Exception Handling
 /// 
-/// \subsubsection exceptionsbasics Exception Handling Basics
+/// @subsubsection exceptionsbasics Exception Handling Basics
 ///
 /// Exceptions can be thrown in ChaiScript and caught in C++ or thrown in C++ and caught in 
 /// ChaiScript.
 ///
-/// \code
+/// ~~~~~~~~{.cpp}
 /// void throwexception()
 /// {
 ///   throw std::runtime_error("err");
@@ -444,19 +454,19 @@
 ///     // i == 1
 ///   }
 /// }
-/// \endcode
+/// ~~~~~~~~
 /// 
-/// \subsubsection exceptionsautomatic Exception Handling Automatic Unboxing
+/// @subsubsection exceptionsautomatic Exception Handling Automatic Unboxing
 ///
 /// As an alternative to the manual unboxing of exceptions shown above, exception specifications allow the user to tell 
 /// ChaiScript what possible exceptions are expected from the script being executed. 
 ///
 /// Example:
-/// \code
+/// ~~~~~~~~{.cpp}
 /// chaiscript::ChaiScript chai;
 ///
 /// try {
-///   chai.eval("throw(runtime_error(\"error\"))", chaiscript::exception_specification<int, double, float, const std::string &, const std::exception &>());
+///   chai.eval("throw(runtime_error(@"error@"))", chaiscript::exception_specification<int, double, float, const std::string &, const std::exception &>());
 /// } catch (const double e) {
 /// } catch (int) {
 /// } catch (float) {
@@ -464,19 +474,19 @@
 /// } catch (const std::exception &e) {
 ///   // This is the one what will be called in the specific throw() above
 /// }
-/// \endcode
+/// ~~~~~~~~
 ///
-/// \sa chaiscript::Exception_Handler for details on automatic exception unboxing 
-/// \sa chaiscript::exception_specification
+/// @sa chaiscript::Exception_Handler for details on automatic exception unboxing 
+/// @sa chaiscript::exception_specification
 
 
 
-/// \page LangObjectSystemRef ChaiScript Language Object Model Reference
+/// @page LangObjectSystemRef ChaiScript Language Object Model Reference
 ///
 ///
 /// ChaiScript has an object system built in, for types defined within the ChaiScript system.
 ///
-/// \code
+/// ~~~~~~~~~
 /// attr Rectangle::height
 /// attr Rectangle::width
 /// def Rectangle::Rectangle() { this.height = 10; this.width = 20 }
@@ -485,67 +495,69 @@
 /// var rect = Rectangle()
 /// rect.height = 30
 /// print(rect.area())
-/// \endcode
+/// ~~~~~~~~~
 ///
-/// \sa \ref keywordattr
-/// \sa \ref keyworddef
+/// @sa @ref keywordattr
+/// @sa @ref keyworddef
 
-/// \page LangInPlaceRef ChaiScript Language In-Place Creation Reference
-/// \section inplacevector Vector
+/// @page LangInPlaceRef ChaiScript Language In-Place Creation Reference
+/// @section inplacevector Vector
 /// 
-/// \code
+/// ~~~~~~~~~
 /// In-place Vector ::= "[" [expression ("," expression)*]  "]"
-/// \endcode
+/// ~~~~~~~~~
 ///
-/// \section inplacerangedvector Ranged Vector
+/// @section inplacerangedvector Ranged Vector
 ///
-/// \code
+/// ~~~~~~~~~
 /// In-place Ranged Vector ::= "[" value ".." value "]"
-/// \endcode
+/// ~~~~~~~~~
 ///
 /// Creates a vector over a range (eg. 1..10)
 ///
-/// \section inplacemap Map
+/// @section inplacemap Map
 ///
-/// \code
+/// ~~~~~~~~
 /// In-place Map ::= "[" (string ":" expression)+ "]"
-/// \endcode
+/// ~~~~~~~~
 
-/// \page LangGettingStarted ChaiScript Language Getting Started
+/// @page LangGettingStarted ChaiScript Language Getting Started
 /// 
 /// ChaiScript is a simple language that should feel familiar to anyone who knows
 /// C++ or ECMAScript (JavaScript). 
 ///
-/// <hr>
-/// \section chaiscriptloops Loops
+/// -----------------------------------------------------------------------
+///
+/// @section chaiscriptloops Loops
 ///
 /// Common looping constructs exist in ChaiScript
 ///
-/// \code
+/// ~~~~~~~~
 /// var i = 0;
 /// while (i < 10)
 /// {
 ///   // do something
 ///   ++i;
 /// }
-/// \endcode
+/// ~~~~~~~~
 ///
-/// \code
+/// ~~~~~~~~
 /// for (var i = 0; i < 10; ++i)
 /// {
 ///   // do something
 /// }
-/// \endcode
+/// ~~~~~~~~
 ///
-/// \sa \ref keywordfor
-/// \sa \ref keywordwhile
+/// @sa @ref keywordfor
+/// @sa @ref keywordwhile
 ///
-/// <hr>
-/// \section chaiscriptifs Conditionals
+/// -----------------------------------------------------------------------
+///
+/// @section chaiscriptifs Conditionals
 ///
 /// If statements work as expected
 /// 
-/// \code
+/// ~~~~~~~~
 /// var b = true;
 /// 
 /// if (b) {
@@ -555,103 +567,109 @@
 /// } else {
 ///   // or do this
 /// }
-/// \endcode
+/// ~~~~~~~~
 ///
-/// \sa \ref keywordif
+/// @sa @ref keywordif
 ///
-/// <hr>
-/// \section chaiscriptfunctions Functions
+/// -----------------------------------------------------------------------
+///
+/// @section chaiscriptfunctions Functions
 /// 
 /// Functions are defined with the def keyword
 /// 
-/// \code
+/// ~~~~~~~~
 /// def myfun(x) { print(x); }
 ///
 /// myfun(10);
-/// \endcode
+/// ~~~~~~~~
 ///
 /// Functions may have "guards" which determine if which is called.
 ///
-/// \code
+/// ~~~~~~~~
 /// eval> def myfun2(x) : x < 10 { print("less than 10"); }
 /// eval> def myfun2(x) : x >= 10 { print("10 or greater"); }
 /// eval> myfun2(5)
 /// less than 10
 /// eval> myfun2(12)
 /// 10 or greater
-/// \endcode
+/// ~~~~~~~~
 /// 
-/// \sa \ref keyworddef
-/// \sa \ref keywordattr
-/// \sa \ref LangObjectSystemRef
+/// @sa @ref keyworddef
+/// @sa @ref keywordattr
+/// @sa @ref LangObjectSystemRef
 ///
-/// <hr>
-/// \section chaiscriptfunctionobjects Function Objects
+/// -----------------------------------------------------------------------
+///
+/// @section chaiscriptfunctionobjects Function Objects
 /// 
 /// Functions are first class types in ChaiScript and can be used as variables.
 ///
-/// \code
+/// ~~~~~~~~
 /// eval> var p = print;
 /// eval> p(1);
 /// 1
-/// \endcode
+/// ~~~~~~~~
 /// 
 /// They can also be passed to functions. 
 ///
-/// \code
+/// ~~~~~~~~
 /// eval> def callfunc(f, lhs, rhs) { return f(lhs, rhs); }
 /// eval> def dosomething(lhs, rhs) { print("lhs: ${lhs}, rhs: ${rhs}"); }
 /// eval> callfunc(dosomething, 1, 2);
 /// lhs: 1, rhs: 2
-/// \endcode
+/// ~~~~~~~~
 ///
 /// Operators can also be treated as functions by using the back tick operator. Building on the above example:
 /// 
-/// \code
+/// ~~~~~~~~
 /// eval> callfunc(`+`, 1, 4);
 /// 5
 /// eval> callfunc(`*`, 3, 2);
 /// 6
-/// \endcode
+/// ~~~~~~~~
 ///
-/// <hr>
-/// \sa \ref LangKeywordRef
-/// \sa ChaiScript_Language for Built in Functions
+/// -----------------------------------------------------------------------
+///
+/// @sa @ref LangKeywordRef
+/// @sa ChaiScript_Language for Built in Functions
 
 
-/// \page LangKeywordRef ChaiScript Language Keyword Reference
+/// @page LangKeywordRef ChaiScript Language Keyword Reference
 ///
 ///
-/// <hr>
-/// \section keywordattr attr
+/// -----------------------------------------------------------------------
+///
+/// @section keywordattr attr
 /// Defines a ChaiScript object attribute
 /// 
-/// \code 
+/// ~~~~~~~~ 
 /// Attribute Definition ::= "attr" class_name "::" attribute_name
-/// \endcode
+/// ~~~~~~~~
 ///
-/// \sa \ref LangObjectSystemRef
+/// @sa @ref LangObjectSystemRef
 ///
-/// <hr>
-/// \section keywordbreak break
+/// -----------------------------------------------------------------------
+///
+/// @section keywordbreak break
 /// Stops execution of a looping block.
 ///
-/// \code
+/// ~~~~~~~~
 /// Break Statement ::= "break"
-/// \endcode
+/// ~~~~~~~~
 ///
-/// \sa \ref keywordfor
-/// \sa \ref keywordwhile 
+/// @sa @ref keywordfor
+/// @sa @ref keywordwhile 
 ///
 ///
-/// <hr>
-/// \section keyworddef def
+/// -----------------------------------------------------------------------
+///
+/// @section keyworddef def
 /// Begins a function or method definition
 ///
-/// \code
+/// ~~~~~~~~
 /// Function Definition ::= [annotation + CR/LF] "def" identifier "(" [arg ("," arg)*] ")" [":" guard] block
 /// Method Definition ::= [annotation + CR/LF] "def" class_name "::" method_name "(" [arg ("," arg)*] ")" [":" guard] block
-/// \endcode
+/// ~~~~~~~~
 /// 
 /// annotation: meta-annotation on function, currently used as documentation. Optional.
 /// identifier: name of function. Required.
@@ -667,50 +685,56 @@
 /// Method definitions for known types extend those types with new methods. This includes C++ and ChaiScript defined types.
 /// Method definitions for unknown types implicitly define the named type.
 ///
-/// \sa \ref LangObjectSystemRef
+/// @sa @ref LangObjectSystemRef
 ///
 ///
-/// <hr>
-/// \section keywordelse else
-/// \sa \ref keywordif 
+/// -----------------------------------------------------------------------
+///
+/// @section keywordelse else
+/// @sa @ref keywordif 
 ///
 ///
-/// <hr>
-/// \section keywordfor for
-/// \code
+/// -----------------------------------------------------------------------
+///
+/// @section keywordfor for
+/// ~~~~~~~~
 /// For Block ::= "for" "(" [initial] ";" stop_condition ";" loop_expression ")" block
-/// \endcode
-/// This loop can be broken using the \ref keywordbreak command.
+/// ~~~~~~~~
+/// This loop can be broken using the @ref keywordbreak command.
 ///
 ///
-/// <hr>
-/// \section keywordfun fun
+/// -----------------------------------------------------------------------
+///
+/// @section keywordfun fun
 /// Begins an anonymous function declaration (sometimes called a lambda).
 ///
-/// \code
+/// ~~~~~~~~
 /// Lambda ::= "fun" "(" [variable] ("," variable)*  ")" block
-/// \endcode
+/// ~~~~~~~~
 ///
-/// \b Examples:
+/// _Example_
 ///
-/// \code
+/// ~~~~~~~~
 /// // Generate an anonymous function object that adds 2 to its parameter
 /// var f = fun(x) { x + 2; }
-/// \endcode
+/// ~~~~~~~~
 ///
-/// \sa \ref keyworddef for more details on ChaiScript functions
+/// @sa @ref keyworddef for more details on ChaiScript functions
 ///
 ///
-/// <hr>
-/// \section keywordif if
+/// -----------------------------------------------------------------------
+///
+/// @section keywordif if
 /// Begins a conditional block of code that only executes if the condition evaluates as true.
-/// \code
+/// ~~~~~~~~
 /// If Block ::= "if" "(" condition ")" block
 /// Else If Block ::= "else if" "(" condition ")" block
 /// Else Block ::= "else" block
-/// \endcode
-/// \b Example:
-/// \code
+/// ~~~~~~~~
+/// 
+/// _Example_
+///
+/// ~~~~~~~~
 /// if (true) {
 ///   // do something
 /// } else if (false) {
@@ -718,35 +742,38 @@
 /// } else {
 ///   // otherwise do this
 /// }
-/// \endcode
+/// ~~~~~~~~
 ///
 ///
-/// <hr>
-/// \section keywordtry try
-/// \code
+/// -----------------------------------------------------------------------
+///
+/// @section keywordtry try
+/// ~~~~~~~~
 /// Try Block ::= "try" block 
 ///  ("catch" ["(" variable ")"] [":" guards] block)+ 
 ///    ["finally" block]
-/// \endcode
+/// ~~~~~~~~
 ///
-/// \sa ChaiScript_Language::throw
+/// @sa ChaiScript_Language::throw
 ///
-/// <hr>
-/// \section keywordwhile while
+/// -----------------------------------------------------------------------
+///
+/// @section keywordwhile while
 /// 
 /// Begins a conditional block of code that loops 0 or more times, as long as the condition is true
 ///
-/// \code
+/// ~~~~~~~~
 /// While Block ::= "while" "(" condition ")" block
-/// \endcode
-/// This loop can be broken using the \ref keywordbreak command.
+/// ~~~~~~~~
+///
+/// This loop can be broken using the @ref keywordbreak command.
 
 
-/// \namespace chaiscript
-/// \brief Namespace chaiscript contains every API call that the average user will be concerned with.
+/// @namespace chaiscript
+/// @brief Namespace chaiscript contains every API call that the average user will be concerned with.
 
-/// \namespace chaiscript::detail
-/// \brief Classes and functions reserved for internal use. Items in this namespace are not supported.
+/// @namespace chaiscript::detail
+/// @brief Classes and functions reserved for internal use. Items in this namespace are not supported.
 
 #include "chaiscript_defines.hpp"
 

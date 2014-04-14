@@ -67,8 +67,6 @@ namespace chaiscript
 #ifdef CHAISCRIPT_HAS_THREAD_LOCAL
       /// Typesafe thread specific storage. If threading is enabled, this class uses a mutex protected map. If
       /// threading is not enabled, the class always returns the same data, regardless of which thread it is called from.
-      /// 
-      /// \todo move to thread_local when it exists 
       template<typename T>
         class Thread_Storage
         {

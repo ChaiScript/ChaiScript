@@ -22,17 +22,14 @@ namespace chaiscript
   class Boxed_Value
   {
     public:
-      /**
-       * used for explicitly creating a "void" object
-       */
+      /// used for explicitly creating a "void" object
       struct Void_Type
       {
       };
 
     private:
-      /**
-       * structure which holds the internal state of a Boxed_Value
-       */
+      /// structure which holds the internal state of a Boxed_Value
+      /// \todo Get rid of Any and merge it with this, reducing an allocation in the process
       struct Data
       {
         Data(const Type_Info &ti,
@@ -137,28 +134,22 @@ namespace chaiscript
       };
 
     public:
-      /**
-       * Basic Boxed_Value constructor
-       */
+      /// Basic Boxed_Value constructor
       template<typename T>
         explicit Boxed_Value(T t)
         : m_data(Object_Data::get(t))
         {
         }
 
-      /**
-       * Copy constructor - each copy shares the same data pointer
-       */
+      /// Copy constructor - each copy shares the same data pointer
       Boxed_Value(const Boxed_Value &t_so)
         : m_data(t_so.m_data)
       {
       }
 
-      /**
-       * Unknown-type constructor
-       */
+      /// Unknown-type constructor
       Boxed_Value()
-        : m_data(Object_Data::get())    
+        : m_data(Object_Data::get())
       {
       }
 
@@ -171,19 +162,15 @@ namespace chaiscript
         std::swap(m_data, rhs.m_data);
       }
 
-      /**
-       * copy the values stored in rhs.m_data to m_data
-       * m_data pointers are not shared in this case
-       */
+      /// Copy the values stored in rhs.m_data to m_data.
+      /// m_data pointers are not shared in this case
       Boxed_Value assign(const Boxed_Value &rhs)
       {
         (*m_data) = (*rhs.m_data);
         return *this;
       }
 
-      /**
-       * shared data assignment, same as copy construction
-       */
+      /// shared data assignment, same as copy construction
       Boxed_Value &operator=(const Boxed_Value &rhs)
       {
         Boxed_Value temp(rhs);
@@ -196,9 +183,7 @@ namespace chaiscript
         return m_data->m_type_info;
       }
 
-      /**
-       * return true if the object is uninitialized
-       */
+      /// return true if the object is uninitialized
       bool is_undef() const
       {
         return m_data->m_type_info.is_undef();
@@ -254,19 +239,20 @@ namespace chaiscript
       std::shared_ptr<Data> m_data;
   };
 
-  /// \brief Creates a Boxed_Value. If the object passed in is a value type, it is copied. If it is a pointer, std::shared_ptr, or std::reference_type
+  /// @brief Creates a Boxed_Value. If the object passed in is a value type, it is copied. If it is a pointer, std::shared_ptr, or std::reference_type
   ///        a copy is not made.
-  /// \param t The value to box
-  /// 
+  /// @param t The value to box
+  ///
   /// Example:
-  /// \code
+  ///
+  /// ~~~{.cpp}
   /// int i;
   /// chaiscript::ChaiScript chai;
   /// chai.add(chaiscript::var(i), "i");
   /// chai.add(chaiscript::var(&i), "ip");
-  /// \endcode
-  /// 
-  /// \sa \ref addingobjects
+  /// ~~~
+  ///
+  /// @sa @ref addingobjects
   template<typename T>
     Boxed_Value var(T t)
     {
@@ -339,6 +325,7 @@ namespace chaiscript
   /// chai.add(chaiscript::const_var(Green), "Green");
   /// \endcode
   /// 
+  /// \todo support C++11 strongly typed enums
   /// \sa \ref addingobjects
   template<typename T>
     Boxed_Value const_var(const T &t)

@@ -11,7 +11,7 @@
 #include "dispatchkit/bootstrap.hpp"
 #include "dispatchkit/bootstrap_stl.hpp"
 
-/// \file
+/// @file
 ///
 /// This file generates the standard library that normal ChaiScript usage requires.
 
