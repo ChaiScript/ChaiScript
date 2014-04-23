@@ -112,12 +112,15 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::fun(&derived_type_factory), "derived_type_factory");
   m->add(chaiscript::fun(&more_derived_type_factory), "more_derived_type_factory");
 
+  m->add(chaiscript::fun(&TestDerivedType::func), "func");
+
   m->add(chaiscript::fun(&TestBaseType::func), "func");
   m->add(chaiscript::fun(&TestBaseType::val), "val");
   m->add(chaiscript::fun(&TestBaseType::const_val), "const_val");
   m->add(chaiscript::fun(&TestBaseType::base_only_func), "base_only_func");
 
   m->add(chaiscript::fun(&get_new_int), "get_new_int");
+
 
   m->add_global_const(chaiscript::const_var(TestValue1), "TestValue1");
 
