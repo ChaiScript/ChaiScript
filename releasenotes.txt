@@ -1,6 +1,12 @@
-Current Version: 4.3.0
+Current Version: 4.3.1
 
 Note: this is scheduled to be the last release that requires boost, new releases after this will require a C++11 compiler.
+
+### Changes since 4.3.0
+* Add automatic conversion of arithmetic return types, following the same
+  rules as conversion of arithmetic types when passing parameters
+* Add automatic casting up the inheritence hierarchy when possible.
+* Enable travis.ci testing
 
 ### Changes since 4.2.0
 * Enhanced unit tests
