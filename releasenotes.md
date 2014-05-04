@@ -1,11 +1,17 @@
 Notes:
+=======
+Current Version: 5.3.1
 
- * There was overlap during the 5.x and 4.x development cycle, so some of the notes appear twice as the new features were developed for 4.x (which required boost) then ported to 5.x (which requires C++11).
- * This is the last release of 5.x, all future development will be on the final merged 6.x line.
-
+### Changes since 5.3.0
+* Add automatic conversion of arithmetic return types, following the same
+  rules as conversion of arithmetic types when passing parameters
+* Add automatic casting up the inheritence hierarchy when possible.
+* Enable travis.ci testing
 
 ### Changes since 5.2.0
 * Official support for MSVC with C++11. All major platforms and compilers are now support for C++11 release
+
+### Changes since 4.2.0
 * Enhanced unit tests
 * Add `continue` statement, fix various use cases for `for`  loops
 * Fix use of suffixed numbers in vector initialization
