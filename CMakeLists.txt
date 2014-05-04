@@ -9,25 +9,38 @@ else()
   option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" TRUE)
 endif()
 
-if (CMAKE_COMPILER_IS_GNUCC)
-  option(ENABLE_COVERAGE "Enable Coverage Reporting in GCC" FALSE)
-endif()
-
-
 
 option(BUILD_MODULES "Build Extra Modules (stl, reflection)" TRUE)
 option(BUILD_SAMPLES "Build Samples Folder" FALSE)
 
-set(EXTRA_LINKER_FLAGS "")
 
 if (CMAKE_COMPILER_IS_GNUCC)
   option(ENABLE_COVERAGE "Enable Coverage Reporting in GCC" FALSE)
 
   if (ENABLE_COVERAGE)
     add_definitions(--coverage -O0)
-    SET(EXTRA_LINKER_FLAGS ${EXTRA_LINKER_FLAGS} "--coverage")
+    set(LINKER_FLAGS "${LINKER_FLAGS} --coverage")
+  endif()
+endif()
+
+if (CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  option(ENABLE_THREAD_SANITIZER "Enable thread sanitizer testing in gcc/clang" FALSE)
+  if (ENABLE_THREAD_SANITIZER)
+    add_definitions(-fsanitize=thread -g)
+    set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=thread")
   endif()
 
+  option(ENABLE_ADDRESS_SANITIZER "Enable address sanitizer testing in gcc/clang" FALSE)
+  if (ENABLE_ADDRESS_SANITIZER)
+    add_definitions(-fsanitize=address -g)
+    set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=address")
+  endif()
+
+  option(ENABLE_UNDEFINED_SANITIZER "Enable undefined behavior sanitizer testing in gcc/clang" FALSE)
+  if (ENABLE_UNDEFINED_SANITIZER)
+    add_definitions(-fsanitize=undefined -g)
+    set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=undefined")
+  endif()
 endif()
 
 list(APPEND CPACK_SOURCE_IGNORE_FILES "${CMAKE_CURRENT_BINARY_DIR}")
@@ -88,26 +101,16 @@ else(READLINE_LIBRARY)
     set (READLINE_FLAG )
 endif(READLINE_LIBRARY)
 
-SET(EXTRA_LINKER_FLAGS "")
-
 if (CMAKE_COMPILER_IS_GNUCC)
   execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
 
   if (GCC_VERSION VERSION_LESS 4.8)
-    SET(CPP11_FLAG "-std=c++0x")
+    set(CPP11_FLAG "-std=c++0x")
   else()
-    SET(CPP11_FLAG "-std=c++11")
+    set(CPP11_FLAG "-std=c++11")
   endif()
-
-  if (ENABLE_COVERAGE)
-    add_definitions(--coverage -O0)
-    SET(EXTRA_LINKER_FLAGS ${EXTRA_LINKER_FLAGS} "--coverage")
-    #    SET(CMAKE_EXE_LINKER_FLAGS_DEBUG "-fprofile-arcs -ftest-coverage")
-  endif()
-   
-
 else()
-  SET(CPP11_FLAG "-std=c++11")
+  set(CPP11_FLAG "-std=c++11")
 endif()
 
 if(MSVC)
@@ -123,7 +126,7 @@ if(MSVC)
   ADD_DEFINITIONS(/wd4503)
 else()
   add_definitions(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic ${CPP11_FLAG})
-  
+
   if (APPLE)
     add_definitions(-Wno-sign-compare)
   endif()
@@ -134,12 +137,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
   if (USE_LIBCXX)
     add_definitions(-stdlib=libc++)
-    set (EXTRA_LINKER_FLAGS  ${EXTRA_LINKER_FLAGS} ${CPP11_FLAG} -stdlib=libc++)
+    set(LINKER_FLAGS "${LINKER_FLAGS} ${CPP11_FLAG} -stdlib=libc++")
   else ()
-    set (EXTRA_LINKER_FLAGS  ${EXTRA_LINKER_FLAGS} ${CPP11_FLAG})
+    set(LINKER_FLAGS "${LINKER_FLAGS} ${CPP11_FLAG}")
   endif()
 elseif(CMAKE_COMPILER_IS_GNUCC)
-  set (EXTRA_LINKER_FLAGS  ${EXTRA_LINKER_FLAGS} ${CPP11_FLAG})
+  set(LINKER_FLAGS "${LINKER_FLAGS} ${CPP11_FLAG}")
 endif()
 
 # limitations in MinGW require us to make an optimized build
@@ -169,44 +172,47 @@ if (CMAKE_HOST_UNIX)
     if (CMAKE_COMPILER_IS_GNUCC)
       execute_process(COMMAND ${CMAKE_C_COMPILER} --version OUTPUT_VARIABLE GCC_FULL_VERSION)
       if (GCC_FULL_VERSION MATCHES "4.8.1.*ubuntu")
-        set (EXTRA_LINKER_FLAGS ${EXTRA_LINKER_FLAGS} -Wl,--no-as-needed -pthread )
+        set(LINKER_FLAGS "${LINKER_FLAGS} -Wl,--no-as-needed -pthread")
       else()
-        set (EXTRA_LINKER_FLAGS ${EXTRA_LINKER_FLAGS} -pthread )
+        set(LINKER_FLAGS "${LINKER_FLAGS} -pthread")
       endif()
     else()
-      set (EXTRA_LINKER_FLAGS ${EXTRA_LINKER_FLAGS} -pthread )
+      set(LINKER_FLAGS "${LINKER_FLAGS} -pthread")
     endif()
 
     add_definitions(-pthread)
   endif()
 
 endif(CMAKE_HOST_UNIX)
-  
+
 list(APPEND LIBS ${READLINE_LIB})
 
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
+set(CMAKE_SHARED_MODULE_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
 
 add_library(chaiscript_stdlib MODULE src/chaiscript_stdlib.cpp)
-target_link_libraries(chaiscript_stdlib ${LIBS} ${EXTRA_LINKER_FLAGS} ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(chaiscript_stdlib ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(chai src/main.cpp ${Chai_INCLUDES})
-target_link_libraries(chai ${LIBS} ${EXTRA_LINKER_FLAGS})
+target_link_libraries(chai ${LIBS})
 add_dependencies(chai chaiscript_stdlib)
 
 if (BUILD_SAMPLES)
   add_executable(example samples/example.cpp)
-  target_link_libraries(example ${LIBS} ${EXTRA_LINKER_FLAGS})
+  target_link_libraries(example ${LIBS})
   add_executable(memory_leak_test samples/memory_leak_test.cpp)
-  target_link_libraries(memory_leak_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+  target_link_libraries(memory_leak_test ${LIBS})
 endif()
 
 
 if (BUILD_MODULES)
   add_library(stl_extra MODULE src/stl_extra.cpp)
-  target_link_libraries(stl_extra ${LIBS} ${EXTRA_LINKER_FLAGS})
+  target_link_libraries(stl_extra ${LIBS})
 
   add_library(reflection MODULE src/reflection.cpp)
-  target_link_libraries(reflection ${LIBS} ${EXTRA_LINKER_FLAGS})
+  target_link_libraries(reflection ${LIBS})
   set(MODULES stl_extra reflection)
 endif()
 
@@ -231,80 +237,80 @@ if(BUILD_TESTING)
   if (NOT UNIT_TEST_LIGHT)
     # commented out because uniform initializer syntax is not working properly in MSVC 2013
     add_executable(utility_test unittests/utility_test.cpp)
-    target_link_libraries(utility_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(utility_test ${LIBS})
     add_test(NAME Utility_Test COMMAND utility_test)
 
     add_executable(dynamic_object_test unittests/dynamic_object_test.cpp)
-    target_link_libraries(dynamic_object_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(dynamic_object_test ${LIBS})
     add_test(NAME Dynamic_Object_Test COMMAND dynamic_object_test)
 
     add_executable(functor_creation_test unittests/functor_creation_test.cpp)
-    target_link_libraries(functor_creation_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(functor_creation_test ${LIBS})
     add_test(NAME Functor_Creation_Test COMMAND functor_creation_test)
 
     add_executable(functor_cast_test unittests/functor_cast_test.cpp)
-    target_link_libraries(functor_cast_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(functor_cast_test ${LIBS})
     add_test(NAME Functor_Cast_Test COMMAND functor_cast_test)
 
     add_executable(boxed_cast_test unittests/boxed_cast_test.cpp)
-    target_link_libraries(boxed_cast_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(boxed_cast_test ${LIBS})
     add_test(NAME Boxed_Cast_Test COMMAND boxed_cast_test)
 
     add_executable(object_lifetime_test unittests/object_lifetime_test.cpp)
-    target_link_libraries(object_lifetime_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(object_lifetime_test ${LIBS})
     add_test(NAME Object_Lifetime_Test COMMAND object_lifetime_test)
 
     add_executable(function_ordering_test unittests/function_ordering_test.cpp)
-    target_link_libraries(function_ordering_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(function_ordering_test ${LIBS})
     add_test(NAME Function_Ordering_Test COMMAND function_ordering_test)
 
     add_executable(type_info_test unittests/type_info_test.cpp)
-    target_link_libraries(type_info_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(type_info_test ${LIBS})
     add_test(NAME Type_Info_Test COMMAND type_info_test)
 
     add_executable(eval_catch_exception_test unittests/eval_catch_exception_test.cpp)
-    target_link_libraries(eval_catch_exception_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(eval_catch_exception_test ${LIBS})
     add_test(NAME Eval_Catch_Exception_Test COMMAND eval_catch_exception_test)
 
     add_executable(short_comparison_test unittests/short_comparison_test.cpp)
-    target_link_libraries(short_comparison_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(short_comparison_test ${LIBS})
     add_test(NAME Short_Comparison_Test COMMAND short_comparison_test)
 
     add_executable(cpp_lambda_test unittests/cpp_lambda_test.cpp)
-    target_link_libraries(cpp_lambda_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(cpp_lambda_test ${LIBS})
     add_test(NAME cpp_lambda_test COMMAND cpp_lambda_test)
 
     add_executable(expected_eval_errors_test unittests/expected_eval_errors_test.cpp)
-    target_link_libraries(expected_eval_errors_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(expected_eval_errors_test ${LIBS})
     add_test(NAME Expected_Eval_Errors_Test COMMAND expected_eval_errors_test)
 
     add_executable(set_state_test unittests/set_state_test.cpp)
-    target_link_libraries(set_state_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(set_state_test ${LIBS})
     add_test(NAME Set_State_Test COMMAND set_state_test)
 
     add_executable(simultaneous_chaiscript_test unittests/simultaneous_chaiscript_test.cpp)
-    target_link_libraries(simultaneous_chaiscript_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(simultaneous_chaiscript_test ${LIBS})
     add_test(NAME Simultaneous_Chaiscript_Test COMMAND simultaneous_chaiscript_test)
 
     add_executable(heap_allocated_chaiscript_test unittests/heap_allocated_chaiscript_test.cpp)
-    target_link_libraries(heap_allocated_chaiscript_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(heap_allocated_chaiscript_test ${LIBS})
     add_test(NAME Heap_Allocated_Chaiscript_Test COMMAND heap_allocated_chaiscript_test)
 
     add_executable(c_linkage_test unittests/c_linkage_test.cpp)
-    target_link_libraries(c_linkage_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(c_linkage_test ${LIBS})
     add_test(NAME C_Linkage_Test COMMAND c_linkage_test)
 
     add_executable(integer_literal_test unittests/integer_literal_test.cpp)
-    target_link_libraries(integer_literal_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(integer_literal_test ${LIBS})
     add_test(NAME Integer_Literal_Test COMMAND integer_literal_test)
 
     add_executable(arithmetic_conversions_test unittests/arithmetic_conversions_test.cpp)
-    target_link_libraries(arithmetic_conversions_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(arithmetic_conversions_test ${LIBS})
     add_test(NAME Arithmetic_Conversions_Test COMMAND arithmetic_conversions_test)
 
     if (MULTITHREAD_SUPPORT_ENABLED)
       add_executable(multithreaded_test unittests/multithreaded_test.cpp)
-      target_link_libraries(multithreaded_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+      target_link_libraries(multithreaded_test ${LIBS})
       add_test(NAME Multithreaded_Test COMMAND multithreaded_test)
       set_property(TEST Multithreaded_Test
         PROPERTY ENVIRONMENT
@@ -317,11 +323,11 @@ if(BUILD_TESTING)
 
     add_executable(multifile_test unittests/multifile_test_main.cpp unittests/multifile_test_chai.cpp
       unittests/multifile_test_module.cpp)
-    target_link_libraries(multifile_test ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(multifile_test ${LIBS})
     add_test(NAME MultiFile_Test COMMAND multifile_test)
 
     add_library(test_module MODULE src/test_module.cpp)
-    target_link_libraries(test_module ${LIBS} ${EXTRA_LINKER_FLAGS})
+    target_link_libraries(test_module ${LIBS})
 
     install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript)
   endif()
