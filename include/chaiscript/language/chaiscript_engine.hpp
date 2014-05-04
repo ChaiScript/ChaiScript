@@ -253,8 +253,6 @@ namespace chaiscript
 
     chaiscript::detail::Dispatch_Engine m_engine;
 
-
-
     /// Evaluates the given string in by parsing it and running the results through the evaluator
     Boxed_Value do_eval(const std::string &t_input, const std::string &t_filename = "__EVAL__", bool /* t_internal*/  = false) 
     {
@@ -329,7 +327,6 @@ namespace chaiscript
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::function_exists, std::ref(m_engine)), "function_exists");
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_function_objects, std::ref(m_engine)), "get_functions");
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_scripting_objects, std::ref(m_engine)), "get_objects");
-
       m_engine.add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(std::bind(&chaiscript::detail::Dispatch_Engine::call_exists, std::ref(m_engine), std::placeholders::_1))), 
           "call_exists");
       m_engine.add(fun<Boxed_Value (const dispatch::Proxy_Function_Base *, const std::vector<Boxed_Value> &)>(std::bind(&chaiscript::dispatch::Proxy_Function_Base::operator(), std::placeholders::_1, std::placeholders::_2, std::ref(m_engine.conversions()))), "call");
@@ -346,6 +343,12 @@ namespace chaiscript
       m_engine.add(fun(&ChaiScript::use, this), "use");
       m_engine.add(fun(&ChaiScript::internal_eval, this), "eval");
       m_engine.add(fun(&ChaiScript::internal_eval_ast, this), "eval");
+
+      m_engine.add(fun(&ChaiScript::version_major, this), "version_major");
+      m_engine.add(fun(&ChaiScript::version_minor, this), "version_minor");
+      m_engine.add(fun(&ChaiScript::version_patch, this), "version_patch");
+      m_engine.add(fun(&ChaiScript::version, this), "version");
+
 
       do_eval(ChaiScript_Prelude::chaiscript_prelude(), "standard prelude");
     }
@@ -455,12 +458,32 @@ namespace chaiscript
 
 
       // attempt to load the stdlib
-      load_module("chaiscript_stdlib");
+      load_module("chaiscript_stdlib-" + version());
 
       build_eval_system(ModulePtr());
     }
 
+    int version_major() const
+    {
+      return chaiscript::version_major;
+    }
 
+    int version_minor() const
+    {
+      return chaiscript::version_minor;
+    }
+
+    int version_patch() const
+    {
+      return chaiscript::version_patch;
+    }
+
+    std::string version() const
+    {
+      std::stringstream ss;
+      ss << version_major() << "." << version_minor() << "." << version_patch();
+      return ss.str();
+    }
 
     /// \brief Loads and parses a file. If the file is already, it is not reloaded
     /// The use paths specified at ChaiScript construction time are searched for the 
@@ -655,6 +678,12 @@ namespace chaiscript
     std::string load_module(const std::string &t_module_name)
     {
       std::vector<exception::load_module_error> errors;
+      std::string version_stripped_name = t_module_name;
+      size_t version_pos = version_stripped_name.find("-"+version());
+      if (version_pos != std::string::npos)
+      {
+        version_stripped_name.erase(version_pos);
+      }
 
       std::vector<std::string> prefixes;
       prefixes.push_back("lib");
@@ -674,7 +703,7 @@ namespace chaiscript
             try {
               std::string name = m_modulepaths[i] + prefixes[j] + t_module_name + postfixes[k];
               // std::cerr << "trying location: " << name << std::endl;
-              load_module(t_module_name, name);
+              load_module(version_stripped_name, name);
               return name;
             } catch (const chaiscript::exception::load_module_error &e) {
               // std::cerr << "error: " << e.what() << std::endl;

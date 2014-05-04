@@ -192,12 +192,12 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_SHARED_MODULE_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
 
-add_library(chaiscript_stdlib MODULE src/chaiscript_stdlib.cpp)
-target_link_libraries(chaiscript_stdlib ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
+add_library(chaiscript_stdlib-${CHAI_VERSION} MODULE src/chaiscript_stdlib.cpp)
+target_link_libraries(chaiscript_stdlib-${CHAI_VERSION} ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(chai src/main.cpp ${Chai_INCLUDES})
 target_link_libraries(chai ${LIBS})
-add_dependencies(chai chaiscript_stdlib)
+add_dependencies(chai chaiscript_stdlib-${CHAI_VERSION})
 
 if (BUILD_SAMPLES)
   add_executable(example samples/example.cpp)
@@ -223,10 +223,18 @@ list(SORT UNIT_TESTS)
 if(BUILD_TESTING)
   option(UNIT_TEST_LIGHT "Unit tests light (expect module loading failures)" FALSE)
 
+  add_test(version_check chai -c  "if(\"\\\${ version() };\\\${version_major()};\\\${version_minor()};\\\${version_patch()}\" != \"${CHAI_VERSION};${CPACK_PACKAGE_VERSION_MAJOR};${CPACK_PACKAGE_VERSION_MINOR};${CPACK_PACKAGE_VERSION_PATCH}\") { exit(-1) }")
+  set_property(TEST version_check
+   PROPERTY ENVIRONMENT
+    "CHAI_USE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/unittests/"
+    "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
+  )
+
+
   foreach(filename ${UNIT_TESTS})
     message(STATUS "Adding test ${filename}")
     add_test(${filename} chai ${CMAKE_CURRENT_SOURCE_DIR}/unittests/unit_test.inc ${CMAKE_CURRENT_SOURCE_DIR}/unittests/${filename})
- endforeach(filename)
+  endforeach(filename)
 
   set_property(TEST ${UNIT_TESTS}
    PROPERTY ENVIRONMENT
@@ -333,7 +341,7 @@ if(BUILD_TESTING)
   endif()
 endif(BUILD_TESTING)
 
-install(TARGETS chai chaiscript_stdlib ${MODULES} RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript )
+install(TARGETS chai chaiscript_stdlib-${CHAI_VERSION} ${MODULES} RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript )
 
 install(DIRECTORY include/chaiscript DESTINATION include
    PATTERN "*.hpp"
