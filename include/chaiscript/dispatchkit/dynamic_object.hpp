@@ -55,7 +55,7 @@ namespace chaiscript
               const std::string &t_type_name,
               const Proxy_Function &t_func)
             : Proxy_Function_Base(t_func->get_param_types()),
-            m_type_name(t_type_name), m_func(t_func)
+            m_type_name(t_type_name), m_func(t_func), m_doti(user_type<Dynamic_Object>())
           {
             assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
                 && "Programming error, Dynamic_Object_Function must have at least one parameter (this)");
@@ -66,13 +66,15 @@ namespace chaiscript
               const Proxy_Function &t_func,
               const Type_Info &t_ti)
             : Proxy_Function_Base(build_param_types(t_func->get_param_types(), t_ti)),
-              m_type_name(t_type_name), m_func(t_func), m_ti(new Type_Info(t_ti))
+              m_type_name(t_type_name), m_func(t_func), m_ti(new Type_Info(t_ti)), m_doti(user_type<Dynamic_Object>())
           {
             assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
                 && "Programming error, Dynamic_Object_Function must have at least one parameter (this)");
           }
 
           virtual ~Dynamic_Object_Function() {}
+
+          Dynamic_Object_Function &operator=(const Dynamic_Object_Function) = delete;
 
           virtual bool operator==(const Proxy_Function_Base &f) const
           {
@@ -140,11 +142,10 @@ namespace chaiscript
             return types;
           }
 
-          static bool dynamic_object_typename_match(const Boxed_Value &bv, const std::string &name,
-              const std::shared_ptr<Type_Info> &ti, const Dynamic_Cast_Conversions &t_conversions)
+          bool dynamic_object_typename_match(const Boxed_Value &bv, const std::string &name,
+              const std::shared_ptr<Type_Info> &ti, const Dynamic_Cast_Conversions &t_conversions) const
           {
-            static Type_Info doti = user_type<Dynamic_Object>();
-            if (bv.get_type_info().bare_equal(doti))
+            if (bv.get_type_info().bare_equal(m_doti))
             {
               try {
                 const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bv, &t_conversions);
@@ -163,8 +164,8 @@ namespace chaiscript
 
           }
 
-          static bool dynamic_object_typename_match(const std::vector<Boxed_Value> &bvs, const std::string &name,
-              const std::shared_ptr<Type_Info> &ti, const Dynamic_Cast_Conversions &t_conversions) 
+          bool dynamic_object_typename_match(const std::vector<Boxed_Value> &bvs, const std::string &name,
+              const std::shared_ptr<Type_Info> &ti, const Dynamic_Cast_Conversions &t_conversions) const
           {
             if (bvs.size() > 0)
             {
@@ -177,6 +178,8 @@ namespace chaiscript
           std::string m_type_name;
           Proxy_Function m_func;
           std::shared_ptr<Type_Info> m_ti;
+          const Type_Info m_doti;
+
 
       };
 
