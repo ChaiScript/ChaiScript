@@ -185,6 +185,10 @@ namespace chaiscript
         class Thread_Storage
         {
           public:
+            Thread_Storage(void *)
+            {
+            }
+
             inline T *operator->() const
             {
               return &obj;
