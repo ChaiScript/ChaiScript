@@ -16,11 +16,18 @@
 #define CHAISCRIPT_WINDOWS
 #endif
 
-#if defined(__GNUC__) && __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8)
+#if (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8)
 /// Currently only g++>=4.8supports this natively
 /// \todo Make this support other compilers when possible
 #define CHAISCRIPT_HAS_THREAD_LOCAL
 #endif
+
+#if (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7) || defined(CHAISCRIPT_MSVC) || defined(__llvm__)
+#define CHAISCRIPT_OVERRIDE override
+#else
+#define CHAISCRIPT_OVERRIDE
+#endif
+
 
 #ifdef  CHAISCRIPT_HAS_DECLSPEC
 #define CHAISCRIPT_MODULE_EXPORT extern "C" __declspec(dllexport)

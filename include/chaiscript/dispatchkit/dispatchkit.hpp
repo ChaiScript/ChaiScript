@@ -252,7 +252,7 @@ namespace chaiscript
         {
         }
 
-        virtual bool operator==(const dispatch::Proxy_Function_Base &rhs) const override
+        virtual bool operator==(const dispatch::Proxy_Function_Base &rhs) const CHAISCRIPT_OVERRIDE
         {
           try {
             const Dispatch_Function &dispatchfun = dynamic_cast<const Dispatch_Function &>(rhs);
@@ -264,13 +264,13 @@ namespace chaiscript
 
         virtual ~Dispatch_Function() {}
 
-        virtual std::vector<Const_Proxy_Function> get_contained_functions() const override
+        virtual std::vector<Const_Proxy_Function> get_contained_functions() const CHAISCRIPT_OVERRIDE
         {
           return std::vector<Const_Proxy_Function>(m_funcs.begin(), m_funcs.end());
         }
 
 
-        virtual int get_arity() const override
+        virtual int get_arity() const CHAISCRIPT_OVERRIDE
         {
           typedef std::vector<Proxy_Function> function_vec;
 
@@ -300,7 +300,7 @@ namespace chaiscript
           return -1; // unknown arity
         }
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const override
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
           auto begin = m_funcs.begin();
           auto end = m_funcs.end();
@@ -318,13 +318,13 @@ namespace chaiscript
           return false;
         }
 
-        virtual std::string annotation() const override
+        virtual std::string annotation() const CHAISCRIPT_OVERRIDE
         {
           return "Multiple method dispatch function wrapper.";
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const override
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
           return dispatch::dispatch(m_funcs.begin(), m_funcs.end(), params, t_conversions);
         }

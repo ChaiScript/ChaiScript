@@ -29,7 +29,7 @@ namespace chaiscript {
           virtual ~bad_any_cast() CHAISCRIPT_NOEXCEPT {}
 
           /// \brief Description of what error occured
-          virtual const char * what() const CHAISCRIPT_NOEXCEPT override
+          virtual const char * what() const CHAISCRIPT_NOEXCEPT CHAISCRIPT_OVERRIDE
           {
             return m_what.c_str();
           }
@@ -61,17 +61,17 @@ namespace chaiscript {
 
             virtual ~Data_Impl() {}
 
-            virtual void *data() override
+            virtual void *data() CHAISCRIPT_OVERRIDE
             {
               return &m_data;
             }
 
-            const std::type_info &type() const override
+            const std::type_info &type() const CHAISCRIPT_OVERRIDE
             {
               return m_type;
             }
 
-            std::shared_ptr<Data> clone() const override
+            std::shared_ptr<Data> clone() const CHAISCRIPT_OVERRIDE
             {
               return std::shared_ptr<Data>(new Data_Impl<T>(m_data));
             }

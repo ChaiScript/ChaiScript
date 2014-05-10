@@ -133,12 +133,12 @@ namespace chaiscript
         {
         }
 
-        virtual Boxed_Value convert_down(const Boxed_Value &t_base) const override
+        virtual Boxed_Value convert_down(const Boxed_Value &t_base) const CHAISCRIPT_OVERRIDE
         {
           return Dynamic_Caster<Base, Derived>::cast(t_base);
         }
 
-        virtual Boxed_Value convert(const Boxed_Value &t_derived) const override
+        virtual Boxed_Value convert(const Boxed_Value &t_derived) const CHAISCRIPT_OVERRIDE
         {
           return Dynamic_Caster<Derived, Base>::cast(t_derived);
         }
