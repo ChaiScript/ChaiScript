@@ -64,8 +64,8 @@ namespace chaiscript
       template<typename Ret, typename ... Param>
         struct Build_Function_Caller_Helper
         {
-          Build_Function_Caller_Helper(const std::vector<Const_Proxy_Function> &t_funcs, const Dynamic_Cast_Conversions &t_conversions)
-            : m_funcs(t_funcs),
+          Build_Function_Caller_Helper(std::vector<Const_Proxy_Function> t_funcs, const Dynamic_Cast_Conversions &t_conversions)
+            : m_funcs(std::move(t_funcs)),
               m_conversions(t_conversions)
           {
           }

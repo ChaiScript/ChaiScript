@@ -189,8 +189,8 @@ namespace chaiscript
         template<typename Type>
           void insert_at(Type &container, int pos, const typename Type::value_type &v)
           {
-            typename Type::iterator itr = container.begin();
-            typename Type::iterator end = container.end();
+            auto itr = container.begin();
+            auto end = container.end();
 
             if (pos < 0 || std::distance(itr, end) < pos)
             {
@@ -206,8 +206,8 @@ namespace chaiscript
         template<typename Type>
           void erase_at(Type &container, int pos)
           {
-            typename Type::iterator itr = container.begin();
-            typename Type::iterator end = container.end();
+            auto itr = container.begin();
+            auto end = container.end();
 
             if (pos < 0 || std::distance(itr, end) < (pos-1))
             {

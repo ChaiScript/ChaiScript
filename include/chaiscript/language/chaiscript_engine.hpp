@@ -383,9 +383,9 @@ namespace chaiscript
     /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
     /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
     ChaiScript(const ModulePtr &t_lib,
-               const std::vector<std::string> &t_modulepaths = std::vector<std::string>(),
-                      const std::vector<std::string> &t_usepaths = std::vector<std::string>())
-      : m_modulepaths(t_modulepaths), m_usepaths(t_usepaths) 
+               std::vector<std::string> t_modulepaths = std::vector<std::string>(),
+                      std::vector<std::string> t_usepaths = std::vector<std::string>())
+      : m_modulepaths(std::move(t_modulepaths)), m_usepaths(std::move(t_usepaths)) 
     {
       if (m_modulepaths.empty())
       {
@@ -407,9 +407,9 @@ namespace chaiscript
     ///
     /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
     /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
-    ChaiScript( const std::vector<std::string> &t_modulepaths = std::vector<std::string>(),
-                      const std::vector<std::string> &t_usepaths = std::vector<std::string>())
-      : m_modulepaths(t_modulepaths), m_usepaths(t_usepaths) 
+    ChaiScript( std::vector<std::string> t_modulepaths = std::vector<std::string>(),
+                      std::vector<std::string> t_usepaths = std::vector<std::string>())
+      : m_modulepaths(std::move(t_modulepaths)), m_usepaths(std::move(t_usepaths)) 
     {
       if (m_modulepaths.empty())
       {
@@ -694,14 +694,14 @@ namespace chaiscript
       postfixes.push_back(".so");
       postfixes.push_back("");
 
-      for (size_t i = 0; i < m_modulepaths.size(); ++i) 
+      for (auto & elem : m_modulepaths) 
       {
-        for (size_t j = 0; j < prefixes.size(); ++j)
+        for (auto & prefixe : prefixes)
         {
-          for (size_t k = 0; k < postfixes.size(); ++k)
+          for (auto & postfixe : postfixes)
           {
             try {
-              std::string name = m_modulepaths[i] + prefixes[j] + t_module_name + postfixes[k];
+              std::string name = elem + prefixe + t_module_name + postfixe;
               // std::cerr << "trying location: " << name << std::endl;
               load_module(version_stripped_name, name);
               return name;

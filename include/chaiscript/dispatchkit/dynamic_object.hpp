@@ -7,6 +7,8 @@
 #ifndef CHAISCRIPT_DYNAMIC_OBJECT_HPP_
 #define CHAISCRIPT_DYNAMIC_OBJECT_HPP_
 
+#include <utility>
+
 
 namespace chaiscript
 {
@@ -15,8 +17,8 @@ namespace chaiscript
     class Dynamic_Object
     {
       public:
-        Dynamic_Object(const std::string &t_type_name)
-          : m_type_name(t_type_name)
+        Dynamic_Object(std::string t_type_name)
+          : m_type_name(std::move(t_type_name))
         {
         }
 
@@ -52,21 +54,21 @@ namespace chaiscript
       {
         public:
           Dynamic_Object_Function(
-              const std::string &t_type_name,
+              std::string t_type_name,
               const Proxy_Function &t_func)
             : Proxy_Function_Base(t_func->get_param_types()),
-            m_type_name(t_type_name), m_func(t_func), m_doti(user_type<Dynamic_Object>())
+            m_type_name(std::move(t_type_name)), m_func(t_func), m_doti(user_type<Dynamic_Object>())
           {
             assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
                 && "Programming error, Dynamic_Object_Function must have at least one parameter (this)");
           }
 
           Dynamic_Object_Function(
-              const std::string &t_type_name,
+              std::string t_type_name,
               const Proxy_Function &t_func,
               const Type_Info &t_ti)
             : Proxy_Function_Base(build_param_types(t_func->get_param_types(), t_ti)),
-              m_type_name(t_type_name), m_func(t_func), m_ti(new Type_Info(t_ti)), m_doti(user_type<Dynamic_Object>())
+              m_type_name(std::move(t_type_name)), m_func(t_func), m_ti(new Type_Info(t_ti)), m_doti(user_type<Dynamic_Object>())
           {
             assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
                 && "Programming error, Dynamic_Object_Function must have at least one parameter (this)");
@@ -76,7 +78,7 @@ namespace chaiscript
 
           Dynamic_Object_Function &operator=(const Dynamic_Object_Function) = delete;
 
-          virtual bool operator==(const Proxy_Function_Base &f) const
+          virtual bool operator==(const Proxy_Function_Base &f) const override
           {
             const Dynamic_Object_Function *df = dynamic_cast<const Dynamic_Object_Function *>(&f);
             if (df)
@@ -87,7 +89,7 @@ namespace chaiscript
             }
           }
 
-          virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const
+          virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const override
           {
             if (dynamic_object_typename_match(vals, m_type_name, m_ti, t_conversions))
             {
@@ -97,25 +99,25 @@ namespace chaiscript
             }
           }    
 
-          virtual std::vector<Const_Proxy_Function> get_contained_functions() const
+          virtual std::vector<Const_Proxy_Function> get_contained_functions() const override
           {
             return {m_func};
           }
 
 
-          virtual int get_arity() const
+          virtual int get_arity() const override
           {
             return m_func->get_arity();
           }
 
-          virtual std::string annotation() const
+          virtual std::string annotation() const override
           {
             return m_func->annotation();
           }
 
 
         protected:
-          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const
+          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const override
           {
             if (dynamic_object_typename_match(params, m_type_name, m_ti, t_conversions))
             {
@@ -125,7 +127,7 @@ namespace chaiscript
             } 
           }
 
-          virtual bool compare_first_type(const Boxed_Value &bv, const Dynamic_Cast_Conversions &t_conversions) const
+          virtual bool compare_first_type(const Boxed_Value &bv, const Dynamic_Cast_Conversions &t_conversions) const override
           {
             return dynamic_object_typename_match(bv, m_type_name, m_ti, t_conversions);
           }
@@ -194,10 +196,10 @@ namespace chaiscript
       {
         public:
           Dynamic_Object_Constructor(
-              const std::string &t_type_name,
+              std::string t_type_name,
               const Proxy_Function &t_func)
             : Proxy_Function_Base(build_type_list(t_func->get_param_types())),
-              m_type_name(t_type_name), m_func(t_func)
+              m_type_name(std::move(t_type_name)), m_func(t_func)
           {
             assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
                 && "Programming error, Dynamic_Object_Function must have at least one parameter (this)");
@@ -205,8 +207,8 @@ namespace chaiscript
 
           static std::vector<Type_Info> build_type_list(const std::vector<Type_Info> &tl)
           {
-            std::vector<Type_Info>::const_iterator begin = tl.begin();
-            std::vector<Type_Info>::const_iterator end = tl.end();
+            auto begin = tl.begin();
+            auto end = tl.end();
 
             if (begin != end)
             {
@@ -218,7 +220,7 @@ namespace chaiscript
 
           virtual ~Dynamic_Object_Constructor() {}
 
-          virtual bool operator==(const Proxy_Function_Base &f) const
+          virtual bool operator==(const Proxy_Function_Base &f) const override
           {
             const Dynamic_Object_Constructor *dc = dynamic_cast<const Dynamic_Object_Constructor*>(&f);
             if (dc)
@@ -229,7 +231,7 @@ namespace chaiscript
             }
           }
 
-          virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const
+          virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const override
           {
             std::vector<Boxed_Value> new_vals;
             new_vals.push_back(Boxed_Value(Dynamic_Object(m_type_name)));
@@ -239,19 +241,19 @@ namespace chaiscript
           }    
 
 
-          virtual int get_arity() const
+          virtual int get_arity() const override
           {
             // "this" is not considered part of the arity
             return m_func->get_arity() - 1; 
           }
 
-          virtual std::string annotation() const
+          virtual std::string annotation() const override
           {
             return m_func->annotation();
           }
 
         protected:
-          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const
+          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const override
           {
             std::vector<Boxed_Value> new_params;
             chaiscript::Boxed_Value bv = var(Dynamic_Object(m_type_name));

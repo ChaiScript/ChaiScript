@@ -36,7 +36,7 @@ namespace chaiscript
             const chaiscript::detail::Any &to,
             bool tr,
             const void *t_void_ptr)
-          : m_type_info(ti), m_obj(to), m_data_ptr(ti.is_const()?0:const_cast<void *>(t_void_ptr)), m_const_data_ptr(t_void_ptr),
+          : m_type_info(ti), m_obj(to), m_data_ptr(ti.is_const()?nullptr:const_cast<void *>(t_void_ptr)), m_const_data_ptr(t_void_ptr),
             m_is_ref(tr)
         {
         }
@@ -201,7 +201,7 @@ namespace chaiscript
 
       bool is_null() const
       {
-        return (m_data->m_data_ptr == 0 && m_data->m_const_data_ptr == 0);
+        return (m_data->m_data_ptr == nullptr && m_data->m_const_data_ptr == nullptr);
       }
 
       const chaiscript::detail::Any & get() const

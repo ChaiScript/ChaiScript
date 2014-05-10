@@ -109,11 +109,11 @@ namespace chaiscript
                 // Pull the reference out of the contained boxed value, which we know is the type we want
                 if (t_from.is_const())
                 {
-                  const From &d = detail::Cast_Helper<const From &>::cast(t_from, 0);
+                  const From &d = detail::Cast_Helper<const From &>::cast(t_from, nullptr);
                   const To &data = dynamic_cast<const To &>(d);
                   return Boxed_Value(std::cref(data));
                 } else {
-                  From &d = detail::Cast_Helper<From &>::cast(t_from, 0);
+                  From &d = detail::Cast_Helper<From &>::cast(t_from, nullptr);
                   To &data = dynamic_cast<To &>(d);
                   return Boxed_Value(std::ref(data));
                 }
@@ -133,12 +133,12 @@ namespace chaiscript
         {
         }
 
-        virtual Boxed_Value convert_down(const Boxed_Value &t_base) const
+        virtual Boxed_Value convert_down(const Boxed_Value &t_base) const override
         {
           return Dynamic_Caster<Base, Derived>::cast(t_base);
         }
 
-        virtual Boxed_Value convert(const Boxed_Value &t_derived) const
+        virtual Boxed_Value convert(const Boxed_Value &t_derived) const override
         {
           return Dynamic_Caster<Derived, Base>::cast(t_derived);
         }
@@ -209,7 +209,7 @@ namespace chaiscript
       {
         chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-        std::set<std::shared_ptr<detail::Dynamic_Conversion> >::const_iterator itr =
+        auto itr =
           find(base, derived);
 
         if (itr != m_conversions.end())
@@ -224,7 +224,7 @@ namespace chaiscript
       std::set<std::shared_ptr<detail::Dynamic_Conversion> >::const_iterator find(
           const Type_Info &base, const Type_Info &derived) const
       {
-        for (std::set<std::shared_ptr<detail::Dynamic_Conversion> >::const_iterator itr = m_conversions.begin();
+        for (auto itr = m_conversions.begin();
             itr != m_conversions.end();
             ++itr)
         {

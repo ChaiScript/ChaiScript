@@ -7,6 +7,8 @@
 #ifndef CHAISCRIPT_ANY_HPP_
 #define CHAISCRIPT_ANY_HPP_
 
+#include <utility>
+
 namespace chaiscript {
   namespace detail {
     namespace exception
@@ -27,7 +29,7 @@ namespace chaiscript {
           virtual ~bad_any_cast() CHAISCRIPT_NOEXCEPT {}
 
           /// \brief Description of what error occured
-          virtual const char * what() const CHAISCRIPT_NOEXCEPT
+          virtual const char * what() const CHAISCRIPT_NOEXCEPT override
           {
             return m_what.c_str();
           }
@@ -51,25 +53,25 @@ namespace chaiscript {
         template<typename T>
           struct Data_Impl : Data
           {
-            Data_Impl(const T &t_type)
+            Data_Impl(T t_type)
               : m_type(typeid(T)),
-                m_data(t_type)
+                m_data(std::move(t_type))
             {
             }
 
             virtual ~Data_Impl() {}
 
-            virtual void *data()
+            virtual void *data() override
             {
               return &m_data;
             }
 
-            const std::type_info &type() const
+            const std::type_info &type() const override
             {
               return m_type;
             }
 
-            std::shared_ptr<Data> clone() const
+            std::shared_ptr<Data> clone() const override
             {
               return std::shared_ptr<Data>(new Data_Impl<T>(m_data));
             }

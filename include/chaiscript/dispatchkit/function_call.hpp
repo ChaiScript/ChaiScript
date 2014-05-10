@@ -31,7 +31,7 @@ namespace chaiscript
       std::function<FunctionType>
       functor(const std::vector<Const_Proxy_Function> &funcs, const Dynamic_Cast_Conversions *t_conversions)
       {
-        FunctionType *p=0;
+        FunctionType *p=nullptr;
         return detail::build_function_caller_helper(p, funcs, t_conversions);
       }
 

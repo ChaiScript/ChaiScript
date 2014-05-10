@@ -135,8 +135,8 @@ namespace chaiscript
         m_operator_matches.push_back(multiplication);
 
         for ( int c = 0 ; c < detail::lengthof_alphabet ; ++c ) {
-          for ( int a = 0 ; a < detail::max_alphabet ; a ++ ) {
-            m_alphabet[a][c]=false;
+          for (auto & elem : m_alphabet) {
+            elem[c]=false;
           }
         }
         m_alphabet[detail::symbol_alphabet][static_cast<int>('?')]=true;
@@ -212,9 +212,9 @@ namespace chaiscript
        * Shows the current stack of matched ast_nodes
        */
       void show_match_stack() {
-        for (unsigned int i = 0; i < m_match_stack.size(); ++i) {
+        for (auto & elem : m_match_stack) {
           //debug_print(match_stack[i]);
-          std::cout << m_match_stack[i]->to_string();
+          std::cout << elem->to_string();
         }
       }
 
@@ -2062,8 +2062,8 @@ namespace chaiscript
         }
 
         bool Operator_Helper(size_t t_precedence) {
-          for (size_t i = 0; i < m_operator_matches[t_precedence].size(); ++i) {
-            if (Symbol(m_operator_matches[t_precedence][i].c_str(), true)) {
+          for (auto & elem : m_operator_matches[t_precedence]) {
+            if (Symbol(elem.c_str(), true)) {
               return true;
             }
           }
