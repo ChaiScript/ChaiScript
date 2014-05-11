@@ -200,7 +200,7 @@ namespace chaiscript
       /**
        * test a char in an m_alphabet
        */
-      bool char_in_alphabet(char c, detail::Alphabet a) { return m_alphabet[a][c]; }
+      bool char_in_alphabet(char c, detail::Alphabet a) { return m_alphabet[a][static_cast<int>(c)]; }
 
       /**
        * Prints the parsed ast_nodes as a tree
