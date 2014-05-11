@@ -7,23 +7,43 @@
 #ifndef CHAISCRIPT_DISPATCHKIT_HPP_
 #define CHAISCRIPT_DISPATCHKIT_HPP_
 
-#include <typeinfo>
-#include <string>
+#include <algorithm>
+#include <cassert>
+#include <deque>
+#include <iostream>
+#include <iterator>
+#include <list>
 #include <map>
+#include <memory>
 #include <set>
 #include <stdexcept>
+#include <string>
+#include <typeinfo>
+#include <utility>
 #include <vector>
-#include <iostream>
-#include <deque>
-#include <list>
-#include <algorithm>
 
-#include "boxed_value.hpp"
-#include "type_info.hpp"
-#include "proxy_functions.hpp"
-#include "proxy_constructors.hpp"
-#include "dynamic_object.hpp"
+#include "../chaiscript_defines.hpp"
 #include "../chaiscript_threading.hpp"
+#include "boxed_cast.hpp"
+#include "boxed_cast_helper.hpp"
+#include "boxed_value.hpp"
+#include "dynamic_cast_conversion.hpp"
+#include "dynamic_object.hpp"
+#include "proxy_constructors.hpp"
+#include "proxy_functions.hpp"
+#include "type_info.hpp"
+
+namespace chaiscript {
+class Boxed_Number;
+}  // namespace chaiscript
+
+namespace chaiscript {
+namespace dispatch {
+class Dynamic_Proxy_Function;
+class Proxy_Function_Base;
+struct Placeholder_Object;
+}  // namespace dispatch
+}  // namespace chaiscript
 
 
 /// \namespace chaiscript::dispatch
@@ -188,7 +208,7 @@ namespace chaiscript
       std::vector<Dynamic_Cast_Conversion> m_conversions;
 
       template<typename T, typename InItr>
-        void apply(InItr begin, InItr end, T &t) const
+        static void apply(InItr begin, InItr end, T &t) 
         {
           while (begin != end)
           {
@@ -203,7 +223,7 @@ namespace chaiscript
         }
 
       template<typename T, typename InItr>
-        void apply_globals(InItr begin, InItr end, T &t) const
+        static void apply_globals(InItr begin, InItr end, T &t)
         {
           while (begin != end)
           {
@@ -213,7 +233,7 @@ namespace chaiscript
         }
 
       template<typename T, typename InItr>
-        void apply_single(InItr begin, InItr end, T &t) const
+        static void apply_single(InItr begin, InItr end, T &t)
         {
           while (begin != end)
           {
@@ -223,7 +243,7 @@ namespace chaiscript
         }
 
       template<typename T, typename InItr>
-        void apply_eval(InItr begin, InItr end, T &t) const
+        static void apply_eval(InItr begin, InItr end, T &t)
         {
           while (begin != end)
           {
@@ -252,7 +272,7 @@ namespace chaiscript
         {
         }
 
-        virtual bool operator==(const dispatch::Proxy_Function_Base &rhs) const
+        virtual bool operator==(const dispatch::Proxy_Function_Base &rhs) const CHAISCRIPT_OVERRIDE
         {
           try {
             const Dispatch_Function &dispatchfun = dynamic_cast<const Dispatch_Function &>(rhs);
@@ -264,17 +284,17 @@ namespace chaiscript
 
         virtual ~Dispatch_Function() {}
 
-        virtual std::vector<Const_Proxy_Function> get_contained_functions() const
+        virtual std::vector<Const_Proxy_Function> get_contained_functions() const CHAISCRIPT_OVERRIDE
         {
           return std::vector<Const_Proxy_Function>(m_funcs.begin(), m_funcs.end());
         }
 
 
-        virtual int get_arity() const
+        virtual int get_arity() const CHAISCRIPT_OVERRIDE
         {
           typedef std::vector<Proxy_Function> function_vec;
 
-          function_vec::const_iterator begin = m_funcs.begin();
+          auto begin = m_funcs.begin();
           const function_vec::const_iterator end = m_funcs.end();
 
           if (begin != end)
@@ -300,12 +320,10 @@ namespace chaiscript
           return -1; // unknown arity
         }
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          typedef std::vector<Proxy_Function> function_vec;
-
-          function_vec::const_iterator begin = m_funcs.begin();
-          function_vec::const_iterator end = m_funcs.end();
+          auto begin = m_funcs.begin();
+          auto end = m_funcs.end();
 
           while (begin != end)
           {
@@ -320,13 +338,13 @@ namespace chaiscript
           return false;
         }
 
-        virtual std::string annotation() const
+        virtual std::string annotation() const CHAISCRIPT_OVERRIDE
         {
           return "Multiple method dispatch function wrapper.";
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
           return dispatch::dispatch(m_funcs.begin(), m_funcs.end(), params, t_conversions);
         }
@@ -338,7 +356,7 @@ namespace chaiscript
         {
           typedef std::vector<Proxy_Function> function_vec;
 
-          function_vec::const_iterator begin = t_funcs.begin();
+          auto begin = t_funcs.begin();
           const function_vec::const_iterator end = t_funcs.end();
 
           if (begin != end)
@@ -466,18 +484,18 @@ namespace chaiscript
 
           add_object(name, obj);
         }
-        
+
 
         /**
          * Adds a named object to the current scope
          */
-        void add_object(const std::string &name, const Boxed_Value &obj)
+        void add_object(const std::string &name, const Boxed_Value &obj) const
         {
           StackData &stack = get_stack_data();
           validate_object_name(name);
-          
+
           Scope &scope = stack.back();
-          Scope::iterator itr = scope.find(name);
+          auto itr = scope.find(name);
           if (itr != stack.back().end())
           {
             throw chaiscript::exception::name_conflict_error(name);
@@ -598,7 +616,7 @@ namespace chaiscript
           {
             chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_global_object_mutex);
 
-            std::map<std::string, Boxed_Value>::const_iterator itr = m_state.m_global_objects.find(name);
+            auto itr = m_state.m_global_objects.find(name);
             if (itr != m_state.m_global_objects.end())
             {
               return itr->second;
@@ -628,7 +646,7 @@ namespace chaiscript
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-          Type_Name_Map::const_iterator itr = m_state.m_types.find(name);
+          auto itr = m_state.m_types.find(name);
 
           if (itr != m_state.m_types.end())
           {
@@ -647,13 +665,11 @@ namespace chaiscript
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-          for (Type_Name_Map::const_iterator itr = m_state.m_types.begin();
-              itr != m_state.m_types.end();
-              ++itr)
+          for (const auto & elem : m_state.m_types)
           {
-            if (itr->second.bare_equal(ti))
+            if (elem.second.bare_equal(ti))
             {
-              return itr->first;
+              return elem.first;
             }
           }
 
@@ -680,7 +696,7 @@ namespace chaiscript
 
             const std::map<std::string, std::vector<Proxy_Function> > &funs = get_functions_int();
 
-            std::map<std::string, std::vector<Proxy_Function> >::const_iterator itr 
+            auto itr 
               = funs.find(t_name);
 
             if (itr != funs.end())
@@ -699,7 +715,7 @@ namespace chaiscript
 
           const std::map<std::string, Proxy_Function> &funs = get_function_objects_int();
 
-          std::map<std::string, Proxy_Function>::const_iterator itr = funs.find(t_name);
+          auto itr = funs.find(t_name);
 
           if (itr != funs.end())
           {
@@ -756,7 +772,7 @@ namespace chaiscript
 
           // note: map insert doesn't overwrite existing values, which is why this works
          
-          for (StackData::reverse_iterator itr = stack.rbegin(); itr != stack.rend(); ++itr)
+          for (auto itr = stack.rbegin(); itr != stack.rend(); ++itr)
           {
             retval.insert(itr->begin(), itr->end());
           } 
@@ -783,11 +799,9 @@ namespace chaiscript
 
           std::map<std::string, Boxed_Value> objs;
 
-          for (std::map<std::string, Proxy_Function>::const_iterator itr = funs.begin();
-               itr != funs.end();
-               ++itr)
+          for (const auto & fun : funs)
           {
-            objs.insert(std::make_pair(itr->first, const_var(itr->second)));
+            objs.insert(std::make_pair(fun.first, const_var(fun.second)));
           }
 
           return objs;
@@ -805,15 +819,11 @@ namespace chaiscript
 
           const std::map<std::string, std::vector<Proxy_Function> > &functions = get_functions_int();
 
-          for (std::map<std::string, std::vector<Proxy_Function> >::const_iterator itr = functions.begin();
-              itr != functions.end();
-              ++itr)
+          for (const auto & function : functions)
           {
-            for (std::vector<Proxy_Function>::const_iterator itr2 = itr->second.begin();
-                itr2 != itr->second.end();
-                ++itr2)
+            for (const auto & internal_func : function.second)
             {
-              rets.push_back(std::make_pair(itr->first, *itr2));
+              rets.push_back(std::make_pair(function.first, internal_func));
             }
           }
 
@@ -977,7 +987,7 @@ namespace chaiscript
           return get_type_name(obj.get_type_info());
         }
 
-        State get_state()
+        State get_state() const
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l2(m_global_object_mutex);
@@ -1171,7 +1181,7 @@ namespace chaiscript
 
           std::map<std::string, std::vector<Proxy_Function> > &funcs = get_functions_int();
 
-          std::map<std::string, std::vector<Proxy_Function> >::iterator itr
+          auto itr
             = funcs.find(t_name);
 
           std::map<std::string, Proxy_Function> &func_objs = get_function_objects_int();

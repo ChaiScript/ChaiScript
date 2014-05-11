@@ -7,8 +7,12 @@
 #ifndef CHAISCRIPT_REGISTER_FUNCTION_HPP_
 #define CHAISCRIPT_REGISTER_FUNCTION_HPP_
 
-#include "dispatchkit.hpp"
+#include <functional>
+#include <type_traits>
+
 #include "bind_first.hpp"
+#include "dispatchkit.hpp"
+#include "proxy_functions.hpp"
 
 namespace chaiscript
 {

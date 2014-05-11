@@ -13,9 +13,21 @@
 #ifndef CHAISCRIPT_BOOTSTRAP_STL_HPP_
 #define CHAISCRIPT_BOOTSTRAP_STL_HPP_
 
-#include "dispatchkit.hpp"
+#include <functional>
+#include <iterator>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <typeinfo>
+#include <vector>
+
 #include "bootstrap.hpp"
+#include "boxed_value.hpp"
+#include "dispatchkit.hpp"
+#include "operators.hpp"
+#include "proxy_constructors.hpp"
 #include "register_function.hpp"
+#include "type_info.hpp"
 
 namespace chaiscript 
 {
@@ -189,8 +201,8 @@ namespace chaiscript
         template<typename Type>
           void insert_at(Type &container, int pos, const typename Type::value_type &v)
           {
-            typename Type::iterator itr = container.begin();
-            typename Type::iterator end = container.end();
+            auto itr = container.begin();
+            auto end = container.end();
 
             if (pos < 0 || std::distance(itr, end) < pos)
             {
@@ -206,8 +218,8 @@ namespace chaiscript
         template<typename Type>
           void erase_at(Type &container, int pos)
           {
-            typename Type::iterator itr = container.begin();
-            typename Type::iterator end = container.end();
+            auto itr = container.begin();
+            auto end = container.end();
 
             if (pos < 0 || std::distance(itr, end) < (pos-1))
             {

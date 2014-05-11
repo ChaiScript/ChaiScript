@@ -7,11 +7,17 @@
 #ifndef CHAISCRIPT_PARSER_HPP_
 #define CHAISCRIPT_PARSER_HPP_
 
+#include <cstdint>
+#include <cstring>
 #include <exception>
 #include <fstream>
+#include <iostream>
+#include <memory>
 #include <sstream>
-#include <cstring>
+#include <string>
+#include <vector>
 
+#include "../dispatchkit/boxed_value.hpp"
 #include "chaiscript_common.hpp"
 
 namespace chaiscript
@@ -135,8 +141,8 @@ namespace chaiscript
         m_operator_matches.push_back(multiplication);
 
         for ( int c = 0 ; c < detail::lengthof_alphabet ; ++c ) {
-          for ( int a = 0 ; a < detail::max_alphabet ; a ++ ) {
-            m_alphabet[a][c]=false;
+          for (auto & elem : m_alphabet) {
+            elem[c]=false;
           }
         }
         m_alphabet[detail::symbol_alphabet][static_cast<int>('?')]=true;
@@ -211,10 +217,10 @@ namespace chaiscript
       /**
        * Shows the current stack of matched ast_nodes
        */
-      void show_match_stack() {
-        for (size_t i = 0; i < m_match_stack.size(); ++i) {
+      void show_match_stack() const {
+        for (auto & elem : m_match_stack) {
           //debug_print(match_stack[i]);
-          std::cout << m_match_stack[i]->to_string();
+          std::cout << elem->to_string();
         }
       }
 
@@ -274,7 +280,7 @@ namespace chaiscript
       /**
        * Check to see if there is more text parse
        */
-      inline bool has_more_input() {
+      inline bool has_more_input() const {
         return (m_input_pos != m_input_end);
       }
 
@@ -460,7 +466,7 @@ namespace chaiscript
         return retval;
       }
 
-      Boxed_Value buildFloat(const std::string &t_val)
+      static Boxed_Value buildFloat(const std::string &t_val)
       {
         bool float_ = false;
         bool long_ = false;
@@ -502,7 +508,7 @@ namespace chaiscript
 
 
       template<typename IntType>
-      Boxed_Value buildInt(const IntType &t_type, const std::string &t_val)
+      static Boxed_Value buildInt(const IntType &t_type, const std::string &t_val)
       {
         bool unsigned_ = false;
         bool long_ = false;
@@ -2062,8 +2068,8 @@ namespace chaiscript
         }
 
         bool Operator_Helper(size_t t_precedence) {
-          for (size_t i = 0; i < m_operator_matches[t_precedence].size(); ++i) {
-            if (Symbol(m_operator_matches[t_precedence][i].c_str(), true)) {
+          for (auto & elem : m_operator_matches[t_precedence]) {
+            if (Symbol(elem.c_str(), true)) {
               return true;
             }
           }

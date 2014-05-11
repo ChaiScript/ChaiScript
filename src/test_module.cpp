@@ -36,7 +36,7 @@ class TestDerivedType : public TestBaseType
 {
   public:
     virtual ~TestDerivedType() {}
-    virtual int func() { return 1; }
+    virtual int func() CHAISCRIPT_OVERRIDE { return 1; }
     int derived_only_func() { return 19; }
 
   private:

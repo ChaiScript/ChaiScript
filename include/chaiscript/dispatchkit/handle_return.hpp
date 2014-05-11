@@ -7,13 +7,19 @@
 #ifndef CHAISCRIPT_HANDLE_RETURN_HPP_
 #define CHAISCRIPT_HANDLE_RETURN_HPP_
 
-#include "boxed_value.hpp"
-#include "boxed_number.hpp"
-#include "type_info.hpp"
-#include <string>
-
+#include <functional>
+#include <memory>
 #include <stdexcept>
+#include <string>
 #include <vector>
+
+#include "boxed_number.hpp"
+#include "boxed_value.hpp"
+#include "type_info.hpp"
+
+namespace chaiscript {
+class Boxed_Number;
+}  // namespace chaiscript
 
 namespace chaiscript
 {

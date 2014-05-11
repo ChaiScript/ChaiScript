@@ -7,10 +7,27 @@
 #ifndef CHAISCRIPT_ENGINE_HPP_
 #define CHAISCRIPT_ENGINE_HPP_
 
+#include <cassert>
+#include <cstring>
+#include <algorithm>
 #include <exception>
 #include <fstream>
+#include <functional>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <set>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 #include "../chaiscript_defines.hpp"
+#include "../chaiscript_threading.hpp"
+#include "../dispatchkit/boxed_cast_helper.hpp"
+#include "../dispatchkit/boxed_value.hpp"
+#include "../dispatchkit/dispatchkit.hpp"
+#include "../dispatchkit/dynamic_cast_conversion.hpp"
+#include "../dispatchkit/proxy_functions.hpp"
 #include "chaiscript_common.hpp"
 
 #if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
@@ -28,9 +45,9 @@
 #endif
 
 
-#include "chaiscript_prelude.chai"
-#include "chaiscript_parser.hpp"
 #include "../dispatchkit/exception_specification.hpp"
+#include "chaiscript_parser.hpp"
+#include "chaiscript_prelude.chai"
 
 namespace chaiscript
 {
@@ -355,7 +372,7 @@ namespace chaiscript
 
 
     /// Helper function for loading a file
-    std::string load_file(const std::string &t_filename) {
+    static std::string load_file(const std::string &t_filename) {
       std::ifstream infile(t_filename.c_str(), std::ios::in | std::ios::ate | std::ios::binary );
 
       if (!infile.is_open()) {
@@ -383,9 +400,9 @@ namespace chaiscript
     /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
     /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
     ChaiScript(const ModulePtr &t_lib,
-               const std::vector<std::string> &t_modulepaths = std::vector<std::string>(),
-                      const std::vector<std::string> &t_usepaths = std::vector<std::string>())
-      : m_modulepaths(t_modulepaths), m_usepaths(t_usepaths) 
+               std::vector<std::string> t_modulepaths = std::vector<std::string>(),
+                      std::vector<std::string> t_usepaths = std::vector<std::string>())
+      : m_modulepaths(std::move(t_modulepaths)), m_usepaths(std::move(t_usepaths)) 
     {
       if (m_modulepaths.empty())
       {
@@ -407,9 +424,9 @@ namespace chaiscript
     ///
     /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
     /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
-    ChaiScript( const std::vector<std::string> &t_modulepaths = std::vector<std::string>(),
-                      const std::vector<std::string> &t_usepaths = std::vector<std::string>())
-      : m_modulepaths(t_modulepaths), m_usepaths(t_usepaths) 
+    ChaiScript( std::vector<std::string> t_modulepaths = std::vector<std::string>(),
+                      std::vector<std::string> t_usepaths = std::vector<std::string>())
+      : m_modulepaths(std::move(t_modulepaths)), m_usepaths(std::move(t_usepaths)) 
     {
       if (m_modulepaths.empty())
       {
@@ -694,14 +711,14 @@ namespace chaiscript
       postfixes.push_back(".so");
       postfixes.push_back("");
 
-      for (size_t i = 0; i < m_modulepaths.size(); ++i) 
+      for (auto & elem : m_modulepaths) 
       {
-        for (size_t j = 0; j < prefixes.size(); ++j)
+        for (auto & prefixe : prefixes)
         {
-          for (size_t k = 0; k < postfixes.size(); ++k)
+          for (auto & postfixe : postfixes)
           {
             try {
-              std::string name = m_modulepaths[i] + prefixes[j] + t_module_name + postfixes[k];
+              std::string name = elem + prefixe + t_module_name + postfixe;
               // std::cerr << "trying location: " << name << std::endl;
               load_module(version_stripped_name, name);
               return name;

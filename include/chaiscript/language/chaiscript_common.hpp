@@ -5,10 +5,24 @@
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_COMMON_HPP_
-#define	CHAISCRIPT_COMMON_HPP_
+#define CHAISCRIPT_COMMON_HPP_
 
+#include <algorithm>
+#include <memory>
 #include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include "../chaiscript_defines.hpp"
+#include "../dispatchkit/boxed_value.hpp"
 #include "../dispatchkit/dispatchkit.hpp"
+#include "../dispatchkit/proxy_functions.hpp"
+#include "../dispatchkit/type_info.hpp"
+
+namespace chaiscript {
+struct AST_Node;
+}  // namespace chaiscript
 
 namespace chaiscript
 {
@@ -253,11 +267,9 @@ namespace chaiscript
         } else {
           ss << "  " << t_functions.size() << " overloads available:" << std::endl;
 
-          for (std::vector<chaiscript::Const_Proxy_Function>::const_iterator itr = t_functions.begin();
-               itr != t_functions.end();
-               ++itr)
+          for (const auto & t_function : t_functions)
           {
-            ss << "      " << format_types((*itr), t_dot_notation, t_ss) << std::endl;
+            ss << "      " << format_types((t_function), t_dot_notation, t_ss) << std::endl;
           }
 
         }
@@ -277,7 +289,7 @@ namespace chaiscript
         {
           std::string paramstr;
 
-          for (std::vector<Boxed_Value>::const_iterator itr = t_parameters.begin();
+          for (auto itr = t_parameters.begin();
                itr != t_parameters.end();
                ++itr)
           {
@@ -404,8 +416,8 @@ namespace chaiscript
 
         oss << text;
 
-        for (size_t j = 0; j < this->children.size(); ++j) {
-          oss << this->children[j]->pretty_print();
+        for (auto & elem : this->children) {
+          oss << elem->pretty_print();
         }
 
         return oss.str();
@@ -446,15 +458,15 @@ namespace chaiscript
       }
 
     protected:
-      AST_Node(const std::string &t_ast_node_text, int t_id, const std::shared_ptr<std::string> &t_fname, 
+      AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<std::string> &t_fname, 
           int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
-        text(t_ast_node_text), identifier(t_id), filename(t_fname),
+        text(std::move(t_ast_node_text)), identifier(t_id), filename(t_fname),
         start(t_start_line, t_start_col), end(t_end_line, t_end_col)
       {
       }
 
-      AST_Node(const std::string &t_ast_node_text, int t_id, const std::shared_ptr<std::string> &t_fname) :
-        text(t_ast_node_text), identifier(t_id), filename(t_fname) {}
+      AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<std::string> &t_fname) :
+        text(std::move(t_ast_node_text)), identifier(t_id), filename(t_fname) {}
 
       virtual ~AST_Node() {}
 

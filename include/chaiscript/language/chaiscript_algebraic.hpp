@@ -7,6 +7,8 @@
 #ifndef CHAISCRIPT_ALGEBRAIC_HPP_
 #define	CHAISCRIPT_ALGEBRAIC_HPP_
 
+#include <string>
+
 #include "../dispatchkit/dispatchkit.hpp"
 
 namespace chaiscript

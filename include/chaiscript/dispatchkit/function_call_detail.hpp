@@ -7,8 +7,17 @@
 #ifndef CHAISCRIPT_FUNCTION_CALL_DETAIL_HPP_
 #define CHAISCRIPT_FUNCTION_CALL_DETAIL_HPP_
 
+#include <algorithm>
+#include <functional>
+#include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
+
+#include "boxed_cast.hpp"
+#include "boxed_number.hpp"
+#include "boxed_value.hpp"
+#include "dynamic_cast_conversion.hpp"
 #include "proxy_functions.hpp"
 
 namespace chaiscript
@@ -64,8 +73,8 @@ namespace chaiscript
       template<typename Ret, typename ... Param>
         struct Build_Function_Caller_Helper
         {
-          Build_Function_Caller_Helper(const std::vector<Const_Proxy_Function> &t_funcs, const Dynamic_Cast_Conversions &t_conversions)
-            : m_funcs(t_funcs),
+          Build_Function_Caller_Helper(std::vector<Const_Proxy_Function> t_funcs, const Dynamic_Cast_Conversions &t_conversions)
+            : m_funcs(std::move(t_funcs)),
               m_conversions(t_conversions)
           {
           }

@@ -7,10 +7,20 @@
 #ifndef CHAISCRIPT_BOXED_NUMERIC_HPP_
 #define CHAISCRIPT_BOXED_NUMERIC_HPP_
 
-#include "boxed_value.hpp"
-#include "../language/chaiscript_algebraic.hpp"
-#include <sstream>
 #include <cstdint>
+#include <sstream>
+#include <string>
+
+#include "../language/chaiscript_algebraic.hpp"
+#include "any.hpp"
+#include "boxed_cast.hpp"
+#include "boxed_cast_helper.hpp"
+#include "boxed_value.hpp"
+#include "type_info.hpp"
+
+namespace chaiscript {
+class Dynamic_Cast_Conversions;
+}  // namespace chaiscript
 
 namespace chaiscript 
 {

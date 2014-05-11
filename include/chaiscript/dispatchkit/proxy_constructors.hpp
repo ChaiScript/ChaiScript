@@ -48,7 +48,7 @@ namespace chaiscript
   template<typename T>
     Proxy_Function constructor()
     {
-      T *f = 0;
+      T *f = nullptr;
       return (dispatch::detail::build_constructor_(f));
     }
 

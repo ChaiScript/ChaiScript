@@ -7,8 +7,13 @@
 #ifndef CHAISCRIPT_UTILITY_UTILITY_HPP_
 #define CHAISCRIPT_UTILITY_UTILITY_HPP_
 
-#include "../chaiscript.hpp"
 #include <string>
+#include <utility>
+#include <vector>
+
+#include "../chaiscript.hpp"
+#include "../dispatchkit/proxy_functions.hpp"
+#include "../dispatchkit/type_info.hpp"
 
 
 namespace chaiscript 

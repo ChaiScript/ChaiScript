@@ -7,10 +7,11 @@
 #ifndef CHAISCRIPT_TYPE_INFO_HPP_
 #define CHAISCRIPT_TYPE_INFO_HPP_
 
-#include <string>
-#include <typeinfo>
+#include <functional>
 #include <memory>
+#include <string>
 #include <type_traits>
+#include <typeinfo>
 
 namespace chaiscript
 {
@@ -38,7 +39,7 @@ namespace chaiscript
       }
 
       Type_Info()
-        : m_type_info(0), m_bare_type_info(0),
+        : m_type_info(nullptr), m_bare_type_info(nullptr),
         m_is_const(false), m_is_reference(false), m_is_pointer(false),
         m_is_void(false), m_is_arithmetic(false), 
         m_is_undef(true)
@@ -81,7 +82,7 @@ namespace chaiscript
 
       bool operator==(const std::type_info &ti) const
       {
-        return m_type_info != 0 && (*m_type_info) == ti;
+        return m_type_info != nullptr && (*m_type_info) == ti;
       }
 
       bool bare_equal(const Type_Info &ti) const
@@ -92,7 +93,7 @@ namespace chaiscript
 
       bool bare_equal_type_info(const std::type_info &ti) const
       {
-        return m_bare_type_info != 0 
+        return m_bare_type_info != nullptr 
           && (*m_bare_type_info) == ti;
       }
 
@@ -100,7 +101,7 @@ namespace chaiscript
       bool is_reference() const { return m_is_reference; }
       bool is_void() const { return m_is_void; }
       bool is_arithmetic() const { return m_is_arithmetic; }
-      bool is_undef() const { return m_is_undef || m_bare_type_info == 0; }
+      bool is_undef() const { return m_is_undef || m_bare_type_info == nullptr; }
       bool is_pointer() const { return m_is_pointer; }
 
       std::string name() const
