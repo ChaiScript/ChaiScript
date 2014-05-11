@@ -9,11 +9,16 @@
 
 #include <memory>
 #include <set>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <typeinfo>
 
-#include "type_info.hpp"
-#include "boxed_value.hpp"
-#include "boxed_cast_helper.hpp"
+#include "../chaiscript_threading.hpp"
 #include "bad_boxed_cast.hpp"
+#include "boxed_cast_helper.hpp"
+#include "boxed_value.hpp"
+#include "type_info.hpp"
 
 namespace chaiscript
 {

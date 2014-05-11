@@ -7,15 +7,24 @@
 #ifndef CHAISCRIPT_PROXY_FUNCTIONS_DETAIL_HPP_
 #define CHAISCRIPT_PROXY_FUNCTIONS_DETAIL_HPP_
 
-#include "boxed_value.hpp"
-#include "boxed_cast.hpp"
-#include "type_info.hpp"
-#include "handle_return.hpp"
-#include <string>
-
-#include <stdexcept>
-#include <vector>
+#include <algorithm>
 #include <functional>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include "../chaiscript_defines.hpp"
+#include "boxed_cast.hpp"
+#include "boxed_value.hpp"
+#include "handle_return.hpp"
+#include "type_info.hpp"
+
+namespace chaiscript {
+class Dynamic_Cast_Conversions;
+namespace exception {
+class bad_boxed_cast;
+}  // namespace exception
+}  // namespace chaiscript
 
 namespace chaiscript
 {

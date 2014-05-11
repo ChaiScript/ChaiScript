@@ -7,10 +7,27 @@
 #ifndef CHAISCRIPT_ENGINE_HPP_
 #define CHAISCRIPT_ENGINE_HPP_
 
+#include <cassert>
+#include <cstring>
+#include <algorithm>
 #include <exception>
 #include <fstream>
+#include <functional>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <set>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 #include "../chaiscript_defines.hpp"
+#include "../chaiscript_threading.hpp"
+#include "../dispatchkit/boxed_cast_helper.hpp"
+#include "../dispatchkit/boxed_value.hpp"
+#include "../dispatchkit/dispatchkit.hpp"
+#include "../dispatchkit/dynamic_cast_conversion.hpp"
+#include "../dispatchkit/proxy_functions.hpp"
 #include "chaiscript_common.hpp"
 
 #if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
@@ -28,9 +45,9 @@
 #endif
 
 
-#include "chaiscript_prelude.chai"
-#include "chaiscript_parser.hpp"
 #include "../dispatchkit/exception_specification.hpp"
+#include "chaiscript_parser.hpp"
+#include "chaiscript_prelude.chai"
 
 namespace chaiscript
 {

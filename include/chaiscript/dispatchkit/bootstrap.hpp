@@ -7,13 +7,31 @@
 #ifndef CHAISCRIPT_BOOTSTRAP_HPP_
 #define CHAISCRIPT_BOOTSTRAP_HPP_
 
-#include "dispatchkit.hpp"
-#include "dynamic_object.hpp"
-#include "register_function.hpp"
-#include "operators.hpp"
-#include "boxed_number.hpp"
+#include <cstdint>
+#include <exception>
+#include <functional>
+#include <iostream>
+#include <map>
+#include <memory>
 #include <sstream>
+#include <stdexcept>
+#include <string>
 #include <type_traits>
+#include <vector>
+
+#include "bad_boxed_cast.hpp"
+#include "boxed_cast.hpp"
+#include "boxed_number.hpp"
+#include "boxed_value.hpp"
+#include "dispatchkit.hpp"
+#include "dynamic_cast_conversion.hpp"
+#include "dynamic_object.hpp"
+#include "operators.hpp"
+#include "proxy_constructors.hpp"
+#include "proxy_functions.hpp"
+#include "proxy_functions_detail.hpp"
+#include "register_function.hpp"
+#include "type_info.hpp"
 
 namespace chaiscript 
 {

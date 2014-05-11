@@ -7,23 +7,43 @@
 #ifndef CHAISCRIPT_DISPATCHKIT_HPP_
 #define CHAISCRIPT_DISPATCHKIT_HPP_
 
-#include <typeinfo>
-#include <string>
+#include <algorithm>
+#include <cassert>
+#include <deque>
+#include <iostream>
+#include <iterator>
+#include <list>
 #include <map>
+#include <memory>
 #include <set>
 #include <stdexcept>
+#include <string>
+#include <typeinfo>
+#include <utility>
 #include <vector>
-#include <iostream>
-#include <deque>
-#include <list>
-#include <algorithm>
 
-#include "boxed_value.hpp"
-#include "type_info.hpp"
-#include "proxy_functions.hpp"
-#include "proxy_constructors.hpp"
-#include "dynamic_object.hpp"
+#include "../chaiscript_defines.hpp"
 #include "../chaiscript_threading.hpp"
+#include "boxed_cast.hpp"
+#include "boxed_cast_helper.hpp"
+#include "boxed_value.hpp"
+#include "dynamic_cast_conversion.hpp"
+#include "dynamic_object.hpp"
+#include "proxy_constructors.hpp"
+#include "proxy_functions.hpp"
+#include "type_info.hpp"
+
+namespace chaiscript {
+class Boxed_Number;
+}  // namespace chaiscript
+
+namespace chaiscript {
+namespace dispatch {
+class Dynamic_Proxy_Function;
+class Proxy_Function_Base;
+struct Placeholder_Object;
+}  // namespace dispatch
+}  // namespace chaiscript
 
 
 /// \namespace chaiscript::dispatch

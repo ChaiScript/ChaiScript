@@ -13,9 +13,21 @@
 #ifndef CHAISCRIPT_BOOTSTRAP_STL_HPP_
 #define CHAISCRIPT_BOOTSTRAP_STL_HPP_
 
-#include "dispatchkit.hpp"
+#include <functional>
+#include <iterator>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <typeinfo>
+#include <vector>
+
 #include "bootstrap.hpp"
+#include "boxed_value.hpp"
+#include "dispatchkit.hpp"
+#include "operators.hpp"
+#include "proxy_constructors.hpp"
 #include "register_function.hpp"
+#include "type_info.hpp"
 
 namespace chaiscript 
 {

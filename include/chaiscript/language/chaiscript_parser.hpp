@@ -7,11 +7,17 @@
 #ifndef CHAISCRIPT_PARSER_HPP_
 #define CHAISCRIPT_PARSER_HPP_
 
+#include <cstdint>
+#include <cstring>
 #include <exception>
 #include <fstream>
+#include <iostream>
+#include <memory>
 #include <sstream>
-#include <cstring>
+#include <string>
+#include <vector>
 
+#include "../dispatchkit/boxed_value.hpp"
 #include "chaiscript_common.hpp"
 
 namespace chaiscript

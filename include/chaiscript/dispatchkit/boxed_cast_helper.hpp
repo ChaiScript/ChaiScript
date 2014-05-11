@@ -7,8 +7,12 @@
 #ifndef CHAISCRIPT_BOXED_CAST_HELPER_HPP_
 #define CHAISCRIPT_BOXED_CAST_HELPER_HPP_
 
-#include "type_info.hpp"
+#include <functional>
+#include <memory>
+#include <type_traits>
+
 #include "boxed_value.hpp"
+#include "type_info.hpp"
 
 
 namespace chaiscript 

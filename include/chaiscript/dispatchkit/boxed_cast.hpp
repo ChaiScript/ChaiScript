@@ -7,14 +7,24 @@
 #ifndef CHAISCRIPT_BOXED_CAST_HPP_
 #define CHAISCRIPT_BOXED_CAST_HPP_
 
+#include <type_traits>
+
 #include "../chaiscript_defines.hpp"
-
-#include "type_info.hpp"
-#include "boxed_value.hpp"
-#include "boxed_cast_helper.hpp"
-#include "dynamic_cast_conversion.hpp"
-
 #include "../chaiscript_threading.hpp"
+#include "bad_boxed_cast.hpp"
+#include "boxed_cast_helper.hpp"
+#include "boxed_value.hpp"
+#include "dynamic_cast_conversion.hpp"
+#include "type_info.hpp"
+
+namespace chaiscript {
+class Dynamic_Cast_Conversions;
+namespace detail {
+namespace exception {
+class bad_any_cast;
+}  // namespace exception
+}  // namespace detail
+}  // namespace chaiscript
 
 namespace chaiscript 
 {

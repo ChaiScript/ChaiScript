@@ -7,10 +7,36 @@
 #ifndef CHAISCRIPT_EVAL_HPP_
 #define CHAISCRIPT_EVAL_HPP_
 
+#include <assert.h>
+#include <cstdlib>
+#include <exception>
+#include <functional>
+#include <limits>
 #include <map>
+#include <memory>
+#include <ostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
-#include "chaiscript_common.hpp"
+#include "../chaiscript_defines.hpp"
+#include "../dispatchkit/boxed_cast.hpp"
+#include "../dispatchkit/boxed_cast_helper.hpp"
+#include "../dispatchkit/boxed_number.hpp"
+#include "../dispatchkit/boxed_value.hpp"
+#include "../dispatchkit/dispatchkit.hpp"
+#include "../dispatchkit/proxy_functions.hpp"
+#include "../dispatchkit/proxy_functions_detail.hpp"
 #include "../dispatchkit/register_function.hpp"
+#include "../dispatchkit/type_info.hpp"
+#include "chaiscript_algebraic.hpp"
+#include "chaiscript_common.hpp"
+
+namespace chaiscript {
+namespace exception {
+class bad_boxed_cast;
+}  // namespace exception
+}  // namespace chaiscript
 
 namespace chaiscript
 {

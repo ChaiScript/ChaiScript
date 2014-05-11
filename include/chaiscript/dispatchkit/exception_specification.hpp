@@ -7,7 +7,17 @@
 #ifndef CHAISCRIPT_EXCEPTION_SPECIFICATION_HPP_
 #define CHAISCRIPT_EXCEPTION_SPECIFICATION_HPP_
 
+#include <memory>
+
+#include "../chaiscript_defines.hpp"
 #include "boxed_cast.hpp"
+
+namespace chaiscript {
+class Boxed_Value;
+namespace exception {
+class bad_boxed_cast;
+}  // namespace exception
+}  // namespace chaiscript
 
 namespace chaiscript
 {

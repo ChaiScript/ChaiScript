@@ -7,8 +7,27 @@
 #ifndef CHAISCRIPT_DYNAMIC_OBJECT_HPP_
 #define CHAISCRIPT_DYNAMIC_OBJECT_HPP_
 
+#include <cassert>
+#include <map>
+#include <memory>
+#include <string>
+#include <typeinfo>
 #include <utility>
+#include <vector>
 
+#include "../chaiscript_defines.hpp"
+#include "boxed_cast.hpp"
+#include "boxed_cast_helper.hpp"
+#include "boxed_value.hpp"
+#include "proxy_functions.hpp"
+#include "type_info.hpp"
+
+namespace chaiscript {
+class Dynamic_Cast_Conversions;
+namespace dispatch {
+class Proxy_Function_Base;
+}  // namespace dispatch
+}  // namespace chaiscript
 
 namespace chaiscript
 {

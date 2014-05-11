@@ -7,13 +7,22 @@
 #ifndef CHAISCRIPT_FUNCTION_CALL_HPP_
 #define CHAISCRIPT_FUNCTION_CALL_HPP_
 
+#include <functional>
+#include <iostream>
 #include <string>
 #include <vector>
-#include "proxy_functions.hpp"
+
+#include "boxed_cast.hpp"
 #include "function_call_detail.hpp"
+#include "proxy_functions.hpp"
 
-
-#include <iostream>
+namespace chaiscript {
+class Boxed_Value;
+class Dynamic_Cast_Conversions;
+namespace detail {
+template <typename T> struct Cast_Helper;
+}  // namespace detail
+}  // namespace chaiscript
 
 namespace chaiscript
 {

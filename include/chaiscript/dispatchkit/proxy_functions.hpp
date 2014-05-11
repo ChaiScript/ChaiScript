@@ -9,14 +9,29 @@
 #define CHAISCRIPT_PROXY_FUNCTIONS_HPP_
 
 
-#include "boxed_value.hpp"
-#include "type_info.hpp"
+#include <algorithm>
+#include <cassert>
+#include <functional>
+#include <memory>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <stdexcept>
 #include <vector>
-#include <cassert>
+
+#include "../chaiscript_defines.hpp"
+#include "boxed_cast.hpp"
+#include "boxed_cast_helper.hpp"
+#include "boxed_value.hpp"
 #include "proxy_functions_detail.hpp"
+#include "type_info.hpp"
+
+namespace chaiscript {
+class Dynamic_Cast_Conversions;
+namespace exception {
+class bad_boxed_cast;
+struct arity_error;
+}  // namespace exception
+}  // namespace chaiscript
 
 namespace chaiscript
 {

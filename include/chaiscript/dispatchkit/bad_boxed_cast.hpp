@@ -7,7 +7,14 @@
 #ifndef CHAISCRIPT_BAD_BOXED_CAST_HPP_
 #define CHAISCRIPT_BAD_BOXED_CAST_HPP_
 
+#include <string>
+#include <typeinfo>
+
 #include "type_info.hpp"
+
+namespace chaiscript {
+class Type_Info;
+}  // namespace chaiscript
 
 namespace chaiscript 
 {

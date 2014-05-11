@@ -7,9 +7,17 @@
 #ifndef CHAISCRIPT_STDLIB_HPP_
 #define CHAISCRIPT_STDLIB_HPP_
 
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "chaiscript_defines.hpp"
+#include "dispatchkit/dispatchkit.hpp"
 #include "dispatchkit/bootstrap.hpp"
 #include "dispatchkit/bootstrap_stl.hpp"
+#include "dispatchkit/boxed_value.hpp"
 
 /// @file
 ///

@@ -5,10 +5,24 @@
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_COMMON_HPP_
-#define	CHAISCRIPT_COMMON_HPP_
+#define CHAISCRIPT_COMMON_HPP_
 
+#include <algorithm>
+#include <memory>
 #include <sstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include "../chaiscript_defines.hpp"
+#include "../dispatchkit/boxed_value.hpp"
 #include "../dispatchkit/dispatchkit.hpp"
+#include "../dispatchkit/proxy_functions.hpp"
+#include "../dispatchkit/type_info.hpp"
+
+namespace chaiscript {
+struct AST_Node;
+}  // namespace chaiscript
 
 namespace chaiscript
 {

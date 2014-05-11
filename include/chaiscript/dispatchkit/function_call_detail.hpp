@@ -7,8 +7,17 @@
 #ifndef CHAISCRIPT_FUNCTION_CALL_DETAIL_HPP_
 #define CHAISCRIPT_FUNCTION_CALL_DETAIL_HPP_
 
+#include <algorithm>
+#include <functional>
+#include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
+
+#include "boxed_cast.hpp"
+#include "boxed_number.hpp"
+#include "boxed_value.hpp"
+#include "dynamic_cast_conversion.hpp"
 #include "proxy_functions.hpp"
 
 namespace chaiscript

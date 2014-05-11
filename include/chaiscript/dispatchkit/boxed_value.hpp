@@ -7,12 +7,14 @@
 #ifndef CHAISCRIPT_BOXED_VALUE_HPP_
 #define CHAISCRIPT_BOXED_VALUE_HPP_
 
-#include "type_info.hpp"
+#include <functional>
+#include <map>
+#include <memory>
+#include <type_traits>
 
 #include "../chaiscript_threading.hpp"
-
-#include <map>
 #include "any.hpp"
+#include "type_info.hpp"
 
 namespace chaiscript 
 {
