@@ -23,7 +23,8 @@ char *mystrdup (const char *s) {
 #ifdef CHAISCRIPT_MSVC
   strcpy_s(d, len, s);                        // Copy the characters
 #else
-  strcpy(d,s);                        // Copy the characters
+  strncpy(d,s,len);                        // Copy the characters
+  d[len] = '\0';
 #endif
   return d;                            // Return the new string
 }
