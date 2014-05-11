@@ -372,7 +372,7 @@ namespace chaiscript
 
 
     /// Helper function for loading a file
-    std::string load_file(const std::string &t_filename) {
+    static std::string load_file(const std::string &t_filename) {
       std::ifstream infile(t_filename.c_str(), std::ios::in | std::ios::ate | std::ios::binary );
 
       if (!infile.is_open()) {

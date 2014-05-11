@@ -208,7 +208,7 @@ namespace chaiscript
       std::vector<Dynamic_Cast_Conversion> m_conversions;
 
       template<typename T, typename InItr>
-        void apply(InItr begin, InItr end, T &t) const
+        static void apply(InItr begin, InItr end, T &t) 
         {
           while (begin != end)
           {
@@ -223,7 +223,7 @@ namespace chaiscript
         }
 
       template<typename T, typename InItr>
-        void apply_globals(InItr begin, InItr end, T &t) const
+        static void apply_globals(InItr begin, InItr end, T &t)
         {
           while (begin != end)
           {
@@ -233,7 +233,7 @@ namespace chaiscript
         }
 
       template<typename T, typename InItr>
-        void apply_single(InItr begin, InItr end, T &t) const
+        static void apply_single(InItr begin, InItr end, T &t)
         {
           while (begin != end)
           {
@@ -243,7 +243,7 @@ namespace chaiscript
         }
 
       template<typename T, typename InItr>
-        void apply_eval(InItr begin, InItr end, T &t) const
+        static void apply_eval(InItr begin, InItr end, T &t)
         {
           while (begin != end)
           {
@@ -484,16 +484,16 @@ namespace chaiscript
 
           add_object(name, obj);
         }
-        
+
 
         /**
          * Adds a named object to the current scope
          */
-        void add_object(const std::string &name, const Boxed_Value &obj)
+        void add_object(const std::string &name, const Boxed_Value &obj) const
         {
           StackData &stack = get_stack_data();
           validate_object_name(name);
-          
+
           Scope &scope = stack.back();
           auto itr = scope.find(name);
           if (itr != stack.back().end())
@@ -987,7 +987,7 @@ namespace chaiscript
           return get_type_name(obj.get_type_info());
         }
 
-        State get_state()
+        State get_state() const
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l2(m_global_object_mutex);

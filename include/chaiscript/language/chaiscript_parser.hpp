@@ -200,7 +200,7 @@ namespace chaiscript
       /**
        * test a char in an m_alphabet
        */
-      bool char_in_alphabet(unsigned char c, detail::Alphabet a) { return m_alphabet[a][c]; }
+      bool char_in_alphabet(unsigned char c, detail::Alphabet a) const { return m_alphabet[a][c]; }
 
       /**
        * Prints the parsed ast_nodes as a tree
@@ -217,7 +217,7 @@ namespace chaiscript
       /**
        * Shows the current stack of matched ast_nodes
        */
-      void show_match_stack() {
+      void show_match_stack() const {
         for (auto & elem : m_match_stack) {
           //debug_print(match_stack[i]);
           std::cout << elem->to_string();
@@ -280,7 +280,7 @@ namespace chaiscript
       /**
        * Check to see if there is more text parse
        */
-      inline bool has_more_input() {
+      inline bool has_more_input() const {
         return (m_input_pos != m_input_end);
       }
 
@@ -466,7 +466,7 @@ namespace chaiscript
         return retval;
       }
 
-      Boxed_Value buildFloat(const std::string &t_val)
+      static Boxed_Value buildFloat(const std::string &t_val)
       {
         bool float_ = false;
         bool long_ = false;
@@ -508,7 +508,7 @@ namespace chaiscript
 
 
       template<typename IntType>
-      Boxed_Value buildInt(const IntType &t_type, const std::string &t_val)
+      static Boxed_Value buildInt(const IntType &t_type, const std::string &t_val)
       {
         bool unsigned_ = false;
         bool long_ = false;
