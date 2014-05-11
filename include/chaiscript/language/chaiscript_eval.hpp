@@ -258,7 +258,7 @@ namespace chaiscript
         {
           std::ostringstream oss;
 
-          for (unsigned int j = 0; j < this->children.size(); ++j) {
+          for (size_t j = 0; j < this->children.size(); ++j) {
             oss << this->children[j]->pretty_print();
 
             if (j == 0)
@@ -323,7 +323,7 @@ namespace chaiscript
         virtual std::string pretty_print() const 
         {
           std::ostringstream oss;
-          for (unsigned int j = 0; j < this->children.size(); ++j) {
+          for (size_t j = 0; j < this->children.size(); ++j) {
             oss << this->children[j]->pretty_print();
 
             if (j == 0)
@@ -1248,7 +1248,7 @@ namespace chaiscript
               assert(end_point > 0);
               end_point = this->children.size() - 1;
             }
-            for (unsigned int i = 1; i < end_point; ++i) {
+            for (size_t i = 1; i < end_point; ++i) {
               chaiscript::eval::detail::Scope_Push_Pop catchscope(t_ss);
               AST_NodePtr catch_block = this->children[i];
 

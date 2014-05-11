@@ -404,7 +404,7 @@ namespace chaiscript
 
         oss << text;
 
-        for (unsigned int j = 0; j < this->children.size(); ++j) {
+        for (size_t j = 0; j < this->children.size(); ++j) {
           oss << this->children[j]->pretty_print();
         }
 
@@ -413,13 +413,13 @@ namespace chaiscript
 
 
       /// Prints the contents of an AST node, including its children, recursively
-      std::string to_string(std::string t_prepend = "") {
+      std::string to_string(const std::string &t_prepend = "") {
         std::ostringstream oss;
 
         oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
             << this->text << " : " << this->start.line << ", " << this->start.column << std::endl;
         
-        for (unsigned int j = 0; j < this->children.size(); ++j) {
+        for (size_t j = 0; j < this->children.size(); ++j) {
           oss << this->children[j]->to_string(t_prepend + "  ");
         }
         return oss.str();

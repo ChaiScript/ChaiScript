@@ -212,7 +212,7 @@ namespace chaiscript
        * Shows the current stack of matched ast_nodes
        */
       void show_match_stack() {
-        for (unsigned int i = 0; i < m_match_stack.size(); ++i) {
+        for (size_t i = 0; i < m_match_stack.size(); ++i) {
           //debug_print(match_stack[i]);
           std::cout << m_match_stack[i]->to_string();
         }
@@ -1109,11 +1109,11 @@ namespace chaiscript
          */
         bool Keyword_(const char *t_s) {
           bool retval = false;
-          int len = static_cast<int>(strlen(t_s));
+          size_t len = strlen(t_s);
 
-          if ((m_input_end - m_input_pos) >= len) {
+          if ((m_input_end - m_input_pos) >= static_cast<std::make_signed<size_t>::type>(len)) {
             std::string::const_iterator tmp = m_input_pos;
-            for (int i = 0; i < len; ++i) {
+            for (size_t i = 0; i < len; ++i) {
               if (*tmp != t_s[i]) {
                 return false;
               }
@@ -1157,11 +1157,11 @@ namespace chaiscript
          */
         bool Symbol_(const char *t_s) {
           bool retval = false;
-          int len = static_cast<int>(strlen(t_s));
+          size_t len = strlen(t_s);
 
-          if ((m_input_end - m_input_pos) >= len) {
+          if ((m_input_end - m_input_pos) >= static_cast<std::make_signed<size_t>::type>(len)) {
             std::string::const_iterator tmp = m_input_pos;
-            for (int i = 0; i < len; ++i) {
+            for (size_t i = 0; i < len; ++i) {
               if (*tmp != t_s[i]) {
                 return false;
               }
