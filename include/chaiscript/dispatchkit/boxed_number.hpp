@@ -14,10 +14,13 @@
 
 namespace chaiscript 
 {
- 
+
+// Due to the nature of generating every possible arithmetic operation, there
+// are going to be warnings generated on every platform regarding size and sign,
+// this is OK, so we're disabling size/and sign type warnings
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(push)
-#pragma warning(disable : 4244 4018 4389 4146)
+#pragma warning(disable : 4244 4018 4389 4146 4365)
 #endif
 
   /// \brief Represents any numeric type, generically. Used internally for generic operations between POD values

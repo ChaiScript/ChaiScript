@@ -541,7 +541,7 @@ namespace chaiscript
 
           m->add(fun( std::function<const char *(const String *)>( [](const String *s) { return s->c_str(); } ) ), "c_str");
           m->add(fun( std::function<const char *(const String *)>( [](const String *s) { return s->data(); } ) ), "data");
-          m->add(fun( std::function<String (const String *, int, int)>( [](const String *s, int pos, int len) { return s->substr(pos, len); } ) ), "substr");          
+          m->add(fun( std::function<String (const String *, size_t, size_t)>( [](const String *s, size_t pos, size_t len) { return s->substr(pos, len); } ) ), "substr");          
 
           return m;
         }

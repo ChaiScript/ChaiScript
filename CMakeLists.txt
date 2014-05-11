@@ -114,7 +114,7 @@ else()
 endif()
 
 if(MSVC)
-  add_definitions(/W4)
+  add_definitions(/W4 /w44640)
   add_definitions(/bigobj)
   # Note on MSVC compiler flags.
   # The code base selective disables warnings as necessary when the compiler is complaining too much
