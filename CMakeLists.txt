@@ -147,7 +147,7 @@ endif()
 
 # limitations in MinGW require us to make an optimized build
 # for the sake of object sizes or something
-if(MINGW)
+if(MINGW OR CYGWIN)
   add_definitions(-O3)
 endif()
 

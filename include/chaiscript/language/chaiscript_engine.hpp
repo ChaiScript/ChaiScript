@@ -34,7 +34,7 @@
 #include <unistd.h>
 #endif
 
-#ifdef _POSIX_VERSION
+#if defined(_POSIX_VERSION) && !defined(__CYGWIN__) 
 #include <dlfcn.h>
 #else
 #ifdef CHAISCRIPT_WINDOWS
@@ -69,7 +69,7 @@ namespace chaiscript
 
   namespace detail
   {
-#ifdef _POSIX_VERSION
+#if defined(_POSIX_VERSION) && !defined(__CYGWIN__) 
     struct Loadable_Module
     {
       struct DLModule
@@ -438,8 +438,7 @@ namespace chaiscript
         m_usepaths.push_back("");
       }
 
-
-#ifdef _POSIX_VERSION
+#if defined(_POSIX_VERSION) && !defined(__CYGWIN__) 
       // If on Unix, add the path of the current executable to the module search path
       // as windows would do
 
@@ -704,6 +703,7 @@ namespace chaiscript
 
       std::vector<std::string> prefixes;
       prefixes.push_back("lib");
+      prefixes.push_back("cyg");
       prefixes.push_back("");
 
       std::vector<std::string> postfixes;
