@@ -11,6 +11,6 @@ var size = vec.size()
 print("Vector Size: " + size.to_string());
 
 while (i < size) {
-	print(i.to_string() + ": " + to_string(vec[i]))
-	i = i + 1
+  print(i.to_string() + ": " + to_string(vec[i]))
+  i = i + 1
 }

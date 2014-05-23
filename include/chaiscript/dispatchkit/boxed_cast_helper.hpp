@@ -52,10 +52,10 @@ namespace chaiscript
         }
       };
 
-	template<typename Result>
-	  struct Cast_Helper_Inner<const Result> : Cast_Helper_Inner<Result>
-	  {
-	  };
+    template<typename Result>
+      struct Cast_Helper_Inner<const Result> : Cast_Helper_Inner<Result>
+      {
+      };
 
     /**
      * Cast_Helper_Inner for casting to a const & type
@@ -221,9 +221,9 @@ namespace chaiscript
       struct Cast_Helper_Inner<const Boxed_Value &> : Cast_Helper_Inner<Boxed_Value>
       {
       };
-    
 
-	/**
+
+    /**
      * Cast_Helper_Inner for casting to a std::reference_wrapper type
      */
     template<typename Result>
@@ -263,7 +263,7 @@ namespace chaiscript
       struct Cast_Helper
       {
         typedef typename Cast_Helper_Inner<T>::Result_Type Result_Type;
-        
+
         static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *t_conversions)
         {
           return Cast_Helper_Inner<T>::cast(ob, t_conversions);

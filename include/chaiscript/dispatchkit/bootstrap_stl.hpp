@@ -229,7 +229,7 @@ namespace chaiscript
             std::advance(itr, pos);
             container.erase(itr);
           }      
-        
+
       }
 
       template<typename ContainerType>
@@ -547,13 +547,13 @@ namespace chaiscript
           m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find_last_not_of(f, pos); } ) ), "find_last_not_of");
           m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find_first_not_of(f, pos); } ) ), "find_first_not_of");
 
-	        m->add(fun( std::function<void (String *)>( [](String *s) { return s->clear(); } ) ), "clear");
-	        m->add(fun( std::function<bool (const String *)>( [](const String *s) { return s->empty(); } ) ), "empty");
-	        m->add(fun( std::function<size_t (const String *)>( [](const String *s) { return s->size(); } ) ), "size");
+          m->add(fun( std::function<void (String *)>( [](String *s) { return s->clear(); } ) ), "clear");
+          m->add(fun( std::function<bool (const String *)>( [](const String *s) { return s->empty(); } ) ), "empty");
+          m->add(fun( std::function<size_t (const String *)>( [](const String *s) { return s->size(); } ) ), "size");
 
           m->add(fun( std::function<const char *(const String *)>( [](const String *s) { return s->c_str(); } ) ), "c_str");
           m->add(fun( std::function<const char *(const String *)>( [](const String *s) { return s->data(); } ) ), "data");
-          m->add(fun( std::function<String (const String *, size_t, size_t)>( [](const String *s, size_t pos, size_t len) { return s->substr(pos, len); } ) ), "substr");          
+          m->add(fun( std::function<String (const String *, size_t, size_t)>( [](const String *s, size_t pos, size_t len) { return s->substr(pos, len); } ) ), "substr");
 
           return m;
         }

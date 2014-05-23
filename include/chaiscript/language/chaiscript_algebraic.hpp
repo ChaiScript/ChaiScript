@@ -5,7 +5,7 @@
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_ALGEBRAIC_HPP_
-#define	CHAISCRIPT_ALGEBRAIC_HPP_
+#define CHAISCRIPT_ALGEBRAIC_HPP_
 
 #include <string>
 
@@ -128,5 +128,5 @@ namespace chaiscript
   };
 }
 
-#endif	/* _CHAISCRIPT_ALGEBRAIC_HPP */
+#endif /* _CHAISCRIPT_ALGEBRAIC_HPP */
 

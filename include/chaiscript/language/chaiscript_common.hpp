@@ -584,5 +584,5 @@ namespace chaiscript
   }
 }
 
-#endif	/* _CHAISCRIPT_COMMON_HPP */
+#endif /* _CHAISCRIPT_COMMON_HPP */
 

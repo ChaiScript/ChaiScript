@@ -35,28 +35,28 @@ class test
   chaiscript::ChaiScript::State backupState;
 
   public:
-    test()
-      : chai(chaiscript::Std_Lib::library())
-    {		
-      backupState = chai.get_state();
-    }
-    ~test(){}
+  test()
+    : chai(chaiscript::Std_Lib::library())
+  {
+    backupState = chai.get_state();
+  }
+  ~test(){}
 
-    void ResetState()
-    {
-      chai.set_state(backupState);
-      chai.add(chaiscript::fun(&fuction),"Whatever()");
-    }
+  void ResetState()
+  {
+    chai.set_state(backupState);
+    chai.add(chaiscript::fun(&fuction),"Whatever()");
+  }
 
-    void RunFile(std::string sFile)
-    {
-      try {
-        chaiscript::Boxed_Value val = chai.eval_file(sFile);
-      }
-      catch (std::exception &e) {
-        std::cout << e.what() << std::endl;
-      }
+  void RunFile(std::string sFile)
+  {
+    try {
+      chaiscript::Boxed_Value val = chai.eval_file(sFile);
     }
+    catch (std::exception &e) {
+      std::cout << e.what() << std::endl;
+    }
+  }
 
 };
 

@@ -1,17 +1,17 @@
 def bob(x, y, z) {
-	x + y + z
+  x + y + z
 }
 
 def bob(x, y) {
-	x - y
+  x - y
 }
 
 def bob(x) {
-	-x
+  -x
 }
 
 def bob() {
-	10
+  10
 }
 
 assert_equal(10, bob())

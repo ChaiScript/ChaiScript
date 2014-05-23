@@ -1,10 +1,10 @@
 //functions of zero params don't need them:
 def meet {
-	print("Hello")
+  print("Hello")
 }
 
 def greet(x) {
-	print("Hello, " + x.to_string())
+  print("Hello, " + x.to_string())
 }
 
 //but you need parens for invocation:

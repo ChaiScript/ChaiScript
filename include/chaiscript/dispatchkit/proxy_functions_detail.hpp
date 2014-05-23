@@ -114,7 +114,7 @@ namespace chaiscript
           {
           }
         };
-      
+
 
       /**
        * Used by Proxy_Function_Impl to determine if it is equivalent to another
@@ -155,7 +155,7 @@ namespace chaiscript
 #endif
           template<typename ... InnerParams>
             static Ret do_call(const std::function<Ret (Params...)> &f,
-                const std::vector<Boxed_Value> &, const Dynamic_Cast_Conversions &t_conversions, 	InnerParams &&... innerparams)
+                const std::vector<Boxed_Value> &, const Dynamic_Cast_Conversions &t_conversions, InnerParams &&... innerparams)
             {
               return f(boxed_cast<Params>(std::forward<InnerParams>(innerparams), &t_conversions)...);
             }
@@ -181,7 +181,7 @@ namespace chaiscript
 
           throw exception::arity_error(static_cast<int>(params.size()), sizeof...(Params));
         }
-          
+
     }
   }
 
