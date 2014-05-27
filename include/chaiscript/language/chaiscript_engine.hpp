@@ -30,7 +30,7 @@
 #include "../dispatchkit/proxy_functions.hpp"
 #include "chaiscript_common.hpp"
 
-#if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
+#if defined(__linux__) || defined(__unix__) || defined(__APPLE__) || defined(__HAIKU__)
 #include <unistd.h>
 #endif
 
