@@ -1,0 +1,10 @@
+
+var i = 5
+add_global(i, "j")
+
+def myFun()
+{
+  assert_equal(j, 5)
+}
+
+myFun();

@@ -366,6 +366,9 @@ namespace chaiscript
       m_engine.add(fun(&ChaiScript::version_patch, this), "version_patch");
       m_engine.add(fun(&ChaiScript::version, this), "version");
 
+      m_engine.add(fun(&ChaiScript::add_global_const, this), "add_global_const");
+      m_engine.add(fun(&ChaiScript::add_global, this), "add_global");
+
       do_eval(ChaiScript_Prelude::chaiscript_prelude(), "standard prelude");
     }
 
