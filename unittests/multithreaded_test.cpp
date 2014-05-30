@@ -35,7 +35,7 @@ int main()
 {
   // Disable deprecation warning for getenv call.
 #ifdef CHAISCRIPT_MSVC
-#ifdef max // Why microsoft? why?
+#ifdef max // Why Microsoft? why?
 #undef max
 #endif
 #pragma warning(push)

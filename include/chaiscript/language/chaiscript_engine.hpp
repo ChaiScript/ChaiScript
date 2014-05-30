@@ -140,32 +140,32 @@ namespace chaiscript
     struct Loadable_Module
     {
       template<typename T>
-        static std::wstring towstring(const T &t_str) 
+        static std::wstring to_wstring(const T &t_str) 
         {
           return std::wstring(t_str.begin(), t_str.end());
         }
 
       template<typename T>
-        static std::string tostring(const T &t_str)
+        static std::string to_string(const T &t_str)
         {
           return std::string(t_str.begin(), t_str.end());
         }
 
 #ifdef _UNICODE
       template<typename T>
-        static std::wstring toproperstring(const T &t_str)
+        static std::wstring to_proper_string(const T &t_str)
         {
-          return towstring(t_str);
+          return to_wstring(t_str);
         }
 #else
       template<typename T>
-        static std::string toproperstring(const T &t_str)
+        static std::string to_proper_string(const T &t_str)
         {
-          return tostring(t_str);
+          return to_string(t_str);
         }
 #endif
 
-      static std::string GetErrorMessage(DWORD t_err)
+      static std::string get_error_message(DWORD t_err)
       {
 #ifdef _UNICODE
         typedef LPWSTR StringType;
@@ -190,17 +190,17 @@ namespace chaiscript
           LocalFree(lpMsgBuf);
         }
 
-        return tostring(retval);
+        return to_string(retval);
       }
 
       struct DLModule
       {
         DLModule(const std::string &t_filename)
-          : m_data(LoadLibrary(toproperstring(t_filename).c_str()))
+          : m_data(LoadLibrary(to_proper_string(t_filename).c_str()))
         {
           if (!m_data)
           {
-            throw chaiscript::exception::load_module_error(GetErrorMessage(GetLastError()));
+            throw chaiscript::exception::load_module_error(get_error_message(GetLastError()));
           }
         }
 
@@ -220,7 +220,7 @@ namespace chaiscript
           {
             if (!m_symbol)
             {
-              throw chaiscript::exception::load_module_error(GetErrorMessage(GetLastError()));
+              throw chaiscript::exception::load_module_error(get_error_message(GetLastError()));
             }
           }
 
@@ -365,7 +365,6 @@ namespace chaiscript
       m_engine.add(fun(&ChaiScript::version_minor, this), "version_minor");
       m_engine.add(fun(&ChaiScript::version_patch, this), "version_patch");
       m_engine.add(fun(&ChaiScript::version, this), "version");
-
 
       do_eval(ChaiScript_Prelude::chaiscript_prelude(), "standard prelude");
     }
@@ -647,7 +646,7 @@ namespace chaiscript
     /// chai.add(chaiscript::var(&obj), "obj"); // Add a pointer to a locally defined object
     /// \endcode
     ///
-    /// \sa \ref addingitems
+    /// \sa \ref adding_items
     template<typename T>
     ChaiScript &add(const T &t_t, const std::string &t_name)
     {
@@ -713,12 +712,12 @@ namespace chaiscript
 
       for (auto & elem : m_modulepaths) 
       {
-        for (auto & prefixe : prefixes)
+        for (auto & prefix : prefixes)
         {
-          for (auto & postfixe : postfixes)
+          for (auto & postfix : postfixes)
           {
             try {
-              std::string name = elem + prefixe + t_module_name + postfixe;
+              std::string name = elem + prefix + t_module_name + postfix;
               // std::cerr << "trying location: " << name << std::endl;
               load_module(version_stripped_name, name);
               return name;

@@ -96,7 +96,7 @@ namespace chaiscript
   /// chai.add(fun(&MyClass::memberdata), "memberdata");
   /// \endcode
   /// 
-  /// \sa \ref addingfunctions
+  /// \sa \ref adding_functions
   template<typename T>
     Proxy_Function fun(T t)
     {
@@ -114,7 +114,7 @@ namespace chaiscript
   /// chai.add(fun(f), "some_function");
   /// \endcode
   /// 
-  /// \sa \ref addingfunctions
+  /// \sa \ref adding_functions
   template<typename T>
     Proxy_Function fun(const std::function<T> &f)
     {
@@ -139,7 +139,7 @@ namespace chaiscript
   /// chai.add(fun(&MyClass::memberfunction, std::ref(obj)), "memberfunction"); 
   /// \endcode
   /// 
-  /// \sa \ref addingfunctions
+  /// \sa \ref adding_functions
   template<typename T, typename Q>
     Proxy_Function fun(T t, const Q &q)
     {
@@ -165,7 +165,7 @@ namespace chaiscript
   /// chai.add(fun(&MyClass::memberfunction, std::ref(obj), 1), "memberfunction"); 
   /// \endcode
   /// 
-  /// \sa \ref addingfunctions
+  /// \sa \ref adding_functions
   template<typename T, typename Q, typename R>
     Proxy_Function fun(T t, const Q &q, const R &r)
     {

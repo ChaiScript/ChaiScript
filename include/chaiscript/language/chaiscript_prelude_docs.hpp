@@ -5,7 +5,7 @@
 namespace ChaiScript_Language
 {
 
-/// \page LangStandardLibraryRef ChaiScript Language Standard Libary Reference
+/// \page LangStandardLibraryRef ChaiScript Language Standard Library Reference
 ///
 /// ChaiScript, at its core, has some very functional programming-inspired habits. Few places show this off as clearly 
 /// as the prelude, itself a name taken as a nod to the popular functional language Haskell. This prelude is available 

@@ -530,7 +530,7 @@ namespace chaiscript
         chaiscript::detail::Dispatch_Engine &m_de;
       };
 
-      /// Creates a new functon call and pops it on destruction
+      /// Creates a new function call and pops it on destruction
       struct Function_Push_Pop
       {
         Function_Push_Pop(chaiscript::detail::Dispatch_Engine &t_de)

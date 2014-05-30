@@ -39,10 +39,10 @@
 /// - @ref basics
 /// - @ref compiling
 /// - @ref eval
-/// - @ref addingitems
+/// - @ref adding_items
 /// - @ref operatoroverloading
 /// - @ref add_class
-/// - @ref pointerconversions
+/// - @ref pointer_conversions
 /// - @ref baseclasses
 /// - @ref functionobjects
 /// - @ref threading
@@ -138,11 +138,11 @@
 ///
 /// --------------------------------------------------
 ///
-/// @subsection addingitems Adding Items to ChaiScript
+/// @subsection adding_items Adding Items to ChaiScript
 ///
 /// ChaiScript supports 4 basic things that can be added: objects, functions, type infos and Modules
 ///
-/// @subsubsection addingobjects Adding Objects
+/// @subsubsection adding_objects Adding Objects
 ///
 /// Named objects can be created with the chaiscript::var function. Note: adding a object
 /// adds it to the current thread scope, not to a global scope. If you have multiple 
@@ -173,7 +173,7 @@
 /// chai("def somefun() { print(i); }; sumfun();");
 /// ~~~~~~~~~
 /// 
-/// @subsubsection addingfunctions Adding Functions
+/// @subsubsection adding_functions Adding Functions
 /// 
 /// Functions, methods and members are all added using the same function: chaiscript::fun.
 ///
@@ -227,7 +227,7 @@
 /// chai.add(user_type<MyClass>(), "MyClass");
 /// ~~~~~~~~
 ///
-/// @subsubsection addingmodules Adding Modules
+/// @subsubsection adding_modules Adding Modules
 /// 
 /// Modules are holders for collections of ChaiScript registrations.
 ///
@@ -261,7 +261,7 @@
 /// chai.add(fun(append_string_int), "+");
 /// ~~~~~~~~
 ///
-/// @sa @ref addingfunctions
+/// @sa @ref adding_functions
 ///
 /// -----------------------------------------------------------------------
 ///
@@ -302,11 +302,11 @@
 /// }
 /// ~~~~~~~~
 /// 
-/// @sa @ref addingmodules
+/// @sa @ref adding_modules
 ///
 /// -----------------------------------------------------------------------
 ///
-/// @subsection pointerconversions Pointer / Object Conversions
+/// @subsection pointer_conversions Pointer / Object Conversions
 ///
 /// As much as possible, ChaiScript attempts to convert between &, *, const &, const *, std::shared_ptr<T>,
 /// std::shared_ptr<const T>, std::reference_wrapper<T>, std::reference_wrapper<const T> and value types automatically.
@@ -389,7 +389,7 @@
 ///
 /// @subsection functionobjects Function Objects
 ///
-/// Functions are first class objects in Chaiscript and ChaiScript supports automatic conversion
+/// Functions are first class objects in ChaiScript and ChaiScript supports automatic conversion
 /// between ChaiScript functions and std::function objects.
 ///
 /// ~~~~~~~~{.cpp}
@@ -614,8 +614,8 @@
 ///
 /// ~~~~~~~~
 /// eval> def callfunc(f, lhs, rhs) { return f(lhs, rhs); }
-/// eval> def dosomething(lhs, rhs) { print("lhs: ${lhs}, rhs: ${rhs}"); }
-/// eval> callfunc(dosomething, 1, 2);
+/// eval> def do_something(lhs, rhs) { print("lhs: ${lhs}, rhs: ${rhs}"); }
+/// eval> callfunc(do_something, 1, 2);
 /// lhs: 1, rhs: 2
 /// ~~~~~~~~
 ///

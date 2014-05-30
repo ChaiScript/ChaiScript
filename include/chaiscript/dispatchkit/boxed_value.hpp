@@ -254,7 +254,7 @@ namespace chaiscript
   /// chai.add(chaiscript::var(&i), "ip");
   /// ~~~
   ///
-  /// @sa @ref addingobjects
+  /// @sa @ref adding_objects
   template<typename T>
     Boxed_Value var(T t)
     {
@@ -328,7 +328,7 @@ namespace chaiscript
   /// \endcode
   /// 
   /// \todo support C++11 strongly typed enums
-  /// \sa \ref addingobjects
+  /// \sa \ref adding_objects
   template<typename T>
     Boxed_Value const_var(const T &t)
     {

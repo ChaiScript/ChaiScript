@@ -365,7 +365,7 @@ namespace chaiscript
 
             ++begin;
 
-            bool sizemismatch = false;
+            bool size_mismatch = false;
 
             while (begin != end)
             {
@@ -373,7 +373,7 @@ namespace chaiscript
 
               if (param_types.size() != type_infos.size())
               {
-                sizemismatch = true;
+                size_mismatch = true;
               }
 
               for (size_t i = 0; i < type_infos.size() && i < param_types.size(); ++i)
@@ -389,7 +389,7 @@ namespace chaiscript
 
             assert(type_infos.size() > 0 && " type_info vector size is < 0, this is only possible if something else is broken");
 
-            if (sizemismatch)
+            if (size_mismatch)
             {
               type_infos.resize(1);
             }

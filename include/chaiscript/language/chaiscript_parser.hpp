@@ -1487,7 +1487,7 @@ namespace chaiscript
         }
 
         /**
-         * Reads an if/elseif/else block from input
+         * Reads an if/else if/else block from input
          */
         bool If() {
           bool retval = false;

@@ -38,7 +38,7 @@
  ************************************************************************************/
 
 $language_data = array (
-    'LANG_NAME' => 'Chaiscript',
+    'LANG_NAME' => 'ChaiScript',
     'COMMENT_SINGLE' => array(1 => '//'),
     'COMMENT_MULTI' => array('/*' => '*/'),
     //Regular Expressions

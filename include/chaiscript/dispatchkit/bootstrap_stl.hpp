@@ -334,8 +334,8 @@ namespace chaiscript
             push_back_name = "push_back";
           }
 
-          typedef void (ContainerType::*pushback)(const typename ContainerType::value_type &);
-          m->add(fun(static_cast<pushback>(&ContainerType::push_back)), push_back_name);
+          typedef void (ContainerType::*push_back)(const typename ContainerType::value_type &);
+          m->add(fun(static_cast<push_back>(&ContainerType::push_back)), push_back_name);
           m->add(fun(&ContainerType::pop_back), "pop_back");
           return m;
         }

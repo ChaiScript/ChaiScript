@@ -25,15 +25,15 @@ namespace chaiscript
     
     template<typename Class, typename ModuleType>
       void add_class(ModuleType &t_module,
-          const std::string &t_classname,
+          const std::string &t_class_name,
           const std::vector<chaiscript::Proxy_Function> &t_constructors,
           const std::vector<std::pair<chaiscript::Proxy_Function, std::string>> &t_funcs)
       {
-        t_module.add(chaiscript::user_type<Class>(), t_classname); 
+        t_module.add(chaiscript::user_type<Class>(), t_class_name); 
 
         for(const chaiscript::Proxy_Function &ctor: t_constructors)
         {
-          t_module.add(ctor, t_classname);
+          t_module.add(ctor, t_class_name);
         }
 
         for(auto fun: t_funcs)

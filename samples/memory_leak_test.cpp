@@ -24,7 +24,7 @@ std::string get_next_command() {
 #endif
 }
 
-void fuction(void)
+void function(void)
 {
   // do nothing
 }
@@ -45,7 +45,7 @@ class test
   void ResetState()
   {
     chai.set_state(backupState);
-    chai.add(chaiscript::fun(&fuction),"Whatever()");
+    chai.add(chaiscript::fun(&function),"Whatever()");
   }
 
   void RunFile(std::string sFile)
@@ -70,7 +70,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   std::string command = "";
 
   //
-  // this loop increases memoryusage, if RunFile is not called (just hittin enter)
+  // this loop increases memoryusage, if RunFile is not called (just hitting enter)
   // as soon RunFile gets called, memory will be freed.
   //
   // scenario1 - RunFile gets called every Loop: memoryusage does not change

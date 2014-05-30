@@ -19,7 +19,7 @@ int main()
   // Dot notation
 
   try {
-    // non-existant function
+    // non-existent function
     chai.eval("\"test\".test_one()");
     eval_error = false;
   } catch (const chaiscript::exception::eval_error &) {
@@ -51,7 +51,7 @@ int main()
   // regular notation
 
   try {
-    // non-existant function
+    // non-existent function
     chai.eval("test_one(\"test\")");
     eval_error = false;
   } catch (const chaiscript::exception::eval_error &) {

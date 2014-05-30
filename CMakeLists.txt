@@ -297,11 +297,11 @@ if(BUILD_TESTING)
 
     add_executable(simultaneous_chaiscript_test unittests/simultaneous_chaiscript_test.cpp)
     target_link_libraries(simultaneous_chaiscript_test ${LIBS})
-    add_test(NAME Simultaneous_Chaiscript_Test COMMAND simultaneous_chaiscript_test)
+    add_test(NAME Simultaneous_ChaiScript_Test COMMAND simultaneous_chaiscript_test)
 
     add_executable(heap_allocated_chaiscript_test unittests/heap_allocated_chaiscript_test.cpp)
     target_link_libraries(heap_allocated_chaiscript_test ${LIBS})
-    add_test(NAME Heap_Allocated_Chaiscript_Test COMMAND heap_allocated_chaiscript_test)
+    add_test(NAME Heap_Allocated_ChaiScript_Test COMMAND heap_allocated_chaiscript_test)
 
     add_executable(c_linkage_test unittests/c_linkage_test.cpp)
     target_link_libraries(c_linkage_test ${LIBS})
