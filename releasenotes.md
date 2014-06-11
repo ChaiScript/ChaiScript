@@ -1,6 +1,8 @@
 Notes:
 =======
-Current Version: 5.3.1
+Current Version: 5.3.2
+
+### Changes since 5.3.1
 
 ### Changes since 5.3.0
 * Add automatic conversion of arithmetic return types, following the same
