@@ -7,6 +7,16 @@ Current Version: 5.3.1
   rules as conversion of arithmetic types when passing parameters
 * Add automatic casting up the inheritence hierarchy when possible.
 * Enable travis.ci testing
+* Allow users to add globals from within script
+* Various static analysis fixes
+* Code modernization to C++11
+* Unofficial support for Haiku added
+* Fix #121 - Inability to compile on cygwin
+* Formatting fixes and spelling corrections
+* Apply "include what you use" https://code.google.com/p/include-what-you-use/
+* Apply clang-modernize
+* Various threading fixes
+* Performance improvements
 
 ### Changes since 5.2.0
 * Official support for MSVC with C++11. All major platforms and compilers are now support for C++11 release
