@@ -44,17 +44,27 @@ namespace chaiscript {
       private:
         struct Data
         {
+          Data(const std::type_info &t_type) 
+            : m_type(t_type)
+          {
+          }
+
           virtual ~Data() {}
           virtual void *data() = 0;
-          virtual const std::type_info &type() const = 0;
+          const std::type_info &type() const
+          {
+            return m_type;
+          }
+
           virtual std::unique_ptr<Data> clone() const = 0;
+          const std::type_info &m_type;
         };
 
         template<typename T>
           struct Data_Impl : Data
           {
             Data_Impl(T t_type)
-              : m_type(typeid(T)),
+              : Data(typeid(T)),
                 m_data(std::move(t_type))
             {
             }
@@ -66,19 +76,13 @@ namespace chaiscript {
               return &m_data;
             }
 
-            const std::type_info &type() const CHAISCRIPT_OVERRIDE
-            {
-              return m_type;
-            }
-
             std::unique_ptr<Data> clone() const CHAISCRIPT_OVERRIDE
             {
               return std::unique_ptr<Data>(new Data_Impl<T>(m_data));
             }
 
             Data_Impl &operator=(const Data_Impl&) = delete;
-              
-            const std::type_info &m_type;
+
             T m_data;
           };
 
@@ -127,7 +131,6 @@ namespace chaiscript {
             } else {
               throw chaiscript::detail::exception::bad_any_cast();
             }
- 
           }
 
 
