@@ -275,6 +275,10 @@ if(BUILD_TESTING)
     target_link_libraries(type_info_test ${LIBS})
     add_test(NAME Type_Info_Test COMMAND type_info_test)
 
+    add_executable(type_name_test unittests/type_name_test.cpp)
+    target_link_libraries(type_name_test ${LIBS})
+    add_test(NAME Type_Name_Test COMMAND type_name_test)
+
     add_executable(eval_catch_exception_test unittests/eval_catch_exception_test.cpp)
     target_link_libraries(eval_catch_exception_test ${LIBS})
     add_test(NAME Eval_Catch_Exception_Test COMMAND eval_catch_exception_test)
