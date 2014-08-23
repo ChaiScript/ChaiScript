@@ -856,7 +856,23 @@ namespace chaiscript
 
           return Boxed_Value();
         }
+    };
 
+    struct Class_AST_Node : public AST_Node {
+      public:
+        Class_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          AST_Node(t_ast_node_text, AST_Node_Type::Class, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        virtual ~Class_AST_Node() {}
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE {
+          chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+
+          // put class name in current scope so it can be looked up by the attrs and methods
+          t_ss.add_object("_current_class_name", const_var(this->children[0]->text));
+
+          this->children[1]->eval(t_ss);
+
+          return Boxed_Value();
+        }
     };
 
     struct Ternary_Cond_AST_Node : public AST_Node {
@@ -1400,23 +1416,29 @@ namespace chaiscript
           std::vector<std::string> t_param_names;
           AST_NodePtr guardnode;
 
+          auto d = t_ss.get_parent_locals();
+          auto itr = d.find("_current_class_name");
+          int class_offset = 0;
+          if (itr != d.end()) class_offset = -1;
+          const std::string & class_name = (itr != d.end())?std::string(boxed_cast<std::string>(itr->second)):this->children[0]->text;
+
           //The first param of a method is always the implied this ptr.
           t_param_names.push_back("this");
 
-          if ((this->children.size() > 3) && (this->children[2]->identifier == AST_Node_Type::Arg_List)) {
-            for (size_t i = 0; i < this->children[2]->children.size(); ++i) {
-              t_param_names.push_back(this->children[2]->children[i]->text);
+          if ((this->children.size() > (3 + class_offset)) && (this->children[(2 + class_offset)]->identifier == AST_Node_Type::Arg_List)) {
+            for (size_t i = 0; i < this->children[(2 + class_offset)]->children.size(); ++i) {
+              t_param_names.push_back(this->children[(2 + class_offset)]->children[i]->text);
             }
 
-            if (this->children.size() > 4) {
-              guardnode = this->children[3];
+            if (this->children.size() > (4 + class_offset)) {
+              guardnode = this->children[(3 + class_offset)];
             }
           }
           else {
             //no parameters
 
-            if (this->children.size() > 3) {
-              guardnode = this->children[2];
+            if (this->children.size() > (3 + class_offset)) {
+              guardnode = this->children[(2 + class_offset)];
             }
           }
 
@@ -1432,8 +1454,9 @@ namespace chaiscript
 
           try {
             const std::string & l_annotation = this->annotation?this->annotation->text:"";
-            const std::string & class_name = this->children[0]->text;
-            const std::string & function_name = this->children[1]->text;
+
+            const std::string & function_name = this->children[(1 + class_offset)]->text;
+
             if (function_name == class_name) {
               t_ss.add(Proxy_Function
                   (new dispatch::detail::Dynamic_Object_Constructor(class_name, Proxy_Function
@@ -1478,22 +1501,28 @@ namespace chaiscript
         Attr_Decl_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Attr_Decl, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Attr_Decl_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
-          try {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE 
+        {
+          const auto &d = t_ss.get_parent_locals();
+          const auto itr = d.find("_current_class_name");
+          int class_offset = 0;
+          if (itr != d.end()) class_offset = -1;
+          std::string class_name = (itr != d.end())?std::string(boxed_cast<std::string>(itr->second)):this->children[0]->text;
 
+          try {
             t_ss.add(Proxy_Function
                 (new dispatch::detail::Dynamic_Object_Function(
-                     this->children[0]->text,
+                     class_name,
                      fun(std::function<Boxed_Value (dispatch::Dynamic_Object &)>(std::bind(&dispatch::Dynamic_Object::get_attr, 
                                                                                    std::placeholders::_1,
-                                                                                   this->children[1]->text
+                                                                                   this->children[(1 + class_offset)]->text
                                                                                    )))
                      )
-                ), this->children[1]->text);
+                ), this->children[(1 + class_offset)]->text);
 
           }
           catch (const exception::reserved_word_error &) {
-            throw exception::eval_error("Reserved word used as attribute '" + this->children[1]->text + "'");
+            throw exception::eval_error("Reserved word used as attribute '" + this->children[(1 + class_offset)]->text + "'");
           } catch (const exception::name_conflict_error &e) {
             throw exception::eval_error("Attribute redefined '" + e.name() + "'");
           }

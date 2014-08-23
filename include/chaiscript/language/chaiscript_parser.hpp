@@ -1358,7 +1358,7 @@ namespace chaiscript
         /**
          * Reads a function definition from input
          */
-        bool Def() {
+        bool Def(bool t_class_context = false) {
           bool retval = false;
           bool is_annotated = false;
           AST_NodePtr annotation;
@@ -1410,7 +1410,7 @@ namespace chaiscript
               throw exception::eval_error("Incomplete function definition", File_Position(m_line, m_col), *m_filename);
             }
 
-            if (is_method) {
+            if (is_method || t_class_context) {
               build_match(AST_NodePtr(new eval::Method_AST_Node()), prev_stack_top);
             }
             else {
@@ -1554,6 +1554,35 @@ namespace chaiscript
 
           return retval;
         }
+
+        /**
+         * Reads a class block from input
+         */
+        bool Class() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Keyword("class")) {
+            retval = true;
+
+            if (!Id(true)) {
+              throw exception::eval_error("Missing class name in definition", File_Position(m_line, m_col), *m_filename);
+            }
+
+
+            while (Eol()) {}
+
+            if (!Class_Block()) {
+              throw exception::eval_error("Incomplete 'class' block", File_Position(m_line, m_col), *m_filename);
+            }
+
+            build_match(AST_NodePtr(new eval::Class_AST_Node()), prev_stack_top);
+          }
+
+          return retval;
+        }
+
 
         /**
          * Reads a while block from input
@@ -1738,6 +1767,28 @@ namespace chaiscript
         }
 
         /**
+         * Reads a curly-brace C-style class block from input
+         */
+        bool Class_Block() {
+          bool retval = false;
+
+          size_t prev_stack_top = m_match_stack.size();
+
+          if (Char('{')) {
+            retval = true;
+
+            Class_Statements();
+            if (!Char('}')) {
+              throw exception::eval_error("Incomplete class block", File_Position(m_line, m_col), *m_filename);
+            }
+
+            build_match(AST_NodePtr(new eval::Block_AST_Node()), prev_stack_top);
+          }
+
+          return retval;
+        }
+
+        /**
          * Reads a curly-brace C-style block from input
          */
         bool Block() {
@@ -1875,12 +1926,20 @@ namespace chaiscript
         /**
          * Reads a variable declaration from input
          */
-        bool Var_Decl() {
+        bool Var_Decl(bool t_class_context = false) {
           bool retval = false;
 
           size_t prev_stack_top = m_match_stack.size();
 
-          if (Keyword("auto") || Keyword("var")) {
+          if (t_class_context && (Keyword("attr") || Keyword("auto") || Keyword("var"))) {
+            retval = true;
+
+            if (!Id(true)) {
+              throw exception::eval_error("Incomplete attribute declaration", File_Position(m_line, m_col), *m_filename);
+            }
+
+            build_match(AST_NodePtr(new eval::Attr_Decl_AST_Node()), prev_stack_top);
+          } else if (Keyword("auto") || Keyword("var")) {
             retval = true;
 
             if (!(Reference() || Id(true))) {
@@ -1888,8 +1947,7 @@ namespace chaiscript
             }
 
             build_match(AST_NodePtr(new eval::Var_Decl_AST_Node()), prev_stack_top);
-          }
-          else if (Keyword("attr")) {
+          } else if (Keyword("attr")) {
             retval = true;
 
             if (!Id(true)) {
@@ -2263,6 +2321,44 @@ namespace chaiscript
         }
 
         /**
+         * Parses statements allowed inside of a class block
+         */
+        bool Class_Statements() {
+          bool retval = false;
+
+          bool has_more = true;
+          bool saw_eol = true;
+
+          while (has_more) {
+            int prev_line = m_line;
+            int prev_col = m_col;
+            if (Def(true)) {
+              if (!saw_eol) {
+                throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
+              }
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            } else if (Var_Decl(true)) {
+              if (!saw_eol) {
+                throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
+              }
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            } else if (Eol()) {
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            } else {
+              has_more = false;
+            }
+          }
+
+          return retval;
+        }
+
+        /**
          * Top level parser, starts parsing of all known parses
          */
         bool Statements() {
@@ -2299,6 +2395,14 @@ namespace chaiscript
               saw_eol = true;
             }
             else if (While()) {
+              if (!saw_eol) {
+                throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
+              }
+              has_more = true;
+              retval = true;
+              saw_eol = true;
+            }
+            else if (Class()) {
               if (!saw_eol) {
                 throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
               }

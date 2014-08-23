@@ -736,6 +736,19 @@ namespace chaiscript
           return functions.find(name) != functions.end();
         }
 
+        /// \returns All values in the local thread state in the parent scope, or if it doesn't exist,
+        ///          the current scope.
+        std::map<std::string, Boxed_Value> get_parent_locals() const
+        {
+          StackData &stack = get_stack_data();
+          if (stack.size() > 1)
+          {
+            return stack[1];
+          } else {
+            return stack[0];
+          }
+        }
+
         /// \returns All values in the local thread state, added through the add() function
         std::map<std::string, Boxed_Value> get_locals() const
         {
