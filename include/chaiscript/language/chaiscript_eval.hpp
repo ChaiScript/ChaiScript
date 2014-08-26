@@ -584,9 +584,6 @@ namespace chaiscript
               params.clear();
               retval = t_ss.call_function("[]", retval, p1);
             }
-            catch(std::out_of_range &) {
-              throw exception::eval_error("Out of bounds exception");
-            }
             catch(const exception::dispatch_error &e){
               throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, false, t_ss );
             }
@@ -661,9 +658,6 @@ namespace chaiscript
                 for (size_t j = 1; j < this->children[i]->children.size(); ++j) {
                   try {
                     retval = t_ss.call_function("[]", retval, this->children[i]->children[j]->eval(t_ss));
-                  }
-                  catch(std::out_of_range &) {
-                    throw exception::eval_error("Out of bounds exception");
                   }
                   catch(const exception::dispatch_error &e){
                     throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, true, t_ss);
