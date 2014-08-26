@@ -412,6 +412,7 @@ namespace chaiscript
 
         m->add(fun(&Boxed_Value::get_type_info), "get_type_info");
         m->add(user_type<Type_Info>(), "Type_Info");
+        m->add(constructor<Type_Info (const Type_Info &)>(), "Type_Info");
 
 
         operators::equal<Type_Info>(m);
