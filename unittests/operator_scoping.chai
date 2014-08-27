@@ -1,4 +1,3 @@
-load_module("reflection")
 
 try {
   eval("def `+`(x, y) \n { \n print(i); \n } \n \n var i = 10; \n \"1\" + 1;\n")

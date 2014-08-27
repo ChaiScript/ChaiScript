@@ -32,6 +32,8 @@
 #include "proxy_functions_detail.hpp"
 #include "register_function.hpp"
 #include "type_info.hpp"
+#include "../utility/utility.hpp"
+#include "../language/chaiscript_common.hpp"
 
 namespace chaiscript 
 {
@@ -357,11 +359,47 @@ namespace chaiscript
           return vbv;
         }
 
+
+      static bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
+      {
+        std::shared_ptr<const chaiscript::dispatch::Dynamic_Proxy_Function> pf
+          = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
+        if (pf)
+        {
+          if (pf->get_parse_tree())
+          {
+            return true;
+          } else {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      }
+
+      static chaiscript::AST_NodePtr get_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
+      {
+        std::shared_ptr<const chaiscript::dispatch::Dynamic_Proxy_Function> pf 
+          = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
+        if (pf)
+        {
+          if (pf->get_parse_tree())
+          {
+            return pf->get_parse_tree();
+          } else {
+            throw std::runtime_error("Function does not have a parse tree");
+          }
+        } else {
+          throw std::runtime_error("Function does not have a parse tree");
+        }
+      }
+
       template<typename Function>
       static std::function<std::vector<Boxed_Value> (const dispatch::Proxy_Function_Base*)> return_boxed_value_vector(const Function &f)
       {
         return std::bind(&do_return_boxed_value_vector<Function>, f, std::placeholders::_1);
       }
+
 
     public:
       /// \brief perform all common bootstrap functions for std::string, void and POD types
@@ -380,7 +418,7 @@ namespace chaiscript
         m->add(fun(&dispatch::Proxy_Function_Base::annotation), "get_annotation");
         m->add(fun(&dispatch::Proxy_Function_Base::operator==), "==");
 
-        
+
         m->add(fun(return_boxed_value_vector(&dispatch::Proxy_Function_Base::get_param_types)), "get_param_types");
         m->add(fun(return_boxed_value_vector(&dispatch::Proxy_Function_Base::get_contained_functions)), "get_contained_functions");
 
@@ -472,6 +510,68 @@ namespace chaiscript
         m->add(fun(&ptr_assign<std::add_const<dispatch::Proxy_Function_Base>::type>), "=");
 
         m->add(fun(&Boxed_Value::type_match), "type_match");
+
+
+        m->add(chaiscript::fun(&has_parse_tree), "has_parse_tree");
+        m->add(chaiscript::fun(&get_parse_tree), "get_parse_tree");
+
+        m->add(chaiscript::base_class<std::exception, chaiscript::exception::eval_error>());
+
+//        chaiscript::bootstrap::standard_library::vector_type<std::vector<std::shared_ptr<chaiscript::AST_Node> > >("AST_NodeVector", m);
+
+
+        chaiscript::utility::add_class<chaiscript::exception::eval_error>(*m,
+            "eval_error",
+            { },
+            { {fun(&chaiscript::exception::eval_error::reason), "reason"},
+            {fun(std::function<std::vector<Boxed_Value> (const chaiscript::exception::eval_error &t_eval_error)>([](const chaiscript::exception::eval_error &t_eval_error) { 
+                std::vector<Boxed_Value> retval;
+                std::transform(t_eval_error.call_stack.begin(), t_eval_error.call_stack.end(),
+                               std::back_inserter(retval),
+                               &chaiscript::var<std::shared_ptr<chaiscript::AST_Node>>);
+                return retval;
+              })), "call_stack"} }
+            );
+
+
+        chaiscript::utility::add_class<chaiscript::File_Position>(*m,
+            "File_Position",
+            { constructor<File_Position()>(),
+              constructor<File_Position(int, int)>() },
+            { {fun(&File_Position::line), "line"},
+              {fun(&File_Position::column), "column"} }
+            );
+
+
+        chaiscript::utility::add_class<AST_Node>(*m, 
+            "AST_Node",
+            {  },
+            { {fun(&AST_Node::text), "text"},
+              {fun(&AST_Node::identifier), "identifier"},
+              {fun(&AST_Node::filename), "filename"},
+              {fun(&AST_Node::start), "start"},
+              {fun(&AST_Node::end), "end"},
+              {fun(&AST_Node::internal_to_string), "internal_to_string"},
+              {fun(std::function<std::vector<Boxed_Value> (const chaiscript::AST_Node &t_node)>([](const chaiscript::AST_Node &t_node) { 
+                std::vector<Boxed_Value> retval;
+                std::transform(t_node.children.begin(), t_node.children.end(),
+                               std::back_inserter(retval),
+                               &chaiscript::var<std::shared_ptr<chaiscript::AST_Node>>);
+                return retval;
+              })), "children"},
+              {fun(&AST_Node::replace_child), "replace_child"}
+            }
+            );
+
+
+        chaiscript::utility::add_class<parser::ChaiScript_Parser>(*m,
+            "ChaiScript_Parser",
+            { constructor<parser::ChaiScript_Parser ()>() },
+            { {fun(&parser::ChaiScript_Parser::parse), "parse"},
+              {fun(&parser::ChaiScript_Parser::ast), "ast"} }
+            );
+
+
 
         return m;
       }

@@ -10,7 +10,7 @@ else()
 endif()
 
 
-option(BUILD_MODULES "Build Extra Modules (stl, reflection)" TRUE)
+option(BUILD_MODULES "Build Extra Modules (stl)" TRUE)
 option(BUILD_SAMPLES "Build Samples Folder" FALSE)
 
 
@@ -210,9 +210,7 @@ if(BUILD_MODULES)
   add_library(stl_extra MODULE src/stl_extra.cpp)
   target_link_libraries(stl_extra ${LIBS})
 
-  add_library(reflection MODULE src/reflection.cpp)
-  target_link_libraries(reflection ${LIBS})
-  set(MODULES stl_extra reflection)
+  set(MODULES stl_extra)
 endif()
 
 file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.chai ${CMAKE_CURRENT_SOURCE_DIR}/unittests/3.x/*.chai)
