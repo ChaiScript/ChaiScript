@@ -2,3 +2,9 @@ auto x = [1, 2, 3, 4]
 auto r = range(x)
 r.pop_front()
 assert_equal(2, r.front());
+
+// test with temporary vector for range
+auto q = range([1, 2, 3, 4])
+q.pop_front()
+assert_equal(2, q.front());
+
