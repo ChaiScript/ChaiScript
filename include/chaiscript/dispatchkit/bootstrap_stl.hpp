@@ -185,7 +185,7 @@ namespace chaiscript
 
             copy_constructor<Bidir_Type>(type + "_Range", m);
 
-            m->add(constructor<Bidir_Type (typename Bidir_Type::container_type &)>(), "range_internal");
+            m->add(constructor<Bidir_Type (typename Bidir_Type::container_type &)>(), "range");
 
             m->add(fun(&Bidir_Type::empty), "empty");
             m->add(fun(&Bidir_Type::pop_front), "pop_front");
