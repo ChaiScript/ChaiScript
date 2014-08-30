@@ -41,8 +41,10 @@ def new(x) {
 } 
 
 def clone(x) : function_exists(type_name(x)) && call_exists(eval(type_name(x)), x)  
-{ 
-  eval(type_name(x))(x); 
+{
+  var c := eval(type_name(x))(x);
+  c.copy_var_attrs(x);
+  return c;
 }
 
 
@@ -147,10 +149,16 @@ def reverse(container) {
 
 # Return a range from a range 
 def range(r) : call_exists(empty, r) && call_exists(pop_front, r) && call_exists(pop_back, r) && call_exists(back, r) && call_exists(front, r) 
-{ 
-  return clone(r); 
+{
+  clone(r);
 }
 
+def range(r) : call_exists(range_internal, r)
+{
+  var ri := range_internal(r);
+  ri.get_var_attr("internal_obj") := r;
+  return ri;
+}
 
 # The retro attribute that contains the underlying range 
 attr retro::m_range; 

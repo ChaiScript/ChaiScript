@@ -205,9 +205,24 @@ namespace chaiscript
 
         static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
-          return ob;    
+          return ob;
         }
       };
+
+    /**
+     * Cast_Helper_Inner for casting to a Boxed_Value & type
+     */
+    template<>
+      struct Cast_Helper_Inner<Boxed_Value &>
+      {
+        typedef Boxed_Value& Result_Type;
+
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
+        {
+          return const_cast<Boxed_Value &>(ob);
+        }
+      };
+
 
     /**
      * Cast_Helper_Inner for casting to a const Boxed_Value & type
