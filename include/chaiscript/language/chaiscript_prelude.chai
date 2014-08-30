@@ -40,11 +40,9 @@ def new(x) {
   eval(type_name(x))(); 
 } 
 
-def clone(x) : function_exists(type_name(x)) && call_exists(eval(type_name(x)), x)  
+def clone(x) : function_exists(type_name(x)) && call_exists(eval(type_name(x)), x)
 {
-  var c := eval(type_name(x))(x);
-  c.copy_var_attrs(x);
-  return c;
+  eval(type_name(x))(x).copy_var_attrs(x);
 }
 
 
@@ -138,8 +136,8 @@ def insert_at(container, pos, x)
 
 # Returns the reverse of the given container
 def reverse(container) {
-  auto retval = new(container); 
-  auto r = range(container); 
+  auto retval := new(container); 
+  auto r := range(container); 
   while (!r.empty()) { 
     retval.push_back(r.back()); 
     r.pop_back(); 
@@ -157,7 +155,7 @@ def range(r) : call_exists(range_internal, r)
 {
   var ri := range_internal(r);
   ri.get_var_attr("internal_obj") := r;
-  return ri;
+  ri;
 }
 
 # The retro attribute that contains the underlying range 
@@ -208,19 +206,19 @@ def retro::empty()
 
 # Performs the second value function over the container first value
 def for_each(container, func) : call_exists(range, container) { 
-  var t_range = range(container); 
+  var t_range := range(container); 
   while (!t_range.empty()) { 
     func(t_range.front()); 
     t_range.pop_front(); 
   } 
 } 
 
-def back_inserter(container) { 
-  bind(push_back, container, _);     
+def back_inserter(container) {
+  bind(push_back, container, _);
 }
 
 def contains(container, item, compare_func) : call_exists(range, container) { 
-  auto t_range = range(container); 
+  auto t_range := range(container); 
   while (!t_range.empty()) { 
     if ( compare_func(t_range.front(), item) ) { 
       return true; 
@@ -228,15 +226,15 @@ def contains(container, item, compare_func) : call_exists(range, container) {
 
     t_range.pop_front(); 
   } 
-  return false; 
+  false; 
 } 
 
 def contains(container, item) { 
-  return contains(container, item, eq) 
+  contains(container, item, eq) 
 } 
 
 def map(container, func, inserter) : call_exists(range, container) { 
-  auto range = range(container); 
+  auto range := range(container); 
   while (!range.empty()) { 
     inserter(func(range.front())); 
     range.pop_front(); 
@@ -245,7 +243,7 @@ def map(container, func, inserter) : call_exists(range, container) {
 
 # Performs the second value function over the container first value. Creates a new container with the results
 def map(container, func) { 
-  auto retval = new(container); 
+  auto retval := new(container); 
   map(container, func, back_inserter(retval));
   retval;
 }
@@ -253,7 +251,7 @@ def map(container, func) {
 # Performs the second value function over the container first value. Starts with initial and continues with each element.
 def foldl(container, func, initial) : call_exists(range, container){ 
   auto retval = initial; 
-  auto range = range(container); 
+  auto range := range(container); 
   while (!range.empty()) { 
     retval = (func(range.front(), retval)); 
     range.pop_front(); 
@@ -274,8 +272,8 @@ def product(container) {
 # Returns a new container with the elements of the first value concatenated with the elements of the second value
 def concat(x, y) : call_exists(clone, x) { 
   auto retval = x; 
-  auto inserter = back_inserter(retval); 
-  auto range = range(y); 
+  auto inserter := back_inserter(retval); 
+  auto range := range(y); 
   while (!range.empty()) { 
     inserter(range.front()); 
     range.pop_front(); 
@@ -285,7 +283,7 @@ def concat(x, y) : call_exists(clone, x) {
 
 
 def take(container, num, inserter) : call_exists(range, container) { 
-  auto r = range(container); 
+  auto r := range(container); 
   auto i = num; 
   while ((i > 0) && (!r.empty())) { 
     inserter(r.front()); 
@@ -297,14 +295,14 @@ def take(container, num, inserter) : call_exists(range, container) {
 
 # Returns a new container with the given number of elements taken from the container
 def take(container, num) {
-  auto retval = new(container); 
+  auto retval := new(container); 
   take(container, num, back_inserter(retval)); 
   retval; 
 }
 
 
 def take_while(container, f, inserter) : call_exists(range, container) { 
-  auto r = range(container); 
+  auto r := range(container); 
   while ((!r.empty()) && f(r.front())) { 
     inserter(r.front()); 
     r.pop_front(); 
@@ -314,14 +312,14 @@ def take_while(container, f, inserter) : call_exists(range, container) {
 
 # Returns a new container with the given elements match the second value function
 def take_while(container, f) {
-  auto retval = new(container); 
+  auto retval := new(container); 
   take_while(container, f, back_inserter(retval)); 
   retval;
 }
 
 
 def drop(container, num, inserter) : call_exists(range, container) { 
-  auto r = range(container); 
+  auto r := range(container); 
   auto i = num; 
   while ((i > 0) && (!r.empty())) { 
     r.pop_front(); 
@@ -336,14 +334,14 @@ def drop(container, num, inserter) : call_exists(range, container) {
 
 # Returns a new container with the given number of elements dropped from the given container 
 def drop(container, num) {
-  auto retval = new(container); 
+  auto retval := new(container); 
   drop(container, num, back_inserter(retval)); 
   retval; 
 }
 
 
 def drop_while(container, f, inserter) : call_exists(range, container) { 
-  auto r = range(container); 
+  auto r := range(container); 
   while ((!r.empty())&& f(r.front())) { 
     r.pop_front(); 
   } 
@@ -356,7 +354,7 @@ def drop_while(container, f, inserter) : call_exists(range, container) {
 
 # Returns a new container with the given elements dropped that match the second value function
 def drop_while(container, f) {
-  auto retval = new(container); 
+  auto retval := new(container); 
   drop_while(container, f, back_inserter(retval)); 
   retval; 
 }
@@ -364,7 +362,7 @@ def drop_while(container, f) {
 
 # Applies the second value function to the container. Starts with the first two elements. Expects at least 2 elements.
 def reduce(container, func) : container.size() >= 2 && call_exists(range, container) { 
-  auto r = range(container); 
+  auto r := range(container); 
   auto retval = r.front(); 
   r.pop_front(); 
   retval = func(retval, r.front()); 
@@ -380,7 +378,7 @@ def reduce(container, func) : container.size() >= 2 && call_exists(range, contai
 # Returns a string of the elements in container delimited by the second value string
 def join(container, delim) { 
   auto retval = ""; 
-  auto range = range(container); 
+  auto range := range(container); 
   if (!range.empty()) { 
     retval += to_string(range.front()); 
     range.pop_front(); 
@@ -395,7 +393,7 @@ def join(container, delim) {
 
 
 def filter(container, f, inserter) : call_exists(range, container) { 
-  auto r = range(container); 
+  auto r := range(container); 
   while (!r.empty()) { 
     if (f(r.front())) { 
       inserter(r.front()); 
@@ -407,7 +405,7 @@ def filter(container, f, inserter) : call_exists(range, container) {
 
 # Returns a new Vector which match the second value function
 def filter(container, f) { 
-  auto retval = new(container); 
+  auto retval := new(container); 
   filter(container, f, back_inserter(retval));
   retval;
 }
@@ -424,7 +422,7 @@ def generate_range(x, y, inserter) {
 
 # Returns a new Vector which represents the range from the first value to the second value
 def generate_range(x, y) { 
-  auto retval = Vector(); 
+  auto retval := Vector(); 
   generate_range(x,y,back_inserter(retval)); 
   retval; 
 }
@@ -437,8 +435,8 @@ def collate(x, y) {
 
 
 def zip_with(f, x, y, inserter) : call_exists(range, x) && call_exists(range, y) { 
-  auto r_x = range(x); 
-  auto r_y = range(y); 
+  auto r_x := range(x); 
+  auto r_y := range(y); 
   while (!r_x.empty() && !r_y.empty()) { 
     inserter(f(r_x.front(), r_y.front())); 
     r_x.pop_front(); 
@@ -449,7 +447,7 @@ def zip_with(f, x, y, inserter) : call_exists(range, x) && call_exists(range, y)
 
 # Returns a new Vector which joins matching elements of the second and third value with the first value function
 def zip_with(f, x, y) { 
-  auto retval = Vector(); 
+  auto retval := Vector(); 
   zip_with(f,x,y,back_inserter(retval)); 
   retval;
 }
@@ -513,7 +511,7 @@ def string::trim() {
 
 
 def find(container, value, compare_func) : call_exists(range, container) && is_type(compare_func, "Function") { 
-  auto range = range(container); 
+  auto range := range(container); 
   while (!range.empty()) { 
     if (compare_func(range.front(), value)) { 
       return range; 
@@ -521,12 +519,12 @@ def find(container, value, compare_func) : call_exists(range, container) && is_t
       range.pop_front(); 
     } 
   } 
-  return range; 
+  range; 
 } 
 
 
 def find(container, value) { 
-  return find(container, value, eq) 
+  find(container, value, eq) 
 } 
 
 

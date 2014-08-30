@@ -249,12 +249,13 @@ namespace chaiscript
         return (*m_data->m_attrs)[t_name];
       }
 
-      void copy_attrs(const Boxed_Value &t_obj)
+      Boxed_Value &copy_attrs(const Boxed_Value &t_obj)
       {
         if (t_obj.m_data->m_attrs)
         {
           m_data->m_attrs = std::unique_ptr<std::map<std::string, Boxed_Value>>(new std::map<std::string, Boxed_Value>(*t_obj.m_data->m_attrs));
         }
+        return *this;
       }
 
 
