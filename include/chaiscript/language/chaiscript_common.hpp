@@ -430,15 +430,11 @@ namespace chaiscript
 
         oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
             << this->text << " : " << this->start.line << ", " << this->start.column << std::endl;
-        
+
         for (size_t j = 0; j < this->children.size(); ++j) {
           oss << this->children[j]->to_string(t_prepend + "  ");
         }
         return oss.str();
-      }
-
-      std::string internal_to_string() {
-        return to_string();
       }
 
       Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_e) 

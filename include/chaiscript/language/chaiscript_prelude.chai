@@ -56,11 +56,6 @@ def to_string(x) : call_exists(range, x) && !x.is_type("string"){
   "[" + x.join(", ") + "]"; 
 }
 
-# Basic to_string function
-def to_string(x) { 
-  internal_to_string(x); 
-}
-
 # Prints to console with no carriage return
 def puts(x) { 
   print_string(x.to_string()); 

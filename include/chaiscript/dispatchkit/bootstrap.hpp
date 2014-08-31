@@ -472,8 +472,8 @@ namespace chaiscript
         operators::assign<bool>(m);
         operators::equal<bool>(m);
 
-        m->add(fun(&to_string<const std::string &>), "internal_to_string");
-        m->add(fun(&Bootstrap::bool_to_string), "internal_to_string");
+        m->add(fun(&to_string<const std::string &>), "to_string");
+        m->add(fun(&Bootstrap::bool_to_string), "to_string");
         m->add(fun(&unknown_assign), "=");
         m->add(fun(&throw_exception), "throw");
         m->add(fun(&what), "what");
@@ -553,7 +553,7 @@ namespace chaiscript
               {fun(&AST_Node::filename), "filename"},
               {fun(&AST_Node::start), "start"},
               {fun(&AST_Node::end), "end"},
-              {fun(&AST_Node::internal_to_string), "internal_to_string"},
+              {fun(&AST_Node::to_string), "to_string"},
               {fun(std::function<std::vector<Boxed_Value> (const chaiscript::AST_Node &t_node)>([](const chaiscript::AST_Node &t_node) { 
                 std::vector<Boxed_Value> retval;
                 std::transform(t_node.children.begin(), t_node.children.end(),
