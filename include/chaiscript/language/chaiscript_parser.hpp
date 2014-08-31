@@ -1127,7 +1127,7 @@ namespace chaiscript
             }
             retval = true;
             m_input_pos = tmp;
-            m_col += len;
+            m_col += static_cast<int>(len);
           }
 
           return retval;
@@ -1175,7 +1175,7 @@ namespace chaiscript
             }
             retval = true;
             m_input_pos = tmp;
-            m_col += len;
+            m_col += static_cast<int>(len);
           }
 
           return retval;

@@ -49,6 +49,8 @@ namespace chaiscript {
           {
           }
 
+          Data &operator=(const Data &) = delete;
+
           virtual ~Data() {}
           virtual void *data() = 0;
           const std::type_info &type() const
