@@ -440,32 +440,24 @@ namespace chaiscript
         int m_arity;
     };
 
-    /**
-     * The standard typesafe function call implementation of Proxy_Function
-     * It takes a std::function<> object and performs runtime 
-     * type checking of Boxed_Value parameters, in a type safe manner
-     */
-    template<typename Func>
-      class Proxy_Function_Impl : public Proxy_Function_Base
+    class Proxy_Function_Impl_Base : public Proxy_Function_Base
     {
       public:
-        Proxy_Function_Impl(std::function<Func> f)
-          : Proxy_Function_Base(detail::build_param_type_list(static_cast<Func *>(nullptr))),
-          m_f(std::move(f)), m_dummy_func(nullptr)
+        Proxy_Function_Impl_Base(std::vector<Type_Info> t_types)
+          : Proxy_Function_Base(std::move(t_types))
         {
         }
 
-        virtual ~Proxy_Function_Impl() {}
-
-        virtual bool operator==(const Proxy_Function_Base &t_func) const CHAISCRIPT_OVERRIDE
-        {
-          const Proxy_Function_Impl *pimpl = dynamic_cast<const Proxy_Function_Impl<Func> *>(&t_func);
-          return pimpl != nullptr;
-        }
+        virtual ~Proxy_Function_Impl_Base() {}
 
         virtual int get_arity() const CHAISCRIPT_OVERRIDE
         {
           return static_cast<int>(m_types.size()) - 1;
+        }
+
+        virtual std::string annotation() const CHAISCRIPT_OVERRIDE
+        {
+          return "";
         }
 
         virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
@@ -475,12 +467,37 @@ namespace chaiscript
             return false;
           }
 
-          return compare_types(m_types, vals) || detail::compare_types_cast(m_dummy_func, vals, t_conversions);
+          return compare_types(m_types, vals) || compare_types_with_cast(vals, t_conversions);
         }
 
-        virtual std::string annotation() const CHAISCRIPT_OVERRIDE
+        virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const = 0;
+    };
+
+    /**
+     * The standard typesafe function call implementation of Proxy_Function
+     * It takes a std::function<> object and performs runtime 
+     * type checking of Boxed_Value parameters, in a type safe manner
+     */
+    template<typename Func>
+      class Proxy_Function_Impl : public Proxy_Function_Impl_Base
+    {
+      public:
+        Proxy_Function_Impl(std::function<Func> f)
+          : Proxy_Function_Impl_Base(detail::build_param_type_list(static_cast<Func *>(nullptr))),
+            m_f(std::move(f)), m_dummy_func(nullptr)
         {
-          return "";
+        }
+
+        virtual ~Proxy_Function_Impl() {}
+
+        virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
+        {
+          return detail::compare_types_cast(m_dummy_func, vals, t_conversions);
+        }
+
+        virtual bool operator==(const Proxy_Function_Base &t_func) const CHAISCRIPT_OVERRIDE
+        {
+          return dynamic_cast<const Proxy_Function_Impl<Func> *>(&t_func) != nullptr;
         }
 
         std::function<Func> internal_function() const
@@ -489,7 +506,7 @@ namespace chaiscript
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const
         {
           return detail::Do_Call<typename std::function<Func>::result_type>::go(m_f, params, t_conversions);
         }

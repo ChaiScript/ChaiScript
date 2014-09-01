@@ -1,4 +1,3 @@
-load_module("reflection")
 
 def deep()
 {

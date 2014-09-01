@@ -330,6 +330,7 @@ namespace chaiscript
       m_engine.add_reserved_word("break");
       m_engine.add_reserved_word("true");
       m_engine.add_reserved_word("false");
+      m_engine.add_reserved_word("class");
       m_engine.add_reserved_word("_");
 
       if (t_lib)
@@ -502,6 +503,18 @@ namespace chaiscript
       ss << version_major() << "." << version_minor() << "." << version_patch();
       return ss.str();
     }
+
+    std::string get_type_name(const Type_Info &ti) const
+    {
+      return m_engine.get_type_name(ti);
+    }
+
+    template<typename T>
+    std::string get_type_name() const
+    {
+      return get_type_name(user_type<T>());
+    }
+
 
     /// \brief Loads and parses a file. If the file is already, it is not reloaded
     /// The use paths specified at ChaiScript construction time are searched for the 

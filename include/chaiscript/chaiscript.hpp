@@ -497,6 +497,21 @@
 /// print(rect.area())
 /// ~~~~~~~~~
 ///
+/// Since ChaiScript 5.4.0 it has been possible to use the "class" keyword to simplify this code.
+///
+/// ~~~~~~~~~
+/// class Rectangle {
+///   attr height
+///   attr width
+///   def Rectangle() { this.height = 10; this.width = 20 }
+///   def area() { this.height * this.width }
+/// }
+///
+/// var rect = Rectangle()
+/// rect.height = 30
+/// print(rect.area())
+/// ~~~~~~~~~
+///
 /// @sa @ref keywordattr
 /// @sa @ref keyworddef
 

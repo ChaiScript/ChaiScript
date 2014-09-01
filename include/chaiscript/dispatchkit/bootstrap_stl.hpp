@@ -185,7 +185,7 @@ namespace chaiscript
 
             copy_constructor<Bidir_Type>(type + "_Range", m);
 
-            m->add(constructor<Bidir_Type (typename Bidir_Type::container_type &)>(), "range");
+            m->add(constructor<Bidir_Type (typename Bidir_Type::container_type &)>(), "range_internal");
 
             m->add(fun(&Bidir_Type::empty), "empty");
             m->add(fun(&Bidir_Type::pop_front), "pop_front");
@@ -348,10 +348,12 @@ namespace chaiscript
         ModulePtr front_insertion_sequence_type(const std::string &, ModulePtr m = ModulePtr(new Module()))
         {
           typedef typename ContainerType::reference (ContainerType::*frontptr)();
+          typedef typename ContainerType::const_reference (ContainerType::*constfrontptr)() const;
           typedef void (ContainerType::*pushptr)(typename ContainerType::const_reference);
           typedef void (ContainerType::*popptr)();
 
           m->add(fun(static_cast<frontptr>(&ContainerType::front)), "front");
+          m->add(fun(static_cast<constfrontptr>(&ContainerType::front)), "front");
 
           std::string push_front_name;
           if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value))
@@ -475,7 +477,10 @@ namespace chaiscript
           m->add(user_type<VectorType>(), type);
 
           typedef typename VectorType::reference (VectorType::*frontptr)();
+          typedef typename VectorType::const_reference (VectorType::*constfrontptr)() const;
+
           m->add(fun(static_cast<frontptr>(&VectorType::front)), "front");
+          m->add(fun(static_cast<constfrontptr>(&VectorType::front)), "front");
 
 
           back_insertion_sequence_type<VectorType>(type, m);

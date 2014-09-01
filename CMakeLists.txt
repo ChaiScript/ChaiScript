@@ -10,7 +10,7 @@ else()
 endif()
 
 
-option(BUILD_MODULES "Build Extra Modules (stl, reflection)" TRUE)
+option(BUILD_MODULES "Build Extra Modules (stl)" TRUE)
 option(BUILD_SAMPLES "Build Samples Folder" FALSE)
 
 
@@ -54,8 +54,8 @@ set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/readme.md")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/description.txt")
 
 set(CPACK_PACKAGE_VERSION_MAJOR 5)
-set(CPACK_PACKAGE_VERSION_MINOR 3)
-set(CPACK_PACKAGE_VERSION_PATCH 1)
+set(CPACK_PACKAGE_VERSION_MINOR 4)
+set(CPACK_PACKAGE_VERSION_PATCH 0)
 
 set(CPACK_PACKAGE_EXECUTABLES "chai;ChaiScript Eval")
 set(CPACK_PACKAGE_VENDOR "ChaiScript.com")
@@ -210,9 +210,7 @@ if(BUILD_MODULES)
   add_library(stl_extra MODULE src/stl_extra.cpp)
   target_link_libraries(stl_extra ${LIBS})
 
-  add_library(reflection MODULE src/reflection.cpp)
-  target_link_libraries(reflection ${LIBS})
-  set(MODULES stl_extra reflection)
+  set(MODULES stl_extra)
 endif()
 
 file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.chai ${CMAKE_CURRENT_SOURCE_DIR}/unittests/3.x/*.chai)
@@ -274,6 +272,10 @@ if(BUILD_TESTING)
     add_executable(type_info_test unittests/type_info_test.cpp)
     target_link_libraries(type_info_test ${LIBS})
     add_test(NAME Type_Info_Test COMMAND type_info_test)
+
+    add_executable(type_name_test unittests/type_name_test.cpp)
+    target_link_libraries(type_name_test ${LIBS})
+    add_test(NAME Type_Name_Test COMMAND type_name_test)
 
     add_executable(eval_catch_exception_test unittests/eval_catch_exception_test.cpp)
     target_link_libraries(eval_catch_exception_test ${LIBS})

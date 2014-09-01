@@ -37,7 +37,7 @@ namespace chaiscript
                 Comparison, Addition, Subtraction, Multiplication, Division, Modulus, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
                 Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
                 Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, 
-                Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop
+                Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop, Class
     };
   };
 
@@ -430,15 +430,11 @@ namespace chaiscript
 
         oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
             << this->text << " : " << this->start.line << ", " << this->start.column << std::endl;
-        
+
         for (size_t j = 0; j < this->children.size(); ++j) {
           oss << this->children[j]->to_string(t_prepend + "  ");
         }
         return oss.str();
-      }
-
-      std::string internal_to_string() {
-        return to_string();
       }
 
       Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_e) 
@@ -510,6 +506,9 @@ namespace chaiscript
       /// Creates a new scope then pops it on destruction
       struct Scope_Push_Pop
       {
+        Scope_Push_Pop(const Scope_Push_Pop &) = delete;
+        Scope_Push_Pop& operator=(const Scope_Push_Pop &) = delete;
+
         Scope_Push_Pop(chaiscript::detail::Dispatch_Engine &t_de)
           : m_de(t_de)
         {
@@ -523,9 +522,6 @@ namespace chaiscript
 
 
         private:
-        // explicitly unimplemented copy and assignment
-        Scope_Push_Pop(const Scope_Push_Pop &);
-        Scope_Push_Pop& operator=(const Scope_Push_Pop &);
 
         chaiscript::detail::Dispatch_Engine &m_de;
       };
@@ -533,6 +529,9 @@ namespace chaiscript
       /// Creates a new function call and pops it on destruction
       struct Function_Push_Pop
       {
+        Function_Push_Pop(const Function_Push_Pop &) = delete;
+        Function_Push_Pop& operator=(const Function_Push_Pop &) = delete;
+
         Function_Push_Pop(chaiscript::detail::Dispatch_Engine &t_de)
           : m_de(t_de)
         {
@@ -551,9 +550,6 @@ namespace chaiscript
 
 
         private:
-        // explicitly unimplemented copy and assignment
-        Function_Push_Pop(const Function_Push_Pop &);
-        Function_Push_Pop& operator=(const Function_Push_Pop &);
 
         chaiscript::detail::Dispatch_Engine &m_de;
       };
@@ -561,6 +557,9 @@ namespace chaiscript
       /// Creates a new scope then pops it on destruction
       struct Stack_Push_Pop
       {
+        Stack_Push_Pop(const Stack_Push_Pop &) = delete;
+        Stack_Push_Pop& operator=(const Stack_Push_Pop &) = delete;
+
         Stack_Push_Pop(chaiscript::detail::Dispatch_Engine &t_de)
           : m_de(t_de)
         {
@@ -574,9 +573,6 @@ namespace chaiscript
 
 
         private:
-        // explicitly unimplemented copy and assignment
-        Stack_Push_Pop(const Stack_Push_Pop &);
-        Stack_Push_Pop& operator=(const Stack_Push_Pop &);
 
         chaiscript::detail::Dispatch_Engine &m_de;
       };

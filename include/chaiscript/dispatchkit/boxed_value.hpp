@@ -51,8 +51,15 @@ namespace chaiscript
           m_data_ptr = rhs.m_data_ptr;
           m_const_data_ptr = rhs.m_const_data_ptr;
 
+          if (rhs.m_attrs)
+          {
+            m_attrs = std::unique_ptr<std::map<std::string, Boxed_Value>>(new std::map<std::string, Boxed_Value>(*rhs.m_attrs));
+          }
+
           return *this;
         }
+
+        Data(const Data &) = delete;
 
         ~Data()
         {
@@ -63,6 +70,7 @@ namespace chaiscript
         void *m_data_ptr;
         const void *m_const_data_ptr;
         bool m_is_ref;
+        std::unique_ptr<std::map<std::string, Boxed_Value>> m_attrs;
       };
 
       struct Object_Data
@@ -230,6 +238,26 @@ namespace chaiscript
       {
         return m_data->m_const_data_ptr;
       }
+
+      Boxed_Value get_attr(const std::string &t_name)
+      {
+        if (!m_data->m_attrs)
+        {
+          m_data->m_attrs = std::unique_ptr<std::map<std::string, Boxed_Value>>(new std::map<std::string, Boxed_Value>());
+        }
+
+        return (*m_data->m_attrs)[t_name];
+      }
+
+      Boxed_Value &copy_attrs(const Boxed_Value &t_obj)
+      {
+        if (t_obj.m_data->m_attrs)
+        {
+          m_data->m_attrs = std::unique_ptr<std::map<std::string, Boxed_Value>>(new std::map<std::string, Boxed_Value>(*t_obj.m_data->m_attrs));
+        }
+        return *this;
+      }
+
 
       /// \returns true if the two Boxed_Values share the same internal type
       static bool type_match(Boxed_Value l, Boxed_Value r)

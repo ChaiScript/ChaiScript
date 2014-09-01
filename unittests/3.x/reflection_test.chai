@@ -1,4 +1,3 @@
-load_module("reflection")
 var parser := ChaiScript_Parser()
 var parse_success = parser.parse("3 + 4", "INPUT")
 var a := parser.ast()

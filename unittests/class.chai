@@ -1,0 +1,27 @@
+
+class Vector3
+{
+  // you can use attr, auto or var in this context
+  attr x
+  auto y
+  var z
+
+  def Vector3(x,y,z)
+  {
+    this.x = x
+    this.y = y
+    this.z = z
+  }
+
+  def doSomething(mult)
+  {
+    return this.x * this.y * this.z * mult
+  }
+
+}
+
+
+auto v = Vector3(1,2,3)
+assert_equal(1, v.x)
+assert_equal(v.doSomething(2), 12)
+

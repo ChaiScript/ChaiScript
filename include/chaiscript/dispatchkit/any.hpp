@@ -44,17 +44,29 @@ namespace chaiscript {
       private:
         struct Data
         {
+          Data(const std::type_info &t_type) 
+            : m_type(t_type)
+          {
+          }
+
+          Data &operator=(const Data &) = delete;
+
           virtual ~Data() {}
           virtual void *data() = 0;
-          virtual const std::type_info &type() const = 0;
-          virtual std::shared_ptr<Data> clone() const = 0;
+          const std::type_info &type() const
+          {
+            return m_type;
+          }
+
+          virtual std::unique_ptr<Data> clone() const = 0;
+          const std::type_info &m_type;
         };
 
         template<typename T>
           struct Data_Impl : Data
           {
             Data_Impl(T t_type)
-              : m_type(typeid(T)),
+              : Data(typeid(T)),
                 m_data(std::move(t_type))
             {
             }
@@ -66,23 +78,17 @@ namespace chaiscript {
               return &m_data;
             }
 
-            const std::type_info &type() const CHAISCRIPT_OVERRIDE
+            std::unique_ptr<Data> clone() const CHAISCRIPT_OVERRIDE
             {
-              return m_type;
-            }
-
-            std::shared_ptr<Data> clone() const CHAISCRIPT_OVERRIDE
-            {
-              return std::shared_ptr<Data>(new Data_Impl<T>(m_data));
+              return std::unique_ptr<Data>(new Data_Impl<T>(m_data));
             }
 
             Data_Impl &operator=(const Data_Impl&) = delete;
-              
-            const std::type_info &m_type;
+
             T m_data;
           };
 
-        std::shared_ptr<Data> m_data;
+        std::unique_ptr<Data> m_data;
 
       public:
         // construct/copy/destruct
@@ -100,7 +106,7 @@ namespace chaiscript {
 
         template<typename ValueType> 
         Any(const ValueType &t_value)
-          : m_data(std::shared_ptr<Data>(new Data_Impl<ValueType>(t_value)))
+          : m_data(std::unique_ptr<Data>(new Data_Impl<ValueType>(t_value)))
         {
         }
 
@@ -114,7 +120,7 @@ namespace chaiscript {
         template<typename ValueType> 
           Any & operator=(const ValueType &t_value)
         {
-          m_data = std::shared_ptr<Data>(new Data_Impl<ValueType>(t_value));
+          m_data = std::unique_ptr<Data>(new Data_Impl<ValueType>(t_value));
           return *this;
         }
 
@@ -127,7 +133,6 @@ namespace chaiscript {
             } else {
               throw chaiscript::detail::exception::bad_any_cast();
             }
- 
           }
 
 
@@ -138,9 +143,7 @@ namespace chaiscript {
         // modifiers
         Any & swap(Any &t_other)
         {
-          std::shared_ptr<Data> data = t_other.m_data;
-          t_other.m_data = m_data;
-          m_data = data;
+          std::swap(t_other.m_data, m_data);
           return *this;
         }
 
