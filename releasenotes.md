@@ -1,8 +1,16 @@
 Notes:
 =======
-Current Version: 5.3.2
+Current Version: 5.4.0
 
 ### Changes since 5.3.1
+* Decreased compile time and build size
+* Make "reflection" module built in (losing some of the time / build size gains)
+* Add new "class" syntax for ChaiScript defined methods and attributes see: [unittests/class.chai](unittests/class.chai) for examples
+* Minor performance enhancements
+* major to_string performance enhancements
+* Provide API for retrieving registered type name #124
+* Added strong reference to container to range object #132
+
 
 ### Changes since 5.3.0
 * Add automatic conversion of arithmetic return types, following the same
