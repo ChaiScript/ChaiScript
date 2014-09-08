@@ -845,7 +845,7 @@ namespace chaiscript
     ///
     /// \param[in] t_input Script to execute
     /// \param[in] t_handler Optional Exception_Handler used for automatic unboxing of script thrown exceptions
-    /// \param[in] t_filename Optional filename to report to the user for where the error occured. Useful
+    /// \param[in] t_filename Optional filename to report to the user for where the error occurred. Useful
     ///                       in special cases where you are loading a file internally instead of using eval_file
     ///
     /// \return result of the script execution
@@ -879,7 +879,7 @@ namespace chaiscript
       }
     }
 
-    /// \brief Loads the file specified by filename, evaluates it, and returns the typesafe result.
+    /// \brief Loads the file specified by filename, evaluates it, and returns the type safe result.
     /// \tparam T Type to extract from the result value of the script execution
     /// \param[in] t_filename File to load and parse.
     /// \param[in] t_handler Optional Exception_Handler used for automatic unboxing of script thrown exceptions

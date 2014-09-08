@@ -75,7 +75,7 @@
 ///
 /// @subsection compiling Compiling ChaiScript Applications
 ///
-/// ChaiScript is a header only library with only one dependecy: The
+/// ChaiScript is a header only library with only one dependency: The
 /// operating system provided dynamic library loader, which has to be specified on some platforms.
 /// 
 /// @subsubsection compilinggcc Compiling with GCC
@@ -112,7 +112,7 @@
 ///
 /// @subsubsection evalmethod Method 'eval'
 /// 
-/// The eval method is somewhat more verbose and can be used to get typesafely return values
+/// The eval method is somewhat more verbose and can be used to get type safely return values
 /// from the script.
 ///
 /// ~~~~~~~~{.cpp}
@@ -311,7 +311,7 @@
 /// As much as possible, ChaiScript attempts to convert between &, *, const &, const *, std::shared_ptr<T>,
 /// std::shared_ptr<const T>, std::reference_wrapper<T>, std::reference_wrapper<const T> and value types automatically.
 ///
-/// If a chaiscript::var object was created in C++ from a pointer, it cannot be convered to a shared_ptr (this would add invalid reference counting).
+/// If a chaiscript::var object was created in C++ from a pointer, it cannot be converted to a shared_ptr (this would add invalid reference counting).
 /// Const may be added, but never removed. 
 ///
 /// The take away is that you can pretty much expect function calls to Just Work when you need them to.

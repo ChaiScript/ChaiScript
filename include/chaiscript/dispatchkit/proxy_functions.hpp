@@ -63,7 +63,7 @@ namespace chaiscript
 
         /// Returns a vector containing all of the types of the parameters the function returns/takes
         /// if the function is variadic or takes no arguments (arity of 0 or -1), the returned
-        /// value containes exactly 1 Type_Info object: the return type
+        /// value contains exactly 1 Type_Info object: the return type
         /// \returns the types of all parameters. 
         const std::vector<Type_Info> &get_param_types() const { return m_types; }
 
@@ -182,7 +182,7 @@ namespace chaiscript
   /// \brief Common typedef used for passing of any registered function in ChaiScript
   typedef std::shared_ptr<dispatch::Proxy_Function_Base> Proxy_Function;
 
-  /// \brief Const version of Proxy_Function chaiscript. Points to a const Proxy_Function. This is how most registered functions
+  /// \brief Const version of Proxy_Function. Points to a const Proxy_Function. This is how most registered functions
   ///        are handled internally.
   typedef std::shared_ptr<const dispatch::Proxy_Function_Base> Const_Proxy_Function;
 

@@ -118,7 +118,7 @@ namespace chaiscript
 
       /**
        * Used by Proxy_Function_Impl to determine if it is equivalent to another
-       * Proxy_Function_Impl object. This function is primarly used to prevent
+       * Proxy_Function_Impl object. This function is primarily used to prevent
        * registration of two functions with the exact same signatures
        */
       template<typename Ret, typename ... Params>
@@ -166,7 +166,7 @@ namespace chaiscript
 
       /**
        * Used by Proxy_Function_Impl to perform typesafe execution of a function.
-       * The function attempts to unbox each paramter to the expected type.
+       * The function attempts to unbox each parameter to the expected type.
        * if any unboxing fails the execution of the function fails and
        * the bad_boxed_cast is passed up to the caller.
        */

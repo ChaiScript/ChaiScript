@@ -46,7 +46,7 @@ namespace chaiscript
 
         virtual ~bad_boxed_cast() CHAISCRIPT_NOEXCEPT {} 
 
-        /// \brief Description of what error occured
+        /// \brief Description of what error occurred
         virtual const char * what() const CHAISCRIPT_NOEXCEPT CHAISCRIPT_OVERRIDE
         {
           return m_what.c_str();

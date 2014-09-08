@@ -70,12 +70,12 @@ int main(int /*argc*/, char * /*argv*/[]) {
   std::string command = "";
 
   //
-  // this loop increases memoryusage, if RunFile is not called (just hitting enter)
+  // this loop increases memory usage, if RunFile is not called (just hitting enter)
   // as soon RunFile gets called, memory will be freed.
   //
-  // scenario1 - RunFile gets called every Loop: memoryusage does not change
-  // scenario2 - RunFile gets never called (just hitting enter): memoryusage increases every loop
-  // scenario3 - RunFile gets in changing intervals: memoryusage goes up and down, but never as 
+  // scenario1 - RunFile gets called every Loop: memory usage does not change
+  // scenario2 - RunFile gets never called (just hitting enter): memory usage increases every loop
+  // scenario3 - RunFile gets in changing intervals: memory usage goes up and down, but never as
   //            low as in case 1 scenario3 :
 
   while(command != "quit")

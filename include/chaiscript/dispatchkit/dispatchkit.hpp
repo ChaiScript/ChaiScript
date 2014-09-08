@@ -173,7 +173,7 @@ namespace chaiscript
       }
 
 
-      //Add a bit of chaiscript to eval during module implementation
+      //Add a bit of ChaiScript to eval during module implementation
       Module &eval(const std::string &str)
       {
         m_evals.push_back(str);
