@@ -51,12 +51,17 @@ class TestMoreDerivedType : public TestDerivedType
 
 std::shared_ptr<TestBaseType> derived_type_factory()
 {
-  return std::shared_ptr<TestBaseType>(new TestDerivedType());
+  return std::make_shared<TestDerivedType>();
 }
 
 std::shared_ptr<TestBaseType> more_derived_type_factory()
 {
-  return std::shared_ptr<TestBaseType>(new TestMoreDerivedType());
+  return std::make_shared<TestBaseType>();
+}
+
+std::shared_ptr<TestBaseType> null_factory()
+{
+  return std::shared_ptr<TestBaseType>();
 }
 
 std::string hello_world()
@@ -111,6 +116,7 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
 
   m->add(chaiscript::fun(&derived_type_factory), "derived_type_factory");
   m->add(chaiscript::fun(&more_derived_type_factory), "more_derived_type_factory");
+  m->add(chaiscript::fun(&null_factory), "null_factory");
 
   m->add(chaiscript::fun(&TestDerivedType::func), "func");
 
