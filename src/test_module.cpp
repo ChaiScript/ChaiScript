@@ -56,7 +56,7 @@ std::shared_ptr<TestBaseType> derived_type_factory()
 
 std::shared_ptr<TestBaseType> more_derived_type_factory()
 {
-  return std::make_shared<TestBaseType>();
+  return std::make_shared<TestMoreDerivedType>();
 }
 
 std::shared_ptr<TestBaseType> null_factory()
