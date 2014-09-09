@@ -23,6 +23,13 @@ namespace chaiscript
   {
     // Cast_Helper_Inner helper classes
 
+    template<typename T>
+      T* throw_if_null(T *t)
+      {
+        if (t) return t;
+        throw std::runtime_error("Attempted to dereference null Boxed_Value");
+      }
+
     /**
      * Generic Cast_Helper_Inner, for casting to any type
      */
@@ -33,21 +40,11 @@ namespace chaiscript
 
         static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
-          if (ob.is_ref())
+          if (ob.get_type_info().bare_equal_type_info(typeid(Result)))
           {
-            if (!ob.get_type_info().is_const())
-            {
-              return std::cref((ob.get().cast<std::reference_wrapper<Result> >()).get());
-            } else {
-              return ob.get().cast<std::reference_wrapper<const Result> >();
-            }
+            return *(static_cast<const Result *>(throw_if_null(ob.get_const_ptr())));
           } else {
-            if (!ob.get_type_info().is_const())
-            {
-              return std::cref(*(ob.get().cast<std::shared_ptr<Result> >()));   
-            } else {
-              return std::cref(*(ob.get().cast<std::shared_ptr<const Result> >()));   
-            }
+            throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -65,14 +62,46 @@ namespace chaiscript
       {
       };
 
-    /**
-     * Cast_Helper_Inner for casting to a const * type
-     */
+    /*
+    /// Cast_Helper_Inner for casting to a const * type
     template<typename Result>
       struct Cast_Helper_Inner<const Result *>
       {
         typedef const Result * Result_Type;
 
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
+        {
+          if (ob.get_type_info().bare_equal_type_info(typeid(Result)))
+          {
+            return static_cast<const Result *>(ob.get_const_ptr());
+          } else {
+            throw chaiscript::detail::exception::bad_any_cast();
+          }
+        }
+      };
+
+    /// Cast_Helper_Inner for casting to a * type
+    template<typename Result>
+      struct Cast_Helper_Inner<Result *>
+      {
+        typedef Result * Result_Type;
+
+        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
+        {
+          if (!ob.get_type_info().is_const() && ob.get_type_info().bare_equal_type_info(typeid(Result)))
+          {
+            return static_cast<Result *>(ob.get_ptr());
+          } else {
+            throw chaiscript::detail::exception::bad_any_cast();
+          }
+        }
+      };
+*/
+
+    template<typename Result>
+      struct Cast_Helper_Inner<const Result *>
+      {
+        typedef const Result * Result_Type;
         static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
           if (ob.is_ref())
@@ -95,13 +124,12 @@ namespace chaiscript
       };
 
     /**
-     * Cast_Helper_Inner for casting to a * type
-     */
+     * * Cast_Helper_Inner for casting to a * type
+     * */
     template<typename Result>
       struct Cast_Helper_Inner<Result *>
       {
         typedef Result * Result_Type;
-
         static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
           if (ob.is_ref())
@@ -113,6 +141,7 @@ namespace chaiscript
         }
       };
 
+
     /**
      * Cast_Helper_Inner for casting to a & type
      */
@@ -123,12 +152,11 @@ namespace chaiscript
 
         static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
         {
-          if (ob.is_ref())
+          if (!ob.get_type_info().is_const() && ob.get_type_info().bare_equal_type_info(typeid(Result)))
           {
-            return ob.get().cast<std::reference_wrapper<Result> >();
+            return *(static_cast<Result *>(throw_if_null(ob.get_ptr())));
           } else {
-            Result &r = *(ob.get().cast<std::shared_ptr<Result> >());
-            return r;
+            throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
