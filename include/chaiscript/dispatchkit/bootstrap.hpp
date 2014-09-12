@@ -113,9 +113,7 @@ namespace chaiscript
     }
 
 
-    /**
-     * to_string function for internal use. Uses ostream operator<<
-     */
+    /// to_string function for internal use. Uses ostream operator<<
     template<typename Input>
     std::string to_string(Input i)
     {
@@ -124,10 +122,8 @@ namespace chaiscript
       return ss.str();
     }
 
-    /**
-     * Internal function for converting from a string to a value
-     * uses ostream operator >> to perform the conversion
-     */
+    /// Internal function for converting from a string to a value
+    /// uses ostream operator >> to perform the conversion
     template<typename Input>
     Input parse_string(const std::string &i)
     {
@@ -136,12 +132,10 @@ namespace chaiscript
       ss >> t;
       return t;
     }
-      
-            
-    /**
-    * Add all common functions for a POD type. All operators, and
-    * common conversions
-    */
+
+
+    /// Add all common functions for a POD type. All operators, and
+    /// common conversions
     template<typename T>
     ModulePtr bootstrap_pod_type(const std::string &name, ModulePtr m = ModulePtr(new Module()))
     {
@@ -155,13 +149,11 @@ namespace chaiscript
     }
 
 
-    /**
-    * "clone" function for a shared_ptr type. This is used in the case
-    * where you do not want to make a deep copy of an object during cloning
-    * but want to instead maintain the shared_ptr. It is needed internally
-    * for handling of Proxy_Function object (that is,
-    * function variables.
-    */
+    /// "clone" function for a shared_ptr type. This is used in the case
+    /// where you do not want to make a deep copy of an object during cloning
+    /// but want to instead maintain the shared_ptr. It is needed internally
+    /// for handling of Proxy_Function object (that is,
+    /// function variables.
     template<typename Type>
     std::shared_ptr<Type> shared_ptr_clone(const std::shared_ptr<Type> &p)
     {
