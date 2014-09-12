@@ -30,9 +30,7 @@ namespace chaiscript
         throw std::runtime_error("Attempted to dereference null Boxed_Value");
       }
 
-    /**
-     * Generic Cast_Helper_Inner, for casting to any type
-     */
+    /// Generic Cast_Helper_Inner, for casting to any type
     template<typename Result>
       struct Cast_Helper_Inner
       {
@@ -54,50 +52,13 @@ namespace chaiscript
       {
       };
 
-    /**
-     * Cast_Helper_Inner for casting to a const & type
-     */
+    /// Cast_Helper_Inner for casting to a const & type
     template<typename Result>
       struct Cast_Helper_Inner<const Result &> : Cast_Helper_Inner<Result>
       {
       };
 
-    /*
     /// Cast_Helper_Inner for casting to a const * type
-    template<typename Result>
-      struct Cast_Helper_Inner<const Result *>
-      {
-        typedef const Result * Result_Type;
-
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
-        {
-          if (ob.get_type_info().bare_equal_type_info(typeid(Result)))
-          {
-            return static_cast<const Result *>(ob.get_const_ptr());
-          } else {
-            throw chaiscript::detail::exception::bad_any_cast();
-          }
-        }
-      };
-
-    /// Cast_Helper_Inner for casting to a * type
-    template<typename Result>
-      struct Cast_Helper_Inner<Result *>
-      {
-        typedef Result * Result_Type;
-
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
-        {
-          if (!ob.get_type_info().is_const() && ob.get_type_info().bare_equal_type_info(typeid(Result)))
-          {
-            return static_cast<Result *>(ob.get_ptr());
-          } else {
-            throw chaiscript::detail::exception::bad_any_cast();
-          }
-        }
-      };
-*/
-
     template<typename Result>
       struct Cast_Helper_Inner<const Result *>
       {
@@ -123,9 +84,7 @@ namespace chaiscript
         }
       };
 
-    /**
-     * * Cast_Helper_Inner for casting to a * type
-     * */
+    /// Cast_Helper_Inner for casting to a * type
     template<typename Result>
       struct Cast_Helper_Inner<Result *>
       {
@@ -142,9 +101,7 @@ namespace chaiscript
       };
 
 
-    /**
-     * Cast_Helper_Inner for casting to a & type
-     */
+    /// Cast_Helper_Inner for casting to a & type
     template<typename Result>
       struct Cast_Helper_Inner<Result &>
       {
@@ -161,9 +118,7 @@ namespace chaiscript
         }
       };
 
-    /**
-     * Cast_Helper_Inner for casting to a std::shared_ptr<> type
-     */
+    /// Cast_Helper_Inner for casting to a std::shared_ptr<> type
     template<typename Result>
       struct Cast_Helper_Inner<typename std::shared_ptr<Result> >
       {
@@ -175,9 +130,7 @@ namespace chaiscript
         }
       };
 
-    /**
-     * Cast_Helper_Inner for casting to a std::shared_ptr<const> type
-     */
+    /// Cast_Helper_Inner for casting to a std::shared_ptr<const> type
     template<typename Result>
       struct Cast_Helper_Inner<typename std::shared_ptr<const Result> >
       {
@@ -194,9 +147,7 @@ namespace chaiscript
         }
       };
 
-    /**
-     * Cast_Helper_Inner for casting to a const std::shared_ptr<> & type
-     */
+    /// Cast_Helper_Inner for casting to a const std::shared_ptr<> & type
     template<typename Result>
       struct Cast_Helper_Inner<const std::shared_ptr<Result> > : Cast_Helper_Inner<std::shared_ptr<Result> >
       {
@@ -208,9 +159,7 @@ namespace chaiscript
       };
 
 
-    /**
-     * Cast_Helper_Inner for casting to a const std::shared_ptr<const> & type
-     */
+    /// Cast_Helper_Inner for casting to a const std::shared_ptr<const> & type
     template<typename Result>
       struct Cast_Helper_Inner<const std::shared_ptr<const Result> > : Cast_Helper_Inner<std::shared_ptr<const Result> >
       {
@@ -223,9 +172,7 @@ namespace chaiscript
 
 
 
-    /**
-     * Cast_Helper_Inner for casting to a Boxed_Value type
-     */
+    /// Cast_Helper_Inner for casting to a Boxed_Value type
     template<>
       struct Cast_Helper_Inner<Boxed_Value>
       {
@@ -237,9 +184,7 @@ namespace chaiscript
         }
       };
 
-    /**
-     * Cast_Helper_Inner for casting to a Boxed_Value & type
-     */
+    /// Cast_Helper_Inner for casting to a Boxed_Value & type
     template<>
       struct Cast_Helper_Inner<Boxed_Value &>
       {
@@ -252,9 +197,7 @@ namespace chaiscript
       };
 
 
-    /**
-     * Cast_Helper_Inner for casting to a const Boxed_Value & type
-     */
+    /// Cast_Helper_Inner for casting to a const Boxed_Value & type
     template<>
       struct Cast_Helper_Inner<const Boxed_Value> : Cast_Helper_Inner<Boxed_Value>
       {
@@ -266,9 +209,7 @@ namespace chaiscript
       };
 
 
-    /**
-     * Cast_Helper_Inner for casting to a std::reference_wrapper type
-     */
+    /// Cast_Helper_Inner for casting to a std::reference_wrapper type
     template<typename Result>
       struct Cast_Helper_Inner<std::reference_wrapper<Result> > : Cast_Helper_Inner<Result &>
       {
@@ -299,9 +240,7 @@ namespace chaiscript
       {
       };
 
-    /**
-     * The exposed Cast_Helper object that by default just calls the Cast_Helper_Inner
-     */
+    /// The exposed Cast_Helper object that by default just calls the Cast_Helper_Inner
     template<typename T>
       struct Cast_Helper
       {
