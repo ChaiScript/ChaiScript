@@ -345,8 +345,10 @@ namespace chaiscript
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::function_exists, std::ref(m_engine)), "function_exists");
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_function_objects, std::ref(m_engine)), "get_functions");
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_scripting_objects, std::ref(m_engine)), "get_objects");
-      m_engine.add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(std::bind(&chaiscript::detail::Dispatch_Engine::call_exists, std::ref(m_engine), std::placeholders::_1))), 
-          "call_exists");
+      m_engine.add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(
+              [this](const std::vector<Boxed_Value> &t_params) {
+                return m_engine.call_exists(t_params);
+              })), "call_exists");
       m_engine.add(fun<Boxed_Value (const dispatch::Proxy_Function_Base *, const std::vector<Boxed_Value> &)>(std::bind(&chaiscript::dispatch::Proxy_Function_Base::operator(), std::placeholders::_1, std::placeholders::_2, std::ref(m_engine.conversions()))), "call");
 
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type_name, std::ref(m_engine)), "name");

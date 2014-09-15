@@ -496,8 +496,7 @@ namespace chaiscript
         m->add(fun(&print), "print_string");
         m->add(fun(&println), "println_string");
 
-        m->add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(std::bind(&bind_function, std::placeholders::_1))), 
-          "bind");
+        m->add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(&bind_function)), "bind");
 
         m->add(fun(&shared_ptr_unconst_clone<dispatch::Proxy_Function_Base>), "clone");
         m->add(fun(&ptr_assign<std::remove_const<dispatch::Proxy_Function_Base>::type>), "=");

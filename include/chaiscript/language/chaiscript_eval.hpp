@@ -732,9 +732,14 @@ namespace chaiscript
             numparams = 0;
           }
 
-          return Boxed_Value(Proxy_Function(new dispatch::Dynamic_Proxy_Function
-                (std::bind(chaiscript::eval::detail::eval_function, std::ref(t_ss), this->children.back(), t_param_names, std::placeholders::_1),
-                 static_cast<int>(numparams), this->children.back())));
+          const auto &lambda_node = this->children.back();
+
+          return Boxed_Value(Proxy_Function(new dispatch::Dynamic_Proxy_Function(
+                [&t_ss, lambda_node, t_param_names](const std::vector<Boxed_Value> &t_params)
+                {
+                  return detail::eval_function(t_ss, lambda_node, t_param_names, t_params);
+                },
+                static_cast<int>(numparams), lambda_node)));
         }
 
     };
@@ -800,19 +805,22 @@ namespace chaiscript
           std::shared_ptr<dispatch::Dynamic_Proxy_Function> guard;
           if (guardnode) {
             guard = std::shared_ptr<dispatch::Dynamic_Proxy_Function>
-              (new dispatch::Dynamic_Proxy_Function(std::bind(chaiscript::eval::detail::eval_function,
-                                                                std::ref(t_ss), guardnode,
-                                                                t_param_names, std::placeholders::_1), static_cast<int>(numparams), guardnode));
+              (new dispatch::Dynamic_Proxy_Function([&t_ss, guardnode, t_param_names](const std::vector<Boxed_Value> &t_params)
+                                                    {
+                                                      return detail::eval_function(t_ss, guardnode, t_param_names, t_params);
+                                                    }, static_cast<int>(numparams), guardnode));
           }
 
           try {
             const std::string & l_function_name = this->children[0]->text;
             const std::string & l_annotation = this->annotation?this->annotation->text:"";
+            const auto & func_node = this->children.back();
             t_ss.add(Proxy_Function
-                (new dispatch::Dynamic_Proxy_Function(std::bind(chaiscript::eval::detail::eval_function,
-                                                                  std::ref(t_ss), this->children.back(),
-                                                                  t_param_names, std::placeholders::_1), static_cast<int>(numparams), this->children.back(),
-                                                      l_annotation, guard)), l_function_name);
+                (new dispatch::Dynamic_Proxy_Function([&t_ss, guardnode, func_node, t_param_names](const std::vector<Boxed_Value> &t_params)
+                                                      {
+                                                        return detail::eval_function(t_ss, func_node, t_param_names, t_params);
+                                                      }, static_cast<int>(numparams), this->children.back(),
+                                                         l_annotation, guard)), l_function_name);
           }
           catch (const exception::reserved_word_error &e) {
             throw exception::eval_error("Reserved word used as function name '" + e.word() + "'");
