@@ -297,7 +297,7 @@ namespace chaiscript
     template<typename T>
       Boxed_Value const_var_impl(const T &t)
       {
-        return Boxed_Value(std::shared_ptr<typename std::add_const<T>::type >(new T(t)));
+        return Boxed_Value(std::make_shared<typename std::add_const<T>::type >(t));
       }
 
     /// \brief Takes a pointer to a value, adds const to the pointed to type and returns an immutable Boxed_Value.

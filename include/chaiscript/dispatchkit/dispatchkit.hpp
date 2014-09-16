@@ -430,7 +430,7 @@ namespace chaiscript
 
         Dispatch_Engine()
           : m_stack_holder(this),
-            m_place_holder(std::shared_ptr<dispatch::Placeholder_Object>(new dispatch::Placeholder_Object()))
+            m_place_holder(std::make_shared<dispatch::Placeholder_Object>())
             
         {
         }
@@ -549,8 +549,7 @@ namespace chaiscript
          */
         void new_scope()
         {
-          StackData &stack = get_stack_data();
-          stack.push_back(Scope());
+          get_stack_data().emplace_back();
         }
 
         /**
@@ -571,9 +570,8 @@ namespace chaiscript
         /// Pushes a new stack on to the list of stacks
         void new_stack()
         {
-          Stack s(new Stack::element_type());
-          s->push_back(Scope());
-          m_stack_holder->stacks.push_back(s);
+          // add a new Stack with 1 element
+          m_stack_holder->stacks.emplace_back(std::make_shared<StackData>(1));
         }
 
         void pop_stack()
@@ -836,7 +834,7 @@ namespace chaiscript
           {
             for (const auto & internal_func : function.second)
             {
-              rets.push_back(std::make_pair(function.first, internal_func));
+              rets.emplace_back(function.first, internal_func);
             }
           }
 
@@ -867,19 +865,14 @@ namespace chaiscript
           return call_function(t_name, std::vector<Boxed_Value>());
         }
 
-        Boxed_Value call_function(const std::string &t_name, const Boxed_Value &p1) const
+        Boxed_Value call_function(const std::string &t_name, Boxed_Value p1) const
         {
-          std::vector<Boxed_Value> params;
-          params.push_back(p1);
-          return call_function(t_name, params);
+          return call_function(t_name, std::vector<Boxed_Value>({std::move(p1)}));
         }
 
-        Boxed_Value call_function(const std::string &t_name, const Boxed_Value &p1, const Boxed_Value &p2) const
+        Boxed_Value call_function(const std::string &t_name, Boxed_Value p1, Boxed_Value p2) const
         {
-          std::vector<Boxed_Value> params;
-          params.push_back(p1);
-          params.push_back(p2);
-          return call_function(t_name, params);
+          return call_function(t_name, std::vector<Boxed_Value>({std::move(p1), std::move(p2)}));
         }
 
         /**
@@ -1219,14 +1212,11 @@ namespace chaiscript
             // if the function is the only function but it also contains
             // arithmetic operators, we must wrap it in a dispatch function
             // to allow for automatic arithmetic type conversions
-            std::vector<Proxy_Function> vec;
-            vec.push_back(t_f);
+            std::vector<Proxy_Function> vec({t_f});
             funcs.insert(std::make_pair(t_name, vec));
             func_objs[t_name] = Proxy_Function(new Dispatch_Function(vec));
           } else {
-            std::vector<Proxy_Function> vec;
-            vec.push_back(t_f);
-            funcs.insert(std::make_pair(t_name, vec));
+            funcs.insert(std::make_pair(t_name, std::vector<Proxy_Function>({t_f})));
             func_objs[t_name] = t_f;
           }
 
@@ -1241,9 +1231,7 @@ namespace chaiscript
           Stack_Holder()
             : call_depth(0)
           {
-            Stack s(new StackData());
-            s->push_back(Scope());
-            stacks.push_back(s);
+            stacks.emplace_back(std::make_shared<StackData>(1));
           }
 
           std::deque<Stack> stacks;

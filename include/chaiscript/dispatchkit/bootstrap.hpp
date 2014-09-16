@@ -46,13 +46,9 @@ namespace chaiscript
       /// \param[in] v Boxed_Number to copy into the new object
       /// \returns The newly created object.
       template<typename P1>
-      std::shared_ptr<P1> construct_pod(Boxed_Number v)
+      std::shared_ptr<P1> construct_pod(const Boxed_Number &v)
       {
-        std::shared_ptr<P1> p(new P1());
-        Boxed_Value bv(p);
-        Boxed_Number nb(bv);
-        nb = v;
-        return p;
+        return std::make_shared<P1>(v.get_as<P1>());
       }
     }
 

@@ -334,8 +334,8 @@ namespace chaiscript
       {
       }
 
-      Boxed_Number(const Boxed_Value &v)
-        : bv(v)
+      Boxed_Number(Boxed_Value v)
+        : bv(std::move(v))
       {
         validate_boxed_number(v);
       }

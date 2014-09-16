@@ -21,7 +21,7 @@ namespace chaiscript
       template<typename Class, typename ... Params>
         std::shared_ptr<Class> constructor_(Params ... params)
         {
-          return std::shared_ptr<Class>(new Class(params...));
+          return std::make_shared<Class>(params...);
         }
 
       template<typename Class, typename ... Params  >
