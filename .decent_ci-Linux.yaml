@@ -2,6 +2,9 @@ compilers:
   - name: "gcc"
     version: "4.8"
     cmake_extra_flags: -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON  -DCOMMIT_SHA=$COMMIT_SHA
+  - name: "gcc"
+    version: "4.6"
+    cmake_extra_flags: -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON  -DCOMMIT_SHA=$COMMIT_SHA
   - name: cppcheck
     compiler_extra_flags: --enable=all 
 
