@@ -16,14 +16,8 @@
 namespace chaiscript
 {
 
-  namespace detail
-  {
-    template<typename T>
-      struct Bare_Type
-      {
-        typedef typename std::remove_cv<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::type type;
-      };
-  }
+  template<typename T>
+    using Bare_Type = typename std::remove_cv<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::type;
 
   /// \brief Compile time deduced information about a type
   class Type_Info
@@ -151,7 +145,7 @@ namespace chaiscript
               std::is_void<T>::value,
               std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(T), 
-              &typeid(typename Bare_Type<T>::type));
+              &typeid(Bare_Type<T>));
         }
       };
 
@@ -166,7 +160,7 @@ namespace chaiscript
               std::is_void<T>::value,
               std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(std::shared_ptr<T> ), 
-              &typeid(typename Bare_Type<T>::type));
+              &typeid(Bare_Type<T>));
         }
       };
 
@@ -181,7 +175,7 @@ namespace chaiscript
               std::is_void<T>::value,
               std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(const std::shared_ptr<T> &), 
-              &typeid(typename Bare_Type<T>::type));
+              &typeid(Bare_Type<T>));
         }
       };
 
@@ -196,7 +190,7 @@ namespace chaiscript
               std::is_void<T>::value,
               std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(std::reference_wrapper<T> ), 
-              &typeid(typename Bare_Type<T>::type));
+              &typeid(Bare_Type<T>));
         }
       };
 
@@ -211,15 +205,10 @@ namespace chaiscript
               std::is_void<T>::value,
               std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(const std::reference_wrapper<T> &), 
-              &typeid(typename Bare_Type<T>::type));
+              &typeid(Bare_Type<T>));
         }
       };
 
-    template<typename T>
-      struct Stripped_Type
-      {
-        typedef typename Bare_Type<typename detail::Get_Type_Info<T>::type>::type type;
-      };
   }
 
   /// \brief Creates a Type_Info object representing the type passed in

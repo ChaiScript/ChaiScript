@@ -86,7 +86,7 @@ namespace chaiscript
 #pragma warning(disable : 4127)
 #endif
 
-      if (std::is_polymorphic<typename detail::Stripped_Type<Type>::type>::value && t_conversions)
+      if (std::is_polymorphic<Bare_Type<Type>>::value && t_conversions)
       {
         try {
           // std::cout << "trying an up conversion " << typeid(Type).name() << std::endl;
