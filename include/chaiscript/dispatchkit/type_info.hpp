@@ -16,8 +16,15 @@
 namespace chaiscript
 {
 
-  template<typename T>
-    using Bare_Type = typename std::remove_cv<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::type;
+  namespace detail
+  {
+    template<typename T>
+      struct Bare_Type
+      {
+        typedef typename std::remove_cv<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::type type;
+      };
+  }
+
 
   /// \brief Compile time deduced information about a type
   class Type_Info
@@ -145,7 +152,7 @@ namespace chaiscript
               std::is_void<T>::value,
               std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(T), 
-              &typeid(Bare_Type<T>));
+              &typeid(typename Bare_Type<T>::type));
         }
       };
 
@@ -160,7 +167,7 @@ namespace chaiscript
               std::is_void<T>::value,
               std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(std::shared_ptr<T> ), 
-              &typeid(Bare_Type<T>));
+              &typeid(typename Bare_Type<T>::type));
         }
       };
 
@@ -175,7 +182,7 @@ namespace chaiscript
               std::is_void<T>::value,
               std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(const std::shared_ptr<T> &), 
-              &typeid(Bare_Type<T>));
+              &typeid(typename Bare_Type<T>::type));
         }
       };
 
@@ -190,7 +197,7 @@ namespace chaiscript
               std::is_void<T>::value,
               std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(std::reference_wrapper<T> ), 
-              &typeid(Bare_Type<T>));
+              &typeid(typename Bare_Type<T>::type));
         }
       };
 
@@ -205,7 +212,7 @@ namespace chaiscript
               std::is_void<T>::value,
               std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(const std::reference_wrapper<T> &), 
-              &typeid(Bare_Type<T>));
+              &typeid(typename Bare_Type<T>::type));
         }
       };
 
