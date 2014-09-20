@@ -16,9 +16,8 @@ namespace chaiscript
 
     struct Placeholder
     {
-      static const std::tuple<decltype(std::placeholders::_1),decltype(std::placeholders::_2),decltype(std::placeholders::_3),decltype(std::placeholders::_4),decltype(std::placeholders::_5),decltype(std::placeholders::_6),decltype(std::placeholders::_7),decltype(std::placeholders::_8),decltype(std::placeholders::_9),decltype(std::placeholders::_10)>& placeholder() {
-        static const std::tuple<decltype(std::placeholders::_1),decltype(std::placeholders::_2),decltype(std::placeholders::_3),decltype(std::placeholders::_4),decltype(std::placeholders::_5),decltype(std::placeholders::_6),decltype(std::placeholders::_7),decltype(std::placeholders::_8),decltype(std::placeholders::_9),decltype(std::placeholders::_10)> d(std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5,std::placeholders::_6,std::placeholders::_7,std::placeholders::_8,std::placeholders::_9,std::placeholders::_10);
-        return d;
+      CHAISCRIPT_CONSTEXPR static std::tuple<decltype(std::placeholders::_1),decltype(std::placeholders::_2),decltype(std::placeholders::_3),decltype(std::placeholders::_4),decltype(std::placeholders::_5),decltype(std::placeholders::_6),decltype(std::placeholders::_7),decltype(std::placeholders::_8),decltype(std::placeholders::_9),decltype(std::placeholders::_10)> placeholder() {
+        return std::tuple<decltype(std::placeholders::_1),decltype(std::placeholders::_2),decltype(std::placeholders::_3),decltype(std::placeholders::_4),decltype(std::placeholders::_5),decltype(std::placeholders::_6),decltype(std::placeholders::_7),decltype(std::placeholders::_8),decltype(std::placeholders::_9),decltype(std::placeholders::_10)>(std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5,std::placeholders::_6,std::placeholders::_7,std::placeholders::_8,std::placeholders::_9,std::placeholders::_10);
       };
     };
 
