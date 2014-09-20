@@ -2,6 +2,7 @@
 
 #include <chaiscript/chaiscript_defines.hpp>
 #include <chaiscript/dispatchkit/type_info.hpp>
+#include <iostream>
 #include <cstdlib>
 
 void test_type(const chaiscript::Type_Info &ti, bool t_is_const, bool t_is_pointer, bool t_is_reference, bool t_is_void,
@@ -29,6 +30,8 @@ int main()
   test_type(chaiscript::user_type<int *>(), false, true, false, false, false);
   test_type(chaiscript::user_type<const int *>(), true, true, false, false, false);
   test_type(chaiscript::Type_Info(), false, false, false, false, true);
+
+  std::cout << "Size of Type_Info " << sizeof(chaiscript::Type_Info) << std::endl;
 
   return EXIT_SUCCESS;
 }
