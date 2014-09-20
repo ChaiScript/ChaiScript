@@ -513,7 +513,7 @@ namespace chaiscript
             "eval_error",
             { },
             { {fun(&chaiscript::exception::eval_error::reason), "reason"},
-            {fun(std::function<std::vector<Boxed_Value> (const chaiscript::exception::eval_error &t_eval_error)>([](const chaiscript::exception::eval_error &t_eval_error) { 
+            {fun(std::function<std::vector<Boxed_Value> (const chaiscript::exception::eval_error &t_eval_error)>([](const chaiscript::exception::eval_error &t_eval_error) -> std::vector<Boxed_Value> { 
                 std::vector<Boxed_Value> retval;
                 std::transform(t_eval_error.call_stack.begin(), t_eval_error.call_stack.end(),
                                std::back_inserter(retval),
@@ -541,7 +541,7 @@ namespace chaiscript
               {fun(&AST_Node::start), "start"},
               {fun(&AST_Node::end), "end"},
               {fun(&AST_Node::to_string), "to_string"},
-              {fun(std::function<std::vector<Boxed_Value> (const chaiscript::AST_Node &t_node)>([](const chaiscript::AST_Node &t_node) { 
+              {fun(std::function<std::vector<Boxed_Value> (const chaiscript::AST_Node &t_node)>([](const chaiscript::AST_Node &t_node) -> std::vector<Boxed_Value> { 
                 std::vector<Boxed_Value> retval;
                 std::transform(t_node.children.begin(), t_node.children.end(),
                                std::back_inserter(retval),

@@ -1420,7 +1420,7 @@ namespace chaiscript
 
           auto d = t_ss.get_parent_locals();
           auto itr = d.find("_current_class_name");
-          ssize_t class_offset = 0;
+          int class_offset = 0;
           if (itr != d.end()) class_offset = -1;
           const std::string & class_name = (itr != d.end())?std::string(boxed_cast<std::string>(itr->second)):this->children[0]->text;
 
