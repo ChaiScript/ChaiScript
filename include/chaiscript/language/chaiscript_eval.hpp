@@ -1420,26 +1420,26 @@ namespace chaiscript
 
           auto d = t_ss.get_parent_locals();
           auto itr = d.find("_current_class_name");
-          int class_offset = 0;
+          ssize_t class_offset = 0;
           if (itr != d.end()) class_offset = -1;
           const std::string & class_name = (itr != d.end())?std::string(boxed_cast<std::string>(itr->second)):this->children[0]->text;
 
           //The first param of a method is always the implied this ptr.
           t_param_names.push_back("this");
 
-          if ((this->children.size() > (3 + class_offset)) && (this->children[(2 + class_offset)]->identifier == AST_Node_Type::Arg_List)) {
+          if ((this->children.size() > static_cast<size_t>(3 + class_offset)) && (this->children[(2 + class_offset)]->identifier == AST_Node_Type::Arg_List)) {
             for (size_t i = 0; i < this->children[(2 + class_offset)]->children.size(); ++i) {
               t_param_names.push_back(this->children[(2 + class_offset)]->children[i]->text);
             }
 
-            if (this->children.size() > (4 + class_offset)) {
+            if (this->children.size() > static_cast<size_t>(4 + class_offset)) {
               guardnode = this->children[(3 + class_offset)];
             }
           }
           else {
             //no parameters
 
-            if (this->children.size() > (3 + class_offset)) {
+            if (this->children.size() > static_cast<size_t>(3 + class_offset)) {
               guardnode = this->children[(2 + class_offset)];
             }
           }
