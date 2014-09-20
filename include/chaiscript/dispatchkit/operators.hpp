@@ -18,6 +18,7 @@ namespace chaiscript
     {
       namespace detail
       {
+        /// \todo make this return a decltype once we drop gcc 4.6
         template<typename L, typename R>
           auto assign(L l, R r) -> L&
           {
@@ -78,6 +79,7 @@ namespace chaiscript
             return (l >>= r);
           }
 
+        /// \todo make this return a decltype once we drop gcc 4.6
         template<typename L, typename R>
           auto assign_sum(L l, R r) -> L&
           {
