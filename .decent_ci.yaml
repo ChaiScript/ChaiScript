@@ -1,0 +1,4 @@
+results_repository : ChaiScript/ChaiScript-BuildResults
+results_path : _posts
+results_base_url : https://chaiscript.github.io/ChaiScript-BuildResults
+aging_pull_requests_notification: true
