@@ -19,7 +19,7 @@ namespace chaiscript
       namespace detail
       {
         template<typename L, typename R>
-          auto assign(L l, R r) -> decltype((l = r))
+          auto assign(L l, R r) -> L&
           {
             return (l = r);
           }
@@ -79,7 +79,7 @@ namespace chaiscript
           }
 
         template<typename L, typename R>
-          auto assign_sum(L l, R r) -> decltype(( l += r))
+          auto assign_sum(L l, R r) -> L&
           {
             return (l += r);
           }
@@ -229,7 +229,7 @@ namespace chaiscript
       template<typename T>
         ModulePtr assign(ModulePtr m = ModulePtr(new Module()))
         {
-          m->add(chaiscript::fun(static_cast<T& (*)(T&, const T&)>(&detail::assign<T &, const T&>)), "=");
+          m->add(chaiscript::fun(&detail::assign<T &, const T&>), "=");
           return m;
         }
 
@@ -299,7 +299,7 @@ namespace chaiscript
       template<typename T>
         ModulePtr assign_sum(ModulePtr m = ModulePtr(new Module()))
         {
-          m->add(chaiscript::fun(static_cast<T & (*)(T &, const T&)>(&detail::assign_sum<T &, const T&>)), "+=");
+          m->add(chaiscript::fun(&detail::assign_sum<T &, const T&>), "+=");
           return m;
         }
 
