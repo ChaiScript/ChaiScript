@@ -61,9 +61,6 @@ namespace chaiscript
 
         Data(const Data &) = delete;
 
-        ~Data()
-        {
-        }
 
         Type_Info m_type_info;
         chaiscript::detail::Any m_obj;
@@ -151,21 +148,18 @@ namespace chaiscript
         {
         }
 
-      /// Copy constructor - each copy shares the same data pointer
-      Boxed_Value(const Boxed_Value &t_so)
-        : m_data(t_so.m_data)
-      {
-      }
-
       /// Unknown-type constructor
       Boxed_Value()
         : m_data(Object_Data::get())
       {
       }
 
-      ~Boxed_Value()
-      {
-      }
+
+      Boxed_Value(Boxed_Value&&) = default;
+      Boxed_Value& operator=(Boxed_Value&&) = default;
+
+      Boxed_Value(const Boxed_Value&) = default;
+      Boxed_Value& operator=(const Boxed_Value&) = default;
 
       void swap(Boxed_Value &rhs)
       {
@@ -180,61 +174,53 @@ namespace chaiscript
         return *this;
       }
 
-      /// shared data assignment, same as copy construction
-      Boxed_Value &operator=(const Boxed_Value &rhs)
-      {
-        Boxed_Value temp(rhs);
-        swap(temp);
-        return *this;
-      }
-
-      const Type_Info &get_type_info() const
+      const Type_Info &get_type_info() const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_type_info;
       }
 
       /// return true if the object is uninitialized
-      bool is_undef() const
+      bool is_undef() const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_type_info.is_undef();
       }
 
-      bool is_const() const
+      bool is_const() const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_type_info.is_const();
       }
 
-      bool is_type(const Type_Info &ti) const
+      bool is_type(const Type_Info &ti) const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_type_info.bare_equal(ti);
       }
 
-      bool is_null() const
+      bool is_null() const CHAISCRIPT_NOEXCEPT
       {
         return (m_data->m_data_ptr == nullptr && m_data->m_const_data_ptr == nullptr);
       }
 
-      const chaiscript::detail::Any & get() const
+      const chaiscript::detail::Any & get() const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_obj;
       }
 
-      bool is_ref() const
+      bool is_ref() const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_is_ref;
       }
 
-      bool is_pointer() const
+      bool is_pointer() const CHAISCRIPT_NOEXCEPT
       {
         return !is_ref();
       }
 
-      void *get_ptr() const
+      void *get_ptr() const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_data_ptr;
       }
 
-      const void *get_const_ptr() const
+      const void *get_const_ptr() const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_const_data_ptr;
       }
@@ -260,7 +246,7 @@ namespace chaiscript
 
 
       /// \returns true if the two Boxed_Values share the same internal type
-      static bool type_match(Boxed_Value l, Boxed_Value r)
+      static bool type_match(const Boxed_Value &l, const Boxed_Value &r) CHAISCRIPT_NOEXCEPT
       {
         return l.get_type_info() == r.get_type_info();
       }

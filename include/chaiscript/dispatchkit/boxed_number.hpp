@@ -337,7 +337,7 @@ namespace chaiscript
       Boxed_Number(Boxed_Value v)
         : bv(std::move(v))
       {
-        validate_boxed_number(v);
+        validate_boxed_number(bv);
       }
 
       template<typename T> explicit Boxed_Number(T t)
