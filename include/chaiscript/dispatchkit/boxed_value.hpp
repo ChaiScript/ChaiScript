@@ -61,7 +61,7 @@ namespace chaiscript
 
         Data(const Data &) = delete;
 
-#if !defined(_MSC_VER) || _MSC_VER != 1800
+#if !defined(__APPLE__) && (!defined(_MSC_VER) || _MSC_VER != 1800)
         Data(Data &&) = default;
         Data &operator=(Data &&rhs) = default;
 #endif
