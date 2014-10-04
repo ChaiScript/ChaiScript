@@ -45,19 +45,17 @@ namespace chaiscript
   {
     namespace detail
     {
-      /**
-       * Helper function that will set up the scope around a function call, including handling the named function parameters
-       */
-      static const Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_NodePtr &t_node, const std::vector<std::string> &t_param_names, const std::vector<Boxed_Value> &t_vals) {
+      /// Helper function that will set up the scope around a function call, including handling the named function parameters
+      static Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_NodePtr &t_node, const std::vector<std::string> &t_param_names, const std::vector<Boxed_Value> &t_vals) {
         chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
-        for (unsigned int i = 0; i < t_param_names.size(); ++i) {
+        for (size_t i = 0; i < t_param_names.size(); ++i) {
           t_ss.add_object(t_param_names[i], t_vals[i]);
         }
 
         try {
           return t_node->eval(t_ss);
-        } catch (const detail::Return_Value &rv) {
+        } catch (detail::Return_Value &rv) {
           return rv.retval;
         } 
       }
@@ -65,12 +63,12 @@ namespace chaiscript
 
     struct Binary_Operator_AST_Node : public AST_Node {
       public:
-        Binary_Operator_AST_Node(const std::string &t_ast_node_text, int t_id, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
+        Binary_Operator_AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<std::string> &t_fname, int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
+          AST_Node(std::move(t_ast_node_text), t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
       { }
 
         virtual ~Binary_Operator_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           return do_oper(t_ss, Operators::to_operator(children[1]->text), children[1]->text,
               this->children[0]->eval(t_ss),
               this->children[2]->eval(t_ss));
@@ -88,15 +86,12 @@ namespace chaiscript
 
       protected:
         Boxed_Value do_oper(chaiscript::detail::Dispatch_Engine &t_ss, 
-            Operators::Opers t_oper, const std::string &t_oper_string, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
+            Operators::Opers t_oper, const std::string &t_oper_string, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs) const
         {
           try {
             chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-            std::vector<Boxed_Value> params(2);
-            params.push_back(t_lhs);
-            params.push_back(t_rhs);
-            fpp.save_params(params);
-           
+            fpp.save_params({t_lhs, t_rhs});
+
             if (t_oper != Operators::invalid && t_lhs.get_type_info().is_arithmetic() && t_rhs.get_type_info().is_arithmetic())
             {
               // If it's an arithmetic operation we want to short circuit dispatch
@@ -117,24 +112,13 @@ namespace chaiscript
         }
     };
 
-    struct Error_AST_Node : public AST_Node {
-      public:
-        Error_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Error, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
-
-        virtual ~Error_AST_Node() {}
-    };
-
     struct Int_AST_Node : public AST_Node {
       public:
-        Int_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Int, t_fname, t_start_line, t_start_col, t_end_line, t_end_col), 
-          m_value(const_var(int(atoi(t_ast_node_text.c_str())))) { }
-        Int_AST_Node(const std::string &t_ast_node_text, const Boxed_Value &t_bv, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Int, t_fname, t_start_line, t_start_col, t_end_line, t_end_col), 
-          m_value(t_bv) { }
+        Int_AST_Node(std::string t_ast_node_text, Boxed_Value t_bv, const std::shared_ptr<std::string> &t_fname, int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Int, t_fname, t_start_line, t_start_col, t_end_line, t_end_col), 
+          m_value(std::move(t_bv)) { }
         virtual ~Int_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const CHAISCRIPT_OVERRIDE{
           return m_value;
         }
 
@@ -145,14 +129,11 @@ namespace chaiscript
 
     struct Float_AST_Node : public AST_Node {
       public:
-        Float_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Float, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
-          m_value(const_var(double(atof(t_ast_node_text.c_str())))) { }
-        Float_AST_Node(const std::string &t_ast_node_text, const Boxed_Value &t_bv, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Float, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
-          m_value(t_bv) { }
+        Float_AST_Node(std::string t_ast_node_text, Boxed_Value t_bv, const std::shared_ptr<std::string> &t_fname, int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Float, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
+          m_value(std::move(t_bv)) { }
         virtual ~Float_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const CHAISCRIPT_OVERRIDE{
           return m_value;
         }
 
@@ -163,13 +144,13 @@ namespace chaiscript
 
     struct Id_AST_Node : public AST_Node {
       public:
-        Id_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+        Id_AST_Node(const std::string &t_ast_node_text, const std::shared_ptr<std::string> &t_fname, int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
           AST_Node(t_ast_node_text, AST_Node_Type::Id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
           m_value(get_value(t_ast_node_text))
       { }
 
         virtual ~Id_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           if (!m_value.is_undef())
           {
             return m_value;
@@ -207,22 +188,22 @@ namespace chaiscript
 
     struct Char_AST_Node : public AST_Node {
       public:
-        Char_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Char, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Char_AST_Node(std::string t_ast_node_text, const std::shared_ptr<std::string> &t_fname, int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Char, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Char_AST_Node() {}
     };
 
     struct Str_AST_Node : public AST_Node {
       public:
-        Str_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Str, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Str_AST_Node(std::string t_ast_node_text, const std::shared_ptr<std::string> &t_fname, int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Str, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Str_AST_Node() {}
     };
 
     struct Eol_AST_Node : public AST_Node {
       public:
-        Eol_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Eol, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Eol_AST_Node(std::string t_ast_node_text, const std::shared_ptr<std::string> &t_fname, int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Eol, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Eol_AST_Node() {}
 
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE 
@@ -236,24 +217,27 @@ namespace chaiscript
         Fun_Call_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Fun_Call, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Fun_Call_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
+
           std::vector<Boxed_Value> params;
 
-          if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
-            for (size_t i = 0; i < this->children[1]->children.size(); ++i) {
-              params.push_back(this->children[1]->children[i]->eval(t_ss));
+          if ((this->children.size() > 1)) {
+            const AST_Node &first_child(*(this->children[1]));
+            if (first_child.identifier == AST_Node_Type::Arg_List) {
+              for (const auto &child : first_child.children) {
+                params.push_back(child->eval(t_ss));
+              }
             }
           }
 
           fpp.save_params(params);
 
+          Boxed_Value fn(this->children[0]->eval(t_ss));
 
-          Boxed_Value fn = this->children[0]->eval(t_ss);
           try {
             chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
-            const Boxed_Value &retval = (*t_ss.boxed_cast<const Const_Proxy_Function &>(fn))(params, t_ss.conversions());
-            return retval;
+            return (*t_ss.boxed_cast<const Const_Proxy_Function &>(fn))(params, t_ss.conversions());
           }
           catch(const exception::dispatch_error &e){
             throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, e.functions, false, t_ss);
@@ -262,9 +246,7 @@ namespace chaiscript
             try {
               Const_Proxy_Function f = t_ss.boxed_cast<const Const_Proxy_Function &>(fn);
               // handle the case where there is only 1 function to try to call and dispatch fails on it
-              std::vector<Const_Proxy_Function> funcs;
-              funcs.push_back(f);
-              throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, funcs, false, t_ss);
+              throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, {f}, false, t_ss);
             } catch (const exception::bad_boxed_cast &) {
               throw exception::eval_error("'" + this->children[0]->pretty_print() + "' does not evaluate to a function.");
             }
@@ -284,13 +266,15 @@ namespace chaiscript
         {
           std::ostringstream oss;
 
-          for (size_t j = 0; j < this->children.size(); ++j) {
-            oss << this->children[j]->pretty_print();
+          int count = 0;
+          for (const auto &child : this->children) {
+            oss << child->pretty_print();
 
-            if (j == 0)
+            if (count == 0)
             {
               oss << "(";
             }
+            ++count;
           }
 
           oss << ")";
@@ -300,25 +284,25 @@ namespace chaiscript
 
     };
 
+    /// Used in the context of in-string ${} evals, so that no new scope is created
     struct Inplace_Fun_Call_AST_Node : public AST_Node {
       public:
         Inplace_Fun_Call_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Inplace_Fun_Call, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inplace_Fun_Call_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           std::vector<Boxed_Value> params;
 
           if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
-            for (size_t i = 0; i < this->children[1]->children.size(); ++i) {
-              params.push_back(this->children[1]->children[i]->eval(t_ss));
+            for (const auto &child : this->children[1]->children) {
+              params.push_back(child->eval(t_ss));
             }
           }
 
-          Boxed_Value bv;
           Const_Proxy_Function fn;
 
           try {
-            bv = this->children[0]->eval(t_ss);
+            Boxed_Value bv = this->children[0]->eval(t_ss);
             try {
               fn = t_ss.boxed_cast<const Const_Proxy_Function &>(bv);
             } catch (const exception::bad_boxed_cast &) {
@@ -333,7 +317,7 @@ namespace chaiscript
             // handle the case where there is only 1 function to try to call and dispatch fails on it
             std::vector<Const_Proxy_Function> funcs;
             funcs.push_back(fn);
-            throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, funcs, false, t_ss);
+            throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, {fn}, false, t_ss);
           }
           catch(const exception::arity_error &e){
             throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
@@ -349,13 +333,15 @@ namespace chaiscript
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE 
         {
           std::ostringstream oss;
-          for (size_t j = 0; j < this->children.size(); ++j) {
-            oss << this->children[j]->pretty_print();
+          int count = 0;
+          for (const auto &child : this->children) {
+            oss << child->pretty_print();
 
-            if (j == 0)
+            if (count == 0)
             {
               oss << "(";
             }
+            ++count;
           }
 
           oss << ")";
@@ -367,14 +353,14 @@ namespace chaiscript
 
     struct Arg_List_AST_Node : public AST_Node {
       public:
-        Arg_List_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Arg_List, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Arg_List_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Arg_List, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Arg_List_AST_Node() {}
 
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE 
         {
           std::ostringstream oss;
-          for (unsigned int j = 0; j < this->children.size(); ++j) {
+          for (size_t j = 0; j < this->children.size(); ++j) {
             if (j != 0)
             {
               oss << ", ";
@@ -387,21 +373,14 @@ namespace chaiscript
         }
     };
 
-    struct Variable_AST_Node : public AST_Node {
-      public:
-        Variable_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Variable, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
-        virtual ~Variable_AST_Node() {}
-    };
-
     struct Equation_AST_Node : public AST_Node {
       public:
-        Equation_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Equation, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
+        Equation_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Equation, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
         {}
 
         virtual ~Equation_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           Boxed_Value retval = this->children.back()->eval(t_ss); 
 
 
@@ -435,7 +414,7 @@ namespace chaiscript
                 }
 
                 try {
-                  retval = t_ss.call_function(this->children[1]->text, lhs, retval);
+                  retval = t_ss.call_function(this->children[1]->text, std::move(lhs), retval);
                 }
                 catch(const exception::dispatch_error &e){
                   throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, t_ss);
@@ -454,9 +433,9 @@ namespace chaiscript
             }
             else {
               try {
-                retval = t_ss.call_function(this->children[1]->text, lhs, retval);
+                retval = t_ss.call_function(this->children[1]->text, std::move(lhs), retval);
               } catch(const exception::dispatch_error &e){
-                  throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, t_ss);
+                throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, t_ss);
               }
             }
           }
@@ -466,10 +445,10 @@ namespace chaiscript
 
     struct Var_Decl_AST_Node : public AST_Node {
       public:
-        Var_Decl_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Var_Decl, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Var_Decl_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Var_Decl, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Var_Decl_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           if (this->children[0]->identifier == AST_Node_Type::Reference)
           {
             return this->children[0]->eval(t_ss);
@@ -510,7 +489,7 @@ namespace chaiscript
             int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, AST_Node_Type::Addition, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Addition_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           return do_oper(t_ss, Operators::sum, "+", this->children[0]->eval(t_ss), this->children[1]->eval(t_ss));
         }
     };
@@ -522,7 +501,7 @@ namespace chaiscript
             int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, AST_Node_Type::Subtraction, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Subtraction_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           return do_oper(t_ss, Operators::difference, "-", this->children[0]->eval(t_ss), this->children[1]->eval(t_ss));
         }
     };
@@ -534,7 +513,7 @@ namespace chaiscript
             int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, AST_Node_Type::Multiplication, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Multiplication_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           return do_oper(t_ss, Operators::product, "*", this->children[0]->eval(t_ss), this->children[1]->eval(t_ss));
         }
     };
@@ -546,7 +525,7 @@ namespace chaiscript
             int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, AST_Node_Type::Division, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Division_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           return do_oper(t_ss, Operators::quotient, "/", this->children[0]->eval(t_ss), this->children[1]->eval(t_ss));
         }
     };
@@ -558,7 +537,7 @@ namespace chaiscript
             int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           Binary_Operator_AST_Node(t_ast_node_text, AST_Node_Type::Modulus, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Modulus_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           return do_oper(t_ss, Operators::remainder, "%", this->children[0]->eval(t_ss), this->children[1]->eval(t_ss));
         }
     };
@@ -568,7 +547,7 @@ namespace chaiscript
         Array_Call_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Array_Call, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Array_Call_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
           Boxed_Value retval = this->children[0]->eval(t_ss);
           std::vector<Boxed_Value> params;
@@ -613,7 +592,7 @@ namespace chaiscript
         Dot_Access_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Dot_Access, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Dot_Access_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           Boxed_Value retval = this->children[0]->eval(t_ss);
 
           if (this->children.size() > 1) {
@@ -678,7 +657,7 @@ namespace chaiscript
           AST_Node(t_ast_node_text, AST_Node_Type::Quoted_String, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
           m_value(const_var(t_ast_node_text)) { }
         virtual ~Quoted_String_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) CHAISCRIPT_OVERRIDE {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const CHAISCRIPT_OVERRIDE {
           return m_value;
         }
 
@@ -698,7 +677,7 @@ namespace chaiscript
           AST_Node(t_ast_node_text, AST_Node_Type::Single_Quoted_String, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
           m_value(const_var(char(t_ast_node_text.at(0)))) { }
         virtual ~Single_Quoted_String_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const CHAISCRIPT_OVERRIDE{
           return m_value;
         }
 
@@ -716,7 +695,7 @@ namespace chaiscript
         Lambda_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Lambda, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Lambda_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           std::vector<std::string> t_param_names;
           size_t numparams = 0;
 
@@ -749,7 +728,7 @@ namespace chaiscript
         Block_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Block, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Block_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           const size_t num_children = this->children.size();
 
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
@@ -778,7 +757,7 @@ namespace chaiscript
         Def_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Def, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Def_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           std::vector<std::string> t_param_names;
           size_t numparams = 0;
           AST_NodePtr guardnode;
@@ -837,7 +816,7 @@ namespace chaiscript
         While_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::While, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~While_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
           try {
@@ -865,7 +844,7 @@ namespace chaiscript
         Class_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Class, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Class_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
           // put class name in current scope so it can be looked up by the attrs and methods
@@ -882,7 +861,7 @@ namespace chaiscript
         Ternary_Cond_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::If, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Ternary_Cond_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           bool cond;
           try {
             cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
@@ -905,7 +884,7 @@ namespace chaiscript
         If_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::If, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~If_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           bool cond;
           try {
             cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
@@ -950,7 +929,7 @@ namespace chaiscript
         For_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::For, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~For_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
           // initial expression
@@ -989,7 +968,7 @@ namespace chaiscript
         Switch_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Switch, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Switch_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           Boxed_Value match_value;
           bool breaking = false;
           size_t currentCase = 1;
@@ -1032,7 +1011,7 @@ namespace chaiscript
         Case_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Case, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Case_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
           this->children[1]->eval(t_ss);
@@ -1046,7 +1025,7 @@ namespace chaiscript
         Default_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Default, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Default_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
           this->children[0]->eval(t_ss);
@@ -1061,7 +1040,7 @@ namespace chaiscript
         Inline_Array_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Inline_Array, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inline_Array_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           try {
             std::vector<Boxed_Value> vec;
             if (this->children.size() > 0) {
@@ -1089,7 +1068,7 @@ namespace chaiscript
         Inline_Map_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Inline_Map, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inline_Map_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           try {
             std::map<std::string, Boxed_Value> retval;
             for (size_t i = 0; i < this->children[0]->children.size(); ++i) {
@@ -1111,7 +1090,7 @@ namespace chaiscript
         Return_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Return, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Return_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           if (this->children.size() > 0) {
             throw detail::Return_Value(this->children[0]->eval(t_ss));
           }
@@ -1127,7 +1106,7 @@ namespace chaiscript
         File_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::File, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~File_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE {
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           const size_t size = this->children.size(); 
           for (size_t i = 0; i < size; ++i) {
             const Boxed_Value &retval = this->children[i]->eval(t_ss);
@@ -1145,7 +1124,7 @@ namespace chaiscript
           AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
         { }
 
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           try {
             t_ss.add_object(this->children[0]->text, Boxed_Value());
           }
@@ -1165,7 +1144,7 @@ namespace chaiscript
         { }
 
         virtual ~Prefix_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
           Boxed_Value bv(this->children[1]->eval(t_ss));
 
@@ -1194,7 +1173,7 @@ namespace chaiscript
         Break_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Break, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Break_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const CHAISCRIPT_OVERRIDE{
           throw detail::Break_Loop();
         }
     };
@@ -1204,7 +1183,7 @@ namespace chaiscript
         Continue_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Continue, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Continue_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const CHAISCRIPT_OVERRIDE{
           throw detail::Continue_Loop();
         }
     };
@@ -1217,7 +1196,7 @@ namespace chaiscript
         { }
 
         virtual ~Noop_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const CHAISCRIPT_OVERRIDE{
           // It's a no-op, that evaluates to "true"
           return m_value;
         }
@@ -1245,7 +1224,7 @@ namespace chaiscript
         Inline_Range_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Inline_Range, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Inline_Range_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           try {
             return t_ss.call_function("generate_range",
                 this->children[0]->children[0]->children[0]->eval(t_ss),
@@ -1270,7 +1249,7 @@ namespace chaiscript
         Try_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Try, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Try_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           Boxed_Value retval;        
 
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
@@ -1413,7 +1392,7 @@ namespace chaiscript
         Method_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Method, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Method_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
 
           std::vector<std::string> t_param_names;
           AST_NodePtr guardnode;
@@ -1503,7 +1482,7 @@ namespace chaiscript
         Attr_Decl_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Attr_Decl, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Attr_Decl_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE 
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE 
         {
           const auto &d = t_ss.get_parent_locals();
           const auto itr = d.find("_current_class_name");
@@ -1573,7 +1552,7 @@ namespace chaiscript
         Logical_And_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Logical_And, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Logical_And_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           Boxed_Value retval = this->children[0]->eval(t_ss);
 
           if (this->children.size() > 1) {
@@ -1607,7 +1586,7 @@ namespace chaiscript
         Logical_Or_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Logical_Or, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Logical_Or_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_OVERRIDE{
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           Boxed_Value retval;
 
           retval = this->children[0]->eval(t_ss);
