@@ -389,8 +389,7 @@ namespace chaiscript
       public:
         typedef std::map<std::string, chaiscript::Type_Info> Type_Name_Map;
         typedef std::map<std::string, Boxed_Value> Scope;
-        typedef std::deque<Scope> StackData;
-        typedef std::shared_ptr<StackData> Stack;
+        typedef std::vector<Scope> StackData;
 
         struct State
         {
@@ -528,18 +527,12 @@ namespace chaiscript
         void new_stack()
         {
           // add a new Stack with 1 element
-          m_stack_holder->stacks.emplace_back(std::make_shared<StackData>(1));
+          m_stack_holder->stacks.emplace_back(1);
         }
 
         void pop_stack()
         {
           m_stack_holder->stacks.pop_back();
-        }
-
-        /// \returns the current stack
-        Stack get_stack() const
-        {
-          return m_stack_holder->stacks.back();
         }
 
         /// Searches the current stack for an object of the given name
@@ -718,7 +711,7 @@ namespace chaiscript
           Stack_Holder &s = *m_stack_holder;
 
           // We don't want the current context, but one up if it exists
-          StackData &stack = (s.stacks.size()==1)?(*(s.stacks.back())):(*s.stacks[s.stacks.size()-2]);
+          StackData &stack = (s.stacks.size()==1)?(s.stacks.back()):(s.stacks[s.stacks.size()-2]);
 
           std::map<std::string, Boxed_Value> retval;
 
@@ -966,7 +959,7 @@ namespace chaiscript
         /// make const/non const versions
         StackData &get_stack_data() const
         {
-          return *(m_stack_holder->stacks.back());
+          return m_stack_holder->stacks.back();
         }
 
         const std::map<std::string, Proxy_Function> &get_function_objects_int() const
@@ -1147,10 +1140,10 @@ namespace chaiscript
           Stack_Holder()
             : call_depth(0)
           {
-            stacks.emplace_back(std::make_shared<StackData>(1));
+            stacks.emplace_back(1);
           }
 
-          std::deque<Stack> stacks;
+          std::deque<StackData> stacks;
 
           std::list<Boxed_Value> call_params;
           int call_depth;
