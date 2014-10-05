@@ -282,7 +282,7 @@ namespace chaiscript
           return Boxed_Value();
         }
       }
-      catch (const chaiscript::eval::detail::Return_Value &rv) {
+      catch (chaiscript::eval::detail::Return_Value &rv) {
         return rv.retval;
       }
     }
@@ -384,7 +384,7 @@ namespace chaiscript
         throw chaiscript::exception::file_not_found_error(t_filename);
       }
 
-      std::streampos size = infile.tellg();
+      const auto size = infile.tellg();
       infile.seekg(0, std::ios::beg);
 
       assert(size >= 0);
@@ -393,7 +393,7 @@ namespace chaiscript
       {
         return std::string();
       } else {
-        std::vector<char> v(static_cast<unsigned int>(size));
+        std::vector<char> v(static_cast<size_t>(size));
         infile.read(&v[0], size);
         return std::string(v.begin(), v.end());
       }
@@ -459,7 +459,7 @@ namespace chaiscript
       u.in_ptr = &ChaiScript::use;
       if ( dladdr((void*)(u.out_ptr), &rInfo) && rInfo.dli_fname ) { 
         std::string dllpath(rInfo.dli_fname);
-        size_t lastslash = dllpath.rfind('/');
+        const size_t lastslash = dllpath.rfind('/');
         if (lastslash != std::string::npos)
         {
           dllpath.erase(lastslash);
@@ -467,15 +467,15 @@ namespace chaiscript
 
         // Let's see if this is a link that we should expand
         std::vector<char> buf(2048);
-        size_t pathlen = readlink(dllpath.c_str(), &buf.front(), buf.size());
+        const size_t pathlen = readlink(dllpath.c_str(), &buf.front(), buf.size());
         if (pathlen > 0 && pathlen < buf.size())
         {
           dllpath = std::string(&buf.front(), pathlen);
         }
 
         m_modulepaths.insert(m_modulepaths.begin(), dllpath+"/");
-      } 
-#endif    
+      }
+#endif
 
 
       // attempt to load the stdlib
@@ -525,10 +525,10 @@ namespace chaiscript
     /// \param[in] t_filename Filename to load and evaluate
     void use(const std::string &t_filename)
     {
-      for (size_t i = 0; i < m_usepaths.size(); ++i)
+      for (const auto &path : m_usepaths)
       {
         try {
-          const std::string appendedpath = m_usepaths[i] + t_filename;
+          const auto appendedpath = path + t_filename;
 
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l2(m_mutex);
@@ -543,14 +543,12 @@ namespace chaiscript
 
           return; // return, we loaded it, or it was already loaded
         } catch (const exception::file_not_found_error &) {
-           if (i == m_usepaths.size() - 1)
-          {
-            throw exception::file_not_found_error(t_filename);
-          }
-
           // failed to load, try the next path
         }
       }
+
+      // failed to load by any name
+      throw exception::file_not_found_error(t_filename);
     }
 
     /// \brief Adds a constant object that is available in all contexts and to all threads
@@ -718,15 +716,9 @@ namespace chaiscript
         version_stripped_name.erase(version_pos);
       }
 
-      std::vector<std::string> prefixes;
-      prefixes.push_back("lib");
-      prefixes.push_back("cyg");
-      prefixes.push_back("");
+      std::vector<std::string> prefixes{"lib", "cyg", ""};
 
-      std::vector<std::string> postfixes;
-      postfixes.push_back(".dll");
-      postfixes.push_back(".so");
-      postfixes.push_back("");
+      std::vector<std::string> postfixes{".dll", ".so", ""};
 
       for (auto & elem : m_modulepaths) 
       {
@@ -735,7 +727,7 @@ namespace chaiscript
           for (auto & postfix : postfixes)
           {
             try {
-              std::string name = elem + prefix + t_module_name + postfix;
+              const auto name = elem + prefix + t_module_name + postfix;
               // std::cerr << "trying location: " << name << std::endl;
               load_module(version_stripped_name, name);
               return name;
