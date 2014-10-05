@@ -272,7 +272,7 @@ namespace chaiscript
           }
         }
 
-        virtual ~Dispatch_Function() = default;
+        virtual ~Dispatch_Function() {}
 
         virtual std::vector<Const_Proxy_Function> get_contained_functions() const CHAISCRIPT_OVERRIDE
         {
@@ -464,7 +464,7 @@ namespace chaiscript
           {
             throw chaiscript::exception::name_conflict_error(name);
           } else {
-            stack.back().emplace(name, std::move(obj));
+            stack.back().insert(std::make_pair(name, std::move(obj)));
           }
         }
 
@@ -483,7 +483,7 @@ namespace chaiscript
           {
             throw chaiscript::exception::name_conflict_error(name);
           } else {
-            m_state.m_global_objects.emplace(name, obj);
+            m_state.m_global_objects.insert(std::make_pair(name, obj));
           }
         }
 
@@ -499,7 +499,7 @@ namespace chaiscript
           {
             throw chaiscript::exception::name_conflict_error(name);
           } else {
-            m_state.m_global_objects.emplace(name, obj);
+            m_state.m_global_objects.insert(std::make_pair(name, obj));
           }
         }
 
@@ -580,7 +580,7 @@ namespace chaiscript
 
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-          m_state.m_types.emplace(name, ti);
+          m_state.m_types.insert(std::make_pair(name, ti));
         }
 
         /// Returns the type info for a named type
@@ -745,7 +745,7 @@ namespace chaiscript
 
           for (const auto & fun : funs)
           {
-            objs.emplace(fun.first, const_var(fun.second));
+            objs.insert(std::make_pair(fun.first, const_var(fun.second)));
           }
 
           return objs;
@@ -1122,10 +1122,10 @@ namespace chaiscript
             // arithmetic operators, we must wrap it in a dispatch function
             // to allow for automatic arithmetic type conversions
             std::vector<Proxy_Function> vec({t_f});
-            funcs.emplace(t_name, vec);
+            funcs.insert(std::make_pair(t_name, vec));
             func_objs[t_name] = std::make_shared<Dispatch_Function>(std::move(vec));
           } else {
-            funcs.emplace(t_name, std::vector<Proxy_Function>{t_f});
+            funcs.insert(std::make_pair(t_name, std::vector<Proxy_Function>{t_f}));
             func_objs[t_name] = t_f;
           }
 

@@ -51,7 +51,7 @@ namespace chaiscript {
 
           Data &operator=(const Data &) = delete;
 
-          virtual ~Data() = default;
+          virtual ~Data() {}
 
           virtual void *data() = 0;
           const std::type_info &type() const
@@ -72,7 +72,7 @@ namespace chaiscript {
             {
             }
 
-            virtual ~Data_Impl() = default;
+            virtual ~Data_Impl() {}
 
             virtual void *data() CHAISCRIPT_OVERRIDE
             {

@@ -123,11 +123,12 @@ namespace chaiscript
         template<typename T>
           static std::shared_ptr<Data> get(std::reference_wrapper<T> obj)
           {
+            auto p = &obj.get();
             return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(),
-                  chaiscript::detail::Any(obj),
+                  chaiscript::detail::Any(std::move(obj)),
                   true,
-                  &obj.get()
+                  p
                 );
           }
 
