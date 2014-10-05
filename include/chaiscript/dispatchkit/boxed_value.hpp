@@ -35,10 +35,10 @@ namespace chaiscript
       struct Data
       {
         Data(const Type_Info &ti,
-            const chaiscript::detail::Any &to,
+            chaiscript::detail::Any to,
             bool tr,
             const void *t_void_ptr)
-          : m_type_info(ti), m_obj(to), m_data_ptr(ti.is_const()?nullptr:const_cast<void *>(t_void_ptr)), m_const_data_ptr(t_void_ptr),
+          : m_type_info(ti), m_obj(std::move(to)), m_data_ptr(ti.is_const()?nullptr:const_cast<void *>(t_void_ptr)), m_const_data_ptr(t_void_ptr),
             m_is_ref(tr)
         {
         }
@@ -60,6 +60,9 @@ namespace chaiscript
         }
 
         Data(const Data &) = delete;
+
+        Data(Data &&) = default;
+        Data &operator=(Data &&rhs) = default;
 
 
         Type_Info m_type_info;
@@ -100,6 +103,18 @@ namespace chaiscript
           }
 
         template<typename T>
+          static std::shared_ptr<Data> get(std::shared_ptr<T> &&obj)
+          {
+            auto ptr = obj.get();
+            return std::make_shared<Data>(
+                  detail::Get_Type_Info<T>::get(), 
+                  chaiscript::detail::Any(std::move(obj)), 
+                  false,
+                  ptr
+                );
+          }
+
+        template<typename T>
           static std::shared_ptr<Data> get(T *t)
           {
             return get(std::ref(*t));
@@ -120,11 +135,12 @@ namespace chaiscript
           static std::shared_ptr<Data> get(const T& t)
           {
             auto p = std::make_shared<T>(t);
+            auto ptr = p.get();
             return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(), 
-                  chaiscript::detail::Any(p), 
+                  chaiscript::detail::Any(std::move(p)),
                   false,
-                  p.get()
+                  ptr
                 );
           }
 

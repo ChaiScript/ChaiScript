@@ -51,7 +51,8 @@ namespace chaiscript {
 
           Data &operator=(const Data &) = delete;
 
-          virtual ~Data() {}
+          virtual ~Data() = default;
+
           virtual void *data() = 0;
           const std::type_info &type() const
           {
@@ -65,13 +66,13 @@ namespace chaiscript {
         template<typename T>
           struct Data_Impl : Data
           {
-            Data_Impl(T t_type)
+            explicit Data_Impl(T t_type)
               : Data(typeid(T)),
                 m_data(std::move(t_type))
             {
             }
 
-            virtual ~Data_Impl() {}
+            virtual ~Data_Impl() = default;
 
             virtual void *data() CHAISCRIPT_OVERRIDE
             {
@@ -104,24 +105,22 @@ namespace chaiscript {
           }
         }
 
-        template<typename ValueType> 
-        Any(const ValueType &t_value)
-          : m_data(std::unique_ptr<Data>(new Data_Impl<ValueType>(t_value)))
+        Any(Any &&) = default;
+        Any &operator=(Any &&t_any) = default;
+
+        template<typename ValueType,
+          typename = typename std::enable_if<!std::is_same<Any, typename std::decay<ValueType>::type>::value>::type>
+        explicit Any(ValueType &&t_value)
+          : m_data(std::unique_ptr<Data>(new Data_Impl<typename std::decay<ValueType>::type>(std::forward<ValueType>(t_value))))
         {
         }
+
 
         Any & operator=(const Any &t_any)
         {
           Any copy(t_any);
           swap(copy);
           return *this; 
-        }
-
-        template<typename ValueType> 
-          Any & operator=(const ValueType &t_value)
-        {
-          m_data = std::unique_ptr<Data>(new Data_Impl<ValueType>(t_value));
-          return *this;
         }
 
         template<typename ToType>
