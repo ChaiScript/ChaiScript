@@ -132,9 +132,9 @@ namespace chaiscript
           }
 
         template<typename T>
-          static std::shared_ptr<Data> get(const T& t)
+          static std::shared_ptr<Data> get(T t)
           {
-            auto p = std::make_shared<T>(t);
+            auto p = std::make_shared<T>(std::move(t));
             auto ptr = p.get();
             return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(), 
@@ -158,9 +158,10 @@ namespace chaiscript
 
     public:
       /// Basic Boxed_Value constructor
-      template<typename T>
-        explicit Boxed_Value(T t)
-        : m_data(Object_Data::get(t))
+        template<typename T,
+          typename = typename std::enable_if<!std::is_same<Boxed_Value, typename std::decay<T>::type>::value>::type>
+        explicit Boxed_Value(T &&t)
+          : m_data(Object_Data::get(std::forward<T>(t)))
         {
         }
 
