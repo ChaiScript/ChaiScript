@@ -61,9 +61,10 @@ namespace chaiscript
 
         Data(const Data &) = delete;
 
+#if !defined(_MSC_VER) || _MSC_VER != 1800
         Data(Data &&) = default;
         Data &operator=(Data &&rhs) = default;
-
+#endif
 
         Type_Info m_type_info;
         chaiscript::detail::Any m_obj;
@@ -172,9 +173,10 @@ namespace chaiscript
       {
       }
 
-
+#if !defined(_MSC_VER) || _MSC_VER != 1800
       Boxed_Value(Boxed_Value&&) = default;
       Boxed_Value& operator=(Boxed_Value&&) = default;
+#endif
 
       Boxed_Value(const Boxed_Value&) = default;
       Boxed_Value& operator=(const Boxed_Value&) = default;

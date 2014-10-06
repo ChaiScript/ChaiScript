@@ -47,8 +47,10 @@ namespace chaiscript
       {
       }
 
+#if !defined(_MSC_VER) || _MSC_VER != 1800
       Type_Info(Type_Info&&) = default;
       Type_Info& operator=(Type_Info&&) = default;
+#endif
 
       Type_Info(const Type_Info&) = default;
       Type_Info& operator=(const Type_Info&) = default;

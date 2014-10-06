@@ -105,8 +105,10 @@ namespace chaiscript {
           }
         }
 
+#if _MSC_VER  != 1800
         Any(Any &&) = default;
         Any &operator=(Any &&t_any) = default;
+#endif
 
         template<typename ValueType,
           typename = typename std::enable_if<!std::is_same<Any, typename std::decay<ValueType>::type>::value>::type>
