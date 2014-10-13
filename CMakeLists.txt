@@ -203,6 +203,8 @@ if(BUILD_SAMPLES)
   target_link_libraries(example ${LIBS})
   add_executable(memory_leak_test samples/memory_leak_test.cpp)
   target_link_libraries(memory_leak_test ${LIBS})
+  add_executable(inheritance samples/inheritance.cpp)
+  target_link_libraries(inheritance ${LIBS})
 endif()
 
 
