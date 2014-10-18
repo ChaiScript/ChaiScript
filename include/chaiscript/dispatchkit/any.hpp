@@ -44,31 +44,20 @@ namespace chaiscript {
       private:
         struct Data
         {
-          Data(const std::type_info &t_type) 
-            : m_type(t_type)
-          {
-          }
 
           Data &operator=(const Data &) = delete;
 
           virtual ~Data() {}
 
           virtual void *data() = 0;
-          const std::type_info &type() const
-          {
-            return m_type;
-          }
-
           virtual std::unique_ptr<Data> clone() const = 0;
-          const std::type_info &m_type;
         };
 
         template<typename T>
           struct Data_Impl : Data
           {
             explicit Data_Impl(T t_type)
-              : Data(typeid(T)),
-                m_data(std::move(t_type))
+              : m_data(std::move(t_type))
             {
             }
 
@@ -90,19 +79,21 @@ namespace chaiscript {
           };
 
         std::unique_ptr<Data> m_data;
+        mutable std::array<uint8_t, 15> m_smallSize;
+        bool m_isSmall = false;
+        const std::type_info *m_type = &typeid(void);
 
       public:
         // construct/copy/destruct
         Any() = default;
 
         Any(const Any &t_any) 
-        { 
-          if (!t_any.empty())
-          {
-            m_data = t_any.m_data->clone(); 
-          } else {
-            m_data.reset();
-          }
+          : m_data(t_any.m_data?t_any.m_data->clone():nullptr),
+            m_smallSize(t_any.m_smallSize),
+            m_isSmall(t_any.m_isSmall),
+            m_type(t_any.m_type)
+        {
+
         }
 
 #if _MSC_VER  != 1800
@@ -111,11 +102,29 @@ namespace chaiscript {
 #endif
 
         template<typename ValueType,
-          typename = typename std::enable_if<!std::is_same<Any, typename std::decay<ValueType>::type>::value>::type>
+          typename = typename std::enable_if<!std::is_same<Any, typename std::decay<ValueType>::type>::value>::type,
+          typename = typename std::enable_if< std::is_trivial<typename std::decay<ValueType>::type>::value>::type,
+          typename = typename std::enable_if<sizeof(typename std::decay<ValueType>::type) <= sizeof(decltype(m_smallSize)) >::type>
         explicit Any(ValueType &&t_value)
-          : m_data(std::unique_ptr<Data>(new Data_Impl<typename std::decay<ValueType>::type>(std::forward<ValueType>(t_value))))
+          : m_isSmall(true), m_type(&typeid(typename std::decay<ValueType>::type))
+        {
+          m_smallSize.fill(0);
+          *(static_cast<typename std::decay<ValueType>::type *>(static_cast<void *>(m_smallSize.data()))) = t_value;
+          // std::cout << "Setting type: " << typeid(typename std::decay<ValueType>::type).name() << " "  << t_value << " actual val: " << *(static_cast<typename std::decay<ValueType>::type *>(static_cast<void *>(m_smallSize.data()))) << " cast: " << cast<typename std::decay<ValueType>::type>() << "\n";
+        }
+
+        template<typename ValueType,
+          typename = typename std::enable_if<!std::is_same<Any, typename std::decay<ValueType>::type>::value>::type,
+          typename = typename std::enable_if< 
+            !std::is_trivial<typename std::decay<ValueType>::type>::value
+            || !(sizeof(typename std::decay<ValueType>::type) <= sizeof(decltype(m_smallSize))) >::type>
+        explicit Any(ValueType &&t_value)
+          : m_data(std::unique_ptr<Data>(new Data_Impl<typename std::decay<ValueType>::type>(std::forward<ValueType>(t_value)))),
+            m_isSmall(false),
+            m_type(&typeid(typename std::decay<ValueType>::type))
         {
         }
+
 
 
         Any & operator=(const Any &t_any)
@@ -128,14 +137,20 @@ namespace chaiscript {
         template<typename ToType>
           ToType &cast() const
           {
-            if (m_data && typeid(ToType) == m_data->type())
+            if (m_isSmall && typeid(ToType) == *m_type)
             {
+              return *static_cast<ToType *>(static_cast<void *>(m_smallSize.data()));
+            } else if (!m_isSmall && m_data && typeid(ToType) == *m_type) {
               return *static_cast<ToType *>(m_data->data());
             } else {
               throw chaiscript::detail::exception::bad_any_cast();
             }
           }
 
+        const std::type_info &type() const
+        {
+          return *m_type;
+        }
 
         ~Any()
         {
@@ -144,25 +159,31 @@ namespace chaiscript {
         // modifiers
         Any & swap(Any &t_other)
         {
+          std::swap(t_other.m_smallSize, m_smallSize);
+          std::swap(t_other.m_isSmall, m_isSmall);
           std::swap(t_other.m_data, m_data);
+          std::swap(t_other.m_type, m_type);
           return *this;
         }
 
         // queries
         bool empty() const
         {
-          return !bool(m_data);
+          return !bool(m_data) && !m_isSmall;
         }
 
-        const std::type_info & type() const
+        void *data() const
         {
-          if (m_data)
+          if (m_isSmall)
           {
-            return m_data->type();
+            return static_cast<void *>(m_smallSize.data());
+          } else if (m_data) {
+            return m_data->data();
           } else {
-            return typeid(void);
+            return nullptr;
           }
         }
+
     };
 
   }

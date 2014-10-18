@@ -157,7 +157,7 @@ namespace chaiscript
       {
         if (!t_bv.is_const())
         {
-          throw chaiscript::exception::global_non_const();
+//          throw chaiscript::exception::global_non_const();
         }
 
         m_globals.emplace_back(std::move(t_bv), std::move(t_name));
@@ -474,7 +474,7 @@ namespace chaiscript
           validate_object_name(name);
           if (!obj.is_const())
           {
-            throw chaiscript::exception::global_non_const();
+//            throw chaiscript::exception::global_non_const();
           }
 
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_global_object_mutex);
