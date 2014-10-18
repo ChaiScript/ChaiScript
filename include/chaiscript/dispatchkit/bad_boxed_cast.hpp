@@ -10,6 +10,7 @@
 #include <string>
 #include <typeinfo>
 
+#include "../chaiscript_defines.hpp"
 #include "type_info.hpp"
 
 namespace chaiscript {
@@ -28,14 +29,14 @@ namespace chaiscript
     class bad_boxed_cast : public std::bad_cast
     {
       public:
-        bad_boxed_cast(const Type_Info &t_from, const std::type_info &t_to,
+        bad_boxed_cast(Type_Info t_from, const std::type_info &t_to,
             std::string t_what) CHAISCRIPT_NOEXCEPT
-          : from(t_from), to(&t_to), m_what(std::move(t_what))
+          : from(std::move(t_from)), to(&t_to), m_what(std::move(t_what))
         {
         }
 
-        bad_boxed_cast(const Type_Info &t_from, const std::type_info &t_to) CHAISCRIPT_NOEXCEPT
-          : from(t_from), to(&t_to), m_what("Cannot perform boxed_cast")
+        bad_boxed_cast(Type_Info t_from, const std::type_info &t_to)
+          : from(std::move(t_from)), to(&t_to), m_what("Cannot perform boxed_cast")
         {
         }
 
