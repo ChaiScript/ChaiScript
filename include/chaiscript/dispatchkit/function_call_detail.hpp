@@ -17,7 +17,7 @@
 #include "boxed_cast.hpp"
 #include "boxed_number.hpp"
 #include "boxed_value.hpp"
-#include "dynamic_cast_conversion.hpp"
+#include "type_conversions.hpp"
 #include "proxy_functions.hpp"
 
 namespace chaiscript

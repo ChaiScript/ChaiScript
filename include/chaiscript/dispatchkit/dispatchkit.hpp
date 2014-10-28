@@ -27,7 +27,7 @@
 #include "boxed_cast.hpp"
 #include "boxed_cast_helper.hpp"
 #include "boxed_value.hpp"
-#include "dynamic_cast_conversion.hpp"
+#include "type_conversions.hpp"
 #include "dynamic_object.hpp"
 #include "proxy_constructors.hpp"
 #include "proxy_functions.hpp"

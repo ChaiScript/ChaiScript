@@ -26,7 +26,7 @@
 #include "../dispatchkit/boxed_cast_helper.hpp"
 #include "../dispatchkit/boxed_value.hpp"
 #include "../dispatchkit/dispatchkit.hpp"
-#include "../dispatchkit/dynamic_cast_conversion.hpp"
+#include "../dispatchkit/type_conversions.hpp"
 #include "../dispatchkit/proxy_functions.hpp"
 #include "chaiscript_common.hpp"
 
@@ -353,6 +353,13 @@ namespace chaiscript
 
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type_name, std::ref(m_engine)), "name");
 
+      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type, std::ref(m_engine)), "type");
+      m_engine.add(fun<void (const Type_Info &, const Type_Info &, const std::function<Boxed_Value (const Boxed_Value &)> &)> ( 
+            [=](const Type_Info &t_from, const Type_Info &t_to, const std::function<Boxed_Value (const Boxed_Value &)> &t_func) {
+              m_engine.add(chaiscript::type_conversion(t_from, t_to, t_func));
+            }
+          ), "add_type_conversion");
+              
 
       typedef std::string (ChaiScript::*load_mod_1)(const std::string&);
       typedef void (ChaiScript::*load_mod_2)(const std::string&, const std::string&);

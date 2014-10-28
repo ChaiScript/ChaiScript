@@ -1,0 +1,11 @@
+
+add_type_conversion(type("string"), type("Type_Info"), fun(s) { return type(s); });
+
+// This looks simple, but it takes the string "string" and using the registered
+// conversion above, automatically converts that into a Type_Info object, which then
+// allows the Type_Info.name() function to be called
+
+assert_equal("string".name(), "string");
+
+
+

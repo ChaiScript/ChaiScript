@@ -45,10 +45,7 @@ namespace chaiscript
 
         virtual ~bad_boxed_dynamic_cast() CHAISCRIPT_NOEXCEPT {}
     };
-  }
 
-  namespace exception
-  {
     class bad_boxed_type_cast : public bad_boxed_cast
     {
       public:
@@ -174,6 +171,32 @@ namespace chaiscript
           return Dynamic_Caster<Derived, Base>::cast(t_derived);
         }
     };
+
+
+    class Type_Conversion_Impl : public Type_Conversion_Base
+    {
+      public:
+        Type_Conversion_Impl(Type_Info t_from, Type_Info t_to, std::function<Boxed_Value (const Boxed_Value)> t_func)
+          : Type_Conversion_Base(std::move(t_to), std::move(t_from)),
+            m_func(std::move(t_func))
+        {
+        }
+
+        virtual Boxed_Value convert_down(const Boxed_Value &) const CHAISCRIPT_OVERRIDE
+        {
+          throw chaiscript::exception::bad_boxed_type_cast("No conversion exists");
+        }
+
+        virtual Boxed_Value convert(const Boxed_Value &t_from) const CHAISCRIPT_OVERRIDE
+        {
+          /// \todo better handling of errors from the conversion function
+          return m_func(t_from);
+        }
+
+      private:
+        std::function<Boxed_Value (const Boxed_Value)> m_func;
+    };
+
   }
 
   class Type_Conversions
@@ -191,6 +214,7 @@ namespace chaiscript
       void add_conversion(const std::shared_ptr<detail::Type_Conversion_Base> &conversion)
       {
         chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+        /// \todo error if a conversion already exists
         m_conversions.insert(conversion);
       }
 
@@ -240,8 +264,7 @@ namespace chaiscript
       {
         chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-        auto itr =
-          find(to, from);
+        auto itr = find(to, from);
 
         if (itr != m_conversions.end())
         {
@@ -283,7 +306,7 @@ namespace chaiscript
   /// Currently, due to limitations in module loading on Windows, and for the sake of portability,
   /// if you have a type that is introduced in a loadable module and is used by multiple modules
   /// (through a tertiary dll that is shared between the modules, static linking the new type
-  /// into both loadable modules would not be portable), you need to register the to type
+  /// into both loadable modules would not be portable), you need to register the type
   /// relationship in all modules that use the newly added type in a polymorphic way.
   ///
   /// Example:
@@ -307,6 +330,14 @@ namespace chaiscript
     static_assert(std::is_polymorphic<Derived>::value, "Derived class must be polymorphic");
 
     return std::shared_ptr<detail::Type_Conversion_Base>(new detail::Dynamic_Conversion_Impl<Base, Derived>());
+  }
+
+  namespace {
+    Type_Conversion type_conversion(const Type_Info &t_from, const Type_Info &t_to, 
+        const std::function<Boxed_Value (Boxed_Value)> &t_func)
+    {
+      return std::shared_ptr<detail::Type_Conversion_Base>(new detail::Type_Conversion_Impl(t_from, t_to, t_func));
+    }
   }
 
 }

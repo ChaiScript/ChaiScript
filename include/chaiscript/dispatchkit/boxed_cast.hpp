@@ -14,7 +14,7 @@
 #include "bad_boxed_cast.hpp"
 #include "boxed_cast_helper.hpp"
 #include "boxed_value.hpp"
-#include "dynamic_cast_conversion.hpp"
+#include "type_conversions.hpp"
 #include "type_info.hpp"
 
 namespace chaiscript {
@@ -86,7 +86,7 @@ namespace chaiscript
 #pragma warning(disable : 4127)
 #endif
 
-      if (std::is_polymorphic<typename detail::Bare_Type<Type>::type>::value && t_conversions)
+      if ( /*std::is_polymorphic<typename detail::Bare_Type<Type>::type>::value && */ t_conversions)
       {
         try {
           // std::cout << "trying an up conversion " << typeid(Type).name() << std::endl;

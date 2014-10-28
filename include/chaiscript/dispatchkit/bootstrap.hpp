@@ -24,7 +24,7 @@
 #include "boxed_number.hpp"
 #include "boxed_value.hpp"
 #include "dispatchkit.hpp"
-#include "dynamic_cast_conversion.hpp"
+#include "type_conversions.hpp"
 #include "dynamic_object.hpp"
 #include "operators.hpp"
 #include "proxy_constructors.hpp"
