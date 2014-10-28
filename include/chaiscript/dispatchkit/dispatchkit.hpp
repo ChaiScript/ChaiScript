@@ -141,7 +141,7 @@ namespace chaiscript
         return *this;
       }
 
-      Module &add(Dynamic_Cast_Conversion d)
+      Module &add(Type_Conversion d)
       {
         m_conversions.push_back(std::move(d));
         return *this;
@@ -197,7 +197,7 @@ namespace chaiscript
       std::vector<std::pair<Proxy_Function, std::string> > m_funcs;
       std::vector<std::pair<Boxed_Value, std::string> > m_globals;
       std::vector<std::string> m_evals;
-      std::vector<Dynamic_Cast_Conversion> m_conversions;
+      std::vector<Type_Conversion> m_conversions;
 
       template<typename T, typename InItr>
         static void apply(InItr begin, const InItr end, T &t) 
@@ -300,7 +300,7 @@ namespace chaiscript
           return arity;
         }
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
           return std::any_of(m_funcs.cbegin(), m_funcs.cend(),
                              [&vals, &t_conversions](const Proxy_Function &f){ return f->call_match(vals, t_conversions); });
@@ -312,7 +312,7 @@ namespace chaiscript
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
           return dispatch::dispatch(m_funcs.cbegin(), m_funcs.cend(), params, t_conversions);
         }
@@ -409,7 +409,7 @@ namespace chaiscript
           }
 
         /// Add a new conversion for upcasting to a base class
-        void add(const Dynamic_Cast_Conversion &d)
+        void add(const Type_Conversion &d)
         {
           m_conversions.add_conversion(d);
         }
@@ -768,7 +768,7 @@ namespace chaiscript
           m_state.m_reserved_words.insert(name);
         }
 
-        const Dynamic_Cast_Conversions &conversions() const
+        const Type_Conversions &conversions() const
         {
           return m_conversions;
         }
@@ -1138,7 +1138,7 @@ namespace chaiscript
           int call_depth;
         };
 
-        Dynamic_Cast_Conversions m_conversions;
+        Type_Conversions m_conversions;
         chaiscript::detail::threading::Thread_Storage<Stack_Holder> m_stack_holder;
 
 

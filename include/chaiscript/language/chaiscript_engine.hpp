@@ -679,7 +679,7 @@ namespace chaiscript
     /// chaiscript::ChaiScript chai;
     /// chai.add(chaiscript::base_class<std::runtime_error, chaiscript::dispatch_error>());
     /// \endcode
-    ChaiScript &add(const Dynamic_Cast_Conversion &d)
+    ChaiScript &add(const Type_Conversion &d)
     {
       m_engine.add(d);
       return *this;
