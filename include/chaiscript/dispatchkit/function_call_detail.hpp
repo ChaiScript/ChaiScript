@@ -26,10 +26,8 @@ namespace chaiscript
   {
     namespace detail
     {
-      /**
-       * Internal helper class for handling the return
-       * value of a build_function_caller
-       */
+      /// Internal helper class for handling the return
+      /// value of a build_function_caller
       template<typename Ret, bool is_arithmetic>
         struct Function_Caller_Ret
         {

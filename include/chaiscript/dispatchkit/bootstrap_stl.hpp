@@ -278,9 +278,9 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
-          m->add(fun( std::function<size_t (const ContainerType *)>( [](const ContainerType *a) { return a->size(); } ) ), "size");
-          m->add(fun( std::function<bool (const ContainerType *)>( [](const ContainerType *a) { return a->empty(); } ) ), "empty");
-          m->add(fun( std::function<void (ContainerType *)>( [](ContainerType *a) { a->clear(); } ) ), "clear");
+          m->add(fun<size_t (const ContainerType *)>([](const ContainerType *a) { return a->size(); } ), "size");
+          m->add(fun<bool (const ContainerType *)>([](const ContainerType *a) { return a->empty(); } ), "empty");
+          m->add(fun<void (ContainerType *)>([](ContainerType *a) { a->clear(); } ), "clear");
           return m;
         }
 
@@ -493,24 +493,26 @@ namespace chaiscript
 
           if (typeid(VectorType) == typeid(std::vector<Boxed_Value>))
           {
-            m->eval("def Vector::`==`(rhs) : type_match(rhs, this) { \
-                       if ( rhs.size() != this.size() ) {    \
-                         return false;  \
-                       } else {  \
-                         auto r1 = range(this); \
-                         auto r2 = range(rhs);  \
-                         while (!r1.empty()) \
-                         {  \
-                           if (!eq(r1.front(), r2.front())) \
-                           {  \
-                             return false; \
-                           } \
-                           r1.pop_front(); \
-                           r2.pop_front(); \
-                         } \
-                       return true; \
-                     } \
-                   }");
+            m->eval(R"(
+                    def Vector::`==`(rhs) : type_match(rhs, this) {
+                       if ( rhs.size() != this.size() ) {
+                         return false;
+                       } else {
+                         auto r1 = range(this);
+                         auto r2 = range(rhs);
+                         while (!r1.empty())
+                         {
+                           if (!eq(r1.front(), r2.front()))
+                           {
+                             return false;
+                           }
+                           r1.pop_front();
+                           r2.pop_front();
+                         }
+                         true;
+                       }
+                   } )"
+                 );
           } 
 
           return m;

@@ -13,6 +13,7 @@
 #include <type_traits>
 
 #include "../chaiscript_threading.hpp"
+#include "../chaiscript_defines.hpp"
 #include "any.hpp"
 #include "type_info.hpp"
 

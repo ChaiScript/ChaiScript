@@ -64,11 +64,9 @@ namespace chaiscript
 
     namespace detail
     {
-      /**
-       * A Proxy_Function implementation designed for calling a function
-       * that is automatically guarded based on the first param based on the
-       * param's type name
-       */
+      /// A Proxy_Function implementation designed for calling a function
+      /// that is automatically guarded based on the first param based on the
+      /// param's type name
       class Dynamic_Object_Function : public Proxy_Function_Base
       {
         public:
@@ -96,11 +94,11 @@ namespace chaiscript
           virtual ~Dynamic_Object_Function() {}
 
           Dynamic_Object_Function &operator=(const Dynamic_Object_Function) = delete;
+          Dynamic_Object_Function(Dynamic_Object_Function &) = delete;
 
           virtual bool operator==(const Proxy_Function_Base &f) const CHAISCRIPT_OVERRIDE
           {
-            const Dynamic_Object_Function *df = dynamic_cast<const Dynamic_Object_Function *>(&f);
-            if (df)
+            if (const auto *df = dynamic_cast<const Dynamic_Object_Function *>(&f))
             {
               return df->m_type_name == m_type_name && (*df->m_func) == (*m_func);
             } else {
@@ -164,7 +162,7 @@ namespace chaiscript
           }
 
           bool dynamic_object_typename_match(const Boxed_Value &bv, const std::string &name,
-              const std::shared_ptr<Type_Info> &ti, const Dynamic_Cast_Conversions &t_conversions) const
+              const std::unique_ptr<Type_Info> &ti, const Dynamic_Cast_Conversions &t_conversions) const
           {
             if (bv.get_type_info().bare_equal(m_doti))
             {
@@ -186,7 +184,7 @@ namespace chaiscript
           }
 
           bool dynamic_object_typename_match(const std::vector<Boxed_Value> &bvs, const std::string &name,
-              const std::shared_ptr<Type_Info> &ti, const Dynamic_Cast_Conversions &t_conversions) const
+              const std::unique_ptr<Type_Info> &ti, const Dynamic_Cast_Conversions &t_conversions) const
           {
             if (bvs.size() > 0)
             {
@@ -198,7 +196,7 @@ namespace chaiscript
 
           std::string m_type_name;
           Proxy_Function m_func;
-          std::shared_ptr<Type_Info> m_ti;
+          std::unique_ptr<Type_Info> m_ti;
           const Type_Info m_doti;
 
 
@@ -252,8 +250,7 @@ namespace chaiscript
 
           virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
           {
-            std::vector<Boxed_Value> new_vals;
-            new_vals.push_back(Boxed_Value(Dynamic_Object(m_type_name)));
+            std::vector<Boxed_Value> new_vals{Boxed_Value(Dynamic_Object(m_type_name))};
             new_vals.insert(new_vals.end(), vals.begin(), vals.end());
 
             return m_func->call_match(new_vals, t_conversions);
@@ -274,9 +271,8 @@ namespace chaiscript
         protected:
           virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
           {
-            std::vector<Boxed_Value> new_params;
-            chaiscript::Boxed_Value bv = var(Dynamic_Object(m_type_name));
-            new_params.push_back(bv);
+            auto bv = var(Dynamic_Object(m_type_name));
+            std::vector<Boxed_Value> new_params{bv};
             new_params.insert(new_params.end(), params.begin(), params.end());
 
             (*m_func)(new_params, t_conversions);

@@ -826,9 +826,7 @@ namespace chaiscript
 
   namespace detail
   {
-    /**
-     * Cast_Helper for converting from Boxed_Value to Boxed_Number
-     */
+    /// Cast_Helper for converting from Boxed_Value to Boxed_Number
     template<>
       struct Cast_Helper<Boxed_Number>
       {
@@ -840,17 +838,13 @@ namespace chaiscript
         }
       };
 
-    /**
-     * Cast_Helper for converting from Boxed_Value to Boxed_Number
-     */
+    /// Cast_Helper for converting from Boxed_Value to Boxed_Number
     template<>
       struct Cast_Helper<const Boxed_Number &> : Cast_Helper<Boxed_Number>
       {
       };
       
-    /**
-     * Cast_Helper for converting from Boxed_Value to Boxed_Number
-     */
+    /// Cast_Helper for converting from Boxed_Value to Boxed_Number
     template<>
       struct Cast_Helper<const Boxed_Number> : Cast_Helper<Boxed_Number>
       {

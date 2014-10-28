@@ -229,17 +229,12 @@ namespace chaiscript
       std::set<std::shared_ptr<detail::Dynamic_Conversion> >::const_iterator find(
           const Type_Info &base, const Type_Info &derived) const
       {
-        for (auto itr = m_conversions.begin();
-            itr != m_conversions.end();
-            ++itr)
-        {
-          if ((*itr)->base().bare_equal(base) && (*itr)->derived().bare_equal(derived))
-          {
-            return itr;
-          }
-        }
-
-        return m_conversions.end();
+        return std::find_if(m_conversions.begin(), m_conversions.end(),
+              [&base, &derived](const std::shared_ptr<detail::Dynamic_Conversion> &conversion)
+              {
+                return conversion->base().bare_equal(base) && conversion->derived().bare_equal(derived);
+              }
+        );
       }
 
       std::set<std::shared_ptr<detail::Dynamic_Conversion> > get_conversions() const

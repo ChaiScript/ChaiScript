@@ -166,9 +166,9 @@ namespace chaiscript
 
 
       //Add a bit of ChaiScript to eval during module implementation
-      Module &eval(std::string str)
+      Module &eval(const std::string &str)
       {
-        m_evals.push_back(std::move(str));
+        m_evals.push_back(str);
         return *this;
       }
 
@@ -265,7 +265,7 @@ namespace chaiscript
         virtual bool operator==(const dispatch::Proxy_Function_Base &rhs) const CHAISCRIPT_OVERRIDE
         {
           try {
-            const Dispatch_Function &dispatchfun = dynamic_cast<const Dispatch_Function &>(rhs);
+            const auto &dispatchfun = dynamic_cast<const Dispatch_Function &>(rhs);
             return m_funcs == dispatchfun.m_funcs;
           } catch (const std::bad_cast &) {
             return false;
@@ -286,7 +286,7 @@ namespace chaiscript
             return -1;
           }
 
-          const int arity = m_funcs.front()->get_arity();
+          const auto arity = m_funcs.front()->get_arity();
 
           for (const auto &func : m_funcs)
           {
@@ -302,15 +302,8 @@ namespace chaiscript
 
         virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          for (const auto &func : m_funcs)
-          {
-            if (func->call_match(vals, t_conversions))
-            {
-              return true;
-            }
-          }
-
-          return false;
+          return std::any_of(m_funcs.cbegin(), m_funcs.cend(),
+                             [&vals, &t_conversions](const Proxy_Function &f){ return f->call_match(vals, t_conversions); });
         }
 
         virtual std::string annotation() const CHAISCRIPT_OVERRIDE
@@ -321,7 +314,7 @@ namespace chaiscript
       protected:
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          return dispatch::dispatch(m_funcs.begin(), m_funcs.end(), params, t_conversions);
+          return dispatch::dispatch(m_funcs.cbegin(), m_funcs.cend(), params, t_conversions);
         }
 
       private:
@@ -329,10 +322,8 @@ namespace chaiscript
 
         static std::vector<Type_Info> build_type_infos(const std::vector<Proxy_Function> &t_funcs)
         {
-          typedef std::vector<Proxy_Function> function_vec;
-
-          auto begin = t_funcs.begin();
-          const function_vec::const_iterator end = t_funcs.end();
+          auto begin = t_funcs.cbegin();
+          const auto &end = t_funcs.cend();
 
           if (begin != end)
           {
@@ -380,10 +371,8 @@ namespace chaiscript
 
   namespace detail
   {
-    /**
-     * Main class for the dispatchkit. Handles management
-     * of the object stack, functions and registered types.
-     */
+    /// Main class for the dispatchkit. Handles management
+    /// of the object stack, functions and registered types.
     class Dispatch_Engine
     {
       public:
@@ -437,12 +426,12 @@ namespace chaiscript
         void add(const Boxed_Value &obj, const std::string &name)
         {
           validate_object_name(name);
-          StackData &stack = get_stack_data();
+          auto &stack = get_stack_data();
 
-          for (int i = static_cast<int>(stack.size())-1; i >= 0; --i)
+          for (auto stack_elem = stack.rbegin(); stack_elem != stack.rend(); ++stack_elem)
           {
-            const auto itr = stack[i].find(name);
-            if (itr != stack[i].end())
+            auto itr = stack_elem->find(name);
+            if (itr != stack_elem->end())
             {
               itr->second = std::move(obj);
               return;
@@ -456,15 +445,15 @@ namespace chaiscript
         /// Adds a named object to the current scope
         void add_object(const std::string &name, const Boxed_Value &obj) const
         {
-          StackData &stack = get_stack_data();
+          auto &stack = get_stack_data();
           validate_object_name(name);
 
-          const Scope &scope = stack.back();
+          auto &scope = stack.back();
           if (scope.find(name) != scope.end())
           {
             throw chaiscript::exception::name_conflict_error(name);
           } else {
-            stack.back().insert(std::make_pair(name, std::move(obj)));
+            scope.insert(std::make_pair(name, obj));
           }
         }
 
@@ -546,13 +535,13 @@ namespace chaiscript
             return m_place_holder;
           }
 
-          StackData &stack = get_stack_data();
+          auto &stack = get_stack_data();
 
           // Is it in the stack?
-          for (int i = static_cast<int>(stack.size())-1; i >= 0; --i)
+          for (auto stack_elem = stack.rbegin(); stack_elem != stack.rend(); ++stack_elem)
           {
-            const auto stackitr = stack[i].find(name);
-            if (stackitr != stack[i].end())
+            const auto stackitr = stack_elem->find(name);
+            if (stackitr != stack_elem->end())
             {
               return stackitr->second;
             }
@@ -672,7 +661,7 @@ namespace chaiscript
         ///          the current scope.
         std::map<std::string, Boxed_Value> get_parent_locals() const
         {
-          StackData &stack = get_stack_data();
+          auto &stack = get_stack_data();
           if (stack.size() > 1)
           {
             return stack[1];
@@ -684,8 +673,8 @@ namespace chaiscript
         /// \returns All values in the local thread state, added through the add() function
         std::map<std::string, Boxed_Value> get_locals() const
         {
-          StackData &stack = get_stack_data();
-          Scope &scope = stack.front();
+          auto &stack = get_stack_data();
+          auto &scope = stack.front();
           return scope;
         }
 
@@ -696,8 +685,8 @@ namespace chaiscript
         /// Any existing locals are removed and the given set of variables is added
         void set_locals(const std::map<std::string, Boxed_Value> &t_locals)
         {
-          StackData &stack = get_stack_data();
-          Scope &scope = stack.front();
+          auto &stack = get_stack_data();
+          auto &scope = stack.front();
           scope = t_locals;
         }
 
@@ -850,7 +839,7 @@ namespace chaiscript
         /// (the function) with the remaining parameters as its arguments.
         Boxed_Value call_exists(const std::vector<Boxed_Value> &params)
         {
-          if (params.size() < 1)
+          if (params.empty())
           {
             throw chaiscript::exception::arity_error(static_cast<int>(params.size()), 1);
           }
@@ -984,17 +973,17 @@ namespace chaiscript
 
         static bool function_less_than(const Proxy_Function &lhs, const Proxy_Function &rhs)
         {
-          const std::vector<Type_Info> &lhsparamtypes = lhs->get_param_types();
-          const std::vector<Type_Info> &rhsparamtypes = rhs->get_param_types();
+          const auto &lhsparamtypes = lhs->get_param_types();
+          const auto &rhsparamtypes = rhs->get_param_types();
 
-          const size_t lhssize = lhsparamtypes.size();
-          const size_t rhssize = rhsparamtypes.size();
+          const auto lhssize = lhsparamtypes.size();
+          const auto rhssize = rhsparamtypes.size();
 
-          const Type_Info boxed_type = user_type<Boxed_Value>();
-          const Type_Info boxed_pod_type = user_type<Boxed_Number>();
+          CHAISCRIPT_CONSTEXPR auto boxed_type = user_type<Boxed_Value>();
+          CHAISCRIPT_CONSTEXPR auto boxed_pod_type = user_type<Boxed_Number>();
 
-          std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynamic_lhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(lhs));
-          std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynamic_rhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(rhs));
+          auto dynamic_lhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(lhs));
+          auto dynamic_rhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(rhs));
 
           if (dynamic_lhs && dynamic_rhs)
           {

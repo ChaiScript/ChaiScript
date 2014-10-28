@@ -156,9 +156,7 @@ namespace chaiscript
       return p;
     }
 
-    /**
-     * Specific version of shared_ptr_clone just for Proxy_Functions
-     */
+    /// Specific version of shared_ptr_clone just for Proxy_Functions
     template<typename Type>
     std::shared_ptr<typename std::remove_const<Type>::type> 
         shared_ptr_unconst_clone(const std::shared_ptr<typename std::add_const<Type>::type> &p)
@@ -168,11 +166,9 @@ namespace chaiscript
 
 
 
-    /**
-    * Assignment function for shared_ptr objects, does not perform a copy of the
-    * object pointed to, instead maintains the shared_ptr concept.
-    * Similar to shared_ptr_clone. Used for Proxy_Function.
-    */
+    /// Assignment function for shared_ptr objects, does not perform a copy of the
+    /// object pointed to, instead maintains the shared_ptr concept.
+    /// Similar to shared_ptr_clone. Used for Proxy_Function.
     template<typename Type>
     Boxed_Value ptr_assign(Boxed_Value lhs, const std::shared_ptr<Type> &rhs)
     {
@@ -186,10 +182,8 @@ namespace chaiscript
       }
     }
 
-    /**
-    * Class consisting of only static functions. All default bootstrapping occurs
-    * from this class.
-    */
+    /// Class consisting of only static functions. All default bootstrapping occurs
+    /// from this class.
     class Bootstrap
     {
     private:
@@ -217,9 +211,7 @@ namespace chaiscript
       }
 
 
-      /**
-      * Add all arithmetic operators for PODs
-      */
+      /// Add all arithmetic operators for PODs
       static void opers_arithmetic_pod(ModulePtr m = ModulePtr(new Module()))
       {
         m->add(fun(&Boxed_Number::equals), "==");
@@ -259,11 +251,8 @@ namespace chaiscript
 
      }
 
-      /**
-      * Create a bound function object. The first param is the function to bind
-      * the remaining parameters are the args to bind into the
-      * result
-      */
+      /// Create a bound function object. The first param is the function to bind
+      /// the remaining parameters are the args to bind into the result
       static Boxed_Value bind_function(const std::vector<Boxed_Value> &params)
       {
         if (params.size() < 2)
@@ -273,7 +262,7 @@ namespace chaiscript
 
         Const_Proxy_Function f = boxed_cast<Const_Proxy_Function>(params[0]);
 
-        return Boxed_Value(Const_Proxy_Function(new dispatch::Bound_Function(f,
+        return Boxed_Value(Const_Proxy_Function(std::make_shared<dispatch::Bound_Function>(f,
           std::vector<Boxed_Value>(params.begin() + 1, params.end()))));
       }
 
@@ -318,9 +307,7 @@ namespace chaiscript
         return e.what();
       }
 
-      /**
-       * Boolean specialization of internal to_string function 
-       */
+      /// Boolean specialization of internal to_string function
       static std::string bool_to_string(bool b)
       {
         if (b)
@@ -350,9 +337,7 @@ namespace chaiscript
 
       static bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
       {
-        std::shared_ptr<const chaiscript::dispatch::Dynamic_Proxy_Function> pf
-          = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
-        if (pf)
+        if (auto pf = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf))
         {
           if (pf->get_parse_tree())
           {
@@ -367,9 +352,7 @@ namespace chaiscript
 
       static chaiscript::AST_NodePtr get_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
       {
-        std::shared_ptr<const chaiscript::dispatch::Dynamic_Proxy_Function> pf 
-          = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
-        if (pf)
+        if (auto pf = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf))
         {
           if (pf->get_parse_tree())
           {
