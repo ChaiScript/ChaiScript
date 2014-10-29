@@ -1,0 +1,9 @@
+load_module("test_module")
+
+auto t := TestBaseType();
+
+// This uses the TestBaseType to Type2 user type
+// conversion which was added in the module and then calls
+// "get_val()" which exists on the Type2 type
+assert_equal(t.get_val(), 10);
+

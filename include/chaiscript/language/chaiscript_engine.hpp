@@ -359,7 +359,7 @@ namespace chaiscript
               m_engine.add(chaiscript::type_conversion(t_from, t_to, t_func));
             }
           ), "add_type_conversion");
-              
+
 
       typedef std::string (ChaiScript::*load_mod_1)(const std::string&);
       typedef void (ChaiScript::*load_mod_2)(const std::string&, const std::string&);

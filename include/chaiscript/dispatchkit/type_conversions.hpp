@@ -107,7 +107,7 @@ namespace chaiscript
         public: 
           static Boxed_Value cast(const Boxed_Value &t_from)
           {
-            if (t_from.get_type_info().bare_equal(user_type<From>()))
+            if (t_from.get_type_info().bare_equal(chaiscript::user_type<From>()))
             {
               if (t_from.is_pointer())
               {
@@ -157,7 +157,7 @@ namespace chaiscript
     {
       public:
         Dynamic_Conversion_Impl()
-          : Type_Conversion_Base(user_type<Base>(), user_type<Derived>())
+          : Type_Conversion_Base(chaiscript::user_type<Base>(), chaiscript::user_type<Derived>())
         {
         }
 
@@ -173,10 +173,11 @@ namespace chaiscript
     };
 
 
+    template<typename Callable>
     class Type_Conversion_Impl : public Type_Conversion_Base
     {
       public:
-        Type_Conversion_Impl(Type_Info t_from, Type_Info t_to, std::function<Boxed_Value (const Boxed_Value)> t_func)
+        Type_Conversion_Impl(Type_Info t_from, Type_Info t_to, Callable t_func)
           : Type_Conversion_Base(std::move(t_to), std::move(t_from)),
             m_func(std::move(t_func))
         {
@@ -194,7 +195,7 @@ namespace chaiscript
         }
 
       private:
-        std::function<Boxed_Value (const Boxed_Value)> m_func;
+        Callable m_func;
     };
 
   }
@@ -329,16 +330,26 @@ namespace chaiscript
     static_assert(std::is_polymorphic<Base>::value, "Base class must be polymorphic");
     static_assert(std::is_polymorphic<Derived>::value, "Derived class must be polymorphic");
 
-    return std::shared_ptr<detail::Type_Conversion_Base>(new detail::Dynamic_Conversion_Impl<Base, Derived>());
+    return std::make_shared<detail::Dynamic_Conversion_Impl<Base, Derived>>();
   }
 
-  namespace {
+  template<typename Callable>
     Type_Conversion type_conversion(const Type_Info &t_from, const Type_Info &t_to, 
-        const std::function<Boxed_Value (Boxed_Value)> &t_func)
+        const Callable &t_func)
     {
-      return std::shared_ptr<detail::Type_Conversion_Base>(new detail::Type_Conversion_Impl(t_from, t_to, t_func));
+      return std::make_shared<detail::Type_Conversion_Impl<Callable>>(t_from, t_to, t_func);
     }
-  }
+
+  template<typename From, typename To, typename Callable>
+    Type_Conversion type_conversion(const Callable &t_function)
+    {
+      auto func = [t_function](const Boxed_Value &t_bv) -> Boxed_Value {
+            // not even attempting to call boxed_cast so that we don't get caught in some call recursion
+            return chaiscript::Boxed_Value(t_function(detail::Cast_Helper<const From &>::cast(t_bv, nullptr)));
+          };
+
+      return std::make_shared<detail::Type_Conversion_Impl<decltype(func)>>(user_type<From>(), user_type<To>(), func);
+    }
 
 }
 
