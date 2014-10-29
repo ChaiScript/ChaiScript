@@ -86,7 +86,7 @@ namespace chaiscript
 #pragma warning(disable : 4127)
 #endif
 
-      if ( /*std::is_polymorphic<typename detail::Bare_Type<Type>::type>::value && */ t_conversions)
+      if (t_conversions && t_conversions->convertable_type<Type>())
       {
         try {
           // std::cout << "trying an up conversion " << typeid(Type).name() << std::endl;

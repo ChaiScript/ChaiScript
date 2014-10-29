@@ -111,6 +111,11 @@ namespace chaiscript
         }
       }
 
+      CHAISCRIPT_CONSTEXPR const std::type_info *bare_type_info() const
+      {
+        return m_bare_type_info;
+      }
+
     private:
       const std::type_info *m_type_info;
       const std::type_info *m_bare_type_info;

@@ -7,6 +7,7 @@
 #ifndef CHAISCRIPT_DYNAMIC_CAST_CONVERSION_HPP_
 #define CHAISCRIPT_DYNAMIC_CAST_CONVERSION_HPP_
 
+#include <atomic>
 #include <memory>
 #include <set>
 #include <stdexcept>
@@ -203,13 +204,36 @@ namespace chaiscript
   class Type_Conversions
   {
     public:
+      struct Less_Than
+      {
+        bool operator()(const std::type_info *t_lhs, const std::type_info *t_rhs) const
+        {
+          return *t_lhs != *t_rhs && t_lhs->before(*t_rhs);
+        }
+      };
+
       Type_Conversions()
+        : m_num_types(0),
+          m_thread_cache(this)
       {
       }
 
       Type_Conversions(const Type_Conversions &t_other)
-        : m_conversions(t_other.get_conversions())
+        : m_conversions(t_other.get_conversions()), m_num_types(m_conversions.size()),
+          m_thread_cache(this)
       {
+      }
+
+      const std::set<const std::type_info *, Less_Than> &thread_cache() const
+      {
+        auto &cache = *m_thread_cache;
+        if (cache.size() != m_num_types)
+        {
+          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+          cache = m_convertableTypes;
+        }
+
+        return cache;
       }
 
       void add_conversion(const std::shared_ptr<detail::Type_Conversion_Base> &conversion)
@@ -217,7 +241,15 @@ namespace chaiscript
         chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
         /// \todo error if a conversion already exists
         m_conversions.insert(conversion);
+        m_convertableTypes.insert({conversion->to().bare_type_info(), conversion->from().bare_type_info()});
+        m_num_types = m_convertableTypes.size();
       }
+
+      template<typename T>
+        bool convertable_type() const
+        {
+          return thread_cache().count(user_type<T>().bare_type_info()) != 0;
+        }
 
       template<typename To, typename From>
         bool converts() const
@@ -227,7 +259,14 @@ namespace chaiscript
 
       bool converts(const Type_Info &to, const Type_Info &from) const
       {
-        return has_conversion(to, from) || has_conversion(from, to);
+        const auto &types = thread_cache();
+        if (types.count(to.bare_type_info()) != 0 && types.count(to.bare_type_info()) != 0)
+        {
+          return has_conversion(to, from) || has_conversion(from, to);
+        } else {
+          return false;
+        }
+
       }
 
       template<typename To>
@@ -294,8 +333,12 @@ namespace chaiscript
         return m_conversions;
       }
 
+
       mutable chaiscript::detail::threading::shared_mutex m_mutex;
       std::set<std::shared_ptr<detail::Type_Conversion_Base>> m_conversions;
+      std::set<const std::type_info *, Less_Than> m_convertableTypes;
+      std::atomic_size_t m_num_types;
+      chaiscript::detail::threading::Thread_Storage<std::set<const std::type_info *, Less_Than>> m_thread_cache;
   };
 
   typedef std::shared_ptr<chaiscript::detail::Type_Conversion_Base> Type_Conversion;
