@@ -260,7 +260,7 @@ namespace chaiscript
       bool converts(const Type_Info &to, const Type_Info &from) const
       {
         const auto &types = thread_cache();
-        if (types.count(to.bare_type_info()) != 0 && types.count(to.bare_type_info()) != 0)
+        if (types.count(to.bare_type_info()) != 0 && types.count(from.bare_type_info()) != 0)
         {
           return has_conversion(to, from) || has_conversion(from, to);
         } else {
