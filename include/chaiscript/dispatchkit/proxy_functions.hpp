@@ -712,17 +712,42 @@ namespace chaiscript
      * each function against the set of parameters, in order, until a matching
      * function is found or throw dispatch_error if no matching function is found
      */
-    template<typename InItr>
-      Boxed_Value dispatch(InItr begin, const InItr &end,
+    template<typename Funcs>
+      Boxed_Value dispatch(const Funcs &funcs,
           const std::vector<Boxed_Value> &plist, const Type_Conversions &t_conversions)
       {
-        InItr orig(begin);
-        while (begin != end)
+
+        std::multimap<int, const Proxy_Function_Base *> ordered_funcs;
+
+        for (const auto &func : funcs)
+        {
+          int numdiffs = 0;
+          const auto arity = func->get_arity();
+
+          if (arity == -1)
+          {
+            numdiffs = plist.size();
+          } else if (arity == plist.size()) {
+            for (size_t i = 0; i < plist.size(); ++i)
+            {
+              if (!func->get_param_types()[i+1].bare_equal(plist[i].get_type_info()))
+              {
+                ++numdiffs;
+              }
+            }
+          } else {
+            continue;
+          }
+
+          ordered_funcs.insert(std::make_pair(numdiffs, func.get()));
+        }
+
+        for (const auto &func : ordered_funcs )
         {
           try {
-            if ((*begin)->filter(plist, t_conversions))
+            if (func.second->filter(plist, t_conversions))
             {
-              return (*(*begin))(plist, t_conversions);
+              return (*(func.second))(plist, t_conversions);
             }
           } catch (const exception::bad_boxed_cast &) {
             //parameter failed to cast, try again
@@ -732,22 +757,9 @@ namespace chaiscript
             //guard failed to allow the function to execute,
             //try again
           }
-          ++begin;
         }
 
-        return detail::dispatch_with_conversions(orig, end, plist, t_conversions);
-      }
-
-    /**
-     * Take a vector of functions and a vector of parameters. Attempt to execute
-     * each function against the set of parameters, in order, until a matching
-     * function is found or throw dispatch_error if no matching function is found
-     */
-    template<typename Funcs>
-      Boxed_Value dispatch(const Funcs &funcs,
-          const std::vector<Boxed_Value> &plist, const Type_Conversions &t_conversions)
-      {
-        return dispatch::dispatch(funcs.begin(), funcs.end(), plist, t_conversions);
+        return detail::dispatch_with_conversions(funcs.cbegin(), funcs.cend(), plist, t_conversions);
       }
   }
 }

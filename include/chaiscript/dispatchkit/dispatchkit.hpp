@@ -314,7 +314,7 @@ namespace chaiscript
       protected:
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          return dispatch::dispatch(m_funcs.cbegin(), m_funcs.cend(), params, t_conversions);
+          return dispatch::dispatch(m_funcs, params, t_conversions);
         }
 
       private:
@@ -775,9 +775,7 @@ namespace chaiscript
 
         Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params) const
         {
-          std::vector<Proxy_Function> functions = get_function(t_name);
-
-          return dispatch::dispatch(functions.begin(), functions.end(), params, m_conversions);
+          return dispatch::dispatch(get_function(t_name), params, m_conversions);
         }
 
         Boxed_Value call_function(const std::string &t_name) const
