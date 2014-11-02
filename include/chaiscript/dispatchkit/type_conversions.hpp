@@ -394,6 +394,19 @@ namespace chaiscript
       return std::make_shared<detail::Type_Conversion_Impl<decltype(func)>>(user_type<From>(), user_type<To>(), func);
     }
 
+  template<typename From, typename To>
+    Type_Conversion type_conversion()
+    {
+      static_assert(std::is_convertible<From, To>::value, "Types are not automatically convertible");
+      auto func = [](const Boxed_Value &t_bv) -> Boxed_Value {
+            // not even attempting to call boxed_cast so that we don't get caught in some call recursion
+            auto to = To{detail::Cast_Helper<const From &>::cast(t_bv, nullptr)};
+            return chaiscript::Boxed_Value(std::move(to));
+          };
+
+      return std::make_shared<detail::Type_Conversion_Impl<decltype(func)>>(user_type<From>(), user_type<To>(), func);
+    }
+
 }
 
 

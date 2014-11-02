@@ -7,3 +7,4 @@ auto t := TestBaseType();
 // "get_val()" which exists on the Type2 type
 assert_equal(t.get_val(), 10);
 
+assert_equal(t.get_str().size(), 11);
