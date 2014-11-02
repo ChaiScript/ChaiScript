@@ -84,13 +84,11 @@ namespace chaiscript
         //! to the passed in values
         bool filter(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const
         {
-          int arity = get_arity();
-
-          if (arity < 0)
+          if (m_arity < 0)
           {
             return true;
-          } else if (size_t(arity) == vals.size()) {
-            if (arity == 0)
+          } else if (size_t(m_arity) == vals.size()) {
+            if (m_arity == 0)
             {
               return true;
             } else {
@@ -102,7 +100,10 @@ namespace chaiscript
         }
 
         /// \returns the number of arguments the function takes or -1 if it is variadic
-        virtual int get_arity() const = 0;
+        int get_arity() const
+        {
+          return m_arity;
+        }
 
         virtual std::string annotation() const = 0;
 
@@ -127,8 +128,8 @@ namespace chaiscript
       protected:
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const = 0;
 
-        Proxy_Function_Base(std::vector<Type_Info> t_types)
-          : m_types(std::move(t_types)), m_has_arithmetic_param(false)
+        Proxy_Function_Base(std::vector<Type_Info> t_types, int t_arity)
+          : m_types(std::move(t_types)), m_has_arithmetic_param(false), m_arity(t_arity)
         {
           for (size_t i = 1; i < m_types.size(); ++i)
           {
@@ -175,7 +176,7 @@ namespace chaiscript
 
         std::vector<Type_Info> m_types;
         bool m_has_arithmetic_param;
-
+        int m_arity;
     };
   }
 
@@ -216,7 +217,7 @@ namespace chaiscript
             AST_NodePtr t_parsenode = AST_NodePtr(),
             std::string t_description = "",
             Proxy_Function t_guard = Proxy_Function())
-          : Proxy_Function_Base(build_param_type_list(t_arity)),
+          : Proxy_Function_Base(build_param_type_list(t_arity), t_arity),
             m_f(std::move(t_f)), m_arity(t_arity), m_description(std::move(t_description)), m_guard(std::move(t_guard)), m_parsenode(std::move(t_parsenode))
         {
         }
@@ -239,10 +240,6 @@ namespace chaiscript
             && test_guard(vals, t_conversions);
         }    
 
-        virtual int get_arity() const CHAISCRIPT_OVERRIDE
-        {
-          return m_arity;
-        }
 
         Proxy_Function get_guard() const
         {
@@ -338,8 +335,8 @@ namespace chaiscript
       public:
         Bound_Function(const Const_Proxy_Function &t_f, 
             const std::vector<Boxed_Value> &t_args)
-          : Proxy_Function_Base(build_param_type_info(t_f, t_args)),
-            m_f(t_f), m_args(t_args), m_arity(t_f->get_arity()<0?-1:static_cast<int>(get_param_types().size())-1)
+          : Proxy_Function_Base(build_param_type_info(t_f, t_args), (t_f->get_arity()<0?-1:static_cast<int>(build_param_type_info(t_f, t_args).size())-1)),
+            m_f(t_f), m_args(t_args)
         {
           assert(m_f->get_arity() < 0 || m_f->get_arity() == static_cast<int>(m_args.size()));
         }
@@ -395,11 +392,6 @@ namespace chaiscript
           return args;
         }
 
-        virtual int get_arity() const CHAISCRIPT_OVERRIDE
-        {
-          return m_arity;
-        }
-
         virtual std::string annotation() const CHAISCRIPT_OVERRIDE
         {
           return "Bound: " + m_f->annotation();
@@ -444,16 +436,11 @@ namespace chaiscript
     {
       public:
         Proxy_Function_Impl_Base(std::vector<Type_Info> t_types)
-          : Proxy_Function_Base(std::move(t_types))
+          : Proxy_Function_Base(std::move(t_types), t_types.size() - 1)
         {
         }
 
         virtual ~Proxy_Function_Impl_Base() {}
-
-        virtual int get_arity() const CHAISCRIPT_OVERRIDE
-        {
-          return static_cast<int>(m_types.size()) - 1;
-        }
 
         virtual std::string annotation() const CHAISCRIPT_OVERRIDE
         {
@@ -524,8 +511,8 @@ namespace chaiscript
     {
       public:
         Attribute_Access(T Class::* t_attr)
-          : Proxy_Function_Base(param_types()),
-          m_attr(t_attr)
+          : Proxy_Function_Base(param_types(), 1),
+            m_attr(t_attr)
         {
         }
 
@@ -541,12 +528,6 @@ namespace chaiscript
           } else {
             return false;
           }
-        }
-
-
-        virtual int get_arity() const CHAISCRIPT_OVERRIDE
-        {
-          return 1;
         }
 
         virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions &) const CHAISCRIPT_OVERRIDE

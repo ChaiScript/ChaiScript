@@ -73,7 +73,7 @@ namespace chaiscript
           Dynamic_Object_Function(
               std::string t_type_name,
               const Proxy_Function &t_func)
-            : Proxy_Function_Base(t_func->get_param_types()),
+            : Proxy_Function_Base(t_func->get_param_types(), t_func->get_arity()),
             m_type_name(std::move(t_type_name)), m_func(t_func), m_doti(user_type<Dynamic_Object>())
           {
             assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
@@ -84,7 +84,7 @@ namespace chaiscript
               std::string t_type_name,
               const Proxy_Function &t_func,
               const Type_Info &t_ti)
-            : Proxy_Function_Base(build_param_types(t_func->get_param_types(), t_ti)),
+            : Proxy_Function_Base(build_param_types(t_func->get_param_types(), t_ti), t_func->get_arity()),
               m_type_name(std::move(t_type_name)), m_func(t_func), m_ti(new Type_Info(t_ti)), m_doti(user_type<Dynamic_Object>())
           {
             assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
@@ -119,12 +119,6 @@ namespace chaiscript
           virtual std::vector<Const_Proxy_Function> get_contained_functions() const CHAISCRIPT_OVERRIDE
           {
             return {m_func};
-          }
-
-
-          virtual int get_arity() const CHAISCRIPT_OVERRIDE
-          {
-            return m_func->get_arity();
           }
 
           virtual std::string annotation() const CHAISCRIPT_OVERRIDE
@@ -215,7 +209,7 @@ namespace chaiscript
           Dynamic_Object_Constructor(
               std::string t_type_name,
               const Proxy_Function &t_func)
-            : Proxy_Function_Base(build_type_list(t_func->get_param_types())),
+            : Proxy_Function_Base(build_type_list(t_func->get_param_types()), t_func->get_arity() - 1),
               m_type_name(std::move(t_type_name)), m_func(t_func)
           {
             assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
@@ -255,13 +249,6 @@ namespace chaiscript
 
             return m_func->call_match(new_vals, t_conversions);
           }    
-
-
-          virtual int get_arity() const CHAISCRIPT_OVERRIDE
-          {
-            // "this" is not considered part of the arity
-            return m_func->get_arity() - 1; 
-          }
 
           virtual std::string annotation() const CHAISCRIPT_OVERRIDE
           {

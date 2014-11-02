@@ -257,7 +257,7 @@ namespace chaiscript
     {
       public:
         Dispatch_Function(std::vector<Proxy_Function> t_funcs)
-          : Proxy_Function_Base(build_type_infos(t_funcs)),
+          : Proxy_Function_Base(build_type_infos(t_funcs), calculate_arity(t_funcs)),
             m_funcs(std::move(t_funcs))
         {
         }
@@ -280,15 +280,15 @@ namespace chaiscript
         }
 
 
-        virtual int get_arity() const CHAISCRIPT_OVERRIDE
+        static int calculate_arity(const std::vector<Proxy_Function> &t_funcs)
         {
-          if (m_funcs.empty()) {
+          if (t_funcs.empty()) {
             return -1;
           }
 
-          const auto arity = m_funcs.front()->get_arity();
+          const auto arity = t_funcs.front()->get_arity();
 
-          for (const auto &func : m_funcs)
+          for (const auto &func : t_funcs)
           {
             if (arity != func->get_arity())
             {
