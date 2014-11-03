@@ -292,6 +292,7 @@ namespace chaiscript
         virtual ~Inplace_Fun_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           std::vector<Boxed_Value> params;
+          chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
           if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
             for (const auto &child : this->children[1]->children) {
@@ -595,10 +596,10 @@ namespace chaiscript
         virtual ~Dot_Access_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           Boxed_Value retval = this->children[0]->eval(t_ss);
+          chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
           if (this->children.size() > 1) {
             for (size_t i = 2; i < this->children.size(); i+=2) {
-              chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               std::vector<Boxed_Value> params{retval};
 
               if (this->children[i]->children.size() > 1) {
