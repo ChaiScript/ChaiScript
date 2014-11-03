@@ -434,8 +434,8 @@ namespace chaiscript
     class Proxy_Function_Impl_Base : public Proxy_Function_Base
     {
       public:
-        Proxy_Function_Impl_Base(std::vector<Type_Info> t_types)
-          : Proxy_Function_Base(std::move(t_types), static_cast<int>(t_types.size()) - 1)
+        Proxy_Function_Impl_Base(const std::vector<Type_Info> &t_types)
+          : Proxy_Function_Base(t_types, static_cast<int>(t_types.size()) - 1)
         {
         }
 
