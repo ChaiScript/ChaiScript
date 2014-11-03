@@ -354,7 +354,11 @@ namespace chaiscript
 
       struct Conversion_Saves
       {
-        bool enabled = false;
+        Conversion_Saves()
+          : enabled(false)
+        {}
+
+        bool enabled;
         std::vector<Boxed_Value> saves;
       };
 
