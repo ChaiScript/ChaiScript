@@ -67,6 +67,7 @@ namespace chaiscript
         Data &operator=(Data &&rhs) = default;
 #endif
 
+
         Type_Info m_type_info;
         chaiscript::detail::Any m_obj;
         void *m_data_ptr;
@@ -121,6 +122,13 @@ namespace chaiscript
           {
             return get(std::ref(*t));
           }
+
+        template<typename T>
+          static std::shared_ptr<Data> get(const T *t)
+          {
+            return get(std::cref(*t));
+          }
+
 
         template<typename T>
           static std::shared_ptr<Data> get(std::reference_wrapper<T> obj)

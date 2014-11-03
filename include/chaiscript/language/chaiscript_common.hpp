@@ -549,6 +549,11 @@ namespace chaiscript
           m_de.save_function_params(t_params);
         }
 
+        void save_params(std::initializer_list<Boxed_Value> t_params)
+        {
+          m_de.save_function_params(std::move(t_params));
+        }
+
 
         private:
 

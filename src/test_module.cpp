@@ -167,6 +167,7 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::fun(&Type2::get_val), "get_val");
   m->add(chaiscript::fun(&Type2::get_str), "get_str");
   m->add(chaiscript::type_conversion<const char *, std::string>());
+  m->add(chaiscript::constructor<Type2 (const TestBaseType &)>(), "Type2");
 
   return m;
 }

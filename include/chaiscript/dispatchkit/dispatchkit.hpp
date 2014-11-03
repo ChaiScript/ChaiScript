@@ -915,6 +915,22 @@ namespace chaiscript
           m_state = t_state;
         }
 
+        void save_function_params(std::initializer_list<Boxed_Value> t_params)
+        {
+          Stack_Holder &s = *m_stack_holder;
+          s.call_params.insert(s.call_params.begin(), std::move(t_params));
+        }
+
+        void save_function_params(std::vector<Boxed_Value> &&t_params)
+        {
+          Stack_Holder &s = *m_stack_holder;
+
+          for (auto &&param : t_params)
+          {
+            s.call_params.insert(s.call_params.begin(), std::move(param));
+          }
+        }
+
         void save_function_params(const std::vector<Boxed_Value> &t_params)
         {
           Stack_Holder &s = *m_stack_holder;
@@ -923,7 +939,15 @@ namespace chaiscript
 
         void new_function_call()
         {
+          Stack_Holder &s = *m_stack_holder;
+          if (s.call_depth == 0)
+          {
+            m_conversions.enable_conversion_saves(true);
+          }
+
           ++m_stack_holder->call_depth;
+
+          save_function_params(m_conversions.take_saves());
         }
 
         void pop_function_call()
@@ -938,6 +962,7 @@ namespace chaiscript
             /// \todo Critical: this needs to be smarter, memory can expand quickly
             ///       in tight loops involving function calls
             s.call_params.clear();
+            m_conversions.enable_conversion_saves(false);
           }
         }
 
