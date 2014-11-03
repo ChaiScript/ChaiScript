@@ -429,14 +429,13 @@ namespace chaiscript
       private:
         Const_Proxy_Function m_f;
         std::vector<Boxed_Value> m_args;
-        int m_arity;
     };
 
     class Proxy_Function_Impl_Base : public Proxy_Function_Base
     {
       public:
         Proxy_Function_Impl_Base(std::vector<Type_Info> t_types)
-          : Proxy_Function_Base(std::move(t_types), t_types.size() - 1)
+          : Proxy_Function_Base(std::move(t_types), static_cast<int>(t_types.size()) - 1)
         {
         }
 
@@ -708,7 +707,7 @@ namespace chaiscript
           if (arity == -1)
           {
             numdiffs = plist.size();
-          } else if (arity == plist.size()) {
+          } else if (arity == static_cast<int>(plist.size())) {
             for (size_t i = 0; i < plist.size(); ++i)
             {
               if (!func->get_param_types()[i+1].bare_equal(plist[i].get_type_info()))
