@@ -697,11 +697,11 @@ namespace chaiscript
           const std::vector<Boxed_Value> &plist, const Type_Conversions &t_conversions)
       {
 
-        std::multimap<int, const Proxy_Function_Base *> ordered_funcs;
+        std::multimap<size_t, const Proxy_Function_Base *> ordered_funcs;
 
         for (const auto &func : funcs)
         {
-          int numdiffs = 0;
+          size_t numdiffs = 0;
           const auto arity = func->get_arity();
 
           if (arity == -1)
