@@ -27,7 +27,7 @@
 #include "boxed_cast.hpp"
 #include "boxed_cast_helper.hpp"
 #include "boxed_value.hpp"
-#include "dynamic_cast_conversion.hpp"
+#include "type_conversions.hpp"
 #include "dynamic_object.hpp"
 #include "proxy_constructors.hpp"
 #include "proxy_functions.hpp"
@@ -141,7 +141,7 @@ namespace chaiscript
         return *this;
       }
 
-      Module &add(Dynamic_Cast_Conversion d)
+      Module &add(Type_Conversion d)
       {
         m_conversions.push_back(std::move(d));
         return *this;
@@ -197,7 +197,7 @@ namespace chaiscript
       std::vector<std::pair<Proxy_Function, std::string> > m_funcs;
       std::vector<std::pair<Boxed_Value, std::string> > m_globals;
       std::vector<std::string> m_evals;
-      std::vector<Dynamic_Cast_Conversion> m_conversions;
+      std::vector<Type_Conversion> m_conversions;
 
       template<typename T, typename InItr>
         static void apply(InItr begin, const InItr end, T &t) 
@@ -257,7 +257,7 @@ namespace chaiscript
     {
       public:
         Dispatch_Function(std::vector<Proxy_Function> t_funcs)
-          : Proxy_Function_Base(build_type_infos(t_funcs)),
+          : Proxy_Function_Base(build_type_infos(t_funcs), calculate_arity(t_funcs)),
             m_funcs(std::move(t_funcs))
         {
         }
@@ -280,15 +280,15 @@ namespace chaiscript
         }
 
 
-        virtual int get_arity() const CHAISCRIPT_OVERRIDE
+        static int calculate_arity(const std::vector<Proxy_Function> &t_funcs)
         {
-          if (m_funcs.empty()) {
+          if (t_funcs.empty()) {
             return -1;
           }
 
-          const auto arity = m_funcs.front()->get_arity();
+          const auto arity = t_funcs.front()->get_arity();
 
-          for (const auto &func : m_funcs)
+          for (const auto &func : t_funcs)
           {
             if (arity != func->get_arity())
             {
@@ -300,7 +300,7 @@ namespace chaiscript
           return arity;
         }
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Dynamic_Cast_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
           return std::any_of(m_funcs.cbegin(), m_funcs.cend(),
                              [&vals, &t_conversions](const Proxy_Function &f){ return f->call_match(vals, t_conversions); });
@@ -312,9 +312,9 @@ namespace chaiscript
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          return dispatch::dispatch(m_funcs.cbegin(), m_funcs.cend(), params, t_conversions);
+          return dispatch::dispatch(m_funcs, params, t_conversions);
         }
 
       private:
@@ -409,7 +409,7 @@ namespace chaiscript
           }
 
         /// Add a new conversion for upcasting to a base class
-        void add(const Dynamic_Cast_Conversion &d)
+        void add(const Type_Conversion &d)
         {
           m_conversions.add_conversion(d);
         }
@@ -768,16 +768,14 @@ namespace chaiscript
           m_state.m_reserved_words.insert(name);
         }
 
-        const Dynamic_Cast_Conversions &conversions() const
+        const Type_Conversions &conversions() const
         {
           return m_conversions;
         }
 
         Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params) const
         {
-          std::vector<Proxy_Function> functions = get_function(t_name);
-
-          return dispatch::dispatch(functions.begin(), functions.end(), params, m_conversions);
+          return dispatch::dispatch(get_function(t_name), params, m_conversions);
         }
 
         Boxed_Value call_function(const std::string &t_name) const
@@ -917,6 +915,22 @@ namespace chaiscript
           m_state = t_state;
         }
 
+        void save_function_params(std::initializer_list<Boxed_Value> t_params)
+        {
+          Stack_Holder &s = *m_stack_holder;
+          s.call_params.insert(s.call_params.begin(), std::move(t_params));
+        }
+
+        void save_function_params(std::vector<Boxed_Value> &&t_params)
+        {
+          Stack_Holder &s = *m_stack_holder;
+
+          for (auto &&param : t_params)
+          {
+            s.call_params.insert(s.call_params.begin(), std::move(param));
+          }
+        }
+
         void save_function_params(const std::vector<Boxed_Value> &t_params)
         {
           Stack_Holder &s = *m_stack_holder;
@@ -925,7 +939,15 @@ namespace chaiscript
 
         void new_function_call()
         {
+          Stack_Holder &s = *m_stack_holder;
+          if (s.call_depth == 0)
+          {
+            m_conversions.enable_conversion_saves(true);
+          }
+
           ++m_stack_holder->call_depth;
+
+          save_function_params(m_conversions.take_saves());
         }
 
         void pop_function_call()
@@ -940,6 +962,7 @@ namespace chaiscript
             /// \todo Critical: this needs to be smarter, memory can expand quickly
             ///       in tight loops involving function calls
             s.call_params.clear();
+            m_conversions.enable_conversion_saves(false);
           }
         }
 
@@ -1138,7 +1161,7 @@ namespace chaiscript
           int call_depth;
         };
 
-        Dynamic_Cast_Conversions m_conversions;
+        Type_Conversions m_conversions;
         chaiscript::detail::threading::Thread_Storage<Stack_Holder> m_stack_holder;
 
 

@@ -26,7 +26,7 @@
 #include "../dispatchkit/boxed_cast_helper.hpp"
 #include "../dispatchkit/boxed_value.hpp"
 #include "../dispatchkit/dispatchkit.hpp"
-#include "../dispatchkit/dynamic_cast_conversion.hpp"
+#include "../dispatchkit/type_conversions.hpp"
 #include "../dispatchkit/proxy_functions.hpp"
 #include "chaiscript_common.hpp"
 
@@ -352,6 +352,13 @@ namespace chaiscript
       m_engine.add(fun<Boxed_Value (const dispatch::Proxy_Function_Base *, const std::vector<Boxed_Value> &)>(std::bind(&chaiscript::dispatch::Proxy_Function_Base::operator(), std::placeholders::_1, std::placeholders::_2, std::ref(m_engine.conversions()))), "call");
 
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type_name, std::ref(m_engine)), "name");
+
+      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type, std::ref(m_engine)), "type");
+      m_engine.add(fun<void (const Type_Info &, const Type_Info &, const std::function<Boxed_Value (const Boxed_Value &)> &)> ( 
+            [=](const Type_Info &t_from, const Type_Info &t_to, const std::function<Boxed_Value (const Boxed_Value &)> &t_func) {
+              m_engine.add(chaiscript::type_conversion(t_from, t_to, t_func));
+            }
+          ), "add_type_conversion");
 
 
       typedef std::string (ChaiScript::*load_mod_1)(const std::string&);
@@ -679,7 +686,7 @@ namespace chaiscript
     /// chaiscript::ChaiScript chai;
     /// chai.add(chaiscript::base_class<std::runtime_error, chaiscript::dispatch_error>());
     /// \endcode
-    ChaiScript &add(const Dynamic_Cast_Conversion &d)
+    ChaiScript &add(const Type_Conversion &d)
     {
       m_engine.add(d);
       return *this;

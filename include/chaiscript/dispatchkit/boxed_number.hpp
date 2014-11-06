@@ -19,7 +19,7 @@
 #include "type_info.hpp"
 
 namespace chaiscript {
-class Dynamic_Cast_Conversions;
+class Type_Conversions;
 }  // namespace chaiscript
 
 namespace chaiscript 
@@ -832,7 +832,7 @@ namespace chaiscript
       {
         typedef Boxed_Number Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
           return Boxed_Number(ob);
         }

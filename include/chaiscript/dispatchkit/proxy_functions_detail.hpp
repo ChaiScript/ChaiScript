@@ -20,7 +20,7 @@
 #include "type_info.hpp"
 
 namespace chaiscript {
-class Dynamic_Cast_Conversions;
+class Type_Conversions;
 namespace exception {
 class bad_boxed_cast;
 }  // namespace exception
@@ -72,7 +72,7 @@ namespace chaiscript
       template<typename Param, typename ... Rest>
         struct Try_Cast<Param, Rest...>
         {
-          static void do_try(const std::vector<Boxed_Value> &params, int generation, const Dynamic_Cast_Conversions &t_conversions)
+          static void do_try(const std::vector<Boxed_Value> &params, int generation, const Type_Conversions &t_conversions)
           {
             boxed_cast<Param>(params[generation], &t_conversions);
             Try_Cast<Rest...>::do_try(params, generation+1, t_conversions);
@@ -83,7 +83,7 @@ namespace chaiscript
       template<>
         struct Try_Cast<>
         {
-          static void do_try(const std::vector<Boxed_Value> &, int, const Dynamic_Cast_Conversions &)
+          static void do_try(const std::vector<Boxed_Value> &, int, const Type_Conversions &)
           {
           }
         };
@@ -96,7 +96,7 @@ namespace chaiscript
        */
       template<typename Ret, typename ... Params>
         bool compare_types_cast(Ret (*)(Params...),
-             const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
+             const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
        {
           try {
             Try_Cast<Params...>::do_try(params, 0, t_conversions);
@@ -113,7 +113,7 @@ namespace chaiscript
 
           template<typename ... InnerParams>
           static Ret do_call(const std::function<Ret (Params...)> &f,
-              const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions, InnerParams &&... innerparams)
+              const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions, InnerParams &&... innerparams)
           {
             return Call_Func<Ret, count - 1, Params...>::do_call(f, params, t_conversions, std::forward<InnerParams>(innerparams)..., params[sizeof...(Params) - count]);
           } 
@@ -128,7 +128,7 @@ namespace chaiscript
 #endif
           template<typename ... InnerParams>
             static Ret do_call(const std::function<Ret (Params...)> &f,
-                const std::vector<Boxed_Value> &, const Dynamic_Cast_Conversions &t_conversions, InnerParams &&... innerparams)
+                const std::vector<Boxed_Value> &, const Type_Conversions &t_conversions, InnerParams &&... innerparams)
             {
               return f(boxed_cast<Params>(std::forward<InnerParams>(innerparams), &t_conversions)...);
             }
@@ -145,7 +145,7 @@ namespace chaiscript
        */
       template<typename Ret, typename ... Params>
         Ret call_func(const std::function<Ret (Params...)> &f,
-            const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
+            const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
         {
           if (params.size() == sizeof...(Params))
           {
@@ -171,7 +171,7 @@ namespace chaiscript
       struct Do_Call
       {
         template<typename Fun>
-          static Boxed_Value go(const std::function<Fun> &fun, const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
+          static Boxed_Value go(const std::function<Fun> &fun, const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
           {
             return Handle_Return<Ret>::handle(call_func(fun, params, t_conversions));
           }
@@ -181,7 +181,7 @@ namespace chaiscript
       struct Do_Call<void>
       {
         template<typename Fun>
-          static Boxed_Value go(const std::function<Fun> &fun, const std::vector<Boxed_Value> &params, const Dynamic_Cast_Conversions &t_conversions)
+          static Boxed_Value go(const std::function<Fun> &fun, const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
           {
             call_func(fun, params, t_conversions);
             return Handle_Return<void>::handle();

@@ -266,16 +266,27 @@ namespace chaiscript
         return false;
       }
 
+
       /// Skips ChaiScript whitespace, which means space and tab, but not cr/lf
-      /// jespada: Modified SkipWS to skip optionally CR ('\n')
-      bool SkipWS(const bool skip_cr=false) {
+      /// jespada: Modified SkipWS to skip optionally CR ('\n') and/or LF+CR ("\r\n")
+      bool SkipWS(bool skip_cr=false) {
         bool retval = false;
+
         while (has_more_input()) {
-          if ( char_in_alphabet(*m_input_pos,detail::white_alphabet) || (skip_cr && (*m_input_pos == '\n'))) {
-            if(*m_input_pos == '\n') {
+          auto end_line = (*m_input_pos != 0) && ((*m_input_pos == '\n') || (*m_input_pos == '\r' && *(m_input_pos+1) == '\n'));
+
+          if ( char_in_alphabet(*m_input_pos,detail::white_alphabet) || (skip_cr && end_line)) {
+
+            if(end_line) {
               m_col = 1;
               ++m_line;
-            } else {
+
+              if(*(m_input_pos) == '\r') {
+                // discards lf
+                ++m_input_pos;
+              }
+            }
+            else {
               ++m_col;
             }
             ++m_input_pos;
@@ -284,13 +295,13 @@ namespace chaiscript
           }
           else if (SkipComment()) {
             retval = true;
-          }
-          else {
+          } else {
             break;
           }
         }
         return retval;
       }
+
 
       /// Reads a floating point value from input, without skipping initial whitespace
       bool Float_() {

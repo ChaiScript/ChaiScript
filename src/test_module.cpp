@@ -2,6 +2,8 @@
 #include <chaiscript/chaiscript.hpp>
 #include <string>
 
+
+
 class TestBaseType
 {
   public:
@@ -20,6 +22,30 @@ class TestBaseType
 
   private:
     TestBaseType &operator=(const TestBaseType &);
+};
+
+class Type2
+{
+  public:
+    Type2(TestBaseType t_bt)
+      : m_bt(std::move(t_bt)),
+        m_str("Hello World")
+    {
+    }
+
+    int get_val() const
+    {
+      return m_bt.val;
+    }
+
+    const char *get_str() const
+    {
+      return m_str.c_str();
+    }
+
+  private:
+    TestBaseType m_bt;
+    std::string m_str;
 };
 
 enum TestEnum
@@ -95,6 +121,7 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::user_type<TestBaseType>(), "TestBaseType");
   m->add(chaiscript::user_type<TestDerivedType>(), "TestDerivedType");
   m->add(chaiscript::user_type<TestMoreDerivedType>(), "TestMoreDerivedType");
+  m->add(chaiscript::user_type<Type2>(), "Type2");
 
   m->add(chaiscript::constructor<TestBaseType ()>(), "TestBaseType");
 //  m->add(chaiscript::constructor<TestBaseType (int)>(), "TestBaseType");
@@ -135,6 +162,12 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::fun(&to_int), "to_int");
   m->add(chaiscript::fun(&TestBaseType::constMe), "constMe");
 
+  m->add(chaiscript::type_conversion<TestBaseType, Type2>([](const TestBaseType &t_bt) { return Type2(t_bt); }));
+
+  m->add(chaiscript::fun(&Type2::get_val), "get_val");
+  m->add(chaiscript::fun(&Type2::get_str), "get_str");
+  m->add(chaiscript::type_conversion<const char *, std::string>());
+  m->add(chaiscript::constructor<Type2 (const TestBaseType &)>(), "Type2");
 
   return m;
 }
