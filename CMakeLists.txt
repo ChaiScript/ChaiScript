@@ -47,6 +47,27 @@ if(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     add_definitions(-fsanitize=undefined -g)
     set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=undefined")
   endif()
+
+  option(ENABLE_LTO "Enable Link Time Optimization" FALSE)
+
+  if (ENABLE_LTO)
+    add_definitions(-flto)
+    set(LINKER_FLAGS "${LINKER_FLAGS} -flto")
+  endif()
+
+  option(PROFILE_GENERATE "Generate profile data" FALSE)
+  if (PROFILE_GENERATE)
+    add_definitions(-fprofile-generate)
+    set(LINKER_FLAGS "${LINKER_FLAGS} -fprofile-generate")
+  endif()
+
+  option(PROFILE_USE "Use profile data" FALSE)
+  if (PROFILE_USE)
+    add_definitions(-fprofile-use)
+    set(LINKER_FLAGS "${LINKER_FLAGS} -fprofile-use")
+  endif()
+
+
 endif()
 
 list(APPEND CPACK_SOURCE_IGNORE_FILES "${CMAKE_CURRENT_BINARY_DIR}")
