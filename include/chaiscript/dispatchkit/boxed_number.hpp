@@ -19,7 +19,7 @@
 #include "type_info.hpp"
 
 namespace chaiscript {
-class Dynamic_Cast_Conversions;
+class Type_Conversions;
 }  // namespace chaiscript
 
 namespace chaiscript 
@@ -233,7 +233,7 @@ namespace chaiscript
       template<typename LHS, bool Float>
         static Boxed_Value oper_rhs(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
         {
-          const Type_Info &inp_ = t_rhs.get_type_info();
+          const auto &inp_ = t_rhs.get_type_info();
 
           if (inp_ == typeid(int)) {
             return Go<LHS, int, Float>::go(t_oper, t_lhs, t_rhs);
@@ -334,10 +334,10 @@ namespace chaiscript
       {
       }
 
-      Boxed_Number(const Boxed_Value &v)
-        : bv(v)
+      Boxed_Number(Boxed_Value v)
+        : bv(std::move(v))
       {
-        validate_boxed_number(v);
+        validate_boxed_number(bv);
       }
 
       template<typename T> explicit Boxed_Number(T t)
@@ -826,31 +826,25 @@ namespace chaiscript
 
   namespace detail
   {
-    /**
-     * Cast_Helper for converting from Boxed_Value to Boxed_Number
-     */
+    /// Cast_Helper for converting from Boxed_Value to Boxed_Number
     template<>
       struct Cast_Helper<Boxed_Number>
       {
         typedef Boxed_Number Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
           return Boxed_Number(ob);
         }
       };
 
-    /**
-     * Cast_Helper for converting from Boxed_Value to Boxed_Number
-     */
+    /// Cast_Helper for converting from Boxed_Value to Boxed_Number
     template<>
       struct Cast_Helper<const Boxed_Number &> : Cast_Helper<Boxed_Number>
       {
       };
       
-    /**
-     * Cast_Helper for converting from Boxed_Value to Boxed_Number
-     */
+    /// Cast_Helper for converting from Boxed_Value to Boxed_Number
     template<>
       struct Cast_Helper<const Boxed_Number> : Cast_Helper<Boxed_Number>
       {

@@ -28,7 +28,7 @@ namespace chaiscript {
 
           virtual ~bad_any_cast() CHAISCRIPT_NOEXCEPT {}
 
-          /// \brief Description of what error occured
+          /// \brief Description of what error occurred
           virtual const char * what() const CHAISCRIPT_NOEXCEPT CHAISCRIPT_OVERRIDE
           {
             return m_what.c_str();
@@ -52,6 +52,7 @@ namespace chaiscript {
           Data &operator=(const Data &) = delete;
 
           virtual ~Data() {}
+
           virtual void *data() = 0;
           const std::type_info &type() const
           {
@@ -65,7 +66,7 @@ namespace chaiscript {
         template<typename T>
           struct Data_Impl : Data
           {
-            Data_Impl(T t_type)
+            explicit Data_Impl(T t_type)
               : Data(typeid(T)),
                 m_data(std::move(t_type))
             {
@@ -104,24 +105,24 @@ namespace chaiscript {
           }
         }
 
-        template<typename ValueType> 
-        Any(const ValueType &t_value)
-          : m_data(std::unique_ptr<Data>(new Data_Impl<ValueType>(t_value)))
+#if _MSC_VER  != 1800
+        Any(Any &&) = default;
+        Any &operator=(Any &&t_any) = default;
+#endif
+
+        template<typename ValueType,
+          typename = typename std::enable_if<!std::is_same<Any, typename std::decay<ValueType>::type>::value>::type>
+        explicit Any(ValueType &&t_value)
+          : m_data(std::unique_ptr<Data>(new Data_Impl<typename std::decay<ValueType>::type>(std::forward<ValueType>(t_value))))
         {
         }
+
 
         Any & operator=(const Any &t_any)
         {
           Any copy(t_any);
           swap(copy);
           return *this; 
-        }
-
-        template<typename ValueType> 
-          Any & operator=(const ValueType &t_value)
-        {
-          m_data = std::unique_ptr<Data>(new Data_Impl<ValueType>(t_value));
-          return *this;
         }
 
         template<typename ToType>

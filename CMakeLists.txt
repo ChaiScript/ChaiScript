@@ -36,11 +36,38 @@ if(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=address")
   endif()
 
+  option(ENABLE_MEMORY_SANITIZER "Enable memory sanitizer testing in gcc/clang" FALSE)
+  if(ENABLE_MEMORY_SANITIZER)
+    add_definitions(-fsanitize=memory -g)
+    set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=memory")
+  endif()
+
   option(ENABLE_UNDEFINED_SANITIZER "Enable undefined behavior sanitizer testing in gcc/clang" FALSE)
   if(ENABLE_UNDEFINED_SANITIZER)
     add_definitions(-fsanitize=undefined -g)
     set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=undefined")
   endif()
+
+  option(ENABLE_LTO "Enable Link Time Optimization" FALSE)
+
+  if (ENABLE_LTO)
+    add_definitions(-flto)
+    set(LINKER_FLAGS "${LINKER_FLAGS} -flto")
+  endif()
+
+  option(PROFILE_GENERATE "Generate profile data" FALSE)
+  if (PROFILE_GENERATE)
+    add_definitions(-fprofile-generate)
+    set(LINKER_FLAGS "${LINKER_FLAGS} -fprofile-generate")
+  endif()
+
+  option(PROFILE_USE "Use profile data" FALSE)
+  if (PROFILE_USE)
+    add_definitions(-fprofile-use)
+    set(LINKER_FLAGS "${LINKER_FLAGS} -fprofile-use")
+  endif()
+
+
 endif()
 
 list(APPEND CPACK_SOURCE_IGNORE_FILES "${CMAKE_CURRENT_BINARY_DIR}")
@@ -54,7 +81,7 @@ set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/readme.md")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/description.txt")
 
 set(CPACK_PACKAGE_VERSION_MAJOR 5)
-set(CPACK_PACKAGE_VERSION_MINOR 4)
+set(CPACK_PACKAGE_VERSION_MINOR 5)
 set(CPACK_PACKAGE_VERSION_PATCH 0)
 
 set(CPACK_PACKAGE_EXECUTABLES "chai;ChaiScript Eval")
@@ -154,7 +181,7 @@ endif()
 include_directories(include)
 
 
-set(Chai_INCLUDES include/chaiscript/chaiscript.hpp include/chaiscript/chaiscript_threading.hpp include/chaiscript/dispatchkit/bad_boxed_cast.hpp include/chaiscript/dispatchkit/bind_first.hpp include/chaiscript/dispatchkit/bootstrap.hpp include/chaiscript/dispatchkit/bootstrap_stl.hpp include/chaiscript/dispatchkit/boxed_cast.hpp include/chaiscript/dispatchkit/boxed_cast_helper.hpp include/chaiscript/dispatchkit/boxed_number.hpp include/chaiscript/dispatchkit/boxed_value.hpp include/chaiscript/dispatchkit/dispatchkit.hpp include/chaiscript/dispatchkit/dynamic_cast_conversion.hpp include/chaiscript/dispatchkit/dynamic_object.hpp include/chaiscript/dispatchkit/exception_specification.hpp include/chaiscript/dispatchkit/function_call.hpp include/chaiscript/dispatchkit/function_call_detail.hpp include/chaiscript/dispatchkit/handle_return.hpp include/chaiscript/dispatchkit/operators.hpp include/chaiscript/dispatchkit/proxy_constructors.hpp include/chaiscript/dispatchkit/proxy_functions.hpp include/chaiscript/dispatchkit/proxy_functions_detail.hpp include/chaiscript/dispatchkit/register_function.hpp include/chaiscript/dispatchkit/type_info.hpp include/chaiscript/language/chaiscript_algebraic.hpp include/chaiscript/language/chaiscript_common.hpp include/chaiscript/language/chaiscript_engine.hpp include/chaiscript/language/chaiscript_eval.hpp include/chaiscript/language/chaiscript_parser.hpp include/chaiscript/language/chaiscript_prelude.chai include/chaiscript/language/chaiscript_prelude_docs.hpp include/chaiscript/utility/utility.hpp)
+set(Chai_INCLUDES include/chaiscript/chaiscript.hpp include/chaiscript/chaiscript_threading.hpp include/chaiscript/dispatchkit/bad_boxed_cast.hpp include/chaiscript/dispatchkit/bind_first.hpp include/chaiscript/dispatchkit/bootstrap.hpp include/chaiscript/dispatchkit/bootstrap_stl.hpp include/chaiscript/dispatchkit/boxed_cast.hpp include/chaiscript/dispatchkit/boxed_cast_helper.hpp include/chaiscript/dispatchkit/boxed_number.hpp include/chaiscript/dispatchkit/boxed_value.hpp include/chaiscript/dispatchkit/dispatchkit.hpp include/chaiscript/dispatchkit/type_conversions.hpp include/chaiscript/dispatchkit/dynamic_object.hpp include/chaiscript/dispatchkit/exception_specification.hpp include/chaiscript/dispatchkit/function_call.hpp include/chaiscript/dispatchkit/function_call_detail.hpp include/chaiscript/dispatchkit/handle_return.hpp include/chaiscript/dispatchkit/operators.hpp include/chaiscript/dispatchkit/proxy_constructors.hpp include/chaiscript/dispatchkit/proxy_functions.hpp include/chaiscript/dispatchkit/proxy_functions_detail.hpp include/chaiscript/dispatchkit/register_function.hpp include/chaiscript/dispatchkit/type_info.hpp include/chaiscript/language/chaiscript_algebraic.hpp include/chaiscript/language/chaiscript_common.hpp include/chaiscript/language/chaiscript_engine.hpp include/chaiscript/language/chaiscript_eval.hpp include/chaiscript/language/chaiscript_parser.hpp include/chaiscript/language/chaiscript_prelude.chai include/chaiscript/language/chaiscript_prelude_docs.hpp include/chaiscript/utility/utility.hpp)
 
 set_source_files_properties(${Chai_INCLUDES} PROPERTIES HEADER_FILE_ONLY TRUE)
 
@@ -203,6 +230,8 @@ if(BUILD_SAMPLES)
   target_link_libraries(example ${LIBS})
   add_executable(memory_leak_test samples/memory_leak_test.cpp)
   target_link_libraries(memory_leak_test ${LIBS})
+  add_executable(inheritance samples/inheritance.cpp)
+  target_link_libraries(inheritance ${LIBS})
 endif()
 
 

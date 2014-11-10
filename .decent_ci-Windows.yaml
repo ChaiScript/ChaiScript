@@ -1,0 +1,20 @@
+compilers:
+  - name: Visual Studio
+    version: 14
+    cmake_extra_flags: -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DCOMMIT_SHA=%COMMIT_SHA%
+    compiler_extra_flags: /ANALYZE
+  - name: Visual Studio
+    version: 14
+    architecture: Win64
+    cmake_extra_flags: -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DCOMMIT_SHA=%COMMIT_SHA%
+    compiler_extra_flags: /ANALYZE
+  - name: Visual Studio
+    version: 12
+    cmake_extra_flags: -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DCOMMIT_SHA=%COMMIT_SHA%
+    compiler_extra_flags: /ANALYZE
+  - name: Visual Studio
+    version: 12
+    architecture: Win64
+    cmake_extra_flags: -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DCOMMIT_SHA=%COMMIT_SHA%
+    compiler_extra_flags: /ANALYZE
+

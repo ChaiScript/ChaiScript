@@ -21,8 +21,29 @@ namespace chaiscript
   namespace utility
   {
 
-    /// \todo Use of this utility, and uniform initializer lists, is causing memory errors in MSVC
-    
+    /// Single step command for registering a class with ChaiScript
+    /// 
+    /// \param[in,out] t_module Model to add class to
+    /// \param[in] t_class_name Name of the class being registered
+    /// \param[in] t_constructors Vector of constructors to add
+    /// \param[in] t_funcs Vector of methods to add
+    ///
+    /// \example Adding a basic class to ChaiScript in one step
+    /// 
+    /// \code
+    /// chaiscript::utility::add_class<test>(*m,
+    ///      "test",
+    ///      { constructor<test ()>(),
+    ///        constructor<test (const test &)>() },
+    ///      { {fun(&test::function), "function"},
+    ///        {fun(&test::function2), "function2"},
+    ///        {fun(&test::function3), "function3"},
+    ///        {fun(static_cast<std::string(test::*)(double)>(&test::functionoverload)), "functionoverload" },
+    ///        {fun(static_cast<std::string(test::*)(int)>(&test::functionoverload)), "functionoverload" },
+    ///        {fun(static_cast<test & (test::*)(const test &)>(&test::operator=)), "=" }
+    ///        }
+    ///      );
+    /// 
     template<typename Class, typename ModuleType>
       void add_class(ModuleType &t_module,
           const std::string &t_class_name,
@@ -36,13 +57,11 @@ namespace chaiscript
           t_module.add(ctor, t_class_name);
         }
 
-        for(auto fun: t_funcs)
+        for(const auto &fun: t_funcs)
         {
           t_module.add(fun.first, fun.second);
         }
-        
       }
-      
   }
 }
 

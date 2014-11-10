@@ -14,79 +14,20 @@ namespace chaiscript
   namespace detail
   {
 
-    template<int>
-      struct Placeholder
-      {
-      };
-
-    template<>
-      struct Placeholder<1>
-      {
-        static decltype(std::placeholders::_1) value() { return std::placeholders::_1; }
-      };
-
-    template<>
-      struct Placeholder<2>
-      {
-        static decltype(std::placeholders::_2) value() { return std::placeholders::_2; }
-      };
-
-    template<>
-      struct Placeholder<3>
-      {
-        static decltype(std::placeholders::_3) value() { return std::placeholders::_3; }
-      };
-
-    template<>
-      struct Placeholder<4>
-      {
-        static decltype(std::placeholders::_4) value() { return std::placeholders::_4; }
-      };
-
-    template<>
-      struct Placeholder<5>
-      {
-        static decltype(std::placeholders::_5) value() { return std::placeholders::_5; }
-      };
-
-    template<>
-      struct Placeholder<6>
-      {
-        static decltype(std::placeholders::_6) value() { return std::placeholders::_6; }
-      };
-
-    template<>
-      struct Placeholder<7>
-      {
-        static decltype(std::placeholders::_7) value() { return std::placeholders::_7; }
-      };
-
-    template<>
-      struct Placeholder<8>
-      {
-        static decltype(std::placeholders::_8) value() { return std::placeholders::_8; }
-      };
-
-    template<>
-      struct Placeholder<9>
-      {
-        static decltype(std::placeholders::_9) value() { return std::placeholders::_9; }
-      };
-
-    template<>
-      struct Placeholder<10>
-      {
-        static decltype(std::placeholders::_10) value() { return std::placeholders::_10; }
-      };
-
+    struct Placeholder
+    {
+      static std::tuple<decltype(std::placeholders::_1),decltype(std::placeholders::_2),decltype(std::placeholders::_3),decltype(std::placeholders::_4),decltype(std::placeholders::_5),decltype(std::placeholders::_6),decltype(std::placeholders::_7),decltype(std::placeholders::_8),decltype(std::placeholders::_9),decltype(std::placeholders::_10)> placeholder() {
+        return std::tuple<decltype(std::placeholders::_1),decltype(std::placeholders::_2),decltype(std::placeholders::_3),decltype(std::placeholders::_4),decltype(std::placeholders::_5),decltype(std::placeholders::_6),decltype(std::placeholders::_7),decltype(std::placeholders::_8),decltype(std::placeholders::_9),decltype(std::placeholders::_10)>(std::placeholders::_1,std::placeholders::_2,std::placeholders::_3,std::placeholders::_4,std::placeholders::_5,std::placeholders::_6,std::placeholders::_7,std::placeholders::_8,std::placeholders::_9,std::placeholders::_10);
+      }
+    };
 
     template<int count, int maxcount, typename Sig>
       struct Bind_First
       {
         template<typename F, typename ... InnerParams>
-          static std::function<Sig> bind(F f, InnerParams ... innerparams)
+          static std::function<Sig> bind(F&& f, InnerParams ... innerparams)
           {
-            return Bind_First<count - 1, maxcount, Sig>::bind(f, innerparams..., Placeholder<maxcount - count + 1>::value());
+            return Bind_First<count - 1, maxcount, Sig>::bind(std::forward<F>(f), innerparams..., std::get<maxcount - count>(Placeholder::placeholder()));
           } 
       };
 
@@ -94,37 +35,42 @@ namespace chaiscript
       struct Bind_First<0, maxcount, Sig>
       {
         template<typename F, typename ... InnerParams>
-          static std::function<Sig> bind(F f, InnerParams ... innerparams)
+          static std::function<Sig> bind(F&& f, InnerParams ... innerparams)
           {
-            return std::bind(f, innerparams...);
+    return std::bind(std::forward<F>(f), innerparams...);
           }
       };
 
 
     template<typename O, typename Ret, typename P1, typename ... Param>
-      std::function<Ret (Param...)> bind_first(Ret (*f)(P1, Param...), O o)
+      std::function<Ret (Param...)> bind_first(Ret (*f)(P1, Param...), O&& o)
       {
-        return Bind_First<sizeof...(Param), sizeof...(Param), Ret (Param...)>::bind(f, o);
+        return Bind_First<sizeof...(Param), sizeof...(Param), Ret (Param...)>::bind(f, std::forward<O>(o));
       }
 
     template<typename O, typename Ret, typename Class, typename ... Param>
-      std::function<Ret (Param...)> bind_first(Ret (Class::*f)(Param...), O o)
+      std::function<Ret (Param...)> bind_first(Ret (Class::*f)(Param...), O&& o)
       {
-        return Bind_First<sizeof...(Param), sizeof...(Param), Ret (Param...)>::bind(f, o);
+        return Bind_First<sizeof...(Param), sizeof...(Param), Ret (Param...)>::bind(f, std::forward<O>(o));
       }
 
     template<typename O, typename Ret, typename Class, typename ... Param>
-      std::function<Ret (Param...)> bind_first(Ret (Class::*f)(Param...) const, O o)
+      std::function<Ret (Param...)> bind_first(Ret (Class::*f)(Param...) const, O&& o)
       {
-        return Bind_First<sizeof...(Param), sizeof...(Param), Ret (Param...)>::bind(f, o);
+        return Bind_First<sizeof...(Param), sizeof...(Param), Ret (Param...)>::bind(f, std::forward<O>(o));
       }
 
     template<typename O, typename Ret, typename P1, typename ... Param>
-      std::function<Ret (Param...)> bind_first(const std::function<Ret (P1, Param...)> &f, O o)
+      std::function<Ret (Param...)> bind_first(const std::function<Ret (P1, Param...)> &f, O&& o)
       {
-        return Bind_First<sizeof...(Param), sizeof...(Param), Ret (Param...)>::bind(f, o);
+        return Bind_First<sizeof...(Param), sizeof...(Param), Ret (Param...)>::bind(f, std::forward<O>(o));
       }
 
+    template<typename O, typename Ret, typename P1, typename ... Param>
+      std::function<Ret (Param...)> bind_first(std::function<Ret (P1, Param...)> &&f, O&& o)
+      {
+        return Bind_First<sizeof...(Param), sizeof...(Param), Ret (Param...)>::bind(std::move(f), std::forward<O>(o));
+      }
 
   }
 }

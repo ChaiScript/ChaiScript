@@ -1,0 +1,13 @@
+load_module("test_module")
+
+auto o := null_factory();
+
+try {
+  o.func();
+} catch (e) {
+  exit(0);
+}
+
+assert_true(false);
+
+

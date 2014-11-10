@@ -14,11 +14,11 @@
 #include "bad_boxed_cast.hpp"
 #include "boxed_cast_helper.hpp"
 #include "boxed_value.hpp"
-#include "dynamic_cast_conversion.hpp"
+#include "type_conversions.hpp"
 #include "type_info.hpp"
 
 namespace chaiscript {
-class Dynamic_Cast_Conversions;
+class Type_Conversions;
 namespace detail {
 namespace exception {
 class bad_any_cast;
@@ -72,7 +72,7 @@ namespace chaiscript
   /// assert(i == 5);
   /// \endcode
   template<typename Type>
-  typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv, const Dynamic_Cast_Conversions *t_conversions = nullptr)
+  typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv, const Type_Conversions *t_conversions = nullptr)
   {
     try {
       return detail::Cast_Helper<Type>::cast(bv, t_conversions);
@@ -86,18 +86,18 @@ namespace chaiscript
 #pragma warning(disable : 4127)
 #endif
 
-      if (std::is_polymorphic<typename detail::Stripped_Type<Type>::type>::value && t_conversions)
+      if (t_conversions && t_conversions->convertable_type<Type>())
       {
         try {
           // std::cout << "trying an up conversion " << typeid(Type).name() << std::endl;
           // We will not catch any bad_boxed_dynamic_cast that is thrown, let the user get it
           // either way, we are not responsible if it doesn't work
-          return detail::Cast_Helper<Type>::cast(t_conversions->boxed_dynamic_cast<Type>(bv), t_conversions);
+          return detail::Cast_Helper<Type>::cast(t_conversions->boxed_type_conversion<Type>(bv), t_conversions);
         } catch (...) {
           try {
           //  std::cout << "trying a down conversion " << typeid(Type).name() << std::endl;
             // try going the other way - down the inheritance graph
-            return detail::Cast_Helper<Type>::cast(t_conversions->boxed_dynamic_down_cast<Type>(bv), t_conversions);
+            return detail::Cast_Helper<Type>::cast(t_conversions->boxed_type_down_conversion<Type>(bv), t_conversions);
           } catch (const chaiscript::detail::exception::bad_any_cast &) {
             throw exception::bad_boxed_cast(bv.get_type_info(), typeid(Type));
           }

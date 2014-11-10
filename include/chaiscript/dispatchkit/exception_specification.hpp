@@ -23,6 +23,7 @@ namespace chaiscript
 {
   namespace detail
   {
+    /// \todo make this a variadic template
     struct Exception_Handler_Base
     {
       virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) = 0;

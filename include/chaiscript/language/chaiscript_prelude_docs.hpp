@@ -112,7 +112,7 @@ class Map
 };
 
 
-/// \brief A concept implemented by string, Vector and Map. It is convertable to Range, default constructable and back_insertable
+/// \brief A concept implemented by string, Vector and Map. It is convertible to Range, default constructable and back_insertable
 class Container
 {
   public:
@@ -153,10 +153,10 @@ void print(Object o);
 
 /// \brief ChaiScript representation of std::string. It is an std::string but only some member are exposed to ChaiScript.
 /// 
-/// Because the ChaiScript string object is an std::string, it is directly convertable to and from std::string
+/// Because the ChaiScript string object is an std::string, it is directly convertible to and from std::string
 /// using the chaiscript::boxed_cast and chaiscript::var functions.
 ///
-/// With the exception of string::trim, string::rtrim, string::ltrim, all members are direct passthroughs to the
+/// With the exception of string::trim, string::rtrim, string::ltrim, all members are direct pass-throughs to the
 /// std::string of the same name. 
 ///
 /// \note Object and function notations are equivalent in ChaiScript. This means that
@@ -519,7 +519,7 @@ class Function
     /// \brief Returns a vector of Type_Info objects that represent the param types for this function.
     ///        The first value in the list is the return type.
     /// 
-    /// If this function is a conglomeration of several functions (get_contained_values().size() > 0)
+    /// If this function is a conglomerate of several functions (get_contained_values().size() > 0)
     /// then the function returns as many Type_Info objects as it can. If the functions contained all have
     /// the same arity, then it represents the arity. If they have different arities, it returns only
     /// one value - the return type. 
@@ -534,7 +534,7 @@ class Function
     /// \endcode
     Vector get_param_types() const;
 
-    /// \brief Returns true if the function has a guard to it. Always returns falls for a conglomerate function
+    /// \brief Returns true if the function has a guard to it. Always returns false for a conglomerate function
     bool has_guard() const;
 
     /// \brief Calls the function with the given set of parameters and returns the value;

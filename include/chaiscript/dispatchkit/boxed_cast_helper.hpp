@@ -17,37 +17,32 @@
 
 namespace chaiscript 
 {
-  class Dynamic_Cast_Conversions;
+  class Type_Conversions;
 
   namespace detail
   {
     // Cast_Helper_Inner helper classes
 
-    /**
-     * Generic Cast_Helper_Inner, for casting to any type
-     */
+    template<typename T>
+      T* throw_if_null(T *t)
+      {
+        if (t) return t;
+        throw std::runtime_error("Attempted to dereference null Boxed_Value");
+      }
+
+    /// Generic Cast_Helper_Inner, for casting to any type
     template<typename Result>
       struct Cast_Helper_Inner
       {
         typedef typename std::reference_wrapper<typename std::add_const<Result>::type > Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
-          if (ob.is_ref())
+          if (ob.get_type_info().bare_equal_type_info(typeid(Result)))
           {
-            if (!ob.get_type_info().is_const())
-            {
-              return std::cref((ob.get().cast<std::reference_wrapper<Result> >()).get());
-            } else {
-              return ob.get().cast<std::reference_wrapper<const Result> >();
-            }
+            return *(static_cast<const Result *>(throw_if_null(ob.get_const_ptr())));
           } else {
-            if (!ob.get_type_info().is_const())
-            {
-              return std::cref(*(ob.get().cast<std::shared_ptr<Result> >()));   
-            } else {
-              return std::cref(*(ob.get().cast<std::shared_ptr<const Result> >()));   
-            }
+            throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -57,23 +52,18 @@ namespace chaiscript
       {
       };
 
-    /**
-     * Cast_Helper_Inner for casting to a const & type
-     */
+    /// Cast_Helper_Inner for casting to a const & type
     template<typename Result>
       struct Cast_Helper_Inner<const Result &> : Cast_Helper_Inner<Result>
       {
       };
 
-    /**
-     * Cast_Helper_Inner for casting to a const * type
-     */
+    /// Cast_Helper_Inner for casting to a const * type
     template<typename Result>
       struct Cast_Helper_Inner<const Result *>
       {
         typedef const Result * Result_Type;
-
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
           if (ob.is_ref())
           {
@@ -94,15 +84,12 @@ namespace chaiscript
         }
       };
 
-    /**
-     * Cast_Helper_Inner for casting to a * type
-     */
+    /// Cast_Helper_Inner for casting to a * type
     template<typename Result>
       struct Cast_Helper_Inner<Result *>
       {
         typedef Result * Result_Type;
-
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
           if (ob.is_ref())
           {
@@ -113,49 +100,43 @@ namespace chaiscript
         }
       };
 
-    /**
-     * Cast_Helper_Inner for casting to a & type
-     */
+
+    /// Cast_Helper_Inner for casting to a & type
     template<typename Result>
       struct Cast_Helper_Inner<Result &>
       {
         typedef Result& Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
-          if (ob.is_ref())
+          if (!ob.get_type_info().is_const() && ob.get_type_info().bare_equal_type_info(typeid(Result)))
           {
-            return ob.get().cast<std::reference_wrapper<Result> >();
+            return *(static_cast<Result *>(throw_if_null(ob.get_ptr())));
           } else {
-            Result &r = *(ob.get().cast<std::shared_ptr<Result> >());
-            return r;
+            throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
 
-    /**
-     * Cast_Helper_Inner for casting to a std::shared_ptr<> type
-     */
+    /// Cast_Helper_Inner for casting to a std::shared_ptr<> type
     template<typename Result>
       struct Cast_Helper_Inner<typename std::shared_ptr<Result> >
       {
         typedef typename std::shared_ptr<Result> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
           return ob.get().cast<std::shared_ptr<Result> >();
         }
       };
 
-    /**
-     * Cast_Helper_Inner for casting to a std::shared_ptr<const> type
-     */
+    /// Cast_Helper_Inner for casting to a std::shared_ptr<const> type
     template<typename Result>
       struct Cast_Helper_Inner<typename std::shared_ptr<const Result> >
       {
         typedef typename std::shared_ptr<const Result> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
           if (!ob.get_type_info().is_const())
           {
@@ -166,9 +147,7 @@ namespace chaiscript
         }
       };
 
-    /**
-     * Cast_Helper_Inner for casting to a const std::shared_ptr<> & type
-     */
+    /// Cast_Helper_Inner for casting to a const std::shared_ptr<> & type
     template<typename Result>
       struct Cast_Helper_Inner<const std::shared_ptr<Result> > : Cast_Helper_Inner<std::shared_ptr<Result> >
       {
@@ -180,9 +159,7 @@ namespace chaiscript
       };
 
 
-    /**
-     * Cast_Helper_Inner for casting to a const std::shared_ptr<const> & type
-     */
+    /// Cast_Helper_Inner for casting to a const std::shared_ptr<const> & type
     template<typename Result>
       struct Cast_Helper_Inner<const std::shared_ptr<const Result> > : Cast_Helper_Inner<std::shared_ptr<const Result> >
       {
@@ -195,38 +172,32 @@ namespace chaiscript
 
 
 
-    /**
-     * Cast_Helper_Inner for casting to a Boxed_Value type
-     */
+    /// Cast_Helper_Inner for casting to a Boxed_Value type
     template<>
       struct Cast_Helper_Inner<Boxed_Value>
       {
         typedef const Boxed_Value & Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
           return ob;
         }
       };
 
-    /**
-     * Cast_Helper_Inner for casting to a Boxed_Value & type
-     */
+    /// Cast_Helper_Inner for casting to a Boxed_Value & type
     template<>
       struct Cast_Helper_Inner<Boxed_Value &>
       {
         typedef Boxed_Value& Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
           return const_cast<Boxed_Value &>(ob);
         }
       };
 
 
-    /**
-     * Cast_Helper_Inner for casting to a const Boxed_Value & type
-     */
+    /// Cast_Helper_Inner for casting to a const Boxed_Value & type
     template<>
       struct Cast_Helper_Inner<const Boxed_Value> : Cast_Helper_Inner<Boxed_Value>
       {
@@ -238,9 +209,7 @@ namespace chaiscript
       };
 
 
-    /**
-     * Cast_Helper_Inner for casting to a std::reference_wrapper type
-     */
+    /// Cast_Helper_Inner for casting to a std::reference_wrapper type
     template<typename Result>
       struct Cast_Helper_Inner<std::reference_wrapper<Result> > : Cast_Helper_Inner<Result &>
       {
@@ -271,15 +240,13 @@ namespace chaiscript
       {
       };
 
-    /**
-     * The exposed Cast_Helper object that by default just calls the Cast_Helper_Inner
-     */
+    /// The exposed Cast_Helper object that by default just calls the Cast_Helper_Inner
     template<typename T>
       struct Cast_Helper
       {
         typedef typename Cast_Helper_Inner<T>::Result_Type Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Dynamic_Cast_Conversions *t_conversions)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *t_conversions)
         {
           return Cast_Helper_Inner<T>::cast(ob, t_conversions);
         }

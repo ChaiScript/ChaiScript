@@ -69,6 +69,7 @@ namespace chaiscript
 
   /// \brief Typedef for pointers to AST_Node objects. Used in building of the AST_Node tree
   typedef std::shared_ptr<AST_Node> AST_NodePtr;
+  typedef std::shared_ptr<const AST_Node> AST_NodePtr_Const;
 
 
   /// \brief Classes which may be thrown during error cases when ChaiScript is executing.
@@ -82,7 +83,7 @@ namespace chaiscript
       File_Position end_position;
       std::string filename;
       std::string detail;
-      std::vector<AST_NodePtr> call_stack;
+      std::vector<AST_NodePtr_Const> call_stack;
 
       eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname,
           const std::vector<Boxed_Value> &t_parameters, const std::vector<chaiscript::Const_Proxy_Function> &t_functions,
@@ -425,7 +426,7 @@ namespace chaiscript
 
 
       /// Prints the contents of an AST node, including its children, recursively
-      std::string to_string(const std::string &t_prepend = "") {
+      std::string to_string(const std::string &t_prepend = "") const {
         std::ostringstream oss;
 
         oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
@@ -437,7 +438,7 @@ namespace chaiscript
         return oss.str();
       }
 
-      Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_e) 
+      Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_e) const
       {
         try {
           return eval_internal(t_e);
@@ -466,7 +467,7 @@ namespace chaiscript
 
       virtual ~AST_Node() {}
 
-      virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &)
+      virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const
       {
         throw std::runtime_error("Undispatched ast_node (internal error)");
       }
@@ -546,6 +547,11 @@ namespace chaiscript
         void save_params(const std::vector<Boxed_Value> &t_params)
         {
           m_de.save_function_params(t_params);
+        }
+
+        void save_params(std::initializer_list<Boxed_Value> t_params)
+        {
+          m_de.save_function_params(std::move(t_params));
         }
 
 

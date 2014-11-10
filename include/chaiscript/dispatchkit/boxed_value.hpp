@@ -13,6 +13,7 @@
 #include <type_traits>
 
 #include "../chaiscript_threading.hpp"
+#include "../chaiscript_defines.hpp"
 #include "any.hpp"
 #include "type_info.hpp"
 
@@ -35,10 +36,10 @@ namespace chaiscript
       struct Data
       {
         Data(const Type_Info &ti,
-            const chaiscript::detail::Any &to,
+            chaiscript::detail::Any to,
             bool tr,
             const void *t_void_ptr)
-          : m_type_info(ti), m_obj(to), m_data_ptr(ti.is_const()?nullptr:const_cast<void *>(t_void_ptr)), m_const_data_ptr(t_void_ptr),
+          : m_type_info(ti), m_obj(std::move(to)), m_data_ptr(ti.is_const()?nullptr:const_cast<void *>(t_void_ptr)), m_const_data_ptr(t_void_ptr),
             m_is_ref(tr)
         {
         }
@@ -61,9 +62,11 @@ namespace chaiscript
 
         Data(const Data &) = delete;
 
-        ~Data()
-        {
-        }
+#if !defined(__APPLE__) && (!defined(_MSC_VER) || _MSC_VER != 1800)
+        Data(Data &&) = default;
+        Data &operator=(Data &&rhs) = default;
+#endif
+
 
         Type_Info m_type_info;
         chaiscript::detail::Any m_obj;
@@ -103,31 +106,52 @@ namespace chaiscript
           }
 
         template<typename T>
+          static std::shared_ptr<Data> get(std::shared_ptr<T> &&obj)
+          {
+            auto ptr = obj.get();
+            return std::make_shared<Data>(
+                  detail::Get_Type_Info<T>::get(), 
+                  chaiscript::detail::Any(std::move(obj)), 
+                  false,
+                  ptr
+                );
+          }
+
+        template<typename T>
           static std::shared_ptr<Data> get(T *t)
           {
             return get(std::ref(*t));
           }
 
         template<typename T>
+          static std::shared_ptr<Data> get(const T *t)
+          {
+            return get(std::cref(*t));
+          }
+
+
+        template<typename T>
           static std::shared_ptr<Data> get(std::reference_wrapper<T> obj)
           {
+            auto p = &obj.get();
             return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(),
-                  chaiscript::detail::Any(obj),
+                  chaiscript::detail::Any(std::move(obj)),
                   true,
-                  &obj.get()
+                  p
                 );
           }
 
         template<typename T>
-          static std::shared_ptr<Data> get(const T& t)
+          static std::shared_ptr<Data> get(T t)
           {
-            auto p = std::make_shared<T>(t);
+            auto p = std::make_shared<T>(std::move(t));
+            auto ptr = p.get();
             return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(), 
-                  chaiscript::detail::Any(p), 
+                  chaiscript::detail::Any(std::move(p)),
                   false,
-                  p.get()
+                  ptr
                 );
           }
 
@@ -145,17 +169,12 @@ namespace chaiscript
 
     public:
       /// Basic Boxed_Value constructor
-      template<typename T>
-        explicit Boxed_Value(T t)
-        : m_data(Object_Data::get(t))
+        template<typename T,
+          typename = typename std::enable_if<!std::is_same<Boxed_Value, typename std::decay<T>::type>::value>::type>
+        explicit Boxed_Value(T &&t)
+          : m_data(Object_Data::get(std::forward<T>(t)))
         {
         }
-
-      /// Copy constructor - each copy shares the same data pointer
-      Boxed_Value(const Boxed_Value &t_so)
-        : m_data(t_so.m_data)
-      {
-      }
 
       /// Unknown-type constructor
       Boxed_Value()
@@ -163,9 +182,13 @@ namespace chaiscript
       {
       }
 
-      ~Boxed_Value()
-      {
-      }
+#if !defined(_MSC_VER) || _MSC_VER != 1800
+      Boxed_Value(Boxed_Value&&) = default;
+      Boxed_Value& operator=(Boxed_Value&&) = default;
+#endif
+
+      Boxed_Value(const Boxed_Value&) = default;
+      Boxed_Value& operator=(const Boxed_Value&) = default;
 
       void swap(Boxed_Value &rhs)
       {
@@ -180,61 +203,53 @@ namespace chaiscript
         return *this;
       }
 
-      /// shared data assignment, same as copy construction
-      Boxed_Value &operator=(const Boxed_Value &rhs)
-      {
-        Boxed_Value temp(rhs);
-        swap(temp);
-        return *this;
-      }
-
-      const Type_Info &get_type_info() const
+      const Type_Info &get_type_info() const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_type_info;
       }
 
       /// return true if the object is uninitialized
-      bool is_undef() const
+      bool is_undef() const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_type_info.is_undef();
       }
 
-      bool is_const() const
+      bool is_const() const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_type_info.is_const();
       }
 
-      bool is_type(const Type_Info &ti) const
+      bool is_type(const Type_Info &ti) const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_type_info.bare_equal(ti);
       }
 
-      bool is_null() const
+      bool is_null() const CHAISCRIPT_NOEXCEPT
       {
         return (m_data->m_data_ptr == nullptr && m_data->m_const_data_ptr == nullptr);
       }
 
-      const chaiscript::detail::Any & get() const
+      const chaiscript::detail::Any & get() const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_obj;
       }
 
-      bool is_ref() const
+      bool is_ref() const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_is_ref;
       }
 
-      bool is_pointer() const
+      bool is_pointer() const CHAISCRIPT_NOEXCEPT
       {
         return !is_ref();
       }
 
-      void *get_ptr() const
+      void *get_ptr() const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_data_ptr;
       }
 
-      const void *get_const_ptr() const
+      const void *get_const_ptr() const CHAISCRIPT_NOEXCEPT
       {
         return m_data->m_const_data_ptr;
       }
@@ -260,7 +275,7 @@ namespace chaiscript
 
 
       /// \returns true if the two Boxed_Values share the same internal type
-      static bool type_match(Boxed_Value l, Boxed_Value r)
+      static bool type_match(const Boxed_Value &l, const Boxed_Value &r) CHAISCRIPT_NOEXCEPT
       {
         return l.get_type_info() == r.get_type_info();
       }
@@ -297,7 +312,7 @@ namespace chaiscript
     template<typename T>
       Boxed_Value const_var_impl(const T &t)
       {
-        return Boxed_Value(std::shared_ptr<typename std::add_const<T>::type >(new T(t)));
+        return Boxed_Value(std::make_shared<typename std::add_const<T>::type >(t));
       }
 
     /// \brief Takes a pointer to a value, adds const to the pointed to type and returns an immutable Boxed_Value.

@@ -24,7 +24,7 @@
 #include "boxed_number.hpp"
 #include "boxed_value.hpp"
 #include "dispatchkit.hpp"
-#include "dynamic_cast_conversion.hpp"
+#include "type_conversions.hpp"
 #include "dynamic_object.hpp"
 #include "operators.hpp"
 #include "proxy_constructors.hpp"
@@ -46,13 +46,9 @@ namespace chaiscript
       /// \param[in] v Boxed_Number to copy into the new object
       /// \returns The newly created object.
       template<typename P1>
-      std::shared_ptr<P1> construct_pod(Boxed_Number v)
+      std::shared_ptr<P1> construct_pod(const Boxed_Number &v)
       {
-        std::shared_ptr<P1> p(new P1());
-        Boxed_Value bv(p);
-        Boxed_Number nb(bv);
-        nb = v;
-        return p;
+        return std::make_shared<P1>(v.get_as<P1>());
       }
     }
 
@@ -113,9 +109,7 @@ namespace chaiscript
     }
 
 
-    /**
-     * to_string function for internal use. Uses ostream operator<<
-     */
+    /// to_string function for internal use. Uses ostream operator<<
     template<typename Input>
     std::string to_string(Input i)
     {
@@ -124,10 +118,8 @@ namespace chaiscript
       return ss.str();
     }
 
-    /**
-     * Internal function for converting from a string to a value
-     * uses ostream operator >> to perform the conversion
-     */
+    /// Internal function for converting from a string to a value
+    /// uses ostream operator >> to perform the conversion
     template<typename Input>
     Input parse_string(const std::string &i)
     {
@@ -136,12 +128,10 @@ namespace chaiscript
       ss >> t;
       return t;
     }
-      
-            
-    /**
-    * Add all common functions for a POD type. All operators, and
-    * common conversions
-    */
+
+
+    /// Add all common functions for a POD type. All operators, and
+    /// common conversions
     template<typename T>
     ModulePtr bootstrap_pod_type(const std::string &name, ModulePtr m = ModulePtr(new Module()))
     {
@@ -155,22 +145,18 @@ namespace chaiscript
     }
 
 
-    /**
-    * "clone" function for a shared_ptr type. This is used in the case
-    * where you do not want to make a deep copy of an object during cloning
-    * but want to instead maintain the shared_ptr. It is needed internally
-    * for handling of Proxy_Function object (that is,
-    * function variables.
-    */
+    /// "clone" function for a shared_ptr type. This is used in the case
+    /// where you do not want to make a deep copy of an object during cloning
+    /// but want to instead maintain the shared_ptr. It is needed internally
+    /// for handling of Proxy_Function object (that is,
+    /// function variables.
     template<typename Type>
     std::shared_ptr<Type> shared_ptr_clone(const std::shared_ptr<Type> &p)
     {
       return p;
     }
 
-    /**
-     * Specific version of shared_ptr_clone just for Proxy_Functions
-     */
+    /// Specific version of shared_ptr_clone just for Proxy_Functions
     template<typename Type>
     std::shared_ptr<typename std::remove_const<Type>::type> 
         shared_ptr_unconst_clone(const std::shared_ptr<typename std::add_const<Type>::type> &p)
@@ -180,11 +166,9 @@ namespace chaiscript
 
 
 
-    /**
-    * Assignment function for shared_ptr objects, does not perform a copy of the
-    * object pointed to, instead maintains the shared_ptr concept.
-    * Similar to shared_ptr_clone. Used for Proxy_Function.
-    */
+    /// Assignment function for shared_ptr objects, does not perform a copy of the
+    /// object pointed to, instead maintains the shared_ptr concept.
+    /// Similar to shared_ptr_clone. Used for Proxy_Function.
     template<typename Type>
     Boxed_Value ptr_assign(Boxed_Value lhs, const std::shared_ptr<Type> &rhs)
     {
@@ -198,10 +182,8 @@ namespace chaiscript
       }
     }
 
-    /**
-    * Class consisting of only static functions. All default bootstrapping occurs
-    * from this class.
-    */
+    /// Class consisting of only static functions. All default bootstrapping occurs
+    /// from this class.
     class Bootstrap
     {
     private:
@@ -229,9 +211,7 @@ namespace chaiscript
       }
 
 
-      /**
-      * Add all arithmetic operators for PODs
-      */
+      /// Add all arithmetic operators for PODs
       static void opers_arithmetic_pod(ModulePtr m = ModulePtr(new Module()))
       {
         m->add(fun(&Boxed_Number::equals), "==");
@@ -271,11 +251,8 @@ namespace chaiscript
 
      }
 
-      /**
-      * Create a bound function object. The first param is the function to bind
-      * the remaining parameters are the args to bind into the
-      * result
-      */
+      /// Create a bound function object. The first param is the function to bind
+      /// the remaining parameters are the args to bind into the result
       static Boxed_Value bind_function(const std::vector<Boxed_Value> &params)
       {
         if (params.size() < 2)
@@ -285,7 +262,7 @@ namespace chaiscript
 
         Const_Proxy_Function f = boxed_cast<Const_Proxy_Function>(params[0]);
 
-        return Boxed_Value(Const_Proxy_Function(new dispatch::Bound_Function(f,
+        return Boxed_Value(Const_Proxy_Function(std::make_shared<dispatch::Bound_Function>(f,
           std::vector<Boxed_Value>(params.begin() + 1, params.end()))));
       }
 
@@ -330,9 +307,7 @@ namespace chaiscript
         return e.what();
       }
 
-      /**
-       * Boolean specialization of internal to_string function 
-       */
+      /// Boolean specialization of internal to_string function
       static std::string bool_to_string(bool b)
       {
         if (b)
@@ -362,9 +337,7 @@ namespace chaiscript
 
       static bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
       {
-        std::shared_ptr<const chaiscript::dispatch::Dynamic_Proxy_Function> pf
-          = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
-        if (pf)
+        if (auto pf = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf))
         {
           if (pf->get_parse_tree())
           {
@@ -379,9 +352,7 @@ namespace chaiscript
 
       static chaiscript::AST_NodePtr get_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
       {
-        std::shared_ptr<const chaiscript::dispatch::Dynamic_Proxy_Function> pf 
-          = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
-        if (pf)
+        if (auto pf = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf))
         {
           if (pf->get_parse_tree())
           {
@@ -504,8 +475,7 @@ namespace chaiscript
         m->add(fun(&print), "print_string");
         m->add(fun(&println), "println_string");
 
-        m->add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(std::bind(&bind_function, std::placeholders::_1))), 
-          "bind");
+        m->add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(&bind_function)), "bind");
 
         m->add(fun(&shared_ptr_unconst_clone<dispatch::Proxy_Function_Base>), "clone");
         m->add(fun(&ptr_assign<std::remove_const<dispatch::Proxy_Function_Base>::type>), "=");
@@ -526,11 +496,11 @@ namespace chaiscript
             "eval_error",
             { },
             { {fun(&chaiscript::exception::eval_error::reason), "reason"},
-            {fun(std::function<std::vector<Boxed_Value> (const chaiscript::exception::eval_error &t_eval_error)>([](const chaiscript::exception::eval_error &t_eval_error) { 
+            {fun(std::function<std::vector<Boxed_Value> (const chaiscript::exception::eval_error &t_eval_error)>([](const chaiscript::exception::eval_error &t_eval_error) -> std::vector<Boxed_Value> { 
                 std::vector<Boxed_Value> retval;
                 std::transform(t_eval_error.call_stack.begin(), t_eval_error.call_stack.end(),
                                std::back_inserter(retval),
-                               &chaiscript::var<std::shared_ptr<chaiscript::AST_Node>>);
+                               &chaiscript::var<std::shared_ptr<const chaiscript::AST_Node>>);
                 return retval;
               })), "call_stack"} }
             );
@@ -554,7 +524,7 @@ namespace chaiscript
               {fun(&AST_Node::start), "start"},
               {fun(&AST_Node::end), "end"},
               {fun(&AST_Node::to_string), "to_string"},
-              {fun(std::function<std::vector<Boxed_Value> (const chaiscript::AST_Node &t_node)>([](const chaiscript::AST_Node &t_node) { 
+              {fun(std::function<std::vector<Boxed_Value> (const chaiscript::AST_Node &t_node)>([](const chaiscript::AST_Node &t_node) -> std::vector<Boxed_Value> { 
                 std::vector<Boxed_Value> retval;
                 std::transform(t_node.children.begin(), t_node.children.end(),
                                std::back_inserter(retval),
