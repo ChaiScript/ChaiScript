@@ -1,6 +1,15 @@
 Notes:
 =======
-Current Version: 5.4.0
+Current Version: 5.5.0
+
+### Changes since 5.4.0
+* 2x performance increase
+* Significant code cleanups
+* Throw exception if user attempts to call function on null object
+* Allow user defined type conversions
+* Fix object lifetime for nested function calls made at the global scope
+* Fix returning of boolean values from function calls
+
 
 ### Changes since 5.3.1
 * Decreased compile time and build size
