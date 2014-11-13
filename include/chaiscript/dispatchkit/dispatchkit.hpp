@@ -443,17 +443,13 @@ namespace chaiscript
 
 
         /// Adds a named object to the current scope
+        /// \warning This version does not check the validity of the name
+        /// it is meant for internal use only
         void add_object(const std::string &name, const Boxed_Value &obj) const
         {
-          auto &stack = get_stack_data();
-          validate_object_name(name);
-
-          auto &scope = stack.back();
-          if (scope.find(name) != scope.end())
+          if (!get_stack_data().back().insert(std::make_pair(name, obj)).second)
           {
             throw chaiscript::exception::name_conflict_error(name);
-          } else {
-            scope.insert(std::make_pair(name, obj));
           }
         }
 
