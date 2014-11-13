@@ -796,7 +796,7 @@ namespace chaiscript
         /// Dump object info to stdout
         void dump_object(const Boxed_Value &o) const
         {
-          std::cout << (o.is_const()?"const ":"") << type_name(o) << std::endl;
+          std::cout << (o.is_const()?"const ":"") << type_name(o) << '\n';
         }
 
         /// Dump type info to stdout
@@ -830,7 +830,7 @@ namespace chaiscript
             }
           }
 
-          std::cout << ") " << std::endl;
+          std::cout << ") \n";
         }
 
         /// Returns true if a call can be made that consists of the first parameter
@@ -850,7 +850,7 @@ namespace chaiscript
         /// Dump all system info to stdout
         void dump_system() const
         {
-          std::cout << "Registered Types: " << std::endl;
+          std::cout << "Registered Types: \n";
           std::vector<std::pair<std::string, Type_Info> > types = get_types();
           for (std::vector<std::pair<std::string, Type_Info> >::const_iterator itr = types.begin();
               itr != types.end();
@@ -858,20 +858,20 @@ namespace chaiscript
           {
             std::cout << itr->first << ": ";
             std::cout << itr->second.bare_name();
-            std::cout << std::endl;
+            std::cout << '\n';
           }
 
-          std::cout << std::endl;  
+          std::cout << '\n';  
           std::vector<std::pair<std::string, Proxy_Function > > funcs = get_functions();
 
-          std::cout << "Functions: " << std::endl;
+          std::cout << "Functions: \n";
           for (std::vector<std::pair<std::string, Proxy_Function > >::const_iterator itr = funcs.begin();
               itr != funcs.end();
               ++itr)
           {
             dump_function(*itr);
           }
-          std::cout << std::endl;
+          std::cout << '\n';
         }
 
         /// return true if the Boxed_Value matches the registered type by name

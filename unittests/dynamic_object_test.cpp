@@ -8,7 +8,7 @@ void assert_equal(const LHS &lhs, const RHS &rhs)
   {
     return;
   } else {
-    std::cout << "Got: " << lhs << " expected " << rhs << std::endl;
+    std::cout << "Got: " << lhs << " expected " << rhs << '\n';
     exit(EXIT_FAILURE);
   }
 }

@@ -735,11 +735,11 @@ namespace chaiscript
           {
             try {
               const auto name = elem + prefix + t_module_name + postfix;
-              // std::cerr << "trying location: " << name << std::endl;
+              // std::cerr << "trying location: " << name << '\n';
               load_module(version_stripped_name, name);
               return name;
             } catch (const chaiscript::exception::load_module_error &e) {
-              // std::cerr << "error: " << e.what() << std::endl;
+              // std::cerr << "error: " << e.what() << '\n';
               errors.push_back(e);
               // Try next set
             }

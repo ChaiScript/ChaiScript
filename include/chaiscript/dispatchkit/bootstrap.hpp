@@ -207,7 +207,7 @@ namespace chaiscript
 
       static void println(const std::string &s)
       {
-        std::cout << s << std::endl;
+        std::cout << s << '\n';
       }
 
 

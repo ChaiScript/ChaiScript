@@ -31,7 +31,7 @@ int main()
   test_type(chaiscript::user_type<const int *>(), true, true, false, false, false);
   test_type(chaiscript::Type_Info(), false, false, false, false, true);
 
-  std::cout << "Size of Type_Info " << sizeof(chaiscript::Type_Info) << std::endl;
+  std::cout << "Size of Type_Info " << sizeof(chaiscript::Type_Info) << '\n';
 
   return EXIT_SUCCESS;
 }

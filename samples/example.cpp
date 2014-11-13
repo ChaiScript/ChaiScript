@@ -13,12 +13,12 @@
 
 void log(const std::string &msg)
 {
-  std::cout << "[" << time(nullptr) << "] " << msg << std::endl;
+  std::cout << "[" << time(nullptr) << "] " << msg << '\n';
 }
 
 void log(const std::string &module, const std::string &msg)
 {
-  std::cout << "[" << time(nullptr) << "] <" << module << "> " << msg << std::endl;
+  std::cout << "[" << time(nullptr) << "] <" << module << "> " << msg << '\n';
 }
 
 void bound_log(const std::string &msg)
@@ -28,12 +28,12 @@ void bound_log(const std::string &msg)
 
 void hello_world(const chaiscript::Boxed_Value & /*o*/)
 {
-  std::cout << "Hello World" << std::endl;
+  std::cout << "Hello World\n";
 }
 
 void hello_constructor(const chaiscript::Boxed_Value & /*o*/)
 {
-  std::cout << "Hello Constructor" << std::endl;
+  std::cout << "Hello Constructor\n";
 }
 
 
@@ -62,7 +62,7 @@ struct System
 
 void take_shared_ptr(const std::shared_ptr<const std::string> &p)
 {
-  std::cout << *p << std::endl;
+  std::cout << *p << '\n';
 }
 
 int main(int /*argc*/, char * /*argv*/[]) {
@@ -122,7 +122,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   //the templated version of eval:
   int i = chai.eval<int>("5+5");
 
-  std::cout << "5+5: " << i << std::endl;
+  std::cout << "5+5: " << i << '\n';
 
   //Add a new variable
   chai("var scripti = 15");
@@ -130,9 +130,9 @@ int main(int /*argc*/, char * /*argv*/[]) {
   //We can even get a handle to the variables in the system
   int &scripti = chai.eval<int &>("scripti");
 
-  std::cout << "scripti: " << scripti << std::endl;
+  std::cout << "scripti: " << scripti << '\n';
   scripti *= 2;
-  std::cout << "scripti (updated): " << scripti << std::endl;
+  std::cout << "scripti (updated): " << scripti << '\n';
   chai("print(\"Scripti from chai: \" + to_string(scripti))");
 
   //To do: Add examples of handling Boxed_Values directly when needed

@@ -118,19 +118,19 @@ namespace chaiscript
 
         ss << what();
         if (call_stack.size() > 0) {
-          ss << "during evaluation at (" << fname(call_stack[0]) << " " << startpos(call_stack[0]) << ")" << std::endl;
-          ss << std::endl << detail << std::endl;
+          ss << "during evaluation at (" << fname(call_stack[0]) << " " << startpos(call_stack[0]) << ")\n";
+          ss << '\n' << detail << '\n';
           ss << "  " << fname(call_stack[0]) << " (" << startpos(call_stack[0]) << ") '" << pretty(call_stack[0]) << "'";
           for (size_t j = 1; j < call_stack.size(); ++j) {
             if (id(call_stack[j]) != chaiscript::AST_Node_Type::Block
                 && id(call_stack[j]) != chaiscript::AST_Node_Type::File)
             {
-              ss << std::endl;
+              ss << '\n';
               ss << "  from " << fname(call_stack[j]) << " (" << startpos(call_stack[j]) << ") '" << pretty(call_stack[j]) << "'";
             }
           }
         }
-        ss << std::endl;
+        ss << '\n';
         return ss.str();
       }
 
@@ -264,13 +264,13 @@ namespace chaiscript
         std::stringstream ss;
         if (t_functions.size() == 1)
         {
-          ss << "  Expected: " << format_types(t_functions[0], t_dot_notation, t_ss) << std::endl;
+          ss << "  Expected: " << format_types(t_functions[0], t_dot_notation, t_ss) << '\n';
         } else {
-          ss << "  " << t_functions.size() << " overloads available:" << std::endl;
+          ss << "  " << t_functions.size() << " overloads available:\n";
 
           for (const auto & t_function : t_functions)
           {
-            ss << "      " << format_types((t_function), t_dot_notation, t_ss) << std::endl;
+            ss << "      " << format_types((t_function), t_dot_notation, t_ss) << '\n';
           }
 
         }
@@ -430,7 +430,7 @@ namespace chaiscript
         std::ostringstream oss;
 
         oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
-            << this->text << " : " << this->start.line << ", " << this->start.column << std::endl;
+            << this->text << " : " << this->start.line << ", " << this->start.column << '\n';
 
         for (size_t j = 0; j < this->children.size(); ++j) {
           oss << this->children[j]->to_string(t_prepend + "  ");

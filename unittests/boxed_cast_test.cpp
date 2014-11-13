@@ -15,16 +15,16 @@ bool run_test_type_conversion(const Boxed_Value &bv, bool expectedpass)
     use(ret);
   } catch (const chaiscript::exception::bad_boxed_cast &/*e*/) {
     if (expectedpass) {
-//      std::cerr << "Failure in run_test_type_conversion: " << e.what() << std::endl;
+//      std::cerr << "Failure in run_test_type_conversion: " << e.what() << '\n';
       return false;
     } else {
       return true;
     }
   } catch (const std::exception &e) {
-    std::cerr << "Unexpected standard exception when attempting cast_conversion: " << e.what() << std::endl;
+    std::cerr << "Unexpected standard exception when attempting cast_conversion: " << e.what() << '\n';
     return false;
   } catch (...) {
-    std::cerr << "Unexpected unknown exception when attempting cast_conversion." << std::endl;
+    std::cerr << "Unexpected unknown exception when attempting cast_conversion.\n";
     return false;
   }
  
@@ -47,7 +47,7 @@ bool test_type_conversion(const Boxed_Value &bv, bool expectedpass)
       << (bv.is_const()?(std::string("const ")):(std::string())) << bv.get_type_info().name() 
       << " To: "  
       << (std::is_const<To>::value?(std::string("const ")):(std::string())) << typeid(To).name() 
-      << " test was expected to " << ((expectedpass)?(std::string("succeed")):(std::string("fail"))) << " but did not" << std::endl;
+      << " test was expected to " << ((expectedpass)?(std::string("succeed")):(std::string("fail"))) << " but did not\n";
   }
 
   return ret;
@@ -264,21 +264,21 @@ bool pointer_test(const T& default_value, const T& new_value)
 
 
     if (p != (*result) ) { 
-      std::cerr << "Pointer passed in different than one returned" << std::endl;
+      std::cerr << "Pointer passed in different than one returned\n";
       return false;
     }
 
     if (*p != *(*result) ) {
-      std::cerr << "Somehow dereferenced pointer values are not the same?" << std::endl;
+      std::cerr << "Somehow dereferenced pointer values are not the same?\n";
       return false;
     }
 
     return true;
   } catch (const exception::bad_boxed_cast &) {
-    std::cerr << "Bad boxed cast performing ** to ** test" << std::endl;
+    std::cerr << "Bad boxed cast performing ** to ** test\n";
     return false;
   } catch (...) {
-    std::cerr << "Unknown exception performing ** to ** test" << std::endl;
+    std::cerr << "Unknown exception performing ** to ** test\n";
     return false;
   }
 
