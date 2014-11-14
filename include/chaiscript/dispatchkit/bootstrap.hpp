@@ -202,12 +202,12 @@ namespace chaiscript
 
       static void print(const std::string &s)
       {
-        std::cout << s;
+        fwrite(s.c_str(), 1, s.size(), stdout);
       }
 
       static void println(const std::string &s)
       {
-        std::cout << s << '\n';
+        puts(s.c_str());
       }
 
 
