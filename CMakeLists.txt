@@ -265,6 +265,10 @@ if(BUILD_TESTING)
     target_link_libraries(object_lifetime_test ${LIBS})
     add_test(NAME Object_Lifetime_Test COMMAND object_lifetime_test)
 
+    add_executable(object_lifetime_test2 unittests/object_lifetime_test2.cpp)
+    target_link_libraries(object_lifetime_test2 ${LIBS})
+    add_test(NAME Object_Lifetime_Test2 COMMAND object_lifetime_test2)
+
     add_executable(function_ordering_test unittests/function_ordering_test.cpp)
     target_link_libraries(function_ordering_test ${LIBS})
     add_test(NAME Function_Ordering_Test COMMAND function_ordering_test)
