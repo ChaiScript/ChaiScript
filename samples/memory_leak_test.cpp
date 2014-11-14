@@ -54,7 +54,7 @@ class test
       chaiscript::Boxed_Value val = chai.eval_file(sFile);
     }
     catch (std::exception &e) {
-      std::cout << e.what() << std::endl;
+      std::cout << e.what() << '\n';
     }
   }
 

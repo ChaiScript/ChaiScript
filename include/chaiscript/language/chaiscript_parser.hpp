@@ -171,7 +171,7 @@ namespace chaiscript
       /// Prints the parsed ast_nodes as a tree
       /*
          void debug_print(AST_NodePtr t, std::string prepend = "") {
-         std::cout << prepend << "(" << ast_node_type_to_string(t->identifier) << ") " << t->text << " : " << t->start.line << ", " << t->start.column << std::endl;
+         std::cout << prepend << "(" << ast_node_type_to_string(t->identifier) << ") " << t->text << " : " << t->start.line << ", " << t->start.column << '\n';
          for (unsigned int j = 0; j < t->children.size(); ++j) {
          debug_print(t->children[j], prepend + "  ");
          }

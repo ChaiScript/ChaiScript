@@ -207,7 +207,7 @@ namespace chaiscript
 
       static void println(const std::string &s)
       {
-        std::cout << s << std::endl;
+        std::cout << s << '\n';
       }
 
 
@@ -443,7 +443,7 @@ namespace chaiscript
         operators::assign<bool>(m);
         operators::equal<bool>(m);
 
-        m->add(fun(&to_string<const std::string &>), "to_string");
+        m->add(fun<std::string (const std::string &t_ss)>([](const std::string &s) -> std::string { return s; }), "to_string");
         m->add(fun(&Bootstrap::bool_to_string), "to_string");
         m->add(fun(&unknown_assign), "=");
         m->add(fun(&throw_exception), "throw");
