@@ -232,6 +232,8 @@ if(BUILD_SAMPLES)
   target_link_libraries(memory_leak_test ${LIBS})
   add_executable(inheritance samples/inheritance.cpp)
   target_link_libraries(inheritance ${LIBS})
+  add_executable(fun_call_performance samples/fun_call_performance.cpp)
+  target_link_libraries(fun_call_performance ${LIBS})
 endif()
 
 
