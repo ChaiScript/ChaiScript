@@ -382,6 +382,7 @@ namespace chaiscript
 
         virtual ~Equation_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
+          chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
           Boxed_Value retval = this->children.back()->eval(t_ss); 
 
 
@@ -595,8 +596,8 @@ namespace chaiscript
           AST_Node(t_ast_node_text, AST_Node_Type::Dot_Access, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Dot_Access_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
-          Boxed_Value retval = this->children[0]->eval(t_ss);
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
+          Boxed_Value retval = this->children[0]->eval(t_ss);
 
           if (this->children.size() > 1) {
             for (size_t i = 2; i < this->children.size(); i+=2) {

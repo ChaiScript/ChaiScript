@@ -493,11 +493,13 @@ namespace chaiscript
         void new_scope()
         {
           get_stack_data().emplace_back();
+          m_stack_holder->call_params.emplace_back();
         }
 
         /// Pops the current scope from the stack
         void pop_scope()
         {
+          m_stack_holder->call_params.pop_back();
           StackData &stack = get_stack_data();
           if (stack.size() > 1)
           {
@@ -914,7 +916,7 @@ namespace chaiscript
         void save_function_params(std::initializer_list<Boxed_Value> t_params)
         {
           Stack_Holder &s = *m_stack_holder;
-          s.call_params.insert(s.call_params.begin(), std::move(t_params));
+          s.call_params.back().insert(s.call_params.back().begin(), std::move(t_params));
         }
 
         void save_function_params(std::vector<Boxed_Value> &&t_params)
@@ -923,14 +925,14 @@ namespace chaiscript
 
           for (auto &&param : t_params)
           {
-            s.call_params.insert(s.call_params.begin(), std::move(param));
+            s.call_params.back().insert(s.call_params.back().begin(), std::move(param));
           }
         }
 
         void save_function_params(const std::vector<Boxed_Value> &t_params)
         {
           Stack_Holder &s = *m_stack_holder;
-          s.call_params.insert(s.call_params.begin(), t_params.begin(), t_params.end());
+          s.call_params.back().insert(s.call_params.back().begin(), t_params.begin(), t_params.end());
         }
 
         void new_function_call()
@@ -941,7 +943,7 @@ namespace chaiscript
             m_conversions.enable_conversion_saves(true);
           }
 
-          ++m_stack_holder->call_depth;
+          ++s.call_depth;
 
           save_function_params(m_conversions.take_saves());
         }
@@ -955,9 +957,7 @@ namespace chaiscript
 
           if (s.call_depth == 0)
           {
-            /// \todo Critical: this needs to be smarter, memory can expand quickly
-            ///       in tight loops involving function calls
-            s.call_params.clear();
+            s.call_params.back().clear();
             m_conversions.enable_conversion_saves(false);
           }
         }
@@ -1149,11 +1149,12 @@ namespace chaiscript
             : call_depth(0)
           {
             stacks.emplace_back(1);
+            call_params.emplace_back();
           }
 
           std::deque<StackData> stacks;
 
-          std::list<Boxed_Value> call_params;
+          std::deque<std::list<Boxed_Value>> call_params;
           int call_depth;
         };
 
