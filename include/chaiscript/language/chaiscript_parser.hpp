@@ -1836,9 +1836,9 @@ namespace chaiscript
       /// Reads a unary prefixed expression from input
       bool Prefix() {
         const auto prev_stack_top = m_match_stack.size();
-//        const std::array<std::string, 7> prefix_opers;
+        const std::vector<std::string> prefix_opers{"++", "--", "-", "+", "!", "~", "&"};
 
-        for (const auto &oper : std::initializer_list<std::string>{"++", "--", "-", "+", "!", "~", "&"})
+        for (const auto &oper : prefix_opers)
         {
           bool is_char = oper.size() == 1;
           if ((is_char && Char(oper[0], true)) || (!is_char && Symbol(oper.c_str(), true)))
