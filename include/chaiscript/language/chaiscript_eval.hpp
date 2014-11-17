@@ -63,25 +63,21 @@ namespace chaiscript
 
     struct Binary_Operator_AST_Node : public AST_Node {
       public:
-        Binary_Operator_AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<std::string> &t_fname, int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
-          AST_Node(std::move(t_ast_node_text), t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
+        Binary_Operator_AST_Node(const std::string &t_oper) :
+          AST_Node(t_oper, AST_Node_Type::Binary, std::make_shared<std::string>(""), 0, 0, 0, 0),
+          m_oper(Operators::to_operator(t_oper))
       { }
 
         virtual ~Binary_Operator_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
-          return do_oper(t_ss, Operators::to_operator(children[1]->text), children[1]->text,
+          return do_oper(t_ss, m_oper, text,
               this->children[0]->eval(t_ss),
-              this->children[2]->eval(t_ss));
+              this->children[1]->eval(t_ss));
         }
 
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE 
         {
-          if (children.size() == 3)
-          {
-            return "(" + this->children[0]->pretty_print() + " " + this->children[1]->text + " " + this->children[2]->pretty_print() + ")";
-          } else {
-            return "(" + this->children[0]->pretty_print() + " " + text + " " + this->children[1]->pretty_print() + ")";
-          }
+          return "(" + this->children[0]->pretty_print() + " " + text + " " + this->children[1]->pretty_print() + ")";
         }
 
       protected:
@@ -110,6 +106,9 @@ namespace chaiscript
             throw exception::eval_error("Can not find appropriate '" + t_oper_string + "' operator.", e.parameters, e.functions, false, t_ss);
           }
         }
+
+      private:
+        Operators::Opers m_oper;
     };
 
     struct Int_AST_Node : public AST_Node {
@@ -316,8 +315,6 @@ namespace chaiscript
           }
           catch(const exception::bad_boxed_cast &){
             // handle the case where there is only 1 function to try to call and dispatch fails on it
-            std::vector<Const_Proxy_Function> funcs;
-            funcs.push_back(fn);
             throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, {fn}, false, t_ss);
           }
           catch(const exception::arity_error &e){
@@ -455,7 +452,7 @@ namespace chaiscript
           {
             return this->children[0]->eval(t_ss);
           } else {
-            std::string idname = this->children[0]->text;
+            const std::string &idname = this->children[0]->text;
 
             Boxed_Value bv;
             try {
@@ -478,72 +475,6 @@ namespace chaiscript
 
     };
 
-    struct Comparison_AST_Node : public Binary_Operator_AST_Node {
-      public:
-        Comparison_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          Binary_Operator_AST_Node(std::move(t_ast_node_text), AST_Node_Type::Comparison, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
-        virtual ~Comparison_AST_Node() {}
-    };
-
-    struct Addition_AST_Node : public Binary_Operator_AST_Node {
-      public:
-        Addition_AST_Node(std::string t_ast_node_text = "+",
-            const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(),
-            int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          Binary_Operator_AST_Node(std::move(t_ast_node_text), AST_Node_Type::Addition, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
-        virtual ~Addition_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
-          return do_oper(t_ss, Operators::sum, "+", this->children[0]->eval(t_ss), this->children[1]->eval(t_ss));
-        }
-    };
-
-    struct Subtraction_AST_Node : public Binary_Operator_AST_Node {
-      public:
-        Subtraction_AST_Node(std::string t_ast_node_text = "-",
-            const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0,
-            int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          Binary_Operator_AST_Node(std::move(t_ast_node_text), AST_Node_Type::Subtraction, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
-        virtual ~Subtraction_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
-          return do_oper(t_ss, Operators::difference, "-", this->children[0]->eval(t_ss), this->children[1]->eval(t_ss));
-        }
-    };
-
-    struct Multiplication_AST_Node : public Binary_Operator_AST_Node {
-      public:
-        Multiplication_AST_Node(std::string t_ast_node_text = "*",
-            const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0,
-            int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          Binary_Operator_AST_Node(std::move(t_ast_node_text), AST_Node_Type::Multiplication, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
-        virtual ~Multiplication_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
-          return do_oper(t_ss, Operators::product, "*", this->children[0]->eval(t_ss), this->children[1]->eval(t_ss));
-        }
-    };
-
-    struct Division_AST_Node : public Binary_Operator_AST_Node {
-      public:
-        Division_AST_Node(std::string t_ast_node_text = "/",
-            const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0,
-            int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          Binary_Operator_AST_Node(std::move(t_ast_node_text), AST_Node_Type::Division, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
-        virtual ~Division_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
-          return do_oper(t_ss, Operators::quotient, "/", this->children[0]->eval(t_ss), this->children[1]->eval(t_ss));
-        }
-    };
-
-    struct Modulus_AST_Node : public Binary_Operator_AST_Node {
-      public:
-        Modulus_AST_Node(std::string t_ast_node_text = "%",
-            const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0,
-            int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          Binary_Operator_AST_Node(std::move(t_ast_node_text), AST_Node_Type::Modulus, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
-        virtual ~Modulus_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
-          return do_oper(t_ss, Operators::remainder, "%", this->children[0]->eval(t_ss), this->children[1]->eval(t_ss));
-        }
-    };
 
     struct Array_Call_AST_Node : public AST_Node {
       public:
@@ -1145,8 +1076,9 @@ namespace chaiscript
 
     struct Prefix_AST_Node : public AST_Node {
       public:
-        Prefix_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Prefix, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
+        Prefix_AST_Node(Operators::Opers t_oper) :
+          AST_Node("", AST_Node_Type::Prefix, std::make_shared<std::string>(""), 0, 0, 0, 0),
+          m_oper(t_oper)
         { }
 
         virtual ~Prefix_AST_Node() {}
@@ -1154,12 +1086,11 @@ namespace chaiscript
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
           Boxed_Value bv(this->children[1]->eval(t_ss));
 
-          Operators::Opers oper = Operators::to_operator(children[0]->text, true);
           try {
             // short circuit arithmetic operations
-            if (bv.get_type_info().is_arithmetic() && oper != Operators::invalid)
+            if (m_oper != Operators::invalid && bv.get_type_info().is_arithmetic())
             {
-              return Boxed_Number::do_oper(oper, std::move(bv));
+              return Boxed_Number::do_oper(m_oper, std::move(bv));
             } else {
               chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
               fpp.save_params({bv});
@@ -1170,6 +1101,8 @@ namespace chaiscript
           }
         }
 
+      private:
+        Operators::Opers m_oper;
     };
 
     struct Break_AST_Node : public AST_Node {
@@ -1513,40 +1446,6 @@ namespace chaiscript
 
     };
 
-    struct Shift_AST_Node : public Binary_Operator_AST_Node {
-      public:
-        Shift_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          Binary_Operator_AST_Node(t_ast_node_text, AST_Node_Type::Shift, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
-        virtual ~Shift_AST_Node() {}
-    };
-
-    struct Equality_AST_Node : public Binary_Operator_AST_Node {
-      public:
-        Equality_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          Binary_Operator_AST_Node(t_ast_node_text, AST_Node_Type::Equality, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
-        virtual ~Equality_AST_Node() {}
-    };
-
-    struct Bitwise_And_AST_Node : public Binary_Operator_AST_Node {
-      public:
-        Bitwise_And_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          Binary_Operator_AST_Node(t_ast_node_text, AST_Node_Type::Bitwise_And, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
-        virtual ~Bitwise_And_AST_Node() {}
-    };
-
-    struct Bitwise_Xor_AST_Node : public Binary_Operator_AST_Node {
-      public:
-        Bitwise_Xor_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          Binary_Operator_AST_Node(t_ast_node_text, AST_Node_Type::Bitwise_Xor, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
-        virtual ~Bitwise_Xor_AST_Node() {}
-    };
-
-    struct Bitwise_Or_AST_Node : public Binary_Operator_AST_Node {
-      public:
-        Bitwise_Or_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          Binary_Operator_AST_Node(t_ast_node_text, AST_Node_Type::Bitwise_Or, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
-        virtual ~Bitwise_Or_AST_Node() {}
-    };
 
     struct Logical_And_AST_Node : public AST_Node {
       public:
