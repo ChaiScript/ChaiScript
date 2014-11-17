@@ -1835,72 +1835,24 @@ namespace chaiscript
 
       /// Reads a unary prefixed expression from input
       bool Prefix() {
-        bool retval = false;
-
         const auto prev_stack_top = m_match_stack.size();
+//        const std::array<std::string, 7> prefix_opers;
 
-        if (Symbol("++", true)) {
-          retval = true;
+        for (const auto &oper : std::initializer_list<std::string>{"++", "--", "-", "+", "!", "~", "&"})
+        {
+          bool is_char = oper.size() == 1;
+          if ((is_char && Char(oper[0], true)) || (!is_char && Symbol(oper.c_str(), true)))
+          {
+            if (!Operator(m_operators.size()-1)) {
+              throw exception::eval_error("Incomplete prefix '" + oper + "' expression", File_Position(m_line, m_col), *m_filename);
+            }
 
-          if (!Operator(m_operators.size()-1)) {
-            throw exception::eval_error("Incomplete '++' expression", File_Position(m_line, m_col), *m_filename);
+            build_match(std::make_shared<eval::Prefix_AST_Node>(Operators::to_operator(oper, true)), prev_stack_top);
+            return true;
           }
-
-          build_match(std::make_shared<eval::Prefix_AST_Node>(Operators::to_operator("++")), prev_stack_top);
-        } else if (Symbol("--", true)) {
-          retval = true;
-
-          if (!Operator(m_operators.size()-1)) {
-            throw exception::eval_error("Incomplete '--' expression", File_Position(m_line, m_col), *m_filename);
-          }
-
-          build_match(std::make_shared<eval::Prefix_AST_Node>(Operators::to_operator("--")), prev_stack_top);
-        } else if (Char('-', true)) {
-          retval = true;
-
-          if (!Operator(m_operators.size()-1)) {
-            throw exception::eval_error("Incomplete unary '-' expression", File_Position(m_line, m_col), *m_filename);
-          }
-
-          build_match(std::make_shared<eval::Prefix_AST_Node>(Operators::to_operator("-", true)), prev_stack_top);
-        } else if (Char('+', true)) {
-          retval = true;
-
-          if (!Operator(m_operators.size()-1)) {
-            throw exception::eval_error("Incomplete unary '+' expression", File_Position(m_line, m_col), *m_filename);
-          }
-
-          build_match(std::make_shared<eval::Prefix_AST_Node>(Operators::to_operator("+", true)), prev_stack_top);
-        }
-        else if (Char('!', true)) {
-          retval = true;
-
-          if (!Operator(m_operators.size()-1)) {
-            throw exception::eval_error("Incomplete '!' expression", File_Position(m_line, m_col), *m_filename);
-          }
-
-          build_match(std::make_shared<eval::Prefix_AST_Node>(Operators::to_operator("!")), prev_stack_top);
-        }
-        else if (Char('~', true)) {
-          retval = true;
-
-          if (!Operator(m_operators.size()-1)) {
-            throw exception::eval_error("Incomplete '~' expression", File_Position(m_line, m_col), *m_filename);
-          }
-
-          build_match(std::make_shared<eval::Prefix_AST_Node>(Operators::to_operator("~")), prev_stack_top);
-        }
-        else if (Char('&', true)) {
-          retval = true;
-
-          if (!Operator(m_operators.size()-1)) {
-            throw exception::eval_error("Incomplete '&' expression", File_Position(m_line, m_col), *m_filename);
-          }
-
-          build_match(std::make_shared<eval::Prefix_AST_Node>(Operators::to_operator("&")), prev_stack_top);
         }
 
-        return retval;
+        return false;
       }
 
       /// Parses any of a group of 'value' style ast_node groups from input
