@@ -787,7 +787,7 @@ namespace chaiscript
                     //If we've seen previous interpolation, add on instead of making a new one
                     m_match_stack.push_back(std::make_shared<eval::Quoted_String_AST_Node>(match, m_filename, prev_line, prev_col, m_line, m_col));
 
-                    build_match(std::make_shared<eval::Addition_AST_Node>(), prev_stack_top);
+                    build_match(std::make_shared<eval::Binary_Operator_AST_Node>("+"), prev_stack_top);
                   } else {
                     m_match_stack.push_back(std::make_shared<eval::Quoted_String_AST_Node>(match, m_filename, prev_line, prev_col, m_line, m_col));
                   }
@@ -824,7 +824,7 @@ namespace chaiscript
                     build_match(std::make_shared<eval::Inplace_Fun_Call_AST_Node>(), ev_stack_top);
                     build_match(std::make_shared<eval::Arg_List_AST_Node>(), ev_stack_top);
                     build_match(std::make_shared<eval::Fun_Call_AST_Node>(), tostr_stack_top);
-                    build_match(std::make_shared<eval::Addition_AST_Node>(), prev_stack_top);
+                    build_match(std::make_shared<eval::Binary_Operator_AST_Node>("+"), prev_stack_top);
                   } else {
                     throw exception::eval_error("Unclosed in-string eval", File_Position(prev_line, prev_col), *m_filename);
                   }
@@ -867,7 +867,7 @@ namespace chaiscript
             if (is_interpolated) {
               m_match_stack.push_back(std::make_shared<eval::Quoted_String_AST_Node>(match, m_filename, prev_line, prev_col, m_line, m_col));
 
-              build_match(std::make_shared<eval::Addition_AST_Node>(), prev_stack_top);
+              build_match(std::make_shared<eval::Binary_Operator_AST_Node>("+"), prev_stack_top);
             } else {
               m_match_stack.push_back(std::make_shared<eval::Quoted_String_AST_Node>(match, m_filename, prev_line, prev_col, m_line, m_col));
             }
@@ -1846,7 +1846,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete '++' expression", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(std::make_shared<eval::Prefix_AST_Node>(), prev_stack_top);
+          build_match(std::make_shared<eval::Prefix_AST_Node>(Operators::to_operator("++")), prev_stack_top);
         } else if (Symbol("--", true)) {
           retval = true;
 
@@ -1854,7 +1854,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete '--' expression", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(std::make_shared<eval::Prefix_AST_Node>(), prev_stack_top);
+          build_match(std::make_shared<eval::Prefix_AST_Node>(Operators::to_operator("--")), prev_stack_top);
         } else if (Char('-', true)) {
           retval = true;
 
@@ -1862,7 +1862,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete unary '-' expression", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(std::make_shared<eval::Prefix_AST_Node>(), prev_stack_top);
+          build_match(std::make_shared<eval::Prefix_AST_Node>(Operators::to_operator("-", true)), prev_stack_top);
         } else if (Char('+', true)) {
           retval = true;
 
@@ -1870,7 +1870,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete unary '+' expression", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(std::make_shared<eval::Prefix_AST_Node>(), prev_stack_top);
+          build_match(std::make_shared<eval::Prefix_AST_Node>(Operators::to_operator("+", true)), prev_stack_top);
         }
         else if (Char('!', true)) {
           retval = true;
@@ -1879,7 +1879,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete '!' expression", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(std::make_shared<eval::Prefix_AST_Node>(), prev_stack_top);
+          build_match(std::make_shared<eval::Prefix_AST_Node>(Operators::to_operator("!")), prev_stack_top);
         }
         else if (Char('~', true)) {
           retval = true;
@@ -1888,16 +1888,16 @@ namespace chaiscript
             throw exception::eval_error("Incomplete '~' expression", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(std::make_shared<eval::Prefix_AST_Node>(), prev_stack_top);
+          build_match(std::make_shared<eval::Prefix_AST_Node>(Operators::to_operator("~")), prev_stack_top);
         }
         else if (Char('&', true)) {
           retval = true;
 
           if (!Operator(m_operators.size()-1)) {
-            throw exception::eval_error("Incomplete '~' expression", File_Position(m_line, m_col), *m_filename);
+            throw exception::eval_error("Incomplete '&' expression", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(std::make_shared<eval::Prefix_AST_Node>(), prev_stack_top);
+          build_match(std::make_shared<eval::Prefix_AST_Node>(Operators::to_operator("&")), prev_stack_top);
         }
 
         return retval;
@@ -1923,7 +1923,6 @@ namespace chaiscript
 
       bool Operator(const size_t t_precedence = 0) {
         bool retval = false;
-        AST_NodePtr oper;
         const auto prev_stack_top = m_match_stack.size();
 
         if (t_precedence < m_operators.size()) {
@@ -1938,10 +1937,9 @@ namespace chaiscript
                       File_Position(m_line, m_col), *m_filename);
                 }
 
+                AST_NodePtr oper = m_match_stack.at(m_match_stack.size()-2);
+
                 switch (m_operators[t_precedence]) {
-                  case(AST_Node_Type::Comparison) :
-                    build_match(std::make_shared<eval::Comparison_AST_Node>(), prev_stack_top);
-                    break;
                   case(AST_Node_Type::Ternary_Cond) :
                     m_match_stack.erase(m_match_stack.begin() + m_match_stack.size() - 2,
                         m_match_stack.begin() + m_match_stack.size() - 1);
@@ -1959,52 +1957,26 @@ namespace chaiscript
                           File_Position(m_line, m_col), *m_filename);
                     }
                     break;
+
                   case(AST_Node_Type::Addition) :
-                    oper = m_match_stack.at(m_match_stack.size()-2);
-                    m_match_stack.erase(m_match_stack.begin() + m_match_stack.size() - 2,
-                        m_match_stack.begin() + m_match_stack.size() - 1);
-                    if (oper->text == "+") {
-                      build_match(std::make_shared<eval::Addition_AST_Node>(), prev_stack_top);
-                    }
-                    else if (oper->text == "-") {
-                      build_match(std::make_shared<eval::Subtraction_AST_Node>(), prev_stack_top);
-                    }
-                    break;
                   case(AST_Node_Type::Multiplication) :
-                    oper = m_match_stack.at(m_match_stack.size()-2);
-                    m_match_stack.erase(m_match_stack.begin() + m_match_stack.size() - 2,
-                        m_match_stack.begin() + m_match_stack.size() - 1);
-                    if (oper->text == "*") {
-                      build_match(std::make_shared<eval::Multiplication_AST_Node>(), prev_stack_top);
-                    }
-                    else if (oper->text == "/") {
-                      build_match(std::make_shared<eval::Division_AST_Node>(), prev_stack_top);
-                    }
-                    else if (oper->text == "%") {
-                      build_match(std::make_shared<eval::Modulus_AST_Node>(), prev_stack_top);
-                    }
-                    break;
                   case(AST_Node_Type::Shift) :
-                    build_match(std::make_shared<eval::Shift_AST_Node>(), prev_stack_top);
-                    break;
                   case(AST_Node_Type::Equality) :
-                    build_match(std::make_shared<eval::Equality_AST_Node>(), prev_stack_top);
-                    break;
                   case(AST_Node_Type::Bitwise_And) :
-                    build_match(std::make_shared<eval::Bitwise_And_AST_Node>(), prev_stack_top);
-                    break;
                   case(AST_Node_Type::Bitwise_Xor) :
-                    build_match(std::make_shared<eval::Bitwise_Xor_AST_Node>(), prev_stack_top);
-                    break;
                   case(AST_Node_Type::Bitwise_Or) :
-                    build_match(std::make_shared<eval::Bitwise_Or_AST_Node>(), prev_stack_top);
+                  case(AST_Node_Type::Comparison) :
+                    m_match_stack.erase(m_match_stack.begin() + m_match_stack.size() - 2, m_match_stack.begin() + m_match_stack.size() - 1);
+                    build_match(std::make_shared<eval::Binary_Operator_AST_Node>(oper->text), prev_stack_top);
                     break;
+
                   case(AST_Node_Type::Logical_And) :
                     build_match(std::make_shared<eval::Logical_And_AST_Node>(), prev_stack_top);
                     break;
                   case(AST_Node_Type::Logical_Or) :
                     build_match(std::make_shared<eval::Logical_Or_AST_Node>(), prev_stack_top);
                     break;
+
                   default:
                     throw exception::eval_error("Internal error: unhandled ast_node", File_Position(m_line, m_col), *m_filename);
                 }
