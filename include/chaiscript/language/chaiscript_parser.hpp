@@ -2035,14 +2035,7 @@ namespace chaiscript
         while (has_more) {
           const auto prev_line = m_line;
           const auto prev_col = m_col;
-          if (Def(true)) {
-            if (!saw_eol) {
-              throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-            }
-            has_more = true;
-            retval = true;
-            saw_eol = true;
-          } else if (Var_Decl(true)) {
+          if (Def(true) || Var_Decl(true)) {
             if (!saw_eol) {
               throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
             }
@@ -2071,7 +2064,7 @@ namespace chaiscript
         while (has_more) {
           int prev_line = m_line;
           int prev_col = m_col;
-          if (Def()) {
+          if (Def() || Try() || If() || While() || Class() || For() || Switch()) {
             if (!saw_eol) {
               throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
             }
@@ -2079,55 +2072,7 @@ namespace chaiscript
             retval = true;
             saw_eol = true;
           }
-          else if (Try()) {
-            if (!saw_eol) {
-              throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-            }
-            has_more = true;
-            retval = true;
-            saw_eol = true;
-          }
-          else if (If()) {
-            if (!saw_eol) {
-              throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-            }
-            has_more = true;
-            retval = true;
-            saw_eol = true;
-          }
-          else if (While()) {
-            if (!saw_eol) {
-              throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-            }
-            has_more = true;
-            retval = true;
-            saw_eol = true;
-          }
-          else if (Class()) {
-            if (!saw_eol) {
-              throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-            }
-            has_more = true;
-            retval = true;
-            saw_eol = true;
-          }
-          else if (For()) {
-            if (!saw_eol) {
-              throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-            }
-            has_more = true;
-            retval = true;
-            saw_eol = true;
-          }
-          else if (Switch()) {
-            if (!saw_eol) {
-              throw exception::eval_error("Two function definitions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-            }
-            has_more = true;
-            retval = true;
-            saw_eol = true;
-          }
-          else if (Return()) {
+          else if (Return() || Break() || Continue() || Equation()) {
             if (!saw_eol) {
               throw exception::eval_error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
             }
@@ -2135,36 +2080,7 @@ namespace chaiscript
             retval = true;
             saw_eol = false;
           }
-          else if (Break()) {
-            if (!saw_eol) {
-              throw exception::eval_error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-            }
-            has_more = true;
-            retval = true;
-            saw_eol = false;
-          }
-          else if (Continue()) {
-            if (!saw_eol) {
-              throw exception::eval_error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-            }
-            has_more = true;
-            retval = true;
-            saw_eol = false;
-          }
-          else if (Block()) {
-            has_more = true;
-            retval = true;
-            saw_eol = true;
-          }
-          else if (Equation()) {
-            if (!saw_eol) {
-              throw exception::eval_error("Two expressions missing line separator", File_Position(prev_line, prev_col), *m_filename);
-            }
-            has_more = true;
-            retval = true;
-            saw_eol = false;
-          }
-          else if (Eol()) {
+          else if (Block() || Eol()) {
             has_more = true;
             retval = true;
             saw_eol = true;
