@@ -307,7 +307,8 @@ int main(int argc, char *argv[])
 
   for (int i = 0; i < 1000; i++)
   {
-    printf(helloWorld("Bob12345").c_str());
+    std::string str = helloWorld("Bob12345");
+    fwrite(str.c_str(), 1, str.size(), stdout);
   }
 
   clock_t end = clock();
@@ -383,8 +384,8 @@ int main(int argc, char *argv[])
 
                       end = clock();
                       double elapsed_secs1 = double(end - begin) / CLOCKS_PER_SEC;
-                      printf("**C++::time= %lf\n", elapsed_secs);
-                      printf("**ChaiScript::time= %lf\n", elapsed_secs1);
+                      printf("**C++::time= %.10f\n", elapsed_secs);
+                      printf("**ChaiScript::time= %.10f\n", elapsed_secs1);
                       break;
                     }
         default: std::cout << "Unrecognized execution mode" << std::endl; return EXIT_FAILURE;
