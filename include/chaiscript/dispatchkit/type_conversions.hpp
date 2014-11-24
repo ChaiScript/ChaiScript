@@ -429,11 +429,7 @@ namespace chaiscript
       static_assert(std::is_convertible<From, To>::value, "Types are not automatically convertible");
       auto func = [](const Boxed_Value &t_bv) -> Boxed_Value {
             // not even attempting to call boxed_cast so that we don't get caught in some call recursion
-            std::cout << " Type conversion to : " << typeid(To).name() << " from " << typeid(From).name() << std::endl;
             auto &&from =  detail::Cast_Helper<From>::cast(t_bv, nullptr);
-            std::cout << "Ptr" << static_cast<const void *>(from) << std::endl;
-            std::cout << "Ptr" << from << std::endl;
-
             To to(from);
             return chaiscript::Boxed_Value(to);
           };
