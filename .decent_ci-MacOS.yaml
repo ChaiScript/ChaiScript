@@ -4,4 +4,5 @@ compilers:
   - name: clang
     build_type: Debug
     cmake_extra_flags: -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DCOMMIT_SHA=$COMMIT_SHA
+    skip_packaging: true
 
