@@ -7,7 +7,7 @@ bool test_literal(T val, const std::string &str)
 {
   chaiscript::ChaiScript chai;
   T val2 = chai.eval<T>(str);
-  std::cout << "Comparing : " << val << " " << val2 << std::endl;
+  std::cout << "Comparing : " << val << " " << val2 << '\n';
   return val == val2;
 }
 

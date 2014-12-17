@@ -89,13 +89,13 @@ namespace chaiscript
       if (t_conversions && t_conversions->convertable_type<Type>())
       {
         try {
-          // std::cout << "trying an up conversion " << typeid(Type).name() << std::endl;
+          // std::cout << "trying an up conversion " << typeid(Type).name() << '\n';
           // We will not catch any bad_boxed_dynamic_cast that is thrown, let the user get it
           // either way, we are not responsible if it doesn't work
           return detail::Cast_Helper<Type>::cast(t_conversions->boxed_type_conversion<Type>(bv), t_conversions);
         } catch (...) {
           try {
-          //  std::cout << "trying a down conversion " << typeid(Type).name() << std::endl;
+          //  std::cout << "trying a down conversion " << typeid(Type).name() << '\n';
             // try going the other way - down the inheritance graph
             return detail::Cast_Helper<Type>::cast(t_conversions->boxed_type_down_conversion<Type>(bv), t_conversions);
           } catch (const chaiscript::detail::exception::bad_any_cast &) {
