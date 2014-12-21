@@ -46,7 +46,7 @@
 namespace chaiscript {
   static const int version_major = 5;
   static const int version_minor = 5;
-  static const int version_patch = 0;
+  static const int version_patch = 1;
 }
 
 #endif
