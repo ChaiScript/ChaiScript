@@ -1,6 +1,11 @@
 Notes:
 =======
-Current Version: 5.5.0
+Current Version: 5.5.1
+
+### Changes since 5.5.0
+* 30% performance increase
+* Fix handling of object stack, resulting in greatly reduced memory usage
+* Code cleanups
 
 ### Changes since 5.4.0
 * 2x performance increase
