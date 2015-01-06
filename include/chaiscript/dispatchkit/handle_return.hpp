@@ -37,6 +37,11 @@ namespace chaiscript
           {
             return const_var(r);
           }
+
+          static Boxed_Value handle(Ret &&r)
+          {
+            return Boxed_Value(std::move(r));
+          }
         };
 
       template<typename Ret>

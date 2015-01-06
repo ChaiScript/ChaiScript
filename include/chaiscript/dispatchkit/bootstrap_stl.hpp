@@ -564,6 +564,25 @@ namespace chaiscript
 
           return m;
         }
+
+
+
+      /// Add a MapType container
+      /// http://www.sgi.com/tech/stl/Map.html
+      template<typename FutureType>
+        ModulePtr future_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+        {
+          m->add(user_type<FutureType>(), type);
+
+          m->add(fun(&FutureType::valid), "valid");
+          m->add(fun(&FutureType::get), "get");
+          m->add(fun(&FutureType::wait), "wait");
+
+          return m;
+        }
+
+
+
     }
   }
 }
