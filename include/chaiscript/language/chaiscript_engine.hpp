@@ -706,7 +706,7 @@ namespace chaiscript
     /// \param[in] t_module_name Name of the module to load
     ///
     /// The module is searched for in the registered module path folders (chaiscript::ChaiScript::ChaiScript)
-    /// and with standard prefixes and postfixes: ("lib"|"")\<t_module_name\>(".dll"|".so"|"").
+    /// and with standard prefixes and postfixes: ("lib"|"")\<t_module_name\>(".dll"|".so"|".bundle"|"").
     ///
     /// Once the file is located, the system looks for the symbol "create_chaiscript_module_\<t_module_name\>".
     /// If no file can be found matching the search criteria and containing the appropriate entry point 
@@ -725,7 +725,7 @@ namespace chaiscript
 
       std::vector<std::string> prefixes{"lib", "cyg", ""};
 
-      std::vector<std::string> postfixes{".dll", ".so", ""};
+      std::vector<std::string> postfixes{".dll", ".so", ".bundle", ""};
 
       for (auto & elem : m_modulepaths) 
       {
