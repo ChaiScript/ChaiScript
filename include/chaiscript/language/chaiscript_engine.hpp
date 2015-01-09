@@ -581,6 +581,8 @@ namespace chaiscript
     }
 
     /// \brief Represents the current state of the ChaiScript system. State and be saved and restored
+    /// \warning State object does not contain the user defined type conversions of the engine. They
+    ///          are left out due to performance considerations involved in tracking the state
     /// \sa ChaiScript::get_state
     /// \sa ChaiScript::set_state
     struct State
