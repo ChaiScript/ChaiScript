@@ -486,10 +486,10 @@ namespace chaiscript
         m->add(chaiscript::fun(&has_parse_tree), "has_parse_tree");
         m->add(chaiscript::fun(&get_parse_tree), "get_parse_tree");
 
-        m->add(chaiscript::user_type<chaiscript::exception::eval_error>("eval_error"));
+        m->add(chaiscript::user_type<chaiscript::exception::eval_error>(), "eval_error");
         m->add(chaiscript::base_class<std::runtime_error, chaiscript::exception::eval_error>());
 
-        m->add(chaiscript::user_type<chaiscript::exception::arithmetic_error>("arithmetic_error"));
+        m->add(chaiscript::user_type<chaiscript::exception::arithmetic_error>(), "arithmetic_error");
         m->add(chaiscript::base_class<std::runtime_error, chaiscript::exception::arithmetic_error>());
 
 
