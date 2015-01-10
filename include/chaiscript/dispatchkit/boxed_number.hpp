@@ -22,6 +22,22 @@ namespace chaiscript {
 class Type_Conversions;
 }  // namespace chaiscript
 
+namespace chaiscript
+{
+	namespace exception
+	{
+		struct arithmetic_error : public std::runtime_error
+		{
+			std::string reason;
+
+			arithmetic_error(const std::string& reason) : std::runtime_error(std::string("Arithmetic error: ").append(reason)), reason(reason) {}
+			arithmetic_error(const char* reason) : std::runtime_error(std::string("Arithmetic error: ").append(reason)), reason(reason) {}
+			virtual ~arithmetic_error() {}
+		};
+#define CHAISCRIPT_ARITHMETIC_CHECKDIVIDEBYZERO(T, n) if(std::is_arithmetic<T>::value) if(n==0) throw chaiscript::exception::arithmetic_error("divide by zero");
+	}
+}
+
 namespace chaiscript 
 {
 
@@ -89,6 +105,9 @@ namespace chaiscript
               t += u;
               break;
             case Operators::assign_quotient:
+            #ifdef CHAISCRIPT_PROTECT_DIVIDEBYZERO
+      			  CHAISCRIPT_ARITHMETIC_CHECKDIVIDEBYZERO(U, u)
+      		  #endif
               t /= u;
               break;
             case Operators::assign_difference:
@@ -122,6 +141,9 @@ namespace chaiscript
               t >>= u;
               break;
             case Operators::assign_remainder:
+            #ifdef CHAISCRIPT_PROTECT_DIVIDEBYZERO
+      			  CHAISCRIPT_ARITHMETIC_CHECKDIVIDEBYZERO(U, u)
+      		  #endif
               t %= u;
               break;
             case Operators::assign_bitwise_xor:
@@ -146,6 +168,9 @@ namespace chaiscript
             case Operators::shift_right:
               return const_var(t >> u);
             case Operators::remainder:
+            #ifdef CHAISCRIPT_PROTECT_DIVIDEBYZERO
+      			  CHAISCRIPT_ARITHMETIC_CHECKDIVIDEBYZERO(U, u)
+      		  #endif
               return const_var(t % u);
             case Operators::bitwise_and:
               return const_var(t & u);
@@ -171,6 +196,9 @@ namespace chaiscript
             case Operators::sum:
               return const_var(t + u);
             case Operators::quotient:
+            #ifdef CHAISCRIPT_PROTECT_DIVIDEBYZERO
+      			  CHAISCRIPT_ARITHMETIC_CHECKDIVIDEBYZERO(U, u)
+      		  #endif
               return const_var(t / u);
             case Operators::product:
               return const_var(t * u);
