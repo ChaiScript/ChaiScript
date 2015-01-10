@@ -5,3 +5,5 @@ try {
   assert_equal("Arithmetic error: divide by zero", e.what())
 }
 
+assert_equal(3/0.0, Infinity)
+
