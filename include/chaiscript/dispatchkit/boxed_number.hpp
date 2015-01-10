@@ -28,10 +28,7 @@ namespace chaiscript
   {
     struct arithmetic_error : public std::runtime_error
     {
-      std::string reason;
-
-      arithmetic_error(const std::string& reason) : std::runtime_error(std::string("Arithmetic error: ").append(reason)), reason(reason) {}
-      arithmetic_error(const char* reason) : std::runtime_error(std::string("Arithmetic error: ").append(reason)), reason(reason) {}
+      arithmetic_error(const std::string& reason) : std::runtime_error("Arithmetic error: " + reason) {}
       virtual ~arithmetic_error() {}
     };
 #define CHAISCRIPT_ARITHMETIC_CHECKDIVIDEBYZERO(T, n) if(std::is_arithmetic<T>::value) if(n==0) throw chaiscript::exception::arithmetic_error("divide by zero");
