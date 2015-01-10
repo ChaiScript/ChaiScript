@@ -29,7 +29,7 @@ namespace chaiscript
     struct arithmetic_error : public std::runtime_error
     {
       arithmetic_error(const std::string& reason) : std::runtime_error("Arithmetic error: " + reason) {}
-      virtual ~arithmetic_error() {}
+      virtual ~arithmetic_error() CHAISCRIPT_NOEXCEPT {}
     };
   }
 }
