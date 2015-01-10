@@ -49,7 +49,7 @@ namespace chaiscript
   class Boxed_Number
   {
     private:
-#ifdef CHAISCRIPT_PROTECT_DIVIDEBYZERO
+#ifndef CHAISCRIPT_NO_PROTECT_DIVIDEBYZERO
       template<typename T>
       static void check_divide_by_zero(T t)
       {
