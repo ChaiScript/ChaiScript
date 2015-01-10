@@ -31,7 +31,6 @@ namespace chaiscript
       arithmetic_error(const std::string& reason) : std::runtime_error("Arithmetic error: " + reason) {}
       virtual ~arithmetic_error() {}
     };
-#define CHAISCRIPT_ARITHMETIC_CHECKDIVIDEBYZERO(T, n) if(std::is_arithmetic<T>::value) if(n==0) throw chaiscript::exception::arithmetic_error("divide by zero");
   }
 }
 
@@ -50,6 +49,19 @@ namespace chaiscript
   class Boxed_Number
   {
     private:
+#ifdef CHAISCRIPT_PROTECT_DIVIDEBYZERO
+      template<typename T>
+      static void check_divide_by_zero(T t)
+      {
+        if(std::is_arithmetic<T>::value) if(t==0) throw chaiscript::exception::arithmetic_error("divide by zero");
+      }
+#else
+      template<typename T>
+      static void check_divide_by_zero(T)
+      {
+      }
+#endif
+
       struct boolean
       {
 
@@ -74,7 +86,7 @@ namespace chaiscript
             case Operators::not_equal:
               return const_var(t != u);
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -102,16 +114,14 @@ namespace chaiscript
               t += u;
               break;
             case Operators::assign_quotient:
-#ifdef CHAISCRIPT_PROTECT_DIVIDEBYZERO
-              CHAISCRIPT_ARITHMETIC_CHECKDIVIDEBYZERO(U, u)
-#endif
-                t /= u;
+              check_divide_by_zero(u);
+              t /= u;
               break;
             case Operators::assign_difference:
               t -= u;
               break;
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
 
           return t_lhs;
@@ -138,16 +148,14 @@ namespace chaiscript
               t >>= u;
               break;
             case Operators::assign_remainder:
-#ifdef CHAISCRIPT_PROTECT_DIVIDEBYZERO
-              CHAISCRIPT_ARITHMETIC_CHECKDIVIDEBYZERO(U, u)
-#endif
+              check_divide_by_zero(u);
               t %= u;
               break;
             case Operators::assign_bitwise_xor:
               t ^= u;
               break;
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
           return t_lhs;
         }
@@ -165,10 +173,8 @@ namespace chaiscript
             case Operators::shift_right:
               return const_var(t >> u);
             case Operators::remainder:
-#ifdef CHAISCRIPT_PROTECT_DIVIDEBYZERO
-              CHAISCRIPT_ARITHMETIC_CHECKDIVIDEBYZERO(U, u)
-#endif
-                return const_var(t % u);
+              check_divide_by_zero(u);
+              return const_var(t % u);
             case Operators::bitwise_and:
               return const_var(t & u);
             case Operators::bitwise_or:
@@ -178,7 +184,7 @@ namespace chaiscript
             case Operators::bitwise_complement:
               return const_var(~t);
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -193,10 +199,8 @@ namespace chaiscript
             case Operators::sum:
               return const_var(t + u);
             case Operators::quotient:
-#ifdef CHAISCRIPT_PROTECT_DIVIDEBYZERO
-              CHAISCRIPT_ARITHMETIC_CHECKDIVIDEBYZERO(U, u)
-#endif
-                return const_var(t / u);
+              check_divide_by_zero(u);
+              return const_var(t / u);
             case Operators::product:
               return const_var(t * u);
             case Operators::difference:
@@ -206,7 +210,7 @@ namespace chaiscript
             case Operators::unary_plus:
               return const_var(+t);
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -352,7 +356,6 @@ namespace chaiscript
           return oss.str();
         }
 
-      
     public:
       Boxed_Number()
         : bv(Boxed_Value(0))
@@ -868,12 +871,12 @@ namespace chaiscript
       struct Cast_Helper<const Boxed_Number &> : Cast_Helper<Boxed_Number>
       {
       };
-      
+
     /// Cast_Helper for converting from Boxed_Value to Boxed_Number
     template<>
       struct Cast_Helper<const Boxed_Number> : Cast_Helper<Boxed_Number>
       {
-      };  
+      };
   }
 
 #ifdef CHAISCRIPT_MSVC
