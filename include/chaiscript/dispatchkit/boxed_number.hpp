@@ -53,9 +53,21 @@ namespace chaiscript
       template<typename T>
       static void check_divide_by_zero(T t)
       {
+
+#ifdef CHAISCRIPT_MSVC
+        // MSVC complains that this expression is both constant and the value t is unused
+        // in the cases of integral expressions. Seems a bit overzealous to me, the parameter
+        // is only unreferenced because they are eliminating the dead code.
+#pragma warning(push)
+#pragma warning(disable : 4100 4127)
+#endif
         if(std::is_integral<T>::value && std::is_arithmetic<T>::value && t==0) {
           throw chaiscript::exception::arithmetic_error("divide by zero");
         }
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(pop)
+#endif
+
       }
 #else
       template<typename T>
