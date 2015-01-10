@@ -53,7 +53,9 @@ namespace chaiscript
       template<typename T>
       static void check_divide_by_zero(T t)
       {
-        if(std::is_arithmetic<T>::value) if(t==0) throw chaiscript::exception::arithmetic_error("divide by zero");
+        if(std::is_integral<T>::value && std::is_arithmetic<T>::value && t==0) {
+          throw chaiscript::exception::arithmetic_error("divide by zero");
+        }
       }
 #else
       template<typename T>

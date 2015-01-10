@@ -396,10 +396,9 @@ namespace chaiscript
 
         m->add(user_type<std::runtime_error>(), "runtime_error");
         m->add(chaiscript::base_class<std::exception, std::runtime_error>());
- 
 
         m->add(constructor<std::runtime_error (const std::string &)>(), "runtime_error");
-        m->add(fun(std::function<std::string (const std::runtime_error &)>(&what)), "what");     
+        m->add(fun(std::function<std::string (const std::runtime_error &)>(&what)), "what");
 
         m->add(user_type<dispatch::Dynamic_Object>(), "Dynamic_Object");
         m->add(constructor<dispatch::Dynamic_Object (const std::string &)>(), "Dynamic_Object");
@@ -487,7 +486,12 @@ namespace chaiscript
         m->add(chaiscript::fun(&has_parse_tree), "has_parse_tree");
         m->add(chaiscript::fun(&get_parse_tree), "get_parse_tree");
 
-        m->add(chaiscript::base_class<std::exception, chaiscript::exception::eval_error>());
+        m->add(chaiscript::user_type<chaiscript::exception::eval_error>("eval_error"));
+        m->add(chaiscript::base_class<std::runtime_error, chaiscript::exception::eval_error>());
+
+        m->add(chaiscript::user_type<chaiscript::exception::arithmetic_error>("arithmetic_error"));
+        m->add(chaiscript::base_class<std::runtime_error, chaiscript::exception::arithmetic_error>());
+
 
 //        chaiscript::bootstrap::standard_library::vector_type<std::vector<std::shared_ptr<chaiscript::AST_Node> > >("AST_NodeVector", m);
 
