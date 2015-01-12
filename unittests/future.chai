@@ -1,6 +1,6 @@
 var func = fun(){
   var ret = 0;
-  for (var i = 0; i < 1000000; ++i) {
+  for (var i = 0; i < 50000; ++i) {
     ret += i;
   }
   return ret;
@@ -9,9 +9,7 @@ var func = fun(){
 
 var fut1 := async(func);
 var fut2 := async(func);
-var fut3 := async(func);
-var fut4 := async(func);
 
 // simply executing without crashing is good enough for this test
 
-print(" ${fut1.get()} ${fut2.get()} ${fut3.get()} ${fut4.get()}")
+print(" ${fut1.get()} ${fut2.get()} ")
