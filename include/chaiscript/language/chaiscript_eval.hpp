@@ -393,22 +393,40 @@ namespace chaiscript
           return oss.str();
         }
 
+        static std::string get_arg_name(const AST_NodePtr &t_node) {
+          if (t_node->children.empty())
+          {
+            return t_node->text;
+          } else if (t_node->children.size() == 1) {
+            return t_node->children[0]->text;
+          } else {
+            return t_node->children[1]->text;
+          }
+        }
+
         static std::vector<std::string> get_arg_names(const AST_NodePtr &t_node) {
           std::vector<std::string> retval;
 
-          for (const auto &child : t_node->children)
+          for (const auto &node : t_node->children)
           {
-            if (child->children.empty())
-            {
-              retval.push_back(child->text);
-            } else if (child->children.size() == 1) {
-              retval.push_back(child->children[0]->text);
-            } else {
-              retval.push_back(child->children[1]->text);
-            }
+            retval.push_back(get_arg_name(node));
           }
 
           return retval;
+        }
+
+        static std::pair<std::string, Type_Info> get_arg_type(const AST_NodePtr &t_node, chaiscript::detail::Dispatch_Engine &t_ss) 
+        {
+          if (t_node->children.size() < 2)
+          {
+            return std::pair<std::string, Type_Info>();
+          } else {
+            try {
+              return std::pair<std::string, Type_Info>(t_node->children[0]->text, t_ss.get_type(t_node->children[0]->text));
+            } catch (const std::range_error &t_err) {
+              return std::pair<std::string, Type_Info>(t_node->children[0]->text, Type_Info());
+            }
+          }
         }
 
         static dispatch::Param_Types get_arg_types(const AST_NodePtr &t_node, chaiscript::detail::Dispatch_Engine &t_ss) {
@@ -416,18 +434,7 @@ namespace chaiscript
 
           for (const auto &child : t_node->children)
           {
-            if (child->children.empty())
-            {
-              retval.emplace_back("", Type_Info());
-            } else if (child->children.size() == 1) {
-              retval.emplace_back("", Type_Info());
-            } else {
-              try {
-                retval.emplace_back(child->children[0]->text, t_ss.get_type(child->children[0]->text));
-              } catch (const std::range_error &t_err) {
-                retval.emplace_back(child->children[0]->text, Type_Info());
-              }
-            }
+            retval.push_back(get_arg_type(child, t_ss));
           }
 
           return dispatch::Param_Types(std::move(retval));
@@ -1247,10 +1254,73 @@ namespace chaiscript
         Try_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Try, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Try_AST_Node() {}
+
+        Boxed_Value handle_exception(chaiscript::detail::Dispatch_Engine &t_ss, const Boxed_Value &t_except) const
+        {
+          Boxed_Value retval;
+
+          size_t end_point = this->children.size();
+          if (this->children.back()->identifier == AST_Node_Type::Finally) {
+            assert(end_point > 0);
+            end_point = this->children.size() - 1;
+          }
+          for (size_t i = 1; i < end_point; ++i) {
+            chaiscript::eval::detail::Scope_Push_Pop catchscope(t_ss);
+            AST_NodePtr catch_block = this->children[i];
+
+            if (catch_block->children.size() == 1) {
+              //No variable capture, no guards
+              retval = catch_block->children[0]->eval(t_ss);
+              break;
+            } else if (catch_block->children.size() == 2 || catch_block->children.size() == 3) {
+              const auto name = Arg_List_AST_Node::get_arg_name(catch_block->children[0]);
+
+              if (dispatch::Param_Types(
+                    std::vector<std::pair<std::string, Type_Info>>{Arg_List_AST_Node::get_arg_type(catch_block->children[0], t_ss)}
+                    ).match(std::vector<Boxed_Value>{t_except}, t_ss.conversions()))
+              {
+                t_ss.add_object(name, t_except);
+
+                if (catch_block->children.size() == 2) {
+                  //Variable capture, no guards
+                  retval = catch_block->children[1]->eval(t_ss);
+                  break;
+                }
+                else if (catch_block->children.size() == 3) {
+                  //Variable capture, guards
+
+                  bool guard = false;
+                  try {
+                    guard = boxed_cast<bool>(catch_block->children[1]->eval(t_ss));
+                  } catch (const exception::bad_boxed_cast &) {
+                    if (this->children.back()->identifier == AST_Node_Type::Finally) {
+                      this->children.back()->children[0]->eval(t_ss);
+                    }
+                    throw exception::eval_error("Guard condition not boolean");
+                  }
+                  if (guard) {
+                    retval = catch_block->children[2]->eval(t_ss);
+                    break;
+                  }
+                }
+              }
+            }
+            else {
+              if (this->children.back()->identifier == AST_Node_Type::Finally) {
+                this->children.back()->children[0]->eval(t_ss);
+              }
+              throw exception::eval_error("Internal error: catch block size unrecognized");
+            }
+          }
+
+          return retval;
+        }
+
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           Boxed_Value retval;
 
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+
 
           try {
             retval = this->children[0]->eval(t_ss);
@@ -1262,98 +1332,11 @@ namespace chaiscript
             throw;
           }
           catch (const std::exception &e) {
-            Boxed_Value except(std::ref(e));
+            retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
 
-            size_t end_point = this->children.size();
-            if (this->children.back()->identifier == AST_Node_Type::Finally) {
-              assert(end_point > 0);
-              end_point = this->children.size() - 1;
-            }
-            for (size_t i = 1; i < end_point; ++i) {
-              chaiscript::eval::detail::Scope_Push_Pop catchscope(t_ss);
-              AST_NodePtr catch_block = this->children[i];
-
-              if (catch_block->children.size() == 1) {
-                //No variable capture, no guards
-                retval = catch_block->children[0]->eval(t_ss);
-                break;
-              }
-              else if (catch_block->children.size() == 2) {
-                //Variable capture, no guards
-                t_ss.add_object(catch_block->children[0]->text, except);
-                retval = catch_block->children[1]->eval(t_ss);
-
-                break;
-              }
-              else if (catch_block->children.size() == 3) {
-                //Variable capture, no guards
-                t_ss.add_object(catch_block->children[0]->text, except);
-
-                bool guard = false;
-                try {
-                  guard = boxed_cast<bool>(catch_block->children[1]->eval(t_ss));
-                } catch (const exception::bad_boxed_cast &) {
-                  if (this->children.back()->identifier == AST_Node_Type::Finally) {
-                    this->children.back()->children[0]->eval(t_ss);
-                  }
-                  throw exception::eval_error("Guard condition not boolean");
-                }
-                if (guard) {
-                  retval = catch_block->children[2]->eval(t_ss);
-                  break;
-                }
-              }
-              else {
-                if (this->children.back()->identifier == AST_Node_Type::Finally) {
-                  this->children.back()->children[0]->eval(t_ss);
-                }
-                throw exception::eval_error("Internal error: catch block size unrecognized");
-              }
-            }
           }
-          catch (Boxed_Value &except) {
-            for (size_t i = 1; i < this->children.size(); ++i) {
-              chaiscript::eval::detail::Scope_Push_Pop catchscope(t_ss);
-              const auto &catch_block = this->children[i];
-
-              if (catch_block->children.size() == 1) {
-                //No variable capture, no guards
-                retval = catch_block->children[0]->eval(t_ss);
-                break;
-              }
-              else if (catch_block->children.size() == 2) {
-                //Variable capture, no guards
-                t_ss.add_object(catch_block->children[0]->text, except);
-                retval = catch_block->children[1]->eval(t_ss);
-                break;
-              }
-              else if (catch_block->children.size() == 3) {
-                //Variable capture, guards
-                t_ss.add_object(catch_block->children[0]->text, except);
-
-                bool guard;
-                try {
-                  guard = boxed_cast<bool>(catch_block->children[1]->eval(t_ss));
-                }
-                catch (const exception::bad_boxed_cast &) {
-                  if (this->children.back()->identifier == AST_Node_Type::Finally) {
-                    this->children.back()->children[0]->eval(t_ss);
-                  }
-
-                  throw exception::eval_error("Guard condition not boolean");
-                }
-                if (guard) {
-                  retval = catch_block->children[2]->eval(t_ss);
-                  break;
-                }
-              }
-              else {
-                if (this->children.back()->identifier == AST_Node_Type::Finally) {
-                  this->children.back()->children[0]->eval(t_ss);
-                }
-                throw exception::eval_error("Internal error: catch block size unrecognized");
-              }
-            }
+          catch (Boxed_Value &e) {
+            retval = handle_exception(t_ss, e);
           }
           catch (...) {
             if (this->children.back()->identifier == AST_Node_Type::Finally) {
@@ -1361,6 +1344,7 @@ namespace chaiscript
             }
             throw;
           }
+
 
           if (this->children.back()->identifier == AST_Node_Type::Finally) {
             retval = this->children.back()->children[0]->eval(t_ss);

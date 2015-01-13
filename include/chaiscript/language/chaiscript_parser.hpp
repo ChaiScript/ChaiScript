@@ -1337,7 +1337,7 @@ namespace chaiscript
             if (Keyword("catch", false)) {
               const auto catch_stack_top = m_match_stack.size();
               if (Char('(')) {
-                if (!(Id(true) && Char(')'))) {
+                if (!(Arg() && Char(')'))) {
                   throw exception::eval_error("Incomplete 'catch' expression", File_Position(m_line, m_col), *m_filename);
                 }
                 if (Char(':')) {
