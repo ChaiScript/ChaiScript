@@ -47,10 +47,14 @@ namespace chaiscript
     {
       public:
         Param_Types()
+          : m_has_types(false),
+            m_doti(user_type<Dynamic_Object>())
         {}
 
         Param_Types(std::vector<std::pair<std::string, Type_Info>> t_types)
           : m_types(std::move(t_types))
+          : m_has_types(false),
+            m_doti(user_type<Dynamic_Object>())
         {
           update_has_types();
         }
@@ -123,8 +127,8 @@ namespace chaiscript
         }
 
         std::vector<std::pair<std::string, Type_Info>> m_types;
-        bool m_has_types = false;
-        Type_Info m_doti = user_type<Dynamic_Object>();
+        bool m_has_types;
+        Type_Info m_doti;
 
     };
 
