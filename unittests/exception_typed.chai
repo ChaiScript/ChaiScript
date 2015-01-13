@@ -1,0 +1,21 @@
+auto x = 1
+try {
+  throw(x)
+  x = 2
+}
+catch(int e) {
+  x = e + 3
+}
+assert_equal(4, x);
+
+x = 1
+try {
+  throw(x)
+  x = 2
+}
+catch(string e) {
+}
+catch(e) {
+  x = e + 4
+}
+assert_equal(5, x);
