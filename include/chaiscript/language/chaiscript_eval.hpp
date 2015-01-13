@@ -25,6 +25,7 @@
 #include "../dispatchkit/boxed_number.hpp"
 #include "../dispatchkit/boxed_value.hpp"
 #include "../dispatchkit/dispatchkit.hpp"
+#include "../dispatchkit/dynamic_object_detail.hpp"
 #include "../dispatchkit/proxy_functions.hpp"
 #include "../dispatchkit/proxy_functions_detail.hpp"
 #include "../dispatchkit/register_function.hpp"
@@ -349,6 +350,28 @@ namespace chaiscript
 
     };
 
+    struct Arg_AST_Node : public AST_Node {
+      public:
+        Arg_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Arg_List, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        virtual ~Arg_AST_Node() {}
+
+        virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE 
+        {
+          std::ostringstream oss;
+          for (size_t j = 0; j < this->children.size(); ++j) {
+            if (j != 0)
+            {
+              oss << " ";
+            }
+
+            oss << this->children[j]->pretty_print();
+          }
+
+          return oss.str();
+        }
+    };
+
     struct Arg_List_AST_Node : public AST_Node {
       public:
         Arg_List_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
@@ -368,6 +391,46 @@ namespace chaiscript
           }
 
           return oss.str();
+        }
+
+        static std::vector<std::string> get_arg_names(const AST_NodePtr &t_node) {
+          std::vector<std::string> retval;
+
+          for (const auto &child : t_node->children)
+          {
+            if (child->children.empty())
+            {
+              retval.push_back(child->text);
+            } else if (child->children.size() == 1) {
+              retval.push_back(child->children[0]->text);
+            } else {
+              retval.push_back(child->children[1]->text);
+            }
+          }
+
+          return retval;
+        }
+
+        static dispatch::Param_Types get_arg_types(const AST_NodePtr &t_node, chaiscript::detail::Dispatch_Engine &t_ss) {
+          std::vector<std::pair<std::string, Type_Info>> retval;
+
+          for (const auto &child : t_node->children)
+          {
+            if (child->children.empty())
+            {
+              retval.emplace_back("", Type_Info());
+            } else if (child->children.size() == 1) {
+              retval.emplace_back("", Type_Info());
+            } else {
+              try {
+                retval.emplace_back(child->children[0]->text, t_ss.get_type(child->children[0]->text));
+              } catch (const std::range_error &t_err) {
+                retval.emplace_back(child->children[0]->text, Type_Info());
+              }
+            }
+          }
+
+          return dispatch::Param_Types(std::move(retval));
         }
     };
 
@@ -636,13 +699,12 @@ namespace chaiscript
 
           size_t numparams = 0;
 
+          dispatch::Param_Types param_types;
+
           if (!this->children.empty() && (this->children[0]->identifier == AST_Node_Type::Arg_List)) {
             numparams = this->children[0]->children.size();
-
-            for (const auto &child : this->children[0]->children) 
-            {
-              t_param_names.push_back(child->text);
-            }
+            t_param_names = Arg_List_AST_Node::get_arg_names(this->children[0]);
+            param_types = Arg_List_AST_Node::get_arg_types(this->children[0], t_ss);
           }
 
           const auto &lambda_node = this->children.back();
@@ -652,7 +714,7 @@ namespace chaiscript
                 {
                   return detail::eval_function(t_ss, lambda_node, t_param_names, t_params);
                 },
-                static_cast<int>(numparams), lambda_node)));
+                static_cast<int>(numparams), lambda_node, param_types)));
         }
 
     };
@@ -696,13 +758,12 @@ namespace chaiscript
           size_t numparams = 0;
           AST_NodePtr guardnode;
 
+          dispatch::Param_Types param_types;
+
           if ((this->children.size() > 2) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
             numparams = this->children[1]->children.size();
-
-            for (const auto &child : this->children[1]->children)
-            {
-              t_param_names.push_back(child->text);
-            }
+            t_param_names = Arg_List_AST_Node::get_arg_names(this->children[1]);
+            param_types = Arg_List_AST_Node::get_arg_types(this->children[1], t_ss);
 
             if (this->children.size() > 3) {
               guardnode = this->children[2];
@@ -735,7 +796,7 @@ namespace chaiscript
                                                       {
                                                         return detail::eval_function(t_ss, func_node, t_param_names, t_params);
                                                       }, static_cast<int>(numparams), this->children.back(),
-                                                         l_annotation, guard)), l_function_name);
+                                                         param_types, l_annotation, guard)), l_function_name);
           }
           catch (const exception::reserved_word_error &e) {
             throw exception::eval_error("Reserved word used as function name '" + e.word() + "'");
@@ -1341,11 +1402,12 @@ namespace chaiscript
 
           //The first param of a method is always the implied this ptr.
           std::vector<std::string> t_param_names{"this"};
+          dispatch::Param_Types param_types;
 
           if ((this->children.size() > static_cast<size_t>(3 + class_offset)) && (this->children[(2 + class_offset)]->identifier == AST_Node_Type::Arg_List)) {
-            for (const auto &child : this->children[(2 + class_offset)]->children) {
-              t_param_names.push_back(child->text);
-            }
+            auto args = Arg_List_AST_Node::get_arg_names(this->children[(2 + class_offset)]);
+            t_param_names.insert(t_param_names.end(), args.begin(), args.end());
+            param_types = Arg_List_AST_Node::get_arg_types(this->children[(2 + class_offset)], t_ss);
 
             if (this->children.size() > static_cast<size_t>(4 + class_offset)) {
               guardnode = this->children[(3 + class_offset)];
@@ -1375,29 +1437,35 @@ namespace chaiscript
             const std::string & function_name = this->children[(1 + class_offset)]->text;
 
             if (function_name == class_name) {
+              param_types.push_front(class_name, Type_Info());
               t_ss.add(std::make_shared<dispatch::detail::Dynamic_Object_Constructor>(class_name, std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
                         std::ref(t_ss), this->children.back(), t_param_names, std::placeholders::_1), 
-                      static_cast<int>(numparams), this->children.back(), l_annotation, guard)), 
+                      static_cast<int>(numparams), this->children.back(), param_types, l_annotation, guard)), 
                   function_name);
 
             }
             else {
               try {
-                // Do know type name
+                // Do know type name (if this line fails, the catch block is called and the 
+                // other version is called, with no Type_Info object known)
+                auto type = t_ss.get_type(class_name);
+                param_types.push_front(class_name, type);
+
                 t_ss.add(
                     std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name, 
                       std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
                                                                          std::ref(t_ss), this->children.back(),
                                                                          t_param_names, std::placeholders::_1), static_cast<int>(numparams), this->children.back(),
-                                                               l_annotation, guard), t_ss.get_type(class_name)), function_name);
+                                                               param_types, l_annotation, guard), type), function_name);
               } catch (const std::range_error &) {
+                param_types.push_front(class_name, Type_Info());
                 // Do not know type name
                 t_ss.add(
                     std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name, 
                          std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
                                                                          std::ref(t_ss), this->children.back(),
                                                                          t_param_names, std::placeholders::_1), static_cast<int>(numparams), this->children.back(),
-                                                               l_annotation, guard)), function_name);
+                                                               param_types, l_annotation, guard)), function_name);
               }
             }
           }

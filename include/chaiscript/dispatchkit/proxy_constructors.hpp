@@ -8,6 +8,8 @@
 #ifndef CHAISCRIPT_PROXY_CONSTRUCTORS_HPP_
 #define CHAISCRIPT_PROXY_CONSTRUCTORS_HPP_
 
+#include "proxy_functions.hpp"
+
 namespace chaiscript
 {
   namespace dispatch

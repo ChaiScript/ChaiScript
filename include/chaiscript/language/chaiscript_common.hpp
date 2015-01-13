@@ -37,7 +37,7 @@ namespace chaiscript
                 Comparison, Addition, Subtraction, Multiplication, Division, Modulus, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
                 Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
                 Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, 
-                Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop, Class, Binary
+                Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop, Class, Binary, Arg
     };
   };
 
@@ -50,7 +50,7 @@ namespace chaiscript
                                     "Comparison", "Addition", "Subtraction", "Multiplication", "Division", "Modulus", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
                                     "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
                                     "Inline_Range", "Annotation", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Shift", "Equality", "Bitwise_And", "Bitwise_Xor", "Bitwise_Or", 
-                                    "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Ternary Condition", "Noop", "Class", "Binary"};
+                                    "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Ternary Condition", "Noop", "Class", "Binary", "Arg"};
 
       return ast_node_types[ast_node_type];
     }
