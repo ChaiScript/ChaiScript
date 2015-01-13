@@ -52,8 +52,8 @@ namespace chaiscript
         {}
 
         Param_Types(std::vector<std::pair<std::string, Type_Info>> t_types)
-          : m_types(std::move(t_types))
-          : m_has_types(false),
+          : m_types(std::move(t_types)),
+            m_has_types(false),
             m_doti(user_type<Dynamic_Object>())
         {
           update_has_types();
