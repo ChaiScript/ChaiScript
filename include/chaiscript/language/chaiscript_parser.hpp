@@ -431,21 +431,13 @@ namespace chaiscript
           }
         }
 
-        std::stringstream ss(t_val.substr(0, i));
-
         if (float_)
         {
-          float f;
-          ss >> f;
-          return const_var(f);
+          return const_var(std::stof(t_val.substr(0,i)));
         } else if (long_) {
-          long double f;
-          ss >> f;
-          return const_var(f);
+          return const_var(std::stold(t_val.substr(0,i)));
         } else {
-          double f;
-          ss >> f;
-          return const_var(f);
+          return const_var(std::stod(t_val.substr(0,i)));
         }
       }
 
