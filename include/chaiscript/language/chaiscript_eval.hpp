@@ -423,7 +423,7 @@ namespace chaiscript
           } else {
             try {
               return std::pair<std::string, Type_Info>(t_node->children[0]->text, t_ss.get_type(t_node->children[0]->text));
-            } catch (const std::range_error &t_err) {
+            } catch (const std::range_error &) {
               return std::pair<std::string, Type_Info>(t_node->children[0]->text, Type_Info());
             }
           }
