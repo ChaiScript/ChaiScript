@@ -574,7 +574,7 @@ namespace chaiscript
         {
           m->add(user_type<FutureType>(), type);
 
-          m->add(fun(&FutureType::valid), "valid");
+          m->add(fun<bool (const FutureType &)>([](const FutureType &t) { return t.valid(); }), "valid");
           m->add(fun(&FutureType::get), "get");
           m->add(fun(&FutureType::wait), "wait");
 
