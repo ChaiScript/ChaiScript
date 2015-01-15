@@ -44,7 +44,9 @@ namespace chaiscript
         {
         }
 
-        virtual ~bad_boxed_dynamic_cast() CHAISCRIPT_NOEXCEPT {}
+        bad_boxed_dynamic_cast(const bad_boxed_dynamic_cast &) = default;
+
+        virtual ~bad_boxed_dynamic_cast() CHAISCRIPT_NOEXCEPT = default;
     };
 
     class bad_boxed_type_cast : public bad_boxed_cast
@@ -66,7 +68,9 @@ namespace chaiscript
         {
         }
 
-        virtual ~bad_boxed_type_cast() CHAISCRIPT_NOEXCEPT {}
+        bad_boxed_type_cast(const bad_boxed_type_cast &) = default;
+
+        virtual ~bad_boxed_type_cast() CHAISCRIPT_NOEXCEPT = default;
     };
   }
 

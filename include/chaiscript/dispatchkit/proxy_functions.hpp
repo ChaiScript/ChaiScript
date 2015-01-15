@@ -129,7 +129,7 @@ namespace chaiscript
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const = 0;
 
         Proxy_Function_Base(std::vector<Type_Info> t_types, int t_arity)
-          : m_types(std::move(t_types)), m_has_arithmetic_param(false), m_arity(t_arity)
+          : m_types(std::move(t_types)), m_arity(t_arity), m_has_arithmetic_param(false)
         {
           for (size_t i = 1; i < m_types.size(); ++i)
           {
@@ -175,8 +175,8 @@ namespace chaiscript
         }
 
         std::vector<Type_Info> m_types;
-        bool m_has_arithmetic_param;
         int m_arity;
+        bool m_has_arithmetic_param;
     };
   }
 
@@ -220,11 +220,11 @@ namespace chaiscript
             std::string t_description = "",
             Proxy_Function t_guard = Proxy_Function())
           : Proxy_Function_Base(build_param_type_list(t_arity), t_arity),
-            m_f(std::move(t_f)), m_arity(t_arity), m_description(std::move(t_description)), m_guard(std::move(t_guard)), m_parsenode(std::move(t_parsenode))
+            m_guard(std::move(t_guard)), m_parsenode(std::move(t_parsenode)), m_description(std::move(t_description)), m_f(std::move(t_f))
         {
         }
 
-        virtual ~Dynamic_Proxy_Function() {}
+        virtual ~Dynamic_Proxy_Function() = default;
 
         virtual bool operator==(const Proxy_Function_Base &rhs) const CHAISCRIPT_OVERRIDE
         {
@@ -311,11 +311,10 @@ namespace chaiscript
           return types;
         }
 
-        std::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
-        int m_arity;
-        std::string m_description;
         Proxy_Function m_guard;
         AST_NodePtr m_parsenode;
+        std::string m_description;
+        std::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
     };
 
     /**
@@ -591,7 +590,8 @@ namespace chaiscript
         {
         }
 
-        virtual ~dispatch_error() CHAISCRIPT_NOEXCEPT {}
+        dispatch_error(const dispatch_error &) = default;
+        virtual ~dispatch_error() CHAISCRIPT_NOEXCEPT = default;
 
         std::vector<Boxed_Value> parameters;
         std::vector<Const_Proxy_Function> functions;

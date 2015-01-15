@@ -10,6 +10,7 @@ class TestBaseType
     TestBaseType() : val(10), const_val(15) { }
     TestBaseType(int) : val(10), const_val(15) {}
     TestBaseType(int *) : val(10), const_val(15) {}
+    TestBaseType(const TestBaseType &) = default;
     virtual ~TestBaseType() {}
     virtual int func() { return 0; }
 
@@ -62,6 +63,8 @@ class TestDerivedType : public TestBaseType
 {
   public:
     virtual ~TestDerivedType() {}
+    TestDerivedType(const TestDerivedType &) = default;
+    TestDerivedType() = default;
     virtual int func() CHAISCRIPT_OVERRIDE { return 1; }
     int derived_only_func() { return 19; }
 
@@ -72,6 +75,8 @@ class TestDerivedType : public TestBaseType
 class TestMoreDerivedType : public TestDerivedType
 {
   public:
+    TestMoreDerivedType(const TestMoreDerivedType &) = default;
+    TestMoreDerivedType() = default;
     virtual ~TestMoreDerivedType() {}
 };
 

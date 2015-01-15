@@ -298,7 +298,7 @@ namespace chaiscript
         }
       }
 
-      static void throw_exception(const Boxed_Value &bv) {
+      static void throw_exception [[ noreturn ]] (const Boxed_Value &bv) {
         throw bv;
       }
 

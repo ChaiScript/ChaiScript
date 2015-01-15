@@ -397,7 +397,8 @@ namespace chaiscript
         : std::runtime_error("File Not Found: " + t_filename)
       { }
 
-      virtual ~file_not_found_error() CHAISCRIPT_NOEXCEPT {}
+      file_not_found_error(const file_not_found_error &) = default;
+      virtual ~file_not_found_error() CHAISCRIPT_NOEXCEPT = default;
     };
 
   }

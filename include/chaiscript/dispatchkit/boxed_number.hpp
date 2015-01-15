@@ -33,6 +33,15 @@ namespace chaiscript
 #pragma warning(disable : 4244 4018 4389 4146 4365)
 #endif
 
+
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#endif
+
   /// \brief Represents any numeric type, generically. Used internally for generic operations between POD values
   class Boxed_Number
   {
@@ -40,9 +49,6 @@ namespace chaiscript
       struct boolean
       {
 
-#ifdef __GNUC__
-#pragma GCC diagnostic ignored "-Wsign-compare"
-#endif
         template<typename T, typename U>
         static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &)
         {
@@ -850,13 +856,17 @@ namespace chaiscript
       struct Cast_Helper<const Boxed_Number &> : Cast_Helper<Boxed_Number>
       {
       };
-      
+
     /// Cast_Helper for converting from Boxed_Value to Boxed_Number
     template<>
       struct Cast_Helper<const Boxed_Number> : Cast_Helper<Boxed_Number>
       {
-      };  
+      };
   }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)

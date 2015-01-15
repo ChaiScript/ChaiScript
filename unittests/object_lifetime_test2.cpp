@@ -4,9 +4,9 @@
 template<typename T>
 struct Vector2
 {
-  Vector2() : x(0), y(0) {};
-  Vector2(T px, T py) : x(px), y(py) {};
-  Vector2(const Vector2& cp) : x(cp.x), y(cp.y) {};
+  Vector2() : x(0), y(0) {}
+  Vector2(T px, T py) : x(px), y(py) {}
+  Vector2(const Vector2& cp) : x(cp.x), y(cp.y) {}
 
   Vector2& operator+=(const Vector2& vec_r)
   {
