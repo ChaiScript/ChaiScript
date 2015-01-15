@@ -62,6 +62,8 @@ namespace chaiscript
         {
         }
 
+        reserved_word_error(const reserved_word_error &) = default;
+
         virtual ~reserved_word_error() CHAISCRIPT_NOEXCEPT {}
 
         std::string word() const
@@ -81,6 +83,8 @@ namespace chaiscript
           : std::runtime_error("Reserved name not allowed in object name: " + t_name), m_name(t_name)
         {
         }
+
+        illegal_name_error(const illegal_name_error &) = default;
 
         virtual ~illegal_name_error() CHAISCRIPT_NOEXCEPT {}
 
@@ -102,6 +106,8 @@ namespace chaiscript
           : std::runtime_error("Name already exists in current context " + t_name), m_name(t_name)
         {
         }
+
+        name_conflict_error(const name_conflict_error &) = default;
 
         virtual ~name_conflict_error() CHAISCRIPT_NOEXCEPT {}
 
@@ -125,6 +131,7 @@ namespace chaiscript
         {
         }
 
+        global_non_const(const global_non_const &) = default;
         virtual ~global_non_const() CHAISCRIPT_NOEXCEPT {}
     };
   }
@@ -389,6 +396,8 @@ namespace chaiscript
           std::set<std::string> m_reserved_words;
 
           State &operator=(const State &) = default;
+          State() = default;
+          State(const State &) = default;
         };
 
         Dispatch_Engine()

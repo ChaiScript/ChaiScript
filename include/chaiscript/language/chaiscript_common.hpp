@@ -112,6 +112,8 @@ namespace chaiscript
         reason(t_why) 
       {}
 
+      eval_error(const eval_error &) = default;
+
       std::string pretty_print() const
       {
         std::ostringstream ss;

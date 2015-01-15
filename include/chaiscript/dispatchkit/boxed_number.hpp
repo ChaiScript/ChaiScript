@@ -327,7 +327,7 @@ namespace chaiscript
           return oss.str();
         }
 
-      
+
     public:
       Boxed_Number()
         : bv(Boxed_Value(0))
@@ -339,6 +339,13 @@ namespace chaiscript
       {
         validate_boxed_number(bv);
       }
+
+      Boxed_Number(const Boxed_Number &) = default;
+
+#if !defined(_MSC_VER) || _MSC_VER  != 1800
+      Boxed_Number(Boxed_Number &&) = default;
+      Boxed_Number& operator=(Boxed_Number &&) = default;
+#endif
 
       template<typename T> explicit Boxed_Number(T t)
         : bv(Boxed_Value(t))

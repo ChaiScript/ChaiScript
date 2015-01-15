@@ -1333,29 +1333,28 @@ namespace chaiscript
 
           AST_NodePtr guardnode;
 
-          auto d = t_ss.get_parent_locals();
-          auto itr = d.find("_current_class_name");
-          int class_offset = 0;
-          if (itr != d.end()) class_offset = -1;
+          const auto d = t_ss.get_parent_locals();
+          const auto itr = d.find("_current_class_name");
+          const auto class_offset = (itr != d.end())?-1:0;
           const std::string & class_name = (itr != d.end())?std::string(boxed_cast<std::string>(itr->second)):this->children[0]->text;
 
           //The first param of a method is always the implied this ptr.
           std::vector<std::string> t_param_names{"this"};
 
-          if ((this->children.size() > static_cast<size_t>(3 + class_offset)) && (this->children[(2 + class_offset)]->identifier == AST_Node_Type::Arg_List)) {
-            for (const auto &child : this->children[(2 + class_offset)]->children) {
+          if ((this->children.size() > static_cast<size_t>(3 + class_offset)) && (this->children[static_cast<size_t>(2 + class_offset)]->identifier == AST_Node_Type::Arg_List)) {
+            for (const auto &child : this->children[static_cast<size_t>(2 + class_offset)]->children) {
               t_param_names.push_back(child->text);
             }
 
             if (this->children.size() > static_cast<size_t>(4 + class_offset)) {
-              guardnode = this->children[(3 + class_offset)];
+              guardnode = this->children[static_cast<size_t>(3 + class_offset)];
             }
           }
           else {
             //no parameters
 
             if (this->children.size() > static_cast<size_t>(3 + class_offset)) {
-              guardnode = this->children[(2 + class_offset)];
+              guardnode = this->children[static_cast<size_t>(2 + class_offset)];
             }
           }
 
@@ -1372,7 +1371,7 @@ namespace chaiscript
           try {
             const std::string & l_annotation = this->annotation?this->annotation->text:"";
 
-            const std::string & function_name = this->children[(1 + class_offset)]->text;
+            const std::string & function_name = this->children[static_cast<size_t>(1 + class_offset)]->text;
 
             if (function_name == class_name) {
               t_ss.add(std::make_shared<dispatch::detail::Dynamic_Object_Constructor>(class_name, std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
@@ -1420,24 +1419,23 @@ namespace chaiscript
         {
           const auto &d = t_ss.get_parent_locals();
           const auto itr = d.find("_current_class_name");
-          int class_offset = 0;
-          if (itr != d.end()) class_offset = -1;
+          const auto class_offset = (itr != d.end())?-1:0;
           std::string class_name = (itr != d.end())?std::string(boxed_cast<std::string>(itr->second)):this->children[0]->text;
 
           try {
             t_ss.add(
                 std::make_shared<dispatch::detail::Dynamic_Object_Function>(
-                     class_name,
+                     std::move(class_name),
                      fun(std::function<Boxed_Value (dispatch::Dynamic_Object &)>(std::bind(&dispatch::Dynamic_Object::get_attr, 
                                                                                    std::placeholders::_1,
-                                                                                   this->children[(1 + class_offset)]->text
+                                                                                   this->children[static_cast<size_t>(1 + class_offset)]->text
                                                                                    ))
                      )
-                ), this->children[(1 + class_offset)]->text);
+                ), this->children[static_cast<size_t>(1 + class_offset)]->text);
 
           }
           catch (const exception::reserved_word_error &) {
-            throw exception::eval_error("Reserved word used as attribute '" + this->children[(1 + class_offset)]->text + "'");
+            throw exception::eval_error("Reserved word used as attribute '" + this->children[static_cast<size_t>(1 + class_offset)]->text + "'");
           } catch (const exception::name_conflict_error &e) {
             throw exception::eval_error("Attribute redefined '" + e.name() + "'");
           }

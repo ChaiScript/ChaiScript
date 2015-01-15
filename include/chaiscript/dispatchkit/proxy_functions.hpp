@@ -197,6 +197,8 @@ namespace chaiscript
           : std::runtime_error("Guard evaluation failed")
         { }
 
+        guard_error(const guard_error &) = default;
+
         virtual ~guard_error() CHAISCRIPT_NOEXCEPT
         { }
     };
@@ -560,7 +562,7 @@ namespace chaiscript
             }
           } else {
             throw exception::arity_error(static_cast<int>(params.size()), 1);
-          }       
+          }
         }
 
       private:
