@@ -213,11 +213,11 @@ std::string get_next_command() {
 
 // We have to wrap exit with our own because Clang has a hard time with
 // function pointers to functions with special attributes (system exit being marked NORETURN)
-void myexit [[ noreturn ]] (int return_val) {
+void myexit(int return_val) {
   exit(return_val);
 }
 
-void interactive [[ noreturn ]] (chaiscript::ChaiScript& chai)
+void interactive(chaiscript::ChaiScript& chai)
 {
   using_history();
 
@@ -331,8 +331,8 @@ int main(int argc, char *argv[])
     try {
       switch ( mode ) {
         case eInteractive:
-          // interactive never returns, no need for break;
           interactive(chai);
+          break;
         case eCommand:
           val = chai.eval(arg);
           break;
