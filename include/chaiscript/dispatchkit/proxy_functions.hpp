@@ -224,7 +224,7 @@ namespace chaiscript
         {
         }
 
-        virtual ~Dynamic_Proxy_Function() = default;
+        virtual ~Dynamic_Proxy_Function() {}
 
         virtual bool operator==(const Proxy_Function_Base &rhs) const CHAISCRIPT_OVERRIDE
         {
@@ -591,7 +591,7 @@ namespace chaiscript
         }
 
         dispatch_error(const dispatch_error &) = default;
-        virtual ~dispatch_error() CHAISCRIPT_NOEXCEPT = default;
+        virtual ~dispatch_error() CHAISCRIPT_NOEXCEPT {}
 
         std::vector<Boxed_Value> parameters;
         std::vector<Const_Proxy_Function> functions;

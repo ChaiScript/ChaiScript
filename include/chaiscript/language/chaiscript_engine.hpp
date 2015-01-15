@@ -62,7 +62,7 @@ namespace chaiscript
       }
 
       load_module_error(const load_module_error &) = default;
-      virtual ~load_module_error() CHAISCRIPT_NOEXCEPT = default;
+      virtual ~load_module_error() CHAISCRIPT_NOEXCEPT {}
     };
   }
 

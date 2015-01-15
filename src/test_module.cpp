@@ -9,7 +9,7 @@ class TestBaseType
   public:
     TestBaseType() : val(10), const_val(15) { }
     TestBaseType(int) : val(10), const_val(15) {}
-    TestBaseType(int *) : val(10), const_val(15) {}
+    TestBaseType(int *i) : val(10), const_val(15) { }
     TestBaseType(const TestBaseType &) = default;
     virtual ~TestBaseType() {}
     virtual int func() { return 0; }
@@ -100,9 +100,11 @@ std::string hello_world()
   return "Hello World";
 }
 
+int global_i = 1;
+
 int *get_new_int()
 {
-  return new int(1);
+  return &global_i;
 }
 
 // MSVC doesn't like that we are using C++ return types from our C declared module

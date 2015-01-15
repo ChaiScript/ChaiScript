@@ -398,7 +398,7 @@ namespace chaiscript
       { }
 
       file_not_found_error(const file_not_found_error &) = default;
-      virtual ~file_not_found_error() CHAISCRIPT_NOEXCEPT = default;
+      virtual ~file_not_found_error() CHAISCRIPT_NOEXCEPT {}
     };
 
   }
