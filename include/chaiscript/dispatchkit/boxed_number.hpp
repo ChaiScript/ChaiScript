@@ -22,6 +22,18 @@ namespace chaiscript {
 class Type_Conversions;
 }  // namespace chaiscript
 
+namespace chaiscript
+{
+  namespace exception
+  {
+    struct arithmetic_error : public std::runtime_error
+    {
+      arithmetic_error(const std::string& reason) : std::runtime_error("Arithmetic error: " + reason) {}
+      virtual ~arithmetic_error() CHAISCRIPT_NOEXCEPT {}
+    };
+  }
+}
+
 namespace chaiscript 
 {
 
@@ -37,6 +49,21 @@ namespace chaiscript
   class Boxed_Number
   {
     private:
+      template<typename T>
+      static void check_divide_by_zero(T t, typename std::enable_if<std::is_integral<T>::value>::type* = 0)
+      {
+#ifndef CHAISCRIPT_NO_PROTECT_DIVIDEBYZERO
+        if (t == 0) {
+          throw chaiscript::exception::arithmetic_error("divide by zero");
+        }
+#endif
+      }
+
+      template<typename T>
+      static void check_divide_by_zero(T, typename std::enable_if<std::is_floating_point<T>::value>::type* = 0)
+      {
+      }
+
       struct boolean
       {
 
@@ -61,7 +88,7 @@ namespace chaiscript
             case Operators::not_equal:
               return const_var(t != u);
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -89,13 +116,14 @@ namespace chaiscript
               t += u;
               break;
             case Operators::assign_quotient:
+              check_divide_by_zero(u);
               t /= u;
               break;
             case Operators::assign_difference:
               t -= u;
               break;
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
 
           return t_lhs;
@@ -122,13 +150,14 @@ namespace chaiscript
               t >>= u;
               break;
             case Operators::assign_remainder:
+              check_divide_by_zero(u);
               t %= u;
               break;
             case Operators::assign_bitwise_xor:
               t ^= u;
               break;
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
           return t_lhs;
         }
@@ -146,6 +175,7 @@ namespace chaiscript
             case Operators::shift_right:
               return const_var(t >> u);
             case Operators::remainder:
+              check_divide_by_zero(u);
               return const_var(t % u);
             case Operators::bitwise_and:
               return const_var(t & u);
@@ -156,7 +186,7 @@ namespace chaiscript
             case Operators::bitwise_complement:
               return const_var(~t);
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -171,6 +201,7 @@ namespace chaiscript
             case Operators::sum:
               return const_var(t + u);
             case Operators::quotient:
+              check_divide_by_zero(u);
               return const_var(t / u);
             case Operators::product:
               return const_var(t * u);
@@ -181,7 +212,7 @@ namespace chaiscript
             case Operators::unary_plus:
               return const_var(+t);
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -327,7 +358,6 @@ namespace chaiscript
           return oss.str();
         }
 
-      
     public:
       Boxed_Number()
         : bv(Boxed_Value(0))
@@ -843,12 +873,12 @@ namespace chaiscript
       struct Cast_Helper<const Boxed_Number &> : Cast_Helper<Boxed_Number>
       {
       };
-      
+
     /// Cast_Helper for converting from Boxed_Value to Boxed_Number
     template<>
       struct Cast_Helper<const Boxed_Number> : Cast_Helper<Boxed_Number>
       {
-      };  
+      };
   }
 
 #ifdef CHAISCRIPT_MSVC

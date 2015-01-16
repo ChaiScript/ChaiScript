@@ -93,6 +93,8 @@ namespace chaiscript
               // If it's an arithmetic operation we want to short circuit dispatch
               try{
                 return Boxed_Number::do_oper(t_oper, t_lhs, t_rhs);
+              } catch (const chaiscript::exception::arithmetic_error &) {
+                throw;
               } catch (...) {
                 throw exception::eval_error("Error with numeric operator calling: " + t_oper_string);
               }
