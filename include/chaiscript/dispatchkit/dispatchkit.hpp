@@ -454,7 +454,7 @@ namespace chaiscript
         /// Adds a named object to the current scope
         /// \warning This version does not check the validity of the name
         /// it is meant for internal use only
-        void add_object(const std::string &name, const Boxed_Value &obj) const
+        void add_object(const std::string &name, const Boxed_Value &obj)
         {
           if (!get_stack_data().back().insert(std::make_pair(name, obj)).second)
           {
@@ -704,10 +704,10 @@ namespace chaiscript
         ///
         std::map<std::string, Boxed_Value> get_scripting_objects() const
         {
-          Stack_Holder &s = *m_stack_holder;
+          const Stack_Holder &s = *m_stack_holder;
 
           // We don't want the current context, but one up if it exists
-          StackData &stack = (s.stacks.size()==1)?(s.stacks.back()):(s.stacks[s.stacks.size()-2]);
+          const StackData &stack = (s.stacks.size()==1)?(s.stacks.back()):(s.stacks[s.stacks.size()-2]);
 
           std::map<std::string, Boxed_Value> retval;
 
@@ -974,7 +974,12 @@ namespace chaiscript
       private:
         /// Returns the current stack
         /// make const/non const versions
-        StackData &get_stack_data() const
+        const StackData &get_stack_data() const
+        {
+          return m_stack_holder->stacks.back();
+        }
+
+        StackData &get_stack_data()
         {
           return m_stack_holder->stacks.back();
         }

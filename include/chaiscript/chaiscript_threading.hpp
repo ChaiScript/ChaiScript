@@ -82,15 +82,26 @@ namespace chaiscript
               t().erase(m_key);
             }
 
-            inline T *operator->() const
+            inline const T *operator->() const
             {
               return &(t()[m_key]);
             }
 
-            inline T &operator*() const
+            inline const T &operator*() const
             {
               return t()[m_key];
             }
+
+            inline T *operator->()
+            {
+              return &(t()[m_key]);
+            }
+
+            inline T &operator*()
+            {
+              return t()[m_key];
+            }
+
 
             void *m_key;
 
@@ -117,12 +128,22 @@ namespace chaiscript
             {
             }
 
-            inline T *operator->() const
+            inline const T *operator->() const
             {
               return get_tls().get();
             }
 
-            inline T &operator*() const
+            inline const T &operator*() const
+            {
+              return *get_tls();
+            }
+
+            inline T *operator->()
+            {
+              return get_tls().get();
+            }
+
+            inline T &operator*()
             {
               return *get_tls();
             }

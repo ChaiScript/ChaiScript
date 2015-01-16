@@ -370,10 +370,10 @@ namespace chaiscript
       m_engine.add(fun(&ChaiScript::internal_eval, this), "eval");
       m_engine.add(fun(&ChaiScript::internal_eval_ast, this), "eval");
 
-      m_engine.add(fun(&ChaiScript::version_major, this), "version_major");
-      m_engine.add(fun(&ChaiScript::version_minor, this), "version_minor");
-      m_engine.add(fun(&ChaiScript::version_patch, this), "version_patch");
-      m_engine.add(fun(&ChaiScript::version, this), "version");
+      m_engine.add(fun(&ChaiScript::version_major), "version_major");
+      m_engine.add(fun(&ChaiScript::version_minor), "version_minor");
+      m_engine.add(fun(&ChaiScript::version_patch), "version_patch");
+      m_engine.add(fun(&ChaiScript::version), "version");
 
       m_engine.add(fun(&ChaiScript::add_global_const, this), "add_global_const");
       m_engine.add(fun(&ChaiScript::add_global, this), "add_global");
@@ -490,22 +490,22 @@ namespace chaiscript
       build_eval_system(ModulePtr());
     }
 
-    int version_major() const
+    static int version_major()
     {
       return chaiscript::version_major;
     }
 
-    int version_minor() const
+    static int version_minor()
     {
       return chaiscript::version_minor;
     }
 
-    int version_patch() const
+    static int version_patch()
     {
       return chaiscript::version_patch;
     }
 
-    std::string version() const
+    static std::string version()
     {
       std::stringstream ss;
       ss << version_major() << "." << version_minor() << "." << version_patch();
@@ -604,7 +604,7 @@ namespace chaiscript
     /// chaiscript::ChaiScript chai;
     /// chaiscript::ChaiScript::State s = chai.get_state(); // represents bootstrapped initial state
     /// \endcode
-    State get_state()
+    State get_state() const
     {
       chaiscript::detail::threading::lock_guard<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
       chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l2(m_mutex);

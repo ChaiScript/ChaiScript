@@ -67,7 +67,7 @@ namespace chaiscript
             case Operators::not_equal:
               return const_var(t != u);
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -560,6 +560,7 @@ namespace chaiscript
         }
       }
 
+      // cppcheck-suppress operatorEq
       Boxed_Number operator=(const Boxed_Value &v)
       {
         validate_boxed_number(v);
@@ -567,6 +568,7 @@ namespace chaiscript
         return *this;
       }
 
+      // cppcheck-suppress operatorEq
       Boxed_Number operator=(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::assign, this->bv, t_rhs.bv);
