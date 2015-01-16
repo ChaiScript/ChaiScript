@@ -691,6 +691,25 @@ namespace chaiscript
         }
       }
 
+      /// Reads an argument from input
+      bool Arg() {
+        const auto prev_stack_top = m_match_stack.size();
+        SkipWS();
+
+        if (!Id(true)) {
+          return false;
+        }
+
+        SkipWS();
+        Id(true);
+
+        build_match(std::make_shared<eval::Arg_AST_Node>(), prev_stack_top);
+
+        return true;
+      }
+
+
+
       /// Checks for a node annotation of the form "#<annotation>"
       bool Annotation() {
         SkipWS();
@@ -1101,6 +1120,33 @@ namespace chaiscript
         }
       }
 
+      /// Reads a comma-separated list of values from input, for function declarations
+      bool Decl_Arg_List() {
+        SkipWS(true);
+        bool retval = false;
+
+        const auto prev_stack_top = m_match_stack.size();
+
+        if (Arg()) {
+          retval = true;
+          while (Eol()) {}
+          if (Char(',')) {
+            do {
+              while (Eol()) {}
+              if (!Arg()) {
+                throw exception::eval_error("Unexpected value in parameter list", File_Position(m_line, m_col), *m_filename);
+              }
+            } while (Char(','));
+          }
+          build_match(std::make_shared<eval::Arg_List_AST_Node>(), prev_stack_top);
+        }
+
+        SkipWS(true);
+
+        return retval;
+      }
+
+
       /// Reads a comma-separated list of values from input
       bool Arg_List() {
         SkipWS(true);
@@ -1178,7 +1224,7 @@ namespace chaiscript
           retval = true;
 
           if (Char('(')) {
-            Arg_List();
+            Decl_Arg_List();
             if (!Char(')')) {
               throw exception::eval_error("Incomplete anonymous function", File_Position(m_line, m_col), *m_filename);
             }
@@ -1228,7 +1274,7 @@ namespace chaiscript
           }
 
           if (Char('(')) {
-            Arg_List();
+            Decl_Arg_List();
             if (!Char(')')) {
               throw exception::eval_error("Incomplete function definition", File_Position(m_line, m_col), *m_filename);
             }
@@ -1283,7 +1329,7 @@ namespace chaiscript
             if (Keyword("catch", false)) {
               const auto catch_stack_top = m_match_stack.size();
               if (Char('(')) {
-                if (!(Id(true) && Char(')'))) {
+                if (!(Arg() && Char(')'))) {
                   throw exception::eval_error("Incomplete 'catch' expression", File_Position(m_line, m_col), *m_filename);
                 }
                 if (Char(':')) {

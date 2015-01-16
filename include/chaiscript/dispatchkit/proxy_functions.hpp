@@ -24,6 +24,7 @@
 #include "boxed_value.hpp"
 #include "proxy_functions_detail.hpp"
 #include "type_info.hpp"
+#include "dynamic_object.hpp"
 
 namespace chaiscript {
 class Type_Conversions;
@@ -42,6 +43,95 @@ namespace chaiscript
 
   namespace dispatch
   {
+    class Param_Types
+    {
+      public:
+        Param_Types()
+          : m_has_types(false),
+            m_doti(user_type<Dynamic_Object>())
+        {}
+
+        Param_Types(std::vector<std::pair<std::string, Type_Info>> t_types)
+          : m_types(std::move(t_types)),
+            m_has_types(false),
+            m_doti(user_type<Dynamic_Object>())
+        {
+          update_has_types();
+        }
+
+        void push_front(std::string t_name, Type_Info t_ti)
+        {
+          m_types.emplace(m_types.begin(), std::move(t_name), std::move(t_ti));
+          update_has_types();
+        }
+
+        bool operator==(const Param_Types &t_rhs) const
+        {
+          return m_types == t_rhs.m_types;
+        }
+
+        bool match(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const
+        {
+          if (!m_has_types) return true;
+          if (vals.size() != m_types.size()) return false;
+
+          for (size_t i = 0; i < vals.size(); ++i)
+          {
+            const auto &name = m_types[i].first;
+            if (!name.empty()) {
+              const auto &bv = vals[i];
+
+              if (bv.get_type_info().bare_equal(m_doti))
+              {
+                try {
+                  const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bv, &t_conversions);
+                  return name == "Dynamic_Object" || d.get_type_name() == name;
+                } catch (const std::bad_cast &) {
+                  return false;
+                } 
+              } else {
+                const auto &ti = m_types[i].second;
+                if (!ti.is_undef())
+                {
+                  if (!bv.get_type_info().bare_equal(ti)) {
+                    return false;
+                  }
+                } else {
+                  return false;
+                }
+              }
+            }
+          }
+
+          return true;
+        }
+
+        const std::vector<std::pair<std::string, Type_Info>> &types() const
+        {
+          return m_types;
+        }
+
+      private:
+        void update_has_types()
+        {
+          for (const auto &type : m_types)
+          {
+            if (!type.first.empty())
+            {
+              m_has_types = true;
+              return;
+            }
+          }
+
+          m_has_types = false;
+        }
+
+        std::vector<std::pair<std::string, Type_Info>> m_types;
+        bool m_has_types;
+        Type_Info m_doti;
+
+    };
+
     /**
      * Pure virtual base class for all Proxy_Function implementations
      * Proxy_Functions are a type erasure of type safe C++
@@ -215,10 +305,12 @@ namespace chaiscript
             std::function<Boxed_Value (const std::vector<Boxed_Value> &)> t_f, 
             int t_arity=-1,
             AST_NodePtr t_parsenode = AST_NodePtr(),
+            Param_Types t_param_types = Param_Types(),
             std::string t_description = "",
             Proxy_Function t_guard = Proxy_Function())
-          : Proxy_Function_Base(build_param_type_list(t_arity), t_arity),
-            m_f(std::move(t_f)), m_arity(t_arity), m_description(std::move(t_description)), m_guard(std::move(t_guard)), m_parsenode(std::move(t_parsenode))
+          : Proxy_Function_Base(build_param_type_list(t_param_types), t_arity),
+            m_f(std::move(t_f)), m_arity(t_arity), m_param_types(std::move(t_param_types)),
+            m_description(std::move(t_description)), m_guard(std::move(t_guard)), m_parsenode(std::move(t_parsenode))
         {
         }
 
@@ -231,14 +323,15 @@ namespace chaiscript
           return this == &rhs
             || (prhs
                 && this->m_arity == prhs->m_arity
-                && !this->m_guard && !prhs->m_guard);
+                && !this->m_guard && !prhs->m_guard
+                && this->m_param_types == prhs->m_param_types);
         }
 
         virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          return (m_arity < 0 || vals.size() == size_t(m_arity))
+          return (m_arity < 0 || (vals.size() == size_t(m_arity) && m_param_types.match(vals, t_conversions)))
             && test_guard(vals, t_conversions);
-        }    
+        }
 
 
         Proxy_Function get_guard() const
@@ -261,8 +354,7 @@ namespace chaiscript
         {
           if (m_arity < 0 || params.size() == size_t(m_arity))
           {
-
-            if (test_guard(params, t_conversions))
+            if (call_match(params, t_conversions) && test_guard(params, t_conversions))
             {
               return m_f(params);
             } else {
@@ -291,18 +383,19 @@ namespace chaiscript
           }
         }
 
-        static std::vector<Type_Info> build_param_type_list(int arity)
+        static std::vector<Type_Info> build_param_type_list(const Param_Types &t_types)
         {
           std::vector<Type_Info> types;
 
           // For the return type
           types.push_back(chaiscript::detail::Get_Type_Info<Boxed_Value>::get());
 
-          if (arity > 0)
+          for (const auto &t : t_types.types())
           {
-            for (int i = 0; i < arity; ++i)
-            {
+            if (t.second.is_undef()) {
               types.push_back(chaiscript::detail::Get_Type_Info<Boxed_Value>::get());
+            } else {
+              types.push_back(t.second);
             }
           }
 
@@ -311,6 +404,7 @@ namespace chaiscript
 
         std::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
         int m_arity;
+        Param_Types m_param_types;
         std::string m_description;
         Proxy_Function m_guard;
         AST_NodePtr m_parsenode;
