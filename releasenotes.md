@@ -5,6 +5,7 @@ Current Version: 5.6.0
 ### Changes since 5.5.1
 * Throw exception on integer divide by 0
 * Add optional type specification to function declarations
+   
   ```
   def func(int i, j, double k) {
     // i must be an int.
@@ -12,7 +13,7 @@ Current Version: 5.6.0
     // k must be a double
     // normal conversion rules still apply
   }
-  ```
+   ```
 * Many minor fixes for compiler warnings
 * Add support for `std::future` and `std::async`
   ```
