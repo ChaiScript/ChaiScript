@@ -44,6 +44,8 @@ namespace chaiscript
         {
         }
 
+        bad_boxed_dynamic_cast(const bad_boxed_dynamic_cast &) = default;
+
         virtual ~bad_boxed_dynamic_cast() CHAISCRIPT_NOEXCEPT {}
     };
 
@@ -65,6 +67,8 @@ namespace chaiscript
           : bad_boxed_cast(w)
         {
         }
+
+        bad_boxed_type_cast(const bad_boxed_type_cast &) = default;
 
         virtual ~bad_boxed_type_cast() CHAISCRIPT_NOEXCEPT {}
     };
@@ -213,14 +217,20 @@ namespace chaiscript
       };
 
       Type_Conversions()
-        : m_num_types(0),
+        : m_mutex(),
+          m_conversions(),
+          m_convertableTypes(),
+          m_num_types(0),
           m_thread_cache(this),
           m_conversion_saves(this)
       {
       }
 
       Type_Conversions(const Type_Conversions &t_other)
-        : m_conversions(t_other.get_conversions()), m_num_types(m_conversions.size()),
+        : m_mutex(),
+          m_conversions(t_other.get_conversions()),
+          m_convertableTypes(),
+          m_num_types(m_conversions.size()),
           m_thread_cache(this),
           m_conversion_saves(this)
 
@@ -366,8 +376,8 @@ namespace chaiscript
       std::set<std::shared_ptr<detail::Type_Conversion_Base>> m_conversions;
       std::set<const std::type_info *, Less_Than> m_convertableTypes;
       std::atomic_size_t m_num_types;
-      chaiscript::detail::threading::Thread_Storage<std::set<const std::type_info *, Less_Than>> m_thread_cache;
-      chaiscript::detail::threading::Thread_Storage<Conversion_Saves> m_conversion_saves;
+      mutable chaiscript::detail::threading::Thread_Storage<std::set<const std::type_info *, Less_Than>> m_thread_cache;
+      mutable chaiscript::detail::threading::Thread_Storage<Conversion_Saves> m_conversion_saves;
   };
 
   typedef std::shared_ptr<chaiscript::detail::Type_Conversion_Base> Type_Conversion;

@@ -8,6 +8,8 @@ class BaseClass
     {
     }
 
+    BaseClass(const BaseClass &) = default;
+
     virtual ~BaseClass() {}
 
     virtual std::string doSomething(float, double) const = 0;

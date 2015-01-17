@@ -4,9 +4,9 @@
 template<typename T>
 struct Vector2
 {
-  Vector2() : x(0), y(0) {};
-  Vector2(T px, T py) : x(px), y(py) {};
-  Vector2(const Vector2& cp) : x(cp.x), y(cp.y) {};
+  Vector2() : x(0), y(0) {}
+  Vector2(T px, T py) : x(px), y(py) {}
+  Vector2(const Vector2& cp) : x(cp.x), y(cp.y) {}
 
   Vector2& operator+=(const Vector2& vec_r)
   {
@@ -20,10 +20,11 @@ struct Vector2
     return Vector2(*this += vec_r);
   }
 
-  void operator=(const Vector2& ver_r)
+  Vector2 &operator=(const Vector2& ver_r)
   {
     x = ver_r.x;
     y = ver_r.y;
+    return *this;
   }
 
 

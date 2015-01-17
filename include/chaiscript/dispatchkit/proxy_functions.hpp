@@ -219,7 +219,7 @@ namespace chaiscript
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const = 0;
 
         Proxy_Function_Base(std::vector<Type_Info> t_types, int t_arity)
-          : m_types(std::move(t_types)), m_has_arithmetic_param(false), m_arity(t_arity)
+          : m_types(std::move(t_types)), m_arity(t_arity), m_has_arithmetic_param(false)
         {
           for (size_t i = 1; i < m_types.size(); ++i)
           {
@@ -265,8 +265,8 @@ namespace chaiscript
         }
 
         std::vector<Type_Info> m_types;
-        bool m_has_arithmetic_param;
         int m_arity;
+        bool m_has_arithmetic_param;
     };
   }
 
@@ -286,6 +286,8 @@ namespace chaiscript
         guard_error() CHAISCRIPT_NOEXCEPT
           : std::runtime_error("Guard evaluation failed")
         { }
+
+        guard_error(const guard_error &) = default;
 
         virtual ~guard_error() CHAISCRIPT_NOEXCEPT
         { }
@@ -309,8 +311,9 @@ namespace chaiscript
             std::string t_description = "",
             Proxy_Function t_guard = Proxy_Function())
           : Proxy_Function_Base(build_param_type_list(t_param_types), t_arity),
-            m_f(std::move(t_f)), m_arity(t_arity), m_param_types(std::move(t_param_types)),
-            m_description(std::move(t_description)), m_guard(std::move(t_guard)), m_parsenode(std::move(t_parsenode))
+            m_param_types(std::move(t_param_types)),
+            m_guard(std::move(t_guard)), m_parsenode(std::move(t_parsenode)), m_description(std::move(t_description)), 
+            m_f(std::move(t_f))
         {
         }
 
@@ -402,12 +405,11 @@ namespace chaiscript
           return types;
         }
 
-        std::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
-        int m_arity;
         Param_Types m_param_types;
-        std::string m_description;
         Proxy_Function m_guard;
         AST_NodePtr m_parsenode;
+        std::string m_description;
+        std::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
     };
 
     /**
@@ -654,7 +656,7 @@ namespace chaiscript
             }
           } else {
             throw exception::arity_error(static_cast<int>(params.size()), 1);
-          }       
+          }
         }
 
       private:
@@ -683,6 +685,7 @@ namespace chaiscript
         {
         }
 
+        dispatch_error(const dispatch_error &) = default;
         virtual ~dispatch_error() CHAISCRIPT_NOEXCEPT {}
 
         std::vector<Boxed_Value> parameters;

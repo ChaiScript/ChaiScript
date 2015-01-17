@@ -246,6 +246,7 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr random_access_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
+          // cppcheck-suppress syntaxError
           typedef typename ContainerType::reference(ContainerType::*indexoper)(size_t);
           typedef typename ContainerType::const_reference(ContainerType::*constindexoper)(size_t) const;
 

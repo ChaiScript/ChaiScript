@@ -45,6 +45,15 @@ namespace chaiscript
 #pragma warning(disable : 4244 4018 4389 4146 4365)
 #endif
 
+
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#endif
+
   /// \brief Represents any numeric type, generically. Used internally for generic operations between POD values
   class Boxed_Number
   {
@@ -67,9 +76,6 @@ namespace chaiscript
       struct boolean
       {
 
-#ifdef __GNUC__
-#pragma GCC diagnostic ignored "-Wsign-compare"
-#endif
         template<typename T, typename U>
         static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &)
         {
@@ -370,6 +376,13 @@ namespace chaiscript
         validate_boxed_number(bv);
       }
 
+      Boxed_Number(const Boxed_Number &) = default;
+
+#if !defined(_MSC_VER) || _MSC_VER  != 1800
+      Boxed_Number(Boxed_Number &&) = default;
+      Boxed_Number& operator=(Boxed_Number &&) = default;
+#endif
+
       template<typename T> explicit Boxed_Number(T t)
         : bv(Boxed_Value(t))
       {
@@ -577,6 +590,7 @@ namespace chaiscript
         }
       }
 
+      // cppcheck-suppress operatorEq
       Boxed_Number operator=(const Boxed_Value &v)
       {
         validate_boxed_number(v);
@@ -584,6 +598,7 @@ namespace chaiscript
         return *this;
       }
 
+      // cppcheck-suppress operatorEq
       Boxed_Number operator=(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::assign, this->bv, t_rhs.bv);
@@ -880,6 +895,10 @@ namespace chaiscript
       {
       };
   }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)

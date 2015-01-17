@@ -112,6 +112,8 @@ namespace chaiscript
         reason(t_why) 
       {}
 
+      eval_error(const eval_error &) = default;
+
       std::string pretty_print() const
       {
         std::ostringstream ss;
@@ -395,6 +397,7 @@ namespace chaiscript
         : std::runtime_error("File Not Found: " + t_filename)
       { }
 
+      file_not_found_error(const file_not_found_error &) = default;
       virtual ~file_not_found_error() CHAISCRIPT_NOEXCEPT {}
     };
 

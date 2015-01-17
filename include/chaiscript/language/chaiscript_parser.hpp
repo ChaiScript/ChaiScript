@@ -223,8 +223,8 @@ namespace chaiscript
         t_t->end.column = pos_col_stop;
 
         if (is_deep) {
-          t_t->children.assign(m_match_stack.begin() + t_match_start, m_match_stack.end());
-          m_match_stack.erase(m_match_stack.begin() + t_match_start, m_match_stack.end());
+          t_t->children.assign(m_match_stack.begin() + static_cast<int>(t_match_start), m_match_stack.end());
+          m_match_stack.erase(m_match_stack.begin() + static_cast<int>(t_match_start), m_match_stack.end());
         }
 
         /// \todo fix the fact that a successful match that captured no ast_nodes doesn't have any real start position
@@ -1956,6 +1956,7 @@ namespace chaiscript
                   case(AST_Node_Type::Bitwise_Xor) :
                   case(AST_Node_Type::Bitwise_Or) :
                   case(AST_Node_Type::Comparison) :
+                    assert(m_match_stack.size() > 1);
                     m_match_stack.erase(m_match_stack.begin() + m_match_stack.size() - 2, m_match_stack.begin() + m_match_stack.size() - 1);
                     build_match(std::make_shared<eval::Binary_Operator_AST_Node>(oper->text), prev_stack_top);
                     break;

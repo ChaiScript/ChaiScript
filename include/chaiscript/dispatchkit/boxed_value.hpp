@@ -72,8 +72,8 @@ namespace chaiscript
         chaiscript::detail::Any m_obj;
         void *m_data_ptr;
         const void *m_const_data_ptr;
-        bool m_is_ref;
         std::unique_ptr<std::map<std::string, Boxed_Value>> m_attrs;
+        bool m_is_ref;
       };
 
       struct Object_Data
