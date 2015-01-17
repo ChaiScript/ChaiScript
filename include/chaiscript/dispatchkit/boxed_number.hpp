@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_BOXED_NUMERIC_HPP_
@@ -29,6 +29,7 @@ namespace chaiscript
     struct arithmetic_error : public std::runtime_error
     {
       arithmetic_error(const std::string& reason) : std::runtime_error("Arithmetic error: " + reason) {}
+      arithmetic_error(const arithmetic_error &) = default;
       virtual ~arithmetic_error() CHAISCRIPT_NOEXCEPT {}
     };
   }

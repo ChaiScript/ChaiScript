@@ -1,6 +1,30 @@
 Notes:
 =======
-Current Version: 5.5.1
+Current Version: 5.6.0
+
+### Changes since 5.5.1
+* Throw exception on integer divide by 0
+* Add optional type specification to function declarations
+  ```
+  def func(int i, j, double k) {
+    // i must be an int.
+    // j can be anything
+    // k must be a double
+    // normal conversion rules still apply
+  }
+  ```
+* Many minor fixes for compiler warnings
+* Add support for `std::future` and `std::async`
+  ```
+  var f := async(someFunction);
+  var f2 := async(someFunction2);
+
+  // someFunction and someFunction2 are running in parallel now
+  f.get();
+  f2.get();
+  ```
+* Fully support r-value returns, supporting move-only objects and reducing object copies
+
 
 ### Changes since 5.5.0
 * 30% performance increase
