@@ -663,6 +663,19 @@
 ///
 /// @sa @ref LangObjectSystemRef
 ///
+///
+/// -----------------------------------------------------------------------
+///
+/// @section keywordauto auto
+///
+/// Defines a variable
+///
+/// ~~~~~~~~
+/// Variable ::= "auto" identifier
+/// ~~~~~~~~
+///
+/// Synonym for @ref keywordvar
+///
 /// -----------------------------------------------------------------------
 ///
 /// @section keywordbreak break
@@ -682,13 +695,13 @@
 /// Begins a function or method definition
 ///
 /// ~~~~~~~~
-/// Function Definition ::= [annotation + CR/LF] "def" identifier "(" [arg ("," arg)*] ")" [":" guard] block
-/// Method Definition ::= [annotation + CR/LF] "def" class_name "::" method_name "(" [arg ("," arg)*] ")" [":" guard] block
+/// Function Definition ::= [annotation + CR/LF] "def" identifier "(" [[type] arg ("," [type] arg)*] ")" [":" guard] block
+/// Method Definition ::= [annotation + CR/LF] "def" class_name "::" method_name "(" [[type] arg ("," [type] arg)*] ")" [":" guard] block
 /// ~~~~~~~~
 /// 
 /// annotation: meta-annotation on function, currently used as documentation. Optional.
 /// identifier: name of function. Required.
-/// args: comma-delimited list of parameter names. Optional.
+/// args: comma-delimited list of parameter names with optional type specifiers. Optional.
 /// guards: guarding statement that act as a prerequisite for the function. Optional.
 /// { }: scoped block as function body. Required.
 ///
@@ -765,11 +778,12 @@
 /// @section keywordtry try
 /// ~~~~~~~~
 /// Try Block ::= "try" block 
-///  ("catch" ["(" variable ")"] [":" guards] block)+ 
+///  ("catch" ["(" [type] variable ")"] [":" guards] block)+ 
 ///    ["finally" block]
 /// ~~~~~~~~
 ///
 /// @sa ChaiScript_Language::throw
+///
 ///
 /// -----------------------------------------------------------------------
 ///
@@ -782,6 +796,19 @@
 /// ~~~~~~~~
 ///
 /// This loop can be broken using the @ref keywordbreak command.
+///
+///
+/// -----------------------------------------------------------------------
+///
+/// @section keywordvar var
+/// 
+/// Defines a variable
+///
+/// ~~~~~~~~
+/// Variable ::= "var" identifier
+/// ~~~~~~~~
+///
+/// Synonym for @ref keywordauto
 
 
 /// @namespace chaiscript
