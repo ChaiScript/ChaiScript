@@ -187,9 +187,7 @@ namespace chaiscript
     class Bootstrap
     {
     private:
-      /**
-      * Function allowing for assignment of an unknown type to any other value
-      */
+      /// Function allowing for assignment of an unknown type to any other value
       static Boxed_Value unknown_assign(Boxed_Value lhs, Boxed_Value rhs)
       {
         if (lhs.is_undef())
@@ -262,7 +260,7 @@ namespace chaiscript
 
         Const_Proxy_Function f = boxed_cast<Const_Proxy_Function>(params[0]);
 
-        return Boxed_Value(Const_Proxy_Function(std::make_shared<dispatch::Bound_Function>(f,
+        return Boxed_Value(Const_Proxy_Function(std::make_shared<dispatch::Bound_Function>(std::move(f),
           std::vector<Boxed_Value>(params.begin() + 1, params.end()))));
       }
 
@@ -284,15 +282,10 @@ namespace chaiscript
 
       static Const_Proxy_Function get_guard(const Const_Proxy_Function &t_pf)
       {
-        auto pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
-        if (pf)
+        const auto pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
+        if (pf && pf->get_guard())
         {
-          if (pf->get_guard())
-          {
-            return pf->get_guard();
-          } else {
-            throw std::runtime_error("Function does not have a guard");
-          }
+          return pf->get_guard();
         } else {
           throw std::runtime_error("Function does not have a guard");
         }
@@ -337,14 +330,10 @@ namespace chaiscript
 
       static bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
       {
-        if (auto pf = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf))
+        const auto pf = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
+        if (pf && pf->get_parse_tree())
         {
-          if (pf->get_parse_tree())
-          {
-            return true;
-          } else {
-            return false;
-          }
+          return true;
         } else {
           return false;
         }
@@ -352,14 +341,10 @@ namespace chaiscript
 
       static chaiscript::AST_NodePtr get_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
       {
-        if (auto pf = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf))
+        const auto pf = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
+        if (pf && pf->get_parse_tree())
         {
-          if (pf->get_parse_tree())
-          {
-            return pf->get_parse_tree();
-          } else {
-            throw std::runtime_error("Function does not have a parse tree");
-          }
+          return pf->get_parse_tree();
         } else {
           throw std::runtime_error("Function does not have a parse tree");
         }

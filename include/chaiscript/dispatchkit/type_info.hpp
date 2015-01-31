@@ -129,9 +129,7 @@ namespace chaiscript
 
   namespace detail
   {
-    /**
-     * Helper used to create a Type_Info object
-     */
+    /// Helper used to create a Type_Info object
     template<typename T>
       struct Get_Type_Info
       {

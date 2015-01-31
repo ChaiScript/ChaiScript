@@ -228,8 +228,7 @@ namespace chaiscript
 
             std::advance(itr, pos);
             container.erase(itr);
-          }      
-
+          }
       }
 
       template<typename ContainerType>
@@ -303,15 +302,15 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr sequence_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
-          std::string insert_name;
-          if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value))
-          {
-            insert_name = "insert_ref_at";
-          } else {
-            insert_name = "insert_at";
-          }
+          m->add(fun(&detail::insert_at<ContainerType>), 
+              [](){
+                if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
+                  return "insert_ref_at";
+                } else {
+                  return "insert_at";
+                }
+              }());
 
-          m->add(fun(&detail::insert_at<ContainerType>), insert_name);
           m->add(fun(&detail::erase_at<ContainerType>), "erase_at");
 
           return m;
@@ -327,16 +326,17 @@ namespace chaiscript
 
           m->add(fun(static_cast<backptr>(&ContainerType::back)), "back");
 
-          std::string push_back_name;
-          if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value))
-          {
-            push_back_name = "push_back_ref";
-          } else {
-            push_back_name = "push_back";
-          }
 
           typedef void (ContainerType::*push_back)(const typename ContainerType::value_type &);
-          m->add(fun(static_cast<push_back>(&ContainerType::push_back)), push_back_name);
+          m->add(fun(static_cast<push_back>(&ContainerType::push_back)),
+              [](){
+                if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
+                  return "push_back_ref";
+                } else {
+                  return "push_back";
+                }
+              }());
+
           m->add(fun(&ContainerType::pop_back), "pop_back");
           return m;
         }
@@ -356,15 +356,15 @@ namespace chaiscript
           m->add(fun(static_cast<frontptr>(&ContainerType::front)), "front");
           m->add(fun(static_cast<constfrontptr>(&ContainerType::front)), "front");
 
-          std::string push_front_name;
-          if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value))
-          {
-            push_front_name = "push_front_ref";
-          } else {
-            push_front_name = "push_front";
-          }
+          m->add(fun(static_cast<pushptr>(&ContainerType::push_front)), 
+              [](){
+                if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
+                  return "push_front_ref";
+                } else {
+                  return "push_front";
+                }
+              }());
 
-          m->add(fun(static_cast<pushptr>(&ContainerType::push_front)), push_front_name);
           m->add(fun(static_cast<popptr>(&ContainerType::pop_front)), "pop_front");
           return m;
         }
@@ -417,15 +417,16 @@ namespace chaiscript
 
           m->add(fun(&detail::insert<ContainerType>), "insert");
 
-          std::string insert_name;
-          if (typeid(typename ContainerType::mapped_type) == typeid(Boxed_Value))
-          {
-            insert_name = "insert_ref";
-          } else {
-            insert_name = "insert";
-          }
+          m->add(fun(&detail::insert_ref<ContainerType>), 
+              [](){
+                if (typeid(typename ContainerType::mapped_type) == typeid(Boxed_Value)) {
+                  return "insert_ref";
+                } else {
+                  return "insert";
+                }
+              }());
 
-          m->add(fun(&detail::insert_ref<ContainerType>), insert_name);
+
           return m;
         }
 
@@ -536,14 +537,15 @@ namespace chaiscript
           input_range_type<String>(type, m);
 
           //Special case: add push_back to string (which doesn't support other back_insertion operations
-          std::string push_back_name;
-          if (typeid(typename String::value_type) == typeid(Boxed_Value))
-          {
-            push_back_name = "push_back_ref";
-          } else {
-            push_back_name = "push_back";
-          }
-          m->add(fun(&String::push_back), push_back_name);
+          m->add(fun(&String::push_back), 
+              [](){
+                if (typeid(typename String::value_type) == typeid(Boxed_Value)) {
+                  return "push_back_ref";
+                } else {
+                  return "push_back";
+                }
+              }());
+
 
           typedef std::function<size_t (const String *, const String &, size_t)> find_func;
 
@@ -581,9 +583,6 @@ namespace chaiscript
 
           return m;
         }
-
-
-
     }
   }
 }

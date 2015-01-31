@@ -62,7 +62,7 @@ namespace chaiscript
               /// \todo is it possible to reduce the number of templates generated here?
               return Proxy_Function(
                   new Proxy_Function_Impl<typename FunctionSignature<decltype(to_function(t)) >::Signature>(to_function(t)));
-            }      
+            }
         };
 
       template<>
@@ -171,7 +171,7 @@ namespace chaiscript
     {
       return fun(detail::bind_first(detail::bind_first(t, q), r));
     }
-   
+
 }
 
 

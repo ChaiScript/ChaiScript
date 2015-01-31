@@ -147,8 +147,7 @@ namespace chaiscript
 
         Boxed_Value operator()(const std::vector<Boxed_Value> &params, const chaiscript::Type_Conversions &t_conversions) const
         {
-          Boxed_Value bv = do_call(params, t_conversions);
-          return bv;
+          return do_call(params, t_conversions);
         }
 
         /// Returns a vector containing all of the types of the parameters the function returns/takes
@@ -177,7 +176,7 @@ namespace chaiscript
           if (m_arity < 0)
           {
             return true;
-          } else if (size_t(m_arity) == vals.size()) {
+          } else if (static_cast<size_t>(m_arity) == vals.size()) {
             if (m_arity == 0)
             {
               return true;
@@ -234,16 +233,14 @@ namespace chaiscript
 
         virtual bool compare_first_type(const Boxed_Value &bv, const Type_Conversions &t_conversions) const
         {
-          const std::vector<Type_Info> &types = get_param_types();
+          const auto &types = get_param_types();
 
           if (types.size() < 2)
           {
             return true;
           }
 
-          const Type_Info &ti = types[1];
-          return compare_type_to_param(ti, bv, t_conversions);
-
+          return compare_type_to_param(types[1], bv, t_conversions);
         }
 
         static bool compare_types(const std::vector<Type_Info> &tis, const std::vector<Boxed_Value> &bvs)
@@ -252,7 +249,7 @@ namespace chaiscript
           {
             return false;
           } else {
-            size_t size = bvs.size();
+            const size_t size = bvs.size();
             for (size_t i = 0; i < size; ++i)
             {
               if (!(tis[i+1].bare_equal(bvs[i].get_type_info()) && tis[i+1].is_const() >= bvs[i].get_type_info().is_const() ))
@@ -412,20 +409,16 @@ namespace chaiscript
         std::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
     };
 
-    /**
-     * An object used by Bound_Function to represent "_" parameters
-     * of a binding. This allows for unbound parameters during bind.
-     */
+    /// An object used by Bound_Function to represent "_" parameters
+    /// of a binding. This allows for unbound parameters during bind.
     struct Placeholder_Object
     {
     };
 
-    /**
-     * An implementation of Proxy_Function that takes a Proxy_Function
-     * and substitutes bound parameters into the parameter list
-     * at runtime, when call() is executed.
-     * it is used for bind(function, param1, _, param2) style calls
-     */
+    /// An implementation of Proxy_Function that takes a Proxy_Function
+    /// and substitutes bound parameters into the parameter list
+    /// at runtime, when call() is executed.
+    /// it is used for bind(function, param1, _, param2) style calls
     class Bound_Function : public Proxy_Function_Base
     {
       public:
@@ -451,9 +444,7 @@ namespace chaiscript
 
         virtual std::vector<Const_Proxy_Function> get_contained_functions() const CHAISCRIPT_OVERRIDE
         {
-          std::vector<Const_Proxy_Function> fs;
-          fs.push_back(m_f);
-          return fs;
+          return std::vector<Const_Proxy_Function>{m_f};
         }
 
 
@@ -504,8 +495,7 @@ namespace chaiscript
           std::vector<Type_Info> types = t_f->get_param_types();
           assert(types.size() == t_args.size() + 1);
 
-          std::vector<Type_Info> retval;
-          retval.push_back(types[0]);
+          std::vector<Type_Info> retval{types[0]};
           for (size_t i = 0; i < types.size()-1; ++i)
           {
             if (t_args[i].get_type_info() == chaiscript::detail::Get_Type_Info<Placeholder_Object>::get())
@@ -544,7 +534,7 @@ namespace chaiscript
 
         virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          if (int(vals.size()) != get_arity()) 
+          if (static_cast<int>(vals.size()) != get_arity()) 
           {
             return false;
           }
@@ -555,11 +545,9 @@ namespace chaiscript
         virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const = 0;
     };
 
-    /**
-     * The standard typesafe function call implementation of Proxy_Function
-     * It takes a std::function<> object and performs runtime 
-     * type checking of Boxed_Value parameters, in a type safe manner
-     */
+    /// The standard typesafe function call implementation of Proxy_Function
+    /// It takes a std::function<> object and performs runtime 
+    /// type checking of Boxed_Value parameters, in a type safe manner
     template<typename Func>
       class Proxy_Function_Impl : public Proxy_Function_Impl_Base
     {
@@ -598,9 +586,7 @@ namespace chaiscript
         Func *m_dummy_func;
     };
 
-    /**
-     * Attribute getter Proxy_Function implementation
-     */
+    /// Attribute getter Proxy_Function implementation
     template<typename T, typename Class>
       class Attribute_Access : public Proxy_Function_Base
     {
