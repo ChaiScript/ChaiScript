@@ -482,7 +482,7 @@ namespace chaiscript
               }
 
               try {
-                rhs = t_ss.call_function(this->children[1]->text, std::move(lhs), rhs);
+                return t_ss.call_function(this->children[1]->text, std::move(lhs), rhs);
               }
               catch(const exception::dispatch_error &e){
                 throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, t_ss);
@@ -501,7 +501,7 @@ namespace chaiscript
           }
           else {
             try {
-              rhs = t_ss.call_function(this->children[1]->text, std::move(lhs), rhs);
+              return t_ss.call_function(this->children[1]->text, std::move(lhs), rhs);
             } catch(const exception::dispatch_error &e){
               throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, t_ss);
             }
