@@ -296,7 +296,7 @@ namespace chaiscript
           std::vector<Boxed_Value> params;
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
-          if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
+          if (this->children.size() > 1) {
             for (const auto &child : this->children[1]->children) {
               params.push_back(child->eval(t_ss));
             }
