@@ -451,6 +451,15 @@ namespace chaiscript
         }
       }
 
+      static bool get_bool_condition(const Boxed_Value &t_bv) {
+        try {
+          return boxed_cast<bool>(t_bv);
+        }
+        catch (const exception::bad_boxed_cast &) {
+          throw exception::eval_error("Condition not boolean");
+        }
+      }
+
 
       void replace_child(const AST_NodePtr &t_child, const AST_NodePtr &t_new_child)
       {

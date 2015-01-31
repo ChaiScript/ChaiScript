@@ -826,7 +826,7 @@ namespace chaiscript
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
           try {
-            while (boxed_cast<bool>(this->children[0]->eval(t_ss))) {
+            while (get_bool_condition(this->children[0]->eval(t_ss))) {
               try {
                 this->children[1]->eval(t_ss);
               } catch (detail::Continue_Loop &) {
@@ -835,8 +835,6 @@ namespace chaiscript
                 // the next condition test
               }
             } 
-          } catch (const exception::bad_boxed_cast &) {
-            throw exception::eval_error("While condition not boolean");
           } catch (detail::Break_Loop &) {
             // loop was broken intentionally
           }
@@ -868,21 +866,15 @@ namespace chaiscript
           AST_Node(t_ast_node_text, AST_Node_Type::If, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Ternary_Cond_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
-          bool cond = false;
-          try {
-            cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
-          }
-          catch (const exception::bad_boxed_cast &) {
-            throw exception::eval_error("Ternary if condition not boolean");
-          }
 
-          if (cond) {
+          if (get_bool_condition(this->children[0]->eval(t_ss))) {
             return this->children[1]->eval(t_ss);
           }
           else {
             return this->children[2]->eval(t_ss);
           }
         }
+
     };
 
     struct If_AST_Node : public AST_Node {
@@ -891,31 +883,20 @@ namespace chaiscript
           AST_Node(t_ast_node_text, AST_Node_Type::If, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~If_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
-          bool cond = false;
-          try {
-            cond = boxed_cast<bool>(this->children[0]->eval(t_ss));
-          }
-          catch (const exception::bad_boxed_cast &) {
-            throw exception::eval_error("If condition not boolean");
-          }
 
-          if (cond) {
+          if (get_bool_condition(this->children[0]->eval(t_ss))) {
             return this->children[1]->eval(t_ss);
           }
           else {
             if (this->children.size() > 2) {
               size_t i = 2;
+              bool cond = false;
               while ((!cond) && (i < this->children.size())) {
                 if (this->children[i]->text == "else") {
                   return this->children[i+1]->eval(t_ss);
                 }
                 else if (this->children[i]->text == "else if") {
-                  try {
-                    cond = boxed_cast<bool>(this->children[i+1]->eval(t_ss));
-                  }
-                  catch (const exception::bad_boxed_cast &) {
-                    throw exception::eval_error("'else if' condition not boolean");
-                  }
+                  cond = get_bool_condition(this->children[i+1]->eval(t_ss));
                   if (cond) {
                     return this->children[i+2]->eval(t_ss);
                   }
@@ -944,7 +925,7 @@ namespace chaiscript
 
           try {
             // while condition evals to true
-            while (boxed_cast<bool>(this->children[1]->eval(t_ss))) {
+            while (get_bool_condition(this->children[1]->eval(t_ss))) {
               try {
                 // Body of Loop
                 this->children[3]->eval(t_ss);
@@ -957,9 +938,6 @@ namespace chaiscript
               // loop expression
               this->children[2]->eval(t_ss);
             }
-          }
-          catch (const exception::bad_boxed_cast &) {
-            throw exception::eval_error("For condition not boolean");
           }
           catch (detail::Break_Loop &) {
             // loop broken
