@@ -1,0 +1,21 @@
+
+def shouldnt_execute()
+{
+  assert(false)
+}
+
+
+
+if (false && shouldnt_execute()) {
+}
+
+if (true || shouldnt_execute()) {
+}
+
+
+if (false || false || false || true || shouldnt_execute()) {
+}
+
+
+if (true && true && true && false && shouldnt_execute()) {
+}

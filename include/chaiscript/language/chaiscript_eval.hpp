@@ -1483,26 +1483,8 @@ namespace chaiscript
           AST_Node(t_ast_node_text, AST_Node_Type::Logical_And, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Logical_And_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
-          Boxed_Value retval = this->children[0]->eval(t_ss);
-
-          if (this->children.size() > 1) {
-            for (size_t i = 1; i < this->children.size(); i += 2) {
-              bool lhs;
-              try {
-                lhs = boxed_cast<bool>(retval);
-              }
-              catch (const exception::bad_boxed_cast &) {
-                throw exception::eval_error("Condition not boolean");
-              }
-              if (lhs) {
-                retval = this->children[i+1]->eval(t_ss);
-              }
-              else {
-                retval = Boxed_Value(false);
-              }
-            }
-          }
-          return retval;
+          return const_var(get_bool_condition(this->children[0]->eval(t_ss))
+              && get_bool_condition(this->children[2]->eval(t_ss)));
         }
 
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE
@@ -1517,23 +1499,8 @@ namespace chaiscript
           AST_Node(t_ast_node_text, AST_Node_Type::Logical_Or, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Logical_Or_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
-          Boxed_Value retval;
-
-          retval = this->children[0]->eval(t_ss);
-
-          if (this->children.size() > 1) {
-            for (size_t i = 1; i < this->children.size(); i += 2) {
-              bool lhs = boxed_cast<bool>(retval);
-
-              if (lhs) {
-                retval = Boxed_Value(true);
-              }
-              else {
-                retval = this->children[i+1]->eval(t_ss);
-              }
-            }
-          }
-          return retval;
+          return const_var(get_bool_condition(this->children[0]->eval(t_ss))
+              || get_bool_condition(this->children[2]->eval(t_ss)));
         }
 
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE
