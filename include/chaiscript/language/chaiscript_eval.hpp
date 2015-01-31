@@ -452,65 +452,62 @@ namespace chaiscript
         virtual ~Equation_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-          Boxed_Value retval = this->children.back()->eval(t_ss); 
+          Boxed_Value rhs = this->children.back()->eval(t_ss); 
+          Boxed_Value lhs = this->children[0]->eval(t_ss);
 
+          Operators::Opers oper = Operators::to_operator(this->children[1]->text);
 
-          if (this->children.size() > 1) {
-            Boxed_Value lhs = this->children[0]->eval(t_ss);
-
-            Operators::Opers oper = Operators::to_operator(this->children[1]->text);
-
-            if (oper != Operators::invalid && lhs.get_type_info().is_arithmetic() &&
-                retval.get_type_info().is_arithmetic())
-            {
-              try {
-                retval = Boxed_Number::do_oper(oper, lhs, retval);
-              } catch (const std::exception &) {
-                throw exception::eval_error("Error with unsupported arithmetic assignment operation");
+          if (oper != Operators::invalid && lhs.get_type_info().is_arithmetic() &&
+              rhs.get_type_info().is_arithmetic())
+          {
+            try {
+              return Boxed_Number::do_oper(oper, lhs, rhs);
+            } catch (const std::exception &) {
+              throw exception::eval_error("Error with unsupported arithmetic assignment operation");
+            }
+          } else if (oper == Operators::assign) {
+            try {
+              if (lhs.is_undef()) {
+                if (!this->children.empty() && 
+                    !this->children[0]->children.empty() 
+                    && this->children[0]->children[0]->identifier == AST_Node_Type::Reference)
+                {
+                  /// \todo This does not handle the case of an unassigned reference variable
+                  ///       being assigned outside of its declaration
+                  lhs.assign(rhs);
+                  return rhs;
+                } else {
+                  rhs = t_ss.call_function("clone", rhs);
+                }
               }
-            } else if (this->children[1]->text == "=") {
-              try {
-                if (lhs.is_undef()) {
-                  if (!this->children.empty() && 
-                      !this->children[0]->children.empty() 
-                      && this->children[0]->children[0]->identifier == AST_Node_Type::Reference)
-                  {
-                    /// \todo This does not handle the case of an unassigned reference variable
-                    ///       being assigned outside of its declaration
-                    lhs.assign(retval);
-                    return retval;
-                  } else {
-                    retval = t_ss.call_function("clone", retval);
-                  }
-                }
 
-                try {
-                  retval = t_ss.call_function(this->children[1]->text, std::move(lhs), retval);
-                }
-                catch(const exception::dispatch_error &e){
-                  throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, t_ss);
-                }
+              try {
+                rhs = t_ss.call_function(this->children[1]->text, std::move(lhs), rhs);
               }
               catch(const exception::dispatch_error &e){
-                throw exception::eval_error("Missing clone or copy constructor for right hand side of equation", e.parameters, e.functions, false, t_ss);
-              }
-            }
-            else if (this->children[1]->text == ":=") {
-              if (lhs.is_undef() || Boxed_Value::type_match(lhs, retval)) {
-                lhs.assign(retval);
-              } else {
-                throw exception::eval_error("Mismatched types in equation");
-              }
-            }
-            else {
-              try {
-                retval = t_ss.call_function(this->children[1]->text, std::move(lhs), retval);
-              } catch(const exception::dispatch_error &e){
                 throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, t_ss);
               }
             }
+            catch(const exception::dispatch_error &e){
+              throw exception::eval_error("Missing clone or copy constructor for right hand side of equation", e.parameters, e.functions, false, t_ss);
+            }
           }
-          return retval;
+          else if (this->children[1]->text == ":=") {
+            if (lhs.is_undef() || Boxed_Value::type_match(lhs, rhs)) {
+              lhs.assign(rhs);
+            } else {
+              throw exception::eval_error("Mismatched types in equation");
+            }
+          }
+          else {
+            try {
+              rhs = t_ss.call_function(this->children[1]->text, std::move(lhs), rhs);
+            } catch(const exception::dispatch_error &e){
+              throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, t_ss);
+            }
+          }
+
+          return rhs;
         }
     };
 
