@@ -170,7 +170,7 @@
 ///
 /// ~~~~~~~~~{.cpp}
 /// chai.add_global_const(const_var(i), "i");
-/// chai("def somefun() { print(i); }; sumfun();");
+/// chai("def somefun() { print(i); }; somefun();");
 /// ~~~~~~~~~
 /// 
 /// @subsubsection adding_functions Adding Functions
