@@ -19,6 +19,11 @@
 #include "dispatchkit/bootstrap_stl.hpp"
 #include "dispatchkit/boxed_value.hpp"
 
+#ifndef CHAISCRIPT_NO_THREADS
+#include <future>
+#endif
+
+
 /// @file
 ///
 /// This file generates the standard library that normal ChaiScript usage requires.
@@ -39,6 +44,11 @@ namespace chaiscript
         lib->add(standard_library::string_type<std::string>("string"));
         lib->add(standard_library::map_type<std::map<std::string, Boxed_Value> >("Map"));
         lib->add(standard_library::pair_type<std::pair<Boxed_Value, Boxed_Value > >("Pair"));
+
+#ifndef CHAISCRIPT_NO_THREADS
+        lib->add(standard_library::future_type<std::future<chaiscript::Boxed_Value>>("future"));
+        lib->add(chaiscript::fun<std::future<Boxed_Value> (const std::function<chaiscript::Boxed_Value ()> &)>([](const std::function<chaiscript::Boxed_Value ()> &t_func){ return std::async(std::launch::async, t_func);}), "async");
+#endif
 
         return lib;
       }

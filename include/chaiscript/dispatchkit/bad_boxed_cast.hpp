@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_BAD_BOXED_CAST_HPP_
@@ -45,7 +45,8 @@ namespace chaiscript
         {
         }
 
-        virtual ~bad_boxed_cast() CHAISCRIPT_NOEXCEPT {} 
+        bad_boxed_cast(const bad_boxed_cast &) = default;
+        virtual ~bad_boxed_cast() CHAISCRIPT_NOEXCEPT {}
 
         /// \brief Description of what error occurred
         virtual const char * what() const CHAISCRIPT_NOEXCEPT CHAISCRIPT_OVERRIDE

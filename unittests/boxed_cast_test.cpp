@@ -265,20 +265,25 @@ bool pointer_test(const T& default_value, const T& new_value)
 
     if (p != (*result) ) { 
       std::cerr << "Pointer passed in different than one returned\n";
+      delete p;
       return false;
     }
 
     if (*p != *(*result) ) {
       std::cerr << "Somehow dereferenced pointer values are not the same?\n";
+      delete p;
       return false;
     }
 
+    delete p;
     return true;
   } catch (const exception::bad_boxed_cast &) {
     std::cerr << "Bad boxed cast performing ** to ** test\n";
+    delete p;
     return false;
   } catch (...) {
     std::cerr << "Unknown exception performing ** to ** test\n";
+    delete p;
     return false;
   }
 

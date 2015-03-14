@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_BOXED_NUMERIC_HPP_
@@ -22,6 +22,19 @@ namespace chaiscript {
 class Type_Conversions;
 }  // namespace chaiscript
 
+namespace chaiscript
+{
+  namespace exception
+  {
+    struct arithmetic_error : public std::runtime_error
+    {
+      arithmetic_error(const std::string& reason) : std::runtime_error("Arithmetic error: " + reason) {}
+      arithmetic_error(const arithmetic_error &) = default;
+      virtual ~arithmetic_error() CHAISCRIPT_NOEXCEPT {}
+    };
+  }
+}
+
 namespace chaiscript 
 {
 
@@ -33,16 +46,37 @@ namespace chaiscript
 #pragma warning(disable : 4244 4018 4389 4146 4365)
 #endif
 
+
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wfloat-equal"
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#endif
+
   /// \brief Represents any numeric type, generically. Used internally for generic operations between POD values
   class Boxed_Number
   {
     private:
+      template<typename T>
+      static void check_divide_by_zero(T t, typename std::enable_if<std::is_integral<T>::value>::type* = 0)
+      {
+#ifndef CHAISCRIPT_NO_PROTECT_DIVIDEBYZERO
+        if (t == 0) {
+          throw chaiscript::exception::arithmetic_error("divide by zero");
+        }
+#endif
+      }
+
+      template<typename T>
+      static void check_divide_by_zero(T, typename std::enable_if<std::is_floating_point<T>::value>::type* = 0)
+      {
+      }
+
       struct boolean
       {
 
-#ifdef __GNUC__
-#pragma GCC diagnostic ignored "-Wsign-compare"
-#endif
         template<typename T, typename U>
         static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &)
         {
@@ -61,7 +95,7 @@ namespace chaiscript
             case Operators::not_equal:
               return const_var(t != u);
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -89,13 +123,14 @@ namespace chaiscript
               t += u;
               break;
             case Operators::assign_quotient:
+              check_divide_by_zero(u);
               t /= u;
               break;
             case Operators::assign_difference:
               t -= u;
               break;
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
 
           return t_lhs;
@@ -122,13 +157,14 @@ namespace chaiscript
               t >>= u;
               break;
             case Operators::assign_remainder:
+              check_divide_by_zero(u);
               t %= u;
               break;
             case Operators::assign_bitwise_xor:
               t ^= u;
               break;
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
           return t_lhs;
         }
@@ -146,6 +182,7 @@ namespace chaiscript
             case Operators::shift_right:
               return const_var(t >> u);
             case Operators::remainder:
+              check_divide_by_zero(u);
               return const_var(t % u);
             case Operators::bitwise_and:
               return const_var(t & u);
@@ -156,7 +193,7 @@ namespace chaiscript
             case Operators::bitwise_complement:
               return const_var(~t);
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -171,6 +208,7 @@ namespace chaiscript
             case Operators::sum:
               return const_var(t + u);
             case Operators::quotient:
+              check_divide_by_zero(u);
               return const_var(t / u);
             case Operators::product:
               return const_var(t * u);
@@ -181,7 +219,7 @@ namespace chaiscript
             case Operators::unary_plus:
               return const_var(+t);
             default:
-              throw chaiscript::detail::exception::bad_any_cast();        
+              throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -327,7 +365,6 @@ namespace chaiscript
           return oss.str();
         }
 
-      
     public:
       Boxed_Number()
         : bv(Boxed_Value(0))
@@ -339,6 +376,13 @@ namespace chaiscript
       {
         validate_boxed_number(bv);
       }
+
+      Boxed_Number(const Boxed_Number &) = default;
+
+#if !defined(_MSC_VER) || _MSC_VER  != 1800
+      Boxed_Number(Boxed_Number &&) = default;
+      Boxed_Number& operator=(Boxed_Number &&) = default;
+#endif
 
       template<typename T> explicit Boxed_Number(T t)
         : bv(Boxed_Value(t))
@@ -547,6 +591,7 @@ namespace chaiscript
         }
       }
 
+      // cppcheck-suppress operatorEq
       Boxed_Number operator=(const Boxed_Value &v)
       {
         validate_boxed_number(v);
@@ -554,6 +599,7 @@ namespace chaiscript
         return *this;
       }
 
+      // cppcheck-suppress operatorEq
       Boxed_Number operator=(const Boxed_Number &t_rhs) const
       {
         return oper(Operators::assign, this->bv, t_rhs.bv);
@@ -843,13 +889,17 @@ namespace chaiscript
       struct Cast_Helper<const Boxed_Number &> : Cast_Helper<Boxed_Number>
       {
       };
-      
+
     /// Cast_Helper for converting from Boxed_Value to Boxed_Number
     template<>
       struct Cast_Helper<const Boxed_Number> : Cast_Helper<Boxed_Number>
       {
-      };  
+      };
   }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)

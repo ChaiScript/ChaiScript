@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_ENGINE_HPP_
@@ -61,9 +61,8 @@ namespace chaiscript
       {
       }
 
-      virtual ~load_module_error() CHAISCRIPT_NOEXCEPT
-      {
-      }
+      load_module_error(const load_module_error &) = default;
+      virtual ~load_module_error() CHAISCRIPT_NOEXCEPT {}
     };
   }
 
@@ -371,10 +370,10 @@ namespace chaiscript
       m_engine.add(fun(&ChaiScript::internal_eval, this), "eval");
       m_engine.add(fun(&ChaiScript::internal_eval_ast, this), "eval");
 
-      m_engine.add(fun(&ChaiScript::version_major, this), "version_major");
-      m_engine.add(fun(&ChaiScript::version_minor, this), "version_minor");
-      m_engine.add(fun(&ChaiScript::version_patch, this), "version_patch");
-      m_engine.add(fun(&ChaiScript::version, this), "version");
+      m_engine.add(fun(&ChaiScript::version_major), "version_major");
+      m_engine.add(fun(&ChaiScript::version_minor), "version_minor");
+      m_engine.add(fun(&ChaiScript::version_patch), "version_patch");
+      m_engine.add(fun(&ChaiScript::version), "version");
 
       m_engine.add(fun(&ChaiScript::add_global_const, this), "add_global_const");
       m_engine.add(fun(&ChaiScript::add_global, this), "add_global");
@@ -464,7 +463,7 @@ namespace chaiscript
       memset( &rInfo, 0, sizeof(rInfo) ); 
       cast_union u;
       u.in_ptr = &ChaiScript::use;
-      if ( dladdr((void*)(u.out_ptr), &rInfo) && rInfo.dli_fname ) { 
+      if ( dladdr(static_cast<void*>(u.out_ptr), &rInfo) && rInfo.dli_fname ) { 
         std::string dllpath(rInfo.dli_fname);
         const size_t lastslash = dllpath.rfind('/');
         if (lastslash != std::string::npos)
@@ -491,22 +490,22 @@ namespace chaiscript
       build_eval_system(ModulePtr());
     }
 
-    int version_major() const
+    static int version_major()
     {
       return chaiscript::version_major;
     }
 
-    int version_minor() const
+    static int version_minor()
     {
       return chaiscript::version_minor;
     }
 
-    int version_patch() const
+    static int version_patch()
     {
       return chaiscript::version_patch;
     }
 
-    std::string version() const
+    static std::string version()
     {
       std::stringstream ss;
       ss << version_major() << "." << version_minor() << "." << version_patch();
@@ -581,6 +580,8 @@ namespace chaiscript
     }
 
     /// \brief Represents the current state of the ChaiScript system. State and be saved and restored
+    /// \warning State object does not contain the user defined type conversions of the engine. They
+    ///          are left out due to performance considerations involved in tracking the state
     /// \sa ChaiScript::get_state
     /// \sa ChaiScript::set_state
     struct State
@@ -603,7 +604,7 @@ namespace chaiscript
     /// chaiscript::ChaiScript chai;
     /// chaiscript::ChaiScript::State s = chai.get_state(); // represents bootstrapped initial state
     /// \endcode
-    State get_state()
+    State get_state() const
     {
       chaiscript::detail::threading::lock_guard<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
       chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l2(m_mutex);
@@ -706,7 +707,7 @@ namespace chaiscript
     /// \param[in] t_module_name Name of the module to load
     ///
     /// The module is searched for in the registered module path folders (chaiscript::ChaiScript::ChaiScript)
-    /// and with standard prefixes and postfixes: ("lib"|"")\<t_module_name\>(".dll"|".so"|"").
+    /// and with standard prefixes and postfixes: ("lib"|"")\<t_module_name\>(".dll"|".so"|".bundle"|"").
     ///
     /// Once the file is located, the system looks for the symbol "create_chaiscript_module_\<t_module_name\>".
     /// If no file can be found matching the search criteria and containing the appropriate entry point 
@@ -725,7 +726,7 @@ namespace chaiscript
 
       std::vector<std::string> prefixes{"lib", "cyg", ""};
 
-      std::vector<std::string> postfixes{".dll", ".so", ""};
+      std::vector<std::string> postfixes{".dll", ".so", ".bundle", ""};
 
       for (auto & elem : m_modulepaths) 
       {

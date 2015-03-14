@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 /// \file
@@ -246,6 +246,7 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr random_access_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
+          // cppcheck-suppress syntaxError
           typedef typename ContainerType::reference(ContainerType::*indexoper)(size_t);
           typedef typename ContainerType::const_reference(ContainerType::*constindexoper)(size_t) const;
 
@@ -564,6 +565,25 @@ namespace chaiscript
 
           return m;
         }
+
+
+
+      /// Add a MapType container
+      /// http://www.sgi.com/tech/stl/Map.html
+      template<typename FutureType>
+        ModulePtr future_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+        {
+          m->add(user_type<FutureType>(), type);
+
+          m->add(fun<bool (const FutureType &)>([](const FutureType &t) { return t.valid(); }), "valid");
+          m->add(fun(&FutureType::get), "get");
+          m->add(fun(&FutureType::wait), "wait");
+
+          return m;
+        }
+
+
+
     }
   }
 }

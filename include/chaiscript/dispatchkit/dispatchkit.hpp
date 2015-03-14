@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_DISPATCHKIT_HPP_
@@ -62,6 +62,8 @@ namespace chaiscript
         {
         }
 
+        reserved_word_error(const reserved_word_error &) = default;
+
         virtual ~reserved_word_error() CHAISCRIPT_NOEXCEPT {}
 
         std::string word() const
@@ -81,6 +83,8 @@ namespace chaiscript
           : std::runtime_error("Reserved name not allowed in object name: " + t_name), m_name(t_name)
         {
         }
+
+        illegal_name_error(const illegal_name_error &) = default;
 
         virtual ~illegal_name_error() CHAISCRIPT_NOEXCEPT {}
 
@@ -102,6 +106,8 @@ namespace chaiscript
           : std::runtime_error("Name already exists in current context " + t_name), m_name(t_name)
         {
         }
+
+        name_conflict_error(const name_conflict_error &) = default;
 
         virtual ~name_conflict_error() CHAISCRIPT_NOEXCEPT {}
 
@@ -125,6 +131,7 @@ namespace chaiscript
         {
         }
 
+        global_non_const(const global_non_const &) = default;
         virtual ~global_non_const() CHAISCRIPT_NOEXCEPT {}
     };
   }
@@ -389,6 +396,8 @@ namespace chaiscript
           std::set<std::string> m_reserved_words;
 
           State &operator=(const State &) = default;
+          State() = default;
+          State(const State &) = default;
         };
 
         Dispatch_Engine()
@@ -445,7 +454,7 @@ namespace chaiscript
         /// Adds a named object to the current scope
         /// \warning This version does not check the validity of the name
         /// it is meant for internal use only
-        void add_object(const std::string &name, const Boxed_Value &obj) const
+        void add_object(const std::string &name, const Boxed_Value &obj)
         {
           if (!get_stack_data().back().insert(std::make_pair(name, obj)).second)
           {
@@ -695,10 +704,10 @@ namespace chaiscript
         ///
         std::map<std::string, Boxed_Value> get_scripting_objects() const
         {
-          Stack_Holder &s = *m_stack_holder;
+          const Stack_Holder &s = *m_stack_holder;
 
           // We don't want the current context, but one up if it exists
-          StackData &stack = (s.stacks.size()==1)?(s.stacks.back()):(s.stacks[s.stacks.size()-2]);
+          const StackData &stack = (s.stacks.size()==1)?(s.stacks.back()):(s.stacks[s.stacks.size()-2]);
 
           std::map<std::string, Boxed_Value> retval;
 
@@ -965,7 +974,12 @@ namespace chaiscript
       private:
         /// Returns the current stack
         /// make const/non const versions
-        StackData &get_stack_data() const
+        const StackData &get_stack_data() const
+        {
+          return m_stack_holder->stacks.back();
+        }
+
+        StackData &get_stack_data()
         {
           return m_stack_holder->stacks.back();
         }

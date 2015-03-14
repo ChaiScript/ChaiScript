@@ -21,5 +21,5 @@ compilers:
     skip_packaging: true
     cmake_extra_flags: -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON
   - name: cppcheck
-    compiler_extra_flags: --enable=all -I include --inline-suppr
+    compiler_extra_flags: --enable=all -I include --inline-suppr -Umax  --suppress="*:cmake*"
 

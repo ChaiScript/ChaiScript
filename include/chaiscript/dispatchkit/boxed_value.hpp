@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_BOXED_VALUE_HPP_
@@ -72,8 +72,8 @@ namespace chaiscript
         chaiscript::detail::Any m_obj;
         void *m_data_ptr;
         const void *m_const_data_ptr;
-        bool m_is_ref;
         std::unique_ptr<std::map<std::string, Boxed_Value>> m_attrs;
+        bool m_is_ref;
       };
 
       struct Object_Data

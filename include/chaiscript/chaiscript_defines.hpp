@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_DEFINES_HPP_
@@ -17,7 +17,7 @@
 #endif
 
 #if (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8)
-/// Currently only g++>=4.8supports this natively
+/// Currently only g++>=4.8 supports this natively
 /// \todo Make this support other compilers when possible
 #define CHAISCRIPT_HAS_THREAD_LOCAL
 #endif
@@ -45,8 +45,8 @@
 
 namespace chaiscript {
   static const int version_major = 5;
-  static const int version_minor = 5;
-  static const int version_patch = 1;
+  static const int version_minor = 6;
+  static const int version_patch = 0;
 }
 
 #endif
