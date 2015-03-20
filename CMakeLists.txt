@@ -87,8 +87,8 @@ set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/readme.md")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/description.txt")
 
 set(CPACK_PACKAGE_VERSION_MAJOR 5)
-set(CPACK_PACKAGE_VERSION_MINOR 5)
-set(CPACK_PACKAGE_VERSION_PATCH 1)
+set(CPACK_PACKAGE_VERSION_MINOR 6)
+set(CPACK_PACKAGE_VERSION_PATCH 0)
 
 set(CPACK_PACKAGE_EXECUTABLES "chai;ChaiScript Eval")
 set(CPACK_PACKAGE_VENDOR "ChaiScript.com")
@@ -158,7 +158,13 @@ if(MSVC)
   # how to workaround or fix the error. So I'm disabling it globally.
   add_definitions(/wd4503)
 else()
-  add_definitions(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic ${CPP11_FLAG})
+  add_definitions(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wcast-qual -Woverloaded-virtual  -pedantic ${CPP11_FLAG})
+
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    add_definitions(-Weverything -Wno-c++98-compat -Wno-documentation -Wno-switch-enum -Wno-weak-vtables -Wno-sign-conversion -Wno-missing-prototypes -Wno-padded -Wno-missing-noreturn)
+  else()
+    add_definitions(-Wnoexcept)
+  endif()
 
   if(APPLE)
     add_definitions(-Wno-sign-compare)

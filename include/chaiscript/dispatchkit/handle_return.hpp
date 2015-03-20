@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_HANDLE_RETURN_HPP_
@@ -36,6 +36,11 @@ namespace chaiscript
           static Boxed_Value handle(const Ret &r)
           {
             return const_var(r);
+          }
+
+          static Boxed_Value handle(Ret &&r)
+          {
+            return Boxed_Value(std::move(r));
           }
         };
 

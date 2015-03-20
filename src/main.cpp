@@ -1,14 +1,17 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #include <iostream>
 #include <list>
 #include <regex>
 
+#ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <chaiscript/chaiscript.hpp>
 
 #ifdef READLINE_AVAILABLE
@@ -18,7 +21,7 @@
 
 char *mystrdup (const char *s) {
   size_t len = strlen(s); // Space for length plus nul
-  char *d = static_cast<char*>(malloc (len+1));   
+  char *d = static_cast<char*>(malloc (len+1));
   if (d == nullptr) return nullptr;          // No memory
 #ifdef CHAISCRIPT_MSVC
   strcpy_s(d, len, s);                        // Copy the characters
@@ -152,10 +155,6 @@ void help(int n) {
   }
 }
 
-void version(int){
-  std::cout << "chai: compiled " << __TIME__ << " " << __DATE__ << '\n';
-}
-
 bool throws_exception(const std::function<void ()> &f)
 {
   try {
@@ -287,7 +286,6 @@ int main(int argc, char *argv[])
   chai.add(chaiscript::fun(&myexit), "exit");
   chai.add(chaiscript::fun(&myexit), "quit");
   chai.add(chaiscript::fun(&help), "help");
-  chai.add(chaiscript::fun(&version), "version");
   chai.add(chaiscript::fun(&throws_exception), "throws_exception");
   chai.add(chaiscript::fun(&get_eval_error), "get_eval_error");
 
@@ -317,7 +315,7 @@ int main(int argc, char *argv[])
         arg += line + '\n' ;
       }
     } else if ( arg == "-v" || arg == "--version" ) {
-      arg = "version(0)" ;
+      arg = "version()" ;
     } else if ( arg == "-h" || arg == "--help" ) {
       arg = "help(-1)";
     } else if ( arg == "-i" || arg == "--interactive" ) {
@@ -332,10 +330,14 @@ int main(int argc, char *argv[])
     chaiscript::Boxed_Value val ;
     try {
       switch ( mode ) {
-        case eInteractive : interactive(chai); break;
-        case eCommand     : val = chai.eval(arg); break;
-        case eFile        : val = chai.eval_file(arg); break;
-        default           : std::cout << "Unrecognized execution mode\n"; return EXIT_FAILURE;
+        case eInteractive:
+          interactive(chai);
+          break;
+        case eCommand:
+          val = chai.eval(arg);
+          break;
+        case eFile:
+          val = chai.eval_file(arg);
       }
     }
     catch (const chaiscript::exception::eval_error &ee) {

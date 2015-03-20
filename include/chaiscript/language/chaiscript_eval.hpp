@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_EVAL_HPP_
@@ -25,6 +25,7 @@
 #include "../dispatchkit/boxed_number.hpp"
 #include "../dispatchkit/boxed_value.hpp"
 #include "../dispatchkit/dispatchkit.hpp"
+#include "../dispatchkit/dynamic_object_detail.hpp"
 #include "../dispatchkit/proxy_functions.hpp"
 #include "../dispatchkit/proxy_functions_detail.hpp"
 #include "../dispatchkit/register_function.hpp"
@@ -93,6 +94,8 @@ namespace chaiscript
               // If it's an arithmetic operation we want to short circuit dispatch
               try{
                 return Boxed_Number::do_oper(t_oper, t_lhs, t_rhs);
+              } catch (const chaiscript::exception::arithmetic_error &) {
+                throw;
               } catch (...) {
                 throw exception::eval_error("Error with numeric operator calling: " + t_oper_string);
               }
@@ -349,6 +352,28 @@ namespace chaiscript
 
     };
 
+    struct Arg_AST_Node : public AST_Node {
+      public:
+        Arg_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Arg_List, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        virtual ~Arg_AST_Node() {}
+
+        virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE 
+        {
+          std::ostringstream oss;
+          for (size_t j = 0; j < this->children.size(); ++j) {
+            if (j != 0)
+            {
+              oss << " ";
+            }
+
+            oss << this->children[j]->pretty_print();
+          }
+
+          return oss.str();
+        }
+    };
+
     struct Arg_List_AST_Node : public AST_Node {
       public:
         Arg_List_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
@@ -368,6 +393,53 @@ namespace chaiscript
           }
 
           return oss.str();
+        }
+
+        static std::string get_arg_name(const AST_NodePtr &t_node) {
+          if (t_node->children.empty())
+          {
+            return t_node->text;
+          } else if (t_node->children.size() == 1) {
+            return t_node->children[0]->text;
+          } else {
+            return t_node->children[1]->text;
+          }
+        }
+
+        static std::vector<std::string> get_arg_names(const AST_NodePtr &t_node) {
+          std::vector<std::string> retval;
+
+          for (const auto &node : t_node->children)
+          {
+            retval.push_back(get_arg_name(node));
+          }
+
+          return retval;
+        }
+
+        static std::pair<std::string, Type_Info> get_arg_type(const AST_NodePtr &t_node, chaiscript::detail::Dispatch_Engine &t_ss) 
+        {
+          if (t_node->children.size() < 2)
+          {
+            return std::pair<std::string, Type_Info>();
+          } else {
+            try {
+              return std::pair<std::string, Type_Info>(t_node->children[0]->text, t_ss.get_type(t_node->children[0]->text));
+            } catch (const std::range_error &) {
+              return std::pair<std::string, Type_Info>(t_node->children[0]->text, Type_Info());
+            }
+          }
+        }
+
+        static dispatch::Param_Types get_arg_types(const AST_NodePtr &t_node, chaiscript::detail::Dispatch_Engine &t_ss) {
+          std::vector<std::pair<std::string, Type_Info>> retval;
+
+          for (const auto &child : t_node->children)
+          {
+            retval.push_back(get_arg_type(child, t_ss));
+          }
+
+          return dispatch::Param_Types(std::move(retval));
         }
     };
 
@@ -636,13 +708,12 @@ namespace chaiscript
 
           size_t numparams = 0;
 
+          dispatch::Param_Types param_types;
+
           if (!this->children.empty() && (this->children[0]->identifier == AST_Node_Type::Arg_List)) {
             numparams = this->children[0]->children.size();
-
-            for (const auto &child : this->children[0]->children) 
-            {
-              t_param_names.push_back(child->text);
-            }
+            t_param_names = Arg_List_AST_Node::get_arg_names(this->children[0]);
+            param_types = Arg_List_AST_Node::get_arg_types(this->children[0], t_ss);
           }
 
           const auto &lambda_node = this->children.back();
@@ -652,7 +723,7 @@ namespace chaiscript
                 {
                   return detail::eval_function(t_ss, lambda_node, t_param_names, t_params);
                 },
-                static_cast<int>(numparams), lambda_node)));
+                static_cast<int>(numparams), lambda_node, param_types)));
         }
 
     };
@@ -696,13 +767,12 @@ namespace chaiscript
           size_t numparams = 0;
           AST_NodePtr guardnode;
 
+          dispatch::Param_Types param_types;
+
           if ((this->children.size() > 2) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
             numparams = this->children[1]->children.size();
-
-            for (const auto &child : this->children[1]->children)
-            {
-              t_param_names.push_back(child->text);
-            }
+            t_param_names = Arg_List_AST_Node::get_arg_names(this->children[1]);
+            param_types = Arg_List_AST_Node::get_arg_types(this->children[1], t_ss);
 
             if (this->children.size() > 3) {
               guardnode = this->children[2];
@@ -735,7 +805,7 @@ namespace chaiscript
                                                       {
                                                         return detail::eval_function(t_ss, func_node, t_param_names, t_params);
                                                       }, static_cast<int>(numparams), this->children.back(),
-                                                         l_annotation, guard)), l_function_name);
+                                                         param_types, l_annotation, guard)), l_function_name);
           }
           catch (const exception::reserved_word_error &e) {
             throw exception::eval_error("Reserved word used as function name '" + e.word() + "'");
@@ -1186,10 +1256,73 @@ namespace chaiscript
         Try_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
           AST_Node(t_ast_node_text, AST_Node_Type::Try, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~Try_AST_Node() {}
+
+        Boxed_Value handle_exception(chaiscript::detail::Dispatch_Engine &t_ss, const Boxed_Value &t_except) const
+        {
+          Boxed_Value retval;
+
+          size_t end_point = this->children.size();
+          if (this->children.back()->identifier == AST_Node_Type::Finally) {
+            assert(end_point > 0);
+            end_point = this->children.size() - 1;
+          }
+          for (size_t i = 1; i < end_point; ++i) {
+            chaiscript::eval::detail::Scope_Push_Pop catchscope(t_ss);
+            AST_NodePtr catch_block = this->children[i];
+
+            if (catch_block->children.size() == 1) {
+              //No variable capture, no guards
+              retval = catch_block->children[0]->eval(t_ss);
+              break;
+            } else if (catch_block->children.size() == 2 || catch_block->children.size() == 3) {
+              const auto name = Arg_List_AST_Node::get_arg_name(catch_block->children[0]);
+
+              if (dispatch::Param_Types(
+                    std::vector<std::pair<std::string, Type_Info>>{Arg_List_AST_Node::get_arg_type(catch_block->children[0], t_ss)}
+                    ).match(std::vector<Boxed_Value>{t_except}, t_ss.conversions()))
+              {
+                t_ss.add_object(name, t_except);
+
+                if (catch_block->children.size() == 2) {
+                  //Variable capture, no guards
+                  retval = catch_block->children[1]->eval(t_ss);
+                  break;
+                }
+                else if (catch_block->children.size() == 3) {
+                  //Variable capture, guards
+
+                  bool guard = false;
+                  try {
+                    guard = boxed_cast<bool>(catch_block->children[1]->eval(t_ss));
+                  } catch (const exception::bad_boxed_cast &) {
+                    if (this->children.back()->identifier == AST_Node_Type::Finally) {
+                      this->children.back()->children[0]->eval(t_ss);
+                    }
+                    throw exception::eval_error("Guard condition not boolean");
+                  }
+                  if (guard) {
+                    retval = catch_block->children[2]->eval(t_ss);
+                    break;
+                  }
+                }
+              }
+            }
+            else {
+              if (this->children.back()->identifier == AST_Node_Type::Finally) {
+                this->children.back()->children[0]->eval(t_ss);
+              }
+              throw exception::eval_error("Internal error: catch block size unrecognized");
+            }
+          }
+
+          return retval;
+        }
+
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           Boxed_Value retval;
 
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+
 
           try {
             retval = this->children[0]->eval(t_ss);
@@ -1201,98 +1334,11 @@ namespace chaiscript
             throw;
           }
           catch (const std::exception &e) {
-            Boxed_Value except(std::ref(e));
+            retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
 
-            size_t end_point = this->children.size();
-            if (this->children.back()->identifier == AST_Node_Type::Finally) {
-              assert(end_point > 0);
-              end_point = this->children.size() - 1;
-            }
-            for (size_t i = 1; i < end_point; ++i) {
-              chaiscript::eval::detail::Scope_Push_Pop catchscope(t_ss);
-              AST_NodePtr catch_block = this->children[i];
-
-              if (catch_block->children.size() == 1) {
-                //No variable capture, no guards
-                retval = catch_block->children[0]->eval(t_ss);
-                break;
-              }
-              else if (catch_block->children.size() == 2) {
-                //Variable capture, no guards
-                t_ss.add_object(catch_block->children[0]->text, except);
-                retval = catch_block->children[1]->eval(t_ss);
-
-                break;
-              }
-              else if (catch_block->children.size() == 3) {
-                //Variable capture, no guards
-                t_ss.add_object(catch_block->children[0]->text, except);
-
-                bool guard = false;
-                try {
-                  guard = boxed_cast<bool>(catch_block->children[1]->eval(t_ss));
-                } catch (const exception::bad_boxed_cast &) {
-                  if (this->children.back()->identifier == AST_Node_Type::Finally) {
-                    this->children.back()->children[0]->eval(t_ss);
-                  }
-                  throw exception::eval_error("Guard condition not boolean");
-                }
-                if (guard) {
-                  retval = catch_block->children[2]->eval(t_ss);
-                  break;
-                }
-              }
-              else {
-                if (this->children.back()->identifier == AST_Node_Type::Finally) {
-                  this->children.back()->children[0]->eval(t_ss);
-                }
-                throw exception::eval_error("Internal error: catch block size unrecognized");
-              }
-            }
           }
-          catch (Boxed_Value &except) {
-            for (size_t i = 1; i < this->children.size(); ++i) {
-              chaiscript::eval::detail::Scope_Push_Pop catchscope(t_ss);
-              const auto &catch_block = this->children[i];
-
-              if (catch_block->children.size() == 1) {
-                //No variable capture, no guards
-                retval = catch_block->children[0]->eval(t_ss);
-                break;
-              }
-              else if (catch_block->children.size() == 2) {
-                //Variable capture, no guards
-                t_ss.add_object(catch_block->children[0]->text, except);
-                retval = catch_block->children[1]->eval(t_ss);
-                break;
-              }
-              else if (catch_block->children.size() == 3) {
-                //Variable capture, guards
-                t_ss.add_object(catch_block->children[0]->text, except);
-
-                bool guard;
-                try {
-                  guard = boxed_cast<bool>(catch_block->children[1]->eval(t_ss));
-                }
-                catch (const exception::bad_boxed_cast &) {
-                  if (this->children.back()->identifier == AST_Node_Type::Finally) {
-                    this->children.back()->children[0]->eval(t_ss);
-                  }
-
-                  throw exception::eval_error("Guard condition not boolean");
-                }
-                if (guard) {
-                  retval = catch_block->children[2]->eval(t_ss);
-                  break;
-                }
-              }
-              else {
-                if (this->children.back()->identifier == AST_Node_Type::Finally) {
-                  this->children.back()->children[0]->eval(t_ss);
-                }
-                throw exception::eval_error("Internal error: catch block size unrecognized");
-              }
-            }
+          catch (Boxed_Value &e) {
+            retval = handle_exception(t_ss, e);
           }
           catch (...) {
             if (this->children.back()->identifier == AST_Node_Type::Finally) {
@@ -1300,6 +1346,7 @@ namespace chaiscript
             }
             throw;
           }
+
 
           if (this->children.back()->identifier == AST_Node_Type::Finally) {
             retval = this->children.back()->children[0]->eval(t_ss);
@@ -1333,29 +1380,29 @@ namespace chaiscript
 
           AST_NodePtr guardnode;
 
-          auto d = t_ss.get_parent_locals();
-          auto itr = d.find("_current_class_name");
-          int class_offset = 0;
-          if (itr != d.end()) class_offset = -1;
+          const auto d = t_ss.get_parent_locals();
+          const auto itr = d.find("_current_class_name");
+          const auto class_offset = (itr != d.end())?-1:0;
           const std::string & class_name = (itr != d.end())?std::string(boxed_cast<std::string>(itr->second)):this->children[0]->text;
 
           //The first param of a method is always the implied this ptr.
           std::vector<std::string> t_param_names{"this"};
+          dispatch::Param_Types param_types;
 
-          if ((this->children.size() > static_cast<size_t>(3 + class_offset)) && (this->children[(2 + class_offset)]->identifier == AST_Node_Type::Arg_List)) {
-            for (const auto &child : this->children[(2 + class_offset)]->children) {
-              t_param_names.push_back(child->text);
-            }
+          if ((this->children.size() > static_cast<size_t>(3 + class_offset)) && (this->children[static_cast<size_t>(2 + class_offset)]->identifier == AST_Node_Type::Arg_List)) {
+            auto args = Arg_List_AST_Node::get_arg_names(this->children[static_cast<size_t>(2 + class_offset)]);
+            t_param_names.insert(t_param_names.end(), args.begin(), args.end());
+            param_types = Arg_List_AST_Node::get_arg_types(this->children[static_cast<size_t>(2 + class_offset)], t_ss);
 
             if (this->children.size() > static_cast<size_t>(4 + class_offset)) {
-              guardnode = this->children[(3 + class_offset)];
+              guardnode = this->children[static_cast<size_t>(3 + class_offset)];
             }
           }
           else {
             //no parameters
 
             if (this->children.size() > static_cast<size_t>(3 + class_offset)) {
-              guardnode = this->children[(2 + class_offset)];
+              guardnode = this->children[static_cast<size_t>(2 + class_offset)];
             }
           }
 
@@ -1372,32 +1419,38 @@ namespace chaiscript
           try {
             const std::string & l_annotation = this->annotation?this->annotation->text:"";
 
-            const std::string & function_name = this->children[(1 + class_offset)]->text;
+            const std::string & function_name = this->children[static_cast<size_t>(1 + class_offset)]->text;
 
             if (function_name == class_name) {
+              param_types.push_front(class_name, Type_Info());
               t_ss.add(std::make_shared<dispatch::detail::Dynamic_Object_Constructor>(class_name, std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
                         std::ref(t_ss), this->children.back(), t_param_names, std::placeholders::_1), 
-                      static_cast<int>(numparams), this->children.back(), l_annotation, guard)), 
+                      static_cast<int>(numparams), this->children.back(), param_types, l_annotation, guard)), 
                   function_name);
 
             }
             else {
               try {
-                // Do know type name
+                // Do know type name (if this line fails, the catch block is called and the 
+                // other version is called, with no Type_Info object known)
+                auto type = t_ss.get_type(class_name);
+                param_types.push_front(class_name, type);
+
                 t_ss.add(
                     std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name, 
                       std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
                                                                          std::ref(t_ss), this->children.back(),
                                                                          t_param_names, std::placeholders::_1), static_cast<int>(numparams), this->children.back(),
-                                                               l_annotation, guard), t_ss.get_type(class_name)), function_name);
+                                                               param_types, l_annotation, guard), type), function_name);
               } catch (const std::range_error &) {
+                param_types.push_front(class_name, Type_Info());
                 // Do not know type name
                 t_ss.add(
                     std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name, 
                          std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
                                                                          std::ref(t_ss), this->children.back(),
                                                                          t_param_names, std::placeholders::_1), static_cast<int>(numparams), this->children.back(),
-                                                               l_annotation, guard)), function_name);
+                                                               param_types, l_annotation, guard)), function_name);
               }
             }
           }
@@ -1420,24 +1473,23 @@ namespace chaiscript
         {
           const auto &d = t_ss.get_parent_locals();
           const auto itr = d.find("_current_class_name");
-          int class_offset = 0;
-          if (itr != d.end()) class_offset = -1;
+          const auto class_offset = (itr != d.end())?-1:0;
           std::string class_name = (itr != d.end())?std::string(boxed_cast<std::string>(itr->second)):this->children[0]->text;
 
           try {
             t_ss.add(
                 std::make_shared<dispatch::detail::Dynamic_Object_Function>(
-                     class_name,
+                     std::move(class_name),
                      fun(std::function<Boxed_Value (dispatch::Dynamic_Object &)>(std::bind(&dispatch::Dynamic_Object::get_attr, 
                                                                                    std::placeholders::_1,
-                                                                                   this->children[(1 + class_offset)]->text
+                                                                                   this->children[static_cast<size_t>(1 + class_offset)]->text
                                                                                    ))
                      )
-                ), this->children[(1 + class_offset)]->text);
+                ), this->children[static_cast<size_t>(1 + class_offset)]->text);
 
           }
           catch (const exception::reserved_word_error &) {
-            throw exception::eval_error("Reserved word used as attribute '" + this->children[(1 + class_offset)]->text + "'");
+            throw exception::eval_error("Reserved word used as attribute '" + this->children[static_cast<size_t>(1 + class_offset)]->text + "'");
           } catch (const exception::name_conflict_error &e) {
             throw exception::eval_error("Attribute redefined '" + e.name() + "'");
           }

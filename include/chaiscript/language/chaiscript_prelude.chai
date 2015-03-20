@@ -455,37 +455,37 @@ def zip(x, y) {
 
 
 # Returns the position of the second value string in the first value string
-def string::find(substr) : is_type(substr, "string") { 
+def string::find(string substr) { 
   find(this, substr, size_t(0)); 
 }
 
 
 # Returns the position of last match of the second value string in the first value string
-def string::rfind(substr) : is_type(substr, "string") { 
+def string::rfind(string substr) { 
   rfind(this, substr, size_t(-1)); 
 }
 
 
 # Returns the position of the first match of elements in the second value string in the first value string
-def string::find_first_of(list) : is_type(list, "string") { 
+def string::find_first_of(string list) { 
   find_first_of(this, list, size_t(0)); 
 } 
 
 
 # Returns the position of the last match of elements in the second value string in the first value string
-def string::find_last_of(list) : is_type(list, "string") { 
+def string::find_last_of(string list) {
   find_last_of(this, list, size_t(-1)); 
 } 
 
 
 # Returns the position of the first non-matching element in the second value string in the first value string
-def string::find_first_not_of(list) : is_type(list, "string") { 
+def string::find_first_not_of(string list) { 
   find_first_not_of(this, list, size_t(0)); 
 } 
 
 
 # Returns the position of the last non-matching element in the second value string in the first value string
-def string::find_last_not_of(list) : is_type(list, "string") { 
+def string::find_last_not_of(string list) { 
   find_last_not_of(this, list, size_t(-1)); 
 } 
 
@@ -505,7 +505,7 @@ def string::trim() {
 }
 
 
-def find(container, value, compare_func) : call_exists(range, container) && is_type(compare_func, "Function") { 
+def find(container, value, Function compare_func) : call_exists(range, container) { 
   auto range := range(container); 
   while (!range.empty()) { 
     if (compare_func(range.front(), value)) { 

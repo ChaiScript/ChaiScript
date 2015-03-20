@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_THREADING_HPP_
@@ -82,15 +82,26 @@ namespace chaiscript
               t().erase(m_key);
             }
 
-            inline T *operator->() const
+            inline const T *operator->() const
             {
               return &(t()[m_key]);
             }
 
-            inline T &operator*() const
+            inline const T &operator*() const
             {
               return t()[m_key];
             }
+
+            inline T *operator->()
+            {
+              return &(t()[m_key]);
+            }
+
+            inline T &operator*()
+            {
+              return t()[m_key];
+            }
+
 
             void *m_key;
 
@@ -117,12 +128,22 @@ namespace chaiscript
             {
             }
 
-            inline T *operator->() const
+            inline const T *operator->() const
             {
               return get_tls().get();
             }
 
-            inline T &operator*() const
+            inline const T &operator*() const
+            {
+              return *get_tls();
+            }
+
+            inline T *operator->()
+            {
+              return get_tls().get();
+            }
+
+            inline T &operator*()
             {
               return *get_tls();
             }

@@ -1,14 +1,17 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #include <iostream>
 #include <list>
 #include <regex>
 
+#ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <chaiscript/chaiscript.hpp>
 #include <chaiscript/chaiscript_stdlib.hpp>
 
@@ -154,10 +157,6 @@ void help(int n) {
   }
 }
 
-void version(int){
-  std::cout << "chai: compiled " << __TIME__ << " " << __DATE__ << std::endl;
-}
-
 std::string helloWorld(const std::string &t_name)
 {
   return "Hello " + t_name + "!";
@@ -297,7 +296,6 @@ int main(int argc, char *argv[])
   chai.add(chaiscript::fun(&myexit), "exit");
   chai.add(chaiscript::fun(&myexit), "quit");
   chai.add(chaiscript::fun(&help), "help");
-  chai.add(chaiscript::fun(&version), "version");
   chai.add(chaiscript::fun(&throws_exception), "throws_exception");
   chai.add(chaiscript::fun(&get_eval_error), "get_eval_error");
 
@@ -356,7 +354,7 @@ int main(int argc, char *argv[])
       }
     }
     else if (arg == "-v" || arg == "--version") {
-      arg = "version(0)";
+      arg = "version()";
     }
     else if (arg == "-h" || arg == "--help") {
       arg = "help(-1)";
@@ -388,7 +386,7 @@ int main(int argc, char *argv[])
                       printf("**ChaiScript::time= %.10f\n", elapsed_secs1);
                       break;
                     }
-        default: std::cout << "Unrecognized execution mode" << std::endl; return EXIT_FAILURE;
+
       }
     }
     catch (const chaiscript::exception::eval_error &ee) {

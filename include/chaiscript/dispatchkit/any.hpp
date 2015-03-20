@@ -26,6 +26,8 @@ namespace chaiscript {
           {
           }
 
+          bad_any_cast(const bad_any_cast &) = default;
+
           virtual ~bad_any_cast() CHAISCRIPT_NOEXCEPT {}
 
           /// \brief Description of what error occurred
@@ -105,7 +107,7 @@ namespace chaiscript {
           }
         }
 
-#if _MSC_VER  != 1800
+#if !defined(_MSC_VER) || _MSC_VER  != 1800
         Any(Any &&) = default;
         Any &operator=(Any &&t_any) = default;
 #endif

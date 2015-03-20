@@ -1,12 +1,14 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 
 #ifndef CHAISCRIPT_PROXY_CONSTRUCTORS_HPP_
 #define CHAISCRIPT_PROXY_CONSTRUCTORS_HPP_
+
+#include "proxy_functions.hpp"
 
 namespace chaiscript
 {

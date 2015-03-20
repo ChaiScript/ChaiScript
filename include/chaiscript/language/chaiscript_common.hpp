@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_COMMON_HPP_
@@ -37,7 +37,7 @@ namespace chaiscript
                 Comparison, Addition, Subtraction, Multiplication, Division, Modulus, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
                 Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
                 Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, 
-                Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop, Class, Binary
+                Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop, Class, Binary, Arg
     };
   };
 
@@ -50,7 +50,7 @@ namespace chaiscript
                                     "Comparison", "Addition", "Subtraction", "Multiplication", "Division", "Modulus", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
                                     "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
                                     "Inline_Range", "Annotation", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Shift", "Equality", "Bitwise_And", "Bitwise_Xor", "Bitwise_Or", 
-                                    "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Ternary Condition", "Noop", "Class", "Binary"};
+                                    "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Ternary Condition", "Noop", "Class", "Binary", "Arg"};
 
       return ast_node_types[ast_node_type];
     }
@@ -111,6 +111,8 @@ namespace chaiscript
         : std::runtime_error("Error: \"" + t_why + "\" "),
         reason(t_why) 
       {}
+
+      eval_error(const eval_error &) = default;
 
       std::string pretty_print() const
       {
@@ -395,6 +397,7 @@ namespace chaiscript
         : std::runtime_error("File Not Found: " + t_filename)
       { }
 
+      file_not_found_error(const file_not_found_error &) = default;
       virtual ~file_not_found_error() CHAISCRIPT_NOEXCEPT {}
     };
 

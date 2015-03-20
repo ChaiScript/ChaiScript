@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_PROXY_FUNCTIONS_DETAIL_HPP_
@@ -42,6 +42,8 @@ namespace chaiscript
       {
       }
 
+      arity_error(const arity_error &) = default;
+
       virtual ~arity_error() CHAISCRIPT_NOEXCEPT {}
 
       int got;
@@ -72,7 +74,7 @@ namespace chaiscript
       template<typename Param, typename ... Rest>
         struct Try_Cast<Param, Rest...>
         {
-          static void do_try(const std::vector<Boxed_Value> &params, int generation, const Type_Conversions &t_conversions)
+          static void do_try(const std::vector<Boxed_Value> &params, size_t generation, const Type_Conversions &t_conversions)
           {
             boxed_cast<Param>(params[generation], &t_conversions);
             Try_Cast<Rest...>::do_try(params, generation+1, t_conversions);
@@ -83,7 +85,7 @@ namespace chaiscript
       template<>
         struct Try_Cast<>
         {
-          static void do_try(const std::vector<Boxed_Value> &, int, const Type_Conversions &)
+          static void do_try(const std::vector<Boxed_Value> &, size_t, const Type_Conversions &)
           {
           }
         };

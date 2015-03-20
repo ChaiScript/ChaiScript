@@ -1,0 +1,15 @@
+var func = fun(){
+  var ret = 0;
+  for (var i = 0; i < 50000; ++i) {
+    ret += i;
+  }
+  return ret;
+}
+
+
+var fut1 := async(func);
+var fut2 := async(func);
+
+// simply executing without crashing is good enough for this test
+
+print(" ${fut1.get()} ${fut2.get()} ")

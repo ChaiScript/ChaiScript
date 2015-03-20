@@ -8,7 +8,7 @@ ChaiScript
 http://www.chaiscript.com
 
 (c) 2009-2012 Jonathan Turner
-(c) 2009-2014 Jason Turner
+(c) 2009-2015 Jason Turner
 
 Release under the BSD license, see "license.txt" for details.
 
@@ -35,9 +35,10 @@ Requirements
 ============
 
 ChaiScript requires a C++11 compiler to build with support for variadic 
-templates.  It has been tested with gcc 4.7 and clang 3.1 (with libcxx). MacOS 
+templates.  It has been tested with gcc 4.6 and clang 3.1 (with libcxx). MacOS 
 10.8 (Mountain Lion) is also known to support the C++11 build with Apple's 
-clang 4.0.
+clang 4.0. MSVC 2013 or newer is supports also. For more information see the build 
+[dashboard](http://chaiscript.com/ChaiScript-BuildResults/index.html).
 
 Usage
 =====

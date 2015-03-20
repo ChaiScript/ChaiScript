@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2014, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_PARSER_HPP_
@@ -223,8 +223,8 @@ namespace chaiscript
         t_t->end.column = pos_col_stop;
 
         if (is_deep) {
-          t_t->children.assign(m_match_stack.begin() + t_match_start, m_match_stack.end());
-          m_match_stack.erase(m_match_stack.begin() + t_match_start, m_match_stack.end());
+          t_t->children.assign(m_match_stack.begin() + static_cast<int>(t_match_start), m_match_stack.end());
+          m_match_stack.erase(m_match_stack.begin() + static_cast<int>(t_match_start), m_match_stack.end());
         }
 
         /// \todo fix the fact that a successful match that captured no ast_nodes doesn't have any real start position
@@ -431,21 +431,13 @@ namespace chaiscript
           }
         }
 
-        std::stringstream ss(t_val.substr(0, i));
-
         if (float_)
         {
-          float f;
-          ss >> f;
-          return const_var(f);
+          return const_var(std::stof(t_val.substr(0,i)));
         } else if (long_) {
-          long double f;
-          ss >> f;
-          return const_var(f);
+          return const_var(std::stold(t_val.substr(0,i)));
         } else {
-          double f;
-          ss >> f;
-          return const_var(f);
+          return const_var(std::stod(t_val.substr(0,i)));
         }
       }
 
@@ -698,6 +690,25 @@ namespace chaiscript
           }
         }
       }
+
+      /// Reads an argument from input
+      bool Arg() {
+        const auto prev_stack_top = m_match_stack.size();
+        SkipWS();
+
+        if (!Id(true)) {
+          return false;
+        }
+
+        SkipWS();
+        Id(true);
+
+        build_match(std::make_shared<eval::Arg_AST_Node>(), prev_stack_top);
+
+        return true;
+      }
+
+
 
       /// Checks for a node annotation of the form "#<annotation>"
       bool Annotation() {
@@ -1109,6 +1120,33 @@ namespace chaiscript
         }
       }
 
+      /// Reads a comma-separated list of values from input, for function declarations
+      bool Decl_Arg_List() {
+        SkipWS(true);
+        bool retval = false;
+
+        const auto prev_stack_top = m_match_stack.size();
+
+        if (Arg()) {
+          retval = true;
+          while (Eol()) {}
+          if (Char(',')) {
+            do {
+              while (Eol()) {}
+              if (!Arg()) {
+                throw exception::eval_error("Unexpected value in parameter list", File_Position(m_line, m_col), *m_filename);
+              }
+            } while (Char(','));
+          }
+          build_match(std::make_shared<eval::Arg_List_AST_Node>(), prev_stack_top);
+        }
+
+        SkipWS(true);
+
+        return retval;
+      }
+
+
       /// Reads a comma-separated list of values from input
       bool Arg_List() {
         SkipWS(true);
@@ -1186,7 +1224,7 @@ namespace chaiscript
           retval = true;
 
           if (Char('(')) {
-            Arg_List();
+            Decl_Arg_List();
             if (!Char(')')) {
               throw exception::eval_error("Incomplete anonymous function", File_Position(m_line, m_col), *m_filename);
             }
@@ -1236,7 +1274,7 @@ namespace chaiscript
           }
 
           if (Char('(')) {
-            Arg_List();
+            Decl_Arg_List();
             if (!Char(')')) {
               throw exception::eval_error("Incomplete function definition", File_Position(m_line, m_col), *m_filename);
             }
@@ -1291,7 +1329,7 @@ namespace chaiscript
             if (Keyword("catch", false)) {
               const auto catch_stack_top = m_match_stack.size();
               if (Char('(')) {
-                if (!(Id(true) && Char(')'))) {
+                if (!(Arg() && Char(')'))) {
                   throw exception::eval_error("Incomplete 'catch' expression", File_Position(m_line, m_col), *m_filename);
                 }
                 if (Char(':')) {
@@ -1918,6 +1956,7 @@ namespace chaiscript
                   case(AST_Node_Type::Bitwise_Xor) :
                   case(AST_Node_Type::Bitwise_Or) :
                   case(AST_Node_Type::Comparison) :
+                    assert(m_match_stack.size() > 1);
                     m_match_stack.erase(m_match_stack.begin() + m_match_stack.size() - 2, m_match_stack.begin() + m_match_stack.size() - 1);
                     build_match(std::make_shared<eval::Binary_Operator_AST_Node>(oper->text), prev_stack_top);
                     break;
