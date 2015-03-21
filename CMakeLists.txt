@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 
+if(NOT ${CMAKE_VERSION} VERSION_LESS "3.1")
+  cmake_policy(SET CMP0054 NEW)
+endif()
+
 project(chaiscript)
 
 # MINGW does not yet support C++11's concurrency features
