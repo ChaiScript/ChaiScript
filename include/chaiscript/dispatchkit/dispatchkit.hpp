@@ -789,8 +789,8 @@ namespace chaiscript
             auto functions = get_function("method_missing");
             if (!functions.empty()) {
               std::vector<Boxed_Value> tmp_params;
-              tmp_params.push_back(var(t_name));
               tmp_params.insert(tmp_params.end(), params.begin(), params.end());
+              tmp_params.push_back(var(t_name));
               return dispatch::dispatch(functions, tmp_params, m_conversions);
             }
             throw;
