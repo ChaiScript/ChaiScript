@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 2.8)
 
+IF(BIICODE)
+  INIT_BIICODE_BLOCK()
+  ADD_BIICODE_TARGETS()
+ELSE()
+  # Your regular CMakeLists configuration here
+
 project(chaiscript)
 
 # MINGW does not yet support C++11's concurrency features
@@ -408,4 +414,7 @@ install(DIRECTORY samples DESTINATION share/chaiscript
 configure_file(contrib/pkgconfig/chaiscript.pc.in lib/pkgconfig/chaiscript.pc @ONLY)
 install(FILES "${chaiscript_BINARY_DIR}/lib/pkgconfig/chaiscript.pc"
         DESTINATION lib/pkgconfig)
+
+    
+ENDIF()
 
