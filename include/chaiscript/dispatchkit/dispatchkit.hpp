@@ -782,7 +782,19 @@ namespace chaiscript
 
         Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params) const
         {
-          return dispatch::dispatch(get_function(t_name), params, m_conversions);
+          try {
+            return dispatch::dispatch(get_function(t_name), params, m_conversions);
+          }
+          catch(chaiscript::exception::dispatch_error&) {
+            auto functions = get_function("method_missing");
+            if (!functions.empty()) {
+              std::vector<Boxed_Value> tmp_params;
+              tmp_params.push_back(var(t_name));
+              tmp_params.insert(tmp_params.end(), params.begin(), params.end());
+              return dispatch::dispatch(functions, tmp_params, m_conversions);
+            }
+            throw;
+          }
         }
 
         Boxed_Value call_function(const std::string &t_name) const
