@@ -24,7 +24,7 @@ char *mystrdup (const char *s) {
   char *d = static_cast<char*>(malloc (len+1));
   if (d == nullptr) return nullptr;          // No memory
 #ifdef CHAISCRIPT_MSVC
-  strcpy_s(d, len, s);                        // Copy the characters
+  strcpy_s(d, len+1, s);                        // Copy the characters
 #else
   strncpy(d,s,len);                        // Copy the characters
 #endif

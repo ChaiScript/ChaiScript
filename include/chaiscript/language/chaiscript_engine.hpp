@@ -150,8 +150,8 @@ namespace chaiscript
           return std::string(t_str.begin(), t_str.end());
         }
 
-#ifdef _UNICODE
-      template<typename T>
+#if defined(_UNICODE) || defined(UNICODE)
+        template<typename T>
         static std::wstring to_proper_string(const T &t_str)
         {
           return to_wstring(t_str);
@@ -166,7 +166,7 @@ namespace chaiscript
 
       static std::string get_error_message(DWORD t_err)
       {
-#ifdef _UNICODE
+#if defined(_UNICODE) || defined(UNICODE)
         typedef LPWSTR StringType;
         std::wstring retval = L"Unknown Error";
 #else
