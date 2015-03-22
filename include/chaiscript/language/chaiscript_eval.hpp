@@ -230,11 +230,9 @@ namespace chaiscript
           std::vector<Boxed_Value> params;
 
           if ((this->children.size() > 1)) {
-            const AST_Node &first_child(*(this->children[1]));
-            if (first_child.identifier == AST_Node_Type::Arg_List) {
-              for (const auto &child : first_child.children) {
-                params.push_back(child->eval(t_ss));
-              }
+            params.reserve(this->children[1]->children.size());
+            for (const auto &child : this->children[1]->children) {
+              params.push_back(child->eval(t_ss));
             }
           }
 
