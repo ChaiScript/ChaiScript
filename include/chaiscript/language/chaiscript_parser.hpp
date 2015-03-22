@@ -692,7 +692,7 @@ namespace chaiscript
       }
 
       /// Reads an argument from input
-      bool Arg() {
+      bool Arg(const bool t_type_allowed = true) {
         const auto prev_stack_top = m_match_stack.size();
         SkipWS();
 
@@ -701,7 +701,10 @@ namespace chaiscript
         }
 
         SkipWS();
-        Id(true);
+
+        if (t_type_allowed) {
+          Id(true);
+        }
 
         build_match(std::make_shared<eval::Arg_AST_Node>(), prev_stack_top);
 
@@ -1120,6 +1123,32 @@ namespace chaiscript
         }
       }
 
+      /// Reads a comma-separated list of values from input. Id's only, no types allowed
+      bool Id_Arg_List() {
+        SkipWS(true);
+        bool retval = false;
+
+        const auto prev_stack_top = m_match_stack.size();
+
+        if (Arg(false)) {
+          retval = true;
+          while (Eol()) {}
+          if (Char(',')) {
+            do {
+              while (Eol()) {}
+              if (!Arg(false)) {
+                throw exception::eval_error("Unexpected value in parameter list", File_Position(m_line, m_col), *m_filename);
+              }
+            } while (Char(','));
+          }
+        }
+        build_match(std::make_shared<eval::Arg_List_AST_Node>(), prev_stack_top);
+
+        SkipWS(true);
+
+        return retval;
+      }
+
       /// Reads a comma-separated list of values from input, for function declarations
       bool Decl_Arg_List() {
         SkipWS(true);
@@ -1224,7 +1253,7 @@ namespace chaiscript
           retval = true;
 
           if (Char('[')) {
-            Arg_List();
+            Id_Arg_List();
             if (!Char(']')) {
               throw exception::eval_error("Incomplete anonymous function bind", File_Position(m_line, m_col), *m_filename);
             }

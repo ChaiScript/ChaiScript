@@ -226,6 +226,7 @@ namespace chaiscript
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
+
           std::vector<Boxed_Value> params;
 
           if ((this->children.size() > 1)) {
@@ -706,9 +707,14 @@ namespace chaiscript
 
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
 
-          std::cout << "lambda num children = " << children.size() << std::endl;
 
-//          const auto captures = get_captures(this->children[0], t_ss);
+          const auto captures = [&](){
+            std::map<std::string, Boxed_Value> named_captures;
+            for (const auto &capture : children[0]->children) {
+              named_captures.emplace(capture->children[0]->text, capture->children[0]->eval(t_ss));
+            }
+            return named_captures;
+          }();
 
           const auto numparams = this->children[1]->children.size();
           const auto param_names = Arg_List_AST_Node::get_arg_names(this->children[1]);
@@ -717,15 +723,13 @@ namespace chaiscript
           const auto &lambda_node = this->children.back();
 
           return Boxed_Value(Proxy_Function(new dispatch::Dynamic_Proxy_Function(
-                [&t_ss, lambda_node, param_names](const std::vector<Boxed_Value> &t_params)
+                [&t_ss, lambda_node, param_names, captures](const std::vector<Boxed_Value> &t_params)
                 {
-                  return detail::eval_function(t_ss, lambda_node, param_names, t_params);
+                  return detail::eval_function(t_ss, lambda_node, param_names, t_params, captures);
                 },
                 static_cast<int>(numparams), lambda_node, param_types)));
         }
 
-      private:
-  //      std::map<std::string, Boxed_Value>
 
     };
 
