@@ -1,2 +1,6 @@
 auto bob = fun(x) { x + 1 }
 assert_equal(4, bob(3));
+
+var y=3
+auto bob2 = fun[y](x) { x + y }
+assert_equal(7, bob2(4))
