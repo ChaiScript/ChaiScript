@@ -47,8 +47,12 @@ namespace chaiscript
     namespace detail
     {
       /// Helper function that will set up the scope around a function call, including handling the named function parameters
-      static Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_NodePtr &t_node, const std::vector<std::string> &t_param_names, const std::vector<Boxed_Value> &t_vals) {
+      static Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_NodePtr &t_node, const std::vector<std::string> &t_param_names, const std::vector<Boxed_Value> &t_vals, const std::map<std::string, Boxed_Value> &t_locals=std::map<std::string, Boxed_Value>()) {
         chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+
+        for (const auto &local : t_locals) {
+          t_ss.add_object(local.first, local.second);
+        }
 
         for (size_t i = 0; i < t_param_names.size(); ++i) {
           t_ss.add_object(t_param_names[i], t_vals[i]);
@@ -701,27 +705,27 @@ namespace chaiscript
         virtual ~Lambda_AST_Node() {}
 
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
-          std::vector<std::string> t_param_names;
 
-          size_t numparams = 0;
+          std::cout << "lambda num children = " << children.size() << std::endl;
 
-          dispatch::Param_Types param_types;
+//          const auto captures = get_captures(this->children[0], t_ss);
 
-          if (!this->children.empty() && (this->children[0]->identifier == AST_Node_Type::Arg_List)) {
-            numparams = this->children[0]->children.size();
-            t_param_names = Arg_List_AST_Node::get_arg_names(this->children[0]);
-            param_types = Arg_List_AST_Node::get_arg_types(this->children[0], t_ss);
-          }
+          const auto numparams = this->children[1]->children.size();
+          const auto param_names = Arg_List_AST_Node::get_arg_names(this->children[1]);
+          const auto param_types = Arg_List_AST_Node::get_arg_types(this->children[1], t_ss);
 
           const auto &lambda_node = this->children.back();
 
           return Boxed_Value(Proxy_Function(new dispatch::Dynamic_Proxy_Function(
-                [&t_ss, lambda_node, t_param_names](const std::vector<Boxed_Value> &t_params)
+                [&t_ss, lambda_node, param_names](const std::vector<Boxed_Value> &t_params)
                 {
-                  return detail::eval_function(t_ss, lambda_node, t_param_names, t_params);
+                  return detail::eval_function(t_ss, lambda_node, param_names, t_params);
                 },
                 static_cast<int>(numparams), lambda_node, param_types)));
         }
+
+      private:
+  //      std::map<std::string, Boxed_Value>
 
     };
 
@@ -1388,7 +1392,7 @@ namespace chaiscript
             guard = std::make_shared<dispatch::Dynamic_Proxy_Function>
               (std::bind(chaiscript::eval::detail::eval_function,
                          std::ref(t_ss), guardnode,
-                         t_param_names, std::placeholders::_1), static_cast<int>(numparams), guardnode);
+                         t_param_names, std::placeholders::_1, std::map<std::string, Boxed_Value>()), static_cast<int>(numparams), guardnode);
           }
 
           try {
@@ -1399,7 +1403,7 @@ namespace chaiscript
             if (function_name == class_name) {
               param_types.push_front(class_name, Type_Info());
               t_ss.add(std::make_shared<dispatch::detail::Dynamic_Object_Constructor>(class_name, std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
-                        std::ref(t_ss), this->children.back(), t_param_names, std::placeholders::_1), 
+                        std::ref(t_ss), this->children.back(), t_param_names, std::placeholders::_1, std::map<std::string, Boxed_Value>()), 
                       static_cast<int>(numparams), this->children.back(), param_types, l_annotation, guard)), 
                   function_name);
 
@@ -1415,7 +1419,7 @@ namespace chaiscript
                     std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name, 
                       std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
                                                                          std::ref(t_ss), this->children.back(),
-                                                                         t_param_names, std::placeholders::_1), static_cast<int>(numparams), this->children.back(),
+                                                                         t_param_names, std::placeholders::_1, std::map<std::string, Boxed_Value>()), static_cast<int>(numparams), this->children.back(),
                                                                param_types, l_annotation, guard), type), function_name);
               } catch (const std::range_error &) {
                 param_types.push_front(class_name, Type_Info());
@@ -1424,7 +1428,7 @@ namespace chaiscript
                     std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name, 
                          std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
                                                                          std::ref(t_ss), this->children.back(),
-                                                                         t_param_names, std::placeholders::_1), static_cast<int>(numparams), this->children.back(),
+                                                                         t_param_names, std::placeholders::_1, std::map<std::string, Boxed_Value>()), static_cast<int>(numparams), this->children.back(),
                                                                param_types, l_annotation, guard)), function_name);
               }
             }

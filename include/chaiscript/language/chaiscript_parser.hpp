@@ -1138,8 +1138,8 @@ namespace chaiscript
               }
             } while (Char(','));
           }
-          build_match(std::make_shared<eval::Arg_List_AST_Node>(), prev_stack_top);
         }
+        build_match(std::make_shared<eval::Arg_List_AST_Node>(), prev_stack_top);
 
         SkipWS(true);
 
@@ -1223,12 +1223,25 @@ namespace chaiscript
         if (Keyword("fun")) {
           retval = true;
 
+          if (Char('[')) {
+            Arg_List();
+            if (!Char(']')) {
+              throw exception::eval_error("Incomplete anonymous function bind", File_Position(m_line, m_col), *m_filename);
+            }
+          } else {
+            // make sure we always have the same number of nodes
+            build_match(std::make_shared<eval::Arg_List_AST_Node>(), prev_stack_top);
+          }
+
           if (Char('(')) {
             Decl_Arg_List();
             if (!Char(')')) {
               throw exception::eval_error("Incomplete anonymous function", File_Position(m_line, m_col), *m_filename);
             }
+          } else {
+            throw exception::eval_error("Incomplete anonymous function", File_Position(m_line, m_col), *m_filename);
           }
+
 
           while (Eol()) {}
 
