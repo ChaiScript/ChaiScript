@@ -303,7 +303,7 @@ namespace chaiscript
         ModulePtr sequence_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
         {
           m->add(fun(&detail::insert_at<ContainerType>), 
-              [](){
+              []()->std::string{
                 if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
                   return "insert_ref_at";
                 } else {
@@ -329,7 +329,7 @@ namespace chaiscript
 
           typedef void (ContainerType::*push_back)(const typename ContainerType::value_type &);
           m->add(fun(static_cast<push_back>(&ContainerType::push_back)),
-              [](){
+              []()->std::string{
                 if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
                   return "push_back_ref";
                 } else {
@@ -357,7 +357,7 @@ namespace chaiscript
           m->add(fun(static_cast<constfrontptr>(&ContainerType::front)), "front");
 
           m->add(fun(static_cast<pushptr>(&ContainerType::push_front)), 
-              [](){
+              []()->std::string{
                 if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
                   return "push_front_ref";
                 } else {
@@ -418,7 +418,7 @@ namespace chaiscript
           m->add(fun(&detail::insert<ContainerType>), "insert");
 
           m->add(fun(&detail::insert_ref<ContainerType>), 
-              [](){
+              []()->std::string{
                 if (typeid(typename ContainerType::mapped_type) == typeid(Boxed_Value)) {
                   return "insert_ref";
                 } else {
@@ -538,7 +538,7 @@ namespace chaiscript
 
           //Special case: add push_back to string (which doesn't support other back_insertion operations
           m->add(fun(&String::push_back), 
-              [](){
+              []()->std::string{
                 if (typeid(typename String::value_type) == typeid(Boxed_Value)) {
                   return "push_back_ref";
                 } else {

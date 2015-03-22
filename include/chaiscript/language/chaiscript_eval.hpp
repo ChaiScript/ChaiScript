@@ -706,10 +706,10 @@ namespace chaiscript
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
 
 
-          const auto captures = [&](){
+          const auto captures = [&]()->std::map<std::string, Boxed_Value>{
             std::map<std::string, Boxed_Value> named_captures;
             for (const auto &capture : children[0]->children) {
-              named_captures.emplace(capture->children[0]->text, capture->children[0]->eval(t_ss));
+              named_captures.insert(std::make_pair(capture->children[0]->text, capture->children[0]->eval(t_ss)));
             }
             return named_captures;
           }();
