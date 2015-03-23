@@ -158,7 +158,7 @@ namespace chaiscript
 
               if (itr != m_instances.end()) { return itr->second; }
 
-              std::shared_ptr<T> new_instance(new T());
+              std::shared_ptr<T> new_instance(std::make_shared<T>());
 
               m_instances.insert(std::make_pair(std::this_thread::get_id(), new_instance));
 

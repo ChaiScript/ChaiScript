@@ -30,7 +30,7 @@ namespace chaiscript
         Proxy_Function build_constructor_(Class (*)(Params...))
         {
           typedef std::shared_ptr<Class> (sig)(Params...);
-          return Proxy_Function(new Proxy_Function_Impl<sig>(std::function<sig>(&(constructor_<Class, Params...>))));
+          return Proxy_Function(static_cast<Proxy_Function_Impl_Base *>(new Proxy_Function_Impl<sig>(std::function<sig>(&(constructor_<Class, Params...>)))));
         }
     }
   }

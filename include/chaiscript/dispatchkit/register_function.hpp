@@ -61,7 +61,7 @@ namespace chaiscript
             {
               /// \todo is it possible to reduce the number of templates generated here?
               return Proxy_Function(
-                  new Proxy_Function_Impl<typename FunctionSignature<decltype(to_function(t)) >::Signature>(to_function(t)));
+                  static_cast<dispatch::Proxy_Function_Impl_Base *>(new Proxy_Function_Impl<typename FunctionSignature<decltype(to_function(t)) >::Signature>(to_function(t))));
             }
         };
 
@@ -118,7 +118,7 @@ namespace chaiscript
   template<typename T>
     Proxy_Function fun(const std::function<T> &f)
     {
-      return Proxy_Function(new dispatch::Proxy_Function_Impl<T>(f));
+      return Proxy_Function(static_cast<dispatch::Proxy_Function_Impl_Base *>(new dispatch::Proxy_Function_Impl<T>(f)));
     }
 
   
