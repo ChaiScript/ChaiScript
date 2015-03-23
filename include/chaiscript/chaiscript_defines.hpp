@@ -10,6 +10,9 @@
 #ifdef _MSC_VER
 #define CHAISCRIPT_MSVC _MSC_VER
 #define CHAISCRIPT_HAS_DECLSPEC
+#if _MSC_VER <= 1800
+#define CHAISCRIPT_MSVC_12
+#endif
 #endif
 
 #if defined(_WIN32) || defined(__CYGWIN__)
