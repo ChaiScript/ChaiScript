@@ -196,6 +196,60 @@ namespace chaiscript
         return m_match_stack.front();
       }
 
+      static void optimize_blocks(AST_NodePtr &p)
+      {
+        for (auto &c : p->children)
+        {
+          if (c->identifier == AST_Node_Type::Block) {
+            if (c->children.size() == 1) {
+              std::cout << "swapping out block child for block\n";
+              c = c->children[0];
+            }
+          }
+          optimize_blocks(c);
+        }
+      }
+
+      static void optimize_returns(AST_NodePtr &p)
+      {
+        for (auto &c : p->children)
+        {
+          if (c->identifier == AST_Node_Type::Def && c->children.size() > 0) {
+            auto &lastchild = c->children.back();
+            if (lastchild->identifier == AST_Node_Type::Block) {
+              auto &blocklastchild = lastchild->children.back();
+              if (blocklastchild->identifier == AST_Node_Type::Return) {
+                if (blocklastchild->children.size() == 1) {
+                  blocklastchild = blocklastchild->children[0];
+                }
+              }
+            }
+          }
+          optimize_returns(c);
+        }
+      }
+
+      static int count_nodes(const AST_NodePtr &p)
+      {
+        int count = 1;
+        for (auto &c : p->children) {
+          count += count_nodes(c);
+        }
+        return count;
+      }
+
+      AST_NodePtr optimized_ast() {
+        std::cout << " Optimizing AST \n";
+        AST_NodePtr p = m_match_stack.front();
+        std::cout << "Node Count: " << count_nodes(p) << '\n';
+        optimize_blocks(p);
+        std::cout << "Optimized Block Node Count: " << count_nodes(p) << '\n';
+        optimize_returns(p);
+        std::cout << "Returns Block Node Count: " << count_nodes(p) << '\n';
+        return p;
+      }
+
+
       /// Helper function that collects ast_nodes from a starting position to the top of the stack into a new AST node
       void build_match(AST_NodePtr t_t, size_t t_match_start) {
         int pos_line_start, pos_col_start, pos_line_stop, pos_col_stop;

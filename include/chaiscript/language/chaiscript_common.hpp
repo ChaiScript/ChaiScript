@@ -495,7 +495,6 @@ namespace chaiscript
   {
     namespace detail
     {
-
       /// Special type for returned values
       struct Return_Value {
         Boxed_Value retval;

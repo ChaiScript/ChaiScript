@@ -276,7 +276,7 @@ namespace chaiscript
         parser::ChaiScript_Parser parser;
         if (parser.parse(t_input, t_filename)) {
           //parser.show_match_stack();
-          return parser.ast()->eval(m_engine);
+          return parser.optimized_ast()->eval(m_engine);
         } else {
           return Boxed_Value();
         }
