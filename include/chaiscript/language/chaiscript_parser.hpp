@@ -196,13 +196,55 @@ namespace chaiscript
         return m_match_stack.front();
       }
 
+      static std::map<std::string, int> count_fun_calls(const AST_NodePtr &p, bool in_loop) {
+        if (p->identifier == AST_Node_Type::Fun_Call) {
+          if (p->children[0]->identifier == AST_Node_Type::Id) {
+            return std::map<std::string, int>{{p->children[0]->text, in_loop?99:1}};
+          }
+          return {};
+        } else {
+          std::map<std::string, int> counts;
+          for (const auto &child : p->children) {
+            auto childcounts = count_fun_calls(child, in_loop || p->identifier == AST_Node_Type::For || p->identifier == AST_Node_Type::While);
+            for (const auto &count : childcounts) {
+              counts[count.first] += count.second;
+            }
+          }
+          return counts;
+        }
+
+      }
+
+      static void optimize_fun_lookups(AST_NodePtr &p)
+      {
+        for (auto &c : p->children)
+        {
+
+          if (c->identifier == AST_Node_Type::Def
+              || c->identifier == AST_Node_Type::Method
+              || c->identifier == AST_Node_Type::Lambda) {
+            std::vector<AST_NodePtr> children_to_add;
+            auto counts = count_fun_calls(c, false);
+            for (const auto &count : counts) {
+              // std::cout << " Fun Call Count: " << count.first << " " << count.second << '\n';
+              if (count.second > 1) {
+                 children_to_add.push_back(std::make_shared<eval::Fun_Lookup_AST_Node>(count.first));
+              }
+            }
+            c->children.back()->children.insert(c->children.back()->children.begin(), children_to_add.begin(), children_to_add.end());
+          }
+          optimize_fun_lookups(c);
+        }
+      }
+
+
       static void optimize_blocks(AST_NodePtr &p)
       {
         for (auto &c : p->children)
         {
           if (c->identifier == AST_Node_Type::Block) {
             if (c->children.size() == 1) {
-              std::cout << "swapping out block child for block\n";
+              // std::cout << "swapping out block child for block\n";
               c = c->children[0];
             }
           }
@@ -229,6 +271,30 @@ namespace chaiscript
         }
       }
 
+      static void optimize_fun_calls(AST_NodePtr &p)
+      {
+        for (auto &c : p->children)
+        {
+          if (c->identifier == AST_Node_Type::Fun_Call && c->children.size() == 2 && c->children[1]->children.size() == 1) {
+            c = std::make_shared<eval::Unary_Fun_Call_AST_Node>(dynamic_cast<eval::Fun_Call_AST_Node &>(*c));
+        //    std::cout << "optimized unary fun call\n";
+          }
+          optimize_fun_calls(c);
+        }
+      }
+
+      static void fixup_opers(AST_NodePtr &p)
+      {
+        if (p->identifier == AST_Node_Type::Equation)
+        {
+          dynamic_cast<eval::Equation_AST_Node &>(*p).m_oper = Operators::to_operator(p->children[1]->text);
+        }
+
+        for (auto &c : p->children) {
+          fixup_opers(c);
+        }
+      }
+
       static int count_nodes(const AST_NodePtr &p)
       {
         int count = 1;
@@ -238,14 +304,15 @@ namespace chaiscript
         return count;
       }
 
-      AST_NodePtr optimized_ast() {
-        std::cout << " Optimizing AST \n";
+      AST_NodePtr optimized_ast(bool t_optimize_blocks = false, bool t_optimize_returns = true, bool t_optimize_fun_lookups = false,
+          bool t_optimize_fun_calls = false) {
         AST_NodePtr p = m_match_stack.front();
-        std::cout << "Node Count: " << count_nodes(p) << '\n';
-//        optimize_blocks(p);
-//        std::cout << "Optimized Block Node Count: " << count_nodes(p) << '\n';
-        optimize_returns(p);
-        std::cout << "Returns Block Node Count: " << count_nodes(p) << '\n';
+        fixup_opers(p);
+        //Note, optimize_blocks is currently broken; it breaks stack management
+        if (t_optimize_blocks) { optimize_blocks(p); }
+        if (t_optimize_returns) { optimize_returns(p); }
+        if (t_optimize_fun_lookups) { optimize_fun_lookups(p); }
+        if (t_optimize_fun_calls) { optimize_fun_calls(p); }
         return p;
       }
 

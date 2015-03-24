@@ -218,6 +218,7 @@ namespace chaiscript
         }
     };
 
+
     struct Fun_Call_AST_Node : public AST_Node {
       public:
         Fun_Call_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
@@ -288,6 +289,96 @@ namespace chaiscript
         }
 
     };
+
+    struct Fun_Lookup_AST_Node : public AST_Node {
+      public:
+        Fun_Lookup_AST_Node(const std::string &t_fun_name)
+         : AST_Node(t_fun_name, 0, std::make_shared<std::string>("<EVAL>"))
+        {
+        }
+
+        virtual ~Fun_Lookup_AST_Node() {}
+
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
+          try {
+            Boxed_Value bv = t_ss.get_object(text);
+            t_ss.add_object(text, bv);
+            std::cout << " Saved fun lookup: " << text << '\n';
+            return bv;
+          } catch (...) {
+            return Boxed_Value();
+          }
+        }
+    };
+
+
+
+    struct Unary_Fun_Call_AST_Node : public AST_Node {
+      public:
+        Unary_Fun_Call_AST_Node(const Fun_Call_AST_Node &t_fc)
+          : AST_Node(t_fc.text, t_fc.identifier, t_fc.filename, t_fc.start.line, t_fc.start.column, t_fc.end.line, t_fc.end.column)
+        {
+          this->children = t_fc.children;
+        }
+        virtual ~Unary_Fun_Call_AST_Node() {}
+
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
+          chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
+
+          std::vector<Boxed_Value> params{children[1]->children[0]->eval(t_ss)};
+          fpp.save_params(params);
+
+          Boxed_Value fn(this->children[0]->eval(t_ss));
+
+          try {
+            chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
+            return (*t_ss.boxed_cast<const Const_Proxy_Function &>(fn))(params, t_ss.conversions());
+          }
+          catch(const exception::dispatch_error &e){
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, e.functions, false, t_ss);
+          }
+          catch(const exception::bad_boxed_cast &){
+            try {
+              Const_Proxy_Function f = t_ss.boxed_cast<const Const_Proxy_Function &>(fn);
+              // handle the case where there is only 1 function to try to call and dispatch fails on it
+              throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, {f}, false, t_ss);
+            } catch (const exception::bad_boxed_cast &) {
+              throw exception::eval_error("'" + this->children[0]->pretty_print() + "' does not evaluate to a function.");
+            }
+          }
+          catch(const exception::arity_error &e){
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
+          }
+          catch(const exception::guard_error &e){
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
+          }
+          catch(detail::Return_Value &rv) {
+            return rv.retval;
+          }
+        }
+
+        virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE 
+        {
+          std::ostringstream oss;
+
+          int count = 0;
+          for (const auto &child : this->children) {
+            oss << child->pretty_print();
+
+            if (count == 0)
+            {
+              oss << "(";
+            }
+            ++count;
+          }
+
+          oss << ")";
+
+          return oss.str();
+        }
+
+    };
+
 
     /// Used in the context of in-string ${} evals, so that no new scope is created
     struct Inplace_Fun_Call_AST_Node : public AST_Node {
@@ -452,23 +543,24 @@ namespace chaiscript
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Equation, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
         {}
 
+        Operators::Opers m_oper;
+
         virtual ~Equation_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-          Boxed_Value rhs = this->children.back()->eval(t_ss); 
+          Boxed_Value rhs = this->children[2]->eval(t_ss); 
           Boxed_Value lhs = this->children[0]->eval(t_ss);
 
-          Operators::Opers oper = Operators::to_operator(this->children[1]->text);
 
-          if (oper != Operators::invalid && lhs.get_type_info().is_arithmetic() &&
+          if (m_oper != Operators::invalid && lhs.get_type_info().is_arithmetic() &&
               rhs.get_type_info().is_arithmetic())
           {
             try {
-              return Boxed_Number::do_oper(oper, lhs, rhs);
+              return Boxed_Number::do_oper(m_oper, lhs, rhs);
             } catch (const std::exception &) {
               throw exception::eval_error("Error with unsupported arithmetic assignment operation");
             }
-          } else if (oper == Operators::assign) {
+          } else if (m_oper == Operators::assign) {
             try {
               if (lhs.is_undef()) {
                 if (!this->children.empty() && 
