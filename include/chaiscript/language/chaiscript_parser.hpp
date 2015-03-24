@@ -1687,6 +1687,10 @@ namespace chaiscript
             throw exception::eval_error("Incomplete class block", File_Position(m_line, m_col), *m_filename);
           }
 
+          if (m_match_stack.size() == prev_stack_top) {
+            m_match_stack.push_back(std::make_shared<eval::Noop_AST_Node>());
+          }
+
           build_match(std::make_shared<eval::Block_AST_Node>(), prev_stack_top);
         }
 
@@ -1705,6 +1709,10 @@ namespace chaiscript
           Statements();
           if (!Char('}')) {
             throw exception::eval_error("Incomplete block", File_Position(m_line, m_col), *m_filename);
+          }
+
+          if (m_match_stack.size() == prev_stack_top) {
+            m_match_stack.push_back(std::make_shared<eval::Noop_AST_Node>());
           }
 
           build_match(std::make_shared<eval::Block_AST_Node>(), prev_stack_top);

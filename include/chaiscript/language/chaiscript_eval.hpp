@@ -738,25 +738,14 @@ namespace chaiscript
         virtual ~Block_AST_Node() {}
 
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
-          const auto num_children = this->children.size();
-
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
-          for (size_t i = 0; i < num_children; ++i) {
-            try {
-              if (i + 1 < num_children)
-              {
-                this->children[i]->eval(t_ss);
-              } else {
-                return this->children[i]->eval(t_ss);
-              }
-            }
-            catch (const chaiscript::eval::detail::Return_Value &) {
-              throw;
-            }
+          const auto num_children = children.size();
+          for (size_t i = 0; i < num_children-1; ++i) {
+            children[i]->eval(t_ss);
           }
+          return children.back()->eval(t_ss);
 
-          return Boxed_Value();
         }
     };
 
@@ -889,8 +878,7 @@ namespace chaiscript
 
           if (get_bool_condition(this->children[0]->eval(t_ss))) {
             return this->children[1]->eval(t_ss);
-          }
-          else {
+          } else {
             if (this->children.size() > 2) {
               size_t i = 2;
               bool cond = false;
@@ -923,26 +911,22 @@ namespace chaiscript
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
-          // initial expression
-          this->children[0]->eval(t_ss);
-
           try {
-            // while condition evals to true
-            while (get_bool_condition(this->children[1]->eval(t_ss))) {
+            for (
+                children[0]->eval(t_ss);
+                get_bool_condition(children[1]->eval(t_ss));
+                children[2]->eval(t_ss)
+                ) {
               try {
                 // Body of Loop
-                this->children[3]->eval(t_ss);
+                children[3]->eval(t_ss);
               } catch (detail::Continue_Loop &) {
                 // we got a continue exception, which means all of the remaining 
                 // loop implementation is skipped and we just need to continue to
                 // the next iteration step
               }
-
-              // loop expression
-              this->children[2]->eval(t_ss);
             }
-          }
-          catch (detail::Break_Loop &) {
+          } catch (detail::Break_Loop &) {
             // loop broken
           }
 
