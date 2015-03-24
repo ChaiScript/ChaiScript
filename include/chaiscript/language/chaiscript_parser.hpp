@@ -242,8 +242,8 @@ namespace chaiscript
         std::cout << " Optimizing AST \n";
         AST_NodePtr p = m_match_stack.front();
         std::cout << "Node Count: " << count_nodes(p) << '\n';
-        optimize_blocks(p);
-        std::cout << "Optimized Block Node Count: " << count_nodes(p) << '\n';
+//        optimize_blocks(p);
+//        std::cout << "Optimized Block Node Count: " << count_nodes(p) << '\n';
         optimize_returns(p);
         std::cout << "Returns Block Node Count: " << count_nodes(p) << '\n';
         return p;
