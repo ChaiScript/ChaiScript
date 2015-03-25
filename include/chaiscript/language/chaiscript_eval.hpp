@@ -540,7 +540,8 @@ namespace chaiscript
     struct Equation_AST_Node : public AST_Node {
       public:
         Equation_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Equation, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Equation, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
+          m_oper(Operators::invalid)
         {}
 
         Operators::Opers m_oper;
