@@ -1,0 +1,22 @@
+load_module("test_module")
+
+auto t := TestBaseType();
+
+// This uses the TestBaseType to Type2 user type
+// conversion which was added in the module and then calls
+// "get_val()" which exists on the Type2 type
+//assert_equal(t.get_val(), 10);
+//print("Made it past test 1");
+
+var t2 := Type2(t);
+
+//dump_system();
+
+for (var i = 0; i < 50000; ++i) {
+  var str = string(get_str(t2));
+  size(get_str(t2));
+  t2.get_str().size();
+  t.get_str().size();
+}
+
+
