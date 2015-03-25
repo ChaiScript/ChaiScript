@@ -201,7 +201,7 @@ namespace chaiscript
           if (p->children[0]->identifier == AST_Node_Type::Id) {
             return std::map<std::string, int>{{p->children[0]->text, in_loop?99:1}};
           }
-          return {};
+          return std::map<std::string, int>();
         } else {
           std::map<std::string, int> counts;
           for (const auto &child : p->children) {
