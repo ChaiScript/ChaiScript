@@ -74,46 +74,47 @@ namespace chaiscript
   template<typename Type>
   typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv, const Type_Conversions *t_conversions = nullptr)
   {
-    try {
-      return detail::Cast_Helper<Type>::cast(bv, t_conversions);
-    } catch (const chaiscript::detail::exception::bad_any_cast &) {
+    if (!t_conversions || bv.get_type_info().bare_equal(user_type<Type>()) || (t_conversions && !t_conversions->convertable_type<Type>())) {
+      try {
+        return detail::Cast_Helper<Type>::cast(bv, t_conversions);
+      } catch (const chaiscript::detail::exception::bad_any_cast &) {
+      }
+    }
 
 
 #ifdef CHAISCRIPT_MSVC
-      //Thank you MSVC, yes we know that a constant value is being used in the if
-      // statment in THIS VERSION of the template instantiation
+    //Thank you MSVC, yes we know that a constant value is being used in the if
+    // statment in THIS VERSION of the template instantiation
 #pragma warning(push)
 #pragma warning(disable : 4127)
 #endif
 
-      if (t_conversions && t_conversions->convertable_type<Type>())
-      {
+    if (t_conversions && t_conversions->convertable_type<Type>())
+    {
+      try {
+        // std::cout << "trying an up conversion " << typeid(Type).name() << '\n';
+        // We will not catch any bad_boxed_dynamic_cast that is thrown, let the user get it
+        // either way, we are not responsible if it doesn't work
+        return detail::Cast_Helper<Type>::cast(t_conversions->boxed_type_conversion<Type>(bv), t_conversions);
+      } catch (...) {
         try {
-          // std::cout << "trying an up conversion " << typeid(Type).name() << '\n';
-          // We will not catch any bad_boxed_dynamic_cast that is thrown, let the user get it
-          // either way, we are not responsible if it doesn't work
-          return detail::Cast_Helper<Type>::cast(t_conversions->boxed_type_conversion<Type>(bv), t_conversions);
-        } catch (...) {
-          try {
-          //  std::cout << "trying a down conversion " << typeid(Type).name() << '\n';
-            // try going the other way - down the inheritance graph
-            return detail::Cast_Helper<Type>::cast(t_conversions->boxed_type_down_conversion<Type>(bv), t_conversions);
-          } catch (const chaiscript::detail::exception::bad_any_cast &) {
-            throw exception::bad_boxed_cast(bv.get_type_info(), typeid(Type));
-          }
+        //  std::cout << "trying a down conversion " << typeid(Type).name() << '\n';
+          // try going the other way - down the inheritance graph
+          return detail::Cast_Helper<Type>::cast(t_conversions->boxed_type_down_conversion<Type>(bv), t_conversions);
+        } catch (const chaiscript::detail::exception::bad_any_cast &) {
+          throw exception::bad_boxed_cast(bv.get_type_info(), typeid(Type));
         }
-      } else {
-        // If it's not polymorphic, just throw the error, don't waste the time on the 
-        // attempted dynamic_cast
-        throw exception::bad_boxed_cast(bv.get_type_info(), typeid(Type));
       }
+    } else {
+      // If it's not polymorphic, just throw the error, don't waste the time on the 
+      // attempted dynamic_cast
+      throw exception::bad_boxed_cast(bv.get_type_info(), typeid(Type));
+    }
 
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)
 #endif
 
-
-    } 
   }
 
 }

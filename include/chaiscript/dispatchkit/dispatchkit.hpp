@@ -641,6 +641,7 @@ namespace chaiscript
         /// \throws std::range_error if it does not
         Boxed_Value get_function_object(const std::string &t_name) const
         {
+//          std::cout << "Getting function object: " << t_name << '\n';
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           const auto &funs = get_function_objects_int();

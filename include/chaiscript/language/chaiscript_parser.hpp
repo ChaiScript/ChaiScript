@@ -196,6 +196,127 @@ namespace chaiscript
         return m_match_stack.front();
       }
 
+      static std::map<std::string, int> count_fun_calls(const AST_NodePtr &p, bool in_loop) {
+        if (p->identifier == AST_Node_Type::Fun_Call) {
+          if (p->children[0]->identifier == AST_Node_Type::Id) {
+            return std::map<std::string, int>{{p->children[0]->text, in_loop?99:1}};
+          }
+          return std::map<std::string, int>();
+        } else {
+          std::map<std::string, int> counts;
+          for (const auto &child : p->children) {
+            auto childcounts = count_fun_calls(child, in_loop || p->identifier == AST_Node_Type::For || p->identifier == AST_Node_Type::While);
+            for (const auto &count : childcounts) {
+              counts[count.first] += count.second;
+            }
+          }
+          return counts;
+        }
+
+      }
+
+      static void optimize_fun_lookups(AST_NodePtr &p)
+      {
+        for (auto &c : p->children)
+        {
+
+          if (c->identifier == AST_Node_Type::Def
+              || c->identifier == AST_Node_Type::Method
+              || c->identifier == AST_Node_Type::Lambda) {
+            std::vector<AST_NodePtr> children_to_add;
+            auto counts = count_fun_calls(c, false);
+            for (const auto &count : counts) {
+              // std::cout << " Fun Call Count: " << count.first << " " << count.second << '\n';
+              if (count.second > 1) {
+                 children_to_add.push_back(std::make_shared<eval::Fun_Lookup_AST_Node>(count.first));
+              }
+            }
+            c->children.back()->children.insert(c->children.back()->children.begin(), children_to_add.begin(), children_to_add.end());
+          }
+          optimize_fun_lookups(c);
+        }
+      }
+
+
+      static void optimize_blocks(AST_NodePtr &p)
+      {
+        for (auto &c : p->children)
+        {
+          if (c->identifier == AST_Node_Type::Block) {
+            if (c->children.size() == 1) {
+              // std::cout << "swapping out block child for block\n";
+              c = c->children[0];
+            }
+          }
+          optimize_blocks(c);
+        }
+      }
+
+      static void optimize_returns(AST_NodePtr &p)
+      {
+        for (auto &c : p->children)
+        {
+          if (c->identifier == AST_Node_Type::Def && c->children.size() > 0) {
+            auto &lastchild = c->children.back();
+            if (lastchild->identifier == AST_Node_Type::Block) {
+              auto &blocklastchild = lastchild->children.back();
+              if (blocklastchild->identifier == AST_Node_Type::Return) {
+                if (blocklastchild->children.size() == 1) {
+                  blocklastchild = blocklastchild->children[0];
+                }
+              }
+            }
+          }
+          optimize_returns(c);
+        }
+      }
+
+      static void optimize_fun_calls(AST_NodePtr &p)
+      {
+        for (auto &c : p->children)
+        {
+          if (c->identifier == AST_Node_Type::Fun_Call && c->children.size() == 2 && c->children[1]->children.size() == 1) {
+            c = std::make_shared<eval::Unary_Fun_Call_AST_Node>(dynamic_cast<eval::Fun_Call_AST_Node &>(*c));
+        //    std::cout << "optimized unary fun call\n";
+          }
+          optimize_fun_calls(c);
+        }
+      }
+
+      static void fixup_opers(AST_NodePtr &p)
+      {
+        if (p->identifier == AST_Node_Type::Equation)
+        {
+          dynamic_cast<eval::Equation_AST_Node &>(*p).m_oper = Operators::to_operator(p->children[1]->text);
+        }
+
+        for (auto &c : p->children) {
+          fixup_opers(c);
+        }
+      }
+
+      static int count_nodes(const AST_NodePtr &p)
+      {
+        int count = 1;
+        for (auto &c : p->children) {
+          count += count_nodes(c);
+        }
+        return count;
+      }
+
+      AST_NodePtr optimized_ast(bool t_optimize_blocks = false, bool t_optimize_returns = true, bool t_optimize_fun_lookups = false,
+          bool t_optimize_fun_calls = false) {
+        AST_NodePtr p = m_match_stack.front();
+        fixup_opers(p);
+        //Note, optimize_blocks is currently broken; it breaks stack management
+        if (t_optimize_blocks) { optimize_blocks(p); }
+        if (t_optimize_returns) { optimize_returns(p); }
+        if (t_optimize_fun_lookups) { optimize_fun_lookups(p); }
+        if (t_optimize_fun_calls) { optimize_fun_calls(p); }
+        return p;
+      }
+
+
       /// Helper function that collects ast_nodes from a starting position to the top of the stack into a new AST node
       void build_match(AST_NodePtr t_t, size_t t_match_start) {
         int pos_line_start, pos_col_start, pos_line_stop, pos_col_stop;
@@ -692,7 +813,7 @@ namespace chaiscript
       }
 
       /// Reads an argument from input
-      bool Arg() {
+      bool Arg(const bool t_type_allowed = true) {
         const auto prev_stack_top = m_match_stack.size();
         SkipWS();
 
@@ -701,7 +822,10 @@ namespace chaiscript
         }
 
         SkipWS();
-        Id(true);
+
+        if (t_type_allowed) {
+          Id(true);
+        }
 
         build_match(std::make_shared<eval::Arg_AST_Node>(), prev_stack_top);
 
@@ -1120,6 +1244,32 @@ namespace chaiscript
         }
       }
 
+      /// Reads a comma-separated list of values from input. Id's only, no types allowed
+      bool Id_Arg_List() {
+        SkipWS(true);
+        bool retval = false;
+
+        const auto prev_stack_top = m_match_stack.size();
+
+        if (Arg(false)) {
+          retval = true;
+          while (Eol()) {}
+          if (Char(',')) {
+            do {
+              while (Eol()) {}
+              if (!Arg(false)) {
+                throw exception::eval_error("Unexpected value in parameter list", File_Position(m_line, m_col), *m_filename);
+              }
+            } while (Char(','));
+          }
+        }
+        build_match(std::make_shared<eval::Arg_List_AST_Node>(), prev_stack_top);
+
+        SkipWS(true);
+
+        return retval;
+      }
+
       /// Reads a comma-separated list of values from input, for function declarations
       bool Decl_Arg_List() {
         SkipWS(true);
@@ -1138,8 +1288,8 @@ namespace chaiscript
               }
             } while (Char(','));
           }
-          build_match(std::make_shared<eval::Arg_List_AST_Node>(), prev_stack_top);
         }
+        build_match(std::make_shared<eval::Arg_List_AST_Node>(), prev_stack_top);
 
         SkipWS(true);
 
@@ -1223,12 +1373,25 @@ namespace chaiscript
         if (Keyword("fun")) {
           retval = true;
 
+          if (Char('[')) {
+            Id_Arg_List();
+            if (!Char(']')) {
+              throw exception::eval_error("Incomplete anonymous function bind", File_Position(m_line, m_col), *m_filename);
+            }
+          } else {
+            // make sure we always have the same number of nodes
+            build_match(std::make_shared<eval::Arg_List_AST_Node>(), prev_stack_top);
+          }
+
           if (Char('(')) {
             Decl_Arg_List();
             if (!Char(')')) {
               throw exception::eval_error("Incomplete anonymous function", File_Position(m_line, m_col), *m_filename);
             }
+          } else {
+            throw exception::eval_error("Incomplete anonymous function", File_Position(m_line, m_col), *m_filename);
           }
+
 
           while (Eol()) {}
 
@@ -1645,6 +1808,10 @@ namespace chaiscript
             throw exception::eval_error("Incomplete class block", File_Position(m_line, m_col), *m_filename);
           }
 
+          if (m_match_stack.size() == prev_stack_top) {
+            m_match_stack.push_back(std::make_shared<eval::Noop_AST_Node>());
+          }
+
           build_match(std::make_shared<eval::Block_AST_Node>(), prev_stack_top);
         }
 
@@ -1663,6 +1830,10 @@ namespace chaiscript
           Statements();
           if (!Char('}')) {
             throw exception::eval_error("Incomplete block", File_Position(m_line, m_col), *m_filename);
+          }
+
+          if (m_match_stack.size() == prev_stack_top) {
+            m_match_stack.push_back(std::make_shared<eval::Noop_AST_Node>());
           }
 
           build_match(std::make_shared<eval::Block_AST_Node>(), prev_stack_top);

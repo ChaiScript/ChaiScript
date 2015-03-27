@@ -467,14 +467,14 @@ namespace chaiscript
       }
 
     protected:
-      AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<std::string> &t_fname, 
+      AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<const std::string> &t_fname, 
           int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
         text(std::move(t_ast_node_text)), identifier(t_id), filename(t_fname),
         start(t_start_line, t_start_col), end(t_end_line, t_end_col)
       {
       }
 
-      AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<std::string> &t_fname) :
+      AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<const std::string> &t_fname) :
         text(std::move(t_ast_node_text)), identifier(t_id), filename(t_fname) {}
 
       virtual ~AST_Node() {}
@@ -495,7 +495,6 @@ namespace chaiscript
   {
     namespace detail
     {
-
       /// Special type for returned values
       struct Return_Value {
         Boxed_Value retval;

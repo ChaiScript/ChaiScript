@@ -180,6 +180,8 @@ namespace chaiscript
             if (m_arity == 0)
             {
               return true;
+            } else if (m_arity > 1 && m_types.size() > 1) {
+              return compare_first_type(vals[0], t_conversions) && compare_type_to_param(m_types[2], vals[1], t_conversions);
             } else {
               return compare_first_type(vals[0], t_conversions);
             }
@@ -233,14 +235,7 @@ namespace chaiscript
 
         virtual bool compare_first_type(const Boxed_Value &bv, const Type_Conversions &t_conversions) const
         {
-          const auto &types = get_param_types();
-
-          if (types.size() < 2)
-          {
-            return true;
-          }
-
-          return compare_type_to_param(types[1], bv, t_conversions);
+          return compare_type_to_param(m_types[1], bv, t_conversions);
         }
 
         static bool compare_types(const std::vector<Type_Info> &tis, const std::vector<Boxed_Value> &bvs)
@@ -779,7 +774,7 @@ namespace chaiscript
       Boxed_Value dispatch(const Funcs &funcs,
           const std::vector<Boxed_Value> &plist, const Type_Conversions &t_conversions)
       {
-
+        //std::cout << "starting dispatch: " << funcs.size() << '\n';
         std::multimap<size_t, const Proxy_Function_Base *> ordered_funcs;
 
         for (const auto &func : funcs)
@@ -808,11 +803,17 @@ namespace chaiscript
         for (const auto &func : ordered_funcs )
         {
           try {
-            if (func.second->filter(plist, t_conversions))
+            if (func.first == 0 || func.second->filter(plist, t_conversions))
             {
               return (*(func.second))(plist, t_conversions);
             }
           } catch (const exception::bad_boxed_cast &) {
+            //std::cout << "Bad Boxed Cast: " << func.second->get_arity() << '(';
+            //for (const auto &p : plist) {
+            //  std::cout << p.get_type_info().name() << ',';
+            //}
+            //std::cout << ")\n";
+
             //parameter failed to cast, try again
           } catch (const exception::arity_error &) {
             //invalid num params, try again

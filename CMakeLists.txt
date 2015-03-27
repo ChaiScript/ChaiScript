@@ -1,5 +1,16 @@
 cmake_minimum_required(VERSION 2.8)
 
+if(NOT ${CMAKE_VERSION} VERSION_LESS "3.1")
+  cmake_policy(SET CMP0054 NEW)
+endif()
+
+IF(BIICODE)
+  INIT_BIICODE_BLOCK()
+  ADD_BIICODE_TARGETS()
+ELSE()
+  # Your regular CMakeLists configuration here
+
+
 project(chaiscript)
 
 # MINGW does not yet support C++11's concurrency features
@@ -81,7 +92,7 @@ set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/readme.md")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/description.txt")
 
 set(CPACK_PACKAGE_VERSION_MAJOR 5)
-set(CPACK_PACKAGE_VERSION_MINOR 6)
+set(CPACK_PACKAGE_VERSION_MINOR 7)
 set(CPACK_PACKAGE_VERSION_PATCH 0)
 
 set(CPACK_PACKAGE_EXECUTABLES "chai;ChaiScript Eval")
@@ -408,4 +419,7 @@ install(DIRECTORY samples DESTINATION share/chaiscript
 configure_file(contrib/pkgconfig/chaiscript.pc.in lib/pkgconfig/chaiscript.pc @ONLY)
 install(FILES "${chaiscript_BINARY_DIR}/lib/pkgconfig/chaiscript.pc"
         DESTINATION lib/pkgconfig)
+
+    
+ENDIF()
 

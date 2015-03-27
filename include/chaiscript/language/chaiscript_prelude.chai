@@ -38,7 +38,24 @@ def eq(l, r) {
 
 def new(x) { 
   eval(type_name(x))(); 
-} 
+}
+
+def clone(double x) {
+  double(x).copy_var_attrs(x)
+}
+
+def clone(string x) {
+  string(x).copy_var_attrs(x)
+}
+
+def clone(vector x) {
+  vector(x).copy_var_attrs(x)
+}
+
+
+def clone(int x) {
+  int(x).copy_var_attrs(x)
+}
 
 def clone(x) : function_exists(type_name(x)) && call_exists(eval(type_name(x)), x)
 {
