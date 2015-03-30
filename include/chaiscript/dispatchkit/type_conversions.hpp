@@ -119,24 +119,27 @@ namespace chaiscript
                 // Dynamic cast out the contained boxed value, which we know is the type we want
                 if (t_from.is_const())
                 {
-                  std::shared_ptr<const To> data
-                    = std::dynamic_pointer_cast<const To>(detail::Cast_Helper<std::shared_ptr<const From> >::cast(t_from, nullptr));
-                  if (!data)
-                  {
-                    throw std::bad_cast();
-                  }
-
-                  return Boxed_Value(data);
+                  return Boxed_Value(
+                      [&]()->std::shared_ptr<const To>{
+                        if (auto data = std::dynamic_pointer_cast<const To>(detail::Cast_Helper<std::shared_ptr<const From> >::cast(t_from, nullptr)))
+                        {
+                          return data;
+                        } else {
+                          throw std::bad_cast();
+                        }
+                      }()
+                      );
                 } else {
-                  std::shared_ptr<To> data
-                    = std::dynamic_pointer_cast<To>(detail::Cast_Helper<std::shared_ptr<From> >::cast(t_from, nullptr));
-
-                  if (!data)
-                  {
-                    throw std::bad_cast();
-                  }
-
-                  return Boxed_Value(data);
+                  return Boxed_Value(
+                      [&]()->std::shared_ptr<To>{
+                        if (auto data = std::dynamic_pointer_cast<To>(detail::Cast_Helper<std::shared_ptr<From> >::cast(t_from, nullptr)))
+                        {
+                          return data;
+                        } else {
+                          throw std::bad_cast();
+                        }
+                      }()
+                      );
                 }
               } else {
                 // Pull the reference out of the contained boxed value, which we know is the type we want
@@ -439,9 +442,7 @@ namespace chaiscript
       static_assert(std::is_convertible<From, To>::value, "Types are not automatically convertible");
       auto func = [](const Boxed_Value &t_bv) -> Boxed_Value {
             // not even attempting to call boxed_cast so that we don't get caught in some call recursion
-            auto &&from =  detail::Cast_Helper<From>::cast(t_bv, nullptr);
-            To to(from);
-            return chaiscript::Boxed_Value(to);
+            return chaiscript::Boxed_Value(To(detail::Cast_Helper<From>::cast(t_bv, nullptr)));
           };
 
       return std::make_shared<detail::Type_Conversion_Impl<decltype(func)>>(user_type<From>(), user_type<To>(), func);
