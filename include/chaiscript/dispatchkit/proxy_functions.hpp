@@ -529,12 +529,7 @@ namespace chaiscript
 
         virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          if (static_cast<int>(vals.size()) != get_arity()) 
-          {
-            return false;
-          }
-
-          return compare_types(m_types, vals) || compare_types_with_cast(vals, t_conversions);
+          return static_cast<int>(vals.size()) == get_arity() && (compare_types(m_types, vals) || compare_types_with_cast(vals, t_conversions));
         }
 
         virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const = 0;

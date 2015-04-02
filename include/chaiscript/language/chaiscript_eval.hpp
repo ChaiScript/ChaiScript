@@ -61,7 +61,7 @@ namespace chaiscript
         try {
           return t_node->eval(t_ss);
         } catch (detail::Return_Value &rv) {
-          return rv.retval;
+          return std::move(rv.retval);
         } 
       }
     }
@@ -707,13 +707,14 @@ namespace chaiscript
 
               fpp.save_params(params);
 
-              std::string fun_name;
-              if ((this->children[i]->identifier == AST_Node_Type::Fun_Call) || (this->children[i]->identifier == AST_Node_Type::Array_Call)) {
-                fun_name = this->children[i]->children[0]->text;
-              }
-              else {
-                fun_name = this->children[i]->text;
-              }
+              std::string fun_name = [&](){
+                if ((this->children[i]->identifier == AST_Node_Type::Fun_Call) || (this->children[i]->identifier == AST_Node_Type::Array_Call)) {
+                  return this->children[i]->children[0]->text;
+                }
+                else {
+                  return this->children[i]->text;
+                }
+              }();
 
               try {
                 chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
@@ -728,7 +729,7 @@ namespace chaiscript
                 }
               }
               catch(detail::Return_Value &rv) {
-                retval = rv.retval;
+                retval = std::move(rv.retval);
               }
 
               if (this->children[i]->identifier == AST_Node_Type::Array_Call) {
@@ -1171,14 +1172,11 @@ namespace chaiscript
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::File, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~File_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
-          const size_t size = this->children.size(); 
-          for (size_t i = 0; i < size; ++i) {
-            Boxed_Value retval(this->children[i]->eval(t_ss));
-            if (i + 1 == size) {
-              return retval;
-            }
+          const auto num_children = children.size();
+          for (size_t i = 0; i < num_children-1; ++i) {
+            children[i]->eval(t_ss);
           }
-          return Boxed_Value();
+          return children.back()->eval(t_ss);
         }
     };
 

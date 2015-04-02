@@ -1007,14 +1007,6 @@ namespace chaiscript
 
         static bool function_less_than(const Proxy_Function &lhs, const Proxy_Function &rhs)
         {
-          const auto &lhsparamtypes = lhs->get_param_types();
-          const auto &rhsparamtypes = rhs->get_param_types();
-
-          const auto lhssize = lhsparamtypes.size();
-          const auto rhssize = rhsparamtypes.size();
-
-          CHAISCRIPT_CONSTEXPR auto boxed_type = user_type<Boxed_Value>();
-          CHAISCRIPT_CONSTEXPR auto boxed_pod_type = user_type<Boxed_Number>();
 
           auto dynamic_lhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(lhs));
           auto dynamic_rhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(rhs));
@@ -1044,6 +1036,14 @@ namespace chaiscript
             return true;
           }
 
+          const auto &lhsparamtypes = lhs->get_param_types();
+          const auto &rhsparamtypes = rhs->get_param_types();
+
+          const auto lhssize = lhsparamtypes.size();
+          const auto rhssize = rhsparamtypes.size();
+
+          CHAISCRIPT_CONSTEXPR auto boxed_type = user_type<Boxed_Value>();
+          CHAISCRIPT_CONSTEXPR auto boxed_pod_type = user_type<Boxed_Number>();
 
           for (size_t i = 1; i < lhssize && i < rhssize; ++i)
           {

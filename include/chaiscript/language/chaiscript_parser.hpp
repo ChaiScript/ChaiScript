@@ -1118,8 +1118,8 @@ namespace chaiscript
           const auto prev_col = m_col;
           const auto prev_line = m_line;
           if (Char_(t_c)) {
-            std::string match(start, m_input_pos);
-            m_match_stack.push_back(std::make_shared<eval::Char_AST_Node>(std::move(match), m_filename, prev_line, prev_col, m_line, m_col));
+            m_match_stack.push_back(
+                std::make_shared<eval::Char_AST_Node>(std::string(start, m_input_pos), m_filename, prev_line, prev_col, m_line, m_col));
             return true;
           } else {
             return false;
@@ -1163,8 +1163,8 @@ namespace chaiscript
         }
 
         if ( t_capture && retval ) {
-          std::string match(start, m_input_pos);
-          m_match_stack.push_back(std::make_shared<eval::Str_AST_Node>(std::move(match), m_filename, prev_line, prev_col, m_line, m_col));
+          m_match_stack.push_back(std::make_shared<eval::Str_AST_Node>(
+                std::string(start, m_input_pos), m_filename, prev_line, prev_col, m_line, m_col));
         }
         return retval;
       }
@@ -1206,8 +1206,8 @@ namespace chaiscript
         }
 
         if ( t_capture && retval ) {
-          std::string match(start, m_input_pos);
-          m_match_stack.push_back(std::make_shared<eval::Str_AST_Node>(std::move(match), m_filename, prev_line, prev_col, m_line, m_col));
+          m_match_stack.push_back(std::make_shared<eval::Str_AST_Node>(
+                std::string(start, m_input_pos), m_filename, prev_line, prev_col, m_line, m_col));
         }
 
         return retval;
@@ -1239,8 +1239,8 @@ namespace chaiscript
           const auto prev_col = m_col;
           const auto prev_line = m_line;
           if (Eol_()) {
-            std::string match(start, m_input_pos);
-            m_match_stack.push_back(std::make_shared<eval::Eol_AST_Node>(std::move(match), m_filename, prev_line, prev_col, m_line, m_col));
+            m_match_stack.push_back(std::make_shared<eval::Eol_AST_Node>(
+                  std::string(start, m_input_pos), m_filename, prev_line, prev_col, m_line, m_col));
             return true;
           } else {
             return false;
