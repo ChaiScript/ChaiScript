@@ -353,7 +353,9 @@ namespace chaiscript
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type_name, std::ref(m_engine)), "name");
 
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type, std::ref(m_engine)), "type");
-      m_engine.add(fun<void (const Type_Info &, const Type_Info &, const std::function<Boxed_Value (const Boxed_Value &)> &)> ( 
+      m_engine.add(fun<chaiscript::Type_Info (const std::string &)>([this](const std::string &t_type_name){ return this->m_engine.get_type(t_type_name, true); }), "type");
+
+      m_engine.add(fun<void(const Type_Info &, const Type_Info &, const std::function<Boxed_Value(const Boxed_Value &)> &)>(
             [=](const Type_Info &t_from, const Type_Info &t_to, const std::function<Boxed_Value (const Boxed_Value &)> &t_func) {
               m_engine.add(chaiscript::type_conversion(t_from, t_to, t_func));
             }
