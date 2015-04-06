@@ -1,2 +1,8 @@
 auto x = [1, 2, 3]
 assert_equal(3, x[2])
+
+
+for (auto i = x.size() - 1; i >= 0; --i)
+{
+  print(x[i]);
+}
