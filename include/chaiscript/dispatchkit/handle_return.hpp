@@ -38,14 +38,14 @@ namespace chaiscript
                    typename = typename std::enable_if<std::is_pod<typename std::decay<T>::type>::value>::type>
           static Boxed_Value handle(T r)
           {
-            return Boxed_Value(std::move(r));
+            return Boxed_Value(std::move(r), true);
           }
 
           template<typename T,
                    typename = typename std::enable_if<!std::is_pod<typename std::decay<T>::type>::value>::type>
           static Boxed_Value handle(T &&r)
           {
-            return Boxed_Value(std::make_shared<T>(std::forward<T>(r)));
+            return Boxed_Value(std::make_shared<T>(std::forward<T>(r)), true);
           }
         };
 
@@ -54,7 +54,7 @@ namespace chaiscript
         {
           static Boxed_Value handle(Ret *p)
           {
-            return Boxed_Value(p);
+            return Boxed_Value(p, true);
           }
         };
 
@@ -63,7 +63,7 @@ namespace chaiscript
         {
           static Boxed_Value handle(const Ret *p)
           {
-            return Boxed_Value(p);
+            return Boxed_Value(p, true);
           }
         };
 
@@ -72,7 +72,7 @@ namespace chaiscript
         {
           static Boxed_Value handle(const std::shared_ptr<Ret> &r)
           {
-            return Boxed_Value(r);
+            return Boxed_Value(r, true);
           }
         };
 
@@ -81,7 +81,7 @@ namespace chaiscript
         {
           static Boxed_Value handle(const std::shared_ptr<Ret> &r)
           {
-            return Boxed_Value(r);
+            return Boxed_Value(r, true);
           }
         };
 
@@ -90,7 +90,7 @@ namespace chaiscript
         {
           static Boxed_Value handle(const std::shared_ptr<Ret> &r)
           {
-            return Boxed_Value(r);
+            return Boxed_Value(r, true);
           }
         };
 
@@ -99,7 +99,7 @@ namespace chaiscript
         {
           static Boxed_Value handle(const Ret &r)
           {
-            return Boxed_Value(std::cref(r));
+            return Boxed_Value(std::cref(r), true);
           }
         };
 
