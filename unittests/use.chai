@@ -1,4 +1,5 @@
-use("use.inc")
+var newfun = use("use.inc");
+
 
 assert_equal("hello", greet())
 
@@ -7,3 +8,4 @@ use("use.inc")
 
 assert_equal("hello", greet())
 
+assert_equal("world", newfun())
