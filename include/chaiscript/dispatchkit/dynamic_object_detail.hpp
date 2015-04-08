@@ -57,7 +57,7 @@ namespace chaiscript
               const Proxy_Function &t_func,
               const Type_Info &t_ti)
             : Proxy_Function_Base(build_param_types(t_func->get_param_types(), t_ti), t_func->get_arity()),
-              m_type_name(std::move(t_type_name)), m_func(t_func), m_ti(new Type_Info(t_ti)), m_doti(user_type<Dynamic_Object>())
+              m_type_name(std::move(t_type_name)), m_func(t_func), m_ti(t_ti.is_undef()?nullptr:new Type_Info(t_ti)), m_doti(user_type<Dynamic_Object>())
           {
             assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
                 && "Programming error, Dynamic_Object_Function must have at least one parameter (this)");

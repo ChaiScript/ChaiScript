@@ -1,0 +1,10 @@
+
+try {
+  eval_file("use.inc")
+  assert(true)
+
+  //we expect this second eval_file to fail because of a function redefinition
+  eval_file("use.inc")
+  assert(false)
+} catch (e) {
+}

@@ -61,7 +61,7 @@ namespace chaiscript
         try {
           return t_node->eval(t_ss);
         } catch (detail::Return_Value &rv) {
-          return rv.retval;
+          return std::move(rv.retval);
         } 
       }
     }
@@ -517,11 +517,7 @@ namespace chaiscript
           {
             return std::pair<std::string, Type_Info>();
           } else {
-            try {
-              return std::pair<std::string, Type_Info>(t_node->children[0]->text, t_ss.get_type(t_node->children[0]->text));
-            } catch (const std::range_error &) {
-              return std::pair<std::string, Type_Info>(t_node->children[0]->text, Type_Info());
-            }
+            return std::pair<std::string, Type_Info>(t_node->children[0]->text, t_ss.get_type(t_node->children[0]->text, false));
           }
         }
 
@@ -707,13 +703,14 @@ namespace chaiscript
 
               fpp.save_params(params);
 
-              std::string fun_name;
-              if ((this->children[i]->identifier == AST_Node_Type::Fun_Call) || (this->children[i]->identifier == AST_Node_Type::Array_Call)) {
-                fun_name = this->children[i]->children[0]->text;
-              }
-              else {
-                fun_name = this->children[i]->text;
-              }
+              std::string fun_name = [&](){
+                if ((this->children[i]->identifier == AST_Node_Type::Fun_Call) || (this->children[i]->identifier == AST_Node_Type::Array_Call)) {
+                  return this->children[i]->children[0]->text;
+                }
+                else {
+                  return this->children[i]->text;
+                }
+              }();
 
               try {
                 chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
@@ -728,7 +725,7 @@ namespace chaiscript
                 }
               }
               catch(detail::Return_Value &rv) {
-                retval = rv.retval;
+                retval = std::move(rv.retval);
               }
 
               if (this->children[i]->identifier == AST_Node_Type::Array_Call) {
@@ -1171,14 +1168,11 @@ namespace chaiscript
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::File, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
         virtual ~File_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
-          const size_t size = this->children.size(); 
-          for (size_t i = 0; i < size; ++i) {
-            Boxed_Value retval(this->children[i]->eval(t_ss));
-            if (i + 1 == size) {
-              return retval;
-            }
+          const auto num_children = children.size();
+          for (size_t i = 0; i < num_children-1; ++i) {
+            children[i]->eval(t_ss);
           }
-          return Boxed_Value();
+          return children.back()->eval(t_ss);
         }
     };
 
@@ -1486,30 +1480,19 @@ namespace chaiscript
                       static_cast<int>(numparams), this->children.back(), param_types, l_annotation, guard)), 
                   function_name);
 
-            }
-            else {
-              try {
-                // Do know type name (if this line fails, the catch block is called and the 
-                // other version is called, with no Type_Info object known)
-                auto type = t_ss.get_type(class_name);
-                param_types.push_front(class_name, type);
+            } else {
 
-                t_ss.add(
-                    std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name, 
-                      std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
-                                                                         std::ref(t_ss), this->children.back(),
-                                                                         t_param_names, std::placeholders::_1, std::map<std::string, Boxed_Value>()), static_cast<int>(numparams), this->children.back(),
-                                                               param_types, l_annotation, guard), type), function_name);
-              } catch (const std::range_error &) {
-                param_types.push_front(class_name, Type_Info());
-                // Do not know type name
-                t_ss.add(
-                    std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name, 
-                         std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
-                                                                         std::ref(t_ss), this->children.back(),
-                                                                         t_param_names, std::placeholders::_1, std::map<std::string, Boxed_Value>()), static_cast<int>(numparams), this->children.back(),
-                                                               param_types, l_annotation, guard)), function_name);
-              }
+              // if the type is unknown, then this generates a function that looks up the type
+              // at runtime. Defining the type first before this is called is better
+              auto type = t_ss.get_type(class_name, false);
+              param_types.push_front(class_name, type);
+
+              t_ss.add(
+                  std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name, 
+                    std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
+                                                                        std::ref(t_ss), this->children.back(),
+                                                                        t_param_names, std::placeholders::_1, std::map<std::string, Boxed_Value>()), static_cast<int>(numparams), this->children.back(),
+                                                              param_types, l_annotation, guard), type), function_name);
             }
           }
           catch (const exception::reserved_word_error &e) {

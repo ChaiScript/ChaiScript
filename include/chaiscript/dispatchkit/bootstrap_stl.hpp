@@ -267,7 +267,7 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr assignable_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
         {
-          basic_constructors<ContainerType>(type, m);
+          copy_constructor<ContainerType>(type, m);
           operators::assign<ContainerType>(m);
           return m;
         }
@@ -443,6 +443,7 @@ namespace chaiscript
           m->add(fun(static_cast<elemaccess>(&MapType::operator[])), "[]");
 
           container_type<MapType>(type, m);
+          default_constructible_type<MapType>(type, m);
           assignable_type<MapType>(type, m);
           unique_associative_container_type<MapType>(type, m);
           pair_associative_container_type<MapType>(type, m);

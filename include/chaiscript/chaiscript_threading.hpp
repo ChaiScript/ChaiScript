@@ -7,6 +7,7 @@
 #ifndef CHAISCRIPT_THREADING_HPP_
 #define CHAISCRIPT_THREADING_HPP_
 
+
 #include <unordered_map>
 
 #ifndef CHAISCRIPT_NO_THREADS
@@ -15,6 +16,8 @@
 #else
 #pragma message ("ChaiScript is compiling without thread safety.")
 #endif
+
+#include "chaiscript_defines.hpp"
 
 /// \file
 ///

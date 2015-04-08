@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <type_traits>
 
 #include "boxed_number.hpp"
 #include "boxed_value.hpp"
@@ -33,14 +34,18 @@ namespace chaiscript
       template<typename Ret>
         struct Handle_Return
         {
-          static Boxed_Value handle(const Ret &r)
-          {
-            return const_var(r);
-          }
-
-          static Boxed_Value handle(Ret &&r)
+          template<typename T,
+                   typename = typename std::enable_if<std::is_pod<typename std::decay<T>::type>::value>::type>
+          static Boxed_Value handle(T r)
           {
             return Boxed_Value(std::move(r));
+          }
+
+          template<typename T,
+                   typename = typename std::enable_if<!std::is_pod<typename std::decay<T>::type>::value>::type>
+          static Boxed_Value handle(T &&r)
+          {
+            return Boxed_Value(std::make_shared<T>(std::forward<T>(r)));
           }
         };
 

@@ -136,10 +136,14 @@ namespace chaiscript
     ModulePtr bootstrap_pod_type(const std::string &name, ModulePtr m = ModulePtr(new Module()))
     {
       m->add(user_type<T>(), name);
-      m->add(constructor<T ()>(), name);
+      m->add(constructor<T()>(), name);
       construct_pod<T>(name, m);
 
-      m->add(fun(&to_string<T>), "to_string");
+      auto to_s = fun(&to_string<T>);
+
+      if (!m->has_function(to_s, "to_string")) {
+        m->add(to_s, "to_string");
+      }
       m->add(fun(&parse_string<T>), "to_" + name);
       return m;
     }
@@ -471,7 +475,6 @@ namespace chaiscript
         m->add(chaiscript::fun(&has_parse_tree), "has_parse_tree");
         m->add(chaiscript::fun(&get_parse_tree), "get_parse_tree");
 
-        m->add(chaiscript::user_type<chaiscript::exception::eval_error>(), "eval_error");
         m->add(chaiscript::base_class<std::runtime_error, chaiscript::exception::eval_error>());
 
         m->add(chaiscript::user_type<chaiscript::exception::arithmetic_error>(), "arithmetic_error");

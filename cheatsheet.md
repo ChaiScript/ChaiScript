@@ -258,4 +258,15 @@ print(get_value(m)); // prints "Value Is: a"
 
 
 
+# Built In Functions
+
+## Evaluation
+
+```
+eval("4 + 5") // dynamically eval script string and returns value of last statement
+eval_file("filename") // evals file and returns value of last statement
+use("filename") // evals file exactly once and returns value of last statement
+                // if the file had already been 'used' nothing happens and undefined is returned
+```
+
 

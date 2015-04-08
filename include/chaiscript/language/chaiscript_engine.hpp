@@ -297,6 +297,15 @@ namespace chaiscript
       }
     }
 
+    /// Evaluates the given string, used during eval() inside of a script
+    const Boxed_Value internal_eval_file(const std::string &t_filename) {
+      try {
+        return do_eval(load_file(t_filename), t_filename, true);
+      } catch (const exception::eval_error &t_ee) {
+        throw Boxed_Value(t_ee);
+      }
+    }
+
 
 
     /// Evaluates the given string, used during eval() inside of a script
@@ -353,7 +362,9 @@ namespace chaiscript
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type_name, std::ref(m_engine)), "name");
 
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type, std::ref(m_engine)), "type");
-      m_engine.add(fun<void (const Type_Info &, const Type_Info &, const std::function<Boxed_Value (const Boxed_Value &)> &)> ( 
+      m_engine.add(fun<chaiscript::Type_Info (const std::string &)>([this](const std::string &t_type_name){ return this->m_engine.get_type(t_type_name, true); }), "type");
+
+      m_engine.add(fun<void(const Type_Info &, const Type_Info &, const std::function<Boxed_Value(const Boxed_Value &)> &)>(
             [=](const Type_Info &t_from, const Type_Info &t_to, const std::function<Boxed_Value (const Boxed_Value &)> &t_func) {
               m_engine.add(chaiscript::type_conversion(t_from, t_to, t_func));
             }
@@ -367,6 +378,7 @@ namespace chaiscript
       m_engine.add(fun(static_cast<load_mod_2>(&ChaiScript::load_module), this), "load_module");
 
       m_engine.add(fun(&ChaiScript::use, this), "use");
+      m_engine.add(fun(&ChaiScript::internal_eval_file, this), "eval_file");
       m_engine.add(fun(&ChaiScript::internal_eval, this), "eval");
       m_engine.add(fun(&ChaiScript::internal_eval_ast, this), "eval");
 
@@ -455,7 +467,7 @@ namespace chaiscript
 
       union cast_union
       {
-        void (ChaiScript::*in_ptr)(const std::string&);
+        Boxed_Value (ChaiScript::*in_ptr)(const std::string&);
         void *out_ptr;
       };
 
@@ -529,7 +541,7 @@ namespace chaiscript
     /// requested file.
     ///
     /// \param[in] t_filename Filename to load and evaluate
-    void use(const std::string &t_filename)
+    Boxed_Value use(const std::string &t_filename)
     {
       for (const auto &path : m_usepaths)
       {
@@ -539,15 +551,17 @@ namespace chaiscript
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l2(m_mutex);
 
+          Boxed_Value retval;
+
           if (m_used_files.count(appendedpath) == 0)
           {
             l2.unlock();
-            eval_file(appendedpath);
+            retval = eval_file(appendedpath);
             l2.lock();
             m_used_files.insert(appendedpath);
-           }
+          }
 
-          return; // return, we loaded it, or it was already loaded
+          return retval; // return, we loaded it, or it was already loaded
         } catch (const exception::file_not_found_error &) {
           // failed to load, try the next path
         }

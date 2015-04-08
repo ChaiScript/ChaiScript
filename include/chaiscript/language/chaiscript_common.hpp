@@ -499,7 +499,7 @@ namespace chaiscript
       struct Return_Value {
         Boxed_Value retval;
 
-        Return_Value(const Boxed_Value &t_return_value) : retval(t_return_value) { }
+        Return_Value(Boxed_Value t_return_value) : retval(std::move(t_return_value)) { }
       };
 
 

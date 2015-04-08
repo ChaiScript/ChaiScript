@@ -199,6 +199,14 @@ namespace chaiscript
       {
       }
 
+      bool has_function(const Proxy_Function &new_f, const std::string &name)
+      {
+        return std::any_of(m_funcs.begin(), m_funcs.end(), [&](const std::pair<Proxy_Function, std::string> &existing_f) {
+          return existing_f.second == name && *(existing_f.first) == *(new_f);
+          });
+      }
+      
+
     private:
       std::vector<std::pair<Type_Info, std::string> > m_typeinfos;
       std::vector<std::pair<Proxy_Function, std::string> > m_funcs;
@@ -580,7 +588,7 @@ namespace chaiscript
         }
 
         /// Returns the type info for a named type
-        Type_Info get_type(const std::string &name) const
+        Type_Info get_type(const std::string &name, bool t_throw = true) const
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
@@ -591,7 +599,11 @@ namespace chaiscript
             return itr->second;
           }
 
-          throw std::range_error("Type Not Known");
+          if (t_throw) {
+            throw std::range_error("Type Not Known");
+          } else {
+            return Type_Info();
+          }
         }
 
         /// Returns the registered name of a known type_info object
@@ -1018,14 +1030,6 @@ namespace chaiscript
 
         static bool function_less_than(const Proxy_Function &lhs, const Proxy_Function &rhs)
         {
-          const auto &lhsparamtypes = lhs->get_param_types();
-          const auto &rhsparamtypes = rhs->get_param_types();
-
-          const auto lhssize = lhsparamtypes.size();
-          const auto rhssize = rhsparamtypes.size();
-
-          CHAISCRIPT_CONSTEXPR auto boxed_type = user_type<Boxed_Value>();
-          CHAISCRIPT_CONSTEXPR auto boxed_pod_type = user_type<Boxed_Number>();
 
           auto dynamic_lhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(lhs));
           auto dynamic_rhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(rhs));
@@ -1055,6 +1059,14 @@ namespace chaiscript
             return true;
           }
 
+          const auto &lhsparamtypes = lhs->get_param_types();
+          const auto &rhsparamtypes = rhs->get_param_types();
+
+          const auto lhssize = lhsparamtypes.size();
+          const auto rhssize = rhsparamtypes.size();
+
+          CHAISCRIPT_CONSTEXPR auto boxed_type = user_type<Boxed_Value>();
+          CHAISCRIPT_CONSTEXPR auto boxed_pod_type = user_type<Boxed_Number>();
 
           for (size_t i = 1; i < lhssize && i < rhssize; ++i)
           {

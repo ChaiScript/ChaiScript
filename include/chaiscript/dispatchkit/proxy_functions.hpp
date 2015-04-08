@@ -529,12 +529,7 @@ namespace chaiscript
 
         virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          if (static_cast<int>(vals.size()) != get_arity()) 
-          {
-            return false;
-          }
-
-          return compare_types(m_types, vals) || compare_types_with_cast(vals, t_conversions);
+          return static_cast<int>(vals.size()) == get_arity() && (compare_types(m_types, vals) || compare_types_with_cast(vals, t_conversions));
         }
 
         virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const = 0;
@@ -722,8 +717,18 @@ namespace chaiscript
               {
                 matching_func = begin;
               } else {
-                // More than one function matches, not attempting
-                throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(orig, end));
+                // handle const members vs non-const member, which is not really ambiguous
+                const auto &mat_fun_param_types = (*matching_func)->get_param_types();
+                const auto &next_fun_param_types = (*begin)->get_param_types();
+
+                if (plist[0].is_const() && !mat_fun_param_types[1].is_const() && next_fun_param_types[1].is_const()) {
+                  matching_func = begin; // keep the new one, the const/non-const matchup is correct
+                } else if (!plist[0].is_const() && !mat_fun_param_types[1].is_const() && next_fun_param_types[1].is_const()) {
+                  // keep the old one, it has a better const/non-const matchup
+                } else {
+                  // ambiguous function call
+                  throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(orig, end));
+                }
               }
             }
 
@@ -808,12 +813,6 @@ namespace chaiscript
               return (*(func.second))(plist, t_conversions);
             }
           } catch (const exception::bad_boxed_cast &) {
-            //std::cout << "Bad Boxed Cast: " << func.second->get_arity() << '(';
-            //for (const auto &p : plist) {
-            //  std::cout << p.get_type_info().name() << ',';
-            //}
-            //std::cout << ")\n";
-
             //parameter failed to cast, try again
           } catch (const exception::arity_error &) {
             //invalid num params, try again

@@ -617,14 +617,16 @@ namespace chaiscript
         }
 
 
-        size_t size = sizeof(int) * 8;
-
-        if (longlong_)
-        {
-          size = sizeof(int64_t) * 8;
-        } else if (long_) {
-          size = sizeof(long) * 8;
-        } 
+        const size_t size = [&](){
+          if (longlong_)
+          {
+            return sizeof(int64_t) * 8;
+          } else if (long_) {
+            return sizeof(long) * 8;
+          } else {
+            return sizeof(int) * 8;
+          }
+        }();
 
         if ( (u >> (size - 1)) > 0)
         {
@@ -794,17 +796,19 @@ namespace chaiscript
           return Id_();
         } else {
           const auto start = m_input_pos;
-          const int prev_col = m_col;
-          const int prev_line = m_line;
+          const auto prev_col = m_col;
+          const auto prev_line = m_line;
           if (Id_()) {
-            std::string match;
-            if (*start == '`') {
-              //Id Literal
-              match = std::string(start+1, m_input_pos-1);
-            } else {
-              match = std::string(start, m_input_pos);
-            }
-            m_match_stack.push_back(std::make_shared<eval::Id_AST_Node>(std::move(match), m_filename, prev_line, prev_col, m_line, m_col));
+            m_match_stack.push_back(std::make_shared<eval::Id_AST_Node>(
+                  [&](){
+                    if (*start == '`') {
+                      //Id Literal
+                      return std::string(start+1, m_input_pos-1);
+                    } else {
+                      return std::string(start, m_input_pos);
+                    }
+                  }(),
+                  m_filename, prev_line, prev_col, m_line, m_col));
             return true;
           } else {
             return false;
@@ -1114,8 +1118,8 @@ namespace chaiscript
           const auto prev_col = m_col;
           const auto prev_line = m_line;
           if (Char_(t_c)) {
-            std::string match(start, m_input_pos);
-            m_match_stack.push_back(std::make_shared<eval::Char_AST_Node>(std::move(match), m_filename, prev_line, prev_col, m_line, m_col));
+            m_match_stack.push_back(
+                std::make_shared<eval::Char_AST_Node>(std::string(start, m_input_pos), m_filename, prev_line, prev_col, m_line, m_col));
             return true;
           } else {
             return false;
@@ -1159,8 +1163,8 @@ namespace chaiscript
         }
 
         if ( t_capture && retval ) {
-          std::string match(start, m_input_pos);
-          m_match_stack.push_back(std::make_shared<eval::Str_AST_Node>(std::move(match), m_filename, prev_line, prev_col, m_line, m_col));
+          m_match_stack.push_back(std::make_shared<eval::Str_AST_Node>(
+                std::string(start, m_input_pos), m_filename, prev_line, prev_col, m_line, m_col));
         }
         return retval;
       }
@@ -1202,8 +1206,8 @@ namespace chaiscript
         }
 
         if ( t_capture && retval ) {
-          std::string match(start, m_input_pos);
-          m_match_stack.push_back(std::make_shared<eval::Str_AST_Node>(std::move(match), m_filename, prev_line, prev_col, m_line, m_col));
+          m_match_stack.push_back(std::make_shared<eval::Str_AST_Node>(
+                std::string(start, m_input_pos), m_filename, prev_line, prev_col, m_line, m_col));
         }
 
         return retval;
@@ -1235,8 +1239,8 @@ namespace chaiscript
           const auto prev_col = m_col;
           const auto prev_line = m_line;
           if (Eol_()) {
-            std::string match(start, m_input_pos);
-            m_match_stack.push_back(std::make_shared<eval::Eol_AST_Node>(std::move(match), m_filename, prev_line, prev_col, m_line, m_col));
+            m_match_stack.push_back(std::make_shared<eval::Eol_AST_Node>(
+                  std::string(start, m_input_pos), m_filename, prev_line, prev_col, m_line, m_col));
             return true;
           } else {
             return false;

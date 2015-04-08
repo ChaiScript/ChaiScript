@@ -65,21 +65,11 @@ namespace chaiscript
         typedef const Result * Result_Type;
         static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
-          if (ob.is_ref())
+          if (ob.get_type_info().bare_equal_type_info(typeid(Result)))
           {
-            if (!ob.get_type_info().is_const())
-            {
-              return &(ob.get().cast<std::reference_wrapper<Result> >()).get();
-            } else {
-              return &(ob.get().cast<std::reference_wrapper<const Result> >()).get();
-            }
+            return static_cast<const Result *>(throw_if_null(ob.get_const_ptr()));
           } else {
-            if (!ob.get_type_info().is_const())
-            {
-              return (ob.get().cast<std::shared_ptr<Result> >()).get();
-            } else {
-              return (ob.get().cast<std::shared_ptr<const Result> >()).get();
-            }
+            throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -99,6 +89,7 @@ namespace chaiscript
           }
         }
       };
+
 
 
     /// Cast_Helper_Inner for casting to a & type
