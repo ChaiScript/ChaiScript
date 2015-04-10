@@ -68,7 +68,7 @@ void take_shared_ptr(const std::shared_ptr<const std::string> &p)
 int main(int /*argc*/, char * /*argv*/[]) {
   using namespace chaiscript;
 
-  ChaiScript chai(chaiscript::Std_Lib::library());
+  ChaiScript chai;
   
 
   //Create a new system object and share it with the chaiscript engine
