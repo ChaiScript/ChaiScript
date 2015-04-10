@@ -297,13 +297,23 @@ namespace chaiscript
       }
     }
 
-    /// Evaluates the given string, used during eval() inside of a script
+    /// Evaluates the given file and looks in the 'use' paths
     const Boxed_Value internal_eval_file(const std::string &t_filename) {
-      try {
-        return do_eval(load_file(t_filename), t_filename, true);
-      } catch (const exception::eval_error &t_ee) {
-        throw Boxed_Value(t_ee);
+      for (const auto &path : m_usepaths)
+      {
+        try {
+          const auto appendedpath = path + t_filename;
+          return do_eval(load_file(appendedpath), appendedpath, true);
+        } catch (const exception::file_not_found_error &) {
+          // failed to load, try the next path
+        } catch (const exception::eval_error &t_ee) {
+          throw Boxed_Value(t_ee);
+        }
       }
+
+      // failed to load by any name
+      throw exception::file_not_found_error(t_filename);
+
     }
 
 

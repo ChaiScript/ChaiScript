@@ -1,7 +1,7 @@
 
 def shouldnt_execute()
 {
-  assert(false)
+  assert_true(false)
 }
 
 

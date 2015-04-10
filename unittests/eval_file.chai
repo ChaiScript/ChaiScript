@@ -1,10 +1,19 @@
 
 try {
   eval_file("use.inc")
-  assert(true)
+  assert_true(true)
+  print("used use.inc")
+} catch (e) {
+  print("error: " + e.what())
+  assert_true(false)
+}
 
+
+try {
   //we expect this second eval_file to fail because of a function redefinition
   eval_file("use.inc")
-  assert(false)
+  assert_true(false)
+  print("used use.inc x2")
 } catch (e) {
+  assert_true(true)
 }

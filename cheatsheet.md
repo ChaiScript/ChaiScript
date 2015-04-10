@@ -269,4 +269,6 @@ use("filename") // evals file exactly once and returns value of last statement
                 // if the file had already been 'used' nothing happens and undefined is returned
 ```
 
+Both `use` and `eval_file` search the 'usepaths' passed to the ChaiScript constructor
+
 
