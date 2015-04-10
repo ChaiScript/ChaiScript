@@ -795,7 +795,12 @@ namespace chaiscript
 
         Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params) const
         {
-          return dispatch::dispatch(get_function(t_name), params, m_conversions);
+          Boxed_Value bv = dispatch::dispatch(get_function(t_name), params, m_conversions);
+          // the result of a clone is never to be marked as a return_value
+          if (t_name == "clone") {
+            bv.reset_return_value();
+          }
+          return bv;
         }
 
         Boxed_Value call_function(const std::string &t_name) const

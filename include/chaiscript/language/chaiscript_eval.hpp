@@ -558,6 +558,10 @@ namespace chaiscript
               throw exception::eval_error("Error with unsupported arithmetic assignment operation");
             }
           } else if (m_oper == Operators::assign) {
+            if (lhs.is_return_value()) {
+              throw exception::eval_error("Error, cannot assign to temporary value.");
+            }
+
             try {
               if (lhs.is_undef()) {
                 if (!this->children.empty() && 
@@ -567,14 +571,14 @@ namespace chaiscript
                   /// \todo This does not handle the case of an unassigned reference variable
                   ///       being assigned outside of its declaration
                   lhs.assign(rhs);
+                  lhs.reset_return_value();
                   return rhs;
                 } else {
                   if (!rhs.is_return_value())
                   {
                     rhs = t_ss.call_function("clone", rhs);
-                  } else {
-                    rhs.reset_return_value();
                   }
+                  rhs.reset_return_value();
                 }
               }
 
