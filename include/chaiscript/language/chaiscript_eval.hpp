@@ -569,7 +569,12 @@ namespace chaiscript
                   lhs.assign(rhs);
                   return rhs;
                 } else {
-                  rhs = t_ss.call_function("clone", rhs);
+                  if (!rhs.is_return_value())
+                  {
+                    rhs = t_ss.call_function("clone", rhs);
+                  } else {
+                    rhs.reset_return_value();
+                  }
                 }
               }
 
