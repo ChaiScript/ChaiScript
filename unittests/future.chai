@@ -7,8 +7,8 @@ var func = fun(){
 }
 
 
-var fut1 := async(func);
-var fut2 := async(func);
+var fut1 = async(func);
+var fut2 = async(func);
 
 // simply executing without crashing is good enough for this test
 
