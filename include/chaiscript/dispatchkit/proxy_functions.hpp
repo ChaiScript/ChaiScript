@@ -162,6 +162,8 @@ namespace chaiscript
         virtual bool operator==(const Proxy_Function_Base &) const = 0;
         virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const = 0;
 
+        virtual bool is_attribute_function() const { return false; }
+
         bool has_arithmetic_param() const 
         {
           return m_has_arithmetic_param;
@@ -219,6 +221,12 @@ namespace chaiscript
             return false;
           }
         }
+
+        virtual bool compare_first_type(const Boxed_Value &bv, const Type_Conversions &t_conversions) const
+        {
+          return compare_type_to_param(m_types[1], bv, t_conversions);
+        }
+
       protected:
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const = 0;
 
@@ -236,10 +244,6 @@ namespace chaiscript
 
         }
 
-        virtual bool compare_first_type(const Boxed_Value &bv, const Type_Conversions &t_conversions) const
-        {
-          return compare_type_to_param(m_types[1], bv, t_conversions);
-        }
 
         static bool compare_types(const std::vector<Type_Info> &tis, const std::vector<Boxed_Value> &bvs)
         {
@@ -653,6 +657,8 @@ namespace chaiscript
         }
 
         virtual ~Attribute_Access() {}
+
+        virtual bool is_attribute_function() const CHAISCRIPT_OVERRIDE { return true; } 
 
         virtual bool operator==(const Proxy_Function_Base &t_func) const CHAISCRIPT_OVERRIDE
         {

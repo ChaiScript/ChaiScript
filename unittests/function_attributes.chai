@@ -18,3 +18,6 @@ assert_true(func_member(t0)(2) == 6)
 assert_true((func_member(t0))(2) == 6)
 assert_true(t0.func_member(2) == 6)
 
+t0.func_member = fun() { 12; };
+
+assert_true(t0.func_member() == 12);

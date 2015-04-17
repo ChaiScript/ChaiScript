@@ -793,6 +793,42 @@ namespace chaiscript
           return m_conversions;
         }
 
+        bool is_attribute_call(const std::vector<Proxy_Function> &t_funs, const std::vector<Boxed_Value> &t_params,
+            bool t_has_params) const
+        {
+          if (!t_has_params || t_params.empty()) {
+            return false;
+          }
+
+          for (const auto &fun : t_funs) {
+            if (fun->is_attribute_function()) {
+              if (fun->compare_first_type(t_params[0], m_conversions)) {
+                return true;
+              }
+            }
+          }
+
+          return false;
+        }
+
+        Boxed_Value call_member(const std::string &t_name, const std::vector<Boxed_Value> &params, bool t_has_params) const
+        {
+          auto funs = get_function(t_name);
+
+          if (is_attribute_call(funs, params, t_has_params)) {
+            std::vector<Boxed_Value> attr_params{params[0]};
+            std::vector<Boxed_Value> remaining_params{params.begin() + 1, params.end()};
+            Boxed_Value bv = dispatch::dispatch(funs, attr_params, m_conversions);
+            if (!remaining_params.empty() || bv.get_type_info().bare_equal(user_type<dispatch::Proxy_Function_Base>())) {
+              return (*boxed_cast<const dispatch::Proxy_Function_Base *>(bv))(remaining_params, m_conversions);
+            } else {
+              return bv;
+            }
+          } else {
+            return dispatch::dispatch(funs, params, m_conversions);
+          }
+        }
+
         Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params) const
         {
           Boxed_Value bv = dispatch::dispatch(get_function(t_name), params, m_conversions);

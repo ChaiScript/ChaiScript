@@ -704,7 +704,10 @@ namespace chaiscript
             for (size_t i = 2; i < this->children.size(); i+=2) {
               std::vector<Boxed_Value> params{retval};
 
+              bool has_function_params = false;
+
               if (this->children[i]->children.size() > 1) {
+                has_function_params = true;
                 for (const auto &child : this->children[i]->children[1]->children) {
                   params.push_back(child->eval(t_ss));
                 }
@@ -723,7 +726,7 @@ namespace chaiscript
 
               try {
                 chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
-                retval = t_ss.call_function(fun_name, std::move(params));
+                retval = t_ss.call_member(fun_name, std::move(params), has_function_params);
               }
               catch(const exception::dispatch_error &e){
                 if (e.functions.empty())
@@ -1534,7 +1537,9 @@ namespace chaiscript
                                                                                    std::placeholders::_1,
                                                                                    this->children[static_cast<size_t>(1 + class_offset)]->text
                                                                                    ))
-                     )
+                     ),
+                     true
+
                 ), this->children[static_cast<size_t>(1 + class_offset)]->text);
 
           }
