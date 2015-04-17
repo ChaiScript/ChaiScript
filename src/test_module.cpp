@@ -163,11 +163,6 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
 
   // member that is a function
   m->add(chaiscript::fun(&TestBaseType::func_member), "func_member");
-  m->add(chaiscript::fun<std::function<int(int)> &(std::function<int(int)> &, const std::function<int(int)> &)>(
-        [](std::function<int (int)> &t_lhs, const std::function<int (int)> &t_rhs)-> std::function<int (int)> &{
-          return t_lhs = t_rhs;
-        }), "=");
-
   m->add(chaiscript::fun(&get_new_int), "get_new_int");
 
 

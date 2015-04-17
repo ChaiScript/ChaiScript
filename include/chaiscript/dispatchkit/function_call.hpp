@@ -57,7 +57,7 @@ namespace chaiscript
       std::function<FunctionType>
       functor(Const_Proxy_Function func, const Type_Conversions *t_conversions)
       {
-        return functor<FunctionType>(std::vector<Const_Proxy_Function>({func}), t_conversions);
+        return functor<FunctionType>(std::vector<Const_Proxy_Function>({std::move(func)}), t_conversions);
       }
 
     /// Helper for automatically unboxing a Boxed_Value that contains a function object
