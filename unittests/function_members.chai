@@ -2,15 +2,7 @@
 
 load_module("test_module")
 
-class MyClass
-{
-  var func_member;
-
-  def MyClass() {}
-
-}
-
-auto t0 = MyClass();
+auto t0 = TestBaseType()
 
 t0.func_member = fun(int i){ i * 3; };
 
