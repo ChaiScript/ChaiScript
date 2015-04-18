@@ -372,6 +372,7 @@ namespace chaiscript
         m->add(user_type<Boxed_Value>(), "Object");
         m->add(user_type<Boxed_Number>(), "Number");
         m->add(user_type<Proxy_Function>(), "Function");
+        m->add(user_type<dispatch::Assignable_Proxy_Function>(), "Assignable_Function");
         m->add(user_type<std::exception>(), "exception");
 
         m->add(fun(&dispatch::Proxy_Function_Base::get_arity), "get_arity");
@@ -468,6 +469,13 @@ namespace chaiscript
         m->add(fun(&shared_ptr_unconst_clone<dispatch::Proxy_Function_Base>), "clone");
         m->add(fun(&ptr_assign<std::remove_const<dispatch::Proxy_Function_Base>::type>), "=");
         m->add(fun(&ptr_assign<std::add_const<dispatch::Proxy_Function_Base>::type>), "=");
+        m->add(chaiscript::base_class<dispatch::Proxy_Function_Base, dispatch::Assignable_Proxy_Function>());
+        m->add(fun<void (dispatch::Assignable_Proxy_Function &, const std::shared_ptr<const dispatch::Proxy_Function_Base> &)>(
+                  [](dispatch::Assignable_Proxy_Function &t_lhs, const std::shared_ptr<const dispatch::Proxy_Function_Base> &t_rhs) {
+                    t_lhs.assign(t_rhs);
+                  }
+                ), "="
+              );
 
         m->add(fun(&Boxed_Value::type_match), "type_match");
 

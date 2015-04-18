@@ -44,9 +44,11 @@ namespace chaiscript
         public:
           Dynamic_Object_Function(
               std::string t_type_name,
-              const Proxy_Function &t_func)
+              const Proxy_Function &t_func,
+              bool t_is_attribute = false)
             : Proxy_Function_Base(t_func->get_param_types(), t_func->get_arity()),
-            m_type_name(std::move(t_type_name)), m_func(t_func), m_doti(user_type<Dynamic_Object>())
+              m_type_name(std::move(t_type_name)), m_func(t_func), m_doti(user_type<Dynamic_Object>()),
+              m_is_attribute(t_is_attribute)
           {
             assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
                 && "Programming error, Dynamic_Object_Function must have at least one parameter (this)");
@@ -55,9 +57,11 @@ namespace chaiscript
           Dynamic_Object_Function(
               std::string t_type_name,
               const Proxy_Function &t_func,
-              const Type_Info &t_ti)
+              const Type_Info &t_ti,
+              bool t_is_attribute = false)
             : Proxy_Function_Base(build_param_types(t_func->get_param_types(), t_ti), t_func->get_arity()),
-              m_type_name(std::move(t_type_name)), m_func(t_func), m_ti(t_ti.is_undef()?nullptr:new Type_Info(t_ti)), m_doti(user_type<Dynamic_Object>())
+              m_type_name(std::move(t_type_name)), m_func(t_func), m_ti(t_ti.is_undef()?nullptr:new Type_Info(t_ti)), m_doti(user_type<Dynamic_Object>()),
+              m_is_attribute(t_is_attribute)
           {
             assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
                 && "Programming error, Dynamic_Object_Function must have at least one parameter (this)");
@@ -77,6 +81,8 @@ namespace chaiscript
               return false;
             }
           }
+
+          virtual bool is_attribute_function() const CHAISCRIPT_OVERRIDE { return m_is_attribute; } 
 
           virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
           {
@@ -164,6 +170,7 @@ namespace chaiscript
           Proxy_Function m_func;
           std::unique_ptr<Type_Info> m_ti;
           const Type_Info m_doti;
+          bool m_is_attribute;
 
 
       };

@@ -26,6 +26,9 @@ namespace chaiscript
 {
   namespace dispatch
   {
+    template<class T> class Proxy_Function_Impl;
+    template<class T> class Assignable_Proxy_Function_Impl;
+
     namespace detail
     {
       /**
@@ -46,6 +49,98 @@ namespace chaiscript
           static Boxed_Value handle(T &&r)
           {
             return Boxed_Value(std::make_shared<T>(std::forward<T>(r)), true);
+          }
+        };
+
+      template<typename Ret>
+        struct Handle_Return<const std::function<Ret> &>
+        {
+          static Boxed_Value handle(const std::function<Ret> &f) {
+            return Boxed_Value(
+                std::shared_ptr<dispatch::Proxy_Function_Base>(
+                  new dispatch::Proxy_Function_Impl<Ret>(f)
+                )
+              );
+          }
+        };
+
+      template<typename Ret>
+        struct Handle_Return<std::function<Ret>>
+        {
+          static Boxed_Value handle(const std::function<Ret> &f) {
+            return Boxed_Value(
+                std::shared_ptr<dispatch::Proxy_Function_Base>(
+                  new Proxy_Function_Impl<Ret>(f)
+                  )
+                );
+          }
+        };
+
+      template<typename Ret>
+        struct Handle_Return<const std::shared_ptr<std::function<Ret>>>
+        {
+          static Boxed_Value handle(const std::shared_ptr<std::function<Ret>> &f) {
+            return Boxed_Value(
+                std::shared_ptr<Proxy_Function_Base>(
+                  new Assignable_Proxy_Function_Impl<Ret>(
+                    std::ref(*f),
+                    f
+                    )
+                  )
+                );
+          }
+        };
+
+      template<typename Ret>
+        struct Handle_Return<const std::shared_ptr<std::function<Ret>> &>
+        {
+          static Boxed_Value handle(const std::shared_ptr<std::function<Ret>> &f) {
+            return Boxed_Value(
+                std::shared_ptr<Proxy_Function_Base>(
+                  new Assignable_Proxy_Function_Impl<Ret>(
+                    std::ref(*f),
+                    f
+                    )
+                  )
+                );
+          }
+        };
+
+      template<typename Ret>
+        struct Handle_Return<std::shared_ptr<std::function<Ret>>>
+        {
+          static Boxed_Value handle(const std::shared_ptr<std::function<Ret>> &f) {
+            return Boxed_Value(
+                std::shared_ptr<Proxy_Function_Base>(
+                  new Assignable_Proxy_Function_Impl<Ret>(
+                    std::ref(*f),
+                    f
+                    )
+                  )
+                );
+          }
+        };
+
+      template<typename Ret>
+        struct Handle_Return<std::function<Ret> &>
+        {
+          static Boxed_Value handle(std::function<Ret> &f) {
+            return Boxed_Value(
+                std::shared_ptr<Proxy_Function_Base>(
+                  new Assignable_Proxy_Function_Impl<Ret>(
+                    std::ref(f),
+                    std::shared_ptr<std::function<Ret>>()
+                    )
+                  )
+                );
+          }
+
+          static Boxed_Value handle(const std::function<Ret> &f) {
+            return Boxed_Value(
+                std::shared_ptr<dispatch::Proxy_Function_Base>(
+                  new dispatch::Proxy_Function_Impl<Ret>(f)
+                )
+              );
           }
         };
 

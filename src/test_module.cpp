@@ -21,6 +21,8 @@ class TestBaseType
     int val;
     const int const_val;
 
+    std::function<int (int)> func_member;
+
   private:
     TestBaseType &operator=(const TestBaseType &);
 };
@@ -159,6 +161,8 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::fun(&TestBaseType::const_val), "const_val");
   m->add(chaiscript::fun(&TestBaseType::base_only_func), "base_only_func");
 
+  // member that is a function
+  m->add(chaiscript::fun(&TestBaseType::func_member), "func_member");
   m->add(chaiscript::fun(&get_new_int), "get_new_int");
 
 

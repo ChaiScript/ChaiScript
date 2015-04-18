@@ -1,0 +1,12 @@
+// Test attributes/members that are functions
+
+load_module("test_module")
+
+auto t0 = TestBaseType()
+
+t0.func_member = fun(int i){ i * 3; };
+
+assert_true(func_member(t0)(2) == 6)
+assert_true((func_member(t0))(2) == 6)
+assert_true(t0.func_member(2) == 6)
+
