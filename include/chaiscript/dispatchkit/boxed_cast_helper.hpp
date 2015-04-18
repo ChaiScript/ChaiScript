@@ -40,7 +40,8 @@ namespace chaiscript
         {
           if (ob.get_type_info().bare_equal_type_info(typeid(Result)))
           {
-            return *(static_cast<const Result *>(throw_if_null(ob.get_const_ptr())));
+            auto p = throw_if_null(ob.get_const_ptr());
+            return std::cref(*static_cast<const Result *>(p));
           } else {
             throw chaiscript::detail::exception::bad_any_cast();
           }

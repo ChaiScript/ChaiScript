@@ -1,5 +1,6 @@
 
 #include <chaiscript/chaiscript.hpp>
+#include <chaiscript/dispatchkit/bootstrap.hpp>
 #include <string>
 
 
@@ -20,6 +21,8 @@ class TestBaseType
 
     int val;
     const int const_val;
+
+    int mdarray[2][3][5];
 
   private:
     TestBaseType &operator=(const TestBaseType &);
@@ -158,6 +161,13 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::fun(&TestBaseType::val), "val");
   m->add(chaiscript::fun(&TestBaseType::const_val), "const_val");
   m->add(chaiscript::fun(&TestBaseType::base_only_func), "base_only_func");
+
+  // Array types
+  m->add(chaiscript::fun(&TestBaseType::mdarray), "mdarray");
+  m->add(chaiscript::bootstrap::array<int[2][3][5]>("IntArray_2_3_5"));
+  m->add(chaiscript::bootstrap::array<int[3][5]>("IntArray_3_5"));
+  m->add(chaiscript::bootstrap::array<int[5]>("IntArray_5"));
+  // end array types
 
   m->add(chaiscript::fun(&get_new_int), "get_new_int");
 

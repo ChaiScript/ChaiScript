@@ -52,6 +52,43 @@ namespace chaiscript
       }
     }
 
+    template<typename T, typename = typename std::enable_if<std::is_array<T>::value>::type >
+      ModulePtr array(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+      {
+        typedef typename std::remove_extent<T>::type ReturnType;
+        const auto extent = std::extent<T>::value;
+        m->add(user_type<T>(), type);
+        m->add(fun<ReturnType& (T &, size_t)>(
+              [extent](T& t, size_t index)->ReturnType &{
+                if (extent > 0 && index >= extent) {
+                  throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
+                } else {
+                  return t[index];
+                }
+              }
+              ), "[]"
+            );
+
+        m->add(fun<const ReturnType& (const T &, size_t)>(
+              [extent](const T &t, size_t index)->const ReturnType &{
+                if (extent > 0 && index >= extent) {
+                  throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
+                } else {
+                  return t[index];
+                }
+              }
+              ), "[]"
+            );
+
+        m->add(fun<size_t (const T &)>(
+              [extent](const T &) {
+                return extent;
+              }), "size");
+
+
+        return m;
+      }
+
     /// \brief Adds a copy constructor for the given type to the given Model
     /// \param[in] type The name of the type. The copy constructor will be named "type".
     /// \param[in,out] m The Module to add the copy constructor to

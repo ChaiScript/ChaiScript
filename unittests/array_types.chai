@@ -1,0 +1,12 @@
+load_module("test_module")
+
+auto t0 = TestBaseType()
+
+assert_true(t0.mdarray.size() == 2)
+assert_true(t0.mdarray[0].size() == 3)
+assert_true(t0.mdarray[0][0].size() == 5)
+
+t0.mdarray[1][2][4] = 15;
+
+assert_true(t0.mdarray[1][2][4] == 15)
+

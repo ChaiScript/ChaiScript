@@ -712,7 +712,7 @@ namespace chaiscript
 
               fpp.save_params(params);
 
-              std::string fun_name = [&](){
+              std::string fun_name = [&]()->std::string{
                 if ((this->children[i]->identifier == AST_Node_Type::Fun_Call) || (this->children[i]->identifier == AST_Node_Type::Array_Call)) {
                   return this->children[i]->children[0]->text;
                 }
