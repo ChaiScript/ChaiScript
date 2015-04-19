@@ -71,10 +71,19 @@ int main()
 
   chai.eval(" { auto i = create(); } ");
 
+#ifdef CHAISCRIPT_MSVC
+  if (Test::destructcount() == 3 && Test::copycount() == 0 && Test::movecount() == 2 && Test::constructcount() == 1)
+  {
+    return EXIT_SUCCESS;
+  } else {
+    return EXIT_FAILURE;
+  }
+#else
   if (Test::destructcount() == 2 && Test::copycount() == 0 && Test::movecount() == 1 && Test::constructcount() == 1)
   {
     return EXIT_SUCCESS;
   } else {
     return EXIT_FAILURE;
   }
+#endif
 }

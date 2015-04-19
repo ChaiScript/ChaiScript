@@ -490,8 +490,17 @@ namespace chaiscript
           std::vector<Type_Info> types = t_f->get_param_types();
           assert(types.size() == t_args.size() + 1);
 
+#ifdef CHAISCRIPT_MSVC_12
+#pragma warning(push)
+#pragma warning(disable : 6011)
+#endif
+          // this analysis warning is invalid in MSVC12 and doesn't exist in MSVC14
           std::vector<Type_Info> retval{types[0]};
-          for (size_t i = 0; i < types.size()-1; ++i)
+#ifdef CHAISCRIPT_MSVC_12
+#pragma warning(pop)
+#endif
+
+          for (size_t i = 0; i < types.size() - 1; ++i)
           {
             if (t_args[i].get_type_info() == chaiscript::detail::Get_Type_Info<Placeholder_Object>::get())
             {
