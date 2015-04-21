@@ -4,6 +4,11 @@ compilers:
     skip_packaging: true
     cmake_extra_flags: -DUSE_LIBCXX:BOOL=OFF -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON
   - name: "clang"
+    build_tag: "LibC++"
+    version: "3.5"
+    skip_packaging: true
+    cmake_extra_flags: -DUSE_LIBCXX:BOOL=ON -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON
+  - name: "clang"
     build_tag: AddressSanitizer
     version: "3.5"
     skip_packaging: true
