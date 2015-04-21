@@ -617,7 +617,7 @@ namespace chaiscript
         }
 
 
-        const size_t size = [&](){
+        const size_t size = [&]()->size_t{
           if (longlong_)
           {
             return sizeof(int64_t) * 8;
@@ -800,7 +800,7 @@ namespace chaiscript
           const auto prev_line = m_line;
           if (Id_()) {
             m_match_stack.push_back(std::make_shared<eval::Id_AST_Node>(
-                  [&](){
+                  [&]()->std::string{
                     if (*start == '`') {
                       //Id Literal
                       return std::string(start+1, m_input_pos-1);
