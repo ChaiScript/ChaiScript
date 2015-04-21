@@ -367,7 +367,13 @@ namespace chaiscript
               [this](const std::vector<Boxed_Value> &t_params) {
                 return m_engine.call_exists(t_params);
               })), "call_exists");
-      m_engine.add(fun<Boxed_Value (const dispatch::Proxy_Function_Base *, const std::vector<Boxed_Value> &)>(std::bind(&chaiscript::dispatch::Proxy_Function_Base::operator(), std::placeholders::_1, std::placeholders::_2, std::ref(m_engine.conversions()))), "call");
+
+//      m_engine.add(fun<Boxed_Value (const dispatch::Proxy_Function_Base *, const std::vector<Boxed_Value> &)>(std::bind(&chaiscript::dispatch::Proxy_Function_Base::operator(), std::placeholders::_1, std::placeholders::_2, std::ref(m_engine.conversions()))), "call");
+//
+      m_engine.add(fun<Boxed_Value (const dispatch::Proxy_Function_Base &, const std::vector<Boxed_Value> &)>(
+            [=](const dispatch::Proxy_Function_Base &t_fun, const std::vector<Boxed_Value> &t_params) {
+              return t_fun(t_params, this->m_engine.conversions());
+            }), "call");
 
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type_name, std::ref(m_engine)), "name");
 

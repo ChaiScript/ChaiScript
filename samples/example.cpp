@@ -76,7 +76,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   chai.add(var(&system), "system");
 
   //Add a bound callback method
-  chai.add(fun(&System::add_callback, system), "add_callback_bound");
+  chai.add(fun(&System::add_callback, std::ref(system)), "add_callback_bound");
 
   //Register the two methods of the System structure.
   chai.add(fun(&System::add_callback), "add_callback");
