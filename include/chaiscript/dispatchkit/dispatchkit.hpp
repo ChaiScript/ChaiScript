@@ -825,7 +825,17 @@ namespace chaiscript
               return bv;
             }
           } else {
-            return dispatch::dispatch(funs, params, m_conversions);
+            try {
+              return dispatch::dispatch(funs, params, m_conversions);
+            } catch(chaiscript::exception::dispatch_error&) {
+              auto functions = get_function("method_missing");
+              if (!functions.empty()) {
+                std::vector<Boxed_Value> tmp_params(params);
+                tmp_params.insert(tmp_params.begin() + 1, var(t_name));
+                return dispatch::dispatch(functions, tmp_params, m_conversions);
+              }
+              throw;
+            }
           }
         }
 
