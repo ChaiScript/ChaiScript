@@ -56,7 +56,7 @@ namespace chaiscript
 
           if (rhs.m_attrs)
           {
-            m_attrs = std::unique_ptr<std::map<std::string, Boxed_Value>>(new std::map<std::string, Boxed_Value>(*rhs.m_attrs));
+            m_attrs = std::unique_ptr<std::map<std::string, std::shared_ptr<Data>>>(new std::map<std::string, std::shared_ptr<Data>>(*rhs.m_attrs));
           }
 
           return *this;
@@ -74,7 +74,7 @@ namespace chaiscript
         chaiscript::detail::Any m_obj;
         void *m_data_ptr;
         const void *m_const_data_ptr;
-        std::unique_ptr<std::map<std::string, Boxed_Value>> m_attrs;
+        std::unique_ptr<std::map<std::string, std::shared_ptr<Data>>> m_attrs;
         bool m_is_ref;
         bool m_return_value;
       };
@@ -277,17 +277,24 @@ namespace chaiscript
       {
         if (!m_data->m_attrs)
         {
-          m_data->m_attrs = std::unique_ptr<std::map<std::string, Boxed_Value>>(new std::map<std::string, Boxed_Value>());
+          m_data->m_attrs = std::unique_ptr<std::map<std::string, std::shared_ptr<Data>>>(new std::map<std::string, std::shared_ptr<Data>>());
         }
 
-        return (*m_data->m_attrs)[t_name];
+        auto &attr = (*m_data->m_attrs)[t_name];
+        if (attr) {
+          return Boxed_Value(attr, Internal_Construction());
+        } else {
+          Boxed_Value bv; //default construct a new one
+          attr = bv.m_data;
+          return bv;
+        }
       }
 
       Boxed_Value &copy_attrs(const Boxed_Value &t_obj)
       {
         if (t_obj.m_data->m_attrs)
         {
-          m_data->m_attrs = std::unique_ptr<std::map<std::string, Boxed_Value>>(new std::map<std::string, Boxed_Value>(*t_obj.m_data->m_attrs));
+          m_data->m_attrs = std::unique_ptr<std::map<std::string, std::shared_ptr<Data>>>(new std::map<std::string, std::shared_ptr<Data>>(*t_obj.m_data->m_attrs));
         }
         return *this;
       }
@@ -300,6 +307,13 @@ namespace chaiscript
       }
 
     private:
+      // necessary to avoid hitting the templated && constructor of Boxed_Value
+      struct Internal_Construction{};
+
+      Boxed_Value(const std::shared_ptr<Data> &t_data, Internal_Construction)
+        : m_data(t_data) {
+      }
+
       std::shared_ptr<Data> m_data;
   };
 
