@@ -1319,8 +1319,9 @@ namespace chaiscript
               }
             } while (Char(','));
           }
-          build_match(std::make_shared<eval::Arg_List_AST_Node>(), prev_stack_top);
         }
+
+        build_match(std::make_shared<eval::Arg_List_AST_Node>(), prev_stack_top);
 
         SkipWS(true);
 

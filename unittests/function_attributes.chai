@@ -1,0 +1,23 @@
+// Test attributes/members that are functions
+
+load_module("test_module")
+
+class MyClass
+{
+  var func_member;
+
+  def MyClass() {}
+
+}
+
+auto t0 = MyClass();
+
+t0.func_member = fun(int i){ i * 3; };
+
+assert_true(func_member(t0)(2) == 6)
+assert_true((func_member(t0))(2) == 6)
+assert_true(t0.func_member(2) == 6)
+
+t0.func_member = fun() { 12; };
+
+assert_true(t0.func_member() == 12);
