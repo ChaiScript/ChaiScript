@@ -52,36 +52,17 @@ namespace chaiscript
       template<typename Ret, typename Class, typename ... Args> 
         std::function<Ret (const Class &, Args...) > to_function(Ret (Class::*func)(Args...) const)
         {
-#ifdef CHAISCRIPT_MSVC
+#if defined(CHAISCRIPT_MSVC) || defined(CHAISCRIPT_LIBCPP)
           /// \todo this std::mem_fn wrap shouldn't be necessary but type conversions for 
           ///       std::function for member function pointers seems to be broken in MSVC
-          return std::function<Ret(const Class &, Args...)>(std::mem_fn(func));
+          return std::function<Ret (const Class &, Args...)>([func](const Class &o, Args... args)->Ret {
+                return (o.*func)(std::forward<Args>(args)...);
+              });
 #else
           return std::function<Ret(const Class &, Args...)>(func);
 #endif
         }
 
-      template<bool Object>
-        struct Fun_Helper
-        {
-          template<typename T>
-            static Proxy_Function go(T t)
-            {
-              /// \todo is it possible to reduce the number of templates generated here?
-              return Proxy_Function(
-                  static_cast<dispatch::Proxy_Function_Impl_Base *>(new Proxy_Function_Impl<typename FunctionSignature<decltype(to_function(t)) >::Signature>(to_function(t))));
-            }
-        };
-
-      template<>
-        struct Fun_Helper<true>
-        {
-          template<typename T, typename Class>
-            static Proxy_Function go(T Class::* m)
-            {
-              return Proxy_Function(new Attribute_Access<T, Class>(m));
-            }
-        };
     }
   }
 
@@ -106,9 +87,31 @@ namespace chaiscript
   /// 
   /// \sa \ref adding_functions
   template<typename T>
-    Proxy_Function fun(T t)
+    Proxy_Function fun(const T &t)
     {
-      return dispatch::detail::Fun_Helper<std::is_member_object_pointer<T>::value>::go(t);
+      return Proxy_Function(
+          static_cast<dispatch::Proxy_Function_Impl_Base *>(new dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(t)) >::Signature>(dispatch::detail::to_function(t))));
+    }
+
+  template<typename Ret, typename Class, typename ... Param>
+    Proxy_Function fun(Ret (Class::*func)(Param...) const)
+    {
+      return Proxy_Function(
+          static_cast<dispatch::Proxy_Function_Impl_Base *>(new dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(func)) >::Signature>(dispatch::detail::to_function(func))));
+    }
+
+  template<typename Ret, typename Class, typename ... Param>
+    Proxy_Function fun(Ret (Class::*func)(Param...))
+    {
+      return Proxy_Function(
+          static_cast<dispatch::Proxy_Function_Impl_Base *>(new dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(func)) >::Signature>(dispatch::detail::to_function(func))));
+    }
+
+
+  template<typename T, typename Class /*, typename = typename std::enable_if<std::is_member_object_pointer<T>::value>::type*/>
+    Proxy_Function fun(T Class::* m /*, typename std::enable_if<std::is_member_object_pointer<T>::value>::type* = 0*/ )
+    {
+      return Proxy_Function(new dispatch::Attribute_Access<T, Class>(m));
     }
 
 
@@ -149,9 +152,9 @@ namespace chaiscript
   /// 
   /// \sa \ref adding_functions
   template<typename T, typename Q>
-    Proxy_Function fun(T t, const Q &q)
+    Proxy_Function fun(T &&t, const Q &q)
     {
-      return fun(detail::bind_first(t, q));
+      return fun(detail::bind_first(std::forward<T>(t), q));
     }
 
   /// \brief Creates a new Proxy_Function object from a free function or member function and binds the first and second parameters of it
@@ -175,9 +178,9 @@ namespace chaiscript
   /// 
   /// \sa \ref adding_functions
   template<typename T, typename Q, typename R>
-    Proxy_Function fun(T t, const Q &q, const R &r)
+    Proxy_Function fun(T &&t, Q &&q, R &&r)
     {
-      return fun(detail::bind_first(detail::bind_first(t, q), r));
+      return fun(detail::bind_first(detail::bind_first(std::forward<T>(t), std::forward<Q>(q)), std::forward<R>(r)));
     }
 
 }

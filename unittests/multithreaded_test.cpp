@@ -68,7 +68,9 @@ int main()
   std::vector<std::shared_ptr<std::thread> > threads;
 
   // Ensure at least two, but say only 7 on an 8 core processor
-  int num_threads = std::max(std::thread::hardware_concurrency() - 1, 2u);
+  int num_threads = std::max(static_cast<int>(std::thread::hardware_concurrency()) - 1, 2);
+
+  std::cout << "Num threads: " << num_threads << '\n';
 
   for (int i = 0; i < num_threads; ++i)
   {
