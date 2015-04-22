@@ -254,9 +254,9 @@ namespace chaiscript
               fun(std::function<typename ContainerType::reference (ContainerType *, int)>
                 (std::mem_fn(static_cast<indexoper>(&ContainerType::at)))), "[]");
           m->add(
-              fun<typename ContainerType::const_reference (const ContainerType &, int)>(
-                [](const ContainerType &c, int index) -> typename ContainerType::const_reference {
-                  return c.at(index);
+              fun<typename ContainerType::const_reference (const ContainerType *, int)>(
+                [](const ContainerType *c, int index) -> typename ContainerType::const_reference {
+                  return c->at(index);
                 }), "[]");
 
           return m;
