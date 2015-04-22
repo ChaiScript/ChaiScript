@@ -1,0 +1,36 @@
+
+class MyClass {
+  def MyClass()
+  {
+  }
+
+  def mult(double d) {
+    this.y * d
+  }
+};
+
+var o = MyClass();
+o.f = fun(x,y) { x * y; }
+assert_true(o.f(3,4) == 12);
+
+o.f2 = fun(x) { x * 3; }
+assert_true(o.f2(3) == 9);
+
+o.y = 15;
+o.f3 = fun(x) { x * this.y; }
+assert_true(o.f3(4) == 60);
+
+assert_true(o.mult(3.0) == 45.0);
+
+def method_missing(int i, string method_name, x, y) {
+  "method_missing called : " + to_string(i) + "." + method_name + "(" + to_string(x) + ", " + to_string(y) + ")";
+}
+
+
+assert_true(5.bob(3,4) == "method_missing called : 5.bob(3, 4)" )
+
+var o2 = Dynamic_Object();
+o2.a = 15
+assert_true(o2.a == 15)
+
+assert_true(o2["a"] == 15)

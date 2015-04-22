@@ -429,9 +429,18 @@ namespace chaiscript
 
         m->add(user_type<dispatch::Dynamic_Object>(), "Dynamic_Object");
         m->add(constructor<dispatch::Dynamic_Object (const std::string &)>(), "Dynamic_Object");
+        m->add(constructor<dispatch::Dynamic_Object ()>(), "Dynamic_Object");
         m->add(fun(&dispatch::Dynamic_Object::get_type_name), "get_type_name");
         m->add(fun(&dispatch::Dynamic_Object::get_attrs), "get_attrs");
-        m->add(fun(&dispatch::Dynamic_Object::get_attr), "get_attr");
+
+        m->add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::get_attr)), "get_attr");
+        m->add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::get_attr)), "get_attr");
+
+        m->add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::method_missing)), "method_missing");
+        m->add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::method_missing)), "method_missing");
+
+        m->add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::get_attr)), "[]");
+        m->add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::get_attr)), "[]");
 
         m->eval("def Dynamic_Object::clone() { auto &new_o = Dynamic_Object(this.get_type_name()); for_each(this.get_attrs(), bind(fun(new_o, x) { new_o.get_attr(x.first) = x.second; }, new_o, _) ); return new_o; }");
 

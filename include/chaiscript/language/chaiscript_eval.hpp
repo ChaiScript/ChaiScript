@@ -726,6 +726,7 @@ namespace chaiscript
 
               try {
                 chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
+                t_ss.add_object("this", retval);
                 retval = t_ss.call_member(fun_name, std::move(params), has_function_params);
               }
               catch(const exception::dispatch_error &e){
@@ -1533,10 +1534,11 @@ namespace chaiscript
             t_ss.add(
                 std::make_shared<dispatch::detail::Dynamic_Object_Function>(
                      std::move(class_name),
-                     fun(std::function<Boxed_Value (dispatch::Dynamic_Object &)>(std::bind(&dispatch::Dynamic_Object::get_attr, 
-                                                                                   std::placeholders::_1,
-                                                                                   this->children[static_cast<size_t>(1 + class_offset)]->text
-                                                                                   ))
+                     fun(std::function<Boxed_Value (dispatch::Dynamic_Object &)>(
+                         std::bind(static_cast<Boxed_Value &(dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::get_attr), 
+                             std::placeholders::_1,
+                             this->children[static_cast<size_t>(1 + class_offset)]->text
+                             ))
                      ),
                      true
 
