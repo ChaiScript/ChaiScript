@@ -394,7 +394,9 @@ namespace chaiscript
       template<typename Function>
       static std::function<std::vector<Boxed_Value> (const dispatch::Proxy_Function_Base*)> return_boxed_value_vector(const Function &f)
       {
-        return std::bind(&do_return_boxed_value_vector<Function>, f, std::placeholders::_1);
+        return [f](const dispatch::Proxy_Function_Base *b) {
+          return do_return_boxed_value_vector(f, b);
+        };
       }
 
 

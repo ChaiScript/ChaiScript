@@ -15,6 +15,12 @@
 #endif
 #endif
 
+#include <vector>
+
+#if defined( _LIBCPP_VERSION )
+#define CHAISCRIPT_LIBCPP
+#endif
+
 #if defined(_WIN32) || defined(__CYGWIN__)
 #define CHAISCRIPT_WINDOWS
 #endif
