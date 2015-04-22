@@ -831,31 +831,46 @@ namespace chaiscript
           if (is_attribute_call(funs, params, t_has_params)) {
             return do_attribute_call(1, params, funs, m_conversions);
           } else {
-            try {
-              return dispatch::dispatch(funs, params, m_conversions);
-            } catch(chaiscript::exception::dispatch_error&) {
-              const auto functions = get_function("method_missing");
+            std::exception_ptr except;
 
-              const bool is_no_param = [&]()->bool{
-                for (const auto &f : functions) {
-                  if (f->get_arity() != 2) {
-                    return false;
-                  }
-                }
-                return true;
-              }();
+            if (!funs.empty()) {
+              try {
+                return dispatch::dispatch(funs, params, m_conversions);
+              } catch(chaiscript::exception::dispatch_error&) {
+                except = std::current_exception();
+              }
+            }
 
-              if (!functions.empty()) {
-                std::vector<Boxed_Value> tmp_params(params);
-                tmp_params.insert(tmp_params.begin() + 1, var(t_name));
-                if (is_no_param) {
-                  return do_attribute_call(2, tmp_params, functions, m_conversions);
-                } else {
-                  return dispatch::dispatch(functions, tmp_params, m_conversions);
+            // If we get here we know that either there was no method with that name,
+            // or there was no matching method
+
+            const auto functions = get_function("method_missing");
+
+            const bool is_no_param = [&]()->bool{
+              for (const auto &f : functions) {
+                if (f->get_arity() != 2) {
+                  return false;
                 }
               }
+              return true;
+            }();
 
-              throw;
+            if (!functions.empty()) {
+              std::vector<Boxed_Value> tmp_params(params);
+              tmp_params.insert(tmp_params.begin() + 1, var(t_name));
+              if (is_no_param) {
+                return do_attribute_call(2, tmp_params, functions, m_conversions);
+              } else {
+                return dispatch::dispatch(functions, tmp_params, m_conversions);
+              }
+            }
+
+            // If we get all the way down here we know there was no "method_missing"
+            // method at all.
+            if (except) {
+              std::rethrow_exception(except);
+            } else {
+              throw chaiscript::exception::dispatch_error(params, std::vector<Const_Proxy_Function>(funs.begin(), funs.end()));
             }
           }
         }
