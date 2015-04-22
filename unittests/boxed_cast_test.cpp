@@ -117,37 +117,37 @@ bool built_in_type_test(const T &initial, bool ispod)
                                  true, true, true, true, true,
                                  true, true, true, true, true,
                                  true, true, true, true, true,
-                                 ispod && true, ispod && true, ispod && true, true, true);
+                                 ispod, ispod, ispod, true, true);
 
   passed &= do_test<T>(const_var(i), true, true, false, true, false, 
                                        true, false, true, false, true,
                                        false, true, false, true, false,
                                        true, false, true, false, true,
-                                       ispod && true, ispod && true, ispod && true, false, true);
+                                       ispod, ispod, ispod, false, true);
 
   passed &= do_test<T>(var(&i), true, true, true, true, true, 
                                  true, true, true, false, false,
                                  false, false, false, false, true,
                                  true, true, true, true, true,
-                                 ispod && true, ispod && true, ispod && true, true, true);
+                                 ispod, ispod, ispod, true, true);
 
   passed &= do_test<T>(const_var(&i), true, true, false, true, false, 
                                  true, false, true, false, false,
                                  false, false, false, false, false,
                                  true, false, true, false, true,
-                                 ispod && true, ispod && true, ispod && true, ispod && false, true);
+                                 ispod, ispod, ispod, false, true);
 
   passed &= do_test<T>(var(std::ref(i)), true, true, true, true, true, 
                                  true, true, true, false, false,
                                  false, false, false, false, true,
                                  true, true, true, true, true,
-                                 ispod && true, ispod && true, ispod && true, true, true);
+                                 ispod, ispod, ispod, true, true);
 
   passed &= do_test<T>(var(std::cref(i)), true, true, false, true, false, 
                                  true, false, true, false, false,
                                  false, false, false, false, false,
                                  true, false, true, false, true,
-                                 ispod && true, ispod && true, ispod && true, false, true);
+                                 ispod, ispod, ispod, false, true);
 
   /** Const Reference Variable tests */
 
@@ -158,33 +158,33 @@ bool built_in_type_test(const T &initial, bool ispod)
                                  true, true, true, true, true,
                                  true, true, true, true, true,
                                  true, true, true, true, true,
-                                 ispod && true, ispod && true, ispod && true, true, true);
+                                 ispod, ispod, ispod, true, true);
 
   // But a pointer or reference to it should be necessarily const
   passed &= do_test<T>(var(&ir), true, true, false, true, false, 
                                  true, false, true, false, false,
                                  false, false, false, false, false,
                                  true, false, true, false, true,
-                                 ispod && true, ispod && true, ispod && true, false, true);
+                                 ispod, ispod, ispod, false, true);
 
   passed &= do_test<T>(var(std::ref(ir)), true, true, false, true, false, 
                                  true, false, true, false, false,
                                  false, false, false, false, false,
                                  true, false, true, false, true,
-                                 ispod && true, ispod && true, ispod && true, false, true);
+                                 ispod, ispod, ispod, false, true);
 
   // Make sure const of const works too
   passed &= do_test<T>(const_var(&ir), true, true, false, true, false, 
                                  true, false, true, false, false,
                                  false, false, false, false, false,
                                  true, false, true, false, true,
-                                 ispod && true, ispod && true, ispod && true, false, true);
+                                 ispod, ispod, ispod, false, true);
 
   passed &= do_test<T>(const_var(std::ref(ir)), true, true, false, true, false, 
                                  true, false, true, false, false,
                                  false, false, false, false, false,
                                  true, false, true, false, true,
-                                 ispod && true, ispod && true, ispod && true, false, true);
+                                 ispod, ispod, ispod, false, true);
 
   /** Const Reference Variable tests */
 
@@ -194,14 +194,14 @@ bool built_in_type_test(const T &initial, bool ispod)
                                  true, false, true, false, false,
                                  false, false, false, false, false,
                                  true, false, true, false, true,
-                                 ispod && true, ispod && true, ispod && true, false, true);
+                                 ispod, ispod, ispod, false, true);
 
   // make sure const of const works
   passed &= do_test<T>(const_var(cip), true, true, false, true, false, 
                                  true, false, true, false, false,
                                  false, false, false, false, false,
                                  true, false, true, false, true,
-                                 ispod && true, ispod && true, ispod && true, false, true);
+                                 ispod, ispod, ispod, false, true);
 
   /** shared_ptr tests **/
 
@@ -211,13 +211,13 @@ bool built_in_type_test(const T &initial, bool ispod)
                                  true, true, true, true, true,
                                  true, true, true, true, true,
                                  true, true, true, true, true,
-                                 ispod && true, ispod && true, ispod && true, true, true);
+                                 ispod, ispod, ispod, true, true);
 
   passed &= do_test<T>(const_var(ip), true, true, false, true, false, 
                                        true, false, true, false, true,
                                        false, true, false, true, false,
                                        true, false, true, false, true,
-                                       ispod && true, ispod && true, ispod && true, false, true);
+                                       ispod, ispod, ispod, false, true);
 
   /** const shared_ptr tests **/
   std::shared_ptr<const T> ipc(new T(initial));
@@ -226,14 +226,14 @@ bool built_in_type_test(const T &initial, bool ispod)
                                        true, false, true, false, true,
                                        false, true, false, true, false,
                                        true, false, true, false, true,
-                                       ispod && true, ispod && true, ispod && true, false, true);
+                                       ispod, ispod, ispod, false, true);
 
   // const of this should be the same, making sure it compiles
   passed &= do_test<T>(const_var(ipc), true, true, false, true, false, 
                                        true, false, true, false, true,
                                        false, true, false, true, false,
                                        true, false, true, false, true,
-                                       ispod && true, ispod && true, ispod && true, false, true);
+                                       ispod, ispod, ispod, false, true);
 
 
   /** Double ptr tests **/
@@ -245,7 +245,7 @@ bool built_in_type_test(const T &initial, bool ispod)
                                        true, false, true, false, true,
                                        false, true, false, true, false,
                                        true, false, true, false, true,
-                                       ispod && true, ispod && true, ispod && true, false, true);
+                                       ispod, ispod, ispod, false, true);
 */
 
   return passed;
