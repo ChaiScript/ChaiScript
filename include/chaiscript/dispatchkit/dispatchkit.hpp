@@ -813,19 +813,65 @@ namespace chaiscript
 
         Boxed_Value call_member(const std::string &t_name, const std::vector<Boxed_Value> &params, bool t_has_params) const
         {
-          auto funs = get_function(t_name);
+          const auto funs = get_function(t_name);
+
+          const auto do_attribute_call = 
+            [this](int l_num_params, const std::vector<Boxed_Value> &l_params, const std::vector<Proxy_Function> &l_funs, const Type_Conversions &l_conversions)->Boxed_Value
+            {
+              std::vector<Boxed_Value> attr_params{l_params.begin(), l_params.begin() + l_num_params};
+              std::vector<Boxed_Value> remaining_params{l_params.begin() + l_num_params, l_params.end()};
+              Boxed_Value bv = dispatch::dispatch(l_funs, attr_params, l_conversions);
+              if (!remaining_params.empty() || bv.get_type_info().bare_equal(user_type<dispatch::Proxy_Function_Base>())) {
+                return (*boxed_cast<const dispatch::Proxy_Function_Base *>(bv))(remaining_params, l_conversions);
+              } else {
+                return bv;
+              }
+            };
 
           if (is_attribute_call(funs, params, t_has_params)) {
-            std::vector<Boxed_Value> attr_params{params[0]};
-            std::vector<Boxed_Value> remaining_params{params.begin() + 1, params.end()};
-            Boxed_Value bv = dispatch::dispatch(funs, attr_params, m_conversions);
-            if (!remaining_params.empty() || bv.get_type_info().bare_equal(user_type<dispatch::Proxy_Function_Base>())) {
-              return (*boxed_cast<const dispatch::Proxy_Function_Base *>(bv))(remaining_params, m_conversions);
-            } else {
-              return bv;
-            }
+            return do_attribute_call(1, params, funs, m_conversions);
           } else {
-            return dispatch::dispatch(funs, params, m_conversions);
+            std::exception_ptr except;
+
+            if (!funs.empty()) {
+              try {
+                return dispatch::dispatch(funs, params, m_conversions);
+              } catch(chaiscript::exception::dispatch_error&) {
+                except = std::current_exception();
+              }
+            }
+
+            // If we get here we know that either there was no method with that name,
+            // or there was no matching method
+
+            const auto functions = get_function("method_missing");
+
+            const bool is_no_param = [&]()->bool{
+              for (const auto &f : functions) {
+                if (f->get_arity() != 2) {
+                  return false;
+                }
+              }
+              return true;
+            }();
+
+            if (!functions.empty()) {
+              std::vector<Boxed_Value> tmp_params(params);
+              tmp_params.insert(tmp_params.begin() + 1, var(t_name));
+              if (is_no_param) {
+                return do_attribute_call(2, tmp_params, functions, m_conversions);
+              } else {
+                return dispatch::dispatch(functions, tmp_params, m_conversions);
+              }
+            }
+
+            // If we get all the way down here we know there was no "method_missing"
+            // method at all.
+            if (except) {
+              std::rethrow_exception(except);
+            } else {
+              throw chaiscript::exception::dispatch_error(params, std::vector<Const_Proxy_Function>(funs.begin(), funs.end()));
+            }
           }
         }
 
