@@ -266,6 +266,41 @@ file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CUR
 list(SORT UNIT_TESTS)
 
 if(BUILD_TESTING)
+
+  # Add catch tests macro
+  macro(ADD_CATCH_TESTS executable)
+    if (MSVC)
+      file(TO_NATIVE_PATH "${QT_LIBRARY_DIR}" QT_LIB_PATH)
+      set(NEWPATH "${QT_LIB_PATH};$ENV{PATH}")
+    else()
+      set(NEWPATH $ENV{PATH})
+    endif()
+
+    get_target_property(target_files ${executable} SOURCES)
+
+    message("Files: ${target_files}")
+
+    foreach(source ${target_files})
+      if(NOT "${source}" MATCHES "/moc_.*cxx")
+        string(REGEX MATCH .*cpp source "${source}")
+        if(source)
+          file(READ "${source}" contents)
+          string(REGEX MATCHALL "TEST_CASE\\([ ]*\"[^\"]+\"" found_tests ${contents})
+          foreach(hit ${found_tests})
+            message("Found Test: ${hit}")
+            string(REGEX REPLACE "TEST_CASE\\([ ]*(\"[^\"]+\").*" "\\1" test_name ${hit})
+            add_test(${test_name} "${executable}" ${test_name})
+            set_tests_properties(${test_name} PROPERTIES TIMEOUT 660 ENVIRONMENT "PATH=${NEWPATH}")
+          endforeach()
+        endif()
+      endif()
+    endforeach()
+  endmacro()
+
+
+
+
+
   option(UNIT_TEST_LIGHT "Unit tests light (expect module loading failures)" FALSE)
 
   add_test(version_check chai -c  "if(\"\\\${ version() };\\\${version_major()};\\\${version_minor()};\\\${version_patch()}\" != \"${CHAI_VERSION};${CPACK_PACKAGE_VERSION_MAJOR};${CPACK_PACKAGE_VERSION_MINOR};${CPACK_PACKAGE_VERSION_PATCH}\") { exit(-1) }")
@@ -288,79 +323,18 @@ if(BUILD_TESTING)
   )
 
   if(NOT UNIT_TEST_LIGHT)
-    # commented out because uniform initializer syntax is not working properly in MSVC 2013
-    add_executable(utility_test unittests/utility_test.cpp)
-    target_link_libraries(utility_test ${LIBS})
-    add_test(NAME Utility_Test COMMAND utility_test)
+    add_executable(compiled_tests unittests/compiled_tests.cpp)
+    target_link_libraries(compiled_tests ${LIBS})
+    ADD_CATCH_TESTS(compiled_tests)
 
-    add_executable(dynamic_object_test unittests/dynamic_object_test.cpp)
-    target_link_libraries(dynamic_object_test ${LIBS})
-    add_test(NAME Dynamic_Object_Test COMMAND dynamic_object_test)
-
-    add_executable(functor_creation_test unittests/functor_creation_test.cpp)
-    target_link_libraries(functor_creation_test ${LIBS})
-    add_test(NAME Functor_Creation_Test COMMAND functor_creation_test)
-
-    add_executable(functor_cast_test unittests/functor_cast_test.cpp)
-    target_link_libraries(functor_cast_test ${LIBS})
-    add_test(NAME Functor_Cast_Test COMMAND functor_cast_test)
 
     add_executable(boxed_cast_test unittests/boxed_cast_test.cpp)
     target_link_libraries(boxed_cast_test ${LIBS})
     add_test(NAME Boxed_Cast_Test COMMAND boxed_cast_test)
 
-    add_executable(object_lifetime_test unittests/object_lifetime_test.cpp)
-    target_link_libraries(object_lifetime_test ${LIBS})
-    add_test(NAME Object_Lifetime_Test COMMAND object_lifetime_test)
-
-    add_executable(object_lifetime_test2 unittests/object_lifetime_test2.cpp)
-    target_link_libraries(object_lifetime_test2 ${LIBS})
-    add_test(NAME Object_Lifetime_Test2 COMMAND object_lifetime_test2)
-
-    add_executable(object_copy_count_test unittests/object_copy_count_test.cpp)
-    target_link_libraries(object_copy_count_test ${LIBS})
-    add_test(NAME Object_Copy_Test COMMAND object_copy_count_test)
-
-
-    add_executable(function_ordering_test unittests/function_ordering_test.cpp)
-    target_link_libraries(function_ordering_test ${LIBS})
-    add_test(NAME Function_Ordering_Test COMMAND function_ordering_test)
-
     add_executable(type_info_test unittests/type_info_test.cpp)
     target_link_libraries(type_info_test ${LIBS})
     add_test(NAME Type_Info_Test COMMAND type_info_test)
-
-    add_executable(type_name_test unittests/type_name_test.cpp)
-    target_link_libraries(type_name_test ${LIBS})
-    add_test(NAME Type_Name_Test COMMAND type_name_test)
-
-    add_executable(eval_catch_exception_test unittests/eval_catch_exception_test.cpp)
-    target_link_libraries(eval_catch_exception_test ${LIBS})
-    add_test(NAME Eval_Catch_Exception_Test COMMAND eval_catch_exception_test)
-
-    add_executable(short_comparison_test unittests/short_comparison_test.cpp)
-    target_link_libraries(short_comparison_test ${LIBS})
-    add_test(NAME Short_Comparison_Test COMMAND short_comparison_test)
-
-    add_executable(cpp_lambda_test unittests/cpp_lambda_test.cpp)
-    target_link_libraries(cpp_lambda_test ${LIBS})
-    add_test(NAME cpp_lambda_test COMMAND cpp_lambda_test)
-
-    add_executable(expected_eval_errors_test unittests/expected_eval_errors_test.cpp)
-    target_link_libraries(expected_eval_errors_test ${LIBS})
-    add_test(NAME Expected_Eval_Errors_Test COMMAND expected_eval_errors_test)
-
-    add_executable(set_state_test unittests/set_state_test.cpp)
-    target_link_libraries(set_state_test ${LIBS})
-    add_test(NAME Set_State_Test COMMAND set_state_test)
-
-    add_executable(simultaneous_chaiscript_test unittests/simultaneous_chaiscript_test.cpp)
-    target_link_libraries(simultaneous_chaiscript_test ${LIBS})
-    add_test(NAME Simultaneous_ChaiScript_Test COMMAND simultaneous_chaiscript_test)
-
-    add_executable(heap_allocated_chaiscript_test unittests/heap_allocated_chaiscript_test.cpp)
-    target_link_libraries(heap_allocated_chaiscript_test ${LIBS})
-    add_test(NAME Heap_Allocated_ChaiScript_Test COMMAND heap_allocated_chaiscript_test)
 
     add_executable(c_linkage_test unittests/c_linkage_test.cpp)
     target_link_libraries(c_linkage_test ${LIBS})
@@ -369,10 +343,6 @@ if(BUILD_TESTING)
     add_executable(integer_literal_test unittests/integer_literal_test.cpp)
     target_link_libraries(integer_literal_test ${LIBS})
     add_test(NAME Integer_Literal_Test COMMAND integer_literal_test)
-
-    add_executable(arithmetic_conversions_test unittests/arithmetic_conversions_test.cpp)
-    target_link_libraries(arithmetic_conversions_test ${LIBS})
-    add_test(NAME Arithmetic_Conversions_Test COMMAND arithmetic_conversions_test)
 
     if(MULTITHREAD_SUPPORT_ENABLED)
       add_executable(multithreaded_test unittests/multithreaded_test.cpp)
