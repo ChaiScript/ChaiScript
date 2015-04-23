@@ -1,9 +1,11 @@
 // All of these are necessary because of catch.hpp. It's OK, they'll be
 // caught in other cpp files if chaiscript causes them
 
+#include <chaiscript/utility/utility.hpp>
+
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(push)
-#pragma warning(disable : 4190 4640)
+#pragma warning(disable : 4190 4640 28251)
 #endif
 
 #ifdef __GNUC__
@@ -24,7 +26,6 @@
 
 #define CATCH_CONFIG_MAIN
 
-#include <chaiscript/utility/utility.hpp>
 #include "catch.hpp"
 
 // lambda_tests

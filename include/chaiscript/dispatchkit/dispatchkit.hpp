@@ -811,6 +811,12 @@ namespace chaiscript
           return false;
         }
 
+#ifdef CHAISCRIPT_MSVC
+// MSVC is unable to recognize that "rethrow_exception" causes the function to return
+// so we must disable it here.
+#pragma warning(push)
+#pragma warning(disable : 4715)
+#endif
         Boxed_Value call_member(const std::string &t_name, const std::vector<Boxed_Value> &params, bool t_has_params) const
         {
           const auto funs = get_function(t_name);
@@ -887,6 +893,11 @@ namespace chaiscript
             }
           }
         }
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(pop)
+#endif
+
+
 
         Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params) const
         {
