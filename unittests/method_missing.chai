@@ -1,0 +1,7 @@
+def method_missing(int i, string method_name, Vector params) {
+  "method_missing called : " + to_string(i) + "." + method_name + "(" + to_string(params[0]) + ", " + to_string(params[1]) + ")";
+}
+
+
+assert_true(5.bob(3,4) == "method_missing called : 5.bob(3, 4)" )
+

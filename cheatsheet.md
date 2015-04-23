@@ -256,6 +256,43 @@ print(m.get_value()); // prints "Value Is: a"
 print(get_value(m)); // prints "Value Is: a"
 ```
 
+## Dynamic Objects
+
+All ChaiScript defined types and generic Dynamic_Object support dynamic parameters
+
+```
+var o = Dynamic_Object();
+o.f = fun(x) { print(x); }
+o.f(3); // prints "3"
+```
+
+Implicit 'this' is allowed:
+
+```
+var o = Dynamic_Object();
+o.x = 3;
+o.f = fun(y) { print(this.x + y); }
+o.f(10); // prints 13
+```
+
+## method_missing
+
+A function of the signature `method_missing(object, name, param1, param2, param3)` will be called if an appropriate
+method cannot be found
+
+```
+def method_missing(int i, string name, Vector v) {
+  print("method_missing(${i}, ${name}), ${v.size()} params");
+}
+
+5.bob(1,2,3); // prints "method_missing(5, bob, 3 params)"
+```
+
+`method_missing` signature can be either 2 parameters or 3 parameters. If the signature contains two parameters
+it is treated as a property. If the property contains a function then additional parameters are passed to
+the contained function.
+
+If both a 2 parameter and a 3 parameter signature match, the 3 parameter function always wins.
 
 
 # Built In Functions

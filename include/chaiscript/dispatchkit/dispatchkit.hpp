@@ -844,7 +844,20 @@ namespace chaiscript
             // If we get here we know that either there was no method with that name,
             // or there was no matching method
 
-            const auto functions = get_function("method_missing");
+            const auto functions = [&]()->std::vector<Proxy_Function> {
+              std::vector<Proxy_Function> fs;
+
+              for (const auto &f : get_function("method_missing"))
+              {
+                if(f->compare_first_type(params[0], m_conversions)) {
+                  fs.push_back(f);
+                }
+              }
+
+              return fs;
+            }();
+
+
 
             const bool is_no_param = [&]()->bool{
               for (const auto &f : functions) {
@@ -856,12 +869,12 @@ namespace chaiscript
             }();
 
             if (!functions.empty()) {
-              std::vector<Boxed_Value> tmp_params(params);
-              tmp_params.insert(tmp_params.begin() + 1, var(t_name));
               if (is_no_param) {
+                std::vector<Boxed_Value> tmp_params(params);
+                tmp_params.insert(tmp_params.begin() + 1, var(t_name));
                 return do_attribute_call(2, tmp_params, functions, m_conversions);
               } else {
-                return dispatch::dispatch(functions, tmp_params, m_conversions);
+                return dispatch::dispatch(functions, {params[0], var(t_name), var(std::vector<Boxed_Value>(params.begin()+1, params.end()))}, m_conversions);
               }
             }
 
