@@ -5,7 +5,7 @@
 
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(push)
-#pragma warning(disable : 4190 4640 28251 4702)
+#pragma warning(disable : 4190 4640 28251 4702 6330)
 #endif
 
 #ifdef __GNUC__
