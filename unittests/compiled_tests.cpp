@@ -5,12 +5,13 @@
 
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(push)
-#pragma warning(disable : 4190 4640 28251)
+#pragma warning(disable : 4190 4640 28251 4702)
 #endif
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wold-style-cast"
 #endif
 
 #ifdef __llvm__
