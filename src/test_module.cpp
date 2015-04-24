@@ -8,9 +8,9 @@
 class TestBaseType
 {
   public:
-    TestBaseType() : val(10), const_val(15) { }
-    TestBaseType(int) : val(10), const_val(15) {}
-    TestBaseType(int *) : val(10), const_val(15) { }
+    TestBaseType() : val(10), const_val(15), mdarray{} { }
+    TestBaseType(int) : val(10), const_val(15), mdarray{}  {}
+    TestBaseType(int *) : val(10), const_val(15), mdarray{}  { }
     TestBaseType(const TestBaseType &) = default;
     virtual ~TestBaseType() {}
     virtual int func() { return 0; }
