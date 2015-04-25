@@ -90,28 +90,28 @@ namespace chaiscript
     Proxy_Function fun(const T &t)
     {
       return Proxy_Function(
-          static_cast<dispatch::Proxy_Function_Impl_Base *>(new dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(t)) >::Signature>(dispatch::detail::to_function(t))));
+          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(t)) >::Signature>>(dispatch::detail::to_function(t)));
     }
 
   template<typename Ret, typename Class, typename ... Param>
     Proxy_Function fun(Ret (Class::*func)(Param...) const)
     {
       return Proxy_Function(
-          static_cast<dispatch::Proxy_Function_Impl_Base *>(new dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(func)) >::Signature>(dispatch::detail::to_function(func))));
+          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(func)) >::Signature>>(dispatch::detail::to_function(func)));
     }
 
   template<typename Ret, typename Class, typename ... Param>
     Proxy_Function fun(Ret (Class::*func)(Param...))
     {
       return Proxy_Function(
-          static_cast<dispatch::Proxy_Function_Impl_Base *>(new dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(func)) >::Signature>(dispatch::detail::to_function(func))));
+          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(func)) >::Signature>>(dispatch::detail::to_function(func)));
     }
 
 
   template<typename T, typename Class /*, typename = typename std::enable_if<std::is_member_object_pointer<T>::value>::type*/>
     Proxy_Function fun(T Class::* m /*, typename std::enable_if<std::is_member_object_pointer<T>::value>::type* = 0*/ )
     {
-      return Proxy_Function(new dispatch::Attribute_Access<T, Class>(m));
+      return Proxy_Function(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Attribute_Access<T, Class>>(m));
     }
 
 
@@ -129,7 +129,7 @@ namespace chaiscript
   template<typename T>
     Proxy_Function fun(const std::function<T> &f)
     {
-      return Proxy_Function(static_cast<dispatch::Proxy_Function_Impl_Base *>(new dispatch::Proxy_Function_Impl<T>(f)));
+      return Proxy_Function(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<T>>(f));
     }
 
   

@@ -25,7 +25,7 @@ void do_work(chaiscript::ChaiScript &c, int id)
     ss.str("");
     ss << id;
     c.use("multithreaded_work.inc");
-    c("do_chai_work(4000, " + ss.str() + ");");
+    c("do_chai_work(40000, " + ss.str() + ");");
   } catch (const std::exception &e) {
     std::cout << "exception: " << e.what() << " thread:  " << id;
   }

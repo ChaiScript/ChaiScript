@@ -92,13 +92,14 @@ namespace chaiscript
           return m_from;
         }
 
+        virtual ~Type_Conversion_Base() {}
+
       protected:
         Type_Conversion_Base(const Type_Info &t_to, const Type_Info &t_from)
           : m_to(t_to), m_from(t_from)
         {
         }
 
-        virtual ~Type_Conversion_Base() {} 
 
       private:
         Type_Info m_to;
@@ -415,14 +416,14 @@ namespace chaiscript
     static_assert(std::is_polymorphic<Base>::value, "Base class must be polymorphic");
     static_assert(std::is_polymorphic<Derived>::value, "Derived class must be polymorphic");
 
-    return std::make_shared<detail::Dynamic_Conversion_Impl<Base, Derived>>();
+    return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Dynamic_Conversion_Impl<Base, Derived>>();
   }
 
   template<typename Callable>
     Type_Conversion type_conversion(const Type_Info &t_from, const Type_Info &t_to, 
         const Callable &t_func)
     {
-      return std::make_shared<detail::Type_Conversion_Impl<Callable>>(t_from, t_to, t_func);
+      return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Type_Conversion_Impl<Callable>>(t_from, t_to, t_func);
     }
 
   template<typename From, typename To, typename Callable>
@@ -433,7 +434,7 @@ namespace chaiscript
             return chaiscript::Boxed_Value(t_function(detail::Cast_Helper<const From &>::cast(t_bv, nullptr)));
           };
 
-      return std::make_shared<detail::Type_Conversion_Impl<decltype(func)>>(user_type<From>(), user_type<To>(), func);
+      return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Type_Conversion_Impl<decltype(func)>>(user_type<From>(), user_type<To>(), func);
     }
 
   template<typename From, typename To>
@@ -445,7 +446,7 @@ namespace chaiscript
             return chaiscript::Boxed_Value(To(detail::Cast_Helper<From>::cast(t_bv, nullptr)));
           };
 
-      return std::make_shared<detail::Type_Conversion_Impl<decltype(func)>>(user_type<From>(), user_type<To>(), func);
+      return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Type_Conversion_Impl<decltype(func)>>(user_type<From>(), user_type<To>(), func);
     }
 
 }

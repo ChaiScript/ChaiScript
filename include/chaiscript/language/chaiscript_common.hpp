@@ -26,6 +26,7 @@ struct AST_Node;
 
 namespace chaiscript
 {
+
   /// Signature of module entry point that all binary loadable modules must implement.
   typedef ModulePtr (*Create_Module_Func)();
 
@@ -466,6 +467,8 @@ namespace chaiscript
         std::replace(children.begin(), children.end(), t_child, t_new_child);
       }
 
+      virtual ~AST_Node() {}
+
     protected:
       AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<const std::string> &t_fname, 
           int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
@@ -477,7 +480,6 @@ namespace chaiscript
       AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<const std::string> &t_fname) :
         text(std::move(t_ast_node_text)), identifier(t_id), filename(t_fname) {}
 
-      virtual ~AST_Node() {}
 
       virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const
       {

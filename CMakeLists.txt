@@ -23,7 +23,13 @@ endif()
 
 option(BUILD_MODULES "Build Extra Modules (stl)" TRUE)
 option(BUILD_SAMPLES "Build Samples Folder" FALSE)
+option(USE_STD_MAKE_SHARED "Use std::make_shared instead of chaiscript::make_shared" FALSE)
 
+mark_as_advanced(USE_STD_MAKE_SHARED)
+
+if(USE_STD_MAKE_SHARED)
+  add_definitions(-DCHAISCRIPT_USE_STD_MAKE_SHARED)
+endif()
 
 if(CMAKE_COMPILER_IS_GNUCC)
   option(ENABLE_COVERAGE "Enable Coverage Reporting in GCC" FALSE)
@@ -278,8 +284,6 @@ if(BUILD_TESTING)
 
     get_target_property(target_files ${executable} SOURCES)
 
-    message("Files: ${target_files}")
-
     foreach(source ${target_files})
       if(NOT "${source}" MATCHES "/moc_.*cxx")
         string(REGEX MATCH .*cpp source "${source}")
@@ -287,7 +291,6 @@ if(BUILD_TESTING)
           file(READ "${source}" contents)
           string(REGEX MATCHALL "TEST_CASE\\([ ]*\"[^\"]+\"" found_tests ${contents})
           foreach(hit ${found_tests})
-            message("Found Test: ${hit}")
             string(REGEX REPLACE "TEST_CASE\\([ ]*(\"[^\"]+\").*" "\\1" test_name ${hit})
             add_test(${test_name} "${executable}" ${test_name})
             set_tests_properties(${test_name} PROPERTIES TIMEOUT 660 ENVIRONMENT "PATH=${NEWPATH}")
