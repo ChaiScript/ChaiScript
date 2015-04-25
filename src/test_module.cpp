@@ -8,9 +8,18 @@
 class TestBaseType
 {
   public:
-    TestBaseType() : val(10), const_val(15) { }
-    TestBaseType(int) : val(10), const_val(15) {}
-    TestBaseType(int *) : val(10), const_val(15) { }
+#ifdef CHAISCRIPT_MSVC_12
+#pragma warning(push)
+#pragma warning(disable : 4351)
+#endif
+    // MSVC 12 warns that we are using new (correct) behavior 
+    TestBaseType() : val(10), const_val(15), mdarray{} { }
+    TestBaseType(int) : val(10), const_val(15), mdarray{} { }
+    TestBaseType(int *) : val(10), const_val(15), mdarray{} { }
+#ifdef CHAISCRIPT_MSVC_12
+#pragma warning(pop)
+#endif    
+    
     TestBaseType(const TestBaseType &) = default;
     virtual ~TestBaseType() {}
     virtual int func() { return 0; }
