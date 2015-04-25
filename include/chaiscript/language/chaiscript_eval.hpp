@@ -90,9 +90,6 @@ namespace chaiscript
             Operators::Opers t_oper, const std::string &t_oper_string, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs) const
         {
           try {
-            chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-            fpp.save_params({t_lhs, t_rhs});
-
             if (t_oper != Operators::invalid && t_lhs.get_type_info().is_arithmetic() && t_rhs.get_type_info().is_arithmetic())
             {
               // If it's an arithmetic operation we want to short circuit dispatch
@@ -103,8 +100,9 @@ namespace chaiscript
               } catch (...) {
                 throw exception::eval_error("Error with numeric operator calling: " + t_oper_string);
               }
-
             } else {
+              chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
+              fpp.save_params({t_lhs, t_rhs});
               chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
               return t_ss.call_function(t_oper_string, t_lhs, t_rhs);
             }
@@ -1218,7 +1216,6 @@ namespace chaiscript
 
         virtual ~Prefix_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
-          chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
           Boxed_Value bv(this->children[1]->eval(t_ss));
 
           try {
@@ -1227,6 +1224,7 @@ namespace chaiscript
             {
               return Boxed_Number::do_oper(m_oper, std::move(bv));
             } else {
+              chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
               fpp.save_params({bv});
               return t_ss.call_function(this->children[0]->text, std::move(bv));

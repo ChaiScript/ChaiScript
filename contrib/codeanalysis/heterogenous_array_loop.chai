@@ -1,10 +1,19 @@
 
-var my_array=["1", 4, 6.6l, 10ul, "1000", 100, 10.9f ];
-
-for (var j = 0; j < 10000; ++j)
+def go()
 {
-  for (var i = 0; i < 6; ++i)
+  var my_array=["1", 4, 6.6l, 10ul, "1000", 100, 10.9f ];
+
+  var q = 0;
+
+  for (var j = 0; j < 10000; ++j)
   {
-    to_string(my_array[i]);
+    for (var i = 0; i < 6; ++i)
+    {
+      to_string(my_array[i]);
+    }
+
+    q += j;
   }
 }
+
+go();
