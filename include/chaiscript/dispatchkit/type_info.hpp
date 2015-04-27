@@ -10,6 +10,7 @@
 #include <memory>
 #include <type_traits>
 #include <typeinfo>
+#include <string>
 
 namespace chaiscript
 {
