@@ -166,11 +166,11 @@ namespace chaiscript
 
       static std::string get_error_message(DWORD t_err)
       {
+        typedef LPTSTR StringType;
+
 #if defined(_UNICODE) || defined(UNICODE)
-        typedef LPWSTR StringType;
         std::wstring retval = L"Unknown Error";
 #else
-        typedef LPSTR StringType;
         std::string retval = "Unknown Error";
 #endif
         StringType lpMsgBuf = nullptr;
@@ -182,7 +182,7 @@ namespace chaiscript
             NULL,
             t_err,
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            (StringType)&lpMsgBuf,
+            reinterpret_cast<StringType>(&lpMsgBuf),
             0, NULL ) != 0 && lpMsgBuf)
         {
           retval = lpMsgBuf;
@@ -264,8 +264,8 @@ namespace chaiscript
     std::map<std::string, detail::Loadable_Module_Ptr> m_loaded_modules;
     std::set<std::string> m_active_loaded_modules;
 
-    std::vector<std::string> m_modulepaths;
-    std::vector<std::string> m_usepaths;
+    std::vector<std::string> m_module_paths;
+    std::vector<std::string> m_use_paths;
 
     chaiscript::detail::Dispatch_Engine m_engine;
 
@@ -299,7 +299,7 @@ namespace chaiscript
 
     /// Evaluates the given file and looks in the 'use' paths
     const Boxed_Value internal_eval_file(const std::string &t_filename) {
-      for (const auto &path : m_usepaths)
+      for (const auto &path : m_use_paths)
       {
         try {
           const auto appendedpath = path + t_filename;
@@ -441,16 +441,16 @@ namespace chaiscript
     ChaiScript(const ModulePtr &t_lib,
                std::vector<std::string> t_modulepaths = std::vector<std::string>(),
                       std::vector<std::string> t_usepaths = std::vector<std::string>())
-      : m_modulepaths(std::move(t_modulepaths)), m_usepaths(std::move(t_usepaths)) 
+      : m_module_paths(std::move(t_modulepaths)), m_use_paths(std::move(t_usepaths))
     {
-      if (m_modulepaths.empty())
+      if (m_module_paths.empty())
       {
-        m_modulepaths.push_back("");
+        m_module_paths.push_back("");
       }
 
-      if (m_usepaths.empty())
+      if (m_use_paths.empty())
       {
-        m_usepaths.push_back("");
+        m_use_paths.push_back("");
       }
 
       build_eval_system(t_lib);
@@ -465,16 +465,16 @@ namespace chaiscript
     /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
     ChaiScript( std::vector<std::string> t_modulepaths = std::vector<std::string>(),
                       std::vector<std::string> t_usepaths = std::vector<std::string>())
-      : m_modulepaths(std::move(t_modulepaths)), m_usepaths(std::move(t_usepaths)) 
+      : m_module_paths(std::move(t_modulepaths)), m_use_paths(std::move(t_usepaths))
     {
-      if (m_modulepaths.empty())
+      if (m_module_paths.empty())
       {
-        m_modulepaths.push_back("");
+        m_module_paths.push_back("");
       }
 
-      if (m_usepaths.empty())
+      if (m_use_paths.empty())
       {
-        m_usepaths.push_back("");
+        m_use_paths.push_back("");
       }
 
 #if defined(_POSIX_VERSION) && !defined(__CYGWIN__) 
@@ -507,7 +507,7 @@ namespace chaiscript
           dllpath = std::string(&buf.front(), pathlen);
         }
 
-        m_modulepaths.insert(m_modulepaths.begin(), dllpath+"/");
+        m_module_paths.insert(m_module_paths.begin(), dllpath+"/");
       }
 #endif
 
@@ -559,7 +559,7 @@ namespace chaiscript
     /// \param[in] t_filename Filename to load and evaluate
     Boxed_Value use(const std::string &t_filename)
     {
-      for (const auto &path : m_usepaths)
+      for (const auto &path : m_use_paths)
       {
         try {
           const auto appendedpath = path + t_filename;
@@ -758,7 +758,7 @@ namespace chaiscript
 
       std::vector<std::string> postfixes{".dll", ".so", ".bundle", ""};
 
-      for (auto & elem : m_modulepaths) 
+      for (auto & elem : m_module_paths)
       {
         for (auto & prefix : prefixes)
         {

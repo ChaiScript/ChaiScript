@@ -349,15 +349,15 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr front_insertion_sequence_type(const std::string &, ModulePtr m = ModulePtr(new Module()))
         {
-          typedef typename ContainerType::reference (ContainerType::*frontptr)();
-          typedef typename ContainerType::const_reference (ContainerType::*constfrontptr)() const;
-          typedef void (ContainerType::*pushptr)(typename ContainerType::const_reference);
-          typedef void (ContainerType::*popptr)();
+          typedef typename ContainerType::reference (ContainerType::*front_ptr)();
+          typedef typename ContainerType::const_reference (ContainerType::*const_front_ptr)() const;
+          typedef void (ContainerType::*push_ptr)(typename ContainerType::const_reference);
+          typedef void (ContainerType::*pop_ptr)();
 
-          m->add(fun(static_cast<frontptr>(&ContainerType::front)), "front");
-          m->add(fun(static_cast<constfrontptr>(&ContainerType::front)), "front");
+          m->add(fun(static_cast<front_ptr>(&ContainerType::front)), "front");
+          m->add(fun(static_cast<const_front_ptr>(&ContainerType::front)), "front");
 
-          m->add(fun(static_cast<pushptr>(&ContainerType::push_front)), 
+          m->add(fun(static_cast<push_ptr>(&ContainerType::push_front)),
               []()->std::string{
                 if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
                   return "push_front_ref";
@@ -366,7 +366,7 @@ namespace chaiscript
                 }
               }());
 
-          m->add(fun(static_cast<popptr>(&ContainerType::pop_front)), "pop_front");
+          m->add(fun(static_cast<pop_ptr>(&ContainerType::pop_front)), "pop_front");
           return m;
         }
 
@@ -439,9 +439,9 @@ namespace chaiscript
         {
           m->add(user_type<MapType>(), type);
 
-          typedef typename MapType::mapped_type &(MapType::*elemaccess)(const typename MapType::key_type &);
+          typedef typename MapType::mapped_type &(MapType::*elem_access)(const typename MapType::key_type &);
 
-          m->add(fun(static_cast<elemaccess>(&MapType::operator[])), "[]");
+          m->add(fun(static_cast<elem_access>(&MapType::operator[])), "[]");
 
           container_type<MapType>(type, m);
           default_constructible_type<MapType>(type, m);

@@ -257,12 +257,12 @@ namespace chaiscript
         for (auto &c : p->children)
         {
           if (c->identifier == AST_Node_Type::Def && c->children.size() > 0) {
-            auto &lastchild = c->children.back();
-            if (lastchild->identifier == AST_Node_Type::Block) {
-              auto &blocklastchild = lastchild->children.back();
-              if (blocklastchild->identifier == AST_Node_Type::Return) {
-                if (blocklastchild->children.size() == 1) {
-                  blocklastchild = blocklastchild->children[0];
+            auto &last_child = c->children.back();
+            if (last_child->identifier == AST_Node_Type::Block) {
+              auto &block_last_child = last_child->children.back();
+              if (block_last_child->identifier == AST_Node_Type::Return) {
+                if (block_last_child->children.size() == 1) {
+                  block_last_child = block_last_child->children[0];
                 }
               }
             }
@@ -789,30 +789,26 @@ namespace chaiscript
       }
 
       /// Reads (and potentially captures) an identifier from input
-      bool Id(const bool t_capture = false) {
+      bool Id() {
         SkipWS();
 
-        if (!t_capture) {
-          return Id_();
+        const auto start = m_input_pos;
+        const auto prev_col = m_col;
+        const auto prev_line = m_line;
+        if (Id_()) {
+          m_match_stack.push_back(std::make_shared<eval::Id_AST_Node>(
+                [&]()->std::string{
+                  if (*start == '`') {
+                    //Id Literal
+                    return std::string(start+1, m_input_pos-1);
+                  } else {
+                    return std::string(start, m_input_pos);
+                  }
+                }(),
+                m_filename, prev_line, prev_col, m_line, m_col));
+          return true;
         } else {
-          const auto start = m_input_pos;
-          const auto prev_col = m_col;
-          const auto prev_line = m_line;
-          if (Id_()) {
-            m_match_stack.push_back(std::make_shared<eval::Id_AST_Node>(
-                  [&]()->std::string{
-                    if (*start == '`') {
-                      //Id Literal
-                      return std::string(start+1, m_input_pos-1);
-                    } else {
-                      return std::string(start, m_input_pos);
-                    }
-                  }(),
-                  m_filename, prev_line, prev_col, m_line, m_col));
-            return true;
-          } else {
-            return false;
-          }
+          return false;
         }
       }
 
@@ -821,14 +817,14 @@ namespace chaiscript
         const auto prev_stack_top = m_match_stack.size();
         SkipWS();
 
-        if (!Id(true)) {
+        if (!Id()) {
           return false;
         }
 
         SkipWS();
 
         if (t_type_allowed) {
-          Id(true);
+          Id();
         }
 
         build_match(std::make_shared<eval::Arg_AST_Node>(), prev_stack_top);
@@ -1426,7 +1422,7 @@ namespace chaiscript
         if (Keyword("def")) {
           retval = true;
 
-          if (!Id(true)) {
+          if (!Id()) {
             throw exception::eval_error("Missing function name in definition", File_Position(m_line, m_col), *m_filename);
           }
 
@@ -1436,7 +1432,7 @@ namespace chaiscript
             //We're now a method
             is_method = true;
 
-            if (!Id(true)) {
+            if (!Id()) {
               throw exception::eval_error("Missing method name in definition", File_Position(m_line, m_col), *m_filename);
             }
           }
@@ -1609,7 +1605,7 @@ namespace chaiscript
         if (Keyword("class")) {
           retval = true;
 
-          if (!Id(true)) {
+          if (!Id()) {
             throw exception::eval_error("Missing class name in definition", File_Position(m_line, m_col), *m_filename);
           }
 
@@ -1890,7 +1886,7 @@ namespace chaiscript
 
         const auto prev_stack_top = m_match_stack.size();
         if (Lambda() || Num(true) || Quoted_String(true) || Single_Quoted_String(true) ||
-            Paren_Expression() || Inline_Container() || Id(true)) 
+            Paren_Expression() || Inline_Container() || Id())
         {
           retval = true;
           bool has_more = true;
@@ -1931,7 +1927,7 @@ namespace chaiscript
             }
             else if (Symbol(".", true)) {
               has_more = true;
-              if (!(Id(true))) {
+              if (!(Id())) {
                 throw exception::eval_error("Incomplete array access", File_Position(m_line, m_col), *m_filename);
               }
 
@@ -1952,7 +1948,7 @@ namespace chaiscript
         if (t_class_context && (Keyword("attr") || Keyword("auto") || Keyword("var"))) {
           retval = true;
 
-          if (!Id(true)) {
+          if (!Id()) {
             throw exception::eval_error("Incomplete attribute declaration", File_Position(m_line, m_col), *m_filename);
           }
 
@@ -1960,7 +1956,7 @@ namespace chaiscript
         } else if (Keyword("auto") || Keyword("var")) {
           retval = true;
 
-          if (!(Reference() || Id(true))) {
+          if (!(Reference() || Id())) {
             throw exception::eval_error("Incomplete variable declaration", File_Position(m_line, m_col), *m_filename);
           }
 
@@ -1968,13 +1964,13 @@ namespace chaiscript
         } else if (Keyword("attr")) {
           retval = true;
 
-          if (!Id(true)) {
+          if (!Id()) {
             throw exception::eval_error("Incomplete attribute declaration", File_Position(m_line, m_col), *m_filename);
           }
           if (!Symbol("::", false)) {
             throw exception::eval_error("Incomplete attribute declaration", File_Position(m_line, m_col), *m_filename);
           }
-          if (!Id(true)) {
+          if (!Id()) {
             throw exception::eval_error("Missing attribute name in definition", File_Position(m_line, m_col), *m_filename);
           }
 
@@ -2036,7 +2032,7 @@ namespace chaiscript
         const auto prev_stack_top = m_match_stack.size();
 
         if (Symbol("&", false)) {
-          if (!Id(true)) {
+          if (!Id()) {
             throw exception::eval_error("Incomplete '&' expression", File_Position(m_line, m_col), *m_filename);
           }
 
@@ -2071,11 +2067,7 @@ namespace chaiscript
 
       /// Parses any of a group of 'value' style ast_node groups from input
       bool Value() {
-        if (Var_Decl() || Dot_Fun_Array() || Prefix()) {
-          return true;
-        } else {
-          return false;
-        }
+        return Var_Decl() || Dot_Fun_Array() || Prefix();
       }
 
       bool Operator_Helper(const size_t t_precedence) {

@@ -309,16 +309,7 @@ namespace chaiscript
       static bool has_guard(const Const_Proxy_Function &t_pf)
       {
         auto pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
-        if (pf)
-        {
-          if (pf->get_guard()) {
-            return true;
-          } else {
-            return false;
-          }
-        } else {
-          return false;
-        }
+        return pf && pf->get_guard();
       }
 
       static Const_Proxy_Function get_guard(const Const_Proxy_Function &t_pf)
@@ -372,12 +363,7 @@ namespace chaiscript
       static bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
       {
         const auto pf = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
-        if (pf && pf->get_parse_tree())
-        {
-          return true;
-        } else {
-          return false;
-        }
+        return pf && pf->get_parse_tree();
       }
 
       static chaiscript::AST_NodePtr get_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)

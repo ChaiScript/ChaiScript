@@ -1330,7 +1330,7 @@ namespace chaiscript
             end_point = this->children.size() - 1;
           }
           for (size_t i = 1; i < end_point; ++i) {
-            chaiscript::eval::detail::Scope_Push_Pop catchscope(t_ss);
+            chaiscript::eval::detail::Scope_Push_Pop catch_scope(t_ss);
             AST_NodePtr catch_block = this->children[i];
 
             if (catch_block->children.size() == 1) {
