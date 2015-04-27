@@ -225,14 +225,11 @@ namespace chaiscript
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
-
           std::vector<Boxed_Value> params;
 
-          if ((this->children.size() > 1)) {
-            params.reserve(this->children[1]->children.size());
-            for (const auto &child : this->children[1]->children) {
-              params.push_back(child->eval(t_ss));
-            }
+          params.reserve(this->children[1]->children.size());
+          for (const auto &child : this->children[1]->children) {
+            params.push_back(child->eval(t_ss));
           }
 
           fpp.save_params(params);
@@ -388,14 +385,12 @@ namespace chaiscript
           std::vector<Boxed_Value> params;
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
-          if (this->children.size() > 1) {
-            for (const auto &child : this->children[1]->children) {
-              params.push_back(child->eval(t_ss));
-            }
+          for (const auto &child : this->children[1]->children) {
+            params.push_back(child->eval(t_ss));
           }
 
-          Const_Proxy_Function fn;
 
+          Const_Proxy_Function fn;
           try {
             Boxed_Value bv = this->children[0]->eval(t_ss);
             try {
@@ -622,16 +617,16 @@ namespace chaiscript
           } else {
             const std::string &idname = this->children[0]->text;
 
-            Boxed_Value bv;
             try {
+              Boxed_Value bv;
               t_ss.add_object(idname, bv);
+              return bv;
             }
             catch (const exception::reserved_word_error &) {
               throw exception::eval_error("Reserved word used as variable '" + idname + "'");
             } catch (const exception::name_conflict_error &e) {
               throw exception::eval_error("Variable redefined '" + e.name() + "'");
             }
-            return bv;
           }
 
         }
@@ -652,25 +647,17 @@ namespace chaiscript
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
-          Boxed_Value retval(this->children[0]->eval(t_ss));
-          std::vector<Boxed_Value> params{retval};
+          std::vector<Boxed_Value> params{this->children[0]->eval(t_ss), children[1]->eval(t_ss)};
 
-          for (size_t i = 1; i < this->children.size(); ++i) {
-            try {
-              Boxed_Value p1(this->children[i]->eval(t_ss));
-
-              chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
-              params.push_back(p1);
-              fpp.save_params(params);
-              params.clear();
-              retval = t_ss.call_function("[]", retval, std::move(p1));
-            }
-            catch(const exception::dispatch_error &e){
-              throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, false, t_ss );
-            }
+          try {
+            chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
+            fpp.save_params(params);
+            return t_ss.call_function("[]", params);
+          }
+          catch(const exception::dispatch_error &e){
+            throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, false, t_ss );
           }
 
-          return retval;
         }
 
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE 
@@ -696,59 +683,54 @@ namespace chaiscript
         virtual ~Dot_Access_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
+
           Boxed_Value retval = this->children[0]->eval(t_ss);
+          std::vector<Boxed_Value> params{retval};
 
-          if (this->children.size() > 1) {
-            for (size_t i = 2; i < this->children.size(); i+=2) {
-              std::vector<Boxed_Value> params{retval};
+          bool has_function_params = false;
 
-              bool has_function_params = false;
+          if (this->children[2]->children.size() > 1) {
+            has_function_params = true;
+            for (const auto &child : this->children[2]->children[1]->children) {
+              params.push_back(child->eval(t_ss));
+            }
+          }
 
-              if (this->children[i]->children.size() > 1) {
-                has_function_params = true;
-                for (const auto &child : this->children[i]->children[1]->children) {
-                  params.push_back(child->eval(t_ss));
-                }
-              }
+          fpp.save_params(params);
 
-              fpp.save_params(params);
+          std::string fun_name = [&]()->std::string{
+            if ((this->children[2]->identifier == AST_Node_Type::Fun_Call) || (this->children[2]->identifier == AST_Node_Type::Array_Call)) {
+              return this->children[2]->children[0]->text;
+            }
+            else {
+              return this->children[2]->text;
+            }
+          }();
 
-              std::string fun_name = [&]()->std::string{
-                if ((this->children[i]->identifier == AST_Node_Type::Fun_Call) || (this->children[i]->identifier == AST_Node_Type::Array_Call)) {
-                  return this->children[i]->children[0]->text;
-                }
-                else {
-                  return this->children[i]->text;
-                }
-              }();
 
-              try {
-                chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
-                t_ss.add_object("this", retval);
-                retval = t_ss.call_member(fun_name, std::move(params), has_function_params);
-              }
-              catch(const exception::dispatch_error &e){
-                if (e.functions.empty())
-                {
-                  throw exception::eval_error("'" + fun_name + "' is not a function.");
-                } else {
-                  throw exception::eval_error(std::string(e.what()) + " for function '" + fun_name + "'", e.parameters, e.functions, true, t_ss);
-                }
-              }
-              catch(detail::Return_Value &rv) {
-                retval = std::move(rv.retval);
-              }
+          try {
+            chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
+            t_ss.add_object("this", retval);
+            retval = t_ss.call_member(fun_name, std::move(params), has_function_params);
+          }
+          catch(const exception::dispatch_error &e){
+            if (e.functions.empty())
+            {
+              throw exception::eval_error("'" + fun_name + "' is not a function.");
+            } else {
+              throw exception::eval_error(std::string(e.what()) + " for function '" + fun_name + "'", e.parameters, e.functions, true, t_ss);
+            }
+          }
+          catch(detail::Return_Value &rv) {
+            retval = std::move(rv.retval);
+          }
 
-              if (this->children[i]->identifier == AST_Node_Type::Array_Call) {
-                for (size_t j = 1; j < this->children[i]->children.size(); ++j) {
-                  try {
-                    retval = t_ss.call_function("[]", retval, this->children[i]->children[j]->eval(t_ss));
-                  }
-                  catch(const exception::dispatch_error &e){
-                    throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, true, t_ss);
-                  }
-                }
-              }
+          if (this->children[2]->identifier == AST_Node_Type::Array_Call) {
+            try {
+              retval = t_ss.call_function("[]", retval, this->children[2]->children[1]->eval(t_ss));
+            }
+            catch(const exception::dispatch_error &e){
+              throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, true, t_ss);
             }
           }
 
