@@ -229,231 +229,231 @@ namespace chaiscript
 
 
       template<typename T>
-        ModulePtr assign(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr assign(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::assign<T &, const T&>), "=");
           return m;
         }
 
       template<typename T>
-        ModulePtr assign_bitwise_and(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr assign_bitwise_and(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::assign_bitwise_and<T &, const T&>), "&=");
           return m;
         }
 
       template<typename T>
-        ModulePtr assign_xor(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr assign_xor(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::assign_xor<T &, const T&>), "^=");
           return m;
         }
 
       template<typename T>
-        ModulePtr assign_bitwise_or(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr assign_bitwise_or(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::assign_bitwise_or<T &, const T&>), "|=");
           return m;
         }
 
       template<typename T>
-        ModulePtr assign_difference(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr assign_difference(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::assign_difference<T &, const T&>), "-=");
           return m;
         }
 
       template<typename T>
-        ModulePtr assign_left_shift(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr assign_left_shift(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::assign_left_shift<T &, const T&>), "<<=");
           return m;
         }
 
       template<typename T>
-        ModulePtr assign_product(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr assign_product(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::assign_product<T &, const T&>), "*=");
           return m;
         }
 
       template<typename T>
-        ModulePtr assign_quotient(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr assign_quotient(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::assign_quotient<T &, const T&>), "/=");
           return m;
         }
 
       template<typename T>
-        ModulePtr assign_remainder(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr assign_remainder(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::assign_remainder<T &, const T&>), "%=");
           return m;
         }
 
       template<typename T>
-        ModulePtr assign_right_shift(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr assign_right_shift(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::assign_right_shift<T &, const T&>), ">>=");
           return m;
         }
 
       template<typename T>
-        ModulePtr assign_sum(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr assign_sum(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::assign_sum<T &, const T&>), "+=");
           return m;
         }
 
       template<typename T>
-        ModulePtr prefix_decrement(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr prefix_decrement(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::prefix_decrement<T &>), "--");
           return m;
         }
 
       template<typename T>
-        ModulePtr prefix_increment(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr prefix_increment(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::prefix_increment<T &>), "++");
           return m;
         }
 
       template<typename T>
-        ModulePtr equal(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr equal(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::equal<const T&, const T&>), "==");
           return m;
         }
 
       template<typename T>
-        ModulePtr greater_than(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr greater_than(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::greater_than<const T&, const T&>), ">");
           return m;
         }
 
       template<typename T>
-        ModulePtr greater_than_equal(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr greater_than_equal(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::greater_than_equal<const T&, const T&>), ">=");
           return m;
         }
 
       template<typename T>
-        ModulePtr less_than(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr less_than(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::less_than<const T&, const T&>), "<");
           return m;
         }
 
       template<typename T>
-        ModulePtr less_than_equal(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr less_than_equal(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::less_than_equal<const T&, const T&>), "<=");
           return m;
         }
 
       template<typename T>
-        ModulePtr logical_compliment(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr logical_compliment(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::logical_compliment<const T &>), "!");
           return m;
         }
 
       template<typename T>
-        ModulePtr not_equal(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr not_equal(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::not_equal<const T &, const T &>), "!=");
           return m;
         }
 
       template<typename T>
-        ModulePtr addition(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr addition(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::addition<const T &, const T &>), "+");
           return m;
         }
 
       template<typename T>
-        ModulePtr unary_plus(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr unary_plus(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::unary_plus<const T &>), "+");
           return m;
         }
 
       template<typename T>
-        ModulePtr subtraction(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr subtraction(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::subtraction<const T &, const T &>), "-");
           return m;
         }
 
       template<typename T>
-        ModulePtr unary_minus(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr unary_minus(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::unary_minus<const T &>), "-");
           return m;
         }
 
       template<typename T>
-        ModulePtr bitwise_and(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr bitwise_and(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::bitwise_and<const T &, const T &>), "&");
           return m;
         }
 
       template<typename T>
-        ModulePtr bitwise_compliment(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr bitwise_compliment(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::bitwise_compliment<const T &>), "~");
           return m;
         }
 
       template<typename T>
-        ModulePtr bitwise_xor(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr bitwise_xor(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::bitwise_xor<const T &, const T &>), "^");
           return m;
         }
 
       template<typename T>
-        ModulePtr bitwise_or(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr bitwise_or(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::bitwise_or<const T &, const T &>), "|");
           return m;
         }
 
       template<typename T>
-        ModulePtr division(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr division(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::division<const T &, const T &>), "/");
           return m;
         }
 
       template<typename T>
-        ModulePtr left_shift(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr left_shift(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::left_shift<const T &, const T &>), "<<");
           return m;
         }
 
       template<typename T>
-        ModulePtr multiplication(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr multiplication(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::multiplication<const T &, const T &>), "*");
           return m;
         }
 
       template<typename T>
-        ModulePtr remainder(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr remainder(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::remainder<const T &, const T &>), "%");
           return m;
         }
 
       template<typename T>
-        ModulePtr right_shift(ModulePtr m = ModulePtr(new Module()))
+        ModulePtr right_shift(ModulePtr m = std::make_shared<Module>())
         {
           m->add(chaiscript::fun(&detail::right_shift<const T &, const T &>), ">>");
           return m;

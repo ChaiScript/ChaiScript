@@ -14,10 +14,8 @@
 #define CHAISCRIPT_BOOTSTRAP_STL_HPP_
 
 #include <functional>
-#include <iterator>
 #include <memory>
 #include <stdexcept>
-#include <string>
 #include <typeinfo>
 #include <vector>
 
@@ -179,7 +177,7 @@ namespace chaiscript
 
         /// Add Bidir_Range support for the given ContainerType
         template<typename Bidir_Type>
-          ModulePtr input_range_type_impl(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+          ModulePtr input_range_type_impl(const std::string &type, ModulePtr m = std::make_shared<Module>())
           {
             m->add(user_type<Bidir_Type>(), type + "_Range");
 
@@ -232,7 +230,7 @@ namespace chaiscript
       }
 
       template<typename ContainerType>
-        ModulePtr input_range_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr input_range_type(const std::string &type, ModulePtr m = std::make_shared<Module>())
         {
           detail::input_range_type_impl<Bidir_Range<ContainerType> >(type,m);
           detail::input_range_type_impl<Const_Bidir_Range<ContainerType> >("Const_" + type, m);
@@ -243,7 +241,7 @@ namespace chaiscript
       /// Add random_access_container concept to the given ContainerType
       /// http://www.sgi.com/tech/stl/RandomAccessContainer.html
       template<typename ContainerType>
-        ModulePtr random_access_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr random_access_container_type(const std::string &/*type*/, ModulePtr m = std::make_shared<Module>())
         {
           // cppcheck-suppress syntaxError
           typedef typename ContainerType::reference(ContainerType::*indexoper)(size_t);
@@ -266,7 +264,7 @@ namespace chaiscript
       /// Add assignable concept to the given ContainerType
       /// http://www.sgi.com/tech/stl/Assignable.html
       template<typename ContainerType>
-        ModulePtr assignable_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr assignable_type(const std::string &type, ModulePtr m = std::make_shared<Module>())
         {
           copy_constructor<ContainerType>(type, m);
           operators::assign<ContainerType>(m);
@@ -277,7 +275,7 @@ namespace chaiscript
       /// Add container concept to the given ContainerType
       /// http://www.sgi.com/tech/stl/Container.html
       template<typename ContainerType>
-        ModulePtr container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr container_type(const std::string &/*type*/, ModulePtr m = std::make_shared<Module>())
         {
           m->add(fun<size_t (const ContainerType *)>([](const ContainerType *a) { return a->size(); } ), "size");
           m->add(fun<bool (const ContainerType *)>([](const ContainerType *a) { return a->empty(); } ), "empty");
@@ -289,7 +287,7 @@ namespace chaiscript
       /// Add default constructable concept to the given Type
       /// http://www.sgi.com/tech/stl/DefaultConstructible.html
       template<typename Type>
-        ModulePtr default_constructible_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr default_constructible_type(const std::string &type, ModulePtr m = std::make_shared<Module>())
         {
           m->add(constructor<Type ()>(), type);
           return m;
@@ -301,7 +299,7 @@ namespace chaiscript
       /// Add sequence concept to the given ContainerType
       /// http://www.sgi.com/tech/stl/Sequence.html
       template<typename ContainerType>
-        ModulePtr sequence_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr sequence_type(const std::string &/*type*/, ModulePtr m = std::make_shared<Module>())
         {
           m->add(fun(&detail::insert_at<ContainerType>), 
               []()->std::string{
@@ -321,7 +319,7 @@ namespace chaiscript
       /// Add back insertion sequence concept to the given ContainerType
       /// http://www.sgi.com/tech/stl/BackInsertionSequence.html
       template<typename ContainerType>
-        ModulePtr back_insertion_sequence_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr back_insertion_sequence_type(const std::string &/*type*/, ModulePtr m = std::make_shared<Module>())
         {
           typedef typename ContainerType::reference (ContainerType::*backptr)();
 
@@ -347,17 +345,17 @@ namespace chaiscript
       /// Front insertion sequence
       /// http://www.sgi.com/tech/stl/FrontInsertionSequence.html
       template<typename ContainerType>
-        ModulePtr front_insertion_sequence_type(const std::string &, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr front_insertion_sequence_type(const std::string &, ModulePtr m = std::make_shared<Module>())
         {
-          typedef typename ContainerType::reference (ContainerType::*frontptr)();
-          typedef typename ContainerType::const_reference (ContainerType::*constfrontptr)() const;
-          typedef void (ContainerType::*pushptr)(typename ContainerType::const_reference);
-          typedef void (ContainerType::*popptr)();
+          typedef typename ContainerType::reference (ContainerType::*front_ptr)();
+          typedef typename ContainerType::const_reference (ContainerType::*const_front_ptr)() const;
+          typedef void (ContainerType::*push_ptr)(typename ContainerType::const_reference);
+          typedef void (ContainerType::*pop_ptr)();
 
-          m->add(fun(static_cast<frontptr>(&ContainerType::front)), "front");
-          m->add(fun(static_cast<constfrontptr>(&ContainerType::front)), "front");
+          m->add(fun(static_cast<front_ptr>(&ContainerType::front)), "front");
+          m->add(fun(static_cast<const_front_ptr>(&ContainerType::front)), "front");
 
-          m->add(fun(static_cast<pushptr>(&ContainerType::push_front)), 
+          m->add(fun(static_cast<push_ptr>(&ContainerType::push_front)),
               []()->std::string{
                 if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
                   return "push_front_ref";
@@ -366,7 +364,7 @@ namespace chaiscript
                 }
               }());
 
-          m->add(fun(static_cast<popptr>(&ContainerType::pop_front)), "pop_front");
+          m->add(fun(static_cast<pop_ptr>(&ContainerType::pop_front)), "pop_front");
           return m;
         }
 
@@ -374,7 +372,7 @@ namespace chaiscript
       /// bootstrap a given PairType
       /// http://www.sgi.com/tech/stl/pair.html
       template<typename PairType>
-        ModulePtr pair_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr pair_type(const std::string &type, ModulePtr m = std::make_shared<Module>())
         {
           m->add(user_type<PairType>(), type);
 
@@ -397,7 +395,7 @@ namespace chaiscript
       /// http://www.sgi.com/tech/stl/PairAssociativeContainer.html
 
       template<typename ContainerType>
-        ModulePtr pair_associative_container_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr pair_associative_container_type(const std::string &type, ModulePtr m = std::make_shared<Module>())
         {
           pair_type<typename ContainerType::value_type>(type + "_Pair", m);
 
@@ -408,7 +406,7 @@ namespace chaiscript
       /// Add unique associative container concept to the given ContainerType
       /// http://www.sgi.com/tech/stl/UniqueAssociativeContainer.html
       template<typename ContainerType>
-        ModulePtr unique_associative_container_type(const std::string &/*type*/, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr unique_associative_container_type(const std::string &/*type*/, ModulePtr m = std::make_shared<Module>())
         {
           m->add(fun(detail::count<ContainerType>), "count");
 
@@ -435,13 +433,13 @@ namespace chaiscript
       /// Add a MapType container
       /// http://www.sgi.com/tech/stl/Map.html
       template<typename MapType>
-        ModulePtr map_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr map_type(const std::string &type, ModulePtr m = std::make_shared<Module>())
         {
           m->add(user_type<MapType>(), type);
 
-          typedef typename MapType::mapped_type &(MapType::*elemaccess)(const typename MapType::key_type &);
+          typedef typename MapType::mapped_type &(MapType::*elem_access)(const typename MapType::key_type &);
 
-          m->add(fun(static_cast<elemaccess>(&MapType::operator[])), "[]");
+          m->add(fun(static_cast<elem_access>(&MapType::operator[])), "[]");
 
           container_type<MapType>(type, m);
           default_constructible_type<MapType>(type, m);
@@ -457,7 +455,7 @@ namespace chaiscript
       /// hopefully working List type
       /// http://www.sgi.com/tech/stl/List.html
       template<typename ListType>
-        ModulePtr list_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr list_type(const std::string &type, ModulePtr m = std::make_shared<Module>())
         {
           m->add(user_type<ListType>(), type);
 
@@ -476,7 +474,7 @@ namespace chaiscript
       /// Create a vector type with associated concepts
       /// http://www.sgi.com/tech/stl/Vector.html
       template<typename VectorType>
-        ModulePtr vector_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr vector_type(const std::string &type, ModulePtr m = std::make_shared<Module>())
         {
           m->add(user_type<VectorType>(), type);
 
@@ -525,7 +523,7 @@ namespace chaiscript
       /// Add a String container
       /// http://www.sgi.com/tech/stl/basic_string.html
       template<typename String>
-        ModulePtr string_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr string_type(const std::string &type, ModulePtr m = std::make_shared<Module>())
         {
           m->add(user_type<String>(), type);
           operators::addition<String>(m);
@@ -575,7 +573,7 @@ namespace chaiscript
       /// Add a MapType container
       /// http://www.sgi.com/tech/stl/Map.html
       template<typename FutureType>
-        ModulePtr future_type(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+        ModulePtr future_type(const std::string &type, ModulePtr m = std::make_shared<Module>())
         {
           m->add(user_type<FutureType>(), type);
 

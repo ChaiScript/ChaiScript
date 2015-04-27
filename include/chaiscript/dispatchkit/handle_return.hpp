@@ -9,14 +9,11 @@
 
 #include <functional>
 #include <memory>
-#include <stdexcept>
 #include <string>
-#include <vector>
 #include <type_traits>
 
 #include "boxed_number.hpp"
 #include "boxed_value.hpp"
-#include "type_info.hpp"
 
 namespace chaiscript {
 class Boxed_Number;

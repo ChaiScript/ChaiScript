@@ -38,8 +38,8 @@ namespace chaiscript
     ///      { {fun(&test::function), "function"},
     ///        {fun(&test::function2), "function2"},
     ///        {fun(&test::function3), "function3"},
-    ///        {fun(static_cast<std::string(test::*)(double)>(&test::functionoverload)), "functionoverload" },
-    ///        {fun(static_cast<std::string(test::*)(int)>(&test::functionoverload)), "functionoverload" },
+    ///        {fun(static_cast<std::string(test::*)(double)>(&test::function_overload)), "function_overload" },
+    ///        {fun(static_cast<std::string(test::*)(int)>(&test::function_overload)), "function_overload" },
     ///        {fun(static_cast<test & (test::*)(const test &)>(&test::operator=)), "=" }
     ///        }
     ///      );

@@ -7,7 +7,6 @@
 #ifndef CHAISCRIPT_BOXED_CAST_HELPER_HPP_
 #define CHAISCRIPT_BOXED_CAST_HELPER_HPP_
 
-#include <functional>
 #include <memory>
 #include <type_traits>
 
@@ -34,7 +33,7 @@ namespace chaiscript
     template<typename Result>
       struct Cast_Helper_Inner
       {
-        typedef typename std::reference_wrapper<typename std::add_const<Result>::type > Result_Type;
+        typedef std::reference_wrapper<typename std::add_const<Result>::type > Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
@@ -112,9 +111,9 @@ namespace chaiscript
 
     /// Cast_Helper_Inner for casting to a std::shared_ptr<> type
     template<typename Result>
-      struct Cast_Helper_Inner<typename std::shared_ptr<Result> >
+      struct Cast_Helper_Inner<std::shared_ptr<Result> >
       {
-        typedef typename std::shared_ptr<Result> Result_Type;
+        typedef std::shared_ptr<Result> Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
@@ -124,9 +123,9 @@ namespace chaiscript
 
     /// Cast_Helper_Inner for casting to a std::shared_ptr<const> type
     template<typename Result>
-      struct Cast_Helper_Inner<typename std::shared_ptr<const Result> >
+      struct Cast_Helper_Inner<std::shared_ptr<const Result> >
       {
-        typedef typename std::shared_ptr<const Result> Result_Type;
+        typedef std::shared_ptr<const Result> Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {

@@ -7,7 +7,6 @@
 #ifndef CHAISCRIPT_FUNCTION_CALL_DETAIL_HPP_
 #define CHAISCRIPT_FUNCTION_CALL_DETAIL_HPP_
 
-#include <algorithm>
 #include <functional>
 #include <memory>
 #include <string>

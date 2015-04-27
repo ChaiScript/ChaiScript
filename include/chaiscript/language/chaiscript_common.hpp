@@ -78,7 +78,7 @@ namespace chaiscript
   {
 
     /// Errors generated during parsing or evaluation
-    struct eval_error : public std::runtime_error {
+    struct eval_error : std::runtime_error {
       std::string reason;
       File_Position start_position;
       File_Position end_position;
@@ -230,8 +230,7 @@ namespace chaiscript
 
           if (f)
           {
-            std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynfunguard 
-              = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(f);
+            auto dynfunguard = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(f);
             if (dynfunguard)
             {
               retval += " : " + format_guard(dynfunguard->get_parse_tree());
@@ -393,7 +392,7 @@ namespace chaiscript
 
 
     /// Errors generated when loading a file
-    struct file_not_found_error : public std::runtime_error {
+    struct file_not_found_error : std::runtime_error {
       file_not_found_error(const std::string &t_filename) CHAISCRIPT_NOEXCEPT
         : std::runtime_error("File Not Found: " + t_filename)
       { }
@@ -488,8 +487,8 @@ namespace chaiscript
 
     private:
       // Copy and assignment explicitly unimplemented
-      AST_Node(const AST_Node &);
-      AST_Node& operator=(const AST_Node &);
+      AST_Node(const AST_Node &) = delete;
+      AST_Node& operator=(const AST_Node &) = delete;
   };
 
 

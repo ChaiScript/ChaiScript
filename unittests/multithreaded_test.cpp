@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include <list>
 #include <algorithm>
 
 #include <chaiscript/chaiscript.hpp>
@@ -25,7 +24,7 @@ void do_work(chaiscript::ChaiScript &c, int id)
     ss.str("");
     ss << id;
     c.use("multithreaded_work.inc");
-    c("do_chai_work(40000, " + ss.str() + ");");
+    c("do_chai_work(4000, " + ss.str() + ");");
   } catch (const std::exception &e) {
     std::cout << "exception: " << e.what() << " thread:  " << id;
   }
@@ -74,7 +73,7 @@ int main()
 
   for (int i = 0; i < num_threads; ++i)
   {
-    threads.push_back(std::shared_ptr<std::thread>(new std::thread(do_work, std::ref(chai), i)));
+    threads.push_back(std::make_shared<std::thread>(do_work, std::ref(chai), i));
   }
 
   for (int i = 0; i < num_threads; ++i)

@@ -9,8 +9,6 @@
 
 #include <string>
 
-#include "../dispatchkit/dispatchkit.hpp"
-
 namespace chaiscript
 {
 

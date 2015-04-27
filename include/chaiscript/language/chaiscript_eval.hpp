@@ -7,8 +7,6 @@
 #ifndef CHAISCRIPT_EVAL_HPP_
 #define CHAISCRIPT_EVAL_HPP_
 
-#include <assert.h>
-#include <cstdlib>
 #include <exception>
 #include <functional>
 #include <limits>
@@ -21,7 +19,6 @@
 
 #include "../chaiscript_defines.hpp"
 #include "../dispatchkit/boxed_cast.hpp"
-#include "../dispatchkit/boxed_cast_helper.hpp"
 #include "../dispatchkit/boxed_number.hpp"
 #include "../dispatchkit/boxed_value.hpp"
 #include "../dispatchkit/dispatchkit.hpp"
@@ -821,12 +818,12 @@ namespace chaiscript
 
           const auto &lambda_node = this->children.back();
 
-          return Boxed_Value(Proxy_Function(new dispatch::Dynamic_Proxy_Function(
+          return Boxed_Value(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Dynamic_Proxy_Function>(
                 [&t_ss, lambda_node, param_names, captures](const std::vector<Boxed_Value> &t_params)
                 {
                   return detail::eval_function(t_ss, lambda_node, param_names, t_params, captures);
                 },
-                static_cast<int>(numparams), lambda_node, param_types)));
+                static_cast<int>(numparams), lambda_node, param_types));
         }
 
 
@@ -882,23 +879,23 @@ namespace chaiscript
 
           std::shared_ptr<dispatch::Dynamic_Proxy_Function> guard;
           if (guardnode) {
-            guard = std::shared_ptr<dispatch::Dynamic_Proxy_Function>
-              (new dispatch::Dynamic_Proxy_Function([&t_ss, guardnode, t_param_names](const std::vector<Boxed_Value> &t_params)
+            guard = std::make_shared<dispatch::Dynamic_Proxy_Function>
+              ([&t_ss, guardnode, t_param_names](const std::vector<Boxed_Value> &t_params)
                                                     {
                                                       return detail::eval_function(t_ss, guardnode, t_param_names, t_params);
-                                                    }, static_cast<int>(numparams), guardnode));
+                                                    }, static_cast<int>(numparams), guardnode);
           }
 
           try {
             const std::string & l_function_name = this->children[0]->text;
             const std::string & l_annotation = this->annotation?this->annotation->text:"";
             const auto & func_node = this->children.back();
-            t_ss.add(Proxy_Function
-                (new dispatch::Dynamic_Proxy_Function([&t_ss, guardnode, func_node, t_param_names](const std::vector<Boxed_Value> &t_params)
+            t_ss.add(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Dynamic_Proxy_Function>
+				([&t_ss, guardnode, func_node, t_param_names](const std::vector<Boxed_Value> &t_params)
                                                       {
                                                         return detail::eval_function(t_ss, func_node, t_param_names, t_params);
                                                       }, static_cast<int>(numparams), this->children.back(),
-                                                         param_types, l_annotation, guard)), l_function_name);
+                                                         param_types, l_annotation, guard), l_function_name);
           }
           catch (const exception::reserved_word_error &e) {
             throw exception::eval_error("Reserved word used as function name '" + e.word() + "'");
@@ -1330,7 +1327,7 @@ namespace chaiscript
             end_point = this->children.size() - 1;
           }
           for (size_t i = 1; i < end_point; ++i) {
-            chaiscript::eval::detail::Scope_Push_Pop catchscope(t_ss);
+            chaiscript::eval::detail::Scope_Push_Pop catch_scope(t_ss);
             AST_NodePtr catch_block = this->children[i];
 
             if (catch_block->children.size() == 1) {

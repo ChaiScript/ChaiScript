@@ -11,7 +11,6 @@
 #include <type_traits>
 
 #include "bind_first.hpp"
-#include "dispatchkit.hpp"
 #include "proxy_functions.hpp"
 
 namespace chaiscript

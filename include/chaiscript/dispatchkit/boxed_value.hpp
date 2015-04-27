@@ -7,12 +7,10 @@
 #ifndef CHAISCRIPT_BOXED_VALUE_HPP_
 #define CHAISCRIPT_BOXED_VALUE_HPP_
 
-#include <functional>
 #include <map>
 #include <memory>
 #include <type_traits>
 
-#include "../chaiscript_threading.hpp"
 #include "../chaiscript_defines.hpp"
 #include "any.hpp"
 #include "type_info.hpp"

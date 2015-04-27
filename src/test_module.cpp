@@ -35,7 +35,7 @@ class TestBaseType
     std::function<int (int)> func_member;
 
   private:
-    TestBaseType &operator=(const TestBaseType &);
+    TestBaseType &operator=(const TestBaseType &) = delete;
 };
 
 class Type2
@@ -82,7 +82,7 @@ class TestDerivedType : public TestBaseType
     int derived_only_func() { return 19; }
 
   private:
-    TestDerivedType &operator=(const TestDerivedType &);
+    TestDerivedType &operator=(const TestDerivedType &) = delete;
 };
 
 class TestMoreDerivedType : public TestDerivedType

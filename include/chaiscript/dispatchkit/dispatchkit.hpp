@@ -8,10 +8,8 @@
 #define CHAISCRIPT_DISPATCHKIT_HPP_
 
 #include <algorithm>
-#include <cassert>
 #include <deque>
 #include <iostream>
-#include <iterator>
 #include <list>
 #include <map>
 #include <memory>
@@ -280,8 +278,8 @@ namespace chaiscript
         virtual bool operator==(const dispatch::Proxy_Function_Base &rhs) const CHAISCRIPT_OVERRIDE
         {
           try {
-            const auto &dispatchfun = dynamic_cast<const Dispatch_Function &>(rhs);
-            return m_funcs == dispatchfun.m_funcs;
+            const auto &dispatch_fun = dynamic_cast<const Dispatch_Function &>(rhs);
+            return m_funcs == dispatch_fun.m_funcs;
           } catch (const std::bad_cast &) {
             return false;
           }
@@ -1138,12 +1136,7 @@ namespace chaiscript
           {
             if (dynamic_lhs->get_guard())
             {
-              if (dynamic_rhs->get_guard())
-              {
-                return false;
-              } else {
-                return true;
-              }
+              return dynamic_rhs->get_guard() ? false : true;
             } else {
               return false;
             }
