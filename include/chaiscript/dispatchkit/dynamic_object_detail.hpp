@@ -213,12 +213,7 @@ namespace chaiscript
           virtual bool operator==(const Proxy_Function_Base &f) const CHAISCRIPT_OVERRIDE
           {
             const Dynamic_Object_Constructor *dc = dynamic_cast<const Dynamic_Object_Constructor*>(&f);
-            if (dc)
-            {
-              return dc->m_type_name == m_type_name && (*dc->m_func) == (*m_func);
-            } else {
-              return false;
-            }
+            return dc && dc->m_type_name == m_type_name && (*dc->m_func) == (*m_func);
           }
 
           virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE

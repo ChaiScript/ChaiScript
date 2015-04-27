@@ -229,8 +229,7 @@ namespace chaiscript
 
           if (f)
           {
-            std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynfunguard 
-              = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(f);
+            auto dynfunguard = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(f);
             if (dynfunguard)
             {
               retval += " : " + format_guard(dynfunguard->get_parse_tree());
@@ -486,8 +485,8 @@ namespace chaiscript
 
     private:
       // Copy and assignment explicitly unimplemented
-      AST_Node(const AST_Node &);
-      AST_Node& operator=(const AST_Node &);
+      AST_Node(const AST_Node &) = delete;
+      AST_Node& operator=(const AST_Node &) = delete;
   };
 
 

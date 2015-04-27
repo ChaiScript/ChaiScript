@@ -309,7 +309,7 @@ class Range
 
     /// \brief Moves the front pointer forward one
     /// 
-    /// \post front() returne the element at front() + 1;
+    /// \post front() returns the element at front() + 1;
     void pop_front();
 
 };
@@ -340,7 +340,7 @@ class Const_Range
 
     /// \brief Moves the front pointer forward one
     /// 
-    /// \post front() returne the element at front() + 1;
+    /// \post front() returns the element at front() + 1;
     void pop_front();
 
 };
