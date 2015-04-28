@@ -406,11 +406,11 @@ namespace chaiscript
   /// \brief Struct that doubles as both a parser ast_node and an AST node.
   struct AST_Node : std::enable_shared_from_this<AST_Node> {
     public:
-      const std::string text;
-      const int identifier; //< \todo shouldn't this be a strongly typed enum value?
-      std::shared_ptr<const std::string> filename;
-      File_Position start, end;
       std::vector<AST_NodePtr> children;
+      const int identifier; //< \todo shouldn't this be a strongly typed enum value?
+      const std::string text;
+      File_Position start, end;
+      std::shared_ptr<const std::string> filename;
       AST_NodePtr annotation;
 
       virtual std::string pretty_print() const
@@ -468,13 +468,13 @@ namespace chaiscript
     protected:
       AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<const std::string> &t_fname, 
           int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
-        text(std::move(t_ast_node_text)), identifier(t_id), filename(t_fname),
-        start(t_start_line, t_start_col), end(t_end_line, t_end_col)
+        identifier(t_id), text(std::move(t_ast_node_text)),
+        start(t_start_line, t_start_col), end(t_end_line, t_end_col), filename(t_fname)
       {
       }
 
       AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<const std::string> &t_fname) :
-        text(std::move(t_ast_node_text)), identifier(t_id), filename(t_fname) {}
+        identifier(t_id), text(std::move(t_ast_node_text)), filename(t_fname) {}
 
       virtual ~AST_Node() {}
 
