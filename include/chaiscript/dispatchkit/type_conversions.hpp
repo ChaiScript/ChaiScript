@@ -137,6 +137,7 @@ namespace chaiscript
                           return data;
                         } else {
 #ifdef CHAISCRIPT_LIBCPP
+                          /// \todo fix this someday after libc++ is fixed.
                           if (std::string(typeid(To).name()).find("Assignable_Proxy_Function") != std::string::npos) {
                             auto from = detail::Cast_Helper<std::shared_ptr<From> >::cast(t_from, nullptr);
                             if (std::string(typeid(*from).name()).find("Assignable_Proxy_Function_Impl") != std::string::npos) {
