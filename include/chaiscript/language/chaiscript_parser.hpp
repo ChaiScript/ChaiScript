@@ -423,6 +423,37 @@ namespace chaiscript
         return retval;
       }
 
+      /// Reads the optional exponent (scientific notation) and suffix for a Float
+      bool read_exponent_and_suffix() {
+        // Support a form of scientific notation: 1e-5, 35.5E+8, 0.01e19
+        if (has_more_input() && (std::tolower(*m_input_pos) == 'e')) {
+          ++m_input_pos;
+          ++m_col;
+          if (has_more_input() && ((*m_input_pos == '-') || (*m_input_pos == '+'))) {
+            ++m_input_pos;
+            ++m_col;
+          }
+          auto exponent_pos = m_input_pos;
+          while (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet) ) {
+            ++m_input_pos;
+            ++m_col;
+          }
+          if (m_input_pos == exponent_pos) {
+            // Require at least one digit after the exponent
+            return false;
+          }
+        }
+
+        // Parse optional float suffix
+        while (has_more_input() && char_in_alphabet(*m_input_pos, detail::float_suffix_alphabet))
+        {
+          ++m_input_pos;
+          ++m_col;
+        }
+
+        return true;
+      }
+
 
       /// Reads a floating point value from input, without skipping initial whitespace
       bool Float_() {
@@ -432,7 +463,11 @@ namespace chaiscript
             ++m_col;
           }
 
-          if (has_more_input() && (*m_input_pos == '.')) {
+          if (has_more_input() && (std::tolower(*m_input_pos) == 'e')) {
+            // The exponent is valid even without any decimal in the Float (1e8, 3e-15)
+            return read_exponent_and_suffix();
+          }
+          else if (has_more_input() && (*m_input_pos == '.')) {
             ++m_input_pos;
             ++m_col;
             if (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet)) {
@@ -441,13 +476,8 @@ namespace chaiscript
                 ++m_col;
               }
 
-              while (has_more_input() && char_in_alphabet(*m_input_pos, detail::float_suffix_alphabet))
-              {
-                ++m_input_pos;
-                ++m_col;
-              }
-
-              return true;
+              // After any decimal digits, support an optional exponent (3.7e3)
+              return read_exponent_and_suffix();
             } else {
               --m_input_pos;
               --m_col;
