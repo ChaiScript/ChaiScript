@@ -8,6 +8,7 @@ compilers:
     version: 14
     architecture: Win64
     cmake_extra_flags: -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DCOMMIT_SHA=%COMMIT_SHA%
+    compiler_extra_flags: /analyze
     skip_packaging: true
   - name: Visual Studio
     version: 12
@@ -16,5 +17,4 @@ compilers:
     version: 12
     architecture: Win64
     cmake_extra_flags: -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DCOMMIT_SHA=%COMMIT_SHA%
-    compiler_extra_flags: /analyze
 
