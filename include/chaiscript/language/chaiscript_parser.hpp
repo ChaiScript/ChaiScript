@@ -16,6 +16,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <cctype>
 
 #include "../dispatchkit/boxed_value.hpp"
 #include "chaiscript_common.hpp"
