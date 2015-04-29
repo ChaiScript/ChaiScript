@@ -10,14 +10,13 @@
 #include <cstdint>
 #include <exception>
 #include <functional>
-#include <iostream>
-#include <map>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <iterator>
 
 #include "bad_boxed_cast.hpp"
 #include "boxed_cast.hpp"
@@ -53,7 +52,7 @@ namespace chaiscript
     }
 
     template<typename T, typename = typename std::enable_if<std::is_array<T>::value>::type >
-      ModulePtr array(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+      ModulePtr array(const std::string &type, ModulePtr m = std::make_shared<Module>())
       {
         typedef typename std::remove_extent<T>::type ReturnType;
         const auto extent = std::extent<T>::value;
@@ -95,7 +94,7 @@ namespace chaiscript
     /// \tparam T The type to add a copy constructor for
     /// \returns The passed in ModulePtr, or the newly constructed one if the default param is used
     template<typename T>
-    ModulePtr copy_constructor(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    ModulePtr copy_constructor(const std::string &type, ModulePtr m = std::make_shared<Module>())
     {
       m->add(constructor<T (const T &)>(), type);
       return m;
@@ -106,7 +105,7 @@ namespace chaiscript
     /// \param[in,out] m module to add comparison operators to
     /// \returns the passed in ModulePtr or the newly constructed one if the default params are used.
     template<typename T>
-    ModulePtr opers_comparison(ModulePtr m = ModulePtr(new Module()))
+    ModulePtr opers_comparison(ModulePtr m = std::make_shared<Module>())
     {
       operators::equal<T>(m);
       operators::greater_than<T>(m);
@@ -127,7 +126,7 @@ namespace chaiscript
     /// \sa copy_constructor
     /// \sa constructor
     template<typename T>
-    ModulePtr basic_constructors(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    ModulePtr basic_constructors(const std::string &type, ModulePtr m = std::make_shared<Module>())
     {
       m->add(constructor<T ()>(), type);
       copy_constructor<T>(type, m);
@@ -139,7 +138,7 @@ namespace chaiscript
     /// \param[in] type The name of the type
     /// \param[in,out] m The Module to add the constructor to
     template<typename T>
-    ModulePtr construct_pod(const std::string &type, ModulePtr m = ModulePtr(new Module()))
+    ModulePtr construct_pod(const std::string &type, ModulePtr m = std::make_shared<Module>())
     {
       m->add(fun(&detail::construct_pod<T>), type);
       return m;
@@ -170,7 +169,7 @@ namespace chaiscript
     /// Add all common functions for a POD type. All operators, and
     /// common conversions
     template<typename T>
-    ModulePtr bootstrap_pod_type(const std::string &name, ModulePtr m = ModulePtr(new Module()))
+    ModulePtr bootstrap_pod_type(const std::string &name, ModulePtr m = std::make_shared<Module>())
     {
       m->add(user_type<T>(), name);
       m->add(constructor<T()>(), name);
@@ -251,7 +250,7 @@ namespace chaiscript
 
 
       /// Add all arithmetic operators for PODs
-      static void opers_arithmetic_pod(ModulePtr m = ModulePtr(new Module()))
+      static void opers_arithmetic_pod(ModulePtr m = std::make_shared<Module>())
       {
         m->add(fun(&Boxed_Number::equals), "==");
         m->add(fun(&Boxed_Number::less_than), "<");
@@ -390,7 +389,7 @@ namespace chaiscript
       /// \brief perform all common bootstrap functions for std::string, void and POD types
       /// \param[in,out] m Module to add bootstrapped functions to
       /// \returns passed in ModulePtr, or newly created one if default argument is used
-      static ModulePtr bootstrap(ModulePtr m = ModulePtr(new Module()))
+      static ModulePtr bootstrap(ModulePtr m = std::make_shared<Module>())
       {
         m->add(user_type<void>(), "void");
         m->add(user_type<bool>(), "bool");
@@ -498,7 +497,7 @@ namespace chaiscript
         m->add(fun(&print), "print_string");
         m->add(fun(&println), "println_string");
 
-        m->add(Proxy_Function(new dispatch::Dynamic_Proxy_Function(&bind_function)), "bind");
+        m->add(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Dynamic_Proxy_Function>(&bind_function), "bind");
 
         m->add(fun(&shared_ptr_unconst_clone<dispatch::Proxy_Function_Base>), "clone");
         m->add(fun(&ptr_assign<std::remove_const<dispatch::Proxy_Function_Base>::type>), "=");

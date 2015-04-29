@@ -26,7 +26,7 @@ namespace chaiscript
 {
   namespace exception
   {
-    struct arithmetic_error : public std::runtime_error
+    struct arithmetic_error : std::runtime_error
     {
       arithmetic_error(const std::string& reason) : std::runtime_error("Arithmetic error: " + reason) {}
       arithmetic_error(const arithmetic_error &) = default;
@@ -60,7 +60,7 @@ namespace chaiscript
   {
     private:
       template<typename T>
-      static void check_divide_by_zero(T t, typename std::enable_if<std::is_integral<T>::value>::type* = 0)
+      static void check_divide_by_zero(T t, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr)
       {
 #ifndef CHAISCRIPT_NO_PROTECT_DIVIDEBYZERO
         if (t == 0) {
@@ -70,7 +70,7 @@ namespace chaiscript
       }
 
       template<typename T>
-      static void check_divide_by_zero(T, typename std::enable_if<std::is_floating_point<T>::value>::type* = 0)
+      static void check_divide_by_zero(T, typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr)
       {
       }
 

@@ -8,7 +8,6 @@
 #define CHAISCRIPT_FUNCTION_CALL_HPP_
 
 #include <functional>
-#include <iostream>
 #include <string>
 #include <vector>
 

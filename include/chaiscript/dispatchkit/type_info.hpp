@@ -7,11 +7,10 @@
 #ifndef CHAISCRIPT_TYPE_INFO_HPP_
 #define CHAISCRIPT_TYPE_INFO_HPP_
 
-#include <functional>
 #include <memory>
-#include <string>
 #include <type_traits>
 #include <typeinfo>
+#include <string>
 
 namespace chaiscript
 {

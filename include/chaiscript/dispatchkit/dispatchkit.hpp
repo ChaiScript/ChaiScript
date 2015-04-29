@@ -8,10 +8,8 @@
 #define CHAISCRIPT_DISPATCHKIT_HPP_
 
 #include <algorithm>
-#include <cassert>
 #include <deque>
 #include <iostream>
-#include <iterator>
 #include <list>
 #include <map>
 #include <memory>

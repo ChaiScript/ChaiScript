@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include <list>
 #include <algorithm>
 
 #include <chaiscript/chaiscript.hpp>
@@ -74,7 +73,7 @@ int main()
 
   for (int i = 0; i < num_threads; ++i)
   {
-    threads.push_back(std::shared_ptr<std::thread>(new std::thread(do_work, std::ref(chai), i)));
+    threads.push_back(std::make_shared<std::thread>(do_work, std::ref(chai), i));
   }
 
   for (int i = 0; i < num_threads; ++i)

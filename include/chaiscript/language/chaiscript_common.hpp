@@ -26,6 +26,7 @@ struct AST_Node;
 
 namespace chaiscript
 {
+
   /// Signature of module entry point that all binary loadable modules must implement.
   typedef ModulePtr (*Create_Module_Func)();
 
@@ -77,7 +78,7 @@ namespace chaiscript
   {
 
     /// Errors generated during parsing or evaluation
-    struct eval_error : public std::runtime_error {
+    struct eval_error : std::runtime_error {
       std::string reason;
       File_Position start_position;
       File_Position end_position;
@@ -391,7 +392,7 @@ namespace chaiscript
 
 
     /// Errors generated when loading a file
-    struct file_not_found_error : public std::runtime_error {
+    struct file_not_found_error : std::runtime_error {
       file_not_found_error(const std::string &t_filename) CHAISCRIPT_NOEXCEPT
         : std::runtime_error("File Not Found: " + t_filename)
       { }
@@ -465,6 +466,8 @@ namespace chaiscript
         std::replace(children.begin(), children.end(), t_child, t_new_child);
       }
 
+      virtual ~AST_Node() {}
+
     protected:
       AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<const std::string> &t_fname, 
           int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
@@ -476,7 +479,6 @@ namespace chaiscript
       AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<const std::string> &t_fname) :
         identifier(t_id), text(std::move(t_ast_node_text)), filename(t_fname) {}
 
-      virtual ~AST_Node() {}
 
       virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const
       {

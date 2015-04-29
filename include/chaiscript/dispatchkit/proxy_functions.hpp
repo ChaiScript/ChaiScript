@@ -9,7 +9,6 @@
 #define CHAISCRIPT_PROXY_FUNCTIONS_HPP_
 
 
-#include <algorithm>
 #include <cassert>
 #include <functional>
 #include <memory>
@@ -20,7 +19,6 @@
 
 #include "../chaiscript_defines.hpp"
 #include "boxed_cast.hpp"
-#include "boxed_cast_helper.hpp"
 #include "boxed_value.hpp"
 #include "proxy_functions_detail.hpp"
 #include "type_info.hpp"
@@ -582,7 +580,7 @@ namespace chaiscript
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
           return detail::Do_Call<typename std::function<Func>::result_type>::go(m_f, params, t_conversions);
         }
@@ -638,12 +636,12 @@ namespace chaiscript
           return m_f.get();
         }
 
-        virtual void assign(const std::shared_ptr<const Proxy_Function_Base> &t_rhs) {
+        virtual void assign(const std::shared_ptr<const Proxy_Function_Base> &t_rhs) CHAISCRIPT_OVERRIDE {
           m_f.get() = dispatch::functor<Func>(t_rhs, nullptr);
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
           return detail::Do_Call<typename std::function<Func>::result_type>::go(m_f.get(), params, t_conversions);
         }

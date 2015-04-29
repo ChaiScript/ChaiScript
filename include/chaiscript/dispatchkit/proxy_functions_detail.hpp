@@ -7,10 +7,8 @@
 #ifndef CHAISCRIPT_PROXY_FUNCTIONS_DETAIL_HPP_
 #define CHAISCRIPT_PROXY_FUNCTIONS_DETAIL_HPP_
 
-#include <algorithm>
 #include <functional>
 #include <stdexcept>
-#include <string>
 #include <vector>
 
 #include "../chaiscript_defines.hpp"

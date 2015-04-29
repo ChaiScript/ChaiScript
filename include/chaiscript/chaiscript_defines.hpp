@@ -52,11 +52,23 @@
 #define CHAISCRIPT_CONSTEXPR constexpr
 #endif
 
+#include <memory>
+
 namespace chaiscript {
   static const int version_major = 5;
   static const int version_minor = 7;
   static const int version_patch = 0;
-}
 
+  template<typename B, typename D, typename ...Arg>
+  inline std::shared_ptr<B> make_shared(Arg && ... arg)
+  {
+#ifdef CHAISCRIPT_USE_STD_MAKE_SHARED
+    return std::make_shared<D>(std::forward<Arg>(arg)...);
+#else
+    return std::shared_ptr<B>(static_cast<B*>(new D(std::forward<Arg>(arg)...)));
+#endif
+  }
+
+}
 #endif
 
