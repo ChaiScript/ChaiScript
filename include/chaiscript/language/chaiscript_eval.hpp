@@ -998,7 +998,7 @@ namespace chaiscript
       public:
         Case_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Case, std::move(t_loc), std::move(t_children)) 
-        { assert(t_children.size() == 2); }
+        { assert(children.size() == 2); /* how many children does it have? */ }
 
         virtual ~Case_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
@@ -1014,7 +1014,7 @@ namespace chaiscript
       public:
         Default_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Default, std::move(t_loc), std::move(t_children))
-        { assert(t_children.size() == 1); }
+        { assert(children.size() == 1); }
         virtual ~Default_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);

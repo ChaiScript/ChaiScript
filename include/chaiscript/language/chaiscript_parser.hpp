@@ -719,7 +719,8 @@ namespace chaiscript
           if (has_more_input() && char_in_alphabet(*m_input_pos, detail::float_alphabet) ) {
             if (Hex_()) {
               std::string match(start, m_input_pos);
-              m_match_stack.emplace_back(make_node<eval::Int_AST_Node>(std::move(match), prev_line, prev_col, buildInt(std::hex, match)));
+              auto bv = buildInt(std::hex, match);
+              m_match_stack.emplace_back(make_node<eval::Int_AST_Node>(std::move(match), prev_line, prev_col, std::move(bv)));
               return true;
             }
 
@@ -737,30 +738,34 @@ namespace chaiscript
                 ++pos;
               }
 
-              Boxed_Value i;
-              if (match.length() <= sizeof(int) * 8)
-              {
-                i = const_var(static_cast<int>(temp_int));
-              } else {
-                i = const_var(temp_int);
-              }
+              Boxed_Value i = [&](){
+                if (match.length() <= sizeof(int) * 8)
+                {
+                  return const_var(static_cast<int>(temp_int));
+                } else {
+                  return const_var(temp_int);
+                }
+              }();
 
               m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), prev_line, prev_col, std::move(i)));
               return true;
             }
             if (Float_()) {
               std::string match(start, m_input_pos);
-              m_match_stack.push_back(make_node<eval::Float_AST_Node>(std::move(match), prev_line, prev_col, buildFloat(match)));
+              auto bv = buildFloat(match);
+              m_match_stack.push_back(make_node<eval::Float_AST_Node>(std::move(match), prev_line, prev_col, std::move(bv)));
               return true;
             }
             else {
               IntSuffix_();
               std::string match(start, m_input_pos);
               if (!match.empty() && (match[0] == '0')) {
-                m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), prev_line, prev_col, buildInt(std::oct, match)));
+                auto bv = buildInt(std::oct, match);
+                m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), prev_line, prev_col, std::move(bv)));
               }
               else {
-                m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), prev_line, prev_col, buildInt(std::dec, match)));
+                auto bv = buildInt(std::dec, match);
+                m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), prev_line, prev_col, std::move(bv)));
               }
               return true;
             }
