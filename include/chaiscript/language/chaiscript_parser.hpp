@@ -271,29 +271,6 @@ namespace chaiscript
         }
       }
 
-      static void optimize_fun_calls(AST_NodePtr &p)
-      {
-        for (auto &c : p->children)
-        {
-          if (c->identifier == AST_Node_Type::Fun_Call && c->children.size() == 2 && c->children[1]->children.size() == 1) {
-            c = chaiscript::make_shared<AST_Node, eval::Unary_Fun_Call_AST_Node>(dynamic_cast<eval::Fun_Call_AST_Node &>(*c));
-        //    std::cout << "optimized unary fun call\n";
-          }
-          optimize_fun_calls(c);
-        }
-      }
-
-      static void fixup_opers(AST_NodePtr &p)
-      {
-        if (p->identifier == AST_Node_Type::Equation)
-        {
-          dynamic_cast<eval::Equation_AST_Node &>(*p).m_oper = Operators::to_operator(p->children[1]->text);
-        }
-
-        for (auto &c : p->children) {
-          fixup_opers(c);
-        }
-      }
 
       static int count_nodes(const AST_NodePtr &p)
       {
@@ -304,52 +281,61 @@ namespace chaiscript
         return count;
       }
 
-      AST_NodePtr optimized_ast(bool t_optimize_blocks = false, bool t_optimize_returns = true, bool t_optimize_fun_lookups = false,
-          bool t_optimize_fun_calls = false) {
+      AST_NodePtr optimized_ast(bool t_optimize_blocks = false, bool t_optimize_returns = true, bool t_optimize_fun_lookups = false) {
         AST_NodePtr p = m_match_stack.front();
-        fixup_opers(p);
         //Note, optimize_blocks is currently broken; it breaks stack management
         if (t_optimize_blocks) { optimize_blocks(p); }
         if (t_optimize_returns) { optimize_returns(p); }
         if (t_optimize_fun_lookups) { optimize_fun_lookups(p); }
-        if (t_optimize_fun_calls) { optimize_fun_calls(p); }
         return p;
       }
 
 
       /// Helper function that collects ast_nodes from a starting position to the top of the stack into a new AST node
-      void build_match(AST_NodePtr t_t, size_t t_match_start) {
-        int pos_line_start, pos_col_start, pos_line_stop, pos_col_stop;
+      template<typename NodeType>
+      void build_match(size_t t_match_start, std::string t_text = "") {
         bool is_deep = false;
 
-        //so we want to take everything to the right of this and make them children
-        if (t_match_start != m_match_stack.size()) {
-          pos_line_start = m_match_stack[t_match_start]->start.line;
-          pos_col_start = m_match_stack[t_match_start]->start.column;
-          pos_line_stop = m_line;
-          pos_col_stop = m_col;
-          is_deep = true;
-        }
-        else {
-          pos_line_start = m_line;
-          pos_col_start = m_col;
-          pos_line_stop = m_line;
-          pos_col_stop = m_col;
-        }
+        Parse_Location filepos = [&](){ 
+          //so we want to take everything to the right of this and make them children
+          if (t_match_start != m_match_stack.size()) {
+            is_deep = true;
+            return Parse_Location(
+                m_filename,
+                m_match_stack[t_match_start]->location.start.line,
+                m_match_stack[t_match_start]->location.start.column,
+                m_line,
+                m_col
+              );
+          } else {
+            return Parse_Location(
+                m_filename,
+                m_line,
+                m_col,
+                m_line,
+                m_col
+              );
+          }
+        }();
 
-        t_t->filename = m_filename;
-        t_t->start.line = pos_line_start;
-        t_t->start.column = pos_col_start;
-        t_t->end.line = pos_line_stop;
-        t_t->end.column = pos_col_stop;
-
-        if (is_deep) {
-          t_t->children.assign(m_match_stack.begin() + static_cast<int>(t_match_start), m_match_stack.end());
-          m_match_stack.erase(m_match_stack.begin() + static_cast<int>(t_match_start), m_match_stack.end());
-        }
+        std::vector<AST_NodePtr> new_children =
+          [&](){
+            if (is_deep) {
+              std::vector<AST_NodePtr> c(std::make_move_iterator(m_match_stack.begin() + static_cast<int>(t_match_start)), 
+                                         std::make_move_iterator(m_match_stack.end()));
+              m_match_stack.erase(m_match_stack.begin() + static_cast<int>(t_match_start), m_match_stack.end());
+              return c;
+            } else {
+              return std::vector<AST_NodePtr>();
+            }
+          }();
 
         /// \todo fix the fact that a successful match that captured no ast_nodes doesn't have any real start position
-        m_match_stack.push_back(std::move(t_t));
+        m_match_stack.push_back(
+            chaiscript::make_shared<chaiscript::AST_Node, NodeType>(
+              std::move(t_text),
+              std::move(filepos),
+              std::move(new_children)));
       }
 
       /// Check to see if there is more text parse
@@ -714,6 +700,12 @@ namespace chaiscript
         }
       }
 
+      template<typename T, typename ... Param>
+      std::shared_ptr<AST_Node> make_node(std::string t_match, const int t_prev_line, const int t_prev_col, Param && ...param)
+      {
+        return chaiscript::make_shared<AST_Node, T>(std::move(t_match), Parse_Location(m_filename, t_prev_line, t_prev_col, m_line, m_col), std::forward<Param>(param)...);
+      }
+
       /// Reads a number from the input, detecting if it's an integer or floating point
       bool Num(const bool t_capture = false) {
         SkipWS();
@@ -727,7 +719,7 @@ namespace chaiscript
           if (has_more_input() && char_in_alphabet(*m_input_pos, detail::float_alphabet) ) {
             if (Hex_()) {
               std::string match(start, m_input_pos);
-              m_match_stack.emplace_back(chaiscript::make_shared<AST_Node, eval::Int_AST_Node>(std::move(match), buildInt(std::hex, match), m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.emplace_back(make_node<eval::Int_AST_Node>(std::move(match), prev_line, prev_col, buildInt(std::hex, match)));
               return true;
             }
 
@@ -753,22 +745,22 @@ namespace chaiscript
                 i = const_var(temp_int);
               }
 
-              m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Int_AST_Node>(std::move(match), std::move(i), m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), prev_line, prev_col, std::move(i)));
               return true;
             }
             if (Float_()) {
               std::string match(start, m_input_pos);
-              m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Float_AST_Node>(std::move(match), buildFloat(match), m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.push_back(make_node<eval::Float_AST_Node>(std::move(match), prev_line, prev_col, buildFloat(match)));
               return true;
             }
             else {
               IntSuffix_();
               std::string match(start, m_input_pos);
               if (!match.empty() && (match[0] == '0')) {
-                m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Int_AST_Node>(std::move(match), buildInt(std::oct, match), m_filename, prev_line, prev_col, m_line, m_col));
+                m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), prev_line, prev_col, buildInt(std::oct, match)));
               }
               else {
-                m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Int_AST_Node>(std::move(match), buildInt(std::dec, match), m_filename, prev_line, prev_col, m_line, m_col));
+                m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), prev_line, prev_col, buildInt(std::dec, match)));
               }
               return true;
             }
@@ -826,7 +818,7 @@ namespace chaiscript
         const auto prev_col = m_col;
         const auto prev_line = m_line;
         if (Id_()) {
-          m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Id_AST_Node>(
+          m_match_stack.push_back(make_node<eval::Id_AST_Node>(
                 [&]()->std::string{
                   if (*start == '`') {
                     //Id Literal
@@ -835,7 +827,7 @@ namespace chaiscript
                     return std::string(start, m_input_pos);
                   }
                 }(),
-                m_filename, prev_line, prev_col, m_line, m_col));
+                prev_line, prev_col));
           return true;
         } else {
           return false;
@@ -857,7 +849,7 @@ namespace chaiscript
           Id();
         }
 
-        build_match(chaiscript::make_shared<AST_Node, eval::Arg_AST_Node>(), prev_stack_top);
+        build_match<eval::Arg_AST_Node>(prev_stack_top);
 
         return true;
       }
@@ -884,7 +876,7 @@ namespace chaiscript
           } while (Symbol("#"));
 
           std::string match(start, m_input_pos);
-          m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Annotation_AST_Node>(std::move(match), m_filename, prev_line, prev_col, m_line, m_col));
+          m_match_stack.push_back(make_node<eval::Annotation_AST_Node>(std::move(match), prev_line, prev_col));
           return true;
         }
         else {
@@ -950,11 +942,11 @@ namespace chaiscript
 
                   if (is_interpolated) {
                     //If we've seen previous interpolation, add on instead of making a new one
-                    m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Quoted_String_AST_Node>(match, m_filename, prev_line, prev_col, m_line, m_col));
+                    m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, prev_line, prev_col));
 
-                    build_match(chaiscript::make_shared<AST_Node, eval::Binary_Operator_AST_Node>("+"), prev_stack_top);
+                    build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
                   } else {
-                    m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Quoted_String_AST_Node>(match, m_filename, prev_line, prev_col, m_line, m_col));
+                    m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, prev_line, prev_col));
                   }
 
                   //We've finished with the part of the string up to this point, so clear it
@@ -974,22 +966,22 @@ namespace chaiscript
 
                     const auto tostr_stack_top = m_match_stack.size();
 
-                    m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Id_AST_Node>("to_string", m_filename, prev_line, prev_col, m_line, m_col));
+                    m_match_stack.push_back(make_node<eval::Id_AST_Node>("to_string", prev_line, prev_col));
 
                     const auto ev_stack_top = m_match_stack.size();
 
                     /// \todo can we evaluate this in place and save the runtime cost of evaluating with each execution of the node?
-                    m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Id_AST_Node>("eval", m_filename, prev_line, prev_col, m_line, m_col));
+                    m_match_stack.push_back(make_node<eval::Id_AST_Node>("eval", prev_line, prev_col));
 
                     const auto arg_stack_top = m_match_stack.size();
 
-                    m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Quoted_String_AST_Node>(eval_match, m_filename, prev_line, prev_col, m_line, m_col));
+                    m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(eval_match, prev_line, prev_col));
 
-                    build_match(chaiscript::make_shared<AST_Node, eval::Arg_List_AST_Node>(), arg_stack_top);
-                    build_match(chaiscript::make_shared<AST_Node, eval::Inplace_Fun_Call_AST_Node>(), ev_stack_top);
-                    build_match(chaiscript::make_shared<AST_Node, eval::Arg_List_AST_Node>(), ev_stack_top);
-                    build_match(chaiscript::make_shared<AST_Node, eval::Fun_Call_AST_Node>(), tostr_stack_top);
-                    build_match(chaiscript::make_shared<AST_Node, eval::Binary_Operator_AST_Node>("+"), prev_stack_top);
+                    build_match<eval::Arg_List_AST_Node>(arg_stack_top);
+                    build_match<eval::Inplace_Fun_Call_AST_Node>(ev_stack_top);
+                    build_match<eval::Arg_List_AST_Node>(ev_stack_top);
+                    build_match<eval::Fun_Call_AST_Node>(tostr_stack_top);
+                    build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
                   } else {
                     throw exception::eval_error("Unclosed in-string eval", File_Position(prev_line, prev_col), *m_filename);
                   }
@@ -1030,11 +1022,11 @@ namespace chaiscript
             }
 
             if (is_interpolated) {
-              m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Quoted_String_AST_Node>(match, m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, prev_line, prev_col));
 
-              build_match(chaiscript::make_shared<AST_Node, eval::Binary_Operator_AST_Node>("+"), prev_stack_top);
+              build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
             } else {
-              m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Quoted_String_AST_Node>(match, m_filename, prev_line, prev_col, m_line, m_col));
+              m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, prev_line, prev_col));
             }
             return true;
           } else {
@@ -1113,7 +1105,7 @@ namespace chaiscript
                 is_escaped = false;
               }
             }
-            m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Single_Quoted_String_AST_Node>(match, m_filename, prev_line, prev_col, m_line, m_col));
+            m_match_stack.push_back(make_node<eval::Single_Quoted_String_AST_Node>(match, prev_line, prev_col));
             return true;
           }
           else {
@@ -1144,8 +1136,7 @@ namespace chaiscript
           const auto prev_col = m_col;
           const auto prev_line = m_line;
           if (Char_(t_c)) {
-            m_match_stack.push_back(
-                chaiscript::make_shared<AST_Node, eval::Char_AST_Node>(std::string(start, m_input_pos), m_filename, prev_line, prev_col, m_line, m_col));
+            m_match_stack.push_back(make_node<eval::Char_AST_Node>(std::string(start, m_input_pos), prev_line, prev_col));
             return true;
           } else {
             return false;
@@ -1189,8 +1180,7 @@ namespace chaiscript
         }
 
         if ( t_capture && retval ) {
-          m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Str_AST_Node>(
-                std::string(start, m_input_pos), m_filename, prev_line, prev_col, m_line, m_col));
+          m_match_stack.push_back(make_node<eval::Str_AST_Node>(std::string(start, m_input_pos), prev_line, prev_col));
         }
         return retval;
       }
@@ -1232,8 +1222,7 @@ namespace chaiscript
         }
 
         if ( t_capture && retval ) {
-          m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Str_AST_Node>(
-                std::string(start, m_input_pos), m_filename, prev_line, prev_col, m_line, m_col));
+          m_match_stack.push_back(make_node<eval::Str_AST_Node>(std::string(start, m_input_pos), prev_line, prev_col));
         }
 
         return retval;
@@ -1265,8 +1254,7 @@ namespace chaiscript
           const auto prev_col = m_col;
           const auto prev_line = m_line;
           if (Eol_()) {
-            m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Eol_AST_Node>(
-                  std::string(start, m_input_pos), m_filename, prev_line, prev_col, m_line, m_col));
+            m_match_stack.push_back(make_node<eval::Eol_AST_Node>(std::string(start, m_input_pos), prev_line, prev_col));
             return true;
           } else {
             return false;
@@ -1293,7 +1281,7 @@ namespace chaiscript
             } while (Char(','));
           }
         }
-        build_match(chaiscript::make_shared<AST_Node, eval::Arg_List_AST_Node>(), prev_stack_top);
+        build_match<eval::Arg_List_AST_Node>(prev_stack_top);
 
         SkipWS(true);
 
@@ -1319,7 +1307,7 @@ namespace chaiscript
             } while (Char(','));
           }
         }
-        build_match(chaiscript::make_shared<AST_Node, eval::Arg_List_AST_Node>(), prev_stack_top);
+        build_match<eval::Arg_List_AST_Node>(prev_stack_top);
 
         SkipWS(true);
 
@@ -1347,7 +1335,7 @@ namespace chaiscript
           }
         }
 
-        build_match(chaiscript::make_shared<AST_Node, eval::Arg_List_AST_Node>(), prev_stack_top);
+        build_match<eval::Arg_List_AST_Node>(prev_stack_top);
 
         SkipWS(true);
 
@@ -1363,7 +1351,7 @@ namespace chaiscript
 
         if (Value_Range()) {
           retval = true;
-          build_match(chaiscript::make_shared<AST_Node, eval::Arg_List_AST_Node>(), prev_stack_top);
+          build_match<eval::Arg_List_AST_Node>(prev_stack_top);
         } else if (Map_Pair()) {
           retval = true;
           while (Eol()) {}
@@ -1375,7 +1363,7 @@ namespace chaiscript
               }
             } while (Char(','));
           }
-          build_match(chaiscript::make_shared<AST_Node, eval::Arg_List_AST_Node>(), prev_stack_top);
+          build_match<eval::Arg_List_AST_Node>(prev_stack_top);
         } else if (Operator()) {
           retval = true;
           while (Eol()) {}
@@ -1387,7 +1375,7 @@ namespace chaiscript
               }
             } while (Char(','));
           }
-          build_match(chaiscript::make_shared<AST_Node, eval::Arg_List_AST_Node>(), prev_stack_top);
+          build_match<eval::Arg_List_AST_Node>(prev_stack_top);
         }
 
         SkipWS(true);
@@ -1411,7 +1399,7 @@ namespace chaiscript
             }
           } else {
             // make sure we always have the same number of nodes
-            build_match(chaiscript::make_shared<AST_Node, eval::Arg_List_AST_Node>(), prev_stack_top);
+            build_match<eval::Arg_List_AST_Node>(prev_stack_top);
           }
 
           if (Char('(')) {
@@ -1430,7 +1418,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete anonymous function", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(chaiscript::make_shared<AST_Node, eval::Lambda_AST_Node>(), prev_stack_top);
+          build_match<eval::Lambda_AST_Node>(prev_stack_top);
         }
 
         return retval;
@@ -1488,9 +1476,9 @@ namespace chaiscript
           }
 
           if (is_method || t_class_context) {
-            build_match(chaiscript::make_shared<AST_Node, eval::Method_AST_Node>(), prev_stack_top);
+            build_match<eval::Method_AST_Node>(prev_stack_top);
           } else {
-            build_match(chaiscript::make_shared<AST_Node, eval::Def_AST_Node>(), prev_stack_top);
+            build_match<eval::Def_AST_Node>(prev_stack_top);
           }
 
           if (annotation) {
@@ -1538,7 +1526,7 @@ namespace chaiscript
               if (!Block()) {
                 throw exception::eval_error("Incomplete 'catch' block", File_Position(m_line, m_col), *m_filename);
               }
-              build_match(chaiscript::make_shared<AST_Node, eval::Catch_AST_Node>(), catch_stack_top);
+              build_match<eval::Catch_AST_Node>(catch_stack_top);
               has_matches = true;
             }
           }
@@ -1551,10 +1539,10 @@ namespace chaiscript
             if (!Block()) {
               throw exception::eval_error("Incomplete 'finally' block", File_Position(m_line, m_col), *m_filename);
             }
-            build_match(chaiscript::make_shared<AST_Node, eval::Finally_AST_Node>(), finally_stack_top);
+            build_match<eval::Finally_AST_Node>(finally_stack_top);
           }
 
-          build_match(chaiscript::make_shared<AST_Node, eval::Try_AST_Node>(), prev_stack_top);
+          build_match<eval::Try_AST_Node>(prev_stack_top);
         }
 
         return retval;
@@ -1590,10 +1578,8 @@ namespace chaiscript
             if (Keyword("else", true)) {
               if (Keyword("if")) {
                 const AST_NodePtr back(m_match_stack.back());
-                m_match_stack.back() = chaiscript::make_shared<AST_Node, eval::If_AST_Node>("else if");
-                m_match_stack.back()->start = back->start;
-                m_match_stack.back()->end = back->end;
-                m_match_stack.back()->children = back->children;
+                m_match_stack.back() = 
+                  chaiscript::make_shared<AST_Node, eval::If_AST_Node>("else if", back->location, back->children);
                 m_match_stack.back()->annotation = back->annotation;
                 if (!Char('(')) {
                   throw exception::eval_error("Incomplete 'else if' expression", File_Position(m_line, m_col), *m_filename);
@@ -1620,7 +1606,7 @@ namespace chaiscript
             }
           }
 
-          build_match(chaiscript::make_shared<AST_Node, eval::If_AST_Node>(), prev_stack_top);
+          build_match<eval::If_AST_Node>(prev_stack_top);
         }
 
         return retval;
@@ -1646,7 +1632,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'class' block", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(chaiscript::make_shared<AST_Node, eval::Class_AST_Node>(), prev_stack_top);
+          build_match<eval::Class_AST_Node>(prev_stack_top);
         }
 
         return retval;
@@ -1676,7 +1662,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'while' block", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(chaiscript::make_shared<AST_Node, eval::While_AST_Node>(), prev_stack_top);
+          build_match<eval::While_AST_Node>(prev_stack_top);
         }
 
         return retval;
@@ -1713,9 +1699,7 @@ namespace chaiscript
         return true; 
       }
 
-      /**
-       * Reads a for block from input
-       */
+      /// Reads a for block from input
       bool For() {
         bool retval = false;
 
@@ -1738,7 +1722,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'for' block", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(chaiscript::make_shared<AST_Node, eval::For_AST_Node>(), prev_stack_top);
+          build_match<eval::For_AST_Node>(prev_stack_top);
         }
 
         return retval;
@@ -1767,7 +1751,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'case' block", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(chaiscript::make_shared<AST_Node, eval::Case_AST_Node>(), prev_stack_top);
+          build_match<eval::Case_AST_Node>(prev_stack_top);
         } else if (Keyword("default")) {
           while (Eol()) {}
 
@@ -1775,7 +1759,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'default' block", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(chaiscript::make_shared<AST_Node, eval::Default_AST_Node>(), prev_stack_top);
+          build_match<eval::Default_AST_Node>(prev_stack_top);
         }
 
         return retval;
@@ -1815,7 +1799,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete block", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(chaiscript::make_shared<AST_Node, eval::Switch_AST_Node>(), prev_stack_top);
+          build_match<eval::Switch_AST_Node>(prev_stack_top);
           return true;
 
         } else {
@@ -1843,7 +1827,7 @@ namespace chaiscript
             m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Noop_AST_Node>());
           }
 
-          build_match(chaiscript::make_shared<AST_Node, eval::Block_AST_Node>(), prev_stack_top);
+          build_match<eval::Block_AST_Node>(prev_stack_top);
         }
 
         return retval;
@@ -1867,7 +1851,7 @@ namespace chaiscript
             m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Noop_AST_Node>());
           }
 
-          build_match(chaiscript::make_shared<AST_Node, eval::Block_AST_Node>(), prev_stack_top);
+          build_match<eval::Block_AST_Node>(prev_stack_top);
         }
 
         return retval;
@@ -1879,7 +1863,7 @@ namespace chaiscript
 
         if (Keyword("return")) {
           Operator();
-          build_match(chaiscript::make_shared<AST_Node, eval::Return_AST_Node>(), prev_stack_top);
+          build_match<eval::Return_AST_Node>(prev_stack_top);
           return true;
         } else {
           return false;
@@ -1891,7 +1875,7 @@ namespace chaiscript
         const auto prev_stack_top = m_match_stack.size();
 
         if (Keyword("break")) {
-          build_match(chaiscript::make_shared<AST_Node, eval::Break_AST_Node>(), prev_stack_top);
+          build_match<eval::Break_AST_Node>(prev_stack_top);
           return true;
         } else {
           return false;
@@ -1903,7 +1887,7 @@ namespace chaiscript
         const auto prev_stack_top = m_match_stack.size();
 
         if (Keyword("continue")) {
-          build_match(chaiscript::make_shared<AST_Node, eval::Continue_AST_Node>(), prev_stack_top);
+          build_match<eval::Continue_AST_Node>(prev_stack_top);
           return true;
         } else {
           return false;
@@ -1932,7 +1916,7 @@ namespace chaiscript
                 throw exception::eval_error("Incomplete function call", File_Position(m_line, m_col), *m_filename);
               }
 
-              build_match(chaiscript::make_shared<AST_Node, eval::Fun_Call_AST_Node>(), prev_stack_top);
+              build_match<eval::Fun_Call_AST_Node>(prev_stack_top);
               /// \todo Work around for method calls until we have a better solution
               if (!m_match_stack.back()->children.empty()) {
                 if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Dot_Access) {
@@ -1953,7 +1937,7 @@ namespace chaiscript
                 throw exception::eval_error("Incomplete array access", File_Position(m_line, m_col), *m_filename);
               }
 
-              build_match(chaiscript::make_shared<AST_Node, eval::Array_Call_AST_Node>(), prev_stack_top);
+              build_match<eval::Array_Call_AST_Node>(prev_stack_top);
             }
             else if (Symbol(".", true)) {
               has_more = true;
@@ -1961,7 +1945,7 @@ namespace chaiscript
                 throw exception::eval_error("Incomplete array access", File_Position(m_line, m_col), *m_filename);
               }
 
-              build_match(chaiscript::make_shared<AST_Node, eval::Dot_Access_AST_Node>(), prev_stack_top);
+              build_match<eval::Dot_Access_AST_Node>(prev_stack_top);
             }
           }
         }
@@ -1982,7 +1966,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete attribute declaration", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(chaiscript::make_shared<AST_Node, eval::Attr_Decl_AST_Node>(), prev_stack_top);
+          build_match<eval::Attr_Decl_AST_Node>(prev_stack_top);
         } else if (Keyword("auto") || Keyword("var")) {
           retval = true;
 
@@ -1990,7 +1974,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete variable declaration", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(chaiscript::make_shared<AST_Node, eval::Var_Decl_AST_Node>(), prev_stack_top);
+          build_match<eval::Var_Decl_AST_Node>(prev_stack_top);
         } else if (Keyword("attr")) {
           retval = true;
 
@@ -2005,7 +1989,7 @@ namespace chaiscript
           }
 
 
-          build_match(chaiscript::make_shared<AST_Node, eval::Attr_Decl_AST_Node>(), prev_stack_top);
+          build_match<eval::Attr_Decl_AST_Node>(prev_stack_top);
         }
 
         return retval;
@@ -2038,17 +2022,17 @@ namespace chaiscript
           }
           if ((prev_stack_top != m_match_stack.size()) && (m_match_stack.back()->children.size() > 0)) {
             if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Value_Range) {
-              build_match(chaiscript::make_shared<AST_Node, eval::Inline_Range_AST_Node>(), prev_stack_top);
+              build_match<eval::Inline_Range_AST_Node>(prev_stack_top);
             }
             else if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Map_Pair) {
-              build_match(chaiscript::make_shared<AST_Node, eval::Inline_Map_AST_Node>(), prev_stack_top);
+              build_match<eval::Inline_Map_AST_Node>(prev_stack_top);
             }
             else {
-              build_match(chaiscript::make_shared<AST_Node, eval::Inline_Array_AST_Node>(), prev_stack_top);
+              build_match<eval::Inline_Array_AST_Node>(prev_stack_top);
             }
           }
           else {
-            build_match(chaiscript::make_shared<AST_Node, eval::Inline_Array_AST_Node>(), prev_stack_top);
+            build_match<eval::Inline_Array_AST_Node>(prev_stack_top);
           }
 
           return true;
@@ -2066,7 +2050,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete '&' expression", File_Position(m_line, m_col), *m_filename);
           }
 
-          build_match(chaiscript::make_shared<AST_Node, eval::Reference_AST_Node>(), prev_stack_top);
+          build_match<eval::Reference_AST_Node>(prev_stack_top);
           return true;
         } else {
           return false;
@@ -2087,7 +2071,7 @@ namespace chaiscript
               throw exception::eval_error("Incomplete prefix '" + oper + "' expression", File_Position(m_line, m_col), *m_filename);
             }
 
-            build_match(chaiscript::make_shared<AST_Node, eval::Prefix_AST_Node>(Operators::to_operator(oper, true)), prev_stack_top);
+            build_match<eval::Prefix_AST_Node>(prev_stack_top);
             return true;
           }
         }
@@ -2137,7 +2121,7 @@ namespace chaiscript
                             + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
                             File_Position(m_line, m_col), *m_filename);
                       }
-                      build_match(chaiscript::make_shared<AST_Node, eval::Ternary_Cond_AST_Node>(), prev_stack_top);
+                      build_match<eval::Ternary_Cond_AST_Node>(prev_stack_top);
                     }
                     else {
                       throw exception::eval_error("Incomplete "
@@ -2156,14 +2140,14 @@ namespace chaiscript
                   case(AST_Node_Type::Comparison) :
                     assert(m_match_stack.size() > 1);
                     m_match_stack.erase(m_match_stack.begin() + m_match_stack.size() - 2, m_match_stack.begin() + m_match_stack.size() - 1);
-                    build_match(chaiscript::make_shared<AST_Node, eval::Binary_Operator_AST_Node>(oper->text), prev_stack_top);
+                    build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, oper->text);
                     break;
 
                   case(AST_Node_Type::Logical_And) :
-                    build_match(chaiscript::make_shared<AST_Node, eval::Logical_And_AST_Node>(), prev_stack_top);
+                    build_match<eval::Logical_And_AST_Node>(prev_stack_top);
                     break;
                   case(AST_Node_Type::Logical_Or) :
-                    build_match(chaiscript::make_shared<AST_Node, eval::Logical_Or_AST_Node>(), prev_stack_top);
+                    build_match<eval::Logical_Or_AST_Node>(prev_stack_top);
                     break;
 
                   default:
@@ -2195,7 +2179,7 @@ namespace chaiscript
               throw exception::eval_error("Incomplete map pair", File_Position(m_line, m_col), *m_filename);
             }
 
-            build_match(chaiscript::make_shared<AST_Node, eval::Map_Pair_AST_Node>(), prev_stack_top);
+            build_match<eval::Map_Pair_AST_Node>(prev_stack_top);
           }
           else {
             m_input_pos = prev_pos;
@@ -2224,7 +2208,7 @@ namespace chaiscript
               throw exception::eval_error("Incomplete value range", File_Position(m_line, m_col), *m_filename);
             }
 
-            build_match(chaiscript::make_shared<AST_Node, eval::Value_Range_AST_Node>(), prev_stack_top);
+            build_match<eval::Value_Range_AST_Node>(prev_stack_top);
           }
           else {
             m_input_pos = prev_pos;
@@ -2255,7 +2239,7 @@ namespace chaiscript
               throw exception::eval_error("Incomplete equation", File_Position(m_line, m_col), *m_filename);
             }
 
-            build_match(chaiscript::make_shared<AST_Node, eval::Equation_AST_Node>(), prev_stack_top);
+            build_match<eval::Equation_AST_Node>(prev_stack_top);
           }
         }
 
@@ -2349,7 +2333,7 @@ namespace chaiscript
           if (m_input_pos != m_input_end) {
             throw exception::eval_error("Unparsed input", File_Position(m_line, m_col), t_fname);
           } else {
-            build_match(chaiscript::make_shared<AST_Node, eval::File_AST_Node>(), 0);
+            build_match<eval::File_AST_Node>(0);
             return true;
           }
         } else {

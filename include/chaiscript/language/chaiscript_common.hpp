@@ -68,6 +68,31 @@ namespace chaiscript
     File_Position() : line(0), column(0) { }
   };
 
+  struct Parse_Location {
+    Parse_Location(std::string t_fname="", const int t_start_line=0, const int t_start_col=0,
+        const int t_end_line=0, const int t_end_col=0)
+      : start(t_start_line, t_start_col), 
+        end(t_end_line, t_end_col),
+        filename(std::make_shared<std::string>(std::move(t_fname)))
+    {
+    }
+
+    Parse_Location(std::shared_ptr<std::string> t_fname, const int t_start_line=0, const int t_start_col=0,
+        const int t_end_line=0, const int t_end_col=0)
+      : start(t_start_line, t_start_col), 
+        end(t_end_line, t_end_col),
+        filename(std::move(t_fname))
+    {
+    }
+
+
+
+    File_Position start;
+    File_Position end;
+    std::shared_ptr<std::string> filename;
+  };
+
+
   /// \brief Typedef for pointers to AST_Node objects. Used in building of the AST_Node tree
   typedef std::shared_ptr<AST_Node> AST_NodePtr;
   typedef std::shared_ptr<const AST_Node> AST_NodePtr_Const;
@@ -81,7 +106,6 @@ namespace chaiscript
     struct eval_error : std::runtime_error {
       std::string reason;
       File_Position start_position;
-      File_Position end_position;
       std::string filename;
       std::string detail;
       std::vector<AST_NodePtr_Const> call_stack;
@@ -91,7 +115,7 @@ namespace chaiscript
           bool t_dot_notation,
           const chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_NOEXCEPT :
         std::runtime_error(format(t_why, t_where, t_fname, t_parameters, t_dot_notation, t_ss)),
-        reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname), detail(format_detail(t_functions, t_dot_notation, t_ss)) 
+        reason(t_why), start_position(t_where), filename(t_fname), detail(format_detail(t_functions, t_dot_notation, t_ss)) 
       {}
 
       eval_error(const std::string &t_why, 
@@ -105,7 +129,7 @@ namespace chaiscript
 
       eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) CHAISCRIPT_NOEXCEPT :
         std::runtime_error(format(t_why, t_where, t_fname)),
-        reason(t_why), start_position(t_where), end_position(t_where), filename(t_fname)
+        reason(t_why), start_position(t_where), filename(t_fname)
       {}
 
       eval_error(const std::string &t_why) CHAISCRIPT_NOEXCEPT
@@ -154,16 +178,16 @@ namespace chaiscript
         }
 
       template<typename T>
-        static std::string fname(const T& t)
+        static const std::string &fname(const T& t)
         {
-          return *t->filename;
+          return t->filename();
         }
 
       template<typename T>
         static std::string startpos(const T& t)
         {
           std::ostringstream oss;
-          oss << t->start.line << ", " << t->start.column;
+          oss << t->start().line << ", " << t->start().column;
           return oss.str();
         }
 
@@ -253,7 +277,7 @@ namespace chaiscript
         static std::string format_location(const T &t)
         {
           std::ostringstream oss;
-          oss << "(" << *t->filename << " " << t->start.line << ", " << t->start.column << ")"; 
+          oss << "(" << t->filename() << " " << t->start().line << ", " << t->start().column << ")"; 
 
           return oss.str();
 
@@ -407,12 +431,23 @@ namespace chaiscript
   /// \brief Struct that doubles as both a parser ast_node and an AST node.
   struct AST_Node : std::enable_shared_from_this<AST_Node> {
     public:
-      std::vector<AST_NodePtr> children;
       const int identifier; //< \todo shouldn't this be a strongly typed enum value?
       const std::string text;
-      File_Position start, end;
-      std::shared_ptr<const std::string> filename;
+      Parse_Location location;
+      std::vector<AST_NodePtr> children;
       AST_NodePtr annotation;
+
+      const std::string &filename() const {
+        return *location.filename;
+      }
+
+      const File_Position &start() const {
+        return location.start;
+      }
+
+      const File_Position &end() const {
+        return location.end;
+      }
 
       virtual std::string pretty_print() const
       {
@@ -433,7 +468,7 @@ namespace chaiscript
         std::ostringstream oss;
 
         oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
-            << this->text << " : " << this->start.line << ", " << this->start.column << '\n';
+            << this->text << " : " << this->location.start.line << ", " << this->location.start.column << '\n';
 
         for (size_t j = 0; j < this->children.size(); ++j) {
           oss << this->children[j]->to_string(t_prepend + "  ");
@@ -469,16 +504,13 @@ namespace chaiscript
       virtual ~AST_Node() {}
 
     protected:
-      AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<const std::string> &t_fname, 
-          int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
+      AST_Node(std::string t_ast_node_text, int t_id, Parse_Location t_loc, 
+               std::vector<AST_NodePtr> t_children = std::vector<AST_NodePtr>()) :
         identifier(t_id), text(std::move(t_ast_node_text)),
-        start(t_start_line, t_start_col), end(t_end_line, t_end_col), filename(t_fname)
+        location(std::move(t_loc)),
+        children(std::move(t_children))
       {
       }
-
-      AST_Node(std::string t_ast_node_text, int t_id, const std::shared_ptr<const std::string> &t_fname) :
-        identifier(t_id), text(std::move(t_ast_node_text)), filename(t_fname) {}
-
 
       virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const
       {

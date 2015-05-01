@@ -63,10 +63,10 @@ namespace chaiscript
       }
     }
 
-    struct Binary_Operator_AST_Node : public AST_Node {
+    struct Binary_Operator_AST_Node : AST_Node {
       public:
-        Binary_Operator_AST_Node(const std::string &t_oper) :
-          AST_Node(t_oper, AST_Node_Type::Binary, std::make_shared<std::string>(""), 0, 0, 0, 0),
+        Binary_Operator_AST_Node(const std::string &t_oper, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(t_oper, AST_Node_Type::Binary, std::move(t_loc), std::move(t_children)),
           m_oper(Operators::to_operator(t_oper))
       { }
 
@@ -115,8 +115,8 @@ namespace chaiscript
 
     struct Int_AST_Node : public AST_Node {
       public:
-        Int_AST_Node(std::string t_ast_node_text, Boxed_Value t_bv, const std::shared_ptr<std::string> &t_fname, int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Int, t_fname, t_start_line, t_start_col, t_end_line, t_end_col), 
+        Int_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, Boxed_Value t_bv) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Int, std::move(t_loc)), 
           m_value(std::move(t_bv)) { }
         virtual ~Int_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const CHAISCRIPT_OVERRIDE{
@@ -130,8 +130,8 @@ namespace chaiscript
 
     struct Float_AST_Node : public AST_Node {
       public:
-        Float_AST_Node(std::string t_ast_node_text, Boxed_Value t_bv, const std::shared_ptr<std::string> &t_fname, int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Float, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
+        Float_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, Boxed_Value t_bv) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Float, std::move(t_loc)),
           m_value(std::move(t_bv)) { }
         virtual ~Float_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const CHAISCRIPT_OVERRIDE{
@@ -145,8 +145,8 @@ namespace chaiscript
 
     struct Id_AST_Node : public AST_Node {
       public:
-        Id_AST_Node(const std::string &t_ast_node_text, const std::shared_ptr<std::string> &t_fname, int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
+        Id_AST_Node(const std::string &t_ast_node_text, Parse_Location t_loc) :
+          AST_Node(t_ast_node_text, AST_Node_Type::Id, std::move(t_loc)),
           m_value(get_value(t_ast_node_text))
       { }
 
@@ -189,22 +189,22 @@ namespace chaiscript
 
     struct Char_AST_Node : public AST_Node {
       public:
-        Char_AST_Node(std::string t_ast_node_text, const std::shared_ptr<std::string> &t_fname, int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Char, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Char_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Char, std::move(t_loc)) { }
         virtual ~Char_AST_Node() {}
     };
 
     struct Str_AST_Node : public AST_Node {
       public:
-        Str_AST_Node(std::string t_ast_node_text, const std::shared_ptr<std::string> &t_fname, int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Str, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Str_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Str, std::move(t_loc)) { }
         virtual ~Str_AST_Node() {}
     };
 
     struct Eol_AST_Node : public AST_Node {
       public:
-        Eol_AST_Node(std::string t_ast_node_text, const std::shared_ptr<std::string> &t_fname, int t_start_line, int t_start_col, int t_end_line, int t_end_col) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Eol, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Eol_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Eol, std::move(t_loc)) { }
         virtual ~Eol_AST_Node() {}
 
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE 
@@ -216,8 +216,8 @@ namespace chaiscript
 
     struct Fun_Call_AST_Node : public AST_Node {
       public:
-        Fun_Call_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Fun_Call, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Fun_Call_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Fun_Call, std::move(t_loc), std::move(t_children)) { }
         virtual ~Fun_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
@@ -285,7 +285,7 @@ namespace chaiscript
     struct Fun_Lookup_AST_Node : public AST_Node {
       public:
         Fun_Lookup_AST_Node(const std::string &t_fun_name)
-         : AST_Node(t_fun_name, 0, std::make_shared<std::string>("<EVAL>"))
+         : AST_Node(t_fun_name, 0, Parse_Location("<EVAL>"))
         {
         }
 
@@ -305,78 +305,15 @@ namespace chaiscript
 
 
 
-    struct Unary_Fun_Call_AST_Node : public AST_Node {
-      public:
-        Unary_Fun_Call_AST_Node(const Fun_Call_AST_Node &t_fc)
-          : AST_Node(t_fc.text, t_fc.identifier, t_fc.filename, t_fc.start.line, t_fc.start.column, t_fc.end.line, t_fc.end.column)
-        {
-          this->children = t_fc.children;
-        }
-        virtual ~Unary_Fun_Call_AST_Node() {}
-
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
-          chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-
-          std::vector<Boxed_Value> params{children[1]->children[0]->eval(t_ss)};
-          fpp.save_params(params);
-
-          Boxed_Value fn(this->children[0]->eval(t_ss));
-
-          try {
-            chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
-            return (*t_ss.boxed_cast<const Const_Proxy_Function &>(fn))(params, t_ss.conversions());
-          }
-          catch(const exception::dispatch_error &e){
-            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, e.functions, false, t_ss);
-          }
-          catch(const exception::bad_boxed_cast &){
-            try {
-              Const_Proxy_Function f = t_ss.boxed_cast<const Const_Proxy_Function &>(fn);
-              // handle the case where there is only 1 function to try to call and dispatch fails on it
-              throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, {f}, false, t_ss);
-            } catch (const exception::bad_boxed_cast &) {
-              throw exception::eval_error("'" + this->children[0]->pretty_print() + "' does not evaluate to a function.");
-            }
-          }
-          catch(const exception::arity_error &e){
-            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
-          }
-          catch(const exception::guard_error &e){
-            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
-          }
-          catch(detail::Return_Value &rv) {
-            return rv.retval;
-          }
-        }
-
-        virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE 
-        {
-          std::ostringstream oss;
-
-          int count = 0;
-          for (const auto &child : this->children) {
-            oss << child->pretty_print();
-
-            if (count == 0)
-            {
-              oss << "(";
-            }
-            ++count;
-          }
-
-          oss << ")";
-
-          return oss.str();
-        }
-
-    };
 
 
     /// Used in the context of in-string ${} evals, so that no new scope is created
     struct Inplace_Fun_Call_AST_Node : public AST_Node {
       public:
-        Inplace_Fun_Call_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Inplace_Fun_Call, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Inplace_Fun_Call_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(t_ast_node_text, AST_Node_Type::Inplace_Fun_Call, std::move(t_loc), std::move(t_children)) 
+        { assert(children.size() == 2); }
+
         virtual ~Inplace_Fun_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           std::vector<Boxed_Value> params;
@@ -438,8 +375,8 @@ namespace chaiscript
 
     struct Arg_AST_Node : public AST_Node {
       public:
-        Arg_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Arg_List, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Arg_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Arg_List, std::move(t_loc), std::move(t_children)) { }
         virtual ~Arg_AST_Node() {}
 
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE 
@@ -460,8 +397,8 @@ namespace chaiscript
 
     struct Arg_List_AST_Node : public AST_Node {
       public:
-        Arg_List_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Arg_List, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Arg_List_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Arg_List, std::move(t_loc), std::move(t_children)) { }
         virtual ~Arg_List_AST_Node() {}
 
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE 
@@ -525,19 +462,17 @@ namespace chaiscript
 
     struct Equation_AST_Node : public AST_Node {
       public:
-        Equation_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Equation, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
-          m_oper(Operators::invalid)
-        {}
+        Equation_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Equation, std::move(t_loc), std::move(t_children)), 
+          m_oper(Operators::to_operator(children[1]->text))
+        { assert(children.size() == 3); }
 
         Operators::Opers m_oper;
 
         virtual ~Equation_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
-          chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
           Boxed_Value rhs = this->children[2]->eval(t_ss); 
           Boxed_Value lhs = this->children[0]->eval(t_ss);
-
 
           if (m_oper != Operators::invalid && lhs.get_type_info().is_arithmetic() &&
               rhs.get_type_info().is_arithmetic())
@@ -553,6 +488,8 @@ namespace chaiscript
             }
 
             try {
+              chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
+
               if (lhs.is_undef()) {
                 if (!this->children.empty() && 
                     !this->children[0]->children.empty() 
@@ -592,6 +529,7 @@ namespace chaiscript
           }
           else {
             try {
+              chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               return t_ss.call_function(this->children[1]->text, std::move(lhs), rhs);
             } catch(const exception::dispatch_error &e){
               throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, t_ss);
@@ -604,8 +542,8 @@ namespace chaiscript
 
     struct Var_Decl_AST_Node : public AST_Node {
       public:
-        Var_Decl_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Var_Decl, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Var_Decl_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Var_Decl, std::move(t_loc), std::move(t_children)) { }
         virtual ~Var_Decl_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           if (this->children[0]->identifier == AST_Node_Type::Reference)
@@ -638,13 +576,13 @@ namespace chaiscript
 
     struct Array_Call_AST_Node : public AST_Node {
       public:
-        Array_Call_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Array_Call, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Array_Call_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Array_Call, std::move(t_loc), std::move(t_children)) { }
         virtual ~Array_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
-          std::vector<Boxed_Value> params{this->children[0]->eval(t_ss), children[1]->eval(t_ss)};
+          std::vector<Boxed_Value> params{children[0]->eval(t_ss), children[1]->eval(t_ss)};
 
           try {
             chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
@@ -675,47 +613,40 @@ namespace chaiscript
 
     struct Dot_Access_AST_Node : public AST_Node {
       public:
-        Dot_Access_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Dot_Access, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Dot_Access_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Dot_Access, std::move(t_loc), std::move(t_children)),
+          m_fun_name(
+              ((children[2]->identifier == AST_Node_Type::Fun_Call) || (children[2]->identifier == AST_Node_Type::Array_Call))?
+              children[2]->children[0]->text:children[2]->text) { }
+
         virtual ~Dot_Access_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
-          Boxed_Value retval = this->children[0]->eval(t_ss);
+          Boxed_Value retval = children[0]->eval(t_ss);
           std::vector<Boxed_Value> params{retval};
 
           bool has_function_params = false;
-
-          if (this->children[2]->children.size() > 1) {
+          if (children[2]->children.size() > 1) {
             has_function_params = true;
-            for (const auto &child : this->children[2]->children[1]->children) {
+            for (const auto &child : children[2]->children[1]->children) {
               params.push_back(child->eval(t_ss));
             }
           }
 
           fpp.save_params(params);
 
-          std::string fun_name = [&]()->std::string{
-            if ((this->children[2]->identifier == AST_Node_Type::Fun_Call) || (this->children[2]->identifier == AST_Node_Type::Array_Call)) {
-              return this->children[2]->children[0]->text;
-            }
-            else {
-              return this->children[2]->text;
-            }
-          }();
-
-
           try {
             chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
             t_ss.add_object("this", retval);
-            retval = t_ss.call_member(fun_name, std::move(params), has_function_params);
+            retval = t_ss.call_member(m_fun_name, std::move(params), has_function_params);
           }
           catch(const exception::dispatch_error &e){
             if (e.functions.empty())
             {
-              throw exception::eval_error("'" + fun_name + "' is not a function.");
+              throw exception::eval_error("'" + m_fun_name + "' is not a function.");
             } else {
-              throw exception::eval_error(std::string(e.what()) + " for function '" + fun_name + "'", e.parameters, e.functions, true, t_ss);
+              throw exception::eval_error(std::string(e.what()) + " for function '" + m_fun_name + "'", e.parameters, e.functions, true, t_ss);
             }
           }
           catch(detail::Return_Value &rv) {
@@ -734,13 +665,15 @@ namespace chaiscript
           return retval;
         }
 
+      private:
+        std::string m_fun_name;
     };
 
     struct Quoted_String_AST_Node : public AST_Node {
       public:
-        Quoted_String_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Quoted_String, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
-          m_value(const_var(t_ast_node_text)) { }
+        Quoted_String_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Quoted_String, std::move(t_loc)),
+          m_value(const_var(text)) { }
         virtual ~Quoted_String_AST_Node() {}
 
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const CHAISCRIPT_OVERRIDE {
@@ -759,9 +692,9 @@ namespace chaiscript
 
     struct Single_Quoted_String_AST_Node : public AST_Node {
       public:
-        Single_Quoted_String_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Single_Quoted_String, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
-          m_value(const_var(char(t_ast_node_text.at(0)))) { }
+        Single_Quoted_String_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Single_Quoted_String, std::move(t_loc)),
+          m_value(const_var(char(text.at(0)))) { }
 
         virtual ~Single_Quoted_String_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const CHAISCRIPT_OVERRIDE{
@@ -779,12 +712,13 @@ namespace chaiscript
 
     struct Lambda_AST_Node : public AST_Node {
       public:
-        Lambda_AST_Node(const std::string &t_ast_node_text = "", int t_id = AST_Node_Type::Lambda, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Lambda_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(t_ast_node_text, AST_Node_Type::Lambda, std::move(t_loc), std::move(t_children)),
+          m_param_names(Arg_List_AST_Node::get_arg_names(children[1])) { }
+
         virtual ~Lambda_AST_Node() {}
 
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
-
 
           const auto captures = [&]()->std::map<std::string, Boxed_Value>{
             std::map<std::string, Boxed_Value> named_captures;
@@ -795,7 +729,7 @@ namespace chaiscript
           }();
 
           const auto numparams = this->children[1]->children.size();
-          const auto param_names = Arg_List_AST_Node::get_arg_names(this->children[1]);
+          const auto param_names = m_param_names;
           const auto param_types = Arg_List_AST_Node::get_arg_types(this->children[1], t_ss);
 
           const auto &lambda_node = this->children.back();
@@ -808,13 +742,15 @@ namespace chaiscript
                 static_cast<int>(numparams), lambda_node, param_types));
         }
 
+      private:
+        std::vector<std::string> m_param_names;
 
     };
 
     struct Block_AST_Node : public AST_Node {
       public:
-        Block_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Block, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Block_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Block, std::move(t_loc), std::move(t_children)) { }
         virtual ~Block_AST_Node() {}
 
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
@@ -831,8 +767,9 @@ namespace chaiscript
 
     struct Def_AST_Node : public AST_Node {
       public:
-        Def_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Def, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Def_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Def, std::move(t_loc), std::move(t_children)) { }
+
         virtual ~Def_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           std::vector<std::string> t_param_names;
@@ -873,7 +810,7 @@ namespace chaiscript
             const std::string & l_annotation = this->annotation?this->annotation->text:"";
             const auto & func_node = this->children.back();
             t_ss.add(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Dynamic_Proxy_Function>
-				([&t_ss, guardnode, func_node, t_param_names](const std::vector<Boxed_Value> &t_params)
+                        ([&t_ss, guardnode, func_node, t_param_names](const std::vector<Boxed_Value> &t_params)
                                                       {
                                                         return detail::eval_function(t_ss, func_node, t_param_names, t_params);
                                                       }, static_cast<int>(numparams), this->children.back(),
@@ -891,8 +828,8 @@ namespace chaiscript
 
     struct While_AST_Node : public AST_Node {
       public:
-        While_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::While, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        While_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::While, std::move(t_loc), std::move(t_children)) { }
         virtual ~While_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
@@ -917,16 +854,17 @@ namespace chaiscript
 
     struct Class_AST_Node : public AST_Node {
       public:
-        Class_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Class, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Class_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Class, std::move(t_loc), std::move(t_children)) { }
         virtual ~Class_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
+          /// \todo do this better
           // put class name in current scope so it can be looked up by the attrs and methods
-          t_ss.add_object("_current_class_name", const_var(this->children[0]->text));
+          t_ss.add_object("_current_class_name", const_var(children[0]->text));
 
-          this->children[1]->eval(t_ss);
+          children[1]->eval(t_ss);
 
           return Boxed_Value();
         }
@@ -934,16 +872,16 @@ namespace chaiscript
 
     struct Ternary_Cond_AST_Node : public AST_Node {
       public:
-        Ternary_Cond_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::If, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Ternary_Cond_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::If, std::move(t_loc), std::move(t_children)) 
+          { assert(children.size() == 3); }
         virtual ~Ternary_Cond_AST_Node() {}
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
-
-          if (get_bool_condition(this->children[0]->eval(t_ss))) {
-            return this->children[1]->eval(t_ss);
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
+          if (get_bool_condition(children[0]->eval(t_ss))) {
+            return children[1]->eval(t_ss);
           }
           else {
-            return this->children[2]->eval(t_ss);
+            return children[2]->eval(t_ss);
           }
         }
 
@@ -951,25 +889,23 @@ namespace chaiscript
 
     struct If_AST_Node : public AST_Node {
       public:
-        If_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::If, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        If_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::If, std::move(t_loc), std::move(t_children)) { }
         virtual ~If_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
 
-          if (get_bool_condition(this->children[0]->eval(t_ss))) {
-            return this->children[1]->eval(t_ss);
+          if (get_bool_condition(children[0]->eval(t_ss))) {
+            return children[1]->eval(t_ss);
           } else {
-            if (this->children.size() > 2) {
+            if (children.size() > 2) {
               size_t i = 2;
-              bool cond = false;
-              while ((!cond) && (i < this->children.size())) {
-                if (this->children[i]->text == "else") {
-                  return this->children[i+1]->eval(t_ss);
+              while (i < children.size()) {
+                if (children[i]->text == "else") {
+                  return children[i+1]->eval(t_ss);
                 }
-                else if (this->children[i]->text == "else if") {
-                  cond = get_bool_condition(this->children[i+1]->eval(t_ss));
-                  if (cond) {
-                    return this->children[i+2]->eval(t_ss);
+                else if (children[i]->text == "else if") {
+                  if (get_bool_condition(children[i+1]->eval(t_ss))) {
+                    return children[i+2]->eval(t_ss);
                   }
                 }
                 i += 3;
@@ -977,15 +913,16 @@ namespace chaiscript
             }
           }
 
-          return const_var(false);
+          return Boxed_Value();
         }
 
     };
 
     struct For_AST_Node : public AST_Node {
       public:
-        For_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::For, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        For_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::For, std::move(t_loc), std::move(t_children)) 
+          { assert(children.size() == 4); }
         virtual ~For_AST_Node() {}
 
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
@@ -1017,8 +954,8 @@ namespace chaiscript
 
     struct Switch_AST_Node : public AST_Node {
       public:
-        Switch_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Switch, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Switch_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Switch, std::move(t_loc), std::move(t_children)) { }
         virtual ~Switch_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           bool breaking = false;
@@ -1059,13 +996,15 @@ namespace chaiscript
 
     struct Case_AST_Node : public AST_Node {
       public:
-        Case_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Case, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Case_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Case, std::move(t_loc), std::move(t_children)) 
+        { assert(t_children.size() == 2); }
+
         virtual ~Case_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
-          this->children[1]->eval(t_ss);
+          children[1]->eval(t_ss);
 
           return Boxed_Value();
         }
@@ -1073,13 +1012,14 @@ namespace chaiscript
    
     struct Default_AST_Node : public AST_Node {
       public:
-        Default_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Default, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Default_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Default, std::move(t_loc), std::move(t_children))
+        { assert(t_children.size() == 1); }
         virtual ~Default_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
-          this->children[0]->eval(t_ss);
+          children[0]->eval(t_ss);
 
           return Boxed_Value();
         }
@@ -1088,14 +1028,14 @@ namespace chaiscript
 
     struct Inline_Array_AST_Node : public AST_Node {
       public:
-        Inline_Array_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Inline_Array, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Inline_Array_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Inline_Array, std::move(t_loc), std::move(t_children)) { }
         virtual ~Inline_Array_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           try {
             std::vector<Boxed_Value> vec;
-            if (!this->children.empty()) {
-              for (const auto &child : this->children[0]->children) {
+            if (!children.empty()) {
+              for (const auto &child : children[0]->children) {
                 vec.push_back(t_ss.call_function("clone", child->eval(t_ss)));
               }
             }
@@ -1104,7 +1044,6 @@ namespace chaiscript
           catch (const exception::dispatch_error &) {
             throw exception::eval_error("Can not find appropriate 'clone' or copy constructor for vector elements");
           }
-
         }
 
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE
@@ -1115,19 +1054,19 @@ namespace chaiscript
 
     struct Inline_Map_AST_Node : public AST_Node {
       public:
-        Inline_Map_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Inline_Map, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Inline_Map_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Inline_Map, std::move(t_loc), std::move(t_children)) { }
         virtual ~Inline_Map_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           try {
             std::map<std::string, Boxed_Value> retval;
 
-            for (const auto &child : this->children[0]->children) {
+            for (const auto &child : children[0]->children) {
               Boxed_Value bv = t_ss.call_function("clone", child->children[1]->eval(t_ss));
               retval[t_ss.boxed_cast<std::string>(child->children[0]->eval(t_ss))] = std::move(bv);
             }
 
-            return const_var(retval);
+            return const_var(std::move(retval));
           }
           catch (const exception::dispatch_error &e) {
             throw exception::eval_error("Can not find appropriate copy constructor or 'clone' while inserting into Map.", e.parameters, e.functions, false, t_ss);
@@ -1138,12 +1077,12 @@ namespace chaiscript
 
     struct Return_AST_Node : public AST_Node {
       public:
-        Return_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Return, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Return_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Return, std::move(t_loc), std::move(t_children)) { }
         virtual ~Return_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           if (!this->children.empty()) {
-            throw detail::Return_Value(this->children[0]->eval(t_ss));
+            throw detail::Return_Value(children[0]->eval(t_ss));
           }
           else {
             throw detail::Return_Value(Boxed_Value());
@@ -1154,8 +1093,8 @@ namespace chaiscript
 
     struct File_AST_Node : public AST_Node {
       public:
-        File_AST_Node(std::string t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::File, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        File_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::File, std::move(t_loc), std::move(t_children)) { }
         virtual ~File_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
           const auto num_children = children.size();
@@ -1168,9 +1107,9 @@ namespace chaiscript
 
     struct Reference_AST_Node : public AST_Node {
       public:
-        Reference_AST_Node(std::string t_ast_node_text = "", int t_id = AST_Node_Type::Reference, const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(std::move(t_ast_node_text), t_id, t_fname, t_start_line, t_start_col, t_end_line, t_end_col)
-        { }
+        Reference_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Reference, std::move(t_loc), std::move(t_children))
+        { assert(children.size() == 1); }
 
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           try {
@@ -1188,14 +1127,14 @@ namespace chaiscript
 
     struct Prefix_AST_Node : public AST_Node {
       public:
-        Prefix_AST_Node(Operators::Opers t_oper) :
-          AST_Node("", AST_Node_Type::Prefix, std::make_shared<std::string>(""), 0, 0, 0, 0),
-          m_oper(t_oper)
+        Prefix_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Prefix, std::move(t_loc), std::move(t_children)),
+          m_oper(Operators::to_operator(children[0]->text, true))
         { }
 
         virtual ~Prefix_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
-          Boxed_Value bv(this->children[1]->eval(t_ss));
+          Boxed_Value bv(children[1]->eval(t_ss));
 
           try {
             // short circuit arithmetic operations
@@ -1206,7 +1145,7 @@ namespace chaiscript
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
               fpp.save_params({bv});
-              return t_ss.call_function(this->children[0]->text, std::move(bv));
+              return t_ss.call_function(children[0]->text, std::move(bv));
             }
           } catch (const exception::dispatch_error &e) {
             throw exception::eval_error("Error with prefix operator evaluation: '" + children[0]->text + "'", e.parameters, e.functions, false, t_ss);
@@ -1219,8 +1158,8 @@ namespace chaiscript
 
     struct Break_AST_Node : public AST_Node {
       public:
-        Break_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Break, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Break_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Break, std::move(t_loc), std::move(t_children)) { }
         virtual ~Break_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const CHAISCRIPT_OVERRIDE{
           throw detail::Break_Loop();
@@ -1229,8 +1168,8 @@ namespace chaiscript
 
     struct Continue_AST_Node : public AST_Node {
       public:
-        Continue_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Continue, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Continue_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Continue, std::move(t_loc), std::move(t_children)) { }
         virtual ~Continue_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const CHAISCRIPT_OVERRIDE{
           throw detail::Continue_Loop();
@@ -1239,8 +1178,8 @@ namespace chaiscript
 
     struct Noop_AST_Node : public AST_Node {
       public:
-        Noop_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Noop, t_fname, t_start_line, t_start_col, t_end_line, t_end_col),
+        Noop_AST_Node() :
+          AST_Node("", AST_Node_Type::Noop, Parse_Location()),
           m_value(const_var(true))
         { }
 
@@ -1256,28 +1195,28 @@ namespace chaiscript
 
     struct Map_Pair_AST_Node : public AST_Node {
       public:
-        Map_Pair_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Map_Pair, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Map_Pair_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Map_Pair, std::move(t_loc), std::move(t_children)) { }
         virtual ~Map_Pair_AST_Node() {}
     };
 
     struct Value_Range_AST_Node : public AST_Node {
       public:
-        Value_Range_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Value_Range, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Value_Range_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Value_Range, std::move(t_loc), std::move(t_children)) { }
         virtual ~Value_Range_AST_Node() {}
     };
 
     struct Inline_Range_AST_Node : public AST_Node {
       public:
-        Inline_Range_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Inline_Range, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Inline_Range_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Inline_Range, std::move(t_loc), std::move(t_children)) { }
         virtual ~Inline_Range_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
           try {
             return t_ss.call_function("generate_range",
-                this->children[0]->children[0]->children[0]->eval(t_ss),
-                this->children[0]->children[0]->children[1]->eval(t_ss));
+                children[0]->children[0]->children[0]->eval(t_ss),
+                children[0]->children[0]->children[1]->eval(t_ss));
           }
           catch (const exception::dispatch_error &e) {
             throw exception::eval_error("Unable to generate range vector, while calling 'generate_range'", e.parameters, e.functions, false, t_ss);
@@ -1288,15 +1227,15 @@ namespace chaiscript
 
     struct Annotation_AST_Node : public AST_Node {
       public:
-        Annotation_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Annotation, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Annotation_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Annotation, std::move(t_loc)) { }
         virtual ~Annotation_AST_Node() {}
     };
 
     struct Try_AST_Node : public AST_Node {
       public:
-        Try_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Try, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Try_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Try, std::move(t_loc), std::move(t_children)) { }
         virtual ~Try_AST_Node() {}
 
         Boxed_Value handle_exception(chaiscript::detail::Dispatch_Engine &t_ss, const Boxed_Value &t_except) const
@@ -1401,22 +1340,22 @@ namespace chaiscript
 
     struct Catch_AST_Node : public AST_Node {
       public:
-        Catch_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Catch, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Catch_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Catch, std::move(t_loc), std::move(t_children)) { }
         virtual ~Catch_AST_Node() {}
     };
 
     struct Finally_AST_Node : public AST_Node {
       public:
-        Finally_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Finally, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Finally_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Finally, std::move(t_loc), std::move(t_children)) { }
         virtual ~Finally_AST_Node() {}
     };
 
     struct Method_AST_Node : public AST_Node {
       public:
-        Method_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Method, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Method_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Method, std::move(t_loc), std::move(t_children)) { }
         virtual ~Method_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
 
@@ -1431,20 +1370,20 @@ namespace chaiscript
           std::vector<std::string> t_param_names{"this"};
           dispatch::Param_Types param_types;
 
-          if ((this->children.size() > static_cast<size_t>(3 + class_offset)) && (this->children[static_cast<size_t>(2 + class_offset)]->identifier == AST_Node_Type::Arg_List)) {
-            auto args = Arg_List_AST_Node::get_arg_names(this->children[static_cast<size_t>(2 + class_offset)]);
+          if ((children.size() > static_cast<size_t>(3 + class_offset)) && (children[static_cast<size_t>(2 + class_offset)]->identifier == AST_Node_Type::Arg_List)) {
+            auto args = Arg_List_AST_Node::get_arg_names(children[static_cast<size_t>(2 + class_offset)]);
             t_param_names.insert(t_param_names.end(), args.begin(), args.end());
-            param_types = Arg_List_AST_Node::get_arg_types(this->children[static_cast<size_t>(2 + class_offset)], t_ss);
+            param_types = Arg_List_AST_Node::get_arg_types(children[static_cast<size_t>(2 + class_offset)], t_ss);
 
-            if (this->children.size() > static_cast<size_t>(4 + class_offset)) {
-              guardnode = this->children[static_cast<size_t>(3 + class_offset)];
+            if (children.size() > static_cast<size_t>(4 + class_offset)) {
+              guardnode = children[static_cast<size_t>(3 + class_offset)];
             }
           }
           else {
             //no parameters
 
-            if (this->children.size() > static_cast<size_t>(3 + class_offset)) {
-              guardnode = this->children[static_cast<size_t>(2 + class_offset)];
+            if (children.size() > static_cast<size_t>(3 + class_offset)) {
+              guardnode = children[static_cast<size_t>(2 + class_offset)];
             }
           }
 
@@ -1459,15 +1398,15 @@ namespace chaiscript
           }
 
           try {
-            const std::string & l_annotation = this->annotation?this->annotation->text:"";
+            const std::string & l_annotation = annotation?annotation->text:"";
 
-            const std::string & function_name = this->children[static_cast<size_t>(1 + class_offset)]->text;
+            const std::string & function_name = children[static_cast<size_t>(1 + class_offset)]->text;
 
             if (function_name == class_name) {
               param_types.push_front(class_name, Type_Info());
               t_ss.add(std::make_shared<dispatch::detail::Dynamic_Object_Constructor>(class_name, std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
-                        std::ref(t_ss), this->children.back(), t_param_names, std::placeholders::_1, std::map<std::string, Boxed_Value>()), 
-                      static_cast<int>(numparams), this->children.back(), param_types, l_annotation, guard)), 
+                        std::ref(t_ss), children.back(), t_param_names, std::placeholders::_1, std::map<std::string, Boxed_Value>()), 
+                      static_cast<int>(numparams), children.back(), param_types, l_annotation, guard)), 
                   function_name);
 
             } else {
@@ -1480,8 +1419,8 @@ namespace chaiscript
               t_ss.add(
                   std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name, 
                     std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
-                                                                        std::ref(t_ss), this->children.back(),
-                                                                        t_param_names, std::placeholders::_1, std::map<std::string, Boxed_Value>()), static_cast<int>(numparams), this->children.back(),
+                                                                        std::ref(t_ss), children.back(),
+                                                                        t_param_names, std::placeholders::_1, std::map<std::string, Boxed_Value>()), static_cast<int>(numparams), children.back(),
                                                               param_types, l_annotation, guard), type), function_name);
             }
           }
@@ -1497,8 +1436,8 @@ namespace chaiscript
 
     struct Attr_Decl_AST_Node : public AST_Node {
       public:
-        Attr_Decl_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Attr_Decl, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Attr_Decl_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Attr_Decl, std::move(t_loc), std::move(t_children)) { }
         virtual ~Attr_Decl_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE 
         {
@@ -1535,12 +1474,14 @@ namespace chaiscript
 
     struct Logical_And_AST_Node : public AST_Node {
       public:
-        Logical_And_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Logical_And, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Logical_And_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Logical_And, std::move(t_loc), std::move(t_children)) 
+        { assert(children.size() == 3); }
+
         virtual ~Logical_And_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
-          return const_var(get_bool_condition(this->children[0]->eval(t_ss))
-              && get_bool_condition(this->children[2]->eval(t_ss)));
+          return const_var(get_bool_condition(children[0]->eval(t_ss))
+              && get_bool_condition(children[2]->eval(t_ss)));
         }
 
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE
@@ -1551,12 +1492,13 @@ namespace chaiscript
 
     struct Logical_Or_AST_Node : public AST_Node {
       public:
-        Logical_Or_AST_Node(const std::string &t_ast_node_text = "", const std::shared_ptr<std::string> &t_fname=std::shared_ptr<std::string>(), int t_start_line = 0, int t_start_col = 0, int t_end_line = 0, int t_end_col = 0) :
-          AST_Node(t_ast_node_text, AST_Node_Type::Logical_Or, t_fname, t_start_line, t_start_col, t_end_line, t_end_col) { }
+        Logical_Or_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Logical_Or, std::move(t_loc), std::move(t_children)) 
+        { assert(children.size() == 3); }
         virtual ~Logical_Or_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
-          return const_var(get_bool_condition(this->children[0]->eval(t_ss))
-              || get_bool_condition(this->children[2]->eval(t_ss)));
+          return const_var(get_bool_condition(children[0]->eval(t_ss))
+              || get_bool_condition(children[2]->eval(t_ss)));
         }
 
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE
