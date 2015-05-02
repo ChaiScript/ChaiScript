@@ -471,6 +471,7 @@ namespace chaiscript
 
         virtual ~Equation_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
+          chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
           Boxed_Value rhs = this->children[2]->eval(t_ss); 
           Boxed_Value lhs = this->children[0]->eval(t_ss);
 
@@ -488,7 +489,6 @@ namespace chaiscript
             }
 
             try {
-              chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
               if (lhs.is_undef()) {
                 if (!this->children.empty() && 
@@ -529,7 +529,6 @@ namespace chaiscript
           }
           else {
             try {
-              chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               return t_ss.call_function(this->children[1]->text, std::move(lhs), rhs);
             } catch(const exception::dispatch_error &e){
               throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, t_ss);

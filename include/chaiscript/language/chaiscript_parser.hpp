@@ -296,7 +296,7 @@ namespace chaiscript
       void build_match(size_t t_match_start, std::string t_text = "") {
         bool is_deep = false;
 
-        Parse_Location filepos = [&](){ 
+        Parse_Location filepos = [&]()->Parse_Location{ 
           //so we want to take everything to the right of this and make them children
           if (t_match_start != m_match_stack.size()) {
             is_deep = true;
@@ -318,17 +318,15 @@ namespace chaiscript
           }
         }();
 
-        std::vector<AST_NodePtr> new_children =
-          [&](){
-            if (is_deep) {
-              std::vector<AST_NodePtr> c(std::make_move_iterator(m_match_stack.begin() + static_cast<int>(t_match_start)), 
-                                         std::make_move_iterator(m_match_stack.end()));
-              m_match_stack.erase(m_match_stack.begin() + static_cast<int>(t_match_start), m_match_stack.end());
-              return c;
-            } else {
-              return std::vector<AST_NodePtr>();
-            }
-          }();
+        std::vector<AST_NodePtr> new_children;
+
+        if (is_deep) {
+          new_children.assign(std::make_move_iterator(m_match_stack.begin() + static_cast<int>(t_match_start)), 
+                              std::make_move_iterator(m_match_stack.end()));
+//          new_children = std::vector<AST_NodePtr>(std::make_move_iterator(m_match_stack.begin() + static_cast<int>(t_match_start)), 
+//                                     std::make_move_iterator(m_match_stack.end()));
+          m_match_stack.erase(m_match_stack.begin() + static_cast<int>(t_match_start), m_match_stack.end());
+        }
 
         /// \todo fix the fact that a successful match that captured no ast_nodes doesn't have any real start position
         m_match_stack.push_back(
@@ -738,7 +736,7 @@ namespace chaiscript
                 ++pos;
               }
 
-              Boxed_Value i = [&](){
+              Boxed_Value i = [&]()->Boxed_Value{
                 if (match.length() <= sizeof(int) * 8)
                 {
                   return const_var(static_cast<int>(temp_int));
