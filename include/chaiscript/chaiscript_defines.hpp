@@ -15,6 +15,10 @@
 #endif
 #endif
 
+#ifndef CHAISCRIPT_MSVC_12
+#define CHAISCRIPT_HAS_MAGIC_STATICS
+#endif
+
 #include <vector>
 
 #if defined( _LIBCPP_VERSION )

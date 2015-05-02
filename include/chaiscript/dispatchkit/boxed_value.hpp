@@ -409,6 +409,7 @@ namespace chaiscript
       return detail::const_var_impl(t);
     }
 
+#ifdef CHAISCRIPT_HAS_MAGIC_STATICS
   inline Boxed_Value const_var(bool b) {
     static auto t = detail::const_var_impl(true);
     static auto f = detail::const_var_impl(false);
@@ -419,7 +420,7 @@ namespace chaiscript
       return f;
     }
   }
-
+#endif
 
 }
 
