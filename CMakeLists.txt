@@ -13,12 +13,7 @@ ELSE()
 
 project(chaiscript)
 
-# MINGW does not yet support C++11's concurrency features
-if(MINGW)
-  option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" FALSE)
-else()
-  option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" TRUE)
-endif()
+option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" TRUE)
 
 
 option(BUILD_MODULES "Build Extra Modules (stl)" TRUE)
@@ -158,7 +153,13 @@ else()
 endif()
 
 if(MSVC)
-  add_definitions(/W4 /w44640)
+  add_definitions(/W4)
+
+  # VS2013 doesn't have magic statics
+  if (MSVC_VERSION STREQUAL "1800")
+    add_definitions(/w44640)
+  endif()
+
   add_definitions(/bigobj)
   # Note on MSVC compiler flags.
   # The code base selective disables warnings as necessary when the compiler is complaining too much
@@ -172,7 +173,7 @@ else()
   add_definitions(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wcast-qual -Wunused -Woverloaded-virtual  -pedantic ${CPP11_FLAG})
 
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    add_definitions(-Weverything -Wno-c++98-compat -Wno-documentation -Wno-switch-enum -Wno-weak-vtables -Wno-sign-conversion -Wno-missing-prototypes -Wno-padded -Wno-missing-noreturn)
+    add_definitions(-Weverything -Wno-c++98-compat -Wno-documentation -Wno-switch-enum -Wno-weak-vtables -Wno-sign-conversion -Wno-missing-prototypes -Wno-padded -Wno-missing-noreturn -Wno-exit-time-destructors)
   else()
     add_definitions(-Wnoexcept)
   endif()
