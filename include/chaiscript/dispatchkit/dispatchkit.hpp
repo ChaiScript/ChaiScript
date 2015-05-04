@@ -487,6 +487,23 @@ namespace chaiscript
           }
         }
 
+        /// Adds a new global (non-const) shared object, between all the threads
+        Boxed_Value add_global_no_throw(const Boxed_Value &obj, const std::string &name)
+        {
+          validate_object_name(name);
+
+          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_global_object_mutex);
+
+          const auto itr = m_state.m_global_objects.find(name);
+          if (itr == m_state.m_global_objects.end())
+          {
+            m_state.m_global_objects.insert(std::make_pair(name, obj));
+            return obj;
+          } else {
+            return itr->second;
+          }
+        }
+
 
         /// Adds a new global (non-const) shared object, between all the threads
         void add_global(const Boxed_Value &obj, const std::string &name)

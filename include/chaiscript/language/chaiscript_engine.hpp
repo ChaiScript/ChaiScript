@@ -346,6 +346,9 @@ namespace chaiscript
       m_engine.add_reserved_word("true");
       m_engine.add_reserved_word("false");
       m_engine.add_reserved_word("class");
+      m_engine.add_reserved_word("attr");
+      m_engine.add_reserved_word("var");
+      m_engine.add_reserved_word("GLOBAL");
       m_engine.add_reserved_word("_");
 
       if (t_lib)

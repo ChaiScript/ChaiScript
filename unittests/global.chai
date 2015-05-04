@@ -1,0 +1,18 @@
+// Test global 
+
+GLOBAL g = 3;
+assert_true(g == 3);
+
+var v := g;
+assert_true(v == 3);
+
+GLOBAL g = 2;
+assert_true(g == 2);
+assert_true(v == 2);
+
+def f() {
+  assert_true(g == 2);
+}
+
+f();
+

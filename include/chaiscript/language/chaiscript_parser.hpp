@@ -323,8 +323,6 @@ namespace chaiscript
         if (is_deep) {
           new_children.assign(std::make_move_iterator(m_match_stack.begin() + static_cast<int>(t_match_start)), 
                               std::make_move_iterator(m_match_stack.end()));
-//          new_children = std::vector<AST_NodePtr>(std::make_move_iterator(m_match_stack.begin() + static_cast<int>(t_match_start)), 
-//                                     std::make_move_iterator(m_match_stack.end()));
           m_match_stack.erase(m_match_stack.begin() + static_cast<int>(t_match_start), m_match_stack.end());
         }
 
@@ -1970,7 +1968,7 @@ namespace chaiscript
           }
 
           build_match<eval::Attr_Decl_AST_Node>(prev_stack_top);
-        } else if (Keyword("auto") || Keyword("var")) {
+        } else if (Keyword("auto") || Keyword("var") ) {
           retval = true;
 
           if (!(Reference() || Id())) {
@@ -1978,6 +1976,14 @@ namespace chaiscript
           }
 
           build_match<eval::Var_Decl_AST_Node>(prev_stack_top);
+        } else if (Keyword("GLOBAL")) {
+          retval = true;
+
+          if (!(Reference() || Id())) {
+            throw exception::eval_error("Incomplete global declaration", File_Position(m_line, m_col), *m_filename);
+          }
+
+          build_match<eval::Global_Decl_AST_Node>(prev_stack_top);
         } else if (Keyword("attr")) {
           retval = true;
 

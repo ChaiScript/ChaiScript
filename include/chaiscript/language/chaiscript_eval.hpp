@@ -539,6 +539,33 @@ namespace chaiscript
         }
     };
 
+    struct Global_Decl_AST_Node : public AST_Node {
+      public:
+        Global_Decl_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Global_Decl, std::move(t_loc), std::move(t_children)) { }
+        virtual ~Global_Decl_AST_Node() {}
+        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
+
+          const std::string &idname =
+            [&]()->const std::string &{
+              if (children[0]->identifier == AST_Node_Type::Reference) {
+                return children[0]->children[0]->text;
+              } else {
+                return children[0]->text;
+              }
+            }();
+
+          try {
+            return t_ss.add_global_no_throw(Boxed_Value(), idname);
+          }
+          catch (const exception::reserved_word_error &) {
+            throw exception::eval_error("Reserved word used as global '" + idname + "'");
+          }
+
+        }
+    };
+
+
     struct Var_Decl_AST_Node : public AST_Node {
       public:
         Var_Decl_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
