@@ -249,6 +249,15 @@ void interactive(chaiscript::ChaiScript& chai)
   }
 }
 
+double getTimeInSeconds()
+{
+  using namespace std::chrono;
+  static time_point<high_resolution_clock> start = high_resolution_clock::now();
+
+  duration<double> elapsed_seconds = high_resolution_clock::now() - start;
+  return elapsed_seconds.count();
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -288,6 +297,8 @@ int main(int argc, char *argv[])
   chai.add(chaiscript::fun(&help), "help");
   chai.add(chaiscript::fun(&throws_exception), "throws_exception");
   chai.add(chaiscript::fun(&get_eval_error), "get_eval_error");
+  chai.add(chaiscript::fun(&getTimeInSeconds), "getTimeInSeconds");
+
 
   for (int i = 0; i < argc; ++i) {
     if ( i == 0 && argc > 1 ) {
