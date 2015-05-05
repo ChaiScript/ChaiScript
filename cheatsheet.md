@@ -182,6 +182,23 @@ var v = [1,2,3u,4ll,"16", `+`]; // creates vector of heterogenous values
 var m = ["a":1, "b":2]; // map of string:value pairs
 ```
 
+Floating point values default to `double` type and integers default to `int` type. All C++ suffixes
+such as `f`, `ll`, `u` as well as scientific notion is supported
+
+```
+1.0 // double
+1.0f // float
+1.0l // long double
+1 // int
+1u // unsigned int
+1ul // unsigned long
+1ull // unsigned long long
+```
+
+Literals are automatically sized, just as in C++. For example: `10000000000` is > 32bits and the appropriate type is used to hold it
+on your platform.
+
+
 ## Functions
 
 ### General 
