@@ -1,0 +1,13 @@
+var sum = 0.0
+var start = now()
+for (var i = 1; i <= 100000; ++i) {
+  if (i % 2 == 0) {
+    sum += 1.0 / i;
+  }
+  else {
+    sum += 1.0 / (double(i) * i);
+  }
+}
+var end = now()
+print("Elapsed time: " + to_string(end - start) + " sum: " + to_string(sum))
+assert_equal(to_string(sum), "6.9322")
