@@ -1,6 +1,29 @@
 Notes:
 =======
-Current Version: 5.6.0
+Current Version: 5.7.0
+
+### Changes since 5.6.0
+
+* Significant code cleanups and reduction
+* Smaller builds
+* Faster compiles
+* Less runtime memory usage
+* ~2x faster runtimes
+* biicode support
+* method_missing feature added #164 @arBmind
+* Generic objects with dynamic properties support
+* Add ability to call functions contained in properties
+* Add lambda captures
+* Create [cheatsheet.md](cheatsheet.md) for all-in-one reference of features
+* Fix support for libc++
+* Eliminate clone of return value stored locally
+* Eliminate 'return' statements when last line of function
+* Reduce number of runtime exceptions occuring
+* Reduce copies / moves of return values. 
+* make `use` statement return value of last statement in file
+* Add ability to access fixed array sizes
+* Add support for scientific notation floating point literals #174  @totalgee
+
 
 ### Changes since 5.5.1
 * Throw exception on integer divide by 0
