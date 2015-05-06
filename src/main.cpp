@@ -249,6 +249,13 @@ void interactive(chaiscript::ChaiScript& chai)
   }
 }
 
+double now()
+{
+  using namespace std::chrono;
+  auto now = high_resolution_clock::now();
+  return duration_cast<duration<double>>(now.time_since_epoch()).count();
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -288,6 +295,8 @@ int main(int argc, char *argv[])
   chai.add(chaiscript::fun(&help), "help");
   chai.add(chaiscript::fun(&throws_exception), "throws_exception");
   chai.add(chaiscript::fun(&get_eval_error), "get_eval_error");
+  chai.add(chaiscript::fun(&now), "now");
+
 
   for (int i = 0; i < argc; ++i) {
     if ( i == 0 && argc > 1 ) {
