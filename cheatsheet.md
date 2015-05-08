@@ -152,7 +152,7 @@ p(5, 6); // calls chaiscript's '+' function, returning 11
 ```
 
 ```
-auto p = chai.eval<std::function<std::string (int, double)>>(fun(x,y) { to_string(x) + to_string(y); });
+auto p = chai.eval<std::function<std::string (int, double)>>("fun(x,y) { to_string(x) + to_string(y); }");
 p(3,4.2); // evaluates the lambda function, returning the string "34.2" to C++
 ```
 
@@ -183,7 +183,7 @@ var m = ["a":1, "b":2]; // map of string:value pairs
 ```
 
 Floating point values default to `double` type and integers default to `int` type. All C++ suffixes
-such as `f`, `ll`, `u` as well as scientific notion is supported
+such as `f`, `ll`, `u` as well as scientific notation are supported
 
 ```
 1.0 // double
