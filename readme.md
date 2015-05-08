@@ -1,6 +1,6 @@
-Master Status: [![Build Status](https://travis-ci.org/ChaiScript/ChaiScript.png?branch=master)](https://travis-ci.org/ChaiScript/ChaiScript) [![Coverage Status](https://coveralls.io/repos/ChaiScript/ChaiScript/badge.png?branch=master)](https://coveralls.io/r/ChaiScript/ChaiScript?branch=master)
+Master Status: [![Linux Build Status](https://travis-ci.org/ChaiScript/ChaiScript.png?branch=master)](https://travis-ci.org/ChaiScript/ChaiScript) [![Windows Build status](https://ci.appveyor.com/api/projects/status/6u3r4s81kkjqmsqw?svg=true)](https://ci.appveyor.com/project/lefticus/chaiscript) [![Coverage Status](https://coveralls.io/repos/ChaiScript/ChaiScript/badge.png?branch=master)](https://coveralls.io/r/ChaiScript/ChaiScript?branch=master) 
 
-Develop Status: [![Build Status](https://travis-ci.org/ChaiScript/ChaiScript.png?branch=develop)](https://travis-ci.org/ChaiScript/ChaiScript) [![Coverage Status](https://coveralls.io/repos/ChaiScript/ChaiScript/badge.png?branch=develop)](https://coveralls.io/r/ChaiScript/ChaiScript?branch=develop)
+Develop Status: [![Linux Build Status](https://travis-ci.org/ChaiScript/ChaiScript.png?branch=develop)](https://travis-ci.org/ChaiScript/ChaiScript) [![Windows Build status](https://ci.appveyor.com/api/projects/status/6u3r4s81kkjqmsqw/branch/develop?svg=true)](https://ci.appveyor.com/project/lefticus/chaiscript/branch/develop) [![Coverage Status](https://coveralls.io/repos/ChaiScript/ChaiScript/badge.png?branch=develop)](https://coveralls.io/r/ChaiScript/ChaiScript?branch=develop)
 
 
 ChaiScript
