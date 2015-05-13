@@ -258,6 +258,8 @@ double now()
 
 int main(int argc, char *argv[])
 {
+  int i;
+  std::cout << i << '\n';
 
   // Disable deprecation warning for getenv call.
 #ifdef CHAISCRIPT_MSVC
