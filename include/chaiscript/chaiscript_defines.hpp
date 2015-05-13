@@ -61,7 +61,7 @@
 namespace chaiscript {
   static const int version_major = 5;
   static const int version_minor = 7;
-  static const int version_patch = 0;
+  static const int version_patch = 1;
 
   template<typename B, typename D, typename ...Arg>
   inline std::shared_ptr<B> make_shared(Arg && ... arg)
