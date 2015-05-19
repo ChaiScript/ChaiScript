@@ -470,8 +470,8 @@ namespace chaiscript
         oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
             << this->text << " : " << this->location.start.line << ", " << this->location.start.column << '\n';
 
-        for (size_t j = 0; j < this->children.size(); ++j) {
-          oss << this->children[j]->to_string(t_prepend + "  ");
+        for (auto & elem : this->children) {
+          oss << elem->to_string(t_prepend + "  ");
         }
         return oss.str();
       }

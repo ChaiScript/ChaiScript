@@ -67,6 +67,7 @@ namespace chaiscript
           m_multiline_comment_end("*/"),
           m_singleline_comment("//")
       {
+        m_match_stack.reserve(2);
         setup_operators();
       }
 
