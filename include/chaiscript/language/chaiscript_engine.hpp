@@ -370,7 +370,7 @@ namespace chaiscript
 
 //      m_engine.add(fun<Boxed_Value (const dispatch::Proxy_Function_Base *, const std::vector<Boxed_Value> &)>(std::bind(&chaiscript::dispatch::Proxy_Function_Base::operator(), std::placeholders::_1, std::placeholders::_2, std::ref(m_engine.conversions()))), "call");
 //
-      m_engine.add(fun<Boxed_Value (const dispatch::Proxy_Function_Base &, const std::vector<Boxed_Value> &)>(
+      m_engine.add(fun(
             [=](const dispatch::Proxy_Function_Base &t_fun, const std::vector<Boxed_Value> &t_params) {
               return t_fun(t_params, this->m_engine.conversions());
             }), "call");
@@ -378,9 +378,9 @@ namespace chaiscript
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type_name, std::ref(m_engine)), "name");
 
       m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type, std::ref(m_engine)), "type");
-      m_engine.add(fun<chaiscript::Type_Info (const std::string &)>([this](const std::string &t_type_name){ return this->m_engine.get_type(t_type_name, true); }), "type");
+      m_engine.add(fun([this](const std::string &t_type_name){ return this->m_engine.get_type(t_type_name, true); }), "type");
 
-      m_engine.add(fun<void(const Type_Info &, const Type_Info &, const std::function<Boxed_Value(const Boxed_Value &)> &)>(
+      m_engine.add(fun(
             [=](const Type_Info &t_from, const Type_Info &t_to, const std::function<Boxed_Value (const Boxed_Value &)> &t_func) {
               m_engine.add(chaiscript::type_conversion(t_from, t_to, t_func));
             }
