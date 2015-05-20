@@ -36,6 +36,7 @@ namespace chaiscript
           return std::function<Ret (Args...)>(func);
         }
 
+
       template<typename Ret, typename Class, typename ... Args> 
         std::function<Ret (Class &, Args...) > to_function(Ret (Class::*func)(Args...))
         {
@@ -60,6 +61,25 @@ namespace chaiscript
 #else
           return std::function<Ret(const Class &, Args...)>(func);
 #endif
+        }
+
+      template<typename T, typename Ret, typename Class, typename ... Args> 
+        std::function<Ret (Args...)> to_function_callable(Ret (Class::*)(Args...), T t)
+        {
+          return std::function<Ret (Args...)>(t);
+        }
+
+      template<typename T, typename Ret, typename Class, typename ... Args> 
+        std::function<Ret (Args...)> to_function_callable(Ret (Class::*)(Args...) const, T t)
+        {
+          return std::function<Ret (Args...)>(t);
+        }
+
+
+      template<typename T>
+        auto to_function(T t) -> decltype(to_function_callable(&T::operator(), t))
+        {
+          return to_function_callable(&T::operator(), t);
         }
 
     }

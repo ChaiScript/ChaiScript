@@ -57,7 +57,7 @@ namespace chaiscript
         typedef typename std::remove_extent<T>::type ReturnType;
         const auto extent = std::extent<T>::value;
         m->add(user_type<T>(), type);
-        m->add(fun<ReturnType& (T &, size_t)>(
+        m->add(fun(
               [extent](T& t, size_t index)->ReturnType &{
                 if (extent > 0 && index >= extent) {
                   throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
@@ -68,7 +68,7 @@ namespace chaiscript
               ), "[]"
             );
 
-        m->add(fun<const ReturnType& (const T &, size_t)>(
+        m->add(fun(
               [extent](const T &t, size_t index)->const ReturnType &{
                 if (extent > 0 && index >= extent) {
                   throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
@@ -79,7 +79,7 @@ namespace chaiscript
               ), "[]"
             );
 
-        m->add(fun<size_t (const T &)>(
+        m->add(fun(
               [extent](const T &) {
                 return extent;
               }), "size");
@@ -465,7 +465,7 @@ namespace chaiscript
         operators::assign<bool>(m);
         operators::equal<bool>(m);
 
-        m->add(fun<std::string (const std::string &t_ss)>([](const std::string &s) -> std::string { return s; }), "to_string");
+        m->add(fun([](const std::string &s) -> std::string { return s; }), "to_string");
         m->add(fun(&Bootstrap::bool_to_string), "to_string");
         m->add(fun(&unknown_assign), "=");
         m->add(fun(&throw_exception), "throw");
@@ -503,7 +503,7 @@ namespace chaiscript
         m->add(fun(&ptr_assign<std::remove_const<dispatch::Proxy_Function_Base>::type>), "=");
         m->add(fun(&ptr_assign<std::add_const<dispatch::Proxy_Function_Base>::type>), "=");
         m->add(chaiscript::base_class<dispatch::Proxy_Function_Base, dispatch::Assignable_Proxy_Function>());
-        m->add(fun<void (dispatch::Assignable_Proxy_Function &, const std::shared_ptr<const dispatch::Proxy_Function_Base> &)>(
+        m->add(fun(
                   [](dispatch::Assignable_Proxy_Function &t_lhs, const std::shared_ptr<const dispatch::Proxy_Function_Base> &t_rhs) {
                     t_lhs.assign(t_rhs);
                   }
