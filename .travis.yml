@@ -14,10 +14,7 @@ script:
   - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug .
   - make -j2
   - make test
-  - mkdir gcov
-  - find CMakeFiles/ -name "*.gc*" -exec mv {} gcov/ \;
-  - $GCOV -d -o gcov gcov/*.gcda
-  - coveralls -n -E ".*\.cpp"
+  - coveralls -n -E ".*\.cpp" -E "catch\.hpp" --gcov $GCOV
 after_script:
   - contrib/codeanalysis/runcppcheck.sh
 notifications:

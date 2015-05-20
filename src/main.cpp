@@ -324,7 +324,7 @@ int main(int argc, char *argv[])
         arg += line + '\n' ;
       }
     } else if ( arg == "-v" || arg == "--version" ) {
-      arg = "version()" ;
+      arg = "print(version())" ;
     } else if ( arg == "-h" || arg == "--help" ) {
       arg = "help(-1)";
     } else if ( arg == "-i" || arg == "--interactive" ) {

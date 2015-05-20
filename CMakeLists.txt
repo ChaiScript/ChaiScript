@@ -314,6 +314,19 @@ if(BUILD_TESTING)
     "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
   )
 
+  add_test(version_check_2 chai --version )
+  set_property(TEST version_check_2
+    PROPERTY ENVIRONMENT
+    "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
+    PROPERTY PASS_REGULAR_EXPRESSION "${CHAI_VERSION}"
+  )
+
+  add_test(help chai --help )
+  set_property(TEST help
+    PROPERTY ENVIRONMENT
+    "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
+  )
+
 
   foreach(filename ${UNIT_TESTS})
     message(STATUS "Adding test ${filename}")
