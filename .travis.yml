@@ -14,7 +14,7 @@ script:
   - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug .
   - make -j2
   - make test
-  - coveralls -E ".*\.cpp|catch\.hpp" --gcov $GCOV
+  - coveralls -E ".*\.cpp" -e catch.hpp --gcov $GCOV
 after_script:
   - contrib/codeanalysis/runcppcheck.sh
 notifications:
