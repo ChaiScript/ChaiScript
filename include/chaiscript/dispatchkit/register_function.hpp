@@ -19,6 +19,7 @@ namespace chaiscript
   {
     namespace detail
     {
+
       template<typename T>
         struct FunctionSignature
         {
@@ -108,8 +109,17 @@ namespace chaiscript
   template<typename T>
     Proxy_Function fun(const T &t)
     {
+      typedef typename dispatch::detail::Callable_Traits<T>::Signature Signature;
+
       return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(t)) >::Signature>>(dispatch::detail::to_function(t)));
+          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Signature, T>>(t));
+    }
+
+  template<typename Ret, typename ... Param>
+    Proxy_Function fun(Ret (*func)(Param...))
+    {
+      return Proxy_Function(
+          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(func)) >::Signature>>(dispatch::detail::to_function(func)));
     }
 
   template<typename Ret, typename Class, typename ... Param>
