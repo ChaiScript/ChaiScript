@@ -126,17 +126,26 @@ namespace chaiscript
     }
 
   template<typename Ret, typename Class, typename ... Param>
-    Proxy_Function fun(Ret (Class::*func)(Param...) const)
+    Proxy_Function fun(Ret (Class::*t_func)(Param...) const)
     {
+      auto call = dispatch::detail::Const_Caller<Ret, Class, Param...>(t_func);
+
       return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(func)) >::Signature>>(dispatch::detail::to_function(func)));
+          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (const Class &, Param...), decltype(call)>>(call));
     }
 
   template<typename Ret, typename Class, typename ... Param>
-    Proxy_Function fun(Ret (Class::*func)(Param...))
+    Proxy_Function fun(Ret (Class::*t_func)(Param...))
     {
+      auto call = dispatch::detail::Caller<Ret, Class, Param...>(t_func);
+
       return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(func)) >::Signature>>(dispatch::detail::to_function(func)));
+          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (Class &, Param...), decltype(call)>>(call));
+
+/*
+      return Proxy_Function(
+          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(t_func)) >::Signature>>(dispatch::detail::to_function(t_func)));
+*/
     }
 
 
