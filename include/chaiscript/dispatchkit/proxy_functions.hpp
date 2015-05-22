@@ -578,8 +578,8 @@ namespace chaiscript
       protected:
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          typedef typename detail::Callable_Traits<Callable>::Return_Type Return_Type;
-          return detail::Do_Call<Return_Type>::go(m_f, params, t_conversions);
+          typedef typename detail::Function_Signature<Func>::Return_Type Return_Type;
+          return detail::Do_Call<Return_Type>::template go<Func>(m_f, params, t_conversions);
         }
 
 
@@ -621,7 +621,7 @@ namespace chaiscript
       protected:
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          return detail::Do_Call<typename std::function<Func>::result_type>::go(m_f, params, t_conversions);
+          return detail::Do_Call<typename std::function<Func>::result_type>::template go<Func>(m_f, params, t_conversions);
         }
 
 
@@ -682,7 +682,7 @@ namespace chaiscript
       protected:
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          return detail::Do_Call<typename std::function<Func>::result_type>::go(m_f.get(), params, t_conversions);
+          return detail::Do_Call<typename std::function<Func>::result_type>::template go<Func>(m_f.get(), params, t_conversions);
         }
 
 

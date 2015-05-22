@@ -118,8 +118,11 @@ namespace chaiscript
   template<typename Ret, typename ... Param>
     Proxy_Function fun(Ret (*func)(Param...))
     {
+      auto f_ref = std::ref(*func);
+
       return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(func)) >::Signature>>(dispatch::detail::to_function(func)));
+          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (Param...), decltype(f_ref)>>(f_ref));
+
     }
 
   template<typename Ret, typename Class, typename ... Param>

@@ -14,7 +14,14 @@ namespace chaiscript {
       template<typename T>
         struct Function_Signature
         {
+
+          template<typename Ret, typename ... Param>
+            static Ret deduce_ret_type(Function_Signature<Ret (Param...)> *);
+
           typedef T Signature;
+          typedef Function_Signature<T> *ptr_type;
+          typedef decltype(deduce_ret_type(ptr_type(nullptr))) Return_Type;
+
         };
 
       template<typename T>
@@ -22,14 +29,11 @@ namespace chaiscript {
         {
 
           template<typename Ret, typename ... Param>
-            static Ret deduce_ret_type(Ret (T::*)(Param...) const);
-
-          template<typename Ret, typename ... Param>
             static Function_Signature<Ret (Param...)> deduce_sig_type(Ret (T::*)(Param...) const);
 
-          typedef decltype(deduce_ret_type(&T::operator())) Return_Type;
           typedef typename decltype(deduce_sig_type(&T::operator()))::Signature Signature;
           typedef decltype(deduce_sig_type(&T::operator())) Signature_Object;
+          typedef typename Signature_Object::Return_Type Return_Type;
         };
     }
   }

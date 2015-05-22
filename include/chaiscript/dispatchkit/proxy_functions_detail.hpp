@@ -171,20 +171,20 @@ namespace chaiscript
     template<typename Ret>
       struct Do_Call
       {
-        template<typename Callable>
+        template<typename Signature, typename Callable>
           static Boxed_Value go(const Callable &fun, const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
           {
-            return Handle_Return<Ret>::handle(call_func(typename Callable_Traits<Callable>::Signature_Object(), fun, params, t_conversions));
+            return Handle_Return<Ret>::handle(call_func(Function_Signature<Signature>(), fun, params, t_conversions));
           }
       };
 
     template<>
       struct Do_Call<void>
       {
-        template<typename Callable>
+        template<typename Signature, typename Callable>
           static Boxed_Value go(const Callable &fun, const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
           {
-            call_func(typename Callable_Traits<Callable>::Signature_Object(), fun, params, t_conversions);
+            call_func(Function_Signature<Signature>(), fun, params, t_conversions);
             return Handle_Return<void>::handle();
           }
       };
