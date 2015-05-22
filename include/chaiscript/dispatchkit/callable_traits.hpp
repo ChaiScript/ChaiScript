@@ -7,9 +7,20 @@
 #ifndef CHAISCRIPT_CALLABLE_TRAITS_HPP_
 #define CHAISCRIPT_CALLABLE_TRAITS_HPP_
 
+#include <memory>
+
 namespace chaiscript {
   namespace dispatch {
     namespace detail {
+      template<typename Class, typename ... Param>
+      struct Constructor
+      {
+        template<typename ... Inner>
+        std::shared_ptr<Class> operator()(Inner&& ... inner) const {
+          return std::make_shared<Class>(std::forward<Inner>(inner)...);
+        }
+      };
+
       template<typename Ret, typename Class, typename ... Param>
       struct Const_Caller
       {

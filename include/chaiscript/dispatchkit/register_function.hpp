@@ -15,76 +15,6 @@
 
 namespace chaiscript
 {
-  namespace dispatch
-  {
-    namespace detail
-    {
-
-      template<typename T>
-        struct FunctionSignature
-        {
-        };
-
-      template<typename Sig>
-        struct FunctionSignature<std::function<Sig> >
-        {
-          typedef Sig Signature;
-        };
-
-      template<typename Ret, typename ... Args> 
-        std::function<Ret (Args...) > to_function(Ret (*func)(Args...))
-        {
-          return std::function<Ret (Args...)>(func);
-        }
-
-
-      template<typename Ret, typename Class, typename ... Args> 
-        std::function<Ret (Class &, Args...) > to_function(Ret (Class::*func)(Args...))
-        {
-#ifdef CHAISCRIPT_MSVC
-          /// \todo this std::mem_fn wrap shouldn't be necessary but type conversions for 
-          ///       std::function for member function pointers seems to be broken in MSVC
-          return std::function<Ret(Class &, Args...)>(std::mem_fn(func));
-#else
-          return std::function<Ret(Class &, Args...)>(func);
-#endif
-        }
-
-      template<typename Ret, typename Class, typename ... Args> 
-        std::function<Ret (const Class &, Args...) > to_function(Ret (Class::*func)(Args...) const)
-        {
-#if defined(CHAISCRIPT_MSVC) || defined(CHAISCRIPT_LIBCPP)
-          /// \todo this std::mem_fn wrap shouldn't be necessary but type conversions for 
-          ///       std::function for member function pointers seems to be broken in MSVC
-          return std::function<Ret (const Class &, Args...)>([func](const Class &o, Args... args)->Ret {
-                return (o.*func)(std::forward<Args>(args)...);
-              });
-#else
-          return std::function<Ret(const Class &, Args...)>(func);
-#endif
-        }
-
-      template<typename T, typename Ret, typename Class, typename ... Args> 
-        std::function<Ret (Args...)> to_function_callable(Ret (Class::*)(Args...), T t)
-        {
-          return std::function<Ret (Args...)>(t);
-        }
-
-      template<typename T, typename Ret, typename Class, typename ... Args> 
-        std::function<Ret (Args...)> to_function_callable(Ret (Class::*)(Args...) const, T t)
-        {
-          return std::function<Ret (Args...)>(t);
-        }
-
-
-      template<typename T>
-        auto to_function(T t) -> decltype(to_function_callable(&T::operator(), t))
-        {
-          return to_function_callable(&T::operator(), t);
-        }
-
-    }
-  }
 
   /// \brief Creates a new Proxy_Function object from a free function, member function or data member
   /// \param[in] t Function / member to expose
@@ -142,10 +72,6 @@ namespace chaiscript
       return Proxy_Function(
           chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (Class &, Param...), decltype(call)>>(call));
 
-/*
-      return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(t_func)) >::Signature>>(dispatch::detail::to_function(t_func)));
-*/
     }
 
 
