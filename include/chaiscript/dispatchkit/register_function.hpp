@@ -144,22 +144,6 @@ namespace chaiscript
     }
 
 
-  /// \brief Creates a new Proxy_Function object from a std::function object
-  /// \param[in] f std::function to expose to ChaiScript
-  ///
-  /// \b Example:
-  /// \code
-  /// std::function<int (char, float, std::string)> f = get_some_function();
-  /// chaiscript::ChaiScript chai;
-  /// chai.add(fun(f), "some_function");
-  /// \endcode
-  /// 
-  /// \sa \ref adding_functions
-  template<typename T>
-    Proxy_Function fun(const std::function<T> &f)
-    {
-      return Proxy_Function(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<T>>(f));
-    }
 
   
   /// \brief Creates a new Proxy_Function object from a free function, member function or data member and binds the first parameter of it

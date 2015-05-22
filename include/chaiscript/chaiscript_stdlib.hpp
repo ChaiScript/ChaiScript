@@ -47,7 +47,7 @@ namespace chaiscript
 
 #ifndef CHAISCRIPT_NO_THREADS
         lib->add(standard_library::future_type<std::future<chaiscript::Boxed_Value>>("future"));
-        lib->add(chaiscript::fun<std::future<Boxed_Value> (const std::function<chaiscript::Boxed_Value ()> &)>([](const std::function<chaiscript::Boxed_Value ()> &t_func){ return std::async(std::launch::async, t_func);}), "async");
+        lib->add(chaiscript::fun([](const std::function<chaiscript::Boxed_Value ()> &t_func){ return std::async(std::launch::async, t_func);}), "async");
 #endif
 
         return lib;
