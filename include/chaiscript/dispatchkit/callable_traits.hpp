@@ -47,29 +47,32 @@ namespace chaiscript {
         Ret (Class::*m_func)(Param...);
       };
 
+
       template<typename T>
         struct Function_Signature
         {
-
-          template<typename Ret, typename ... Param>
-            static Ret deduce_ret_type(Function_Signature<Ret (Param...)> *);
-
-          typedef T Signature;
-          typedef Function_Signature<T> *ptr_type;
-          typedef decltype(deduce_ret_type(ptr_type(nullptr))) Return_Type;
-
         };
+
+      template<typename Ret, typename ... Params>
+      struct Function_Signature<Ret (Params...)>
+        {
+          typedef Ret Return_Type;
+          typedef Ret (Signature)(Params...);
+        };
+
+      template<typename Ret, typename T, typename ... Params>
+      struct Function_Signature<Ret (T::*)(Params...) const>
+        {
+          typedef Ret Return_Type;
+          typedef Ret (Signature)(Params...);
+        };
+
 
       template<typename T>
         struct Callable_Traits
         {
-
-          template<typename Ret, typename ... Param>
-            static Function_Signature<Ret (Param...)> deduce_sig_type(Ret (T::*)(Param...) const);
-
-          typedef typename decltype(deduce_sig_type(&T::operator()))::Signature Signature;
-          typedef decltype(deduce_sig_type(&T::operator())) Signature_Object;
-          typedef typename Signature_Object::Return_Type Return_Type;
+          typedef typename Function_Signature<decltype(&T::operator())>::Signature Signature;
+          typedef typename Function_Signature<decltype(&T::operator())>::Return_Type Return_Type;
         };
     }
   }

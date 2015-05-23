@@ -558,7 +558,7 @@ namespace chaiscript
       public:
         Proxy_Function_Callable_Impl(Callable f)
           : Proxy_Function_Impl_Base(detail::build_param_type_list(static_cast<Func *>(nullptr))),
-            m_f(std::move(f)), m_dummy_func(nullptr)
+            m_f(std::move(f))
         {
         }
 
@@ -566,7 +566,7 @@ namespace chaiscript
 
         virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          return detail::compare_types_cast(m_dummy_func, vals, t_conversions);
+          return detail::compare_types_cast(static_cast<Func *>(nullptr), vals, t_conversions);
         }
 
         virtual bool operator==(const Proxy_Function_Base &t_func) const CHAISCRIPT_OVERRIDE
@@ -582,10 +582,8 @@ namespace chaiscript
           return detail::Do_Call<Return_Type>::template go<Func>(m_f, params, t_conversions);
         }
 
-
       private:
         Callable m_f;
-        Func *m_dummy_func;
     };
 
 
@@ -611,17 +609,16 @@ namespace chaiscript
       public:
         Assignable_Proxy_Function_Impl(std::reference_wrapper<std::function<Func>> t_f, std::shared_ptr<std::function<Func>> t_ptr)
           : Assignable_Proxy_Function(detail::build_param_type_list(static_cast<Func *>(nullptr))),
-            m_f(std::move(t_f)), m_shared_ptr_holder(std::move(t_ptr)), m_dummy_func(nullptr)
+            m_f(std::move(t_f)), m_shared_ptr_holder(std::move(t_ptr))
         {
           assert(!m_shared_ptr_holder || m_shared_ptr_holder.get() == &m_f.get());
-
         }
 
         virtual ~Assignable_Proxy_Function_Impl() {}
 
         virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          return detail::compare_types_cast(m_dummy_func, vals, t_conversions);
+          return detail::compare_types_cast(static_cast<Func *>(nullptr), vals, t_conversions);
         }
 
         virtual bool operator==(const Proxy_Function_Base &t_func) const CHAISCRIPT_OVERRIDE
@@ -648,7 +645,6 @@ namespace chaiscript
       private:
         std::reference_wrapper<std::function<Func>> m_f;
         std::shared_ptr<std::function<Func>> m_shared_ptr_holder;
-        Func *m_dummy_func;
     };
     /// Attribute getter Proxy_Function implementation
     template<typename T, typename Class>

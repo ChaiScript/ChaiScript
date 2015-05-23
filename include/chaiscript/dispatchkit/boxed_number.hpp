@@ -60,7 +60,7 @@ namespace chaiscript
   {
     private:
       template<typename T>
-      static void check_divide_by_zero(T t, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr)
+      inline static void check_divide_by_zero(T t, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr)
       {
 #ifndef CHAISCRIPT_NO_PROTECT_DIVIDEBYZERO
         if (t == 0) {
@@ -70,7 +70,7 @@ namespace chaiscript
       }
 
       template<typename T>
-      static void check_divide_by_zero(T, typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr)
+      inline static void check_divide_by_zero(T, typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr)
       {
       }
 
@@ -78,7 +78,7 @@ namespace chaiscript
       {
 
         template<typename T, typename U>
-        static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &)
+        inline static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &)
         {
           switch (t_oper)
           {
@@ -103,7 +103,7 @@ namespace chaiscript
       struct binary 
       {
         template<typename T, typename U>
-        static Boxed_Value go(Operators::Opers t_oper, T &t, const U &u, const Boxed_Value &t_lhs) 
+        inline static Boxed_Value go(Operators::Opers t_oper, T &t, const U &u, const Boxed_Value &t_lhs) 
         {
           switch (t_oper)
           {
@@ -140,7 +140,7 @@ namespace chaiscript
       struct binary_int
       {
         template<typename T, typename U>
-        static Boxed_Value go(Operators::Opers t_oper, T &t, const U &u, const Boxed_Value &t_lhs) 
+        inline static Boxed_Value go(Operators::Opers t_oper, T &t, const U &u, const Boxed_Value &t_lhs) 
         {
           switch (t_oper)
           {
@@ -173,7 +173,7 @@ namespace chaiscript
       struct const_binary_int
       {
         template<typename T, typename U>
-        static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &) 
+        inline static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &) 
         {
           switch (t_oper)
           {
@@ -201,7 +201,7 @@ namespace chaiscript
       struct const_binary
       {
         template<typename T, typename U>
-        static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &) 
+        inline static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &) 
         {
           switch (t_oper)
           {
@@ -227,7 +227,7 @@ namespace chaiscript
       template<typename LHS, typename RHS, bool Float>
       struct Go
       {
-        static Boxed_Value go(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
+        inline static Boxed_Value go(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
         {
           if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
           {
@@ -249,7 +249,7 @@ namespace chaiscript
       template<typename LHS, typename RHS>
       struct Go<LHS, RHS, true>
       {
-        static Boxed_Value go(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
+        inline static Boxed_Value go(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
         {
           if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
           {
@@ -269,7 +269,7 @@ namespace chaiscript
       };
 
       template<typename LHS, bool Float>
-        static Boxed_Value oper_rhs(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
+        inline static Boxed_Value oper_rhs(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
         {
           const auto &inp_ = t_rhs.get_type_info();
 
@@ -310,7 +310,7 @@ namespace chaiscript
           }
         } 
 
-        static Boxed_Value oper(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
+        inline static Boxed_Value oper(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
         {
           const Type_Info &inp_ = t_lhs.get_type_info();
 
