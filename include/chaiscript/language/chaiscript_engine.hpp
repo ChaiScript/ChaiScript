@@ -44,7 +44,6 @@
 
 #include "../dispatchkit/exception_specification.hpp"
 #include "chaiscript_parser.hpp"
-#include "chaiscript_prelude.chai"
 
 namespace chaiscript
 {
@@ -405,7 +404,6 @@ namespace chaiscript
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global_const(t_bv, t_name); }), "add_global_const");
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global(t_bv, t_name); }), "add_global");
 
-      do_eval(ChaiScript_Prelude::chaiscript_prelude(), "standard prelude");
     }
 
 
