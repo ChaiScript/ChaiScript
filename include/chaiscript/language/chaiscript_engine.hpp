@@ -356,13 +356,14 @@ namespace chaiscript
         add(t_lib);
       }
 
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::dump_system, std::ref(m_engine)), "dump_system");
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::dump_object, std::ref(m_engine)), "dump_object");
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::is_type, std::ref(m_engine)), "is_type");
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::type_name, std::ref(m_engine)), "type_name");
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::function_exists, std::ref(m_engine)), "function_exists");
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_function_objects, std::ref(m_engine)), "get_functions");
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_scripting_objects, std::ref(m_engine)), "get_objects");
+      m_engine.add(fun([this](){ m_engine.dump_system(); }), "dump_system");
+      m_engine.add(fun([this](const Boxed_Value &t_bv){ m_engine.dump_object(t_bv); }), "dump_object");
+      m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_type){ return m_engine.is_type(t_bv, t_type); }), "is_type");
+      m_engine.add(fun([this](const Boxed_Value &t_bv){ return m_engine.type_name(t_bv); }), "type_name");
+      m_engine.add(fun([this](const std::string &t_f){ return m_engine.function_exists(t_f); }), "function_exists");
+      m_engine.add(fun([this](){ return m_engine.get_function_objects(); }), "get_functions");
+      m_engine.add(fun([this](){ return m_engine.get_scripting_objects(); }), "get_objects");
+
       m_engine.add(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Dynamic_Proxy_Function>(
               [this](const std::vector<Boxed_Value> &t_params) {
                 return m_engine.call_exists(t_params);
@@ -375,10 +376,10 @@ namespace chaiscript
               return t_fun(t_params, this->m_engine.conversions());
             }), "call");
 
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type_name, std::ref(m_engine)), "name");
+      m_engine.add(fun([this](const Type_Info &t_ti){ return m_engine.get_type_name(t_ti); }), "name");
 
-      m_engine.add(fun(&chaiscript::detail::Dispatch_Engine::get_type, std::ref(m_engine)), "type");
-      m_engine.add(fun([this](const std::string &t_type_name){ return this->m_engine.get_type(t_type_name, true); }), "type");
+      m_engine.add(fun([this](const std::string &t_type_name, bool t_throw){ return m_engine.get_type(t_type_name, t_throw); }), "type");
+      m_engine.add(fun([this](const std::string &t_type_name){ return m_engine.get_type(t_type_name, true); }), "type");
 
       m_engine.add(fun(
             [=](const Type_Info &t_from, const Type_Info &t_to, const std::function<Boxed_Value (const Boxed_Value &)> &t_func) {
@@ -387,24 +388,22 @@ namespace chaiscript
           ), "add_type_conversion");
 
 
-      typedef std::string (ChaiScript::*load_mod_1)(const std::string&);
-      typedef void (ChaiScript::*load_mod_2)(const std::string&, const std::string&);
 
-      m_engine.add(fun(static_cast<load_mod_1>(&ChaiScript::load_module), this), "load_module");
-      m_engine.add(fun(static_cast<load_mod_2>(&ChaiScript::load_module), this), "load_module");
+      m_engine.add(fun([this](const std::string &t_module, const std::string &t_file){ return load_module(t_module, t_file); }), "load_module");
+      m_engine.add(fun([this](const std::string &t_module){ return load_module(t_module); }), "load_module");
 
-      m_engine.add(fun(&ChaiScript::use, this), "use");
-      m_engine.add(fun(&ChaiScript::internal_eval_file, this), "eval_file");
-      m_engine.add(fun(&ChaiScript::internal_eval, this), "eval");
-      m_engine.add(fun(&ChaiScript::internal_eval_ast, this), "eval");
+      m_engine.add(fun([this](const std::string &t_file){ return use(t_file); }), "use");
+      m_engine.add(fun([this](const std::string &t_file){ return internal_eval_file(t_file); }), "eval_file");
+      m_engine.add(fun([this](const std::string &t_str){ return internal_eval(t_str); }), "eval");
+      m_engine.add(fun([this](const AST_NodePtr &t_ast){ return internal_eval_ast(t_ast); }), "eval");
 
       m_engine.add(fun(&ChaiScript::version_major), "version_major");
       m_engine.add(fun(&ChaiScript::version_minor), "version_minor");
       m_engine.add(fun(&ChaiScript::version_patch), "version_patch");
       m_engine.add(fun(&ChaiScript::version), "version");
 
-      m_engine.add(fun(&ChaiScript::add_global_const, this), "add_global_const");
-      m_engine.add(fun(&ChaiScript::add_global, this), "add_global");
+      m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global_const(t_bv, t_name); }), "add_global_const");
+      m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global(t_bv, t_name); }), "add_global");
 
       do_eval(ChaiScript_Prelude::chaiscript_prelude(), "standard prelude");
     }

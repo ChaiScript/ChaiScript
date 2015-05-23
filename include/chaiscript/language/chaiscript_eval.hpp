@@ -1418,36 +1418,40 @@ namespace chaiscript
           std::shared_ptr<dispatch::Dynamic_Proxy_Function> guard;
           if (guardnode) {
             guard = std::make_shared<dispatch::Dynamic_Proxy_Function>
-              (std::bind(chaiscript::eval::detail::eval_function,
-                         std::ref(t_ss), guardnode,
-                         t_param_names, std::placeholders::_1, std::map<std::string, Boxed_Value>()), static_cast<int>(numparams), guardnode);
+              ([&t_ss, t_param_names, guardnode](const std::vector<Boxed_Value> &t_params) {
+                 return chaiscript::eval::detail::eval_function(t_ss, guardnode, t_param_names, t_params, std::map<std::string, Boxed_Value>());
+               }, static_cast<int>(numparams), guardnode);
           }
 
           try {
             const std::string & l_annotation = annotation?annotation->text:"";
-
             const std::string & function_name = children[static_cast<size_t>(1 + class_offset)]->text;
+            auto node = children.back();
 
             if (function_name == class_name) {
               param_types.push_front(class_name, Type_Info());
-              t_ss.add(std::make_shared<dispatch::detail::Dynamic_Object_Constructor>(class_name, std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
-                        std::ref(t_ss), children.back(), t_param_names, std::placeholders::_1, std::map<std::string, Boxed_Value>()), 
-                      static_cast<int>(numparams), children.back(), param_types, l_annotation, guard)), 
+
+              t_ss.add(std::make_shared<dispatch::detail::Dynamic_Object_Constructor>(class_name, 
+                    std::make_shared<dispatch::Dynamic_Proxy_Function>(
+                      [&t_ss, t_param_names, node](const std::vector<Boxed_Value> &t_params) {
+                        return chaiscript::eval::detail::eval_function(t_ss, node, t_param_names, t_params, std::map<std::string, Boxed_Value>());
+                      },
+                      static_cast<int>(numparams), node, param_types, l_annotation, guard)), 
                   function_name);
 
             } else {
-
               // if the type is unknown, then this generates a function that looks up the type
               // at runtime. Defining the type first before this is called is better
               auto type = t_ss.get_type(class_name, false);
               param_types.push_front(class_name, type);
 
-              t_ss.add(
-                  std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name, 
-                    std::make_shared<dispatch::Dynamic_Proxy_Function>(std::bind(chaiscript::eval::detail::eval_function,
-                                                                        std::ref(t_ss), children.back(),
-                                                                        t_param_names, std::placeholders::_1, std::map<std::string, Boxed_Value>()), static_cast<int>(numparams), children.back(),
-                                                              param_types, l_annotation, guard), type), function_name);
+              t_ss.add(std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name, 
+                    std::make_shared<dispatch::Dynamic_Proxy_Function>(
+                      [&t_ss, t_param_names, node](const std::vector<Boxed_Value> &t_params) {
+                        return chaiscript::eval::detail::eval_function(t_ss, node, t_param_names, t_params, std::map<std::string, Boxed_Value>());
+                      },
+                      static_cast<int>(numparams), node, param_types, l_annotation, guard), type), 
+                  function_name);
             }
           }
           catch (const exception::reserved_word_error &e) {
@@ -1473,15 +1477,14 @@ namespace chaiscript
           std::string class_name = (itr != d.end())?std::string(boxed_cast<std::string>(itr->second)):this->children[0]->text;
 
           try {
+            std::string attr_name = this->children[static_cast<size_t>(1 + class_offset)]->text;
+
             t_ss.add(
                 std::make_shared<dispatch::detail::Dynamic_Object_Function>(
                      std::move(class_name),
-                     fun(std::function<Boxed_Value (dispatch::Dynamic_Object &)>(
-                         std::bind(static_cast<Boxed_Value &(dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::get_attr), 
-                             std::placeholders::_1,
-                             this->children[static_cast<size_t>(1 + class_offset)]->text
-                             ))
-                     ),
+                     fun([attr_name](dispatch::Dynamic_Object &t_obj) {
+                           return t_obj.get_attr(attr_name);
+                         }),
                      true
 
                 ), this->children[static_cast<size_t>(1 + class_offset)]->text);
