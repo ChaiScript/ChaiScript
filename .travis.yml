@@ -3,9 +3,9 @@ compiler:
   - gcc
 env:
   matrix:
-    - GCC_VER="4.8"
     - GCC_VER="4.6"
-    - GCC_VER="5.1"
+    - GCC_VER="4.8"
+    - GCC_VER="5"
 
   global:
     - secure: eiaR6pXiiEpyB8+LLQ1NvZdl0Yylru1BLy9lMoHl+IpUNGGQGywmW/2WAn77rFfmR1OPA2qWQLfgPwgK0HxUA9HHlot9tre5QhiN2Lw8NOT8tCZ6tTm2+QntDBjBGJyal/knRvQkn/6qs6GxlXRerz4ArnnuPL1vESt3zwB0YtU=
@@ -15,13 +15,13 @@ env:
 
 before_install:
   - if [ "$GCC_VER" = "4.6" ]; then export CXX="g++-4.6" CC="gcc-4.6" GCOV="gcov-4.6"; fi
-  - if [ "$GCC_VER" = "4.8" ]; then export CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8"; fi
-  - if [ "$GCC_VER" = "5.1" ]; then export CXX="g++-5.1" CC="gcc-5.1" GCOV="gcov-5.1" COVERALLS=1 CPPCHECK=1; fi
+  - if [ "$GCC_VER" = "4.8" ]; then export CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8" COVERALLS=1 CPPCHECK=1; fi
+  - if [ "$GCC_VER" = "5" ];   then export CXX="g++-5"   CC="gcc-5"   GCOV="gcov-5"; fi
   - sudo pip install cpp-coveralls
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update
   - if [ "$GCC_VER" = "4.8" ]; then sudo apt-get install -qq g++-4.8; fi
-  - if [ "$GCC_VER" = "5.1" ]; then sudo apt-get install -qq g++-5.1; fi
+  - if [ "$GCC_VER" = "5" ];   then sudo apt-get install -qq g++-5; fi
 
 script: 
   - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug . ; fi
