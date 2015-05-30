@@ -42,9 +42,9 @@ addons:
     project:
       name: "ChaiScript/ChaiScript"
       description: "Build submitted via Travis CI"
-      notification_email: jason@emptycrate.com
-      build_command_prepend: "cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug . ; make clean"
-      build_command:   "make -j2"
-      branch_pattern: coverity_scan
+    notification_email: jason@emptycrate.com
+    build_command_prepend: "cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug . ; make clean"
+    build_command:   "make -j2"
+    branch_pattern: coverity_scan
 
 
