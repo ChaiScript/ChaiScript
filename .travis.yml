@@ -3,9 +3,9 @@ compiler:
   - gcc
 env:
   matrix:
-    - GCC_VER=4.6
-    - GCC_VER=4.8
-
+    - CXX="g++-4.6" CC="gcc-4.6" GCOV="gcov-4.6"
+    - CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8"
+    - CXX="g++-5.1" CC="gcc-5.1" GCOV="gcov-5.1" COVERALLS=1 CPPCHECK=1
 
   global:
     - secure: eiaR6pXiiEpyB8+LLQ1NvZdl0Yylru1BLy9lMoHl+IpUNGGQGywmW/2WAn77rFfmR1OPA2qWQLfgPwgK0HxUA9HHlot9tre5QhiN2Lw8NOT8tCZ6tTm2+QntDBjBGJyal/knRvQkn/6qs6GxlXRerz4ArnnuPL1vESt3zwB0YtU=
@@ -17,16 +17,18 @@ before_install:
   - sudo pip install cpp-coveralls
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update
-  - sudo apt-get install -qq g++-4.8
-  - if [ "$GCC_VER" = "4.8" ]; then export CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8" COVERALLS="1" CPPCHECK="1"; else export GCOV="gcov"; fi
+  - if [ "$CXX" = "g++-4.8" ]; then sudo apt-get install -qq g++-4.8; fi
+  - if [ "$CXX" = "g++-5.1" ]; then sudo apt-get install -qq g++-5.1; fi
+
 script: 
-  - if [ ${COVERITY_SCAN_BRANCH} = 1 ]; then cat cov-int/build-log.txt; fi
   - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug . ; fi
   - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then make -j2 ; fi
-  - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then make test ; fi
-  - if [ ${COVERITY_SCAN_BRANCH} != 1 && ${COVERALLS} = 1 ]; then coveralls -e "unittests/catch.hpp" -E ".*\.cpp"  --gcov $GCOV ; fi
+  - make test
+  - if [ ${COVERALLS} = 1 ]; then coveralls -e "unittests/catch.hpp" -E ".*\.cpp"  --gcov $GCOV ; fi
+
 after_script:
-  - if [ ${COVERITY_SCAN_BRANCH} != 1 && ${COVERALLS} = 1 ]; then contrib/codeanalysis/runcppcheck.sh ; fi
+  - if [ ${CPPCHECK} = 1 ]; then contrib/codeanalysis/runcppcheck.sh ; fi
+
 notifications:
   email:
     recipients:
@@ -46,7 +48,7 @@ addons:
       name: "ChaiScript/ChaiScript"
       description: "Build submitted via Travis CI"
     notification_email: jason@emptycrate.com
-    build_command_prepend: "cmake ."
+    build_command_prepend: "cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug . "
     build_command:   "cmake --build . --target chai"
     branch_pattern: coverity_scan
 
