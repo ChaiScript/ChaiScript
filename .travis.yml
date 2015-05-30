@@ -18,15 +18,15 @@ before_install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update
   - sudo apt-get install -qq g++-4.8
-  - if [ "$GCC_VER" = "4.8" ]; then export CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8"; else export GCOV="gcov"; fi
+  - if [ "$GCC_VER" = "4.8" ]; then export CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8" COVERALLS="1" CPPCHECK="1"; else export GCOV="gcov"; fi
 script: 
-  - cat cov-int/build-log.txt
-  - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug .
-  - make -j2
-  - make test
-  - coveralls -e "unittests/catch.hpp" -E ".*\.cpp"  --gcov $GCOV
+  - if [ ${COVERITY_SCAN_BRANCH} = 1 ]; then cat cov-int/build-log.txt; fi
+  - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug . ; fi
+  - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then make -j2 ; fi
+  - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then make test ; fi
+  - if [ ${COVERITY_SCAN_BRANCH} != 1 && ${COVERALLS} = 1 ]; then coveralls -e "unittests/catch.hpp" -E ".*\.cpp"  --gcov $GCOV ; fi
 after_script:
-  - contrib/codeanalysis/runcppcheck.sh
+  - if [ ${COVERITY_SCAN_BRANCH} != 1 && ${COVERALLS} = 1 ]; then contrib/codeanalysis/runcppcheck.sh ; fi
 notifications:
   email:
     recipients:
@@ -47,7 +47,7 @@ addons:
       description: "Build submitted via Travis CI"
     notification_email: jason@emptycrate.com
     build_command_prepend: "cmake ."
-    build_command:   "cmake --build ."
+    build_command:   "cmake --build . --target chai"
     branch_pattern: coverity_scan
 
 
