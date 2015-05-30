@@ -14,9 +14,9 @@ env:
     - secure: "LfolGjP8tWm3yAwthfu3yp8Zn40aueFae580UUR34gusG87cyglq2tQDtxdy+63gWEeNfArbv9n5rZv+bDW3ggHyPjuCKKc1PlZAy07lfXUXf1uz+SFhNvNoYTn3mQG3VZ08o116p4Le2p8yqu4bylJ8wckEq7PrTwvSGVQWTWM="
 
 before_install:
-  - if [ "$GCC_VER" = "4.6" ]; export CXX="g++-4.6" CC="gcc-4.6" GCOV="gcov-4.6"; fi
-  - if [ "$GCC_VER" = "4.8" ]; export CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8"; fi
-  - if [ "$GCC_VER" = "5.1" ]; export CXX="g++-5.1" CC="gcc-5.1" GCOV="gcov-5.1" COVERALLS=1 CPPCHECK=1; fi
+  - if [ "$GCC_VER" = "4.6" ]; then export CXX="g++-4.6" CC="gcc-4.6" GCOV="gcov-4.6"; fi
+  - if [ "$GCC_VER" = "4.8" ]; then export CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8"; fi
+  - if [ "$GCC_VER" = "5.1" ]; then export CXX="g++-5.1" CC="gcc-5.1" GCOV="gcov-5.1" COVERALLS=1 CPPCHECK=1; fi
   - sudo pip install cpp-coveralls
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update
