@@ -93,7 +93,7 @@ namespace chaiscript
 
       std::string name() const
       {
-        if (m_is_undef)
+        if (!m_is_undef)
         {
           return m_type_info.name();
         } else {
@@ -103,7 +103,7 @@ namespace chaiscript
 
       std::string bare_name() const 
       {
-        if (m_is_undef)
+        if (!m_is_undef)
         {
           return m_bare_type_info.name();
         } else {
