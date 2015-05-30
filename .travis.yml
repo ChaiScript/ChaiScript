@@ -18,8 +18,9 @@ before_install:
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update
   - sudo apt-get install -qq g++-4.8
-  - if [ "$GCC_VER" = "4.8" ]; then export CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8"; fi
+  - if [ "$GCC_VER" = "4.8" ]; then export CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8"; else export GCOV="gcov"; fi
 script: 
+  - cat cov-int/build-log.txt
   - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug .
   - make -j2
   - make test
@@ -46,7 +47,7 @@ addons:
       description: "Build submitted via Travis CI"
     notification_email: jason@emptycrate.com
     build_command_prepend: "cmake . ; make clean"
-    build_command:   "make -j2"
+    build_command:   "make -j2 VERBOSE=1"
     branch_pattern: coverity_scan
 
 
