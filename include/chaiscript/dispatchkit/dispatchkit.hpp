@@ -1176,11 +1176,11 @@ namespace chaiscript
           const auto rhssize = rhsparamtypes.size();
 
 #ifdef CHAISCRIPT_HAS_MAGIC_STATICS
-          auto boxed_type = user_type<Boxed_Value>();
-          auto boxed_pod_type = user_type<Boxed_Number>();
-#else
           static auto boxed_type = user_type<Boxed_Value>();
           static auto boxed_pod_type = user_type<Boxed_Number>();
+#else
+          auto boxed_type = user_type<Boxed_Value>();
+          auto boxed_pod_type = user_type<Boxed_Number>();
 #endif
 
           for (size_t i = 1; i < lhssize && i < rhssize; ++i)
