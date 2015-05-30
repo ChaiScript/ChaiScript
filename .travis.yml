@@ -17,7 +17,7 @@ before_install:
   - sudo pip install cpp-coveralls
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update
-  - apt-get install -qq g++-$GCC_VER
+  - sudo apt-get install -qq g++-$GCC_VER
 
 script: 
   - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug . ; fi
