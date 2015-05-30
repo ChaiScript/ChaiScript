@@ -300,13 +300,6 @@ namespace chaiscript
   class Type_Conversions
   {
     public:
-      struct Less_Than
-      {
-        bool operator()(const std::type_info *t_lhs, const std::type_info *t_rhs) const
-        {
-          return *t_lhs != *t_rhs && t_lhs->before(*t_rhs);
-        }
-      };
 
       Type_Conversions()
         : m_mutex(),
@@ -329,7 +322,7 @@ namespace chaiscript
       {
       }
 
-      const std::set<const std::type_info *, Less_Than> &thread_cache() const
+      const std::set<std::type_index> &thread_cache() const
       {
         auto &cache = *m_thread_cache;
         if (cache.size() != m_num_types)
@@ -466,9 +459,9 @@ namespace chaiscript
 
       mutable chaiscript::detail::threading::shared_mutex m_mutex;
       std::set<std::shared_ptr<detail::Type_Conversion_Base>> m_conversions;
-      std::set<const std::type_info *, Less_Than> m_convertableTypes;
+      std::set<std::type_index> m_convertableTypes;
       std::atomic_size_t m_num_types;
-      mutable chaiscript::detail::threading::Thread_Storage<std::set<const std::type_info *, Less_Than>> m_thread_cache;
+      mutable chaiscript::detail::threading::Thread_Storage<std::set<std::type_index>> m_thread_cache;
       mutable chaiscript::detail::threading::Thread_Storage<Conversion_Saves> m_conversion_saves;
   };
 
