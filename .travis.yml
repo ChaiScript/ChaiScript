@@ -2,8 +2,9 @@ language: cpp
 compiler:
   - gcc
 env:
-  - GCC_VER=4.6
-  - GCC_VER=4.8
+  matrix:
+    - GCC_VER=4.6
+    - GCC_VER=4.8
 
 
   global:
