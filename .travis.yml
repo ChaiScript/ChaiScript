@@ -5,23 +5,19 @@ env:
   matrix:
     - GCC_VER="4.6"
     - GCC_VER="4.8"
-    - GCC_VER="5"
 
   global:
     - secure: eiaR6pXiiEpyB8+LLQ1NvZdl0Yylru1BLy9lMoHl+IpUNGGQGywmW/2WAn77rFfmR1OPA2qWQLfgPwgK0HxUA9HHlot9tre5QhiN2Lw8NOT8tCZ6tTm2+QntDBjBGJyal/knRvQkn/6qs6GxlXRerz4ArnnuPL1vESt3zwB0YtU=
     # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-    #   via the "travis encrypt" command using the project repo's public key
     - secure: "LfolGjP8tWm3yAwthfu3yp8Zn40aueFae580UUR34gusG87cyglq2tQDtxdy+63gWEeNfArbv9n5rZv+bDW3ggHyPjuCKKc1PlZAy07lfXUXf1uz+SFhNvNoYTn3mQG3VZ08o116p4Le2p8yqu4bylJ8wckEq7PrTwvSGVQWTWM="
 
 before_install:
-  - if [ "$GCC_VER" = "4.6" ]; then export CXX="g++-4.6" CC="gcc-4.6" GCOV="gcov-4.6"; fi
-  - if [ "$GCC_VER" = "4.8" ]; then export CXX="g++-4.8" CC="gcc-4.8" GCOV="gcov-4.8" COVERALLS=1 CPPCHECK=1; fi
-  - if [ "$GCC_VER" = "5" ];   then export CXX="g++-5"   CC="gcc-5"   GCOV="gcov-5"; fi
+  - export CXX="g++-$GCC_VER" CC="gcc-$GCC_VER" GCOV="gcov-$GCC_VER"
+  - if [ "$GCC_VER" = "4.8" ]; then export COVERALLS=1 CPPCHECK=1; fi
   - sudo pip install cpp-coveralls
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update
-  - if [ "$GCC_VER" = "4.8" ]; then sudo apt-get install -qq g++-4.8; fi
-  - if [ "$GCC_VER" = "5" ];   then sudo apt-get install -qq g++-5; fi
+  - apt-get install -qq g++-$GCC_VER
 
 script: 
   - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug . ; fi
