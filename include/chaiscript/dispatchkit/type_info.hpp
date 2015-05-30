@@ -71,7 +71,8 @@ namespace chaiscript
 
       bool operator==(const std::type_info &ti) const CHAISCRIPT_NOEXCEPT
       {
-        return m_type_info == ti;
+        return !m_is_undef 
+               && m_type_info == ti;
       }
 
       bool bare_equal(const Type_Info &ti) const CHAISCRIPT_NOEXCEPT
@@ -81,7 +82,8 @@ namespace chaiscript
 
       bool bare_equal_type_info(const std::type_info &ti) const CHAISCRIPT_NOEXCEPT
       {
-        return m_bare_type_info == ti;
+        return !m_is_undef 
+               && m_bare_type_info == ti;
       }
 
       bool is_const() const CHAISCRIPT_NOEXCEPT { return m_is_const; }
