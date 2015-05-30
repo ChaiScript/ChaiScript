@@ -31,6 +31,20 @@ notifications:
     on_start: false     # default: false
 env:
   global:
-    secure: eiaR6pXiiEpyB8+LLQ1NvZdl0Yylru1BLy9lMoHl+IpUNGGQGywmW/2WAn77rFfmR1OPA2qWQLfgPwgK0HxUA9HHlot9tre5QhiN2Lw8NOT8tCZ6tTm2+QntDBjBGJyal/knRvQkn/6qs6GxlXRerz4ArnnuPL1vESt3zwB0YtU=
+    - secure: eiaR6pXiiEpyB8+LLQ1NvZdl0Yylru1BLy9lMoHl+IpUNGGQGywmW/2WAn77rFfmR1OPA2qWQLfgPwgK0HxUA9HHlot9tre5QhiN2Lw8NOT8tCZ6tTm2+QntDBjBGJyal/knRvQkn/6qs6GxlXRerz4ArnnuPL1vESt3zwB0YtU=
+    # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
+    #   via the "travis encrypt" command using the project repo's public key
+    - secure: "LfolGjP8tWm3yAwthfu3yp8Zn40aueFae580UUR34gusG87cyglq2tQDtxdy+63gWEeNfArbv9n5rZv+bDW3ggHyPjuCKKc1PlZAy07lfXUXf1uz+SFhNvNoYTn3mQG3VZ08o116p4Le2p8yqu4bylJ8wckEq7PrTwvSGVQWTWM="
+
+
+addons:
+  coverity_scan:
+    project:
+      name: "ChaiScript/ChaiScript"
+      description: "Build submitted via Travis CI"
+      notification_email: jason@emptycrate.com
+      build_command_prepend: "cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug . ; make clean"
+      build_command:   "make -j2"
+      branch_pattern: coverity_scan
 
 
