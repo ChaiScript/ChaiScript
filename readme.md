@@ -2,6 +2,10 @@ Master Status: [![Linux Build Status](https://travis-ci.org/ChaiScript/ChaiScrip
 
 Develop Status: [![Linux Build Status](https://travis-ci.org/ChaiScript/ChaiScript.png?branch=develop)](https://travis-ci.org/ChaiScript/ChaiScript) [![Windows Build status](https://ci.appveyor.com/api/projects/status/6u3r4s81kkjqmsqw/branch/develop?svg=true)](https://ci.appveyor.com/project/lefticus/chaiscript/branch/develop) [![Coverage Status](https://coveralls.io/repos/ChaiScript/ChaiScript/badge.png?branch=develop)](https://coveralls.io/r/ChaiScript/ChaiScript?branch=develop)
 
+<a href="https://scan.coverity.com/projects/5297">
+  <img alt="Coverity Scan Build Status"
+       src="https://img.shields.io/coverity/scan/5297.svg"/>
+</a>
 
 ChaiScript
 
