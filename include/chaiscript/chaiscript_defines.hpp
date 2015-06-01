@@ -35,6 +35,10 @@
 #define CHAISCRIPT_HAS_THREAD_LOCAL
 #endif
 
+#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ >= 6)
+#define CHAISCRIPT_GCC_4_6
+#endif
+
 #if (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7) || defined(CHAISCRIPT_MSVC) || defined(__llvm__)
 #define CHAISCRIPT_OVERRIDE override
 #else
