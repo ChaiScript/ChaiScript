@@ -68,7 +68,10 @@ namespace chaiscript
 
 #ifdef CHAISCRIPT_GCC_4_6 
       /// \todo REMOVE THIS WHEN WE DROP G++4.6
-      
+      //
+      //
+
+
       // Forward declaration
       template<typename ... Rest> 
         struct Try_Cast; 
@@ -101,7 +104,7 @@ namespace chaiscript
       template<typename Ret, typename ... Params>
         bool compare_types_cast(Ret (*)(Params...),
              const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
-       {
+        {
           try {
             Try_Cast<Params...>::do_try(params, 0, t_conversions);
           } catch (const exception::bad_boxed_cast &) {
@@ -115,8 +118,8 @@ namespace chaiscript
         struct Call_Func
         {
 
-          template<typename ... InnerParams>
-          static Ret do_call(const std::function<Ret (Params...)> &f,
+          template<typename Callable, typename ... InnerParams>
+          static Ret do_call(const Callable &f,
               const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions, InnerParams &&... innerparams)
           {
             return Call_Func<Ret, count - 1, Params...>::do_call(f, params, t_conversions, std::forward<InnerParams>(innerparams)..., params[sizeof...(Params) - count]);
@@ -130,8 +133,8 @@ namespace chaiscript
 #pragma warning(push)
 #pragma warning(disable : 4100) /// Disable unreferenced formal parameter warning, which only shows up in MSVC I don't think there's any way around it \todo evaluate this
 #endif
-          template<typename ... InnerParams>
-            static Ret do_call(const std::function<Ret (Params...)> &f,
+          template<typename Callable, typename ... InnerParams>
+            static Ret do_call(const Callable &f,
                 const std::vector<Boxed_Value> &, const Type_Conversions &t_conversions, InnerParams &&... innerparams)
             {
               return f(boxed_cast<Params>(std::forward<InnerParams>(innerparams), &t_conversions)...);
@@ -147,8 +150,8 @@ namespace chaiscript
        * if any unboxing fails the execution of the function fails and
        * the bad_boxed_cast is passed up to the caller.
        */
-      template<typename Ret, typename ... Params>
-        Ret call_func(const std::function<Ret (Params...)> &f,
+      template<typename Callable, typename Ret, typename ... Params>
+        Ret call_func(const chaiscript::dispatch::detail::Function_Signature<Ret (Params...)> &, const Callable &f,
             const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
         {
           if (params.size() == sizeof...(Params))
@@ -158,6 +161,8 @@ namespace chaiscript
 
           throw exception::arity_error(static_cast<int>(params.size()), sizeof...(Params));
         }
+
+
 
 #else
 
