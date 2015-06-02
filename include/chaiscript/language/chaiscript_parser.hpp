@@ -7,8 +7,6 @@
 #ifndef CHAISCRIPT_PARSER_HPP_
 #define CHAISCRIPT_PARSER_HPP_
 
-#include <cstdint>
-#include <cstring>
 #include <exception>
 #include <iostream>
 #include <memory>

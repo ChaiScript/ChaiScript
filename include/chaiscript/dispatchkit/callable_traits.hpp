@@ -12,6 +12,7 @@
 namespace chaiscript {
   namespace dispatch {
     namespace detail {
+
       template<typename Class, typename ... Param>
       struct Constructor
       {
@@ -32,6 +33,19 @@ namespace chaiscript {
         }
 
         Ret (Class::*m_func)(Param...) const;
+      };
+
+      template<typename Ret, typename ... Param>
+      struct Fun_Caller
+      {
+        Fun_Caller(Ret( * t_func)(Param...) ) : m_func(t_func) {}
+
+        template<typename ... Inner>
+        Ret operator()(Inner&& ... inner) const {
+          return (m_func)(std::forward<Inner>(inner)...);
+        }
+
+        Ret(*m_func)(Param...);
       };
 
       template<typename Ret, typename Class, typename ... Param>

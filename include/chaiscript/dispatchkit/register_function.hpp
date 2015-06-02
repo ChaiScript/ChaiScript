@@ -7,7 +7,6 @@
 #ifndef CHAISCRIPT_REGISTER_FUNCTION_HPP_
 #define CHAISCRIPT_REGISTER_FUNCTION_HPP_
 
-#include <functional>
 #include <type_traits>
 
 #include "bind_first.hpp"
@@ -48,10 +47,10 @@ namespace chaiscript
   template<typename Ret, typename ... Param>
     Proxy_Function fun(Ret (*func)(Param...))
     {
-      auto f_ref = std::ref(*func);
+      auto fun_call = dispatch::detail::Fun_Caller<Ret, Param...>(func);
 
       return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (Param...), decltype(f_ref)>>(f_ref));
+          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (Param...), decltype(fun_call)>>(fun_call));
 
     }
 
