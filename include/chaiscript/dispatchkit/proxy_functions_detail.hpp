@@ -67,7 +67,7 @@ namespace chaiscript
 
 #ifdef CHAISCRIPT_GCC_4_6 
       /// \todo REMOVE THIS WHEN WE DROP G++4.6
-      
+
       // Forward declaration
       template<typename ... Rest> 
         struct Try_Cast; 
@@ -189,7 +189,8 @@ namespace chaiscript
              const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
         {
           try {
-            std::initializer_list<void *>{(boxed_cast<Params>(params[I], &t_conversions), nullptr)...};
+            (void)params; (void)t_conversions;
+            (void)std::initializer_list<int>{(boxed_cast<Params>(params[I], &t_conversions), 0)...};
             return true;
           } catch (const exception::bad_boxed_cast &) {
             return false;
@@ -209,6 +210,7 @@ namespace chaiscript
         Ret call_func(Indexes<I...>, const std::function<Ret (Params...)> &f,
             const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
         {
+          (void)params; (void)t_conversions;
           return f(boxed_cast<Params>(params[I], &t_conversions)...);
         }
 
