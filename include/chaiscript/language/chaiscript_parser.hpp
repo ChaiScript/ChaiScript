@@ -14,6 +14,8 @@
 #include <string>
 #include <vector>
 #include <cctype>
+#include <cstring>
+
 
 #include "../dispatchkit/boxed_value.hpp"
 #include "chaiscript_common.hpp"
