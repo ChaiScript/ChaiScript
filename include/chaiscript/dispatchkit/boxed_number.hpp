@@ -229,17 +229,18 @@ namespace chaiscript
       {
         static Boxed_Value go(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
         {
+          typedef typename std::common_type<LHS, RHS>::type common_type;
           if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
           {
-            return boolean::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
+            return boolean::go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
           } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
-            return binary::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
+            return binary::go<LHS, common_type>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
           } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
-            return binary_int::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
+            return binary_int::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
           } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
-            return const_binary_int::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
+            return const_binary_int::go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
           } else if (t_oper > Operators::const_flag) {
-            return const_binary::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
+            return const_binary::go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
           } else {
             throw chaiscript::detail::exception::bad_any_cast();
           }
@@ -251,17 +252,18 @@ namespace chaiscript
       {
         static Boxed_Value go(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
         {
+          typedef typename std::common_type<LHS, RHS>::type common_type;
           if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
           {
-            return boolean::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
+            return boolean::go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
           } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
-            return binary::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
+            return binary::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
           } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag) {
             throw chaiscript::detail::exception::bad_any_cast();
           } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
             throw chaiscript::detail::exception::bad_any_cast();
           } else if (t_oper > Operators::const_flag) {
-            return const_binary::go<LHS, RHS>(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()), *static_cast<const RHS *>(t_rhs.get_const_ptr()), t_lhs);
+            return const_binary::go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
           } else {
             throw chaiscript::detail::exception::bad_any_cast();
           }
@@ -352,10 +354,16 @@ namespace chaiscript
         }
 
         template<typename Target, typename Source>
-          Target get_as_aux() const
-        {
-          return static_cast<Target>(*static_cast<const Source *>(bv.get_const_ptr()));
-        }
+          inline Target get_as_aux() const
+          {
+            return get_as_aux_impl<Target, Source>(bv);
+          }
+
+        template<typename Target, typename Source>
+          static inline Target get_as_aux_impl(const Boxed_Value &t_bv)
+          {
+            return static_cast<Target>(*static_cast<const Source *>(t_bv.get_const_ptr()));
+          }
 
         template<typename Source>
          static std::string to_string_aux(const Boxed_Value &v)
