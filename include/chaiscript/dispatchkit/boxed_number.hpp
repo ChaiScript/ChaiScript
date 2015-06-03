@@ -476,37 +476,37 @@ namespace chaiscript
         const Type_Info &inp_ = bv.get_type_info();
 
         if (inp_ == typeid(int)) {
-          return to_string_aux<int>(bv);
+          return std::to_string(get_as<int>());
         } else if (inp_ == typeid(double)) {
-          return to_string_aux<double>(bv);
+          return std::to_string(get_as<double>());
         } else if (inp_ == typeid(float)) {
-          return to_string_aux<float>(bv);
+          return std::to_string(get_as<float>());
         } else if (inp_ == typeid(long double)) {
-          return to_string_aux<long double>(bv);
+          return std::to_string(get_as<long double>());
         } else if (inp_ == typeid(char)) {
-          return to_string_aux<int>(Boxed_Value(get_as_aux<int, char>()));
+          return std::to_string(get_as<int>());
         } else if (inp_ == typeid(unsigned int)) {
-          return to_string_aux<unsigned int>(bv);
+          return std::to_string(get_as<unsigned int>());
         } else if (inp_ == typeid(long)) {
-          return to_string_aux<long>(bv);
+          return std::to_string(get_as<long>());
         } else if (inp_ == typeid(unsigned long)) {
-          return to_string_aux<unsigned long>(bv);
+          return std::to_string(get_as<unsigned long>());
         } else if (inp_ == typeid(std::int8_t)) {
-          return to_string_aux<int>(Boxed_Value(get_as_aux<int, std::int8_t>()));
+          return std::to_string(get_as<int>());
         } else if (inp_ == typeid(std::int16_t)) {
-          return to_string_aux<std::int16_t>(bv);
+          return std::to_string(get_as<int16_t>());
         } else if (inp_ == typeid(std::int32_t)) {
-          return to_string_aux<std::int32_t>(bv);
+          return std::to_string(get_as<int32_t>());
         } else if (inp_ == typeid(std::int64_t)) {
-          return to_string_aux<std::int64_t>(bv);
+          return std::to_string(get_as<int64_t>());
         } else if (inp_ == typeid(std::uint8_t)) {
-          return to_string_aux<unsigned int>(Boxed_Value(get_as_aux<unsigned int, std::uint8_t>()));
+          return std::to_string(get_as<unsigned int>());
         } else if (inp_ == typeid(std::uint16_t)) {
-          return to_string_aux<std::uint16_t>(bv);
+          return std::to_string(get_as<std::uint16_t>());
         } else if (inp_ == typeid(std::uint32_t)) {
-          return to_string_aux<std::uint32_t>(bv);
+          return std::to_string(get_as<std::uint32_t>());
         } else if (inp_ == typeid(std::uint64_t)) {
-          return to_string_aux<std::uint64_t>(bv);
+          return std::to_string(get_as<std::uint64_t>());
         } else {
           throw chaiscript::detail::exception::bad_any_cast();
         }
