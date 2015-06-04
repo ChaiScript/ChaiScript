@@ -467,13 +467,13 @@ namespace chaiscript
         } else if (inp_ == typeid(std::int64_t)) {
           return get_as_aux<Target, std::int64_t>();
         } else if (inp_ == typeid(std::uint8_t)) {
-          return get_as_aux<Target, std::int8_t>();
+          return get_as_aux<Target, std::uint8_t>();
         } else if (inp_ == typeid(std::uint16_t)) {
-          return get_as_aux<Target, std::int16_t>();
+          return get_as_aux<Target, std::uint16_t>();
         } else if (inp_ == typeid(std::uint32_t)) {
-          return get_as_aux<Target, std::int32_t>();
+          return get_as_aux<Target, std::uint32_t>();
         } else if (inp_ == typeid(std::uint64_t)) {
-          return get_as_aux<Target, std::int64_t>();
+          return get_as_aux<Target, std::uint64_t>();
         } else {
           throw chaiscript::detail::exception::bad_any_cast();
         }
