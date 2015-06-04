@@ -74,8 +74,8 @@ namespace chaiscript
       {
       }
 
-      template<typename T, typename U>
-      static Boxed_Value boolean_go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &)
+      template<typename T>
+      static Boxed_Value boolean_go(Operators::Opers t_oper, const T &t, const T &u)
       {
         switch (t_oper)
         {
@@ -160,8 +160,8 @@ namespace chaiscript
         return t_lhs;
       }
 
-      template<typename T, typename U>
-      static Boxed_Value const_binary_int_go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &) 
+      template<typename T>
+      static Boxed_Value const_binary_int_go(Operators::Opers t_oper, const T &t, const T &u) 
       {
         switch (t_oper)
         {
@@ -185,8 +185,8 @@ namespace chaiscript
         }
       }
 
-      template<typename T, typename U>
-      static Boxed_Value const_binary_go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &) 
+      template<typename T>
+      static Boxed_Value const_binary_go(Operators::Opers t_oper, const T &t, const T &u) 
       {
         switch (t_oper)
         {
@@ -215,15 +215,15 @@ namespace chaiscript
         typedef typename std::common_type<LHS, RHS>::type common_type;
         if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
         {
-          return boolean_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+          return boolean_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs));
         } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
           return binary_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
         } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
           return binary_int_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
         } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
-          return const_binary_int_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+          return const_binary_int_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs));
         } else if (t_oper > Operators::const_flag) {
-          return const_binary_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+          return const_binary_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs));
         } else {
           throw chaiscript::detail::exception::bad_any_cast();
         }
@@ -236,7 +236,7 @@ namespace chaiscript
         typedef typename std::common_type<LHS, RHS>::type common_type;
         if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
         {
-          return boolean_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+          return boolean_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs));
         } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
           return binary_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
         } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag) {
@@ -244,7 +244,7 @@ namespace chaiscript
         } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
           throw chaiscript::detail::exception::bad_any_cast();
         } else if (t_oper > Operators::const_flag) {
-          return const_binary_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+          return const_binary_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs));
         } else {
           throw chaiscript::detail::exception::bad_any_cast();
         }
