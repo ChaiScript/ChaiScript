@@ -255,8 +255,8 @@ namespace chaiscript
         {
           const auto &inp_ = t_rhs.get_type_info();
 
-          if (inp_ == typeid(std::int32_t)) {
-            return go<LHS, std::int32_t>(t_oper, t_lhs, t_rhs);
+          if (inp_ == typeid(int)) {
+            return go<LHS, int>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(double)) {
             return go<LHS, double>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(float)) {
@@ -265,10 +265,18 @@ namespace chaiscript
             return go<LHS, long double>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(char)) {
             return go<LHS, char>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(unsigned int)) {
+            return go<LHS, unsigned int>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(long)) {
+            return go<LHS, long>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(unsigned long)) {
+            return go<LHS, unsigned long>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int8_t)) {
             return go<LHS, std::int8_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int16_t)) {
             return go<LHS, std::int16_t>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int32_t)) {
+            return go<LHS, std::int32_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int64_t)) {
             return go<LHS, std::int64_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::uint8_t)) {
@@ -288,8 +296,8 @@ namespace chaiscript
         {
           const Type_Info &inp_ = t_lhs.get_type_info();
 
-          if (inp_ == typeid(std::int32_t)) {
-            return oper_rhs<std::int32_t>(t_oper, t_lhs, t_rhs);
+          if (inp_ == typeid(int)) {
+            return oper_rhs<int>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(double)) {
             return oper_rhs<double>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(long double)) {
@@ -298,10 +306,18 @@ namespace chaiscript
             return oper_rhs<float>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(char)) {
             return oper_rhs<char>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(unsigned int)) {
+            return oper_rhs<unsigned int>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(long)) {
+            return oper_rhs<long>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(unsigned long)) {
+            return oper_rhs<unsigned long>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int8_t)) {
             return oper_rhs<std::int8_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int16_t)) {
             return oper_rhs<std::int16_t>(t_oper, t_lhs, t_rhs);
+          } else if (inp_ == typeid(std::int32_t)) {
+            return oper_rhs<std::int32_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int64_t)) {
             return oper_rhs<std::int64_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::uint8_t)) {
@@ -364,8 +380,8 @@ namespace chaiscript
 
       Boxed_Number get_as(const Type_Info &inp_) const
       {
-        if (inp_.bare_equal_type_info(typeid(int32_t))) {
-          return Boxed_Number(get_as<int32_t>());
+        if (inp_.bare_equal_type_info(typeid(int))) {
+          return Boxed_Number(get_as<int>());
         } else if (inp_.bare_equal_type_info(typeid(double))) {
           return Boxed_Number(get_as<double>());
         } else if (inp_.bare_equal_type_info(typeid(float))) {
@@ -374,10 +390,18 @@ namespace chaiscript
           return Boxed_Number(get_as<long double>());
         } else if (inp_.bare_equal_type_info(typeid(char))) {
           return Boxed_Number(get_as<char>());
+        } else if (inp_.bare_equal_type_info(typeid(unsigned int))) {
+          return Boxed_Number(get_as<unsigned int>());
+        } else if (inp_.bare_equal_type_info(typeid(long))) {
+          return Boxed_Number(get_as<long>());
+        } else if (inp_.bare_equal_type_info(typeid(unsigned long))) {
+          return Boxed_Number(get_as<unsigned long>());
         } else if (inp_.bare_equal_type_info(typeid(int8_t))) {
           return Boxed_Number(get_as<int8_t>());
         } else if (inp_.bare_equal_type_info(typeid(int16_t))) {
           return Boxed_Number(get_as<int16_t>());
+        } else if (inp_.bare_equal_type_info(typeid(int32_t))) {
+          return Boxed_Number(get_as<int32_t>());
         } else if (inp_.bare_equal_type_info(typeid(int64_t))) {
           return Boxed_Number(get_as<int64_t>());
         } else if (inp_.bare_equal_type_info(typeid(uint8_t))) {
@@ -398,8 +422,8 @@ namespace chaiscript
       {
         const Type_Info &inp_ = bv.get_type_info();
 
-        if (inp_ == typeid(std::int32_t)) {
-          return get_as_aux<Target, std::int32_t>();
+        if (inp_ == typeid(int)) {
+          return get_as_aux<Target, int>();
         } else if (inp_ == typeid(double)) {
           return get_as_aux<Target, double>();
         } else if (inp_ == typeid(float)) {
@@ -408,10 +432,18 @@ namespace chaiscript
           return get_as_aux<Target, long double>();
         } else if (inp_ == typeid(char)) {
           return get_as_aux<Target, char>();
+        } else if (inp_ == typeid(unsigned int)) {
+          return get_as_aux<Target, unsigned int>();
+        } else if (inp_ == typeid(long)) {
+          return get_as_aux<Target, long>();
+        } else if (inp_ == typeid(unsigned long)) {
+          return get_as_aux<Target, unsigned long>();
         } else if (inp_ == typeid(std::int8_t)) {
           return get_as_aux<Target, std::int8_t>();
         } else if (inp_ == typeid(std::int16_t)) {
           return get_as_aux<Target, std::int16_t>();
+        } else if (inp_ == typeid(std::int32_t)) {
+          return get_as_aux<Target, std::int32_t>();
         } else if (inp_ == typeid(std::int64_t)) {
           return get_as_aux<Target, std::int64_t>();
         } else if (inp_ == typeid(std::uint8_t)) {
@@ -431,8 +463,8 @@ namespace chaiscript
       {
         const Type_Info &inp_ = bv.get_type_info();
 
-        if (inp_ == typeid(std::int32_t)) {
-          return std::to_string(get_as<int32_t>());
+        if (inp_ == typeid(int)) {
+          return std::to_string(get_as<int>());
         } else if (inp_ == typeid(double)) {
           return std::to_string(get_as<double>());
         } else if (inp_ == typeid(float)) {
@@ -441,10 +473,18 @@ namespace chaiscript
           return std::to_string(get_as<long double>());
         } else if (inp_ == typeid(char)) {
           return std::to_string(get_as<int>());
+        } else if (inp_ == typeid(unsigned int)) {
+          return std::to_string(get_as<unsigned int>());
+        } else if (inp_ == typeid(long)) {
+          return std::to_string(get_as<long>());
+        } else if (inp_ == typeid(unsigned long)) {
+          return std::to_string(get_as<unsigned long>());
         } else if (inp_ == typeid(std::int8_t)) {
           return std::to_string(get_as<int>());
         } else if (inp_ == typeid(std::int16_t)) {
           return std::to_string(get_as<int16_t>());
+        } else if (inp_ == typeid(std::int32_t)) {
+          return std::to_string(get_as<int32_t>());
         } else if (inp_ == typeid(std::int64_t)) {
           return std::to_string(get_as<int64_t>());
         } else if (inp_ == typeid(std::uint8_t)) {
