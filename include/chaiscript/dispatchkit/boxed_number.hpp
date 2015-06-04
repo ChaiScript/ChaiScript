@@ -60,7 +60,7 @@ namespace chaiscript
   {
     private:
       template<typename T>
-      static void check_divide_by_zero(T t, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr)
+      static inline void check_divide_by_zero(T t, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr)
       {
 #ifndef CHAISCRIPT_NO_PROTECT_DIVIDEBYZERO
         if (t == 0) {
@@ -70,243 +70,223 @@ namespace chaiscript
       }
 
       template<typename T>
-      static void check_divide_by_zero(T, typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr)
+      static inline void check_divide_by_zero(T, typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr)
       {
       }
 
-      struct boolean
+      template<typename T, typename U>
+      static Boxed_Value boolean_go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &)
       {
-
-        template<typename T, typename U>
-        static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &)
+        switch (t_oper)
         {
-          switch (t_oper)
-          {
-            case Operators::equals:
-              return const_var(t == u);
-            case Operators::less_than:
-              return const_var(t < u);
-            case Operators::greater_than:
-              return const_var(t > u);
-            case Operators::less_than_equal:
-              return const_var(t <= u);
-            case Operators::greater_than_equal:
-              return const_var(t >= u);
-            case Operators::not_equal:
-              return const_var(t != u);
-            default:
-              throw chaiscript::detail::exception::bad_any_cast();
-          }
-        }
-      };
-
-      struct binary 
-      {
-        template<typename T, typename U>
-        static Boxed_Value go(Operators::Opers t_oper, T &t, const U &u, const Boxed_Value &t_lhs) 
-        {
-          switch (t_oper)
-          {
-            case Operators::assign:
-              t = u;
-              break;
-            case Operators::pre_increment:
-              ++t;
-              break;
-            case Operators::pre_decrement:
-              --t;
-              break;
-            case Operators::assign_product:
-              t *= u;
-              break;
-            case Operators::assign_sum:
-              t += u;
-              break;
-            case Operators::assign_quotient:
-              check_divide_by_zero(u);
-              t /= u;
-              break;
-            case Operators::assign_difference:
-              t -= u;
-              break;
-            default:
-              throw chaiscript::detail::exception::bad_any_cast();
-          }
-
-          return t_lhs;
-        }
-      };
-
-      struct binary_int
-      {
-        template<typename T, typename U>
-        static Boxed_Value go(Operators::Opers t_oper, T &t, const U &u, const Boxed_Value &t_lhs) 
-        {
-          switch (t_oper)
-          {
-            case Operators::assign_bitwise_and:
-              t &= u;
-              break;
-            case Operators::assign_bitwise_or:
-              t |= u;
-              break;
-            case Operators::assign_shift_left:
-              t <<= u;
-              break;
-            case Operators::assign_shift_right:
-              t >>= u;
-              break;
-            case Operators::assign_remainder:
-              check_divide_by_zero(u);
-              t %= u;
-              break;
-            case Operators::assign_bitwise_xor:
-              t ^= u;
-              break;
-            default:
-              throw chaiscript::detail::exception::bad_any_cast();
-          }
-          return t_lhs;
-        }
-      };
-
-      struct const_binary_int
-      {
-        template<typename T, typename U>
-        static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &) 
-        {
-          switch (t_oper)
-          {
-            case Operators::shift_left:
-              return const_var(t << u);
-            case Operators::shift_right:
-              return const_var(t >> u);
-            case Operators::remainder:
-              check_divide_by_zero(u);
-              return const_var(t % u);
-            case Operators::bitwise_and:
-              return const_var(t & u);
-            case Operators::bitwise_or:
-              return const_var(t | u);
-            case Operators::bitwise_xor:
-              return const_var(t ^ u);
-            case Operators::bitwise_complement:
-              return const_var(~t);
-            default:
-              throw chaiscript::detail::exception::bad_any_cast();
-          }
-        }
-      };
-
-      struct const_binary
-      {
-        template<typename T, typename U>
-        static Boxed_Value go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &) 
-        {
-          switch (t_oper)
-          {
-            case Operators::sum:
-              return const_var(t + u);
-            case Operators::quotient:
-              check_divide_by_zero(u);
-              return const_var(t / u);
-            case Operators::product:
-              return const_var(t * u);
-            case Operators::difference:
-              return const_var(t - u);
-            case Operators::unary_minus:
-              return const_var(-t);
-            case Operators::unary_plus:
-              return const_var(+t);
-            default:
-              throw chaiscript::detail::exception::bad_any_cast();
-          }
-        }
-      };
-
-      template<typename LHS, typename RHS, bool Float>
-      struct Go
-      {
-        static Boxed_Value go(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
-        {
-          typedef typename std::common_type<LHS, RHS>::type common_type;
-          if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
-          {
-            return boolean::go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
-          } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
-            return binary::go<LHS, common_type>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
-          } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
-            return binary_int::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
-          } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
-            return const_binary_int::go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
-          } else if (t_oper > Operators::const_flag) {
-            return const_binary::go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
-          } else {
+          case Operators::equals:
+            return const_var(t == u);
+          case Operators::less_than:
+            return const_var(t < u);
+          case Operators::greater_than:
+            return const_var(t > u);
+          case Operators::less_than_equal:
+            return const_var(t <= u);
+          case Operators::greater_than_equal:
+            return const_var(t >= u);
+          case Operators::not_equal:
+            return const_var(t != u);
+          default:
             throw chaiscript::detail::exception::bad_any_cast();
-          }
         }
-      };
+      }
+
+      template<typename T, typename U>
+      static Boxed_Value binary_go(Operators::Opers t_oper, T &t, const U &u, const Boxed_Value &t_lhs) 
+      {
+        switch (t_oper)
+        {
+          case Operators::assign:
+            t = u;
+            break;
+          case Operators::pre_increment:
+            ++t;
+            break;
+          case Operators::pre_decrement:
+            --t;
+            break;
+          case Operators::assign_product:
+            t *= u;
+            break;
+          case Operators::assign_sum:
+            t += u;
+            break;
+          case Operators::assign_quotient:
+            check_divide_by_zero(u);
+            t /= u;
+            break;
+          case Operators::assign_difference:
+            t -= u;
+            break;
+          default:
+            throw chaiscript::detail::exception::bad_any_cast();
+        }
+
+        return t_lhs;
+      }
+
+      template<typename T, typename U>
+      static Boxed_Value binary_int_go(Operators::Opers t_oper, T &t, const U &u, const Boxed_Value &t_lhs) 
+      {
+        switch (t_oper)
+        {
+          case Operators::assign_bitwise_and:
+            t &= u;
+            break;
+          case Operators::assign_bitwise_or:
+            t |= u;
+            break;
+          case Operators::assign_shift_left:
+            t <<= u;
+            break;
+          case Operators::assign_shift_right:
+            t >>= u;
+            break;
+          case Operators::assign_remainder:
+            check_divide_by_zero(u);
+            t %= u;
+            break;
+          case Operators::assign_bitwise_xor:
+            t ^= u;
+            break;
+          default:
+            throw chaiscript::detail::exception::bad_any_cast();
+        }
+        return t_lhs;
+      }
+
+      template<typename T, typename U>
+      static Boxed_Value const_binary_int_go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &) 
+      {
+        switch (t_oper)
+        {
+          case Operators::shift_left:
+            return const_var(t << u);
+          case Operators::shift_right:
+            return const_var(t >> u);
+          case Operators::remainder:
+            check_divide_by_zero(u);
+            return const_var(t % u);
+          case Operators::bitwise_and:
+            return const_var(t & u);
+          case Operators::bitwise_or:
+            return const_var(t | u);
+          case Operators::bitwise_xor:
+            return const_var(t ^ u);
+          case Operators::bitwise_complement:
+            return const_var(~t);
+          default:
+            throw chaiscript::detail::exception::bad_any_cast();
+        }
+      }
+
+      template<typename T, typename U>
+      static Boxed_Value const_binary_go(Operators::Opers t_oper, const T &t, const U &u, const Boxed_Value &) 
+      {
+        switch (t_oper)
+        {
+          case Operators::sum:
+            return const_var(t + u);
+          case Operators::quotient:
+            check_divide_by_zero(u);
+            return const_var(t / u);
+          case Operators::product:
+            return const_var(t * u);
+          case Operators::difference:
+            return const_var(t - u);
+          case Operators::unary_minus:
+            return const_var(-t);
+          case Operators::unary_plus:
+            return const_var(+t);
+          default:
+            throw chaiscript::detail::exception::bad_any_cast();
+        }
+      }
 
       template<typename LHS, typename RHS>
-      struct Go<LHS, RHS, true>
+      static auto go(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
+          -> typename std::enable_if<!std::is_floating_point<LHS>::value && !std::is_floating_point<RHS>::value, Boxed_Value>::type
       {
-        static Boxed_Value go(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
+        typedef typename std::common_type<LHS, RHS>::type common_type;
+        if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
         {
-          typedef typename std::common_type<LHS, RHS>::type common_type;
-          if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
-          {
-            return boolean::go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
-          } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
-            return binary::go<LHS, RHS>(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
-          } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag) {
-            throw chaiscript::detail::exception::bad_any_cast();
-          } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
-            throw chaiscript::detail::exception::bad_any_cast();
-          } else if (t_oper > Operators::const_flag) {
-            return const_binary::go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
-          } else {
-            throw chaiscript::detail::exception::bad_any_cast();
-          }
+          return boolean_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+        } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
+          return binary_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+        } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
+          return binary_int_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+        } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
+          return const_binary_int_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+        } else if (t_oper > Operators::const_flag) {
+          return const_binary_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+        } else {
+          throw chaiscript::detail::exception::bad_any_cast();
         }
-      };
+      }
 
-      template<typename LHS, bool Float>
+      template<typename LHS, typename RHS>
+      static auto go(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs) 
+          -> typename std::enable_if<std::is_floating_point<LHS>::value || std::is_floating_point<RHS>::value, Boxed_Value>::type
+      {
+        typedef typename std::common_type<LHS, RHS>::type common_type;
+        if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
+        {
+          return boolean_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+        } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
+          return binary_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+        } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag) {
+          throw chaiscript::detail::exception::bad_any_cast();
+        } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
+          throw chaiscript::detail::exception::bad_any_cast();
+        } else if (t_oper > Operators::const_flag) {
+          return const_binary_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+        } else {
+          throw chaiscript::detail::exception::bad_any_cast();
+        }
+      }
+
+      template<typename LHS>
         static Boxed_Value oper_rhs(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
         {
           const auto &inp_ = t_rhs.get_type_info();
 
           if (inp_ == typeid(int)) {
-            return Go<LHS, int, Float>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, int>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(double)) {
-            return Go<LHS, double, true>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, double>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(float)) {
-            return Go<LHS, float, true>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, float>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(long double)) {
-            return Go<LHS, long double, true>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, long double>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(char)) {
-            return Go<LHS, char, Float>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, char>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(unsigned int)) {
-            return Go<LHS, unsigned int, Float>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, unsigned int>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(long)) {
-            return Go<LHS, long, Float>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, long>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(unsigned long)) {
-            return Go<LHS, unsigned long, Float>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, unsigned long>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int8_t)) {
-            return Go<LHS, std::int8_t, Float>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, std::int8_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int16_t)) {
-            return Go<LHS, std::int16_t, Float>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, std::int16_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int32_t)) {
-            return Go<LHS, std::int32_t, Float>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, std::int32_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int64_t)) {
-            return Go<LHS, std::int64_t, Float>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, std::int64_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::uint8_t)) {
-            return Go<LHS, std::uint8_t, Float>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, std::uint8_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::uint16_t)) {
-            return Go<LHS, std::uint16_t, Float>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, std::uint16_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::uint32_t)) {
-            return Go<LHS, std::uint32_t, Float>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, std::uint32_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::uint64_t)) {
-            return Go<LHS, std::uint64_t, Float>::go(t_oper, t_lhs, t_rhs);
+            return go<LHS, std::uint64_t>(t_oper, t_lhs, t_rhs);
           } else {
             throw chaiscript::detail::exception::bad_any_cast();
           }
@@ -317,37 +297,37 @@ namespace chaiscript
           const Type_Info &inp_ = t_lhs.get_type_info();
 
           if (inp_ == typeid(int)) {
-            return oper_rhs<int, false>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<int>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(double)) {
-            return oper_rhs<double, true>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<double>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(long double)) {
-            return oper_rhs<long double, true>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<long double>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(float)) {
-            return oper_rhs<float, true>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<float>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(char)) {
-            return oper_rhs<char, false>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<char>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(unsigned int)) {
-            return oper_rhs<unsigned int, false>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<unsigned int>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(long)) {
-            return oper_rhs<long, false>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<long>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(unsigned long)) {
-            return oper_rhs<unsigned long, false>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<unsigned long>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int8_t)) {
-            return oper_rhs<std::int8_t, false>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<std::int8_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int16_t)) {
-            return oper_rhs<std::int16_t, false>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<std::int16_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int32_t)) {
-            return oper_rhs<std::int32_t, false>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<std::int32_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::int64_t)) {
-            return oper_rhs<std::int64_t, false>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<std::int64_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::uint8_t)) {
-            return oper_rhs<std::uint8_t, false>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<std::uint8_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::uint16_t)) {
-            return oper_rhs<std::uint16_t, false>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<std::uint16_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::uint32_t)) {
-            return oper_rhs<std::uint32_t, false>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<std::uint32_t>(t_oper, t_lhs, t_rhs);
           } else if (inp_ == typeid(std::uint64_t)) {
-            return oper_rhs<std::uint64_t, false>(t_oper, t_lhs, t_rhs);
+            return oper_rhs<std::uint64_t>(t_oper, t_lhs, t_rhs);
           } else  {
             throw chaiscript::detail::exception::bad_any_cast();
           }
