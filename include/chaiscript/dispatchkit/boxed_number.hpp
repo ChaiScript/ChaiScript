@@ -43,7 +43,7 @@ namespace chaiscript
 // this is OK, so we're disabling size/and sign type warnings
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(push)
-#pragma warning(disable : 4244 4018 4389 4146 4365)
+#pragma warning(disable : 4244 4018 4389 4146 4365 4267)
 #endif
 
 
