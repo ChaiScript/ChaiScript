@@ -842,6 +842,23 @@ namespace chaiscript
         }
     }
 
+    namespace detail {
+      template<typename Itr1, typename Itr2, typename BinaryPredicate>
+        typename std::iterator_traits<Itr1>::difference_type 
+          count_if(Itr1 first1, const Itr1 &last1, Itr2 first2, BinaryPredicate p)
+      {
+        typename std::iterator_traits<Itr1>::difference_type count = 0;
+
+        while (first1 != last1)
+        {
+          if (p(*first1, *first2)) ++count;
+          ++first1; ++first2;
+        }
+
+        return count;
+      }
+    }
+
     /**
      * Take a vector of functions and a vector of parameters. Attempt to execute
      * each function against the set of parameters, in order, until a matching
@@ -863,14 +880,12 @@ namespace chaiscript
           {
             ordered_funcs.emplace_back(plist.size(), func.get());
           } else if (arity == static_cast<int>(plist.size())) {
-            size_t numdiffs = 0;
-            for (size_t i = 0; i < plist.size(); ++i)
-            {
-              if (!func->get_param_types()[i+1].bare_equal(plist[i].get_type_info()))
-              {
-                ++numdiffs;
-              }
-            }
+            const auto numdiffs = detail::count_if(
+                plist.begin(), plist.end(), func->get_param_types().begin() + 1,
+                  [](const Boxed_Value &bv, const Type_Info &ti) {
+                    return !ti.bare_equal(bv.get_type_info());
+                  }
+                );
             ordered_funcs.emplace_back(numdiffs, func.get());
           } else {
             continue;
@@ -878,11 +893,12 @@ namespace chaiscript
         }
 
         std::stable_sort(ordered_funcs.begin(), ordered_funcs.end(), 
-            [](const decltype(ordered_funcs)::const_reference &t_lhs, const decltype(ordered_funcs)::const_reference &t_rhs)
+            [](decltype(ordered_funcs)::const_reference t_lhs, decltype(ordered_funcs)::const_reference t_rhs)
             {
               return t_lhs.first < t_rhs.first;
             }
-            );
+          );
+
 
         for (const auto &func : ordered_funcs )
         {
