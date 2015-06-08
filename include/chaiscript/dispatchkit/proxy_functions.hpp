@@ -852,17 +852,18 @@ namespace chaiscript
           const std::vector<Boxed_Value> &plist, const Type_Conversions &t_conversions)
       {
         //std::cout << "starting dispatch: " << funcs.size() << '\n';
-        std::multimap<size_t, const Proxy_Function_Base *> ordered_funcs;
+        std::vector<std::pair<size_t, const Proxy_Function_Base *>> ordered_funcs;
+        ordered_funcs.reserve(funcs.size());
 
         for (const auto &func : funcs)
         {
-          size_t numdiffs = 0;
           const auto arity = func->get_arity();
 
           if (arity == -1)
           {
-            numdiffs = plist.size();
+            ordered_funcs.emplace_back(plist.size(), func.get());
           } else if (arity == static_cast<int>(plist.size())) {
+            size_t numdiffs = 0;
             for (size_t i = 0; i < plist.size(); ++i)
             {
               if (!func->get_param_types()[i+1].bare_equal(plist[i].get_type_info()))
@@ -870,12 +871,18 @@ namespace chaiscript
                 ++numdiffs;
               }
             }
+            ordered_funcs.emplace_back(numdiffs, func.get());
           } else {
             continue;
           }
-
-          ordered_funcs.insert(std::make_pair(numdiffs, func.get()));
         }
+
+        std::stable_sort(ordered_funcs.begin(), ordered_funcs.end(), 
+            [](const decltype(ordered_funcs)::const_reference &t_lhs, const decltype(ordered_funcs)::const_reference &t_rhs)
+            {
+              return t_lhs.first < t_rhs.first;
+            }
+            );
 
         for (const auto &func : ordered_funcs )
         {
