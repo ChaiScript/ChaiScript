@@ -549,47 +549,43 @@ namespace chaiscript
         virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const = 0;
     };
 
-    /// The standard typesafe function call implementation of Proxy_Function
-    /// It takes a std::function<> object and performs runtime 
-    /// type checking of Boxed_Value parameters, in a type safe manner
-    template<typename Func>
-      class Proxy_Function_Impl : public Proxy_Function_Impl_Base
+
+
+    /// For any callable object
+    template<typename Func, typename Callable>
+      class Proxy_Function_Callable_Impl : public Proxy_Function_Impl_Base
     {
       public:
-        Proxy_Function_Impl(std::function<Func> f)
+        Proxy_Function_Callable_Impl(Callable f)
           : Proxy_Function_Impl_Base(detail::build_param_type_list(static_cast<Func *>(nullptr))),
-            m_f(std::move(f)), m_dummy_func(nullptr)
+            m_f(std::move(f))
         {
         }
 
-        virtual ~Proxy_Function_Impl() {}
+        virtual ~Proxy_Function_Callable_Impl() {}
 
         virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          return detail::compare_types_cast(m_dummy_func, vals, t_conversions);
+          return detail::compare_types_cast(static_cast<Func *>(nullptr), vals, t_conversions);
         }
 
         virtual bool operator==(const Proxy_Function_Base &t_func) const CHAISCRIPT_OVERRIDE
         {
-          return dynamic_cast<const Proxy_Function_Impl<Func> *>(&t_func) != nullptr;
+          return dynamic_cast<const Proxy_Function_Callable_Impl<Func, Callable> *>(&t_func) != nullptr;
         }
 
-        std::function<Func> internal_function() const
-        {
-          return m_f;
-        }
 
       protected:
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          return detail::Do_Call<typename std::function<Func>::result_type>::go(m_f, params, t_conversions);
+          typedef typename detail::Function_Signature<Func>::Return_Type Return_Type;
+          return detail::Do_Call<Return_Type>::template go<Func>(m_f, params, t_conversions);
         }
 
-
       private:
-        std::function<Func> m_f;
-        Func *m_dummy_func;
+        Callable m_f;
     };
+
 
     class Assignable_Proxy_Function : public Proxy_Function_Impl_Base
     {
@@ -613,17 +609,16 @@ namespace chaiscript
       public:
         Assignable_Proxy_Function_Impl(std::reference_wrapper<std::function<Func>> t_f, std::shared_ptr<std::function<Func>> t_ptr)
           : Assignable_Proxy_Function(detail::build_param_type_list(static_cast<Func *>(nullptr))),
-            m_f(std::move(t_f)), m_shared_ptr_holder(std::move(t_ptr)), m_dummy_func(nullptr)
+            m_f(std::move(t_f)), m_shared_ptr_holder(std::move(t_ptr))
         {
           assert(!m_shared_ptr_holder || m_shared_ptr_holder.get() == &m_f.get());
-
         }
 
         virtual ~Assignable_Proxy_Function_Impl() {}
 
         virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          return detail::compare_types_cast(m_dummy_func, vals, t_conversions);
+          return detail::compare_types_cast(static_cast<Func *>(nullptr), vals, t_conversions);
         }
 
         virtual bool operator==(const Proxy_Function_Base &t_func) const CHAISCRIPT_OVERRIDE
@@ -643,14 +638,13 @@ namespace chaiscript
       protected:
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          return detail::Do_Call<typename std::function<Func>::result_type>::go(m_f.get(), params, t_conversions);
+          return detail::Do_Call<typename std::function<Func>::result_type>::template go<Func>(m_f.get(), params, t_conversions);
         }
 
 
       private:
         std::reference_wrapper<std::function<Func>> m_f;
         std::shared_ptr<std::function<Func>> m_shared_ptr_holder;
-        Func *m_dummy_func;
     };
     /// Attribute getter Proxy_Function implementation
     template<typename T, typename Class>

@@ -251,7 +251,7 @@ namespace chaiscript
       }
 
       template<typename LHS>
-        static Boxed_Value oper_rhs(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
+        inline static Boxed_Value oper_rhs(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
         {
           const auto &inp_ = t_rhs.get_type_info();
 
@@ -292,7 +292,7 @@ namespace chaiscript
           }
         } 
 
-        static Boxed_Value oper(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
+        inline static Boxed_Value oper(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
         {
           const Type_Info &inp_ = t_lhs.get_type_info();
 

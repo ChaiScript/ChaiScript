@@ -37,8 +37,7 @@ TEST_CASE("C++11 Lambdas Can Be Registered")
   // in an std::function or provide the signature
   chaiscript::ChaiScript chai;
 
-  // provide the signature
-  chai.add(chaiscript::fun<std::string ()>([] { return "hello"; } ), "f1");
+  chai.add(chaiscript::fun([]()->std::string { return "hello"; } ), "f1");
 
   // wrap
   chai.add(chaiscript::fun(std::function<std::string ()>([] { return "world"; } )), "f2");

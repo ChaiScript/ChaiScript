@@ -7,8 +7,6 @@
 #ifndef CHAISCRIPT_PARSER_HPP_
 #define CHAISCRIPT_PARSER_HPP_
 
-#include <cstdint>
-#include <cstring>
 #include <exception>
 #include <iostream>
 #include <memory>
@@ -16,6 +14,8 @@
 #include <string>
 #include <vector>
 #include <cctype>
+#include <cstring>
+
 
 #include "../dispatchkit/boxed_value.hpp"
 #include "chaiscript_common.hpp"

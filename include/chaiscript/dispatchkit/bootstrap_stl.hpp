@@ -243,18 +243,18 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr random_access_container_type(const std::string &/*type*/, ModulePtr m = std::make_shared<Module>())
         {
-          // cppcheck-suppress syntaxError
-          typedef typename ContainerType::reference(ContainerType::*indexoper)(size_t);
-
           //In the interest of runtime safety for the m, we prefer the at() method for [] access,
           //to throw an exception in an out of bounds condition.
           m->add(
-              fun(std::function<typename ContainerType::reference (ContainerType *, int)>
-                (std::mem_fn(static_cast<indexoper>(&ContainerType::at)))), "[]");
+              fun(
+                [](ContainerType &c, int index) -> typename ContainerType::reference {
+                  return c.at(index);
+                }), "[]");
+
           m->add(
               fun(
-                [](const ContainerType *c, int index) -> typename ContainerType::const_reference {
-                  return c->at(index);
+                [](const ContainerType &c, int index) -> typename ContainerType::const_reference {
+                  return c.at(index);
                 }), "[]");
 
           return m;
