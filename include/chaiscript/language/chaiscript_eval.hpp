@@ -1340,9 +1340,14 @@ namespace chaiscript
             }
             throw;
           }
+          catch (const std::runtime_error &e) {
+            retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
+          }
+          catch (const std::out_of_range &e) {
+            retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
+          }
           catch (const std::exception &e) {
             retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
-
           }
           catch (Boxed_Value &e) {
             retval = handle_exception(t_ss, e);

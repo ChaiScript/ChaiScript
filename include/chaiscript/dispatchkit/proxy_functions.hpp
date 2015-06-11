@@ -878,7 +878,7 @@ namespace chaiscript
         }
 
         std::stable_sort(ordered_funcs.begin(), ordered_funcs.end(), 
-            [](const decltype(ordered_funcs)::const_reference &t_lhs, const decltype(ordered_funcs)::const_reference &t_rhs)
+            [](decltype(ordered_funcs)::const_reference t_lhs, decltype(ordered_funcs)::const_reference t_rhs)
             {
               return t_lhs.first < t_rhs.first;
             }

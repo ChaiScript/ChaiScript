@@ -438,8 +438,12 @@ namespace chaiscript
           m->add(user_type<MapType>(), type);
 
           typedef typename MapType::mapped_type &(MapType::*elem_access)(const typename MapType::key_type &);
+          typedef const typename MapType::mapped_type &(MapType::*const_elem_access)(const typename MapType::key_type &) const;
 
           m->add(fun(static_cast<elem_access>(&MapType::operator[])), "[]");
+
+          m->add(fun(static_cast<elem_access>(&MapType::at)), "at");
+          m->add(fun(static_cast<const_elem_access>(&MapType::at)), "at");
 
           container_type<MapType>(type, m);
           default_constructible_type<MapType>(type, m);

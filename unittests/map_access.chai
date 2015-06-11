@@ -1,2 +1,19 @@
 auto x = ["bob":2, "fred":3]
 assert_equal(3, x["fred"])
+
+
+try {
+  auto m = ["bob":2, "fred":3];
+  m.at("tom");
+  assert_true(false);
+} catch (out_of_range e) {
+  print("out_of_range")
+  assert_true(true);
+} catch (e) {
+  print("other")
+  dump_object(e);
+  assert_true(false);
+}
+
+
+assert_equal(["bob":2, "fred":3].at("fred"), 3);

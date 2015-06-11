@@ -408,6 +408,12 @@ namespace chaiscript
         m->add(fun(return_boxed_value_vector(&dispatch::Proxy_Function_Base::get_contained_functions)), "get_contained_functions");
 
 
+        m->add(user_type<std::out_of_range>(), "out_of_range");
+        m->add(user_type<std::logic_error>(), "logic_error");
+        m->add(chaiscript::base_class<std::exception, std::logic_error>());
+        m->add(chaiscript::base_class<std::logic_error, std::out_of_range>());
+        m->add(chaiscript::base_class<std::exception, std::out_of_range>());
+
         m->add(user_type<std::runtime_error>(), "runtime_error");
         m->add(chaiscript::base_class<std::exception, std::runtime_error>());
 
