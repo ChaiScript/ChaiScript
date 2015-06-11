@@ -23,9 +23,10 @@ script:
   - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug . ; fi
   - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then make -j2 ; fi
   - make test
-  - if [ ${COVERAGE} = 1 ]; then coveralls -e "unittests/catch.hpp" -E ".*\.cpp"  --gcov $GCOV --gcov-options '\-lp' ; fi
-
-after_script:
+    #  - if [ ${COVERAGE} = 1 ]; then coveralls -e "unittests/catch.hpp" -E ".*\.cpp"  --gcov $GCOV ; fi
+  - if [ ${COVERAGE} = 1 ]; then find . -name "*.gcno" | xargs gcov -d  -s /home/jason/ChaiScript -r; fi
+  - if [ ${COVERAGE} = 1 ]; then bash <(curl -s https://codecov.io/bash); fi
+fter_script:
   - if [ ${CPPCHECK} = 1 ]; then contrib/codeanalysis/runcppcheck.sh ; fi
 
 
