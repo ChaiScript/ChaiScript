@@ -24,7 +24,7 @@ script:
   - if [ ${COVERITY_SCAN_BRANCH} != 1 ]; then make -j2 ; fi
   - make test
     #  - if [ ${COVERAGE} = 1 ]; then coveralls -e "unittests/catch.hpp" -E ".*\.cpp"  --gcov $GCOV ; fi
-  - if [ ${COVERAGE} = 1 ]; then bash <(curl -s https://codecov.io/bash | sed "s/# find all the reports/find . -name \"*.gcno\" | xargs gcov  -s \`cd .. \&\& pwd\`  / ")
+  - if [ ${COVERAGE} = 1 ]; then bash <(curl -s https://codecov.io/bash | sed "s/# find all the reports/find . -name \"*.gcno\" | xargs gcov  -s \`cd .. \&\& pwd\`  / ") ; fi
 after_script:
   - if [ ${CPPCHECK} = 1 ]; then contrib/codeanalysis/runcppcheck.sh ; fi
 
