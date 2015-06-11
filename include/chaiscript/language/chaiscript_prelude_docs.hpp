@@ -718,14 +718,14 @@ Object drop_while(Range c, Function f);
 Object reduce(Range c, Function f);
 
 
-/// \brief Takes elements from Range c that match function f, return them.
+/// \brief Takes elements from Container c that match function f, return them.
 ///
 /// Example:
 /// \code
 /// eval> filter([1, 2, 3, 4], odd)
 /// [1, 3]
 /// \endcode
-Object filter(Range c, Function f);
+Object filter(Container c, Function f);
 
 
 /// \brief Joins the elements of the Range c into a string, delimiting each with the delim string.
