@@ -30,6 +30,19 @@ chai.add(chaiscript::fun<ReturnType (ParamType1, ParamType2)>(&function_with_ove
 ```
 chai.add(chaiscript::fun(std::static_cast<ReturnType (*)(ParamType1, ParamType2)>(&function_with_overloads)), "function_name");
 ```
+This overload technique is also used when exposing base member using derived type
+
+```
+struct Base
+{
+  int data;
+};
+
+struct Derived : public Base
+{};
+
+chai.add(chaiscript::fun(static_cast<int(Derived::*)>(&Derived::data)), "data");
+```
 
 ### Lambda
 
@@ -67,6 +80,22 @@ chai.add(chaiscript::var(shareddouble), "shareddouble"); // by shared_ptr, share
 chai.add(chaiscript::const_var(somevar), "somevar"); // copied in and made const
 chai.add_global_const(chaiscript::const_var(somevar), "somevar"); // global const. Throws if value is non-const
 chai.add_global(chaiscript::var(somevar), "somevar"); // global non-const
+```
+#Using STL
+ChaiScript recognize many types from STL, but you have to add specific instantiation yourself.
+
+```
+typedef std::vector<std::pair<int, std::string>> data_list;
+	data_list my_list{ make_pair(0, "Hello"), make_pair(1, "World") };
+	chai.add(chaiscript::bootstrap::standard_library::vector_type<data_list>("DataList"));
+	chai.add(chaiscript::bootstrap::standard_library::pair_type<data_list::value_type>("DataElement"));
+	chai.add(chaiscript::var(&my_list), "data_list");
+	chai.eval(R"_(
+			for(var i=0; i<data_list.size(); ++i)
+			{
+				print(to_string(data_list[i].first) + " " + data_list[i].second)
+			}
+	)_");
 ```
 
 # Executing Script
