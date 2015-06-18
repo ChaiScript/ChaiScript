@@ -59,6 +59,20 @@ namespace chaiscript
   class Boxed_Number
   {
     private:
+      enum class Common_Types {
+        t_int32,
+        t_double,
+        t_uint8,
+        t_int8,
+        t_uint16,
+        t_int16,
+        t_uint32,
+        t_uint64,
+        t_int64,
+        t_float,
+        t_long_double
+      };
+
       template<typename T>
       static inline void check_divide_by_zero(T t, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr)
       {
@@ -72,6 +86,67 @@ namespace chaiscript
       template<typename T>
       static inline void check_divide_by_zero(T, typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr)
       {
+      }
+
+      static CHAISCRIPT_CONSTEXPR Common_Types get_common_type(size_t t_size, bool t_signed)
+      {
+        return   (t_size == 1 && t_signed)?(Common_Types::t_int8)
+                :(t_size == 1)?(Common_Types::t_uint8)
+                :(t_size == 2 && t_signed)?(Common_Types::t_int16)
+                :(t_size == 2)?(Common_Types::t_uint16)
+                :(t_size == 4 && t_signed)?(Common_Types::t_int32)
+                :(t_size == 4)?(Common_Types::t_uint32)
+                :(t_size == 8 && t_signed)?(Common_Types::t_int64)
+                :(Common_Types::t_uint64);
+      }
+
+      static Common_Types get_common_type(const Boxed_Value &t_bv)
+      {
+        const Type_Info &inp_ = t_bv.get_type_info();
+
+        if (inp_ == typeid(int)) {
+          return get_common_type(sizeof(int), true);
+        } else if (inp_ == typeid(double)) {
+          return Common_Types::t_double;
+        } else if (inp_ == typeid(long double)) {
+          return Common_Types::t_long_double;
+        } else if (inp_ == typeid(float)) {
+          return Common_Types::t_float;
+        } else if (inp_ == typeid(char)) {
+          return get_common_type(sizeof(char), std::is_signed<char>::value);
+        } else if (inp_ == typeid(unsigned char)) {
+          return get_common_type(sizeof(unsigned char), false);
+        } else if (inp_ == typeid(unsigned int)) {
+          return get_common_type(sizeof(unsigned int), false);
+        } else if (inp_ == typeid(long)) {
+          return get_common_type(sizeof(long), true);
+        } else if (inp_ == typeid(unsigned long)) {
+          return get_common_type(sizeof(unsigned long), false);
+        } else if (inp_ == typeid(std::int8_t)) {
+          return Common_Types::t_int8;
+        } else if (inp_ == typeid(std::int16_t)) {
+          return Common_Types::t_int16;
+        } else if (inp_ == typeid(std::int32_t)) {
+          return Common_Types::t_int32;
+        } else if (inp_ == typeid(std::int64_t)) {
+          return Common_Types::t_int64;
+        } else if (inp_ == typeid(std::uint8_t)) {
+          return Common_Types::t_uint8;
+        } else if (inp_ == typeid(std::uint16_t)) {
+          return Common_Types::t_uint16;
+        } else if (inp_ == typeid(std::uint32_t)) {
+          return Common_Types::t_uint32;
+        } else if (inp_ == typeid(std::uint64_t)) {
+          return Common_Types::t_uint64;
+        } else if (inp_ == typeid(wchar_t)) {
+          return get_common_type(sizeof(wchar_t), std::is_signed<wchar_t>::value);
+        } else if (inp_ == typeid(char16_t)) {
+          return get_common_type(sizeof(char16_t), std::is_signed<char16_t>::value);
+        } else if (inp_ == typeid(char32_t)) {
+          return get_common_type(sizeof(char32_t), std::is_signed<char32_t>::value);
+        } else  {
+          throw chaiscript::detail::exception::bad_any_cast();
+        }
       }
 
       template<typename T>
@@ -215,15 +290,15 @@ namespace chaiscript
         typedef typename std::common_type<LHS, RHS>::type common_type;
         if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
         {
-          return boolean_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs));
+          return boolean_go(t_oper, get_as_aux<common_type, LHS>(t_lhs), get_as_aux<common_type, RHS>(t_rhs));
         } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
-          return binary_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+          return binary_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux<common_type, RHS>(t_rhs), t_lhs);
         } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
-          return binary_int_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+          return binary_int_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux<common_type, RHS>(t_rhs), t_lhs);
         } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
-          return const_binary_int_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs));
+          return const_binary_int_go(t_oper, get_as_aux<common_type, LHS>(t_lhs), get_as_aux<common_type, RHS>(t_rhs));
         } else if (t_oper > Operators::const_flag) {
-          return const_binary_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs));
+          return const_binary_go(t_oper, get_as_aux<common_type, LHS>(t_lhs), get_as_aux<common_type, RHS>(t_rhs));
         } else {
           throw chaiscript::detail::exception::bad_any_cast();
         }
@@ -236,15 +311,15 @@ namespace chaiscript
         typedef typename std::common_type<LHS, RHS>::type common_type;
         if (t_oper > Operators::boolean_flag && t_oper < Operators::non_const_flag)
         {
-          return boolean_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs));
+          return boolean_go(t_oper, get_as_aux<common_type, LHS>(t_lhs), get_as_aux<common_type, RHS>(t_rhs));
         } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
-          return binary_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux_impl<common_type, RHS>(t_rhs), t_lhs);
+          return binary_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux<common_type, RHS>(t_rhs), t_lhs);
         } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag) {
           throw chaiscript::detail::exception::bad_any_cast();
         } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
           throw chaiscript::detail::exception::bad_any_cast();
         } else if (t_oper > Operators::const_flag) {
-          return const_binary_go(t_oper, get_as_aux_impl<common_type, LHS>(t_lhs), get_as_aux_impl<common_type, RHS>(t_rhs));
+          return const_binary_go(t_oper, get_as_aux<common_type, LHS>(t_lhs), get_as_aux<common_type, RHS>(t_rhs));
         } else {
           throw chaiscript::detail::exception::bad_any_cast();
         }
@@ -253,94 +328,66 @@ namespace chaiscript
       template<typename LHS>
         inline static Boxed_Value oper_rhs(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
         {
-          const auto &inp_ = t_rhs.get_type_info();
-
-          if (inp_ == typeid(int)) {
-            return go<LHS, int>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(double)) {
-            return go<LHS, double>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(float)) {
-            return go<LHS, float>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(long double)) {
-            return go<LHS, long double>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(char)) {
-            return go<LHS, char>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(unsigned int)) {
-            return go<LHS, unsigned int>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(long)) {
-            return go<LHS, long>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(unsigned long)) {
-            return go<LHS, unsigned long>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::int8_t)) {
-            return go<LHS, std::int8_t>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::int16_t)) {
-            return go<LHS, std::int16_t>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::int32_t)) {
-            return go<LHS, std::int32_t>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::int64_t)) {
-            return go<LHS, std::int64_t>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::uint8_t)) {
-            return go<LHS, std::uint8_t>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::uint16_t)) {
-            return go<LHS, std::uint16_t>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::uint32_t)) {
-            return go<LHS, std::uint32_t>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::uint64_t)) {
-            return go<LHS, std::uint64_t>(t_oper, t_lhs, t_rhs);
-          } else {
-            throw chaiscript::detail::exception::bad_any_cast();
+          switch (get_common_type(t_rhs)) {
+            case Common_Types::t_int32:
+              return go<LHS, int32_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_uint8:
+              return go<LHS, uint8_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_int8:
+              return go<LHS, int8_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_uint16:
+              return go<LHS, uint16_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_int16:
+              return go<LHS, int16_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_uint32:
+              return go<LHS, uint32_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_uint64:
+              return go<LHS, uint64_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_int64:
+              return go<LHS, int64_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_double:
+              return go<LHS, double>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_float:
+              return go<LHS, float>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_long_double:
+              return go<LHS, long double>(t_oper, t_lhs, t_rhs);
           }
+
+          throw chaiscript::detail::exception::bad_any_cast();
         } 
 
         inline static Boxed_Value oper(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
         {
-          const Type_Info &inp_ = t_lhs.get_type_info();
-
-          if (inp_ == typeid(int)) {
-            return oper_rhs<int>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(double)) {
-            return oper_rhs<double>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(long double)) {
-            return oper_rhs<long double>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(float)) {
-            return oper_rhs<float>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(char)) {
-            return oper_rhs<char>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(unsigned int)) {
-            return oper_rhs<unsigned int>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(long)) {
-            return oper_rhs<long>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(unsigned long)) {
-            return oper_rhs<unsigned long>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::int8_t)) {
-            return oper_rhs<std::int8_t>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::int16_t)) {
-            return oper_rhs<std::int16_t>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::int32_t)) {
-            return oper_rhs<std::int32_t>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::int64_t)) {
-            return oper_rhs<std::int64_t>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::uint8_t)) {
-            return oper_rhs<std::uint8_t>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::uint16_t)) {
-            return oper_rhs<std::uint16_t>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::uint32_t)) {
-            return oper_rhs<std::uint32_t>(t_oper, t_lhs, t_rhs);
-          } else if (inp_ == typeid(std::uint64_t)) {
-            return oper_rhs<std::uint64_t>(t_oper, t_lhs, t_rhs);
-          } else  {
-            throw chaiscript::detail::exception::bad_any_cast();
+          switch (get_common_type(t_lhs)) {
+            case Common_Types::t_int32:
+              return oper_rhs<int32_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_uint8:
+              return oper_rhs<uint8_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_int8:
+              return oper_rhs<int8_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_uint16:
+              return oper_rhs<uint16_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_int16:
+              return oper_rhs<int16_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_uint32:
+              return oper_rhs<uint32_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_uint64:
+              return oper_rhs<uint64_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_int64:
+              return oper_rhs<int64_t>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_double:
+              return oper_rhs<double>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_float:
+              return oper_rhs<float>(t_oper, t_lhs, t_rhs);
+            case Common_Types::t_long_double:
+              return oper_rhs<long double>(t_oper, t_lhs, t_rhs);
           }
+
+          throw chaiscript::detail::exception::bad_any_cast();
         }
 
         template<typename Target, typename Source>
-          inline Target get_as_aux() const
-          {
-            return get_as_aux_impl<Target, Source>(bv);
-          }
-
-        template<typename Target, typename Source>
-          static inline Target get_as_aux_impl(const Boxed_Value &t_bv)
+          static inline Target get_as_aux(const Boxed_Value &t_bv)
           {
             return static_cast<Target>(*static_cast<const Source *>(t_bv.get_const_ptr()));
           }
@@ -390,6 +437,14 @@ namespace chaiscript
           return Boxed_Number(get_as<long double>());
         } else if (inp_.bare_equal_type_info(typeid(char))) {
           return Boxed_Number(get_as<char>());
+        } else if (inp_.bare_equal_type_info(typeid(unsigned char))) {
+          return Boxed_Number(get_as<unsigned char>());
+        } else if (inp_.bare_equal_type_info(typeid(wchar_t))) {
+          return Boxed_Number(get_as<wchar_t>());
+        } else if (inp_.bare_equal_type_info(typeid(char16_t))) {
+          return Boxed_Number(get_as<char16_t>());
+        } else if (inp_.bare_equal_type_info(typeid(char32_t))) {
+          return Boxed_Number(get_as<char32_t>());
         } else if (inp_.bare_equal_type_info(typeid(unsigned int))) {
           return Boxed_Number(get_as<unsigned int>());
         } else if (inp_.bare_equal_type_info(typeid(long))) {
@@ -420,84 +475,62 @@ namespace chaiscript
 
       template<typename Target> Target get_as() const
       {
-        const Type_Info &inp_ = bv.get_type_info();
-
-        if (inp_ == typeid(int)) {
-          return get_as_aux<Target, int>();
-        } else if (inp_ == typeid(double)) {
-          return get_as_aux<Target, double>();
-        } else if (inp_ == typeid(float)) {
-          return get_as_aux<Target, float>();
-        } else if (inp_ == typeid(long double)) {
-          return get_as_aux<Target, long double>();
-        } else if (inp_ == typeid(char)) {
-          return get_as_aux<Target, char>();
-        } else if (inp_ == typeid(unsigned int)) {
-          return get_as_aux<Target, unsigned int>();
-        } else if (inp_ == typeid(long)) {
-          return get_as_aux<Target, long>();
-        } else if (inp_ == typeid(unsigned long)) {
-          return get_as_aux<Target, unsigned long>();
-        } else if (inp_ == typeid(std::int8_t)) {
-          return get_as_aux<Target, std::int8_t>();
-        } else if (inp_ == typeid(std::int16_t)) {
-          return get_as_aux<Target, std::int16_t>();
-        } else if (inp_ == typeid(std::int32_t)) {
-          return get_as_aux<Target, std::int32_t>();
-        } else if (inp_ == typeid(std::int64_t)) {
-          return get_as_aux<Target, std::int64_t>();
-        } else if (inp_ == typeid(std::uint8_t)) {
-          return get_as_aux<Target, std::uint8_t>();
-        } else if (inp_ == typeid(std::uint16_t)) {
-          return get_as_aux<Target, std::uint16_t>();
-        } else if (inp_ == typeid(std::uint32_t)) {
-          return get_as_aux<Target, std::uint32_t>();
-        } else if (inp_ == typeid(std::uint64_t)) {
-          return get_as_aux<Target, std::uint64_t>();
-        } else {
-          throw chaiscript::detail::exception::bad_any_cast();
+        switch (get_common_type(bv)) {
+          case Common_Types::t_int32:
+            return get_as_aux<Target, int32_t>(bv);
+          case Common_Types::t_uint8:
+            return get_as_aux<Target, uint8_t>(bv);
+          case Common_Types::t_int8:
+            return get_as_aux<Target, int8_t>(bv);
+          case Common_Types::t_uint16:
+            return get_as_aux<Target, uint16_t>(bv);
+          case Common_Types::t_int16:
+            return get_as_aux<Target, int16_t>(bv);
+          case Common_Types::t_uint32:
+            return get_as_aux<Target, uint32_t>(bv);
+          case Common_Types::t_uint64:
+            return get_as_aux<Target, uint64_t>(bv);
+          case Common_Types::t_int64:
+            return get_as_aux<Target, int64_t>(bv);
+          case Common_Types::t_double:
+            return get_as_aux<Target, double>(bv);
+          case Common_Types::t_float:
+            return get_as_aux<Target, float>(bv);
+          case Common_Types::t_long_double:
+            return get_as_aux<Target, long double>(bv);
         }
+
+        throw chaiscript::detail::exception::bad_any_cast();
       }
 
       std::string to_string() const
       {
-        const Type_Info &inp_ = bv.get_type_info();
-
-        if (inp_ == typeid(int)) {
-          return std::to_string(get_as<int>());
-        } else if (inp_ == typeid(double)) {
-          return std::to_string(get_as<double>());
-        } else if (inp_ == typeid(float)) {
-          return std::to_string(get_as<float>());
-        } else if (inp_ == typeid(long double)) {
-          return std::to_string(get_as<long double>());
-        } else if (inp_ == typeid(char)) {
-          return std::to_string(get_as<int>());
-        } else if (inp_ == typeid(unsigned int)) {
-          return std::to_string(get_as<unsigned int>());
-        } else if (inp_ == typeid(long)) {
-          return std::to_string(get_as<long>());
-        } else if (inp_ == typeid(unsigned long)) {
-          return std::to_string(get_as<unsigned long>());
-        } else if (inp_ == typeid(std::int8_t)) {
-          return std::to_string(get_as<int>());
-        } else if (inp_ == typeid(std::int16_t)) {
-          return std::to_string(get_as<int16_t>());
-        } else if (inp_ == typeid(std::int32_t)) {
-          return std::to_string(get_as<int32_t>());
-        } else if (inp_ == typeid(std::int64_t)) {
-          return std::to_string(get_as<int64_t>());
-        } else if (inp_ == typeid(std::uint8_t)) {
-          return std::to_string(get_as<unsigned int>());
-        } else if (inp_ == typeid(std::uint16_t)) {
-          return std::to_string(get_as<std::uint16_t>());
-        } else if (inp_ == typeid(std::uint32_t)) {
-          return std::to_string(get_as<std::uint32_t>());
-        } else if (inp_ == typeid(std::uint64_t)) {
-          return std::to_string(get_as<std::uint64_t>());
-        } else {
-          throw chaiscript::detail::exception::bad_any_cast();
+        switch (get_common_type(bv)) {
+          case Common_Types::t_int32:
+            return std::to_string(get_as<int32_t>());
+          case Common_Types::t_uint8:
+            return std::to_string(get_as<uint32_t>());
+          case Common_Types::t_int8:
+            return std::to_string(get_as<int32_t>());
+          case Common_Types::t_uint16:
+            return std::to_string(get_as<uint16_t>());
+          case Common_Types::t_int16:
+            return std::to_string(get_as<int16_t>());
+          case Common_Types::t_uint32:
+            return std::to_string(get_as<uint32_t>());
+          case Common_Types::t_uint64:
+            return std::to_string(get_as<uint64_t>());
+          case Common_Types::t_int64:
+            return std::to_string(get_as<int64_t>());
+          case Common_Types::t_double:
+            return std::to_string(get_as<double>());
+          case Common_Types::t_float:
+            return std::to_string(get_as<float>());
+          case Common_Types::t_long_double:
+            return std::to_string(get_as<long double>());
         }
+
+        throw chaiscript::detail::exception::bad_any_cast();
       }
 
       bool operator==(const Boxed_Number &t_rhs) const
