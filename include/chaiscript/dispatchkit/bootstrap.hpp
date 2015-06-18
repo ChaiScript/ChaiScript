@@ -157,12 +157,28 @@ namespace chaiscript
     /// Internal function for converting from a string to a value
     /// uses ostream operator >> to perform the conversion
     template<typename Input>
-    Input parse_string(const std::string &i)
+    auto parse_string(const std::string &i)
+      -> typename std::enable_if<
+             !std::is_same<Input, wchar_t>::value
+             && !std::is_same<Input, char16_t>::value
+             && !std::is_same<Input, char32_t>::value,
+      Input>::type
     {
       std::stringstream ss(i);
       Input t;
       ss >> t;
       return t;
+    }
+
+    template<typename Input>
+    auto parse_string(const std::string &) 
+      -> typename std::enable_if<
+             std::is_same<Input, wchar_t>::value
+             || std::is_same<Input, char16_t>::value
+             || std::is_same<Input, char32_t>::value,
+      Input>::type
+    {
+      throw std::runtime_error("Parsing of wide characters is not yet supported");
     }
 
 
@@ -486,6 +502,9 @@ namespace chaiscript
         bootstrap_pod_type<unsigned long>("unsigned_long", m);
         bootstrap_pod_type<size_t>("size_t", m);
         bootstrap_pod_type<char>("char", m);
+        bootstrap_pod_type<wchar_t>("wchar_t", m);
+        bootstrap_pod_type<char16_t>("char16_t", m);
+        bootstrap_pod_type<char32_t>("char32_t", m);
         bootstrap_pod_type<std::int8_t>("int8_t", m);
         bootstrap_pod_type<std::int16_t>("int16_t", m);
         bootstrap_pod_type<std::int32_t>("int32_t", m);
