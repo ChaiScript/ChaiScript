@@ -523,11 +523,11 @@ namespace chaiscript
           case Common_Types::t_int64:
             return std::to_string(get_as<int64_t>());
           case Common_Types::t_double:
-            return std::to_string(get_as<double>());
+            return to_string_aux<double>(bv);
           case Common_Types::t_float:
-            return std::to_string(get_as<float>());
+            return to_string_aux<float>(bv);
           case Common_Types::t_long_double:
-            return std::to_string(get_as<long double>());
+            return to_string_aux<long double>(bv);
         }
 
         throw chaiscript::detail::exception::bad_any_cast();
