@@ -773,9 +773,9 @@ namespace chaiscript
           return true;
         }
 
-      template<typename InItr>
+      template<typename InItr, typename Funcs>
         Boxed_Value dispatch_with_conversions(InItr begin, const InItr &end, const std::vector<Boxed_Value> &plist, 
-            const Type_Conversions &t_conversions)
+            const Type_Conversions &t_conversions, const Funcs &t_funcs)
         {
           InItr orig(begin);
 
@@ -783,15 +783,15 @@ namespace chaiscript
 
           while (begin != end)
           {
-            if (types_match_except_for_arithmetic(*begin, plist, t_conversions))
+            if (types_match_except_for_arithmetic(begin->second, plist, t_conversions))
             {
               if (matching_func == end)
               {
                 matching_func = begin;
               } else {
                 // handle const members vs non-const member, which is not really ambiguous
-                const auto &mat_fun_param_types = (*matching_func)->get_param_types();
-                const auto &next_fun_param_types = (*begin)->get_param_types();
+                const auto &mat_fun_param_types = matching_func->second->get_param_types();
+                const auto &next_fun_param_types = begin->second->get_param_types();
 
                 if (plist[0].is_const() && !mat_fun_param_types[1].is_const() && next_fun_param_types[1].is_const()) {
                   matching_func = begin; // keep the new one, the const/non-const matchup is correct
@@ -799,7 +799,7 @@ namespace chaiscript
                   // keep the old one, it has a better const/non-const matchup
                 } else {
                   // ambiguous function call
-                  throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(orig, end));
+                  throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(t_funcs.begin(), t_funcs.end()));
                 }
               }
             }
@@ -810,12 +810,12 @@ namespace chaiscript
           if (matching_func == end)
           {
             // no appropriate function to attempt arithmetic type conversion on
-            throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(orig, end));
+            throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(t_funcs.begin(), t_funcs.end()));
           }
 
 
           std::vector<Boxed_Value> newplist;
-          const std::vector<Type_Info> &tis = (*matching_func)->get_param_types();
+          const std::vector<Type_Info> &tis = matching_func->second->get_param_types();
 
           for (size_t i = 0; i < plist.size(); ++i)
           {
@@ -828,7 +828,7 @@ namespace chaiscript
           }
 
           try {
-            return (*(*matching_func))(newplist, t_conversions);
+            return (*(matching_func->second))(newplist, t_conversions);
           } catch (const exception::bad_boxed_cast &) {
             //parameter failed to cast
           } catch (const exception::arity_error &) {
@@ -837,7 +837,7 @@ namespace chaiscript
             //guard failed to allow the function to execute
           }
 
-          throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(orig, end));
+          throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(t_funcs.begin(), t_funcs.end()));
 
         }
     }
@@ -895,7 +895,7 @@ namespace chaiscript
           }
         }
 
-        return detail::dispatch_with_conversions(funcs.cbegin(), funcs.cend(), plist, t_conversions);
+        return detail::dispatch_with_conversions(ordered_funcs.cbegin(), ordered_funcs.cend(), plist, t_conversions, funcs);
       }
   }
 }
