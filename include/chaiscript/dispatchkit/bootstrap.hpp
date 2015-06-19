@@ -191,11 +191,6 @@ namespace chaiscript
       m->add(constructor<T()>(), name);
       construct_pod<T>(name, m);
 
-      auto to_s = fun(&to_string<T>);
-
-      if (!m->has_function(to_s, "to_string")) {
-        m->add(to_s, "to_string");
-      }
       m->add(fun(&parse_string<T>), "to_" + name);
       return m;
     }
@@ -492,6 +487,9 @@ namespace chaiscript
         m->add(fun(&unknown_assign), "=");
         m->add(fun(&throw_exception), "throw");
         m->add(fun(&what), "what");
+
+        m->add(fun(&to_string<char>), "to_string");
+        m->add(fun(&Boxed_Number::to_string), "to_string");
 
         bootstrap_pod_type<double>("double", m);
         bootstrap_pod_type<long double>("long_double", m);
