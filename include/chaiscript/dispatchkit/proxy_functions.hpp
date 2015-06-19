@@ -851,7 +851,6 @@ namespace chaiscript
       Boxed_Value dispatch(const Funcs &funcs,
           const std::vector<Boxed_Value> &plist, const Type_Conversions &t_conversions)
       {
-        //std::cout << "starting dispatch: " << funcs.size() << '\n';
         std::vector<std::pair<size_t, const Proxy_Function_Base *>> ordered_funcs;
         ordered_funcs.reserve(funcs.size());
 
@@ -872,32 +871,27 @@ namespace chaiscript
               }
             }
             ordered_funcs.emplace_back(numdiffs, func.get());
-          } else {
-            continue;
           }
         }
 
-        std::stable_sort(ordered_funcs.begin(), ordered_funcs.end(), 
-            [](const std::pair<size_t, const Proxy_Function_Base *> &t_lhs, const std::pair<size_t, const Proxy_Function_Base *> &t_rhs)
-            {
-              return t_lhs.first < t_rhs.first;
-            }
-            );
 
-        for (const auto &func : ordered_funcs )
+        for (size_t i = 0; i <= plist.size(); ++i)
         {
-          try {
-            if (func.first == 0 || func.second->filter(plist, t_conversions))
-            {
-              return (*(func.second))(plist, t_conversions);
+          for (const auto &func : ordered_funcs )
+          {
+            try {
+              if (func.first == i && func.second->filter(plist, t_conversions))
+              {
+                return (*(func.second))(plist, t_conversions);
+              }
+            } catch (const exception::bad_boxed_cast &) {
+              //parameter failed to cast, try again
+            } catch (const exception::arity_error &) {
+              //invalid num params, try again
+            } catch (const exception::guard_error &) {
+              //guard failed to allow the function to execute,
+              //try again
             }
-          } catch (const exception::bad_boxed_cast &) {
-            //parameter failed to cast, try again
-          } catch (const exception::arity_error &) {
-            //invalid num params, try again
-          } catch (const exception::guard_error &) {
-            //guard failed to allow the function to execute,
-            //try again
           }
         }
 
