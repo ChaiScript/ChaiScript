@@ -749,28 +749,16 @@ namespace chaiscript
         bool types_match_except_for_arithmetic(const FuncType &t_func, const std::vector<Boxed_Value> &plist,
             const Type_Conversions &t_conversions)
         {
-          if (t_func->get_arity() != static_cast<int>(plist.size()))
-          {
-            return false;
-          }
-
+          assert(plist.size() == types.size() - 1);
           const std::vector<Type_Info> &types = t_func->get_param_types();
 
-          assert(plist.size() == types.size() - 1);
-
-          for (size_t i = 0; i < plist.size(); ++i)
-          {
-            if (Proxy_Function_Base::compare_type_to_param(types[i+1], plist[i], t_conversions)
-                || (types[i+1].is_arithmetic() && plist[i].get_type_info().is_arithmetic()))
-            {
-              // types continue to match
-            } else {
-              return false;
-            }
-          }
-
-          // all types match
-          return true;
+          return std::mismatch(plist.begin(), plist.end(),
+                               types.begin()+1,
+                               [&](const Boxed_Value &bv, const Type_Info &ti) {
+                                 return Proxy_Function_Base::compare_type_to_param(ti, bv, t_conversions)
+                                       || (bv.get_type_info().is_arithmetic() && ti.is_arithmetic());
+                               }
+              ) == std::make_pair(plist.end(), types.end());
         }
 
       template<typename InItr, typename Funcs>
@@ -815,17 +803,22 @@ namespace chaiscript
 
 
           std::vector<Boxed_Value> newplist;
-          const std::vector<Type_Info> &tis = matching_func->second->get_param_types();
+          newplist.reserve(plist.size());
 
-          for (size_t i = 0; i < plist.size(); ++i)
-          {
-            if (tis[i+1].is_arithmetic()
-                && plist[i].get_type_info().is_arithmetic()) {
-              newplist.push_back(Boxed_Number(plist[i]).get_as(tis[i+1]).bv);
-            } else {
-              newplist.push_back(plist[i]);
-            }
-          }
+          const std::vector<Type_Info> &tis = matching_func->second->get_param_types();
+          std::transform(tis.begin() + 1, tis.end(),
+                         plist.begin(),
+                         std::back_inserter(newplist),
+                         [](const Type_Info &ti, const Boxed_Value &param) {
+                           if (ti.is_arithmetic() && param.get_type_info().is_arithmetic()) {
+                             return Boxed_Number(param).get_as(ti).bv;
+                           } else {
+                             return param;
+                           }
+                         }
+                       );
+
+
 
           try {
             return (*(matching_func->second))(newplist, t_conversions);
