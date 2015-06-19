@@ -390,7 +390,7 @@ namespace chaiscript
     {
       public:
         typedef std::map<std::string, chaiscript::Type_Info> Type_Name_Map;
-        typedef std::map<std::string, Boxed_Value> Scope;
+        typedef std::vector<std::pair<std::string, Boxed_Value>> Scope;
         typedef std::vector<Scope> StackData;
 
         struct State
@@ -445,7 +445,11 @@ namespace chaiscript
 
           for (auto stack_elem = stack.rbegin(); stack_elem != stack.rend(); ++stack_elem)
           {
-            auto itr = stack_elem->find(name);
+            auto itr = std::find_if(stack_elem->begin(), stack_elem->end(),
+                [&](const std::pair<std::string, Boxed_Value> &o) {
+                  return o.first == name;
+                });
+
             if (itr != stack_elem->end())
             {
               itr->second = std::move(obj);
@@ -460,12 +464,20 @@ namespace chaiscript
         /// Adds a named object to the current scope
         /// \warning This version does not check the validity of the name
         /// it is meant for internal use only
-        void add_object(const std::string &name, const Boxed_Value &obj)
+        void add_object(const std::string &name, Boxed_Value obj)
         {
-          if (!get_stack_data().back().insert(std::make_pair(name, obj)).second)
+          auto &stack_elem = get_stack_data().back();
+
+          if (std::any_of(stack_elem.begin(), stack_elem.end(),
+              [&](const std::pair<std::string, Boxed_Value> &o) {
+                return o.first == name;
+              }))
           {
             throw chaiscript::exception::name_conflict_error(name);
           }
+
+          get_stack_data().back().emplace_back(name, std::move(obj));
+
         }
 
         /// Adds a new global shared object, between all the threads
@@ -570,10 +582,11 @@ namespace chaiscript
           // Is it in the stack?
           for (auto stack_elem = stack.rbegin(); stack_elem != stack.rend(); ++stack_elem)
           {
-            const auto stackitr = stack_elem->find(name);
-            if (stackitr != stack_elem->end())
+            for (auto &s : (*stack_elem) )
             {
-              return stackitr->second;
+              if (s.first == name) {
+                return s.second;
+              }
             }
           }
 
@@ -699,9 +712,9 @@ namespace chaiscript
           auto &stack = get_stack_data();
           if (stack.size() > 1)
           {
-            return stack[1];
+            return std::map<std::string, Boxed_Value>(stack[1].begin(), stack[1].end());
           } else {
-            return stack[0];
+            return std::map<std::string, Boxed_Value>(stack[0].begin(), stack[0].end());
           }
         }
 
@@ -710,7 +723,7 @@ namespace chaiscript
         {
           auto &stack = get_stack_data();
           auto &scope = stack.front();
-          return scope;
+          return std::map<std::string, Boxed_Value>(scope.begin(), scope.end());
         }
 
         /// \brief Sets all of the locals for the current thread state.
@@ -722,7 +735,7 @@ namespace chaiscript
         {
           auto &stack = get_stack_data();
           auto &scope = stack.front();
-          scope = t_locals;
+          scope = std::vector<std::pair<std::string, Boxed_Value>>(t_locals.begin(), t_locals.end());
         }
 
 
