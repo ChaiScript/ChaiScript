@@ -16,6 +16,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <iterator>
 
 #include "../chaiscript_defines.hpp"
 #include "boxed_cast.hpp"
@@ -765,8 +766,6 @@ namespace chaiscript
         Boxed_Value dispatch_with_conversions(InItr begin, const InItr &end, const std::vector<Boxed_Value> &plist, 
             const Type_Conversions &t_conversions, const Funcs &t_funcs)
         {
-          InItr orig(begin);
-
           InItr matching_func(end);
 
           while (begin != end)
