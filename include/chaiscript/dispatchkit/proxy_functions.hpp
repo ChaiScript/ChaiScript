@@ -749,8 +749,8 @@ namespace chaiscript
         bool types_match_except_for_arithmetic(const FuncType &t_func, const std::vector<Boxed_Value> &plist,
             const Type_Conversions &t_conversions)
         {
-          assert(plist.size() == types.size() - 1);
           const std::vector<Type_Info> &types = t_func->get_param_types();
+          assert(plist.size() == types.size() - 1);
 
           return std::mismatch(plist.begin(), plist.end(),
                                types.begin()+1,
