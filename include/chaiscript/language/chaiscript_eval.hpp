@@ -185,7 +185,7 @@ namespace chaiscript
 
         Boxed_Value m_value;
 
-        mutable uint32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Char_AST_Node : public AST_Node {

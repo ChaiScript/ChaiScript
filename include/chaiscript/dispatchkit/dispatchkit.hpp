@@ -569,7 +569,7 @@ namespace chaiscript
         /// Searches the current stack for an object of the given name
         /// includes a special overload for the _ place holder object to
         /// ensure that it is always in scope.
-        Boxed_Value get_object(const std::string &name, uint32_t &t_loc) const
+        Boxed_Value get_object(const std::string &name, std::atomic_uint_fast32_t &t_loc) const
         {
           enum class Loc : uint32_t {
             located    = 0x80000000,
@@ -578,7 +578,7 @@ namespace chaiscript
             loc_mask   = 0x0000FFFF
           };
 
-          unsigned int loc = t_loc;
+          uint32_t loc = t_loc.load(std::memory_order_relaxed);
 
           if (loc == 0)
           {
@@ -590,16 +590,17 @@ namespace chaiscript
               for (auto s = stack_elem->begin(); s != stack_elem->end(); ++s )
               {
                 if (s->first == name) {
-                  t_loc =  static_cast<uint32_t>(std::distance(stack.rbegin(), stack_elem) << 16)
-                         | static_cast<uint32_t>(std::distance(stack_elem->begin(), s))
-                         | static_cast<uint32_t>(Loc::located)
-                         | static_cast<uint32_t>(Loc::is_local);
+                  t_loc.store( static_cast<uint32_t>(std::distance(stack.rbegin(), stack_elem) << 16)
+                             | static_cast<uint32_t>(std::distance(stack_elem->begin(), s))
+                             | static_cast<uint32_t>(Loc::located)
+                             | static_cast<uint32_t>(Loc::is_local),
+                             std::memory_order_relaxed);
                   return s->second;
                 }
               }
             }
 
-            t_loc = static_cast<uint32_t>(Loc::located);
+            t_loc.store( static_cast<uint32_t>(Loc::located), std::memory_order_relaxed);
           } else if (loc & static_cast<uint32_t>(Loc::is_local)) {
             auto &stack = get_stack_data();
 
