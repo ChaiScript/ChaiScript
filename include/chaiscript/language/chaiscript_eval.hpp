@@ -316,9 +316,10 @@ namespace chaiscript
 
         virtual ~Inplace_Fun_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE{
-          std::vector<Boxed_Value> params;
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
+          std::vector<Boxed_Value> params;
+          params.reserve(this->children[1]->children.size());
           for (const auto &child : this->children[1]->children) {
             params.push_back(child->eval(t_ss));
           }

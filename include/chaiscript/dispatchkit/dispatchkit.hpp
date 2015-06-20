@@ -438,7 +438,7 @@ namespace chaiscript
 
         /// Set the value of an object, by name. If the object
         /// is not available in the current scope it is created
-        void add(const Boxed_Value &obj, const std::string &name)
+        void add(Boxed_Value obj, const std::string &name)
         {
           validate_object_name(name);
           auto &stack = get_stack_data();
