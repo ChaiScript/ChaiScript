@@ -571,14 +571,14 @@ namespace chaiscript
         /// ensure that it is always in scope.
         Boxed_Value get_object(const std::string &name, std::atomic_uint_fast32_t &t_loc) const
         {
-          enum class Loc : uint32_t {
+          enum class Loc : uint_fast32_t {
             located    = 0x80000000,
             is_local   = 0x40000000,
             stack_mask = 0x0FFF0000,
             loc_mask   = 0x0000FFFF
           };
 
-          uint32_t loc = t_loc.load(std::memory_order_relaxed);
+          uint_fast32_t loc = t_loc.load(std::memory_order_relaxed);
 
           if (loc == 0)
           {
@@ -590,21 +590,21 @@ namespace chaiscript
               for (auto s = stack_elem->begin(); s != stack_elem->end(); ++s )
               {
                 if (s->first == name) {
-                  t_loc.store( static_cast<uint32_t>(std::distance(stack.rbegin(), stack_elem) << 16)
-                             | static_cast<uint32_t>(std::distance(stack_elem->begin(), s))
-                             | static_cast<uint32_t>(Loc::located)
-                             | static_cast<uint32_t>(Loc::is_local),
+                  t_loc.store( static_cast<uint_fast32_t>(std::distance(stack.rbegin(), stack_elem) << 16)
+                             | static_cast<uint_fast32_t>(std::distance(stack_elem->begin(), s))
+                             | static_cast<uint_fast32_t>(Loc::located)
+                             | static_cast<uint_fast32_t>(Loc::is_local),
                              std::memory_order_relaxed);
                   return s->second;
                 }
               }
             }
 
-            t_loc.store( static_cast<uint32_t>(Loc::located), std::memory_order_relaxed);
-          } else if (loc & static_cast<uint32_t>(Loc::is_local)) {
+            t_loc.store( static_cast<uint_fast32_t>(Loc::located), std::memory_order_relaxed);
+          } else if (loc & static_cast<uint_fast32_t>(Loc::is_local)) {
             auto &stack = get_stack_data();
 
-            return stack[stack.size() - 1 - ((loc & static_cast<uint32_t>(Loc::stack_mask)) >> 16)][loc & static_cast<uint32_t>(Loc::loc_mask)].second;
+            return stack[stack.size() - 1 - ((loc & static_cast<uint_fast32_t>(Loc::stack_mask)) >> 16)][loc & static_cast<uint_fast32_t>(Loc::loc_mask)].second;
           }
 
           // Is the value we are looking for a global?
