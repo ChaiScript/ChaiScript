@@ -170,15 +170,14 @@ namespace chaiscript
         {
           if (t_text == "true") {
             return const_var(true);
-          }
-          else if (t_text == "false") {
+          } else if (t_text == "false") {
             return const_var(false);
-          }
-          else if (t_text == "Infinity") {
+          } else if (t_text == "Infinity") {
             return const_var(std::numeric_limits<double>::infinity());
-          }
-          else if (t_text == "NaN") {
+          } else if (t_text == "NaN") {
             return const_var(std::numeric_limits<double>::quiet_NaN());
+          } else if (t_text == "_") {
+            return Boxed_Value(std::make_shared<dispatch::Placeholder_Object>());
           } else {
             return Boxed_Value();
           }

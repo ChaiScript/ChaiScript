@@ -408,8 +408,7 @@ namespace chaiscript
         };
 
         Dispatch_Engine()
-          : m_stack_holder(this),
-            m_place_holder(std::make_shared<dispatch::Placeholder_Object>())
+          : m_stack_holder(this)
         {
         }
 
@@ -572,12 +571,6 @@ namespace chaiscript
         /// ensure that it is always in scope.
         Boxed_Value get_object(const std::string &name) const
         {
-          // Is it a placeholder object?
-          if (name == "_")
-          {
-            return m_place_holder;
-          }
-
           auto &stack = get_stack_data();
 
           // Is it in the stack?
@@ -1345,8 +1338,6 @@ namespace chaiscript
 
 
         State m_state;
-
-        Boxed_Value m_place_holder;
     };
   }
 }
