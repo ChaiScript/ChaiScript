@@ -147,7 +147,7 @@ namespace chaiscript
       public:
         Id_AST_Node(const std::string &t_ast_node_text, Parse_Location t_loc) :
           AST_Node(t_ast_node_text, AST_Node_Type::Id, std::move(t_loc)),
-          m_value(get_value(t_ast_node_text))
+          m_value(get_value(t_ast_node_text)), m_loc(0)
       { }
 
         virtual ~Id_AST_Node() {}
@@ -157,7 +157,7 @@ namespace chaiscript
             return m_value;
           } else {
             try {
-              return t_ss.get_object(this->text);
+              return t_ss.get_object(this->text, m_loc);
             }
             catch (std::exception &) {
               throw exception::eval_error("Can not find object: " + this->text);
@@ -184,6 +184,8 @@ namespace chaiscript
         }
 
         Boxed_Value m_value;
+
+        mutable uint32_t m_loc;
     };
 
     struct Char_AST_Node : public AST_Node {

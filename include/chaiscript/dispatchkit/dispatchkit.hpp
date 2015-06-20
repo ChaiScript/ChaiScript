@@ -569,19 +569,41 @@ namespace chaiscript
         /// Searches the current stack for an object of the given name
         /// includes a special overload for the _ place holder object to
         /// ensure that it is always in scope.
-        Boxed_Value get_object(const std::string &name) const
+        Boxed_Value get_object(const std::string &name, uint32_t &t_loc) const
         {
-          auto &stack = get_stack_data();
+          enum class Loc : uint32_t {
+            located    = 0x80000000,
+            is_local   = 0x40000000,
+            stack_mask = 0x0FFF0000,
+            loc_mask   = 0x0000FFFF
+          };
 
-          // Is it in the stack?
-          for (auto stack_elem = stack.rbegin(); stack_elem != stack.rend(); ++stack_elem)
+          unsigned int loc = t_loc;
+
+          if (loc == 0)
           {
-            for (auto &s : (*stack_elem) )
+            auto &stack = get_stack_data();
+
+            // Is it in the stack?
+            for (auto stack_elem = stack.rbegin(); stack_elem != stack.rend(); ++stack_elem)
             {
-              if (s.first == name) {
-                return s.second;
+              for (auto s = stack_elem->begin(); s != stack_elem->end(); ++s )
+              {
+                if (s->first == name) {
+                  t_loc =  static_cast<uint32_t>(std::distance(stack.rbegin(), stack_elem) << 16)
+                         | static_cast<uint32_t>(std::distance(stack_elem->begin(), s))
+                         | static_cast<uint32_t>(Loc::located)
+                         | static_cast<uint32_t>(Loc::is_local);
+                  return s->second;
+                }
               }
             }
+
+            t_loc = static_cast<uint32_t>(Loc::located);
+          } else if (loc & static_cast<uint32_t>(Loc::is_local)) {
+            auto &stack = get_stack_data();
+
+            return stack[stack.size() - 1 - ((loc & static_cast<uint32_t>(Loc::stack_mask)) >> 16)][loc & static_cast<uint32_t>(Loc::loc_mask)].second;
           }
 
           // Is the value we are looking for a global?
