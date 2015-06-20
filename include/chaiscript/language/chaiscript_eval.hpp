@@ -282,29 +282,6 @@ namespace chaiscript
 
     };
 
-    struct Fun_Lookup_AST_Node : public AST_Node {
-      public:
-        Fun_Lookup_AST_Node(const std::string &t_fun_name)
-         : AST_Node(t_fun_name, 0, Parse_Location("<EVAL>"))
-        {
-        }
-
-        virtual ~Fun_Lookup_AST_Node() {}
-
-        virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &t_ss) const CHAISCRIPT_OVERRIDE {
-          try {
-            Boxed_Value bv = t_ss.get_object(text);
-            t_ss.add_object(text, bv);
-            std::cout << " Saved fun lookup: " << text << '\n';
-            return bv;
-          } catch (...) {
-            return Boxed_Value();
-          }
-        }
-    };
-
-
-
 
 
     /// Used in the context of in-string ${} evals, so that no new scope is created

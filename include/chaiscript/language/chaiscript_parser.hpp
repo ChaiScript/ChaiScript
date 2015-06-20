@@ -216,28 +216,6 @@ namespace chaiscript
 
       }
 
-      static void optimize_fun_lookups(AST_NodePtr &p)
-      {
-        for (auto &c : p->children)
-        {
-
-          if (c->identifier == AST_Node_Type::Def
-              || c->identifier == AST_Node_Type::Method
-              || c->identifier == AST_Node_Type::Lambda) {
-            std::vector<AST_NodePtr> children_to_add;
-            auto counts = count_fun_calls(c, false);
-            for (const auto &count : counts) {
-              // std::cout << " Fun Call Count: " << count.first << " " << count.second << '\n';
-              if (count.second > 1) {
-                 children_to_add.push_back(chaiscript::make_shared<AST_Node, eval::Fun_Lookup_AST_Node>(count.first));
-              }
-            }
-            c->children.back()->children.insert(c->children.back()->children.begin(), children_to_add.begin(), children_to_add.end());
-          }
-          optimize_fun_lookups(c);
-        }
-      }
-
 
       static void optimize_blocks(AST_NodePtr &p)
       {
@@ -282,12 +260,11 @@ namespace chaiscript
         return count;
       }
 
-      AST_NodePtr optimized_ast(bool t_optimize_blocks = false, bool t_optimize_returns = true, bool t_optimize_fun_lookups = false) {
+      AST_NodePtr optimized_ast(bool t_optimize_blocks = false, bool t_optimize_returns = true) {
         AST_NodePtr p = m_match_stack.front();
         //Note, optimize_blocks is currently broken; it breaks stack management
         if (t_optimize_blocks) { optimize_blocks(p); }
         if (t_optimize_returns) { optimize_returns(p); }
-        if (t_optimize_fun_lookups) { optimize_fun_lookups(p); }
         return p;
       }
 

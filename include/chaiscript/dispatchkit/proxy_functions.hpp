@@ -809,7 +809,7 @@ namespace chaiscript
           std::transform(tis.begin() + 1, tis.end(),
                          plist.begin(),
                          std::back_inserter(newplist),
-                         [](const Type_Info &ti, const Boxed_Value &param) {
+                         [](const Type_Info &ti, const Boxed_Value &param) -> Boxed_Value {
                            if (ti.is_arithmetic() && param.get_type_info().is_arithmetic()) {
                              return Boxed_Number(param).get_as(ti).bv;
                            } else {
