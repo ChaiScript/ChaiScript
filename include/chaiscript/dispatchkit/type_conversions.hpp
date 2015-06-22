@@ -92,6 +92,11 @@ namespace chaiscript
           return m_from;
         }
 
+        virtual bool bidir() const
+        {
+          return true;
+        }
+
         virtual ~Type_Conversion_Base() {}
 
       protected:
@@ -262,6 +267,11 @@ namespace chaiscript
           throw chaiscript::exception::bad_boxed_dynamic_cast(t_base.get_type_info(), typeid(Derived), "Unable to cast down inheritance hierarchy with non-polymorphic types");
         }
 
+        virtual bool bidir() const
+        {
+          return false;
+        }
+
         virtual Boxed_Value convert(const Boxed_Value &t_derived) const CHAISCRIPT_OVERRIDE
         {
           return Static_Caster<Derived, Base>::cast(t_derived);
@@ -290,6 +300,12 @@ namespace chaiscript
           /// \todo better handling of errors from the conversion function
           return m_func(t_from);
         }
+
+        virtual bool bidir() const
+        {
+          return false;
+        }
+
 
       private:
         Callable m_func;
@@ -367,7 +383,7 @@ namespace chaiscript
         const auto &types = thread_cache();
         if (types.count(to.bare_type_info()) != 0 && types.count(from.bare_type_info()) != 0)
         {
-          return has_conversion(to, from) || has_conversion(from, to);
+          return has_conversion(to, from);
         } else {
           return false;
         }
@@ -417,7 +433,7 @@ namespace chaiscript
       bool has_conversion(const Type_Info &to, const Type_Info &from) const
       {
         chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
-        return find(to, from) != m_conversions.end();
+        return find_bidir(to, from) != m_conversions.end();
       }
 
       std::shared_ptr<detail::Type_Conversion_Base> get_conversion(const Type_Info &to, const Type_Info &from) const
@@ -435,6 +451,19 @@ namespace chaiscript
       }
 
     private:
+      std::set<std::shared_ptr<detail::Type_Conversion_Base> >::const_iterator find_bidir(
+          const Type_Info &to, const Type_Info &from) const
+      {
+        return std::find_if(m_conversions.begin(), m_conversions.end(),
+              [&to, &from](const std::shared_ptr<detail::Type_Conversion_Base> &conversion)
+              {
+                return  (conversion->to().bare_equal(to) && conversion->from().bare_equal(from))
+                     || (conversion->bidir() && conversion->from().bare_equal(to) && conversion->to().bare_equal(from));
+;
+              }
+        );
+      }
+
       std::set<std::shared_ptr<detail::Type_Conversion_Base> >::const_iterator find(
           const Type_Info &to, const Type_Info &from) const
       {
