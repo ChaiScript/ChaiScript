@@ -10,7 +10,7 @@ compilers:
     cmake_extra_flags: -DUSE_LIBCXX:BOOL=ON -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON
   - name: "clang"
     build_tag: AddressSanitizer
-    version: "3.5"
+    version: "3.6"
     skip_packaging: true
     cmake_extra_flags: -DUSE_LIBCXX:BOOL=OFF -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DENABLE_ADDRESS_SANITIZER:BOOL=ON
   - name: "clang"
