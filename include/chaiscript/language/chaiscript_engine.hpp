@@ -363,10 +363,12 @@ namespace chaiscript
       m_engine.add(fun([this](){ return m_engine.get_function_objects(); }), "get_functions");
       m_engine.add(fun([this](){ return m_engine.get_scripting_objects(); }), "get_objects");
 
-      m_engine.add(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Dynamic_Proxy_Function>(
+      m_engine.add(
+          dispatch::make_dynamic_proxy_function(
               [this](const std::vector<Boxed_Value> &t_params) {
                 return m_engine.call_exists(t_params);
-              }), "call_exists");
+              })
+          , "call_exists");
 
 //      m_engine.add(fun<Boxed_Value (const dispatch::Proxy_Function_Base *, const std::vector<Boxed_Value> &)>(std::bind(&chaiscript::dispatch::Proxy_Function_Base::operator(), std::placeholders::_1, std::placeholders::_2, std::ref(m_engine.conversions()))), "call");
 //

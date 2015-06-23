@@ -302,7 +302,6 @@ namespace chaiscript
     {
       public:
         Dynamic_Proxy_Function(
-            std::function<Boxed_Value (const std::vector<Boxed_Value> &)> t_f, 
             int t_arity=-1,
             AST_NodePtr t_parsenode = AST_NodePtr(),
             Param_Types t_param_types = Param_Types(),
@@ -310,8 +309,7 @@ namespace chaiscript
             Proxy_Function t_guard = Proxy_Function())
           : Proxy_Function_Base(build_param_type_list(t_param_types), t_arity),
             m_param_types(std::move(t_param_types)),
-            m_guard(std::move(t_guard)), m_parsenode(std::move(t_parsenode)), m_description(std::move(t_description)), 
-            m_f(std::move(t_f))
+            m_guard(std::move(t_guard)), m_parsenode(std::move(t_parsenode)), m_description(std::move(t_description))
         {
         }
 
@@ -350,6 +348,75 @@ namespace chaiscript
           return m_description;
         }
 
+
+      protected:
+        bool test_guard(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const
+        {
+          if (m_guard)
+          {
+            try {
+              return boxed_cast<bool>((*m_guard)(params, t_conversions));
+            } catch (const exception::arity_error &) {
+              return false;
+            } catch (const exception::bad_boxed_cast &) {
+              return false;
+            }
+          } else {
+            return true;
+          }
+        }
+
+      private:
+        static std::vector<Type_Info> build_param_type_list(const Param_Types &t_types)
+        {
+          // For the return type
+          std::vector<Type_Info> types{chaiscript::detail::Get_Type_Info<Boxed_Value>::get()};
+
+          for (const auto &t : t_types.types())
+          {
+            if (t.second.is_undef()) {
+              types.push_back(chaiscript::detail::Get_Type_Info<Boxed_Value>::get());
+            } else {
+              types.push_back(t.second);
+            }
+          }
+
+          return types;
+        }
+
+        Param_Types m_param_types;
+        Proxy_Function m_guard;
+        AST_NodePtr m_parsenode;
+        std::string m_description;
+    };
+
+
+
+    template<typename Callable>
+    class Dynamic_Proxy_Function_Impl : public Dynamic_Proxy_Function
+    {
+      public:
+        Dynamic_Proxy_Function_Impl(
+            Callable t_f, 
+            int t_arity=-1,
+            AST_NodePtr t_parsenode = AST_NodePtr(),
+            Param_Types t_param_types = Param_Types(),
+            std::string t_description = "",
+            Proxy_Function t_guard = Proxy_Function())
+          : Dynamic_Proxy_Function(
+                t_arity,
+                std::move(t_parsenode),
+                std::move(t_param_types),
+                std::move(t_description),
+                std::move(t_guard)
+              ),
+            m_f(std::move(t_f))
+        {
+        }
+
+        virtual ~Dynamic_Proxy_Function_Impl() {}
+
+
       protected:
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
@@ -368,47 +435,16 @@ namespace chaiscript
         }
 
       private:
-        bool test_guard(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const
-        {
-          if (m_guard)
-          {
-            try {
-              return boxed_cast<bool>((*m_guard)(params, t_conversions));
-            } catch (const exception::arity_error &) {
-              return false;
-            } catch (const exception::bad_boxed_cast &) {
-              return false;
-            }
-          } else {
-            return true;
-          }
-        }
 
-        static std::vector<Type_Info> build_param_type_list(const Param_Types &t_types)
-        {
-          std::vector<Type_Info> types;
-
-          // For the return type
-          types.push_back(chaiscript::detail::Get_Type_Info<Boxed_Value>::get());
-
-          for (const auto &t : t_types.types())
-          {
-            if (t.second.is_undef()) {
-              types.push_back(chaiscript::detail::Get_Type_Info<Boxed_Value>::get());
-            } else {
-              types.push_back(t.second);
-            }
-          }
-
-          return types;
-        }
-
-        Param_Types m_param_types;
-        Proxy_Function m_guard;
-        AST_NodePtr m_parsenode;
-        std::string m_description;
-        std::function<Boxed_Value (const std::vector<Boxed_Value> &)> m_f;
+        Callable m_f;
     };
+
+    template<typename Callable, typename ... Arg>
+    Proxy_Function make_dynamic_proxy_function(Callable &&c, Arg&& ... a)
+    {
+      return chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Dynamic_Proxy_Function_Impl<Callable>>(
+          std::forward<Callable>(c), std::forward<Arg>(a)...);
+    }
 
     /// An object used by Bound_Function to represent "_" parameters
     /// of a binding. This allows for unbound parameters during bind.

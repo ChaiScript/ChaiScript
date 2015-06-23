@@ -739,12 +739,15 @@ namespace chaiscript
 
           const auto &lambda_node = this->children.back();
 
-          return Boxed_Value(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Dynamic_Proxy_Function>(
-                [&t_ss, lambda_node, param_names, captures](const std::vector<Boxed_Value> &t_params)
-                {
-                  return detail::eval_function(t_ss, lambda_node, param_names, t_params, captures);
-                },
-                static_cast<int>(numparams), lambda_node, param_types));
+          return Boxed_Value(
+              dispatch::make_dynamic_proxy_function(
+                  [&t_ss, lambda_node, param_names, captures](const std::vector<Boxed_Value> &t_params)
+                  {
+                    return detail::eval_function(t_ss, lambda_node, param_names, t_params, captures);
+                  },
+                  static_cast<int>(numparams), lambda_node, param_types
+                )
+              );
         }
 
       private:
@@ -801,25 +804,28 @@ namespace chaiscript
             }
           }
 
-          std::shared_ptr<dispatch::Dynamic_Proxy_Function> guard;
+          std::shared_ptr<dispatch::Proxy_Function_Base> guard;
           if (guardnode) {
-            guard = std::make_shared<dispatch::Dynamic_Proxy_Function>
-              ([&t_ss, guardnode, t_param_names](const std::vector<Boxed_Value> &t_params)
-                                                    {
-                                                      return detail::eval_function(t_ss, guardnode, t_param_names, t_params);
-                                                    }, static_cast<int>(numparams), guardnode);
+            guard = dispatch::make_dynamic_proxy_function(
+                [&t_ss, guardnode, t_param_names](const std::vector<Boxed_Value> &t_params)
+                {
+                  return detail::eval_function(t_ss, guardnode, t_param_names, t_params);
+                },
+                static_cast<int>(numparams), guardnode);
           }
 
           try {
             const std::string & l_function_name = this->children[0]->text;
             const std::string & l_annotation = this->annotation?this->annotation->text:"";
             const auto & func_node = this->children.back();
-            t_ss.add(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Dynamic_Proxy_Function>
-                        ([&t_ss, guardnode, func_node, t_param_names](const std::vector<Boxed_Value> &t_params)
-                                                      {
-                                                        return detail::eval_function(t_ss, func_node, t_param_names, t_params);
-                                                      }, static_cast<int>(numparams), this->children.back(),
-                                                         param_types, l_annotation, guard), l_function_name);
+            t_ss.add(
+                dispatch::make_dynamic_proxy_function(
+                  [&t_ss, guardnode, func_node, t_param_names](const std::vector<Boxed_Value> &t_params)
+                  {
+                    return detail::eval_function(t_ss, func_node, t_param_names, t_params);
+                  },
+                  static_cast<int>(numparams), this->children.back(),
+                  param_types, l_annotation, guard), l_function_name);
           }
           catch (const exception::reserved_word_error &e) {
             throw exception::eval_error("Reserved word used as function name '" + e.word() + "'");
@@ -1399,12 +1405,13 @@ namespace chaiscript
 
           const size_t numparams = t_param_names.size();
 
-          std::shared_ptr<dispatch::Dynamic_Proxy_Function> guard;
+          std::shared_ptr<dispatch::Proxy_Function_Base> guard;
           if (guardnode) {
-            guard = std::make_shared<dispatch::Dynamic_Proxy_Function>
-              ([&t_ss, t_param_names, guardnode](const std::vector<Boxed_Value> &t_params) {
-                 return chaiscript::eval::detail::eval_function(t_ss, guardnode, t_param_names, t_params, std::map<std::string, Boxed_Value>());
-               }, static_cast<int>(numparams), guardnode);
+            guard = dispatch::make_dynamic_proxy_function(
+                [&t_ss, t_param_names, guardnode](const std::vector<Boxed_Value> &t_params) {
+                  return chaiscript::eval::detail::eval_function(t_ss, guardnode, t_param_names, t_params, std::map<std::string, Boxed_Value>());
+                }, 
+                static_cast<int>(numparams), guardnode);
           }
 
           try {
@@ -1415,12 +1422,15 @@ namespace chaiscript
             if (function_name == class_name) {
               param_types.push_front(class_name, Type_Info());
 
-              t_ss.add(std::make_shared<dispatch::detail::Dynamic_Object_Constructor>(class_name, 
-                    std::make_shared<dispatch::Dynamic_Proxy_Function>(
-                      [&t_ss, t_param_names, node](const std::vector<Boxed_Value> &t_params) {
-                        return chaiscript::eval::detail::eval_function(t_ss, node, t_param_names, t_params, std::map<std::string, Boxed_Value>());
-                      },
-                      static_cast<int>(numparams), node, param_types, l_annotation, guard)), 
+              t_ss.add(
+                  std::make_shared<dispatch::detail::Dynamic_Object_Constructor>(class_name,
+                    dispatch::make_dynamic_proxy_function(
+                        [&t_ss, t_param_names, node](const std::vector<Boxed_Value> &t_params) {
+                          return chaiscript::eval::detail::eval_function(t_ss, node, t_param_names, t_params, std::map<std::string, Boxed_Value>());
+                        },
+                        static_cast<int>(numparams), node, param_types, l_annotation, guard
+                      )
+                    ),
                   function_name);
 
             } else {
@@ -1429,8 +1439,8 @@ namespace chaiscript
               auto type = t_ss.get_type(class_name, false);
               param_types.push_front(class_name, type);
 
-              t_ss.add(std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name, 
-                    std::make_shared<dispatch::Dynamic_Proxy_Function>(
+              t_ss.add(std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name,
+                    dispatch::make_dynamic_proxy_function(
                       [&t_ss, t_param_names, node](const std::vector<Boxed_Value> &t_params) {
                         return chaiscript::eval::detail::eval_function(t_ss, node, t_param_names, t_params, std::map<std::string, Boxed_Value>());
                       },
