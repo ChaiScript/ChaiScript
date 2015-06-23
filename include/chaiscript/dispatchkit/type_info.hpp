@@ -62,7 +62,7 @@ namespace chaiscript
 
       CHAISCRIPT_CONSTEXPR bool operator==(const Type_Info &ti) const CHAISCRIPT_NOEXCEPT
       {
-        return ti.m_type_info == m_type_info 
+        return ti.m_type_info == m_type_info
           || (ti.m_type_info && m_type_info && *ti.m_type_info == *m_type_info);
       }
 
@@ -87,7 +87,7 @@ namespace chaiscript
       CHAISCRIPT_CONSTEXPR bool is_reference() const CHAISCRIPT_NOEXCEPT { return m_is_reference; }
       CHAISCRIPT_CONSTEXPR bool is_void() const CHAISCRIPT_NOEXCEPT { return m_is_void; }
       CHAISCRIPT_CONSTEXPR bool is_arithmetic() const CHAISCRIPT_NOEXCEPT { return m_is_arithmetic; }
-      CHAISCRIPT_CONSTEXPR bool is_undef() const CHAISCRIPT_NOEXCEPT { return m_is_undef || m_bare_type_info == nullptr; }
+      CHAISCRIPT_CONSTEXPR bool is_undef() const CHAISCRIPT_NOEXCEPT { return m_is_undef; }
       CHAISCRIPT_CONSTEXPR bool is_pointer() const CHAISCRIPT_NOEXCEPT { return m_is_pointer; }
 
       std::string name() const
@@ -100,7 +100,7 @@ namespace chaiscript
         }
       }
 
-      std::string bare_name() const 
+      std::string bare_name() const
       {
         if (m_bare_type_info)
         {

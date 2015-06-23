@@ -58,6 +58,7 @@ namespace chaiscript
       {
       };
 
+
     /// Cast_Helper_Inner for casting to a const * type
     template<typename Result>
       struct Cast_Helper_Inner<const Result *>
@@ -81,11 +82,11 @@ namespace chaiscript
         typedef Result * Result_Type;
         static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
-          if (ob.is_ref())
+          if (!ob.get_type_info().is_const() && ob.get_type_info() == typeid(Result))
           {
-            return &(ob.get().cast<std::reference_wrapper<Result> >()).get();
+            return static_cast<Result *>(throw_if_null(ob.get_ptr()));
           } else {
-            return (ob.get().cast<std::shared_ptr<Result> >()).get();
+            throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
@@ -149,7 +150,6 @@ namespace chaiscript
       {
       };
 
-
     /// Cast_Helper_Inner for casting to a const std::shared_ptr<const> & type
     template<typename Result>
       struct Cast_Helper_Inner<const std::shared_ptr<const Result> > : Cast_Helper_Inner<std::shared_ptr<const Result> >
@@ -160,7 +160,6 @@ namespace chaiscript
       struct Cast_Helper_Inner<const std::shared_ptr<const Result> &> : Cast_Helper_Inner<std::shared_ptr<const Result> >
       {
       };
-
 
 
     /// Cast_Helper_Inner for casting to a Boxed_Value type
