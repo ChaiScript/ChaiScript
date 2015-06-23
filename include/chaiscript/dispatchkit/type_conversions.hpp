@@ -267,7 +267,7 @@ namespace chaiscript
           throw chaiscript::exception::bad_boxed_dynamic_cast(t_base.get_type_info(), typeid(Derived), "Unable to cast down inheritance hierarchy with non-polymorphic types");
         }
 
-        virtual bool bidir() const
+        virtual bool bidir() const CHAISCRIPT_OVERRIDE
         {
           return false;
         }
@@ -301,7 +301,7 @@ namespace chaiscript
           return m_func(t_from);
         }
 
-        virtual bool bidir() const
+        virtual bool bidir() const CHAISCRIPT_OVERRIDE
         {
           return false;
         }
@@ -455,7 +455,7 @@ namespace chaiscript
           const Type_Info &to, const Type_Info &from) const
       {
         return std::find_if(m_conversions.begin(), m_conversions.end(),
-              [&to, &from](const std::shared_ptr<detail::Type_Conversion_Base> &conversion)
+              [&to, &from](const std::shared_ptr<detail::Type_Conversion_Base> &conversion) -> bool
               {
                 return  (conversion->to().bare_equal(to) && conversion->from().bare_equal(from))
                      || (conversion->bidir() && conversion->from().bare_equal(to) && conversion->to().bare_equal(from));
