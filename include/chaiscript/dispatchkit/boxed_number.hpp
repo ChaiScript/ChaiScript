@@ -171,6 +171,24 @@ namespace chaiscript
         }
       }
 
+      template<typename T>
+      static Boxed_Value unary_go(Operators::Opers t_oper, T &t, const Boxed_Value &t_lhs) 
+      {
+        switch (t_oper)
+        {
+          case Operators::pre_increment:
+            ++t;
+            break;
+          case Operators::pre_decrement:
+            --t;
+            break;
+          default:
+            throw chaiscript::detail::exception::bad_any_cast();
+        }
+
+        return t_lhs;
+      }
+
       template<typename T, typename U>
       static Boxed_Value binary_go(Operators::Opers t_oper, T &t, const U &u, const Boxed_Value &t_lhs) 
       {
@@ -178,12 +196,6 @@ namespace chaiscript
         {
           case Operators::assign:
             t = u;
-            break;
-          case Operators::pre_increment:
-            ++t;
-            break;
-          case Operators::pre_decrement:
-            --t;
             break;
           case Operators::assign_product:
             t *= u;
@@ -236,6 +248,18 @@ namespace chaiscript
       }
 
       template<typename T>
+      static Boxed_Value const_unary_int_go(Operators::Opers t_oper, const T &t) 
+      {
+        switch (t_oper)
+        {
+          case Operators::bitwise_complement:
+            return const_var(~t);
+          default:
+            throw chaiscript::detail::exception::bad_any_cast();
+        }
+      }
+
+      template<typename T>
       static Boxed_Value const_binary_int_go(Operators::Opers t_oper, const T &t, const T &u) 
       {
         switch (t_oper)
@@ -253,8 +277,20 @@ namespace chaiscript
             return const_var(t | u);
           case Operators::bitwise_xor:
             return const_var(t ^ u);
-          case Operators::bitwise_complement:
-            return const_var(~t);
+          default:
+            throw chaiscript::detail::exception::bad_any_cast();
+        }
+      }
+
+      template<typename T>
+      static Boxed_Value const_unary_go(Operators::Opers t_oper, const T &t)
+      {
+        switch (t_oper)
+        {
+          case Operators::unary_minus:
+            return const_var(-t);
+          case Operators::unary_plus:
+            return const_var(+t);
           default:
             throw chaiscript::detail::exception::bad_any_cast();
         }
@@ -274,10 +310,6 @@ namespace chaiscript
             return const_var(t * u);
           case Operators::difference:
             return const_var(t - u);
-          case Operators::unary_minus:
-            return const_var(-t);
-          case Operators::unary_plus:
-            return const_var(+t);
           default:
             throw chaiscript::detail::exception::bad_any_cast();
         }
@@ -314,12 +346,37 @@ namespace chaiscript
           return boolean_go(t_oper, get_as_aux<common_type, LHS>(t_lhs), get_as_aux<common_type, RHS>(t_rhs));
         } else if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
           return binary_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux<common_type, RHS>(t_rhs), t_lhs);
-        } else if (t_oper > Operators::non_const_int_flag && t_oper < Operators::const_int_flag) {
-          throw chaiscript::detail::exception::bad_any_cast();
-        } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
-          throw chaiscript::detail::exception::bad_any_cast();
         } else if (t_oper > Operators::const_flag) {
           return const_binary_go(t_oper, get_as_aux<common_type, LHS>(t_lhs), get_as_aux<common_type, RHS>(t_rhs));
+        } else {
+          throw chaiscript::detail::exception::bad_any_cast();
+        }
+      }
+
+      // Unary 
+      template<typename LHS>
+      static auto go(Operators::Opers t_oper, const Boxed_Value &t_lhs)
+          -> typename std::enable_if<!std::is_floating_point<LHS>::value, Boxed_Value>::type
+      {
+        if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
+          return unary_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), t_lhs);
+        } else if (t_oper > Operators::const_int_flag && t_oper < Operators::const_flag) {
+          return const_unary_int_go(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()));
+        } else if (t_oper > Operators::const_flag) {
+          return const_unary_go(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()));
+        } else {
+          throw chaiscript::detail::exception::bad_any_cast();
+        }
+      }
+
+      template<typename LHS>
+      static auto go(Operators::Opers t_oper, const Boxed_Value &t_lhs) 
+          -> typename std::enable_if<std::is_floating_point<LHS>::value, Boxed_Value>::type
+      {
+        if (t_oper > Operators::non_const_flag && t_oper < Operators::non_const_int_flag && !t_lhs.is_const() && !t_lhs.is_return_value()) {
+          return unary_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), t_lhs);
+        } else if (t_oper > Operators::const_flag) {
+          return const_unary_go(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()));
         } else {
           throw chaiscript::detail::exception::bad_any_cast();
         }
@@ -354,7 +411,38 @@ namespace chaiscript
           }
 
           throw chaiscript::detail::exception::bad_any_cast();
-        } 
+        }
+
+        inline static Boxed_Value oper(Operators::Opers t_oper, const Boxed_Value &t_lhs)
+        {
+          switch (get_common_type(t_lhs)) {
+            case Common_Types::t_int32:
+              return go<int32_t>(t_oper, t_lhs);
+            case Common_Types::t_uint8:
+              return go<uint8_t>(t_oper, t_lhs);
+            case Common_Types::t_int8:
+              return go<int8_t>(t_oper, t_lhs);
+            case Common_Types::t_uint16:
+              return go<uint16_t>(t_oper, t_lhs);
+            case Common_Types::t_int16:
+              return go<int16_t>(t_oper, t_lhs);
+            case Common_Types::t_uint32:
+              return go<uint32_t>(t_oper, t_lhs);
+            case Common_Types::t_uint64:
+              return go<uint64_t>(t_oper, t_lhs);
+            case Common_Types::t_int64:
+              return go<int64_t>(t_oper, t_lhs);
+            case Common_Types::t_double:
+              return go<double>(t_oper, t_lhs);
+            case Common_Types::t_float:
+              return go<float>(t_oper, t_lhs);
+            case Common_Types::t_long_double:
+              return go<long double>(t_oper, t_lhs);
+          }
+
+          throw chaiscript::detail::exception::bad_any_cast();
+        }
+
 
         inline static Boxed_Value oper(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
         {
@@ -565,12 +653,12 @@ namespace chaiscript
 
       Boxed_Number operator--()
       {
-        return oper(Operators::pre_decrement, this->bv, var(0));
+        return oper(Operators::pre_decrement, this->bv);
       }
 
       Boxed_Number operator++() 
       {
-        return oper(Operators::pre_increment, this->bv, var(0));
+        return oper(Operators::pre_increment, this->bv);
       }
 
       Boxed_Number operator+(const Boxed_Number &t_rhs) const
@@ -580,12 +668,12 @@ namespace chaiscript
 
       Boxed_Number operator+() const
       {
-        return oper(Operators::unary_plus, this->bv, Boxed_Value(0));
+        return oper(Operators::unary_plus, this->bv);
       }
 
       Boxed_Number operator-() const
       {
-        return oper(Operators::unary_minus, this->bv, Boxed_Value(0));
+        return oper(Operators::unary_minus, this->bv);
       }
 
       Boxed_Number operator-(const Boxed_Number &t_rhs) const
@@ -658,7 +746,7 @@ namespace chaiscript
 
       Boxed_Number operator~() const
       {
-        return oper(Operators::bitwise_complement, this->bv, Boxed_Value(0));
+        return oper(Operators::bitwise_complement, this->bv);
       }
 
       Boxed_Number operator^(const Boxed_Number &t_rhs) const
@@ -747,12 +835,12 @@ namespace chaiscript
 
       static Boxed_Number pre_decrement(Boxed_Number t_lhs)
       {
-        return oper(Operators::pre_decrement, t_lhs.bv, var(0));
+        return oper(Operators::pre_decrement, t_lhs.bv);
       }
 
       static Boxed_Number pre_increment(Boxed_Number t_lhs) 
       {
-        return oper(Operators::pre_increment, t_lhs.bv, var(0));
+        return oper(Operators::pre_increment, t_lhs.bv);
       }
 
       static const Boxed_Number sum(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs) 
@@ -762,12 +850,12 @@ namespace chaiscript
 
       static const Boxed_Number unary_plus(const Boxed_Number &t_lhs) 
       {
-        return oper(Operators::unary_plus, t_lhs.bv, Boxed_Value(0));
+        return oper(Operators::unary_plus, t_lhs.bv);
       }
 
       static const Boxed_Number unary_minus(const Boxed_Number &t_lhs)
       {
-        return oper(Operators::unary_minus, t_lhs.bv, Boxed_Value(0));
+        return oper(Operators::unary_minus, t_lhs.bv);
       }
 
       static const Boxed_Number difference(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs) 
@@ -883,7 +971,7 @@ namespace chaiscript
 
       static Boxed_Value do_oper(Operators::Opers t_oper, const Boxed_Value &t_lhs)
       {
-        return oper(t_oper, t_lhs, const_var(0));
+        return oper(t_oper, t_lhs);
       }
 
 

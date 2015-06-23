@@ -1151,7 +1151,7 @@ namespace chaiscript
             // short circuit arithmetic operations
             if (m_oper != Operators::invalid && bv.get_type_info().is_arithmetic())
             {
-              return Boxed_Number::do_oper(m_oper, std::move(bv));
+              return Boxed_Number::do_oper(m_oper, bv);
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
