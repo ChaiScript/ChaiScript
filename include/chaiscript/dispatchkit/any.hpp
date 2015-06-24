@@ -8,7 +8,6 @@
 #define CHAISCRIPT_ANY_HPP_
 
 #include <utility>
-#include <array>
 
 namespace chaiscript {
   namespace detail {
@@ -45,15 +44,6 @@ namespace chaiscript {
 
     class Any {
       private:
-
-
-        template<class T>
-          struct destruct {
-            void operator()(T *t) const {
-              t->~T();
-            }
-          };
-
         struct Data
         {
           Data(const std::type_info &t_type) 
@@ -71,7 +61,7 @@ namespace chaiscript {
             return m_type;
           }
 
-          virtual void clone(void *t_ptr) const = 0;
+          virtual std::unique_ptr<Data> clone() const = 0;
           const std::type_info &m_type;
         };
 
@@ -91,9 +81,9 @@ namespace chaiscript {
               return &m_data;
             }
 
-            void clone(void *t_ptr) const CHAISCRIPT_OVERRIDE
+            std::unique_ptr<Data> clone() const CHAISCRIPT_OVERRIDE
             {
-              new (t_ptr) Data_Impl<T>(m_data);
+              return std::unique_ptr<Data>(new Data_Impl<T>(m_data));
             }
 
             Data_Impl &operator=(const Data_Impl&) = delete;
@@ -101,70 +91,32 @@ namespace chaiscript {
             T m_data;
           };
 
-        static const size_t buffersize = sizeof(Data_Impl<std::shared_ptr<int>>)>sizeof(Data_Impl<std::reference_wrapper<int>>)?sizeof(Data_Impl<std::shared_ptr<int>>):sizeof(Data_Impl<std::reference_wrapper<int>>);
-        bool m_constructed;
-        mutable std::array<uint8_t, buffersize> m_data_holder;
-
-        inline Data *data() const
-        {
-          return reinterpret_cast<Data*>(m_data_holder.data());
-        }
-
-
-        void call_destructor()
-        {
-          if (m_constructed)
-          {
-            m_constructed = false;
-            data()->~Data();
-          }
-        }
+        std::unique_ptr<Data> m_data;
 
       public:
-        Any() 
-          : m_constructed(false)
-        {
-        }
-
         // construct/copy/destruct
-        Any(const Any &t_any)
-          : m_constructed(false)
-        {
-          if (t_any.m_constructed) {
-            t_any.data()->clone(m_data_holder.data());
-            m_constructed = true;
+        Any() = default;
+
+        Any(const Any &t_any) 
+        { 
+          if (!t_any.empty())
+          {
+            m_data = t_any.m_data->clone(); 
+          } else {
+            m_data.reset();
           }
         }
 
-        Any(Any &&t_any)
-          : m_constructed(false)
-        {
-          if (t_any.m_constructed) {
-            t_any.m_constructed = false;
-            m_constructed = true;
-            m_data_holder = std::move(t_any.m_data_holder);
-          }
-        }
-
-        Any &operator=(Any &&t_any)
-        {
-          call_destructor();
-          if (t_any.m_constructed) {
-            t_any.m_constructed = false;
-            m_constructed = true;
-            m_data_holder = std::move(t_any.m_data_holder);
-          }
-          return *this;
-        }
-
+#if !defined(_MSC_VER) || _MSC_VER  != 1800
+        Any(Any &&) = default;
+        Any &operator=(Any &&t_any) = default;
+#endif
 
         template<typename ValueType,
           typename = typename std::enable_if<!std::is_same<Any, typename std::decay<ValueType>::type>::value>::type>
         explicit Any(ValueType &&t_value)
-          : m_constructed(true)
+          : m_data(std::unique_ptr<Data>(new Data_Impl<typename std::decay<ValueType>::type>(std::forward<ValueType>(t_value))))
         {
-          static_assert(sizeof(Data_Impl<typename std::decay<ValueType>::type>) <= buffersize, "Buffer too small");
-          (void)(new (m_data_holder.data()) Data_Impl<typename std::decay<ValueType>::type>(std::forward<ValueType>(t_value)));
         }
 
 
@@ -178,9 +130,9 @@ namespace chaiscript {
         template<typename ToType>
           ToType &cast() const
           {
-            if (m_constructed && typeid(ToType) == data()->type())
+            if (m_data && typeid(ToType) == m_data->type())
             {
-              return *static_cast<ToType *>(data()->data());
+              return *static_cast<ToType *>(m_data->data());
             } else {
               throw chaiscript::detail::exception::bad_any_cast();
             }
@@ -189,22 +141,26 @@ namespace chaiscript {
 
         ~Any()
         {
-          call_destructor();
         }
 
         // modifiers
         Any & swap(Any &t_other)
         {
-          std::swap(t_other.m_data_holder, m_data_holder);
-          std::swap(t_other.m_constructed, m_constructed);
+          std::swap(t_other.m_data, m_data);
           return *this;
         }
 
+        // queries
+        bool empty() const
+        {
+          return !bool(m_data);
+        }
 
         const std::type_info & type() const
         {
-          if (m_constructed) {
-            return data()->type();
+          if (m_data)
+          {
+            return m_data->type();
           } else {
             return typeid(void);
           }
