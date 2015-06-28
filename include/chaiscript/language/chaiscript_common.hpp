@@ -476,7 +476,7 @@ namespace chaiscript
         return oss.str();
       }
 
-      Boxed_Value eval(chaiscript::detail::Dispatch_Engine &t_e) const
+      Boxed_Value eval(const chaiscript::detail::Dispatch_State &t_e) const
       {
         try {
           return eval_internal(t_e);
@@ -512,7 +512,7 @@ namespace chaiscript
       {
       }
 
-      virtual Boxed_Value eval_internal(chaiscript::detail::Dispatch_Engine &) const
+      virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const
       {
         throw std::runtime_error("Undispatched ast_node (internal error)");
       }
@@ -554,21 +554,20 @@ namespace chaiscript
         Scope_Push_Pop(const Scope_Push_Pop &) = delete;
         Scope_Push_Pop& operator=(const Scope_Push_Pop &) = delete;
 
-        Scope_Push_Pop(chaiscript::detail::Dispatch_Engine &t_de)
-          : m_de(t_de)
+        Scope_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
+          : m_ds(t_ds)
         {
-          m_de.new_scope();
+          m_ds.get()->new_scope(m_ds.get().stack_holder());
         }
 
         ~Scope_Push_Pop()
         {
-          m_de.pop_scope();
+          m_ds.get()->pop_scope(m_ds.get().stack_holder());
         }
 
 
         private:
-
-        chaiscript::detail::Dispatch_Engine &m_de;
+        std::reference_wrapper<const chaiscript::detail::Dispatch_State> m_ds;
       };
 
       /// Creates a new function call and pops it on destruction
@@ -577,31 +576,30 @@ namespace chaiscript
         Function_Push_Pop(const Function_Push_Pop &) = delete;
         Function_Push_Pop& operator=(const Function_Push_Pop &) = delete;
 
-        Function_Push_Pop(chaiscript::detail::Dispatch_Engine &t_de)
-          : m_de(t_de)
+        Function_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
+          : m_ds(t_ds)
         {
-          m_de.new_function_call();
+          m_ds.get()->new_function_call(m_ds.get().stack_holder());
         }
 
         ~Function_Push_Pop()
         {
-          m_de.pop_function_call();
+          m_ds.get()->pop_function_call(m_ds.get().stack_holder());
         }
 
         void save_params(const std::vector<Boxed_Value> &t_params)
         {
-          m_de.save_function_params(t_params);
+          m_ds.get()->save_function_params(t_params);
         }
 
         void save_params(std::initializer_list<Boxed_Value> t_params)
         {
-          m_de.save_function_params(std::move(t_params));
+          m_ds.get()->save_function_params(std::move(t_params));
         }
 
 
         private:
-
-        chaiscript::detail::Dispatch_Engine &m_de;
+          std::reference_wrapper<const chaiscript::detail::Dispatch_State> m_ds;
       };
 
       /// Creates a new scope then pops it on destruction
@@ -610,21 +608,20 @@ namespace chaiscript
         Stack_Push_Pop(const Stack_Push_Pop &) = delete;
         Stack_Push_Pop& operator=(const Stack_Push_Pop &) = delete;
 
-        Stack_Push_Pop(chaiscript::detail::Dispatch_Engine &t_de)
-          : m_de(t_de)
+        Stack_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
+          : m_ds(t_ds)
         {
-          m_de.new_stack();
+          m_ds.get()->new_stack(m_ds.get().stack_holder());
         }
 
         ~Stack_Push_Pop()
         {
-          m_de.pop_stack();
+          m_ds.get()->pop_stack(m_ds.get().stack_holder());
         }
 
 
         private:
-
-        chaiscript::detail::Dispatch_Engine &m_de;
+          std::reference_wrapper<const chaiscript::detail::Dispatch_State> m_ds;
       };
     }
   }
