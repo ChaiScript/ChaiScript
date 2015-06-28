@@ -184,10 +184,10 @@ namespace chaiscript
             if (m_arity == 0)
             {
               return true;
-            } else if (m_arity > 1 && m_types.size() > 1) {
-              return compare_first_type(vals[0], t_conversions) && compare_type_to_param(m_types[2], vals[1], t_conversions);
+            } else if (m_arity > 1) {
+              return compare_type_to_param(m_types[1], vals[0], t_conversions) && compare_type_to_param(m_types[2], vals[1], t_conversions);
             } else {
-              return compare_first_type(vals[0], t_conversions);
+              return compare_type_to_param(m_types[1], vals[0], t_conversions);
             }
           } else {
             return false;

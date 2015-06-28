@@ -1346,13 +1346,15 @@ namespace chaiscript
           Stack_Holder()
             : call_depth(0)
           {
+            stacks.reserve(2);
             stacks.emplace_back(1);
             call_params.emplace_back();
+            call_params.back().reserve(2);
           }
 
-          std::deque<StackData> stacks;
+          std::vector<StackData> stacks;
 
-          std::deque<std::list<Boxed_Value>> call_params;
+          std::vector<std::vector<Boxed_Value>> call_params;
           int call_depth;
         };
 
