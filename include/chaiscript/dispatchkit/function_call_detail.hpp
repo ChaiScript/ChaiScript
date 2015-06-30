@@ -76,15 +76,35 @@ namespace chaiscript
           {
           }
 
-          Ret operator()(Param...param)
+          template<typename ... P>
+          Ret operator()(P&&  ...  param)
           {
             return Function_Caller_Ret<Ret, std::is_arithmetic<Ret>::value && !std::is_same<Ret, bool>::value>::call(m_funcs, { 
-                (std::is_reference<Param>::value&&!(std::is_same<chaiscript::Boxed_Value, typename std::remove_const<typename std::remove_reference<Param>::type>::type>::value))?Boxed_Value(std::ref(param)):Boxed_Value(param)... 
+                box<P>(std::forward<P>(param))...
                 }, m_conversions
 
                 );
 
           }
+
+          template<typename P, typename Q>
+          static auto box(Q&& q) -> typename std::enable_if<std::is_reference<P>::value&&!std::is_same<chaiscript::Boxed_Value, typename std::remove_const<typename std::remove_reference<P>::type>::type>::value, Boxed_Value>::type
+          {
+            return Boxed_Value(std::ref(std::forward<Q>(q)));
+          }
+
+          template<typename P, typename Q>
+          static auto box(Q&& q) -> typename std::enable_if<!std::is_reference<P>::value&&!std::is_same<chaiscript::Boxed_Value, typename std::remove_const<typename std::remove_reference<P>::type>::type>::value, Boxed_Value>::type
+          {
+            return Boxed_Value(std::forward<Q>(q));
+          }
+
+          template<typename P>
+          static Boxed_Value box(Boxed_Value bv)
+          {
+            return bv;
+          }
+
 
           std::vector<Const_Proxy_Function> m_funcs;
           Type_Conversions m_conversions;
