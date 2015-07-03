@@ -14,7 +14,9 @@
 #include <thread>
 #include <mutex>
 #else
+#ifndef CHAISCRIPT_NO_THREADS_WARNING
 #pragma message ("ChaiScript is compiling without thread safety.")
+#endif
 #endif
 
 #include "chaiscript_defines.hpp"
