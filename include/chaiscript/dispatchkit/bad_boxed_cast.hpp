@@ -36,7 +36,7 @@ namespace chaiscript
         }
 
         bad_boxed_cast(Type_Info t_from, const std::type_info &t_to)
-          : from(std::move(t_from)), to(&t_to), m_what("Cannot perform boxed_cast")
+          : from(std::move(t_from)), to(&t_to), m_what("Cannot perform boxed_cast: " + t_from.name() + " to: " + t_to.name())
         {
         }
 

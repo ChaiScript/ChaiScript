@@ -337,7 +337,7 @@ namespace chaiscript
       Type_Conversions(const Type_Conversions &t_other)
         : m_mutex(),
           m_conversions(t_other.get_conversions()),
-          m_convertableTypes(),
+          m_convertableTypes(t_other.m_convertableTypes),
           m_num_types(m_conversions.size()),
           m_thread_cache(this),
           m_conversion_saves(this)
@@ -580,7 +580,6 @@ namespace chaiscript
     {
       auto func = [](const Boxed_Value &t_bv) -> Boxed_Value {
         const std::vector<Boxed_Value> &from_vec = detail::Cast_Helper<const std::vector<Boxed_Value> &>::cast(t_bv, nullptr);
-
 
         To vec;
 
