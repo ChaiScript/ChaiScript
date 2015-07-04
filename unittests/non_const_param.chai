@@ -1,0 +1,8 @@
+load_module("test_module")
+
+var t2 = TestBaseType();
+
+var s = "5";
+t2.set_string_val(s);
+assert_equal(s, "42")
+
