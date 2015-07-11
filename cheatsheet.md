@@ -80,6 +80,18 @@ It's not strictly necessary to add types, but it helps with many things. Cloning
 chai.add(chaiscript::user_type<MyClass>, "MyClass");
 ```
 
+## Adding Type Conversions
+
+User defined type conversions are possible, defined in either script or in C++.
+
+A helper function exists for strongly typed and ChaiScript `Vector` function conversion definition:
+
+```
+chai.add(chaiscript::vector_conversion<std::vector<int>>());
+```
+
+This allows you to pass a ChaiScript function to a function requiring `std::vector<int>`
+
 ## Adding Objects
 
 ```
