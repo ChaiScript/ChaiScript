@@ -127,18 +127,6 @@ def even(x)
 } 
 
 
-# Pushes the second value onto the container first value while making a clone of the value
-def push_back(container, x) : call_exists(push_back_ref, container, x) 
-{ 
-  container.push_back_ref(clone(x))
-} 
-
-# Pushes the second value onto the front of the container first value while making a clone of the value
-def push_front(container, x) : call_exists(push_front_ref, container, x) 
-{ 
-  container.push_front_ref(clone(x)) 
-} 
-
 # Inserts the third value at the position of the second value into the container of the first
 # while making a clone. 
 def insert_at(container, pos, x) 
