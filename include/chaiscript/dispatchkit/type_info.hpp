@@ -136,9 +136,11 @@ namespace chaiscript
 
          static Type_Info get()
         {
-          return Type_Info(std::is_const<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
+          return Type_Info(std::is_const<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::value, 
+              std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
-              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
+              (std::is_arithmetic<T>::value || std::is_arithmetic<typename std::remove_reference<T>::type>::value)
+                && !std::is_same<typename std::remove_const<T>::type, bool>::value,
               &typeid(T), 
               &typeid(typename Bare_Type<T>::type));
         }
