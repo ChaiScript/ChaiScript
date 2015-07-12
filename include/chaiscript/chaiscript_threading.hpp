@@ -155,6 +155,7 @@ namespace chaiscript
 
 
           private:
+            /// \todo this leaks thread instances. It needs to be culled from time to time
             std::shared_ptr<T> get_tls() const
             {
               unique_lock<mutex> lock(m_mutex);
