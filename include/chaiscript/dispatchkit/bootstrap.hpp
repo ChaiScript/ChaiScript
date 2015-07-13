@@ -304,12 +304,16 @@ namespace chaiscript
       /// the remaining parameters are the args to bind into the result
       static Boxed_Value bind_function(const std::vector<Boxed_Value> &params)
       {
-        if (params.size() < 2)
-        {
-          throw exception::arity_error(static_cast<int>(params.size()), 2);
+        if (params.empty()) {
+          throw exception::arity_error(0, 1);
         }
 
         Const_Proxy_Function f = boxed_cast<Const_Proxy_Function>(params[0]);
+
+        if (f->get_arity() != -1 && size_t(f->get_arity()) != params.size() - 1)
+        {
+          throw exception::arity_error(static_cast<int>(params.size()), f->get_arity());
+        }
 
         return Boxed_Value(Const_Proxy_Function(std::make_shared<dispatch::Bound_Function>(std::move(f),
           std::vector<Boxed_Value>(params.begin() + 1, params.end()))));

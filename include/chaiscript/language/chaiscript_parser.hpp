@@ -194,6 +194,7 @@ namespace chaiscript
 
       /// Returns the front-most AST node
       AST_NodePtr ast() const {
+        if (m_match_stack.empty()) throw exception::eval_error("Attempted to access AST of failed parse.");
         return m_match_stack.front();
       }
 
@@ -261,7 +262,7 @@ namespace chaiscript
       }
 
       AST_NodePtr optimized_ast(bool t_optimize_blocks = false, bool t_optimize_returns = true) {
-        AST_NodePtr p = m_match_stack.front();
+        AST_NodePtr p = ast();
         //Note, optimize_blocks is currently broken; it breaks stack management
         if (t_optimize_blocks) { optimize_blocks(p); }
         if (t_optimize_returns) { optimize_returns(p); }
@@ -1208,37 +1209,32 @@ namespace chaiscript
       }
 
       /// Reads an end-of-line group from input, without skipping initial whitespace
-      bool Eol_() {
+      bool Eol_(const bool t_eos = false) {
         bool retval = false;
 
         if (has_more_input() && (Symbol_("\r\n") || Char_('\n'))) {
           retval = true;
           ++m_line;
           m_col = 1;
-        } else if (has_more_input() && Char_(';')) {
+        } else if (has_more_input() && !t_eos && Char_(';')) {
           retval = true;
         }
 
         return retval;
       }
 
-      /// Reads (and potentially captures) an end-of-line group from input
-      bool Eol(const bool t_capture = false) {
+      /// Reads until the end of the current statement
+      bool Eos() {
         SkipWS();
 
-        if (!t_capture) {
-          return Eol_();
-        } else {
-          const auto start = m_input_pos;
-          const auto prev_col = m_col;
-          const auto prev_line = m_line;
-          if (Eol_()) {
-            m_match_stack.push_back(make_node<eval::Eol_AST_Node>(std::string(start, m_input_pos), prev_line, prev_col));
-            return true;
-          } else {
-            return false;
-          }
-        }
+        return Eol_(true);
+      }
+
+      /// Reads (and potentially captures) an end-of-line group from input
+      bool Eol() {
+        SkipWS();
+
+        return Eol_();
       }
 
       /// Reads a comma-separated list of values from input. Id's only, no types allowed
@@ -1441,7 +1437,7 @@ namespace chaiscript
             }
           }
 
-          while (Eol()) {}
+          while (Eos()) {}
 
           if (Char(':')) {
             if (!Operator()) {

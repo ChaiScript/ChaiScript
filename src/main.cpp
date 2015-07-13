@@ -297,6 +297,8 @@ int main(int argc, char *argv[])
   chai.add(chaiscript::fun(&get_eval_error), "get_eval_error");
   chai.add(chaiscript::fun(&now), "now");
 
+  bool eval_error_ok = false;
+  bool boxed_exception_ok = false;
 
   for (int i = 0; i < argc; ++i) {
     if ( i == 0 && argc > 1 ) {
@@ -327,6 +329,12 @@ int main(int argc, char *argv[])
       arg = "print(version())" ;
     } else if ( arg == "-h" || arg == "--help" ) {
       arg = "help(-1)";
+    } else if ( arg == "-e" || arg == "--evalerrorok" ) {
+      eval_error_ok = true;
+      continue;
+    } else if ( arg == "--exception" ) {
+      boxed_exception_ok = true;
+      continue;
     } else if ( arg == "-i" || arg == "--interactive" ) {
       mode = eInteractive ;
     } else if ( arg.find('-') == 0 ) {
@@ -352,12 +360,23 @@ int main(int argc, char *argv[])
     catch (const chaiscript::exception::eval_error &ee) {
       std::cout << ee.pretty_print();
       std::cout << '\n';
-      return EXIT_FAILURE;
+
+      if (!eval_error_ok) {
+        return EXIT_FAILURE;
+      }
     }
-    catch (std::exception &e) {
-      std::cout << e.what() << '\n';
-      return EXIT_FAILURE;
+    catch (const chaiscript::Boxed_Value &e) {
+      std::cout << "Unhandled exception thrown of type " << e.get_type_info().name() << '\n';
+
+      if (!boxed_exception_ok) {
+        return EXIT_FAILURE;
+      }
     }
+
+//    catch (std::exception &e) {
+//      std::cout << e.what() << '\n';
+//      return EXIT_FAILURE;
+//    }
   }
 
   return EXIT_SUCCESS;

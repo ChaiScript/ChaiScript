@@ -149,7 +149,11 @@ namespace chaiscript
 
         Boxed_Value operator()(const std::vector<Boxed_Value> &params, const chaiscript::Type_Conversions &t_conversions) const
         {
-          return do_call(params, t_conversions);
+          if (m_arity < 0 || size_t(m_arity) == params.size()) {
+            return do_call(params, t_conversions);
+          } else {
+            throw exception::arity_error(static_cast<int>(params.size()), m_arity);
+          }
         }
 
         /// Returns a vector containing all of the types of the parameters the function returns/takes
@@ -420,18 +424,12 @@ namespace chaiscript
       protected:
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          if (m_arity < 0 || params.size() == size_t(m_arity))
+          if (call_match(params, t_conversions) && test_guard(params, t_conversions))
           {
-            if (call_match(params, t_conversions) && test_guard(params, t_conversions))
-            {
-              return m_f(params);
-            } else {
-              throw exception::guard_error();
-            }
-
+            return m_f(params);
           } else {
-            throw exception::arity_error(static_cast<int>(params.size()), m_arity);
-          } 
+            throw exception::guard_error();
+          }
         }
 
       private:
@@ -728,19 +726,14 @@ namespace chaiscript
       protected:
         virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          if (params.size() == 1)
+          const Boxed_Value &bv = params[0];
+          if (bv.is_const())
           {
-            const Boxed_Value &bv = params[0];
-            if (bv.is_const())
-            {
-              const Class *o = boxed_cast<const Class *>(bv, &t_conversions);
-              return detail::Handle_Return<const typename std::add_lvalue_reference<T>::type>::handle(o->*m_attr);
-            } else {
-              Class *o = boxed_cast<Class *>(bv, &t_conversions);
-              return detail::Handle_Return<typename std::add_lvalue_reference<T>::type>::handle(o->*m_attr);
-            }
+            const Class *o = boxed_cast<const Class *>(bv, &t_conversions);
+            return detail::Handle_Return<const typename std::add_lvalue_reference<T>::type>::handle(o->*m_attr);
           } else {
-            throw exception::arity_error(static_cast<int>(params.size()), 1);
+            Class *o = boxed_cast<Class *>(bv, &t_conversions);
+            return detail::Handle_Return<typename std::add_lvalue_reference<T>::type>::handle(o->*m_attr);
           }
         }
 
@@ -787,6 +780,9 @@ namespace chaiscript
             const Type_Conversions &t_conversions)
         {
           const std::vector<Type_Info> &types = t_func->get_param_types();
+
+          if (t_func->get_arity() == -1) return false;
+
           assert(plist.size() == types.size() - 1);
 
           return std::mismatch(plist.begin(), plist.end(),
