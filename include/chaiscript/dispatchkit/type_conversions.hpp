@@ -337,7 +337,7 @@ namespace chaiscript
       Type_Conversions(const Type_Conversions &t_other)
         : m_mutex(),
           m_conversions(t_other.get_conversions()),
-          m_convertableTypes(),
+          m_convertableTypes(t_other.m_convertableTypes),
           m_num_types(m_conversions.size()),
           m_thread_cache(this),
           m_conversion_saves(this)
@@ -573,6 +573,24 @@ namespace chaiscript
           };
 
       return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Type_Conversion_Impl<decltype(func)>>(user_type<From>(), user_type<To>(), func);
+    }
+
+  template<typename To>
+    Type_Conversion vector_conversion()
+    {
+      auto func = [](const Boxed_Value &t_bv) -> Boxed_Value {
+        const std::vector<Boxed_Value> &from_vec = detail::Cast_Helper<const std::vector<Boxed_Value> &>::cast(t_bv, nullptr);
+
+        To vec;
+
+        for (const Boxed_Value &bv : from_vec) {
+          vec.push_back(detail::Cast_Helper<typename To::value_type>::cast(bv, nullptr));
+        }
+
+        return Boxed_Value(std::move(vec));
+      };
+
+      return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Type_Conversion_Impl<decltype(func)>>(user_type<std::vector<Boxed_Value>>(), user_type<To>(), func);
     }
 
 }

@@ -319,7 +319,7 @@ namespace chaiscript
       /// Add back insertion sequence concept to the given ContainerType
       /// http://www.sgi.com/tech/stl/BackInsertionSequence.html
       template<typename ContainerType>
-        ModulePtr back_insertion_sequence_type(const std::string &/*type*/, ModulePtr m = std::make_shared<Module>())
+        ModulePtr back_insertion_sequence_type(const std::string &type, ModulePtr m = std::make_shared<Module>())
         {
           typedef typename ContainerType::reference (ContainerType::*backptr)();
 
@@ -328,8 +328,16 @@ namespace chaiscript
 
           typedef void (ContainerType::*push_back)(const typename ContainerType::value_type &);
           m->add(fun(static_cast<push_back>(&ContainerType::push_back)),
-              []()->std::string{
-                if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
+              [&]()->std::string{
+              if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
+                m->eval(
+                    "# Pushes the second value onto the container while making a clone of the value\n"
+                    "def push_back(" + type + " container, x)\n"
+                    "{ \n"
+                    "  container.push_back_ref(clone(x)) \n"
+                    "} \n"
+                    );
+
                   return "push_back_ref";
                 } else {
                   return "push_back";
@@ -345,7 +353,7 @@ namespace chaiscript
       /// Front insertion sequence
       /// http://www.sgi.com/tech/stl/FrontInsertionSequence.html
       template<typename ContainerType>
-        ModulePtr front_insertion_sequence_type(const std::string &, ModulePtr m = std::make_shared<Module>())
+        ModulePtr front_insertion_sequence_type(const std::string &type, ModulePtr m = std::make_shared<Module>())
         {
           typedef typename ContainerType::reference (ContainerType::*front_ptr)();
           typedef typename ContainerType::const_reference (ContainerType::*const_front_ptr)() const;
@@ -356,8 +364,15 @@ namespace chaiscript
           m->add(fun(static_cast<const_front_ptr>(&ContainerType::front)), "front");
 
           m->add(fun(static_cast<push_ptr>(&ContainerType::push_front)),
-              []()->std::string{
+              [&]()->std::string{
                 if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
+                  m->eval(
+                      "# Pushes the second value onto the front of container while making a clone of the value\n"
+                      "def push_front(" + type + " container, x)\n"
+                      "{ \n"
+                      "  container.push_front_ref(clone(x)) \n"
+                      "} \n"
+                      );
                   return "push_front_ref";
                 } else {
                   return "push_front";

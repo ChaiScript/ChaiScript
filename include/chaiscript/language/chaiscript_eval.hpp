@@ -1050,7 +1050,12 @@ namespace chaiscript
             std::vector<Boxed_Value> vec;
             if (!children.empty()) {
               for (const auto &child : children[0]->children) {
-                vec.push_back(t_ss->call_function("clone", child->eval(t_ss)));
+                auto obj = child->eval(t_ss);
+                if (!obj.is_return_value()) {
+                  vec.push_back(t_ss->call_function("clone", obj));
+                } else {
+                  vec.push_back(std::move(obj));
+                }
               }
             }
             return const_var(std::move(vec));
@@ -1076,8 +1081,12 @@ namespace chaiscript
             std::map<std::string, Boxed_Value> retval;
 
             for (const auto &child : children[0]->children) {
-              Boxed_Value bv = t_ss->call_function("clone", child->children[1]->eval(t_ss));
-              retval[t_ss->boxed_cast<std::string>(child->children[0]->eval(t_ss))] = std::move(bv);
+              auto obj = child->children[1]->eval(t_ss);
+              if (!obj.is_return_value()) {
+                obj = t_ss->call_function("clone", obj);
+              }
+
+              retval[t_ss->boxed_cast<std::string>(child->children[0]->eval(t_ss))] = std::move(obj);
             }
 
             return const_var(std::move(retval));

@@ -34,6 +34,11 @@ class TestBaseType
     int mdarray[2][3][5];
     std::function<int (int)> func_member;
 
+    void set_string_val(std::string &t_str)
+    {
+      t_str = "42";
+    }
+
   private:
     TestBaseType &operator=(const TestBaseType &) = delete;
 };
@@ -51,6 +56,7 @@ class Type2
     {
       return m_bt.val;
     }
+
 
     const char *get_str() const
     {
@@ -171,6 +177,7 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::fun(&TestBaseType::val), "val");
   m->add(chaiscript::fun(&TestBaseType::const_val), "const_val");
   m->add(chaiscript::fun(&TestBaseType::base_only_func), "base_only_func");
+  m->add(chaiscript::fun(&TestBaseType::set_string_val), "set_string_val");
 
 #ifndef CHAISCRIPT_MSVC_12
   // we cannot support these in MSVC_12 because of a bug in the implementation of

@@ -23,7 +23,11 @@
 
 CHAISCRIPT_MODULE_EXPORT chaiscript::ModulePtr create_chaiscript_module_stl_extra()
 {
-  return chaiscript::bootstrap::standard_library::list_type<std::list<chaiscript::Boxed_Value> >("List");
+
+  auto module = chaiscript::bootstrap::standard_library::list_type<std::list<chaiscript::Boxed_Value> >("List");
+  module->add(chaiscript::bootstrap::standard_library::vector_type<std::vector<uint16_t> >("u16vector"));
+  module->add(chaiscript::vector_conversion<std::vector<uint16_t>>());
+  return module;
 }
 
 #ifdef __llvm__

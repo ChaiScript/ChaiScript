@@ -3,3 +3,11 @@ x.push_back(3)
 assert_equal(3, x.size())
 assert_equal(3, x.back())
 assert_equal(1, x.front())
+
+
+load_module("stl_extra")
+
+auto uint16v = u16vector();
+uint16v.push_back(1u);
+assert_equal(1, uint16v.front());
+
