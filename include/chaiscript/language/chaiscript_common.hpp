@@ -276,10 +276,13 @@ namespace chaiscript
       template<typename T>
         static std::string format_location(const T &t)
         {
-          std::ostringstream oss;
-          oss << "(" << t->filename() << " " << t->start().line << ", " << t->start().column << ")"; 
-
-          return oss.str();
+          if (t) {
+            std::ostringstream oss;
+            oss << "(" << t->filename() << " " << t->start().line << ", " << t->start().column << ")"; 
+            return oss.str();
+          } else {
+            return "(internal)";
+          }
 
         }
 

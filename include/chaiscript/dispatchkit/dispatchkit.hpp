@@ -22,6 +22,7 @@
 
 #include "../chaiscript_defines.hpp"
 #include "../chaiscript_threading.hpp"
+#include "bad_boxed_cast.hpp"
 #include "boxed_cast.hpp"
 #include "boxed_cast_helper.hpp"
 #include "boxed_value.hpp"
@@ -873,7 +874,14 @@ namespace chaiscript
               std::vector<Boxed_Value> remaining_params{l_params.begin() + l_num_params, l_params.end()};
               Boxed_Value bv = dispatch::dispatch(l_funs, attr_params, l_conversions);
               if (!remaining_params.empty() || bv.get_type_info().bare_equal(user_type<dispatch::Proxy_Function_Base>())) {
-                return (*boxed_cast<const dispatch::Proxy_Function_Base *>(bv))(remaining_params, l_conversions);
+                auto func = boxed_cast<std::shared_ptr<const dispatch::Proxy_Function_Base>>(bv);
+                try {
+                  return (*func)(remaining_params, l_conversions);
+                } catch (const chaiscript::exception::bad_boxed_cast &) {
+                } catch (const chaiscript::exception::arity_error &) {
+                } catch (const chaiscript::exception::guard_error &) {
+                }
+                throw chaiscript::exception::dispatch_error(remaining_params, std::vector<Const_Proxy_Function>{func});
               } else {
                 return bv;
               }
