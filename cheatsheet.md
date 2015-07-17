@@ -1,3 +1,13 @@
+# ChaiScript Versioning
+
+ChaiScript tries to follow the [Semantic Versioning](http://semver.org/) scheme. This basically means:
+
+  * Major Version Number: API changes / breaking changes
+  * Minor Version Number: New Features
+  * Patch Version Number: Minor changes / enhancements
+  
+
+
 # Initializing ChaiScript
 
 ```
@@ -30,6 +40,19 @@ chai.add(chaiscript::fun<ReturnType (ParamType1, ParamType2)>(&function_with_ove
 ```
 chai.add(chaiscript::fun(std::static_cast<ReturnType (*)(ParamType1, ParamType2)>(&function_with_overloads)), "function_name");
 ```
+This overload technique is also used when exposing base member using derived type
+
+```
+struct Base
+{
+  int data;
+};
+
+struct Derived : public Base
+{};
+
+chai.add(chaiscript::fun(static_cast<int(Derived::*)>(&Derived::data)), "data");
+```
 
 ### Lambda
 
@@ -57,6 +80,18 @@ It's not strictly necessary to add types, but it helps with many things. Cloning
 chai.add(chaiscript::user_type<MyClass>, "MyClass");
 ```
 
+## Adding Type Conversions
+
+User defined type conversions are possible, defined in either script or in C++.
+
+A helper function exists for strongly typed and ChaiScript `Vector` function conversion definition:
+
+```
+chai.add(chaiscript::vector_conversion<std::vector<int>>());
+```
+
+This allows you to pass a ChaiScript function to a function requiring `std::vector<int>`
+
 ## Adding Objects
 
 ```
@@ -67,6 +102,22 @@ chai.add(chaiscript::var(shareddouble), "shareddouble"); // by shared_ptr, share
 chai.add(chaiscript::const_var(somevar), "somevar"); // copied in and made const
 chai.add_global_const(chaiscript::const_var(somevar), "somevar"); // global const. Throws if value is non-const
 chai.add_global(chaiscript::var(somevar), "somevar"); // global non-const
+```
+# Using STL
+ChaiScript recognize many types from STL, but you have to add specific instantiation yourself.
+
+```
+typedef std::vector<std::pair<int, std::string>> data_list;
+data_list my_list{ make_pair(0, "Hello"), make_pair(1, "World") };
+chai.add(chaiscript::bootstrap::standard_library::vector_type<data_list>("DataList"));
+chai.add(chaiscript::bootstrap::standard_library::pair_type<data_list::value_type>("DataElement"));
+chai.add(chaiscript::var(&my_list), "data_list");
+chai.eval(R"_(
+    for(var i=0; i<data_list.size(); ++i)
+    {
+      print(to_string(data_list[i].first) + " " + data_list[i].second)
+    }
+  )_");
 ```
 
 # Executing Script
@@ -79,6 +130,8 @@ chai.eval(R"(print("Hello World"))");
 ```
 
 ## Unboxing Return Values
+
+Returns values are of the type `Boxed_Value` which is meant to be opaque to the programmer. Use one of the unboxing methods to access the internal data.
 
 ### Prefered
 
@@ -152,7 +205,7 @@ p(5, 6); // calls chaiscript's '+' function, returning 11
 ```
 
 ```
-auto p = chai.eval<std::function<std::string (int, double)>>(fun(x,y) { to_string(x) + to_string(y); });
+auto p = chai.eval<std::function<std::string (int, double)>>("fun(x,y) { to_string(x) + to_string(y); }");
 p(3,4.2); // evaluates the lambda function, returning the string "34.2" to C++
 ```
 
@@ -183,7 +236,7 @@ var m = ["a":1, "b":2]; // map of string:value pairs
 ```
 
 Floating point values default to `double` type and integers default to `int` type. All C++ suffixes
-such as `f`, `ll`, `u` as well as scientific notion is supported
+such as `f`, `ll`, `u` as well as scientific notation are supported
 
 ```
 1.0 // double
@@ -200,6 +253,9 @@ on your platform.
 
 
 ## Functions
+
+Note that any type of ChaiScript function can be passed freely to C++ and automatically
+converted into an `std::function` object.
 
 ### General 
 

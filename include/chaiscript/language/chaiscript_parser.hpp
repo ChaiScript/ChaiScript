@@ -7,8 +7,6 @@
 #ifndef CHAISCRIPT_PARSER_HPP_
 #define CHAISCRIPT_PARSER_HPP_
 
-#include <cstdint>
-#include <cstring>
 #include <exception>
 #include <iostream>
 #include <memory>
@@ -16,6 +14,8 @@
 #include <string>
 #include <vector>
 #include <cctype>
+#include <cstring>
+
 
 #include "../dispatchkit/boxed_value.hpp"
 #include "chaiscript_common.hpp"
@@ -67,6 +67,7 @@ namespace chaiscript
           m_multiline_comment_end("*/"),
           m_singleline_comment("//")
       {
+        m_match_stack.reserve(2);
         setup_operators();
       }
 
@@ -193,6 +194,7 @@ namespace chaiscript
 
       /// Returns the front-most AST node
       AST_NodePtr ast() const {
+        if (m_match_stack.empty()) throw exception::eval_error("Attempted to access AST of failed parse.");
         return m_match_stack.front();
       }
 
@@ -213,28 +215,6 @@ namespace chaiscript
           return counts;
         }
 
-      }
-
-      static void optimize_fun_lookups(AST_NodePtr &p)
-      {
-        for (auto &c : p->children)
-        {
-
-          if (c->identifier == AST_Node_Type::Def
-              || c->identifier == AST_Node_Type::Method
-              || c->identifier == AST_Node_Type::Lambda) {
-            std::vector<AST_NodePtr> children_to_add;
-            auto counts = count_fun_calls(c, false);
-            for (const auto &count : counts) {
-              // std::cout << " Fun Call Count: " << count.first << " " << count.second << '\n';
-              if (count.second > 1) {
-                 children_to_add.push_back(chaiscript::make_shared<AST_Node, eval::Fun_Lookup_AST_Node>(count.first));
-              }
-            }
-            c->children.back()->children.insert(c->children.back()->children.begin(), children_to_add.begin(), children_to_add.end());
-          }
-          optimize_fun_lookups(c);
-        }
       }
 
 
@@ -281,12 +261,11 @@ namespace chaiscript
         return count;
       }
 
-      AST_NodePtr optimized_ast(bool t_optimize_blocks = false, bool t_optimize_returns = true, bool t_optimize_fun_lookups = false) {
-        AST_NodePtr p = m_match_stack.front();
+      AST_NodePtr optimized_ast(bool t_optimize_blocks = false, bool t_optimize_returns = true) {
+        AST_NodePtr p = ast();
         //Note, optimize_blocks is currently broken; it breaks stack management
         if (t_optimize_blocks) { optimize_blocks(p); }
         if (t_optimize_returns) { optimize_returns(p); }
-        if (t_optimize_fun_lookups) { optimize_fun_lookups(p); }
         return p;
       }
 
@@ -1230,37 +1209,32 @@ namespace chaiscript
       }
 
       /// Reads an end-of-line group from input, without skipping initial whitespace
-      bool Eol_() {
+      bool Eol_(const bool t_eos = false) {
         bool retval = false;
 
         if (has_more_input() && (Symbol_("\r\n") || Char_('\n'))) {
           retval = true;
           ++m_line;
           m_col = 1;
-        } else if (has_more_input() && Char_(';')) {
+        } else if (has_more_input() && !t_eos && Char_(';')) {
           retval = true;
         }
 
         return retval;
       }
 
-      /// Reads (and potentially captures) an end-of-line group from input
-      bool Eol(const bool t_capture = false) {
+      /// Reads until the end of the current statement
+      bool Eos() {
         SkipWS();
 
-        if (!t_capture) {
-          return Eol_();
-        } else {
-          const auto start = m_input_pos;
-          const auto prev_col = m_col;
-          const auto prev_line = m_line;
-          if (Eol_()) {
-            m_match_stack.push_back(make_node<eval::Eol_AST_Node>(std::string(start, m_input_pos), prev_line, prev_col));
-            return true;
-          } else {
-            return false;
-          }
-        }
+        return Eol_(true);
+      }
+
+      /// Reads (and potentially captures) an end-of-line group from input
+      bool Eol() {
+        SkipWS();
+
+        return Eol_();
       }
 
       /// Reads a comma-separated list of values from input. Id's only, no types allowed
@@ -1463,7 +1437,7 @@ namespace chaiscript
             }
           }
 
-          while (Eol()) {}
+          while (Eos()) {}
 
           if (Char(':')) {
             if (!Operator()) {

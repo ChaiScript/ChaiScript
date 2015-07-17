@@ -35,6 +35,10 @@
 #define CHAISCRIPT_HAS_THREAD_LOCAL
 #endif
 
+#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ == 6)
+#define CHAISCRIPT_GCC_4_6
+#endif
+
 #if (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7) || defined(CHAISCRIPT_MSVC) || defined(__llvm__)
 #define CHAISCRIPT_OVERRIDE override
 #else
@@ -61,7 +65,7 @@
 namespace chaiscript {
   static const int version_major = 5;
   static const int version_minor = 7;
-  static const int version_patch = 0;
+  static const int version_patch = 1;
 
   template<typename B, typename D, typename ...Arg>
   inline std::shared_ptr<B> make_shared(Arg && ... arg)

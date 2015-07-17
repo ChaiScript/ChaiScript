@@ -57,7 +57,7 @@ namespace chaiscript
         typedef typename std::remove_extent<T>::type ReturnType;
         const auto extent = std::extent<T>::value;
         m->add(user_type<T>(), type);
-        m->add(fun<ReturnType& (T &, size_t)>(
+        m->add(fun(
               [extent](T& t, size_t index)->ReturnType &{
                 if (extent > 0 && index >= extent) {
                   throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
@@ -68,7 +68,7 @@ namespace chaiscript
               ), "[]"
             );
 
-        m->add(fun<const ReturnType& (const T &, size_t)>(
+        m->add(fun(
               [extent](const T &t, size_t index)->const ReturnType &{
                 if (extent > 0 && index >= extent) {
                   throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
@@ -79,7 +79,7 @@ namespace chaiscript
               ), "[]"
             );
 
-        m->add(fun<size_t (const T &)>(
+        m->add(fun(
               [extent](const T &) {
                 return extent;
               }), "size");
@@ -157,12 +157,28 @@ namespace chaiscript
     /// Internal function for converting from a string to a value
     /// uses ostream operator >> to perform the conversion
     template<typename Input>
-    Input parse_string(const std::string &i)
+    auto parse_string(const std::string &i)
+      -> typename std::enable_if<
+             !std::is_same<Input, wchar_t>::value
+             && !std::is_same<Input, char16_t>::value
+             && !std::is_same<Input, char32_t>::value,
+      Input>::type
     {
       std::stringstream ss(i);
       Input t;
       ss >> t;
       return t;
+    }
+
+    template<typename Input>
+    auto parse_string(const std::string &) 
+      -> typename std::enable_if<
+             std::is_same<Input, wchar_t>::value
+             || std::is_same<Input, char16_t>::value
+             || std::is_same<Input, char32_t>::value,
+      Input>::type
+    {
+      throw std::runtime_error("Parsing of wide characters is not yet supported");
     }
 
 
@@ -175,11 +191,6 @@ namespace chaiscript
       m->add(constructor<T()>(), name);
       construct_pod<T>(name, m);
 
-      auto to_s = fun(&to_string<T>);
-
-      if (!m->has_function(to_s, "to_string")) {
-        m->add(to_s, "to_string");
-      }
       m->add(fun(&parse_string<T>), "to_" + name);
       return m;
     }
@@ -293,12 +304,16 @@ namespace chaiscript
       /// the remaining parameters are the args to bind into the result
       static Boxed_Value bind_function(const std::vector<Boxed_Value> &params)
       {
-        if (params.size() < 2)
-        {
-          throw exception::arity_error(static_cast<int>(params.size()), 2);
+        if (params.empty()) {
+          throw exception::arity_error(0, 1);
         }
 
         Const_Proxy_Function f = boxed_cast<Const_Proxy_Function>(params[0]);
+
+        if (f->get_arity() != -1 && size_t(f->get_arity()) != params.size() - 1)
+        {
+          throw exception::arity_error(static_cast<int>(params.size()), f->get_arity());
+        }
 
         return Boxed_Value(Const_Proxy_Function(std::make_shared<dispatch::Bound_Function>(std::move(f),
           std::vector<Boxed_Value>(params.begin() + 1, params.end()))));
@@ -408,6 +423,12 @@ namespace chaiscript
         m->add(fun(return_boxed_value_vector(&dispatch::Proxy_Function_Base::get_contained_functions)), "get_contained_functions");
 
 
+        m->add(user_type<std::out_of_range>(), "out_of_range");
+        m->add(user_type<std::logic_error>(), "logic_error");
+        m->add(chaiscript::base_class<std::exception, std::logic_error>());
+        m->add(chaiscript::base_class<std::logic_error, std::out_of_range>());
+        m->add(chaiscript::base_class<std::exception, std::out_of_range>());
+
         m->add(user_type<std::runtime_error>(), "runtime_error");
         m->add(chaiscript::base_class<std::exception, std::runtime_error>());
 
@@ -465,11 +486,14 @@ namespace chaiscript
         operators::assign<bool>(m);
         operators::equal<bool>(m);
 
-        m->add(fun<std::string (const std::string &t_ss)>([](const std::string &s) -> std::string { return s; }), "to_string");
+        m->add(fun([](const std::string &s) -> std::string { return s; }), "to_string");
         m->add(fun(&Bootstrap::bool_to_string), "to_string");
         m->add(fun(&unknown_assign), "=");
         m->add(fun(&throw_exception), "throw");
         m->add(fun(&what), "what");
+
+        m->add(fun(&to_string<char>), "to_string");
+        m->add(fun(&Boxed_Number::to_string), "to_string");
 
         bootstrap_pod_type<double>("double", m);
         bootstrap_pod_type<long double>("long_double", m);
@@ -480,6 +504,9 @@ namespace chaiscript
         bootstrap_pod_type<unsigned long>("unsigned_long", m);
         bootstrap_pod_type<size_t>("size_t", m);
         bootstrap_pod_type<char>("char", m);
+        bootstrap_pod_type<wchar_t>("wchar_t", m);
+        bootstrap_pod_type<char16_t>("char16_t", m);
+        bootstrap_pod_type<char32_t>("char32_t", m);
         bootstrap_pod_type<std::int8_t>("int8_t", m);
         bootstrap_pod_type<std::int16_t>("int16_t", m);
         bootstrap_pod_type<std::int32_t>("int32_t", m);
@@ -497,13 +524,13 @@ namespace chaiscript
         m->add(fun(&print), "print_string");
         m->add(fun(&println), "println_string");
 
-        m->add(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Dynamic_Proxy_Function>(&bind_function), "bind");
+        m->add(dispatch::make_dynamic_proxy_function(&bind_function), "bind");
 
         m->add(fun(&shared_ptr_unconst_clone<dispatch::Proxy_Function_Base>), "clone");
         m->add(fun(&ptr_assign<std::remove_const<dispatch::Proxy_Function_Base>::type>), "=");
         m->add(fun(&ptr_assign<std::add_const<dispatch::Proxy_Function_Base>::type>), "=");
         m->add(chaiscript::base_class<dispatch::Proxy_Function_Base, dispatch::Assignable_Proxy_Function>());
-        m->add(fun<void (dispatch::Assignable_Proxy_Function &, const std::shared_ptr<const dispatch::Proxy_Function_Base> &)>(
+        m->add(fun(
                   [](dispatch::Assignable_Proxy_Function &t_lhs, const std::shared_ptr<const dispatch::Proxy_Function_Base> &t_rhs) {
                     t_lhs.assign(t_rhs);
                   }

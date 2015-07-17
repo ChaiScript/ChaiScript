@@ -1,6 +1,33 @@
 Notes:
 =======
-Current Version: 5.7.0
+Current Version: 5.7.1
+
+### Changes since 5.7.0
+* Build time reduction
+* Build size reduction
+* Performance increases
+* Fixed ~20 crash-bugs found with fuzzy testing #194
+  * Let unhandled exceptions propogate to user
+  * Report eval_error when break statement is not in loop
+  * Fix handling of 0 length scripts closes #193
+  * Don't crash on arity mismatch - Specifically affects the case where no overloads exist for a given function
+  * Fix error printing for `bind` calls
+  * Handle unexpected continue statement
+  * Check arity during bind
+  * Don't allow arith conversion on variadic function
+  * Correct `bind` parameter match count
+  * Add in expected Boxed_Value exception cases
+  * Check access to AST, don't allow `;` in func def
+  * Don't attempt arithmetic unary & call
+  * Don't crash on 0 param call to `bind`
+  * Catch errors during member function dispatch
+  * Properly handle type of const bool &
+* Automatic deduction of lambda type signatures
+* Work with non-polymorphic parent/child conversions
+* Move to codecov for coverage reporting
+* Add `.at` method for Map objects
+* Various corrections for support of move-only objects
+
 
 ### Changes since 5.6.0
 

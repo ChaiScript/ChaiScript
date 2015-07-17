@@ -79,13 +79,6 @@ namespace chaiscript
     }
 
 
-#ifdef CHAISCRIPT_MSVC
-    //Thank you MSVC, yes we know that a constant value is being used in the if
-    // statment in THIS VERSION of the template instantiation
-#pragma warning(push)
-#pragma warning(disable : 4127)
-#endif
-
     if (t_conversions && t_conversions->convertable_type<Type>())
     {
       try {
@@ -107,10 +100,6 @@ namespace chaiscript
       // attempted dynamic_cast
       throw exception::bad_boxed_cast(bv.get_type_info(), typeid(Type));
     }
-
-#ifdef CHAISCRIPT_MSVC
-#pragma warning(pop)
-#endif
 
   }
 

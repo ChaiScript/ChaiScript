@@ -16,6 +16,7 @@
 #include "boxed_value.hpp"
 #include "handle_return.hpp"
 #include "type_info.hpp"
+#include "callable_traits.hpp"
 
 namespace chaiscript {
 class Type_Conversions;
@@ -65,6 +66,10 @@ namespace chaiscript
         }
 
 
+#ifdef CHAISCRIPT_GCC_4_6 
+      /// \todo REMOVE THIS WHEN WE DROP G++4.6
+
+
       // Forward declaration
       template<typename ... Rest> 
         struct Try_Cast; 
@@ -97,7 +102,7 @@ namespace chaiscript
       template<typename Ret, typename ... Params>
         bool compare_types_cast(Ret (*)(Params...),
              const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
-       {
+        {
           try {
             Try_Cast<Params...>::do_try(params, 0, t_conversions);
           } catch (const exception::bad_boxed_cast &) {
@@ -111,8 +116,8 @@ namespace chaiscript
         struct Call_Func
         {
 
-          template<typename ... InnerParams>
-          static Ret do_call(const std::function<Ret (Params...)> &f,
+          template<typename Callable, typename ... InnerParams>
+          static Ret do_call(const Callable &f,
               const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions, InnerParams &&... innerparams)
           {
             return Call_Func<Ret, count - 1, Params...>::do_call(f, params, t_conversions, std::forward<InnerParams>(innerparams)..., params[sizeof...(Params) - count]);
@@ -126,8 +131,8 @@ namespace chaiscript
 #pragma warning(push)
 #pragma warning(disable : 4100) /// Disable unreferenced formal parameter warning, which only shows up in MSVC I don't think there's any way around it \todo evaluate this
 #endif
-          template<typename ... InnerParams>
-            static Ret do_call(const std::function<Ret (Params...)> &f,
+          template<typename Callable, typename ... InnerParams>
+            static Ret do_call(const Callable &f,
                 const std::vector<Boxed_Value> &, const Type_Conversions &t_conversions, InnerParams &&... innerparams)
             {
               return f(boxed_cast<Params>(std::forward<InnerParams>(innerparams), &t_conversions)...);
@@ -143,8 +148,8 @@ namespace chaiscript
        * if any unboxing fails the execution of the function fails and
        * the bad_boxed_cast is passed up to the caller.
        */
-      template<typename Ret, typename ... Params>
-        Ret call_func(const std::function<Ret (Params...)> &f,
+      template<typename Callable, typename Ret, typename ... Params>
+        Ret call_func(const chaiscript::dispatch::detail::Function_Signature<Ret (Params...)> &, const Callable &f,
             const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
         {
           if (params.size() == sizeof...(Params))
@@ -154,6 +159,82 @@ namespace chaiscript
 
           throw exception::arity_error(static_cast<int>(params.size()), sizeof...(Params));
         }
+
+
+
+#else
+
+      template<size_t ... I>
+      struct Indexes
+      {
+      };
+
+      template<size_t S, size_t ... I> 
+      struct Make_Indexes
+      {
+        typedef typename Make_Indexes<S-1, I..., sizeof...(I)>::indexes indexes;
+      };
+
+      template<size_t ... I>
+      struct Make_Indexes<0, I...>
+      {
+        typedef Indexes<I...> indexes;
+      };
+
+
+
+      /**
+       * Used by Proxy_Function_Impl to determine if it is equivalent to another
+       * Proxy_Function_Impl object. This function is primarily used to prevent
+       * registration of two functions with the exact same signatures
+       */
+      template<typename Ret, typename ... Params, size_t ... I>
+        bool compare_types_cast(Indexes<I...>, Ret (*)(Params...),
+             const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
+        {
+          try {
+            (void)params; (void)t_conversions;
+            (void)std::initializer_list<int>{(boxed_cast<Params>(params[I], &t_conversions), 0)...};
+            return true;
+          } catch (const exception::bad_boxed_cast &) {
+            return false;
+          }
+
+        }
+
+      template<typename Ret, typename ... Params>
+        bool compare_types_cast(Ret (*f)(Params...),
+             const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
+        {
+          typedef typename Make_Indexes<sizeof...(Params)>::indexes indexes;
+          return compare_types_cast(indexes(), f, params, t_conversions);
+        }
+
+
+      template<typename Callable, typename Ret, typename ... Params, size_t ... I>
+        Ret call_func(const chaiscript::dispatch::detail::Function_Signature<Ret (Params...)> &, Indexes<I...>, const Callable &f,
+            const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
+        {
+          (void)params; (void)t_conversions;
+          return f(boxed_cast<Params>(params[I], &t_conversions)...);
+        }
+
+
+      /**
+       * Used by Proxy_Function_Impl to perform typesafe execution of a function.
+       * The function attempts to unbox each parameter to the expected type.
+       * if any unboxing fails the execution of the function fails and
+       * the bad_boxed_cast is passed up to the caller.
+       */
+      template<typename Callable, typename Ret, typename ... Params>
+        Ret call_func(const chaiscript::dispatch::detail::Function_Signature<Ret (Params...)> &sig, const Callable &f,
+            const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
+        {
+          typedef typename Make_Indexes<sizeof...(Params)>::indexes indexes;
+          return call_func(sig, indexes(), f, params, t_conversions);
+        }
+
+#endif
 
     }
   }
@@ -170,20 +251,20 @@ namespace chaiscript
     template<typename Ret>
       struct Do_Call
       {
-        template<typename Fun>
-          static Boxed_Value go(const std::function<Fun> &fun, const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
+        template<typename Signature, typename Callable>
+          static Boxed_Value go(const Callable &fun, const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
           {
-            return Handle_Return<Ret>::handle(call_func(fun, params, t_conversions));
+            return Handle_Return<Ret>::handle(call_func(Function_Signature<Signature>(), fun, params, t_conversions));
           }
       };
 
     template<>
       struct Do_Call<void>
       {
-        template<typename Fun>
-          static Boxed_Value go(const std::function<Fun> &fun, const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
+        template<typename Signature, typename Callable>
+          static Boxed_Value go(const Callable &fun, const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions)
           {
-            call_func(fun, params, t_conversions);
+            call_func(Function_Signature<Signature>(), fun, params, t_conversions);
             return Handle_Return<void>::handle();
           }
       };

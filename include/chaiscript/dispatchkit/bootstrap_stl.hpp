@@ -243,18 +243,18 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr random_access_container_type(const std::string &/*type*/, ModulePtr m = std::make_shared<Module>())
         {
-          // cppcheck-suppress syntaxError
-          typedef typename ContainerType::reference(ContainerType::*indexoper)(size_t);
-
           //In the interest of runtime safety for the m, we prefer the at() method for [] access,
           //to throw an exception in an out of bounds condition.
           m->add(
-              fun(std::function<typename ContainerType::reference (ContainerType *, int)>
-                (std::mem_fn(static_cast<indexoper>(&ContainerType::at)))), "[]");
+              fun(
+                [](ContainerType &c, int index) -> typename ContainerType::reference {
+                  return c.at(index);
+                }), "[]");
+
           m->add(
-              fun<typename ContainerType::const_reference (const ContainerType *, int)>(
-                [](const ContainerType *c, int index) -> typename ContainerType::const_reference {
-                  return c->at(index);
+              fun(
+                [](const ContainerType &c, int index) -> typename ContainerType::const_reference {
+                  return c.at(index);
                 }), "[]");
 
           return m;
@@ -277,9 +277,9 @@ namespace chaiscript
       template<typename ContainerType>
         ModulePtr container_type(const std::string &/*type*/, ModulePtr m = std::make_shared<Module>())
         {
-          m->add(fun<size_t (const ContainerType *)>([](const ContainerType *a) { return a->size(); } ), "size");
-          m->add(fun<bool (const ContainerType *)>([](const ContainerType *a) { return a->empty(); } ), "empty");
-          m->add(fun<void (ContainerType *)>([](ContainerType *a) { a->clear(); } ), "clear");
+          m->add(fun([](const ContainerType *a) { return a->size(); } ), "size");
+          m->add(fun([](const ContainerType *a) { return a->empty(); } ), "empty");
+          m->add(fun([](ContainerType *a) { a->clear(); } ), "clear");
           return m;
         }
 
@@ -319,7 +319,7 @@ namespace chaiscript
       /// Add back insertion sequence concept to the given ContainerType
       /// http://www.sgi.com/tech/stl/BackInsertionSequence.html
       template<typename ContainerType>
-        ModulePtr back_insertion_sequence_type(const std::string &/*type*/, ModulePtr m = std::make_shared<Module>())
+        ModulePtr back_insertion_sequence_type(const std::string &type, ModulePtr m = std::make_shared<Module>())
         {
           typedef typename ContainerType::reference (ContainerType::*backptr)();
 
@@ -328,8 +328,16 @@ namespace chaiscript
 
           typedef void (ContainerType::*push_back)(const typename ContainerType::value_type &);
           m->add(fun(static_cast<push_back>(&ContainerType::push_back)),
-              []()->std::string{
-                if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
+              [&]()->std::string{
+              if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
+                m->eval(
+                    "# Pushes the second value onto the container while making a clone of the value\n"
+                    "def push_back(" + type + " container, x)\n"
+                    "{ \n"
+                    "  container.push_back_ref(clone(x)) \n"
+                    "} \n"
+                    );
+
                   return "push_back_ref";
                 } else {
                   return "push_back";
@@ -345,7 +353,7 @@ namespace chaiscript
       /// Front insertion sequence
       /// http://www.sgi.com/tech/stl/FrontInsertionSequence.html
       template<typename ContainerType>
-        ModulePtr front_insertion_sequence_type(const std::string &, ModulePtr m = std::make_shared<Module>())
+        ModulePtr front_insertion_sequence_type(const std::string &type, ModulePtr m = std::make_shared<Module>())
         {
           typedef typename ContainerType::reference (ContainerType::*front_ptr)();
           typedef typename ContainerType::const_reference (ContainerType::*const_front_ptr)() const;
@@ -356,8 +364,15 @@ namespace chaiscript
           m->add(fun(static_cast<const_front_ptr>(&ContainerType::front)), "front");
 
           m->add(fun(static_cast<push_ptr>(&ContainerType::push_front)),
-              []()->std::string{
+              [&]()->std::string{
                 if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
+                  m->eval(
+                      "# Pushes the second value onto the front of container while making a clone of the value\n"
+                      "def push_front(" + type + " container, x)\n"
+                      "{ \n"
+                      "  container.push_front_ref(clone(x)) \n"
+                      "} \n"
+                      );
                   return "push_front_ref";
                 } else {
                   return "push_front";
@@ -438,8 +453,12 @@ namespace chaiscript
           m->add(user_type<MapType>(), type);
 
           typedef typename MapType::mapped_type &(MapType::*elem_access)(const typename MapType::key_type &);
+          typedef const typename MapType::mapped_type &(MapType::*const_elem_access)(const typename MapType::key_type &) const;
 
           m->add(fun(static_cast<elem_access>(&MapType::operator[])), "[]");
+
+          m->add(fun(static_cast<elem_access>(&MapType::at)), "at");
+          m->add(fun(static_cast<const_elem_access>(&MapType::at)), "at");
 
           container_type<MapType>(type, m);
           default_constructible_type<MapType>(type, m);
@@ -547,23 +566,20 @@ namespace chaiscript
               }());
 
 
-          typedef std::function<size_t (const String *, const String &, size_t)> find_func;
+          m->add(fun([](const String *s, const String &f, size_t pos) { return s->find(f, pos); } ), "find");
+          m->add(fun([](const String *s, const String &f, size_t pos) { return s->rfind(f, pos); } ), "rfind");
+          m->add(fun([](const String *s, const String &f, size_t pos) { return s->find_first_of(f, pos); } ), "find_first_of");
+          m->add(fun([](const String *s, const String &f, size_t pos) { return s->find_last_of(f, pos); } ), "find_last_of");
+          m->add(fun([](const String *s, const String &f, size_t pos) { return s->find_last_not_of(f, pos); } ), "find_last_not_of");
+          m->add(fun([](const String *s, const String &f, size_t pos) { return s->find_first_not_of(f, pos); } ), "find_first_not_of");
 
+          m->add(fun([](String *s) { s->clear(); } ), "clear");
+          m->add(fun([](const String *s) { return s->empty(); } ), "empty");
+          m->add(fun([](const String *s) { return s->size(); } ), "size");
 
-          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find(f, pos); } )), "find");
-          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->rfind(f, pos); } ) ), "rfind");
-          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find_first_of(f, pos); } ) ), "find_first_of");
-          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find_last_of(f, pos); } ) ), "find_last_of");
-          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find_last_not_of(f, pos); } ) ), "find_last_not_of");
-          m->add(fun(find_func( [](const String *s, const String &f, size_t pos) { return s->find_first_not_of(f, pos); } ) ), "find_first_not_of");
-
-          m->add(fun( std::function<void (String *)>( [](String *s) { return s->clear(); } ) ), "clear");
-          m->add(fun( std::function<bool (const String *)>( [](const String *s) { return s->empty(); } ) ), "empty");
-          m->add(fun( std::function<size_t (const String *)>( [](const String *s) { return s->size(); } ) ), "size");
-
-          m->add(fun( std::function<const char *(const String *)>( [](const String *s) { return s->c_str(); } ) ), "c_str");
-          m->add(fun( std::function<const char *(const String *)>( [](const String *s) { return s->data(); } ) ), "data");
-          m->add(fun( std::function<String (const String *, size_t, size_t)>( [](const String *s, size_t pos, size_t len) { return s->substr(pos, len); } ) ), "substr");
+          m->add(fun([](const String *s) { return s->c_str(); } ), "c_str");
+          m->add(fun([](const String *s) { return s->data(); } ), "data");
+          m->add(fun([](const String *s, size_t pos, size_t len) { return s->substr(pos, len); } ), "substr");
 
           return m;
         }
@@ -577,7 +593,7 @@ namespace chaiscript
         {
           m->add(user_type<FutureType>(), type);
 
-          m->add(fun<bool (const FutureType &)>([](const FutureType &t) { return t.valid(); }), "valid");
+          m->add(fun([](const FutureType &t) { return t.valid(); }), "valid");
           m->add(fun(&FutureType::get), "get");
           m->add(fun(&FutureType::wait), "wait");
 

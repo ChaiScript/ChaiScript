@@ -7,7 +7,6 @@
 #ifndef CHAISCRIPT_REGISTER_FUNCTION_HPP_
 #define CHAISCRIPT_REGISTER_FUNCTION_HPP_
 
-#include <functional>
 #include <type_traits>
 
 #include "bind_first.hpp"
@@ -15,55 +14,6 @@
 
 namespace chaiscript
 {
-  namespace dispatch
-  {
-    namespace detail
-    {
-      template<typename T>
-        struct FunctionSignature
-        {
-        };
-
-      template<typename Sig>
-        struct FunctionSignature<std::function<Sig> >
-        {
-          typedef Sig Signature;
-        };
-
-      template<typename Ret, typename ... Args> 
-        std::function<Ret (Args...) > to_function(Ret (*func)(Args...))
-        {
-          return std::function<Ret (Args...)>(func);
-        }
-
-      template<typename Ret, typename Class, typename ... Args> 
-        std::function<Ret (Class &, Args...) > to_function(Ret (Class::*func)(Args...))
-        {
-#ifdef CHAISCRIPT_MSVC
-          /// \todo this std::mem_fn wrap shouldn't be necessary but type conversions for 
-          ///       std::function for member function pointers seems to be broken in MSVC
-          return std::function<Ret(Class &, Args...)>(std::mem_fn(func));
-#else
-          return std::function<Ret(Class &, Args...)>(func);
-#endif
-        }
-
-      template<typename Ret, typename Class, typename ... Args> 
-        std::function<Ret (const Class &, Args...) > to_function(Ret (Class::*func)(Args...) const)
-        {
-#if defined(CHAISCRIPT_MSVC) || defined(CHAISCRIPT_LIBCPP)
-          /// \todo this std::mem_fn wrap shouldn't be necessary but type conversions for 
-          ///       std::function for member function pointers seems to be broken in MSVC
-          return std::function<Ret (const Class &, Args...)>([func](const Class &o, Args... args)->Ret {
-                return (o.*func)(std::forward<Args>(args)...);
-              });
-#else
-          return std::function<Ret(const Class &, Args...)>(func);
-#endif
-        }
-
-    }
-  }
 
   /// \brief Creates a new Proxy_Function object from a free function, member function or data member
   /// \param[in] t Function / member to expose
@@ -88,22 +38,39 @@ namespace chaiscript
   template<typename T>
     Proxy_Function fun(const T &t)
     {
+      typedef typename dispatch::detail::Callable_Traits<T>::Signature Signature;
+
       return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(t)) >::Signature>>(dispatch::detail::to_function(t)));
+          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Signature, T>>(t));
+    }
+
+  template<typename Ret, typename ... Param>
+    Proxy_Function fun(Ret (*func)(Param...))
+    {
+      auto fun_call = dispatch::detail::Fun_Caller<Ret, Param...>(func);
+
+      return Proxy_Function(
+          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (Param...), decltype(fun_call)>>(fun_call));
+
     }
 
   template<typename Ret, typename Class, typename ... Param>
-    Proxy_Function fun(Ret (Class::*func)(Param...) const)
+    Proxy_Function fun(Ret (Class::*t_func)(Param...) const)
     {
+      auto call = dispatch::detail::Const_Caller<Ret, Class, Param...>(t_func);
+
       return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(func)) >::Signature>>(dispatch::detail::to_function(func)));
+          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (const Class &, Param...), decltype(call)>>(call));
     }
 
   template<typename Ret, typename Class, typename ... Param>
-    Proxy_Function fun(Ret (Class::*func)(Param...))
+    Proxy_Function fun(Ret (Class::*t_func)(Param...))
     {
+      auto call = dispatch::detail::Caller<Ret, Class, Param...>(t_func);
+
       return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<typename dispatch::detail::FunctionSignature<decltype(dispatch::detail::to_function(func)) >::Signature>>(dispatch::detail::to_function(func)));
+          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (Class &, Param...), decltype(call)>>(call));
+
     }
 
 
@@ -114,22 +81,6 @@ namespace chaiscript
     }
 
 
-  /// \brief Creates a new Proxy_Function object from a std::function object
-  /// \param[in] f std::function to expose to ChaiScript
-  ///
-  /// \b Example:
-  /// \code
-  /// std::function<int (char, float, std::string)> f = get_some_function();
-  /// chaiscript::ChaiScript chai;
-  /// chai.add(fun(f), "some_function");
-  /// \endcode
-  /// 
-  /// \sa \ref adding_functions
-  template<typename T>
-    Proxy_Function fun(const std::function<T> &f)
-    {
-      return Proxy_Function(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Impl<T>>(f));
-    }
 
   
   /// \brief Creates a new Proxy_Function object from a free function, member function or data member and binds the first parameter of it

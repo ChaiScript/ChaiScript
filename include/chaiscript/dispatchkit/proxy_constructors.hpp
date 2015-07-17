@@ -16,21 +16,14 @@ namespace chaiscript
   {
     namespace detail
     {
-      /**
-       * A constructor function, used for creating a new object
-       * of a given type with a given set of params
-       */
-      template<typename Class, typename ... Params>
-        std::shared_ptr<Class> constructor_(Params ... params)
-        {
-          return std::make_shared<Class>(params...);
-        }
 
       template<typename Class, typename ... Params  >
         Proxy_Function build_constructor_(Class (*)(Params...))
         {
-          typedef std::shared_ptr<Class> (sig)(Params...);
-          return Proxy_Function(static_cast<Proxy_Function_Impl_Base *>(new Proxy_Function_Impl<sig>(std::function<sig>(&(constructor_<Class, Params...>)))));
+          auto call = dispatch::detail::Constructor<Class, Params...>();
+
+          return Proxy_Function(
+            chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<std::shared_ptr<Class> (Params...), decltype(call)>>(call));
         }
     }
   }

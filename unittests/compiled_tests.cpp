@@ -37,8 +37,7 @@ TEST_CASE("C++11 Lambdas Can Be Registered")
   // in an std::function or provide the signature
   chaiscript::ChaiScript chai;
 
-  // provide the signature
-  chai.add(chaiscript::fun<std::string ()>([] { return "hello"; } ), "f1");
+  chai.add(chaiscript::fun([]()->std::string { return "hello"; } ), "f1");
 
   // wrap
   chai.add(chaiscript::fun(std::function<std::string ()>([] { return "world"; } )), "f2");
@@ -722,4 +721,25 @@ TEST_CASE("Object lifetime test 2")
   CHECK(_script.eval<std::string>("to_string(test)") == "10");
   CHECK(_script.eval<std::string>("to_string(test2.x)") == "10");
 
+}
+
+
+
+
+///// Non-polymorphic base class conversions
+class Non_Poly_Base {};
+class Non_Poly_Derived : public Non_Poly_Base {};
+int myfunction(Non_Poly_Base *)
+{
+  return 2;
+}
+
+TEST_CASE("Test Derived->Base with non-polymorphic classes")
+{
+  chaiscript::ChaiScript chai;
+  chai.add(chaiscript::base_class<Non_Poly_Base, Non_Poly_Derived>());
+  Non_Poly_Derived d;
+  chai.add(chaiscript::var(&d), "d");
+  chai.add(chaiscript::fun(&myfunction), "myfunction");
+  CHECK(chai.eval<int>("myfunction(d)") == 2);
 }
