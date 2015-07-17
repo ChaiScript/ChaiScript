@@ -385,10 +385,31 @@ namespace chaiscript
 
   namespace detail
   {
+    struct Stack_Holder
+    {
+      typedef std::vector<std::pair<std::string, Boxed_Value>> Scope;
+      typedef std::vector<Scope> StackData;
+
+      Stack_Holder()
+        : call_depth(0)
+      {
+        stacks.reserve(2);
+        stacks.emplace_back(1);
+        call_params.emplace_back();
+        call_params.back().reserve(2);
+      }
+
+      std::vector<StackData> stacks;
+
+      std::vector<std::vector<Boxed_Value>> call_params;
+      int call_depth;
+    };
+
     /// Main class for the dispatchkit. Handles management
     /// of the object stack, functions and registered types.
     class Dispatch_Engine
     {
+
       public:
         typedef std::map<std::string, chaiscript::Type_Info> Type_Name_Map;
         typedef std::vector<std::pair<std::string, Boxed_Value>> Scope;
@@ -537,15 +558,27 @@ namespace chaiscript
         /// Adds a new scope to the stack
         void new_scope()
         {
-          get_stack_data().emplace_back();
-          m_stack_holder->call_params.emplace_back();
+          new_scope(*m_stack_holder);
         }
 
         /// Pops the current scope from the stack
         void pop_scope()
         {
-          m_stack_holder->call_params.pop_back();
-          StackData &stack = get_stack_data();
+          pop_scope(*m_stack_holder);
+        }
+
+        /// Adds a new scope to the stack
+        void new_scope(Stack_Holder &t_holder)
+        {
+          get_stack_data(t_holder).emplace_back();
+          t_holder.call_params.emplace_back();
+        }
+
+        /// Pops the current scope from the stack
+        void pop_scope(Stack_Holder &t_holder)
+        {
+          t_holder.call_params.pop_back();
+          StackData &stack = get_stack_data(t_holder);
           if (stack.size() > 1)
           {
             stack.pop_back();
@@ -556,15 +589,15 @@ namespace chaiscript
 
 
         /// Pushes a new stack on to the list of stacks
-        void new_stack()
+        void new_stack(Stack_Holder &t_holder)
         {
           // add a new Stack with 1 element
-          m_stack_holder->stacks.emplace_back(1);
+          t_holder.stacks.emplace_back(1);
         }
 
-        void pop_stack()
+        void pop_stack(Stack_Holder &t_holder)
         {
-          m_stack_holder->stacks.pop_back();
+          t_holder.stacks.pop_back();
         }
 
         /// Searches the current stack for an object of the given name
@@ -1099,53 +1132,77 @@ namespace chaiscript
           m_state = t_state;
         }
 
+        void save_function_params(Stack_Holder &t_s, std::initializer_list<Boxed_Value> t_params)
+        {
+          t_s.call_params.back().insert(t_s.call_params.back().begin(), std::move(t_params));
+        }
+
+        void save_function_params(Stack_Holder &t_s, std::vector<Boxed_Value> &&t_params)
+        {
+          for (auto &&param : t_params)
+          {
+            t_s.call_params.back().insert(t_s.call_params.back().begin(), std::move(param));
+          }
+        }
+
+        void save_function_params(Stack_Holder &t_s, const std::vector<Boxed_Value> &t_params)
+        {
+          t_s.call_params.back().insert(t_s.call_params.back().begin(), t_params.begin(), t_params.end());
+        }
+
         void save_function_params(std::initializer_list<Boxed_Value> t_params)
         {
-          Stack_Holder &s = *m_stack_holder;
-          s.call_params.back().insert(s.call_params.back().begin(), std::move(t_params));
+          save_function_params(*m_stack_holder, std::move(t_params));
         }
 
         void save_function_params(std::vector<Boxed_Value> &&t_params)
         {
-          Stack_Holder &s = *m_stack_holder;
-
-          for (auto &&param : t_params)
-          {
-            s.call_params.back().insert(s.call_params.back().begin(), std::move(param));
-          }
+          save_function_params(*m_stack_holder, std::move(t_params));
         }
 
         void save_function_params(const std::vector<Boxed_Value> &t_params)
         {
-          Stack_Holder &s = *m_stack_holder;
-          s.call_params.back().insert(s.call_params.back().begin(), t_params.begin(), t_params.end());
+          save_function_params(*m_stack_holder, t_params);
         }
 
-        void new_function_call()
+        void new_function_call(Stack_Holder &t_s)
         {
-          Stack_Holder &s = *m_stack_holder;
-          if (s.call_depth == 0)
+          if (t_s.call_depth == 0)
           {
             m_conversions.enable_conversion_saves(true);
           }
 
-          ++s.call_depth;
+          ++t_s.call_depth;
 
           save_function_params(m_conversions.take_saves());
         }
 
-        void pop_function_call()
+        void pop_function_call(Stack_Holder &t_s)
         {
-          Stack_Holder &s = *m_stack_holder;
-          --s.call_depth;
+          --t_s.call_depth;
 
-          assert(s.call_depth >= 0);
+          assert(t_s.call_depth >= 0);
 
-          if (s.call_depth == 0)
+          if (t_s.call_depth == 0)
           {
-            s.call_params.back().clear();
+            t_s.call_params.back().clear();
             m_conversions.enable_conversion_saves(false);
           }
+        }
+
+        void new_function_call()
+        {
+          new_function_call(*m_stack_holder);
+        }
+
+        void pop_function_call()
+        {
+          pop_function_call(*m_stack_holder);
+        }
+
+        Stack_Holder &get_stack_holder()
+        {
+          return *m_stack_holder;
         }
 
       private:
@@ -1154,6 +1211,11 @@ namespace chaiscript
         const StackData &get_stack_data() const
         {
           return m_stack_holder->stacks.back();
+        }
+
+        StackData &get_stack_data(Stack_Holder &t_holder)
+        {
+          return t_holder.stacks.back();
         }
 
         StackData &get_stack_data()
@@ -1349,28 +1411,38 @@ namespace chaiscript
         mutable chaiscript::detail::threading::shared_mutex m_mutex;
         mutable chaiscript::detail::threading::shared_mutex m_global_object_mutex;
 
-        struct Stack_Holder
-        {
-          Stack_Holder()
-            : call_depth(0)
-          {
-            stacks.reserve(2);
-            stacks.emplace_back(1);
-            call_params.emplace_back();
-            call_params.back().reserve(2);
-          }
-
-          std::vector<StackData> stacks;
-
-          std::vector<std::vector<Boxed_Value>> call_params;
-          int call_depth;
-        };
 
         Type_Conversions m_conversions;
         chaiscript::detail::threading::Thread_Storage<Stack_Holder> m_stack_holder;
 
 
         State m_state;
+    };
+
+    class Dispatch_State
+    {
+      public:
+        Dispatch_State(Dispatch_Engine &t_engine)
+          : m_engine(t_engine),
+            m_stack_holder(t_engine.get_stack_holder())
+        {
+        }
+
+        Dispatch_Engine *operator->() const {
+          return &m_engine.get();
+        }
+
+        Dispatch_Engine &operator*() const {
+          return m_engine.get();
+        }
+
+        Stack_Holder &stack_holder() const {
+          return m_stack_holder.get();
+        }
+
+      private:
+        std::reference_wrapper<Dispatch_Engine> m_engine;
+        std::reference_wrapper<Stack_Holder> m_stack_holder;
     };
   }
 }
