@@ -1120,11 +1120,22 @@ namespace chaiscript
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::File, std::move(t_loc), std::move(t_children)) { }
         virtual ~File_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE {
-          const auto num_children = children.size();
-          for (size_t i = 0; i < num_children-1; ++i) {
-            children[i]->eval(t_ss);
+          try {
+            const auto num_children = children.size();
+
+            if (num_children > 0) {
+              for (size_t i = 0; i < num_children-1; ++i) {
+                children[i]->eval(t_ss);
+              }
+              return children.back()->eval(t_ss);
+            } else {
+              return Boxed_Value();
+            }
+          } catch (const detail::Continue_Loop &) {
+            throw exception::eval_error("Unexpected `continue` statement outside of a loop");
+          } catch (const detail::Break_Loop &) {
+            throw exception::eval_error("Unexpected `break` statement outside of a loop");
           }
-          return children.back()->eval(t_ss);
         }
     };
 
@@ -1161,7 +1172,7 @@ namespace chaiscript
 
           try {
             // short circuit arithmetic operations
-            if (m_oper != Operators::invalid && bv.get_type_info().is_arithmetic())
+            if (m_oper != Operators::invalid && m_oper != Operators::bitwise_and && bv.get_type_info().is_arithmetic())
             {
               return Boxed_Number::do_oper(m_oper, bv);
             } else {

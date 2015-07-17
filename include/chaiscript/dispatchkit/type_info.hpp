@@ -29,7 +29,7 @@ namespace chaiscript
   class Type_Info
   {
     public:
-       CHAISCRIPT_CONSTEXPR Type_Info(bool t_is_const, bool t_is_reference, bool t_is_pointer, bool t_is_void, 
+      CHAISCRIPT_CONSTEXPR Type_Info(bool t_is_const, bool t_is_reference, bool t_is_pointer, bool t_is_void, 
           bool t_is_arithmetic, const std::type_info *t_ti, const std::type_info *t_bare_ti)
         : m_type_info(t_ti), m_bare_type_info(t_bare_ti),
         m_is_const(t_is_const), m_is_reference(t_is_reference), m_is_pointer(t_is_pointer),
@@ -38,7 +38,7 @@ namespace chaiscript
       {
       }
 
-       CHAISCRIPT_CONSTEXPR Type_Info()
+      CHAISCRIPT_CONSTEXPR Type_Info()
         : m_type_info(nullptr), m_bare_type_info(nullptr),
         m_is_const(false), m_is_reference(false), m_is_pointer(false),
         m_is_void(false), m_is_arithmetic(false), 
@@ -134,14 +134,14 @@ namespace chaiscript
       {
         typedef T type;
 
-         static Type_Info get()
+        static Type_Info get()
         {
           return Type_Info(std::is_const<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::value, 
               std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
               (std::is_arithmetic<T>::value || std::is_arithmetic<typename std::remove_reference<T>::type>::value)
-                && !std::is_same<typename std::remove_const<T>::type, bool>::value,
-              &typeid(T), 
+                && !std::is_same<typename std::remove_const<typename std::remove_reference<T>::type>::type, bool>::value,
+              &typeid(T),
               &typeid(typename Bare_Type<T>::type));
         }
       };
@@ -151,11 +151,11 @@ namespace chaiscript
       {
         typedef T type;
 
-         static Type_Info get()
+        static Type_Info get()
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
-              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
+              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<typename std::remove_reference<T>::type>::type, bool>::value,
               &typeid(std::shared_ptr<T> ), 
               &typeid(typename Bare_Type<T>::type));
         }
@@ -166,11 +166,11 @@ namespace chaiscript
       {
         typedef T type;
 
-         static Type_Info get()
+        static Type_Info get()
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
-              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
+              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<typename std::remove_reference<T>::type>::type, bool>::value,
               &typeid(const std::shared_ptr<T> &), 
               &typeid(typename Bare_Type<T>::type));
         }
@@ -181,11 +181,11 @@ namespace chaiscript
       {
         typedef T type;
 
-         static Type_Info get()
+        static Type_Info get()
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
-              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
+              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<typename std::remove_reference<T>::type>::type, bool>::value,
               &typeid(std::reference_wrapper<T> ), 
               &typeid(typename Bare_Type<T>::type));
         }
@@ -196,11 +196,11 @@ namespace chaiscript
       {
         typedef T type;
 
-         static Type_Info get()
+        static Type_Info get()
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
-              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<T>::type, bool>::value,
+              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<typename std::remove_reference<T>::type>::type, bool>::value,
               &typeid(const std::reference_wrapper<T> &), 
               &typeid(typename Bare_Type<T>::type));
         }
