@@ -60,6 +60,8 @@ namespace chaiscript
       std::vector<std::vector<std::string>> m_operator_matches;
       std::vector<AST_Node_Type::Type> m_operators;
 
+      void increment_pos(std::string::const_iterator &itr) { if (itr != m_input_end) ++itr; }
+
       public:
       ChaiScript_Parser()
         : m_line(-1), m_col(-1),
@@ -167,17 +169,16 @@ namespace chaiscript
       }
 
       /// test a char in an m_alphabet
-      bool char_in_alphabet(char c, detail::Alphabet a) const { return m_alphabet[a][static_cast<int>(c)]; }
+      bool char_in_alphabet(char c, detail::Alphabet a) const { return m_alphabet[a][static_cast<uint8_t>(c)]; }
 
       /// Prints the parsed ast_nodes as a tree
-      /*
-         void debug_print(AST_NodePtr t, std::string prepend = "") {
-         std::cout << prepend << "(" << ast_node_type_to_string(t->identifier) << ") " << t->text << " : " << t->start.line << ", " << t->start.column << '\n';
-         for (unsigned int j = 0; j < t->children.size(); ++j) {
-         debug_print(t->children[j], prepend + "  ");
-         }
-         }
-         */
+      void debug_print(AST_NodePtr t, std::string prepend = "") {
+        std::cout << prepend << "(" << ast_node_type_to_string(t->identifier) << ") " << t->text << " : " << t->start().line << ", " << t->start().column << '\n';
+        for (unsigned int j = 0; j < t->children.size(); ++j) {
+          debug_print(t->children[j], prepend + "  ");
+        }
+      }
+
 
       /// Shows the current stack of matched ast_nodes
       void show_match_stack() const {
@@ -326,7 +327,7 @@ namespace chaiscript
               break;
             } else if (!Eol_()) {
               ++m_col;
-              ++m_input_pos;
+              increment_pos(m_input_pos);
             }
           }
           return true;
@@ -340,7 +341,7 @@ namespace chaiscript
               break;
             } else {
               ++m_col;
-              ++m_input_pos;
+              increment_pos(m_input_pos);
             }
           }
           return true;
@@ -365,13 +366,14 @@ namespace chaiscript
 
               if(*(m_input_pos) == '\r') {
                 // discards lf
-                ++m_input_pos;
+                increment_pos(m_input_pos);
               }
             }
             else {
               ++m_col;
             }
-            ++m_input_pos;
+
+            increment_pos(m_input_pos);
 
             retval = true;
           }
@@ -388,15 +390,15 @@ namespace chaiscript
       bool read_exponent_and_suffix() {
         // Support a form of scientific notation: 1e-5, 35.5E+8, 0.01e19
         if (has_more_input() && (std::tolower(*m_input_pos) == 'e')) {
-          ++m_input_pos;
+          increment_pos(m_input_pos);
           ++m_col;
           if (has_more_input() && ((*m_input_pos == '-') || (*m_input_pos == '+'))) {
-            ++m_input_pos;
+            increment_pos(m_input_pos);
             ++m_col;
           }
           auto exponent_pos = m_input_pos;
           while (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet) ) {
-            ++m_input_pos;
+            increment_pos(m_input_pos);
             ++m_col;
           }
           if (m_input_pos == exponent_pos) {
@@ -408,7 +410,7 @@ namespace chaiscript
         // Parse optional float suffix
         while (has_more_input() && char_in_alphabet(*m_input_pos, detail::float_suffix_alphabet))
         {
-          ++m_input_pos;
+          increment_pos(m_input_pos);
           ++m_col;
         }
 
@@ -420,7 +422,7 @@ namespace chaiscript
       bool Float_() {
         if (has_more_input() && char_in_alphabet(*m_input_pos,detail::float_alphabet) ) {
           while (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet) ) {
-            ++m_input_pos;
+            increment_pos(m_input_pos);
             ++m_col;
           }
 
@@ -429,11 +431,11 @@ namespace chaiscript
             return read_exponent_and_suffix();
           }
           else if (has_more_input() && (*m_input_pos == '.')) {
-            ++m_input_pos;
+            increment_pos(m_input_pos);
             ++m_col;
             if (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet)) {
               while (has_more_input() && char_in_alphabet(*m_input_pos,detail::int_alphabet) ) {
-                ++m_input_pos;
+                increment_pos(m_input_pos);
                 ++m_col;
               }
 
@@ -451,20 +453,20 @@ namespace chaiscript
       /// Reads a hex value from input, without skipping initial whitespace
       bool Hex_() {
         if (has_more_input() && (*m_input_pos == '0')) {
-          ++m_input_pos;
+          increment_pos(m_input_pos);
           ++m_col;
 
           if (has_more_input() && char_in_alphabet(*m_input_pos, detail::x_alphabet) ) {
-            ++m_input_pos;
+            increment_pos(m_input_pos);
             ++m_col;
             if (has_more_input() && char_in_alphabet(*m_input_pos, detail::hex_alphabet)) {
               while (has_more_input() && char_in_alphabet(*m_input_pos, detail::hex_alphabet) ) {
-                ++m_input_pos;
+                increment_pos(m_input_pos);
                 ++m_col;
               }
               while (has_more_input() && char_in_alphabet(*m_input_pos, detail::int_suffix_alphabet))
               {
-                ++m_input_pos;
+                increment_pos(m_input_pos);
                 ++m_col;
               }
 
@@ -488,7 +490,7 @@ namespace chaiscript
       void IntSuffix_() {
         while (has_more_input() && char_in_alphabet(*m_input_pos, detail::int_suffix_alphabet))
         {
-          ++m_input_pos;
+          increment_pos(m_input_pos);
           ++m_col;
         }
       }
@@ -496,15 +498,15 @@ namespace chaiscript
       /// Reads a binary value from input, without skipping initial whitespace
       bool Binary_() {
         if (has_more_input() && (*m_input_pos == '0')) {
-          ++m_input_pos;
+          increment_pos(m_input_pos);
           ++m_col;
 
           if (has_more_input() && char_in_alphabet(*m_input_pos, detail::b_alphabet) ) {
-            ++m_input_pos;
+            increment_pos(m_input_pos);
             ++m_col;
             if (has_more_input() && char_in_alphabet(*m_input_pos, detail::bin_alphabet) ) {
               while (has_more_input() && char_in_alphabet(*m_input_pos, detail::bin_alphabet) ) {
-                ++m_input_pos;
+                increment_pos(m_input_pos);
                 ++m_col;
               }
               return true;
@@ -738,9 +740,11 @@ namespace chaiscript
                 auto bv = buildInt(std::oct, match);
                 m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), prev_line, prev_col, std::move(bv)));
               }
-              else {
+              else if (!match.empty()) {
                 auto bv = buildInt(std::dec, match);
                 m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), prev_line, prev_col, std::move(bv)));
+              } else {
+                return false;
               }
               return true;
             }
@@ -755,14 +759,14 @@ namespace chaiscript
       bool Id_() {
         if (has_more_input() && char_in_alphabet(*m_input_pos, detail::id_alphabet)) {
           while (has_more_input() && char_in_alphabet(*m_input_pos, detail::keyword_alphabet) ) {
-            ++m_input_pos;
+            increment_pos(m_input_pos);
             ++m_col;
           }
 
           return true;
         } else if (has_more_input() && (*m_input_pos == '`')) {
           ++m_col;
-          ++m_input_pos;
+          increment_pos(m_input_pos);
           const auto start = m_input_pos;
 
           while (has_more_input() && (*m_input_pos != '`')) {
@@ -770,7 +774,7 @@ namespace chaiscript
               throw exception::eval_error("Carriage return in identifier literal", File_Position(m_line, m_col), *m_filename);
             }
             else {
-              ++m_input_pos;
+              increment_pos(m_input_pos);
               ++m_col;
             }
           }
@@ -783,7 +787,7 @@ namespace chaiscript
           }
 
           ++m_col;
-          ++m_input_pos;
+          increment_pos(m_input_pos);
 
           return true;
         }
@@ -850,7 +854,7 @@ namespace chaiscript
               }
               else {
                 ++m_col;
-                ++m_input_pos;
+                increment_pos(m_input_pos);
               }
             }
           } while (Symbol("#"));
@@ -868,7 +872,7 @@ namespace chaiscript
       bool Quoted_String_() {
         if (has_more_input() && (*m_input_pos == '\"')) {
           char prev_char = *m_input_pos;
-          ++m_input_pos;
+          increment_pos(m_input_pos);
           ++m_col;
 
           while (has_more_input() && ((*m_input_pos != '\"') || ((*m_input_pos == '\"') && (prev_char == '\\')))) {
@@ -878,13 +882,13 @@ namespace chaiscript
               } else {
                 prev_char = *m_input_pos;
               }
-              ++m_input_pos;
+              increment_pos(m_input_pos);
               ++m_col;
             }
           }
 
           if (has_more_input()) {
-            ++m_input_pos;
+            increment_pos(m_input_pos);
             ++m_col;
           } else {
             throw exception::eval_error("Unclosed quoted string", File_Position(m_line, m_col), *m_filename);
@@ -1021,7 +1025,7 @@ namespace chaiscript
         if (has_more_input() && (*m_input_pos == '\'')) {
           retval = true;
           char prev_char = *m_input_pos;
-          ++m_input_pos;
+          increment_pos(m_input_pos);
           ++m_col;
 
           while (has_more_input() && ((*m_input_pos != '\'') || ((*m_input_pos == '\'') && (prev_char == '\\')))) {
@@ -1031,13 +1035,13 @@ namespace chaiscript
               } else {
                 prev_char = *m_input_pos;
               }
-              ++m_input_pos;
+              increment_pos(m_input_pos);
               ++m_col;
             }
           }
 
           if (m_input_pos != m_input_end) {
-            ++m_input_pos;
+            increment_pos(m_input_pos);
             ++m_col;
           } else {
             throw exception::eval_error("Unclosed single-quoted string", File_Position(m_line, m_col), *m_filename);
@@ -1097,7 +1101,7 @@ namespace chaiscript
       /// Reads a char from input if it matches the parameter, without skipping initial whitespace
       bool Char_(const char c) {
         if (has_more_input() && (*m_input_pos == c)) {
-          ++m_input_pos;
+          increment_pos(m_input_pos);
           ++m_col;
           return true;
         } else {
@@ -1130,11 +1134,11 @@ namespace chaiscript
 
         if ((m_input_end - m_input_pos) >= static_cast<std::make_signed<size_t>::type>(len)) {
           auto tmp = m_input_pos;
-          for (size_t i = 0; i < len; ++i) {
+          for (size_t i = 0; tmp != m_input_end && i < len; ++i) {
             if (*tmp != t_s[i]) {
               return false;
             }
-            ++tmp;
+            increment_pos(tmp);
           }
           m_input_pos = tmp;
           m_col += static_cast<int>(len);
@@ -1171,11 +1175,11 @@ namespace chaiscript
 
         if ((m_input_end - m_input_pos) >= static_cast<std::make_signed<decltype(len)>::type>(len)) {
           auto tmp = m_input_pos;
-          for (size_t i = 0; i < len; ++i) {
+          for (size_t i = 0; tmp != m_input_end && i < len; ++i) {
             if (*tmp != t_s[i]) {
               return false;
             }
-            ++tmp;
+            increment_pos(tmp);
           }
           m_input_pos = tmp;
           m_col += static_cast<int>(len);
@@ -1895,13 +1899,17 @@ namespace chaiscript
               /// \todo Work around for method calls until we have a better solution
               if (!m_match_stack.back()->children.empty()) {
                 if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Dot_Access) {
+                  if (m_match_stack.empty()) throw exception::eval_error("Incomplete dot access fun call", File_Position(m_line, m_col), *m_filename);
+                  if (m_match_stack.back()->children.empty()) throw exception::eval_error("Incomplete dot access fun call", File_Position(m_line, m_col), *m_filename);
                   AST_NodePtr dot_access = m_match_stack.back()->children[0];
                   AST_NodePtr func_call = m_match_stack.back();
                   m_match_stack.pop_back();
                   func_call->children.erase(func_call->children.begin());
+                  if (dot_access->children.empty()) throw exception::eval_error("Incomplete dot access fun call", File_Position(m_line, m_col), *m_filename);
                   func_call->children.insert(func_call->children.begin(), dot_access->children.back());
                   dot_access->children.pop_back();
                   dot_access->children.push_back(std::move(func_call));
+                  if (dot_access->children.size() != 3) throw exception::eval_error("Incomplete dot access fun call", File_Position(m_line, m_col), *m_filename);
                   m_match_stack.push_back(std::move(dot_access));
                 }
               }
@@ -1917,9 +1925,12 @@ namespace chaiscript
             else if (Symbol(".", true)) {
               has_more = true;
               if (!(Id())) {
-                throw exception::eval_error("Incomplete array access", File_Position(m_line, m_col), *m_filename);
+                throw exception::eval_error("Incomplete dot access fun call", File_Position(m_line, m_col), *m_filename);
               }
 
+              if ( std::distance(m_match_stack.begin() + static_cast<int>(prev_stack_top), m_match_stack.end()) != 3) {
+                throw exception::eval_error("Incomplete dot access fun call", File_Position(m_line, m_col), *m_filename);
+              }
               build_match<eval::Dot_Access_AST_Node>(prev_stack_top);
             }
           }
@@ -2307,7 +2318,7 @@ namespace chaiscript
 
         if ((t_input.size() > 1) && (t_input[0] == '#') && (t_input[1] == '!')) {
           while ((m_input_pos != m_input_end) && (!Eol())) {
-            ++m_input_pos;
+            increment_pos(m_input_pos);
           }
           /// \todo respect // -*- coding: utf-8 -*- on line 1 or 2 see: http://evanjones.ca/python-utf8.html)
         }
@@ -2317,6 +2328,7 @@ namespace chaiscript
             throw exception::eval_error("Unparsed input", File_Position(m_line, m_col), t_fname);
           } else {
             build_match<eval::File_AST_Node>(0);
+            //debug_print(ast());
             return true;
           }
         } else {

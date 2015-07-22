@@ -118,7 +118,7 @@ namespace chaiscript
       public:
         Int_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, Boxed_Value t_bv) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Int, std::move(t_loc)), 
-          m_value(std::move(t_bv)) { }
+          m_value(std::move(t_bv)) { assert(text != ""); }
         virtual ~Int_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const CHAISCRIPT_OVERRIDE{
           return m_value;
@@ -628,6 +628,7 @@ namespace chaiscript
         virtual ~Dot_Access_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE{
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
+
 
           Boxed_Value retval = children[0]->eval(t_ss);
           std::vector<Boxed_Value> params{retval};
