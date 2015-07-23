@@ -954,15 +954,14 @@ namespace chaiscript
 
                     const auto ev_stack_top = m_match_stack.size();
 
-                    /// \todo can we evaluate this in place and save the runtime cost of evaluating with each execution of the node?
-                    m_match_stack.push_back(make_node<eval::Id_AST_Node>("eval", prev_line, prev_col));
+                    try {
+                      ChaiScript_Parser parser;
+                      parser.parse(eval_match, "instr eval");
+                      m_match_stack.push_back(parser.ast());
+                    } catch (const exception::eval_error &e) {
+                      throw exception::eval_error(e.what(), File_Position(prev_line, prev_col), *m_filename);
+                    }
 
-                    const auto arg_stack_top = m_match_stack.size();
-
-                    m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(eval_match, prev_line, prev_col));
-
-                    build_match<eval::Arg_List_AST_Node>(arg_stack_top);
-                    build_match<eval::Inplace_Fun_Call_AST_Node>(ev_stack_top);
                     build_match<eval::Arg_List_AST_Node>(ev_stack_top);
                     build_match<eval::Fun_Call_AST_Node>(tostr_stack_top);
                     build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
