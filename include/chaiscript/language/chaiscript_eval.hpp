@@ -73,9 +73,9 @@ namespace chaiscript
 
         virtual ~Binary_Operator_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE {
-          return do_oper(t_ss, m_oper, text,
-              this->children[0]->eval(t_ss),
-              this->children[1]->eval(t_ss));
+          auto lhs = this->children[0]->eval(t_ss);
+          auto rhs = this->children[1]->eval(t_ss);
+          return do_oper(t_ss, m_oper, text, lhs, rhs);
         }
 
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE 
@@ -1182,9 +1182,10 @@ namespace chaiscript
         virtual ~Inline_Range_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE{
           try {
+            auto oper1 = children[0]->children[0]->children[0]->eval(t_ss);
+            auto oper2 = children[0]->children[0]->children[1]->eval(t_ss);
             return t_ss->call_function("generate_range",
-                children[0]->children[0]->children[0]->eval(t_ss),
-                children[0]->children[0]->children[1]->eval(t_ss));
+                oper1, oper2);
           }
           catch (const exception::dispatch_error &e) {
             throw exception::eval_error("Unable to generate range vector, while calling 'generate_range'", e.parameters, e.functions, false, *t_ss);
