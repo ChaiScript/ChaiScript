@@ -14,6 +14,7 @@
 #include "boxed_cast.hpp"
 #include "function_call_detail.hpp"
 #include "proxy_functions.hpp"
+#include "callable_traits.hpp"
 
 namespace chaiscript {
 class Boxed_Value;
@@ -37,6 +38,15 @@ namespace chaiscript
       std::function<FunctionType>
       functor(const std::vector<Const_Proxy_Function> &funcs, const Type_Conversions *t_conversions)
       {
+        const bool has_arity_match = std::any_of(funcs.begin(), funcs.end(),
+            [](const Const_Proxy_Function &f) {
+              return f->get_arity() == -1 || f->get_arity() == chaiscript::dispatch::detail::Arity<FunctionType>::arity;
+            });
+
+        if (!has_arity_match) {
+          throw exception::bad_boxed_cast(user_type<Const_Proxy_Function>(), typeid(std::function<FunctionType>));
+        }
+
         FunctionType *p=nullptr;
         return detail::build_function_caller_helper(p, funcs, t_conversions);
       }
