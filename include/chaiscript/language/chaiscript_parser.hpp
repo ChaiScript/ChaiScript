@@ -1222,6 +1222,16 @@ namespace chaiscript
         return false;
       }
 
+      bool is_operator(const std::string &t_s) const {
+        return std::any_of(m_operator_matches.begin(), m_operator_matches.end(),
+            [t_s](const std::vector<std::string> &opers) {
+              return std::any_of(opers.begin(), opers.end(), 
+                [t_s](const std::string &s) {
+                  return s == t_s;
+                });
+            });
+      }
+
       /// Reads (and potentially captures) a symbol group from input if it matches the parameter
       bool Symbol(const char *t_s, const bool t_capture = false, const bool t_disallow_prevention=false) {
         SkipWS();
@@ -1230,8 +1240,12 @@ namespace chaiscript
 
         // ignore substring matches
         if (retval && m_position.has_more() && (t_disallow_prevention == false) && char_in_alphabet(*m_position,detail::symbol_alphabet)) {
-          m_position = start;
-          retval = false;
+          if (*m_position != '=' && is_operator(Position::str(start, m_position)) && !is_operator(Position::str(start, m_position+1))) {
+            // don't throw this away, it's a good match and the next is not
+          } else {
+            m_position = start;
+            retval = false;
+          }
         }
 
         if ( t_capture && retval ) {
