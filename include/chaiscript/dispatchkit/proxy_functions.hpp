@@ -248,7 +248,7 @@ namespace chaiscript
         }
 
 
-        static bool compare_types(const std::vector<Type_Info> &tis, const std::vector<Boxed_Value> &bvs)
+        static bool compare_types(const std::vector<Type_Info> &tis, const std::vector<Boxed_Value> &bvs, const Type_Conversions &t_conversions)
         {
           if (tis.size() - 1 != bvs.size())
           {
@@ -257,10 +257,7 @@ namespace chaiscript
             const size_t size = bvs.size();
             for (size_t i = 0; i < size; ++i)
             {
-              if (!(tis[i+1].bare_equal(bvs[i].get_type_info()) && tis[i+1].is_const() >= bvs[i].get_type_info().is_const() ))
-              {
-                return false;
-              }
+              if (!compare_type_to_param(tis[i + 1], bvs[i], t_conversions)) { return false;  }
             }
           }
           return true;
@@ -578,7 +575,7 @@ namespace chaiscript
 
         virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
         {
-          return static_cast<int>(vals.size()) == get_arity() && (compare_types(m_types, vals) || compare_types_with_cast(vals, t_conversions));
+          return static_cast<int>(vals.size()) == get_arity() && (compare_types(m_types, vals, t_conversions) && compare_types_with_cast(vals, t_conversions));
         }
 
         virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const = 0;

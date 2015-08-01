@@ -450,7 +450,13 @@ namespace chaiscript
         m->add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::get_attr)), "[]");
         m->add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::get_attr)), "[]");
 
-        m->eval("def Dynamic_Object::clone() { auto &new_o = Dynamic_Object(this.get_type_name()); for_each(this.get_attrs(), bind(fun(new_o, x) { new_o.get_attr(x.first) = x.second; }, new_o, _) ); return new_o; }");
+        m->eval(R""(
+          def Dynamic_Object::clone() { 
+            auto &new_o = Dynamic_Object(this.get_type_name()); 
+            for_each(this.get_attrs(), fun[new_o](x) { new_o.get_attr(x.first) = x.second; } ); 
+            new_o; 
+          }
+          )"");
 
         m->add(fun(&has_guard), "has_guard");
         m->add(fun(&get_guard), "get_guard");
