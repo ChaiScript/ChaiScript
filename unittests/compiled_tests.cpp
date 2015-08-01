@@ -743,3 +743,37 @@ TEST_CASE("Test Derived->Base with non-polymorphic classes")
   chai.add(chaiscript::fun(&myfunction), "myfunction");
   CHECK(chai.eval<int>("myfunction(d)") == 2);
 }
+
+
+struct TestCppVariableScope
+{
+  void print()
+  {
+    std::cout << "Printed" << std::endl;
+  }
+};
+
+TEST_CASE("Variable Scope When Calling From C++")
+{
+  chaiscript::ChaiScript chai;
+  chai.add(chaiscript::user_type<TestCppVariableScope>(), "Test");
+  chai.add(chaiscript::constructor<TestCppVariableScope()>(), "Test");
+  chai.add(chaiscript::fun(&TestCppVariableScope::print), "print");
+  chai.eval(R"(var t := Test();
+
+      def func()
+      {
+        t.print();
+      }
+
+      )");
+
+  CHECK_THROWS(chai.eval("func()"));
+
+  chai.eval("dump_object(t)");
+
+  auto func = chai.eval<std::function<void()>>("func");
+  CHECK_THROWS(func());
+}
+
+
