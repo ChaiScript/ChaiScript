@@ -166,11 +166,11 @@ namespace chaiscript
     template<>
       struct Cast_Helper_Inner<Boxed_Value>
       {
-        typedef const Boxed_Value & Result_Type;
+        typedef std::reference_wrapper<const Boxed_Value> Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
-          return ob;
+          return std::cref(ob);
         }
       };
 
@@ -178,11 +178,11 @@ namespace chaiscript
     template<>
       struct Cast_Helper_Inner<Boxed_Value &>
       {
-        typedef Boxed_Value& Result_Type;
+        typedef std::reference_wrapper<Boxed_Value> Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
-          return const_cast<Boxed_Value &>(ob);
+          return std::ref(const_cast<Boxed_Value &>(ob));
         }
       };
 

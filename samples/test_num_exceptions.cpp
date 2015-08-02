@@ -3,7 +3,7 @@
 #include <chaiscript/dispatchkit/bootstrap_stl.hpp>
 #include <chaiscript/dispatchkit/function_call.hpp>
 
-int main( int argc , char * argv[] )
+int main( int /*argc*/ , char * /*argv*/[] )
 {
   chaiscript::ChaiScript ch( chaiscript::Std_Lib::library( ) );
 
