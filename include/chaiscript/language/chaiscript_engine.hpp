@@ -284,14 +284,7 @@ namespace chaiscript
 
 
 
-    const Boxed_Value internal_eval_ast(const AST_NodePtr &t_ast)
-    {
-      try {
-        return t_ast->eval(m_engine);
-      } catch (const exception::eval_error &t_ee) {
-        throw Boxed_Value(t_ee);
-      }
-    }
+
 
     /// Evaluates the given file and looks in the 'use' paths
     const Boxed_Value internal_eval_file(const std::string &t_filename) {
@@ -396,7 +389,8 @@ namespace chaiscript
       m_engine.add(fun([this](const std::string &t_file){ return use(t_file); }), "use");
       m_engine.add(fun([this](const std::string &t_file){ return internal_eval_file(t_file); }), "eval_file");
       m_engine.add(fun([this](const std::string &t_str){ return internal_eval(t_str); }), "eval");
-      m_engine.add(fun([this](const AST_NodePtr &t_ast){ return internal_eval_ast(t_ast); }), "eval");
+      m_engine.add(fun([this](const AST_NodePtr &t_ast){ return eval(t_ast); }), "eval");
+      m_engine.add(fun(&parse), "parse");
 
       m_engine.add(fun(&ChaiScript::version_major), "version_major");
       m_engine.add(fun(&ChaiScript::version_minor), "version_minor");
@@ -516,6 +510,28 @@ namespace chaiscript
 
       build_eval_system(ModulePtr());
     }
+
+
+    const Boxed_Value eval(const AST_NodePtr &t_ast)
+    {
+      try {
+        return t_ast->eval(m_engine);
+      } catch (const exception::eval_error &t_ee) {
+        throw Boxed_Value(t_ee);
+      }
+    }
+
+    static AST_NodePtr parse(const std::string &t_input)
+    {
+      parser::ChaiScript_Parser parser;
+      if (parser.parse(t_input, "PARSE")) {
+        //parser.show_match_stack();
+        return parser.optimized_ast();
+      } else {
+        throw chaiscript::exception::eval_error("Unknown error while parsing");
+      }
+    }
+
 
     static int version_major()
     {

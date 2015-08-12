@@ -1,0 +1,10 @@
+auto p = parse("5 + 4");
+
+try {
+  assert_equal(eval(p), 9)
+} catch (e) {
+  print(e.pretty_print());
+  assert_true(false);
+}
+
+

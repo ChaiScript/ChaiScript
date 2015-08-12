@@ -562,13 +562,14 @@ namespace chaiscript
             "eval_error",
             { },
             { {fun(&chaiscript::exception::eval_error::reason), "reason"},
-            {fun(std::function<std::vector<Boxed_Value> (const chaiscript::exception::eval_error &t_eval_error)>([](const chaiscript::exception::eval_error &t_eval_error) -> std::vector<Boxed_Value> { 
-                std::vector<Boxed_Value> retval;
-                std::transform(t_eval_error.call_stack.begin(), t_eval_error.call_stack.end(),
-                               std::back_inserter(retval),
-                               &chaiscript::var<std::shared_ptr<const chaiscript::AST_Node>>);
-                return retval;
-              })), "call_stack"} }
+              {fun(&chaiscript::exception::eval_error::pretty_print), "pretty_print"},
+              {fun(std::function<std::vector<Boxed_Value> (const chaiscript::exception::eval_error &t_eval_error)>([](const chaiscript::exception::eval_error &t_eval_error) -> std::vector<Boxed_Value> { 
+                  std::vector<Boxed_Value> retval;
+                  std::transform(t_eval_error.call_stack.begin(), t_eval_error.call_stack.end(),
+                                 std::back_inserter(retval),
+                                 &chaiscript::var<std::shared_ptr<const chaiscript::AST_Node>>);
+                  return retval;
+                })), "call_stack"} }
             );
 
 
