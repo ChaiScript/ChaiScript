@@ -39,7 +39,8 @@ namespace chaiscript
       /// A Proxy_Function implementation designed for calling a function
       /// that is automatically guarded based on the first param based on the
       /// param's type name
-      class Dynamic_Object_Function : public Proxy_Function_Base
+      class Dynamic_Object_Function : public Proxy_Function_Base, public Dynamic_Function_Interface
+
       {
         public:
           Dynamic_Object_Function(
@@ -71,6 +72,17 @@ namespace chaiscript
 
           Dynamic_Object_Function &operator=(const Dynamic_Object_Function) = delete;
           Dynamic_Object_Function(Dynamic_Object_Function &) = delete;
+
+          virtual Param_Types get_dynamic_param_types() const {
+            auto dynamic(std::dynamic_pointer_cast<dispatch::Dynamic_Function_Interface>(m_func));
+
+            if (dynamic) {
+              return dynamic->get_dynamic_param_types();
+            } else {
+              return Param_Types(get_param_types());
+            }
+          }
+
 
           virtual bool operator==(const Proxy_Function_Base &f) const CHAISCRIPT_OVERRIDE
           {
@@ -182,7 +194,7 @@ namespace chaiscript
        * that is automatically guarded based on the first param based on the
        * param's type name
        */
-      class Dynamic_Object_Constructor : public Proxy_Function_Base
+      class Dynamic_Object_Constructor : public Proxy_Function_Base, public Dynamic_Function_Interface
       {
         public:
           Dynamic_Object_Constructor(
@@ -191,6 +203,7 @@ namespace chaiscript
             : Proxy_Function_Base(build_type_list(t_func->get_param_types()), t_func->get_arity() - 1),
               m_type_name(std::move(t_type_name)), m_func(t_func)
           {
+            assert( t_func );
             assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
                 && "Programming error, Dynamic_Object_Function must have at least one parameter (this)");
           }
@@ -210,6 +223,17 @@ namespace chaiscript
 
           virtual ~Dynamic_Object_Constructor() {}
 
+          virtual Param_Types get_dynamic_param_types() const {
+            auto dynamic(std::dynamic_pointer_cast<dispatch::Dynamic_Function_Interface>(m_func));
+
+            if (dynamic) {
+              return dynamic->get_dynamic_param_types();
+            } else {
+              return Param_Types(get_param_types());
+            }
+          }
+
+
           virtual bool operator==(const Proxy_Function_Base &f) const CHAISCRIPT_OVERRIDE
           {
             const Dynamic_Object_Constructor *dc = dynamic_cast<const Dynamic_Object_Constructor*>(&f);
@@ -222,7 +246,7 @@ namespace chaiscript
             new_vals.insert(new_vals.end(), vals.begin(), vals.end());
 
             return m_func->call_match(new_vals, t_conversions);
-          }    
+          }
 
           virtual std::string annotation() const CHAISCRIPT_OVERRIDE
           {
@@ -232,7 +256,7 @@ namespace chaiscript
         protected:
           virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
           {
-            auto bv = var(Dynamic_Object(m_type_name));
+            auto bv = Boxed_Value(Dynamic_Object(m_type_name), true);
             std::vector<Boxed_Value> new_params{bv};
             new_params.insert(new_params.end(), params.begin(), params.end());
 

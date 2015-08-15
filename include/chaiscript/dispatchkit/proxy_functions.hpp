@@ -53,12 +53,31 @@ namespace chaiscript
             m_doti(user_type<Dynamic_Object>())
         {}
 
+        Param_Types(const std::vector<Type_Info> &t_types)
+          : m_types(build_param_types(t_types)),
+            m_has_types(false),
+            m_doti(user_type<Dynamic_Object>())
+        {
+        }
+
         Param_Types(std::vector<std::pair<std::string, Type_Info>> t_types)
           : m_types(std::move(t_types)),
             m_has_types(false),
             m_doti(user_type<Dynamic_Object>())
         {
           update_has_types();
+        }
+
+        static std::vector<std::pair<std::string, Type_Info>> build_param_types(const std::vector<Type_Info> &t_types)
+        {
+          std::vector<std::pair<std::string, Type_Info>> retval;
+          std::transform(t_types.begin(), t_types.end(), std::back_inserter(retval),
+              [](const Type_Info &ti){
+                return std::make_pair(std::string(), ti);
+              }
+            );
+
+          return retval;
         }
 
         void push_front(std::string t_name, Type_Info t_ti)
@@ -295,11 +314,18 @@ namespace chaiscript
 
   namespace dispatch
   {
+    class Dynamic_Function_Interface
+    {
+      public:
+        virtual ~Dynamic_Function_Interface() {}
+        virtual Param_Types get_dynamic_param_types() const = 0;
+    };
+
     /**
      * A Proxy_Function implementation that is not type safe, the called function
      * is expecting a vector<Boxed_Value> that it works with how it chooses.
      */
-    class Dynamic_Proxy_Function : public Proxy_Function_Base
+    class Dynamic_Proxy_Function : public Proxy_Function_Base, public Dynamic_Function_Interface
     {
       public:
         Dynamic_Proxy_Function(
@@ -349,6 +375,9 @@ namespace chaiscript
           return m_description;
         }
 
+        virtual Param_Types get_dynamic_param_types() const {
+          return m_param_types;
+        }
 
       protected:
         bool test_guard(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const
@@ -366,6 +395,8 @@ namespace chaiscript
             return true;
           }
         }
+
+
 
       private:
         static std::vector<Type_Info> build_param_type_list(const Param_Types &t_types)
@@ -678,6 +709,8 @@ namespace chaiscript
         std::reference_wrapper<std::function<Func>> m_f;
         std::shared_ptr<std::function<Func>> m_shared_ptr_holder;
     };
+
+
     /// Attribute getter Proxy_Function implementation
     template<typename T, typename Class>
       class Attribute_Access : public Proxy_Function_Base
@@ -875,6 +908,15 @@ namespace chaiscript
         std::vector<std::pair<size_t, const Proxy_Function_Base *>> ordered_funcs;
         ordered_funcs.reserve(funcs.size());
 
+#ifdef CHAISCRIPT_HAS_MAGIC_STATICS
+        static auto boxed_type = user_type<Boxed_Value>();
+        static auto dynamic_type = user_type<Dynamic_Object>();
+#else
+        auto boxed_type = user_type<Boxed_Value>();
+        auto dynamic_type = user_type<Dynamic_Object>();
+#endif
+
+
         for (const auto &func : funcs)
         {
           const auto arity = func->get_arity();
@@ -886,7 +928,10 @@ namespace chaiscript
             size_t numdiffs = 0;
             for (size_t i = 0; i < plist.size(); ++i)
             {
-              if (!func->get_param_types()[i+1].bare_equal(plist[i].get_type_info()))
+              const auto &p_type = plist[i].get_type_info();
+              const auto &f_type = func->get_param_types()[i+1];
+
+              if (!(f_type.bare_equal(boxed_type) && p_type.bare_equal(dynamic_type)) && !f_type.bare_equal(p_type))
               {
                 ++numdiffs;
               }
