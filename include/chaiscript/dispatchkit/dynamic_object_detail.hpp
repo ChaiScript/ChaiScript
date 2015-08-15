@@ -232,7 +232,7 @@ namespace chaiscript
         protected:
           virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
           {
-            auto bv = var(Dynamic_Object(m_type_name));
+            auto bv = Boxed_Value(Dynamic_Object(m_type_name), true);
             std::vector<Boxed_Value> new_params{bv};
             new_params.insert(new_params.end(), params.begin(), params.end());
 
