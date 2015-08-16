@@ -436,6 +436,7 @@ namespace chaiscript
           else if (this->children[1]->text == ":=") {
             if (lhs.is_undef() || Boxed_Value::type_match(lhs, rhs)) {
               lhs.assign(rhs);
+              lhs.reset_return_value();
             } else {
               throw exception::eval_error("Mismatched types in equation");
             }
