@@ -46,6 +46,9 @@ namespace chaiscript
       /// Helper function that will set up the scope around a function call, including handling the named function parameters
       static Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_NodePtr &t_node, const std::vector<std::string> &t_param_names, const std::vector<Boxed_Value> &t_vals, const std::map<std::string, Boxed_Value> &t_locals=std::map<std::string, Boxed_Value>()) {
         chaiscript::detail::Dispatch_State state(t_ss);
+
+        chaiscript::eval::detail::Stack_Push_Pop tpp(state);
+        if (!t_vals.empty()) t_ss.add_object("this", t_vals[0]);
         chaiscript::eval::detail::Scope_Push_Pop spp(state);
 
         for (const auto &local : t_locals) {
@@ -101,7 +104,6 @@ namespace chaiscript
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               fpp.save_params({t_lhs, t_rhs});
-              chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
               return t_ss->call_function(t_oper_string, t_lhs, t_rhs);
             }
           }
@@ -236,7 +238,6 @@ namespace chaiscript
           Boxed_Value fn(this->children[0]->eval(t_ss));
 
           try {
-            chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
             return (*t_ss->boxed_cast<const Const_Proxy_Function &>(fn))(params, t_ss->conversions());
           }
           catch(const exception::dispatch_error &e){
@@ -525,7 +526,6 @@ namespace chaiscript
           std::vector<Boxed_Value> params{children[0]->eval(t_ss), children[1]->eval(t_ss)};
 
           try {
-            chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
             fpp.save_params(params);
             return t_ss->call_function("[]", params);
           }
@@ -578,8 +578,7 @@ namespace chaiscript
           fpp.save_params(params);
 
           try {
-            chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
-            t_ss->add_object("this", retval);
+//            t_ss->add_object("this", retval);
             retval = t_ss->call_member(m_fun_name, std::move(params), has_function_params);
           }
           catch(const exception::dispatch_error &e){
@@ -1112,7 +1111,6 @@ namespace chaiscript
               return Boxed_Number::do_oper(m_oper, bv);
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-              chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
               fpp.save_params({bv});
               return t_ss->call_function(children[0]->text, std::move(bv));
             }
