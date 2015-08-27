@@ -778,4 +778,12 @@ TEST_CASE("Variable Scope When Calling From C++")
   CHECK_THROWS(func());
 }
 
+TEST_CASE("Variable Scope When Calling From C++ 2")
+{
+  chaiscript::ChaiScript chai;
+  chai.eval("var obj = 2;");
+  auto func = chai.eval<std::function<void()>>("fun(){ return obj; }");
+  CHECK_THROWS(func());
+}
+
 

@@ -44,16 +44,32 @@ namespace chaiscript
     namespace detail
     {
       /// Helper function that will set up the scope around a function call, including handling the named function parameters
-      static Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_NodePtr &t_node, const std::vector<std::string> &t_param_names, const std::vector<Boxed_Value> &t_vals, const std::map<std::string, Boxed_Value> &t_locals=std::map<std::string, Boxed_Value>()) {
+      static Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_NodePtr &t_node, const std::vector<std::string> &t_param_names, const std::vector<Boxed_Value> &t_vals, const std::map<std::string, Boxed_Value> *t_locals=nullptr) {
         chaiscript::detail::Dispatch_State state(t_ss);
+
+        const Boxed_Value *thisobj = [&]() -> const Boxed_Value *{
+          auto &stack = t_ss.get_stack_data(state.stack_holder()).back();
+          if (!stack.empty() && stack.back().first == "__this") {
+            return &stack.back().second;
+          } else if (!t_vals.empty()) {
+            return &t_vals[0];
+          } else {
+            return nullptr;
+          }
+        }();
+
+        chaiscript::eval::detail::Stack_Push_Pop tpp(state);
+        if (thisobj) state.add_object("this", *thisobj);
         chaiscript::eval::detail::Scope_Push_Pop spp(state);
 
-        for (const auto &local : t_locals) {
-          t_ss.add_object(local.first, local.second);
+        if (t_locals) {
+          for (const auto &local : *t_locals) {
+            state.add_object(local.first, local.second);
+          }
         }
 
         for (size_t i = 0; i < t_param_names.size(); ++i) {
-          t_ss.add_object(t_param_names[i], t_vals[i]);
+          state.add_object(t_param_names[i], t_vals[i]);
         }
 
         try {
@@ -101,7 +117,6 @@ namespace chaiscript
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               fpp.save_params({t_lhs, t_rhs});
-              chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
               return t_ss->call_function(t_oper_string, t_lhs, t_rhs);
             }
           }
@@ -236,7 +251,6 @@ namespace chaiscript
           Boxed_Value fn(this->children[0]->eval(t_ss));
 
           try {
-            chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
             return (*t_ss->boxed_cast<const Const_Proxy_Function &>(fn))(params, t_ss->conversions());
           }
           catch(const exception::dispatch_error &e){
@@ -494,7 +508,7 @@ namespace chaiscript
 
             try {
               Boxed_Value bv;
-              t_ss->add_object(idname, bv);
+              t_ss.add_object(idname, bv);
               return bv;
             }
             catch (const exception::reserved_word_error &) {
@@ -525,7 +539,6 @@ namespace chaiscript
           std::vector<Boxed_Value> params{children[0]->eval(t_ss), children[1]->eval(t_ss)};
 
           try {
-            chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
             fpp.save_params(params);
             return t_ss->call_function("[]", params);
           }
@@ -578,8 +591,6 @@ namespace chaiscript
           fpp.save_params(params);
 
           try {
-            chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
-            t_ss->add_object("this", retval);
             retval = t_ss->call_member(m_fun_name, std::move(params), has_function_params);
           }
           catch(const exception::dispatch_error &e){
@@ -680,7 +691,7 @@ namespace chaiscript
               dispatch::make_dynamic_proxy_function(
                   [engine, lambda_node, param_names, captures](const std::vector<Boxed_Value> &t_params)
                   {
-                    return detail::eval_function(engine, lambda_node, param_names, t_params, captures);
+                    return detail::eval_function(engine, lambda_node, param_names, t_params, &captures);
                   },
                   static_cast<int>(numparams), lambda_node, param_types
                 )
@@ -811,7 +822,7 @@ namespace chaiscript
 
           /// \todo do this better
           // put class name in current scope so it can be looked up by the attrs and methods
-          t_ss->add_object("_current_class_name", const_var(children[0]->text));
+          t_ss.add_object("_current_class_name", const_var(children[0]->text));
 
           children[1]->eval(t_ss);
 
@@ -1083,7 +1094,7 @@ namespace chaiscript
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE{
           try {
             Boxed_Value bv;
-            t_ss->add_object(this->children[0]->text, bv);
+            t_ss.add_object(this->children[0]->text, bv);
             return bv;
           }
           catch (const exception::reserved_word_error &) {
@@ -1112,7 +1123,6 @@ namespace chaiscript
               return Boxed_Number::do_oper(m_oper, bv);
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-              chaiscript::eval::detail::Stack_Push_Pop spp(t_ss);
               fpp.save_params({bv});
               return t_ss->call_function(children[0]->text, std::move(bv));
             }
@@ -1232,7 +1242,7 @@ namespace chaiscript
                     std::vector<std::pair<std::string, Type_Info>>{Arg_List_AST_Node::get_arg_type(catch_block->children[0], t_ss)}
                     ).match(std::vector<Boxed_Value>{t_except}, t_ss->conversions()))
               {
-                t_ss->add_object(name, t_except);
+                t_ss.add_object(name, t_except);
 
                 if (catch_block->children.size() == 2) {
                   //Variable capture, no guards
@@ -1369,7 +1379,7 @@ namespace chaiscript
           if (guardnode) {
             guard = dispatch::make_dynamic_proxy_function(
                 [engine, t_param_names, guardnode](const std::vector<Boxed_Value> &t_params) {
-                  return chaiscript::eval::detail::eval_function(engine, guardnode, t_param_names, t_params, std::map<std::string, Boxed_Value>());
+                  return chaiscript::eval::detail::eval_function(engine, guardnode, t_param_names, t_params);
                 }, 
                 static_cast<int>(numparams), guardnode);
           }
@@ -1386,7 +1396,7 @@ namespace chaiscript
                   std::make_shared<dispatch::detail::Dynamic_Object_Constructor>(class_name,
                     dispatch::make_dynamic_proxy_function(
                         [engine, t_param_names, node](const std::vector<Boxed_Value> &t_params) {
-                          return chaiscript::eval::detail::eval_function(engine, node, t_param_names, t_params, std::map<std::string, Boxed_Value>());
+                          return chaiscript::eval::detail::eval_function(engine, node, t_param_names, t_params);
                         },
                         static_cast<int>(numparams), node, param_types, l_annotation, guard
                       )
@@ -1402,7 +1412,7 @@ namespace chaiscript
               t_ss->add(std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name,
                     dispatch::make_dynamic_proxy_function(
                       [engine, t_param_names, node](const std::vector<Boxed_Value> &t_params) {
-                        return chaiscript::eval::detail::eval_function(engine, node, t_param_names, t_params, std::map<std::string, Boxed_Value>());
+                        return chaiscript::eval::detail::eval_function(engine, node, t_param_names, t_params);
                       },
                       static_cast<int>(numparams), node, param_types, l_annotation, guard), type), 
                   function_name);
