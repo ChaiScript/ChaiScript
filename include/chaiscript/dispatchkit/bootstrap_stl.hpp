@@ -334,7 +334,11 @@ namespace chaiscript
                     "# Pushes the second value onto the container while making a clone of the value\n"
                     "def push_back(" + type + " container, x)\n"
                     "{ \n"
-                    "  container.push_back_ref(clone(x)) \n"
+                    "  if (x.is_var_return_value()) {\n"
+                    "    container.push_back_ref(x) \n"
+                    "  } else { \n"
+                    "    container.push_back_ref(clone(x)); \n"
+                    "  }\n"
                     "} \n"
                     );
 
@@ -370,7 +374,11 @@ namespace chaiscript
                       "# Pushes the second value onto the front of container while making a clone of the value\n"
                       "def push_front(" + type + " container, x)\n"
                       "{ \n"
-                      "  container.push_front_ref(clone(x)) \n"
+                      "  if (x.is_var_return_value()) {\n"
+                      "    container.push_front_ref(x) \n"
+                      "  } else { \n"
+                      "    container.push_front_ref(clone(x)); \n"
+                      "  }\n"
                       "} \n"
                       );
                   return "push_front_ref";
