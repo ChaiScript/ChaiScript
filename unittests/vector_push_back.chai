@@ -11,3 +11,10 @@ auto uint16v = u16vector();
 uint16v.push_back(1u);
 assert_equal(1, uint16v.front());
 
+
+// push_back newly constructed return value that's non-copyable
+
+var v = []
+v.push_back(async(fun(){}))
+
+
