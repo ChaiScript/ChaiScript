@@ -60,7 +60,6 @@ namespace chaiscript
 
         chaiscript::eval::detail::Stack_Push_Pop tpp(state);
         if (thisobj) state.add_object("this", *thisobj);
-        chaiscript::eval::detail::Scope_Push_Pop spp(state);
 
         if (t_locals) {
           for (const auto &local : *t_locals) {
@@ -69,7 +68,9 @@ namespace chaiscript
         }
 
         for (size_t i = 0; i < t_param_names.size(); ++i) {
-          state.add_object(t_param_names[i], t_vals[i]);
+          if (t_param_names[i] != "this") {
+            state.add_object(t_param_names[i], t_vals[i]);
+          }
         }
 
         try {
