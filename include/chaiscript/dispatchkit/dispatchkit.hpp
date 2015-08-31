@@ -1397,6 +1397,7 @@ namespace chaiscript
             auto itr = find_keyed_value(t_c, t_key);
 
             if (itr == t_c.end()) {
+              t_c.reserve(t_c.size() + 1); // tightly control growth of memory usage here
               t_c.emplace_back(t_key, std::forward<Value>(t_value));
             } else {
               typedef typename Container::value_type value_type;
@@ -1456,6 +1457,7 @@ namespace chaiscript
                   }
                 }
 
+                vec.reserve(vec.size() + 1); // tightly control vec growth
                 vec.push_back(t_f);
                 std::stable_sort(vec.begin(), vec.end(), &function_less_than);
                 itr->second = std::make_shared<std::vector<Proxy_Function>>(vec);
