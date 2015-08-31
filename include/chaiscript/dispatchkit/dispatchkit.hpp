@@ -659,7 +659,7 @@ namespace chaiscript
 
           // no? is it a function object?
           auto obj = get_function_object_int(name, loc);
-          if (obj.first != loc) t_loc.store(obj.first);
+          if (obj.first != loc) t_loc.store(obj.first, std::memory_order_relaxed);
           return obj.second;
 
 
@@ -720,20 +720,29 @@ namespace chaiscript
           return std::vector<std::pair<std::string, Type_Info> >(m_state.m_types.begin(), m_state.m_types.end());
         }
 
+        std::shared_ptr<std::vector<Proxy_Function>> get_method_missing_functions() const
+        {
+          uint_fast32_t method_missing_loc = m_method_missing_loc.load(std::memory_order_relaxed);
+          auto method_missing_funs = get_function("method_missing", method_missing_loc);
+          if (method_missing_funs.first != method_missing_loc) m_method_missing_loc.store(method_missing_funs.first, std::memory_order_relaxed);
+          return std::move(method_missing_funs.second);
+        }
+
+
         /// Return a function by name
-        std::shared_ptr<std::vector< Proxy_Function>> get_function(const std::string &t_name) const
+        std::pair<size_t, std::shared_ptr<std::vector< Proxy_Function>>> get_function(const std::string &t_name, const size_t t_hint) const
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           const auto &funs = get_functions_int();
 
-          auto itr = find_keyed_value(funs, t_name);
+          auto itr = find_keyed_value(funs, t_name, t_hint);
 
           if (itr != funs.end())
           {
-            return itr->second;
+            return std::make_pair(std::distance(funs.begin(), itr), itr->second);
           } else {
-            return std::make_shared<std::vector<Proxy_Function>>();
+            return std::make_pair(size_t(0), std::make_shared<std::vector<Proxy_Function>>());
           }
         }
 
@@ -910,9 +919,11 @@ namespace chaiscript
 #pragma warning(push)
 #pragma warning(disable : 4715)
 #endif
-        Boxed_Value call_member(const std::string &t_name, const std::vector<Boxed_Value> &params, bool t_has_params)
+        Boxed_Value call_member(const std::string &t_name, std::atomic_uint_fast32_t &t_loc, const std::vector<Boxed_Value> &params, bool t_has_params)
         {
-          const auto funs = get_function(t_name);
+          uint_fast32_t loc = t_loc.load(std::memory_order_relaxed);
+          const auto funs = get_function(t_name, loc);
+          if (funs.first != loc) t_loc.store(funs.first, std::memory_order_relaxed);
 
           const auto do_attribute_call = 
             [this](int l_num_params, const std::vector<Boxed_Value> &l_params, const std::vector<Proxy_Function> &l_funs, const Type_Conversions &l_conversions)->Boxed_Value
@@ -948,14 +959,14 @@ namespace chaiscript
               }
             };
 
-          if (is_attribute_call(*funs, params, t_has_params)) {
-            return do_attribute_call(1, params, *funs, m_conversions);
+          if (is_attribute_call(*funs.second, params, t_has_params)) {
+            return do_attribute_call(1, params, *funs.second, m_conversions);
           } else {
             std::exception_ptr except;
 
-            if (!funs->empty()) {
+            if (!funs.second->empty()) {
               try {
-                return dispatch::dispatch(*funs, params, m_conversions);
+                return dispatch::dispatch(*funs.second, params, m_conversions);
               } catch(chaiscript::exception::dispatch_error&) {
                 except = std::current_exception();
               }
@@ -967,7 +978,8 @@ namespace chaiscript
             const auto functions = [&]()->std::vector<Proxy_Function> {
               std::vector<Proxy_Function> fs;
 
-              const auto method_missing_funs = get_function("method_missing");
+              const auto method_missing_funs = get_method_missing_functions();
+
               for (const auto &f : *method_missing_funs)
               {
                 if(f->compare_first_type(params[0], m_conversions)) {
@@ -1004,7 +1016,7 @@ namespace chaiscript
             if (except) {
               std::rethrow_exception(except);
             } else {
-              throw chaiscript::exception::dispatch_error(params, std::vector<Const_Proxy_Function>(funs->begin(), funs->end()));
+              throw chaiscript::exception::dispatch_error(params, std::vector<Const_Proxy_Function>(funs.second->begin(), funs.second->end()));
             }
           }
         }
@@ -1014,10 +1026,12 @@ namespace chaiscript
 
 
 
-        Boxed_Value call_function(const std::string &t_name, const std::vector<Boxed_Value> &params) const
+        Boxed_Value call_function(const std::string &t_name, std::atomic_uint_fast32_t &t_loc, const std::vector<Boxed_Value> &params) const
         {
-          const auto funs = get_function(t_name);
-          Boxed_Value bv = dispatch::dispatch(*funs, params, m_conversions);
+          uint_fast32_t loc = t_loc.load(std::memory_order_relaxed);
+          const auto funs = get_function(t_name, loc);
+          if (funs.first != loc) t_loc.store(funs.first, std::memory_order_relaxed);
+          Boxed_Value bv = dispatch::dispatch(*funs.second, params, m_conversions);
           // the result of a clone is never to be marked as a return_value
           if (t_name == "clone") {
             bv.reset_return_value();
@@ -1025,20 +1039,6 @@ namespace chaiscript
           return bv;
         }
 
-        Boxed_Value call_function(const std::string &t_name) const
-        {
-          return call_function(t_name, std::vector<Boxed_Value>());
-        }
-
-        Boxed_Value call_function(const std::string &t_name, Boxed_Value p1) const
-        {
-          return call_function(t_name, std::vector<Boxed_Value>({std::move(p1)}));
-        }
-
-        Boxed_Value call_function(const std::string &t_name, Boxed_Value p1, Boxed_Value p2) const
-        {
-          return call_function(t_name, std::vector<Boxed_Value>({std::move(p1), std::move(p2)}));
-        }
 
         /// Dump object info to stdout
         void dump_object(const Boxed_Value &o) const
@@ -1483,6 +1483,7 @@ namespace chaiscript
         Type_Conversions m_conversions;
         chaiscript::detail::threading::Thread_Storage<Stack_Holder> m_stack_holder;
 
+        mutable std::atomic_uint_fast32_t m_method_missing_loc;
 
         State m_state;
     };
