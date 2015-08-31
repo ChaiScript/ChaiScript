@@ -658,7 +658,10 @@ namespace chaiscript
           }
 
           // no? is it a function object?
-          return get_function_object_int(name);
+          auto obj = get_function_object_int(name, loc);
+          if (obj.first != loc) t_loc.store(obj.first);
+          return obj.second;
+
 
         }
 
@@ -740,21 +743,21 @@ namespace chaiscript
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-          return get_function_object_int(t_name);
+          return get_function_object_int(t_name, 0).second;
         }
 
         /// \returns a function object (Boxed_Value wrapper) if it exists
         /// \throws std::range_error if it does not
         /// \warn does not obtain a mutex lock. \sa get_function_object for public version
-        Boxed_Value get_function_object_int(const std::string &t_name) const
+        std::pair<size_t, Boxed_Value> get_function_object_int(const std::string &t_name, const size_t t_hint) const
         {
           const auto &funs = get_boxed_functions_int();
 
-          auto itr = find_keyed_value(funs, t_name);
+          auto itr = find_keyed_value(funs, t_name, t_hint);
 
           if (itr != funs.end())
           {
-            return itr->second;
+            return std::make_pair(std::distance(funs.begin(), itr), itr->second);
           } else {
             throw std::range_error("Object not found: " + t_name);
           }
@@ -1417,6 +1420,16 @@ namespace chaiscript
                 [&t_key](const typename Container::value_type &o) {
                   return o.first == t_key;
                 });
+          }
+
+        template<typename Container, typename Key>
+        static typename Container::const_iterator find_keyed_value(const Container &t_c, const Key &t_key, const size_t t_hint)
+          {
+            if (t_c.size() > t_hint && t_c[t_hint].first == t_key) {
+              return t_c.begin() + t_hint;
+            } else {
+              return find_keyed_value(t_c, t_key);
+            }
           }
 
 
