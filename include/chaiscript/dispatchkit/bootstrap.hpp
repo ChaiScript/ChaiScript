@@ -568,7 +568,7 @@ namespace chaiscript
                   std::vector<Boxed_Value> retval;
                   std::transform(t_eval_error.call_stack.begin(), t_eval_error.call_stack.end(),
                                  std::back_inserter(retval),
-                                 &chaiscript::var<std::shared_ptr<const chaiscript::AST_Node>>);
+                                 &chaiscript::var<const std::shared_ptr<const chaiscript::AST_Node> &>);
                   return retval;
                 })), "call_stack"} }
             );
@@ -596,7 +596,7 @@ namespace chaiscript
                 std::vector<Boxed_Value> retval;
                 std::transform(t_node.children.begin(), t_node.children.end(),
                                std::back_inserter(retval),
-                               &chaiscript::var<std::shared_ptr<chaiscript::AST_Node>>);
+                               &chaiscript::var<const std::shared_ptr<chaiscript::AST_Node> &>);
                 return retval;
               })), "children"},
               {fun(&AST_Node::replace_child), "replace_child"}

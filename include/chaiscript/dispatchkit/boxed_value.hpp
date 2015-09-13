@@ -330,9 +330,9 @@ namespace chaiscript
   ///
   /// @sa @ref adding_objects
   template<typename T>
-    Boxed_Value var(T t)
+    Boxed_Value var(T &&t)
     {
-      return Boxed_Value(t);
+      return Boxed_Value(std::forward<T>(t));
     }
 
   namespace detail {
