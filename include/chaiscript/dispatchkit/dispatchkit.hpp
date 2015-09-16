@@ -659,7 +659,7 @@ namespace chaiscript
 
           // no? is it a function object?
           auto obj = get_function_object_int(name, loc);
-          if (obj.first != loc) t_loc.store(obj.first, std::memory_order_relaxed);
+          if (obj.first != loc) t_loc.store(uint_fast32_t(obj.first), std::memory_order_relaxed);
           return obj.second;
 
 
@@ -724,7 +724,7 @@ namespace chaiscript
         {
           uint_fast32_t method_missing_loc = m_method_missing_loc.load(std::memory_order_relaxed);
           auto method_missing_funs = get_function("method_missing", method_missing_loc);
-          if (method_missing_funs.first != method_missing_loc) m_method_missing_loc.store(method_missing_funs.first, std::memory_order_relaxed);
+          if (method_missing_funs.first != method_missing_loc) m_method_missing_loc.store(uint_fast32_t(method_missing_funs.first), std::memory_order_relaxed);
           return std::move(method_missing_funs.second);
         }
 
@@ -923,7 +923,7 @@ namespace chaiscript
         {
           uint_fast32_t loc = t_loc.load(std::memory_order_relaxed);
           const auto funs = get_function(t_name, loc);
-          if (funs.first != loc) t_loc.store(funs.first, std::memory_order_relaxed);
+          if (funs.first != loc) t_loc.store(uint_fast32_t(funs.first), std::memory_order_relaxed);
 
           const auto do_attribute_call = 
             [this](int l_num_params, const std::vector<Boxed_Value> &l_params, const std::vector<Proxy_Function> &l_funs, const Type_Conversions &l_conversions)->Boxed_Value
@@ -1030,7 +1030,7 @@ namespace chaiscript
         {
           uint_fast32_t loc = t_loc.load(std::memory_order_relaxed);
           const auto funs = get_function(t_name, loc);
-          if (funs.first != loc) t_loc.store(funs.first, std::memory_order_relaxed);
+          if (funs.first != loc) t_loc.store(uint_fast32_t(funs.first), std::memory_order_relaxed);
           Boxed_Value bv = dispatch::dispatch(*funs.second, params, m_conversions);
           // the result of a clone is never to be marked as a return_value
           if (t_name == "clone") {

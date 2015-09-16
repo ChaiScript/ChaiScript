@@ -52,7 +52,7 @@
 #define CHAISCRIPT_MODULE_EXPORT extern "C" 
 #endif
 
-#ifdef CHAISCRIPT_MSVC
+#ifdef CHAISCRIPT_MSVC_12
 #define CHAISCRIPT_NOEXCEPT throw()
 #define CHAISCRIPT_CONSTEXPR 
 #else
