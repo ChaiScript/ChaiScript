@@ -66,6 +66,84 @@ namespace chaiscript
         return from_json( json::JSON::Load(t_json) );
       }
 
+      static json::JSON to_json_object(const Boxed_Value &t_bv)
+      {
+        try {
+          const std::map<std::string, Boxed_Value> m = chaiscript::boxed_cast<const std::map<std::string, Boxed_Value> &>(t_bv);
+
+          json::JSON obj;
+          for (const auto &o : m)
+          {
+            obj[o.first] = to_json_object(o.second);
+          }
+          return obj;
+        } catch (const chaiscript::exception::bad_boxed_cast &) {
+          // not a map
+        }
+
+        try {
+          const std::vector<Boxed_Value> v = chaiscript::boxed_cast<const std::vector<Boxed_Value> &>(t_bv);
+
+          json::JSON obj;
+          for (size_t i = 0; i < v.size(); ++i)
+          {
+            obj[i] = to_json_object(v[i]);
+          }
+          return obj;
+        } catch (const chaiscript::exception::bad_boxed_cast &) {
+          // not a vector
+        }
+
+
+        try {
+          Boxed_Number bn(t_bv);
+          json::JSON obj;
+          if (Boxed_Number::is_floating_point(t_bv))
+          {
+            obj = bn.get_as<double>();
+          } else {
+            obj = bn.get_as<long>();
+          }
+        } catch (const chaiscript::detail::exception::bad_any_cast &) {
+          // not a number
+        }
+
+        try {
+          bool b = boxed_cast<bool>(t_bv);
+          json::JSON obj;
+          obj = b;
+          return obj;
+        } catch (const chaiscript::exception::bad_boxed_cast &) {
+          // not a bool
+        }
+
+        try {
+          std::string s = boxed_cast<std::string>(t_bv);
+          json::JSON obj;
+          obj = s;
+          return obj;
+        } catch (const chaiscript::exception::bad_boxed_cast &) {
+          // not a string
+        }
+
+
+        try {
+          const chaiscript::dispatch::Dynamic_Object &o = boxed_cast<const dispatch::Dynamic_Object &>(t_bv);
+
+          json::JSON obj;
+          for (const auto &attr : o.get_attrs())
+          {
+            obj[attr.first] = to_json_object(attr.second);
+          }
+          return obj;
+        } catch (const chaiscript::exception::bad_boxed_cast &) {
+          // not a dynamic object
+        }
+
+        throw std::runtime_error("Unknown object type to convert to JSON");
+      }
+
+
   };
 
 
