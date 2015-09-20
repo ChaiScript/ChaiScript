@@ -457,7 +457,7 @@ namespace {
             ++offset; return Object;
         }
 
-        for (;;) {
+        for (;offset<str.size();) {
             JSON Key = parse_next( str, offset );
             consume_ws( str, offset );
             if( str[offset] != ':' ) {
@@ -494,7 +494,7 @@ namespace {
             ++offset; return Array;
         }
 
-        for (;;) {
+        for (;offset < str.size();) {
             Array[index++] = parse_next( str, offset );
             consume_ws( str, offset );
 
@@ -555,7 +555,7 @@ namespace {
         char c;
         bool isDouble = false;
         long exp = 0;
-        for (;;) {
+        for (; offset < str.size() ;) {
             c = str[offset++];
             if( (c == '-') || (c >= '0' && c <= '9') )
                 val += c;
@@ -566,7 +566,7 @@ namespace {
             else
                 break;
         }
-        if( c == 'E' || c == 'e' ) {
+        if( offset < str.size() && (c == 'E' || c == 'e' )) {
             c = str[ offset++ ];
             if( c == '-' ){ ++offset; exp_str += '-';}
             for (;;) {
@@ -582,7 +582,7 @@ namespace {
             }
             exp = std::stol( exp_str );
         }
-        else if( !isspace( c ) && c != ',' && c != ']' && c != '}' ) {
+        else if( offset < str.size() && (!isspace( c ) && c != ',' && c != ']' && c != '}' )) {
             std::cerr << "ERROR: Number: unexpected character '" << c << "'\n";
             return JSON::Make( JSON::Class::Null );
         }
@@ -601,15 +601,16 @@ namespace {
 
     JSON parse_bool( const string &str, size_t &offset ) {
         JSON Bool;
-        if( str.substr( offset, 4 ) == "true" )
+        if( str.substr( offset, 4 ) == "true" ) {
+            offset += 4;
             Bool = true;
-        else if( str.substr( offset, 5 ) == "false" )
+        } else if( str.substr( offset, 5 ) == "false" ) {
+            offset += 5;
             Bool = false;
-        else {
+        } else {
             std::cerr << "ERROR: Bool: Expected 'true' or 'false', found '" << str.substr( offset, 5 ) << "'\n";
             return JSON::Make( JSON::Class::Null );
         }
-        offset += (Bool.ToBool() ? 4 : 5);
         return Bool;
     }
 
