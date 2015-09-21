@@ -32,7 +32,7 @@ namespace chaiscript
 
               for (const auto &p : t_json.ObjectRange())
               {
-                m.emplace(p.first, from_json(p.second));
+                m.insert(std::make_pair(p.first, from_json(p.second)));
               }
 
               return Boxed_Value(m);

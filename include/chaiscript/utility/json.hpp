@@ -107,13 +107,13 @@ class JSON
         JSON() : Internal(), Type( Class::Null ){}
 
         explicit JSON(Class type)
-            : JSON()
+            : Internal(), Type(Class::Null)
         {
             SetType( type );
         }
 
         JSON( initializer_list<JSON> list ) 
-            : JSON() 
+            : Internal(), Type(Class::Null)
         {
             SetType( Class::Object );
             for( auto i = list.begin(), e = list.end(); i != e; ++i, ++i )
@@ -418,7 +418,7 @@ class JSON
 
     private:
 
-        Class Type = Class::Null;
+        Class Type;
 };
 
 JSON Array() {
