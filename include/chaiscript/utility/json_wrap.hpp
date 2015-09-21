@@ -13,7 +13,7 @@ namespace chaiscript
       {
 
         m->add(chaiscript::fun([](const std::string &t_str) { return json_wrap::from_json(t_str); }), "from_json");
-//        m->add(chaiscript::fun(&json_wrap::to_json), "to_json");
+        m->add(chaiscript::fun(&json_wrap::to_json), "to_json");
 
         return m;
 
@@ -66,6 +66,11 @@ namespace chaiscript
         return from_json( json::JSON::Load(t_json) );
       }
 
+      static std::string to_json(const Boxed_Value &t_bv)
+      {
+        return to_json_object(t_bv).dump();
+      }
+
       static json::JSON to_json_object(const Boxed_Value &t_bv)
       {
         try {
@@ -104,6 +109,7 @@ namespace chaiscript
           } else {
             obj = bn.get_as<long>();
           }
+          return obj;
         } catch (const chaiscript::detail::exception::bad_any_cast &) {
           // not a number
         }
