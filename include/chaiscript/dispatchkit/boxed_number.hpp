@@ -120,8 +120,12 @@ namespace chaiscript
           return get_common_type(sizeof(unsigned int), false);
         } else if (inp_ == typeid(long)) {
           return get_common_type(sizeof(long), true);
+        } else if (inp_ == typeid(long long)) {
+          return get_common_type(sizeof(long long), true);
         } else if (inp_ == typeid(unsigned long)) {
           return get_common_type(sizeof(unsigned long), false);
+        } else if (inp_ == typeid(unsigned long long)) {
+          return get_common_type(sizeof(unsigned long long), false);
         } else if (inp_ == typeid(std::int8_t)) {
           return Common_Types::t_int8;
         } else if (inp_ == typeid(std::int16_t)) {
@@ -537,8 +541,12 @@ namespace chaiscript
           return Boxed_Number(get_as<unsigned int>());
         } else if (inp_.bare_equal_type_info(typeid(long))) {
           return Boxed_Number(get_as<long>());
+        } else if (inp_.bare_equal_type_info(typeid(long long))) {
+          return Boxed_Number(get_as<long long>());
         } else if (inp_.bare_equal_type_info(typeid(unsigned long))) {
           return Boxed_Number(get_as<unsigned long>());
+        } else if (inp_.bare_equal_type_info(typeid(unsigned long long))) {
+          return Boxed_Number(get_as<unsigned long long>());
         } else if (inp_.bare_equal_type_info(typeid(int8_t))) {
           return Boxed_Number(get_as<int8_t>());
         } else if (inp_.bare_equal_type_info(typeid(int16_t))) {
