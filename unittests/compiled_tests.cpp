@@ -784,4 +784,21 @@ TEST_CASE("Variable Scope When Calling From C++ 2")
   CHECK_THROWS(func());
 }
 
+void ulonglong(unsigned long long i) {
+  std::cout << i << '\n';
+}
+
+
+void longlong(long long i) {
+  std::cout << i << '\n';
+}
+
+TEST_CASE("Test long long dispatch")
+{
+  chaiscript::ChaiScript chai;
+  chai.add(chaiscript::fun(&longlong), "longlong");
+  chai.add(chaiscript::fun(&ulonglong), "ulonglong");
+  chai.eval("longlong(15)");
+  chai.eval("ulonglong(15)");
+}
 
