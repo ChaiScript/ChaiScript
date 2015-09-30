@@ -41,6 +41,16 @@ namespace chaiscript
           return m_type_name;
         }
 
+        const Boxed_Value &operator[](const std::string &t_attr_name) const
+        {
+          return get_attr(t_attr_name);
+        }
+
+        Boxed_Value &operator[](const std::string &t_attr_name)
+        {
+          return get_attr(t_attr_name);
+        }
+
         const Boxed_Value &get_attr(const std::string &t_attr_name) const
         {
           auto a = m_attrs.find(t_attr_name);

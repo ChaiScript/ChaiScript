@@ -1,0 +1,1 @@
+assert_equal(from_json("1.20E+2"), 1.20e2)

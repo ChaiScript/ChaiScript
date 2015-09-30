@@ -468,6 +468,30 @@ namespace chaiscript
           m->add(fun(static_cast<elem_access>(&MapType::at)), "at");
           m->add(fun(static_cast<const_elem_access>(&MapType::at)), "at");
 
+          if (typeid(MapType) == typeid(std::map<std::string, Boxed_Value>))
+          {
+            m->eval(R"(
+                    def Map::`==`(Map rhs) {
+                       if ( rhs.size() != this.size() ) {
+                         return false;
+                       } else {
+                         auto r1 = range(this);
+                         auto r2 = range(rhs);
+                         while (!r1.empty())
+                         {
+                           if (!eq(r1.front().first, r2.front().first) || !eq(r1.front().second, r2.front().second))
+                           {
+                             return false;
+                           }
+                           r1.pop_front();
+                           r2.pop_front();
+                         }
+                         true;
+                       }
+                   } )"
+                 );
+          } 
+
           container_type<MapType>(type, m);
           default_constructible_type<MapType>(type, m);
           assignable_type<MapType>(type, m);
@@ -523,7 +547,7 @@ namespace chaiscript
           if (typeid(VectorType) == typeid(std::vector<Boxed_Value>))
           {
             m->eval(R"(
-                    def Vector::`==`(rhs) : type_match(rhs, this) {
+                    def Vector::`==`(Vector rhs) {
                        if ( rhs.size() != this.size() ) {
                          return false;
                        } else {

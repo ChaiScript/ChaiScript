@@ -100,6 +100,7 @@ namespace chaiscript
                 :(Common_Types::t_uint64);
       }
 
+
       static Common_Types get_common_type(const Boxed_Value &t_bv)
       {
         const Type_Info &inp_ = t_bv.get_type_info();
@@ -515,6 +516,21 @@ namespace chaiscript
         : bv(Boxed_Value(t))
       {
         validate_boxed_number(bv);
+      }
+
+      static bool is_floating_point(const Boxed_Value &t_bv)
+      {
+        const Type_Info &inp_ = t_bv.get_type_info();
+
+        if (inp_ == typeid(double)) {
+          return true;
+        } else if (inp_ == typeid(long double)) {
+          return true;
+        } else if (inp_ == typeid(float)) {
+          return true;
+        } else {
+          return false;
+        }
       }
 
       Boxed_Number get_as(const Type_Info &inp_) const
