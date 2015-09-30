@@ -1,0 +1,2 @@
+assert_equal(from_json("[1,2,3]"), [1,2,3])
+
