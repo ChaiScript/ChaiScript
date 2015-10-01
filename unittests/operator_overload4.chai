@@ -1,0 +1,6 @@
+
+
+def string::`*`(double d) { return "${this} * ${d}"; }
+
+"Hello World" * 2
+
