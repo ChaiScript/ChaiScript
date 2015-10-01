@@ -211,7 +211,7 @@ namespace chaiscript
           if (ti.is_undef() 
               || ti.bare_equal(user_type<Boxed_Value>())
               || (!bv.get_type_info().is_undef()
-                && (ti.bare_equal(user_type<Boxed_Number>())
+                && ( (ti.bare_equal(user_type<Boxed_Number>()) && bv.get_type_info().is_arithmetic())
                   || ti.bare_equal(bv.get_type_info())
                   || bv.get_type_info().bare_equal(user_type<std::shared_ptr<const Proxy_Function_Base> >())
                   || t_conversions.converts(ti, bv.get_type_info()) 

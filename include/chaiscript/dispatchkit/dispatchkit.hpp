@@ -1033,6 +1033,7 @@ namespace chaiscript
           if (funs.first != loc) t_loc.store(uint_fast32_t(funs.first), std::memory_order_relaxed);
           Boxed_Value bv = dispatch::dispatch(*funs.second, params, m_conversions);
           // the result of a clone is never to be marked as a return_value
+          // \todo see if we can eliminate this comparison
           if (t_name == "clone") {
             bv.reset_return_value();
           }
