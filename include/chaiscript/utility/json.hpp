@@ -384,8 +384,6 @@ class JSON
                     return std::to_string( Internal.Int );
                 case Class::Boolean:
                     return Internal.Bool ? "true" : "false";
-                default:
-                    return "";
             }
         }
 
@@ -548,7 +546,7 @@ namespace {
     JSON parse_number( const string &str, size_t &offset ) {
         JSON Number;
         string val, exp_str;
-        char c;
+        char c = '\0';
         bool isDouble = false;
         long exp = 0;
         for (; offset < str.size() ;) {

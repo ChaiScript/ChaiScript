@@ -951,49 +951,88 @@ namespace chaiscript
 
       struct Char_Parser
       {
+        std::string &match;
         bool is_escaped;
         bool is_interpolated;
         bool saw_interpolation_marker;
+        bool is_octal;
         const bool interpolation_allowed;
 
-        Char_Parser(const bool t_interpolation_allowed)
-          : is_escaped(false),
+        std::string octal_matches;
+
+        Char_Parser(std::string &t_match, const bool t_interpolation_allowed)
+          : match(t_match),
+            is_escaped(false),
             is_interpolated(false),
             saw_interpolation_marker(false),
+            is_octal(false),
             interpolation_allowed(t_interpolation_allowed)
         {
         }
 
-        void parse(std::string &t_match, const char t_char, const int line, const int col, const std::string &filename) {
+        ~Char_Parser(){
+          if (is_octal) {
+            process_octal();
+          }
+        }
+
+        void process_octal()
+        {
+          int val = stoi(octal_matches, 0, 8);
+          match.push_back(char(val));
+          octal_matches.clear();
+          is_escaped = false;
+          is_octal = false;
+        }
+
+        void parse(const char t_char, const int line, const int col, const std::string &filename) {
           if (t_char == '\\') {
             if (is_escaped) {
-              t_match.push_back('\\');
+              match.push_back('\\');
               is_escaped = false;
             } else {
               is_escaped = true;
             }
           } else {
             if (is_escaped) {
-              switch (t_char) {
-                case ('\'') : t_match.push_back('\''); break;
-                case ('\"') : t_match.push_back('\"'); break;
-                case ('?') : t_match.push_back('?'); break;
-                case ('a') : t_match.push_back('\a'); break;
-                case ('b') : t_match.push_back('\b'); break;
-                case ('f') : t_match.push_back('\f'); break;
-                case ('n') : t_match.push_back('\n'); break;
-                case ('r') : t_match.push_back('\r'); break;
-                case ('t') : t_match.push_back('\t'); break;
-                case ('v') : t_match.push_back('\v'); break;
-                case ('$') : t_match.push_back('$'); break;
-                default: throw exception::eval_error("Unknown escaped sequence in string", File_Position(line, col), filename);
+              bool is_octal_char = t_char >= '0' && t_char <= '7';
+
+              if (is_octal) {
+                if (is_octal_char) {
+                  octal_matches.push_back(t_char);
+
+                  if (octal_matches.size() == 3) {
+                    process_octal();
+                  }
+                } else {
+                  process_octal();
+                  match.push_back(t_char);
+                }
+              } else if (is_octal_char) {
+                is_octal = true;
+                octal_matches.push_back(t_char);
+              } else {
+                switch (t_char) {
+                  case ('\'') : match.push_back('\''); break;
+                  case ('\"') : match.push_back('\"'); break;
+                  case ('?') : match.push_back('?'); break;
+                  case ('a') : match.push_back('\a'); break;
+                  case ('b') : match.push_back('\b'); break;
+                  case ('f') : match.push_back('\f'); break;
+                  case ('n') : match.push_back('\n'); break;
+                  case ('r') : match.push_back('\r'); break;
+                  case ('t') : match.push_back('\t'); break;
+                  case ('v') : match.push_back('\v'); break;
+                  case ('$') : match.push_back('$'); break;
+                  default: throw exception::eval_error("Unknown escaped sequence in string", File_Position(line, col), filename);
+                }
+                is_escaped = false;
               }
             } else if (interpolation_allowed && t_char == '$') {
               saw_interpolation_marker = true;
             } else {
-              t_match.push_back(t_char);
+              match.push_back(t_char);
             }
-            is_escaped = false;
           }
         }
 
@@ -1011,73 +1050,77 @@ namespace chaiscript
 
           if (Quoted_String_()) {
             std::string match;
-
-            Char_Parser cparser(true);
-
             const auto prev_stack_top = m_match_stack.size();
 
-            auto s = start + 1, end = m_position - 1;
+            bool is_interpolated = [&]() {
+              Char_Parser cparser(match, true);
 
-            while (s != end) {
-              if (cparser.saw_interpolation_marker) {
-                if (*s == '{') {
-                  //We've found an interpolation point
 
-                  if (cparser.is_interpolated) {
-                    //If we've seen previous interpolation, add on instead of making a new one
-                    m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
+              auto s = start + 1, end = m_position - 1;
 
-                    build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
-                  } else {
-                    m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
-                  }
+              while (s != end) {
+                if (cparser.saw_interpolation_marker) {
+                  if (*s == '{') {
+                    //We've found an interpolation point
 
-                  //We've finished with the part of the string up to this point, so clear it
-                  match.clear();
+                    if (cparser.is_interpolated) {
+                      //If we've seen previous interpolation, add on instead of making a new one
+                      m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
 
-                  std::string eval_match;
-
-                  ++s;
-                  while ((s != end) && (*s != '}')) {
-                    eval_match.push_back(*s);
-                    ++s;
-                  }
-
-                  if (*s == '}') {
-                    cparser.is_interpolated = true;
-                    ++s;
-
-                    const auto tostr_stack_top = m_match_stack.size();
-
-                    m_match_stack.push_back(make_node<eval::Id_AST_Node>("to_string", start.line, start.col));
-
-                    const auto ev_stack_top = m_match_stack.size();
-
-                    try {
-                      ChaiScript_Parser parser;
-                      parser.parse(eval_match, "instr eval");
-                      m_match_stack.push_back(parser.ast());
-                    } catch (const exception::eval_error &e) {
-                      throw exception::eval_error(e.what(), File_Position(start.line, start.col), *m_filename);
+                      build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
+                    } else {
+                      m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
                     }
 
-                    build_match<eval::Arg_List_AST_Node>(ev_stack_top);
-                    build_match<eval::Fun_Call_AST_Node>(tostr_stack_top);
-                    build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
-                  } else {
-                    throw exception::eval_error("Unclosed in-string eval", File_Position(start.line, start.col), *m_filename);
-                  }
-                } else {
-                  match.push_back('$');
-                }
-                cparser.saw_interpolation_marker = false;
-              } else {
-                cparser.parse(match, *s, start.line, start.col, *m_filename);
-                ++s;
-              }
-            }
+                    //We've finished with the part of the string up to this point, so clear it
+                    match.clear();
 
-            if (cparser.is_interpolated) {
+                    std::string eval_match;
+
+                    ++s;
+                    while ((s != end) && (*s != '}')) {
+                      eval_match.push_back(*s);
+                      ++s;
+                    }
+
+                    if (*s == '}') {
+                      cparser.is_interpolated = true;
+                      ++s;
+
+                      const auto tostr_stack_top = m_match_stack.size();
+
+                      m_match_stack.push_back(make_node<eval::Id_AST_Node>("to_string", start.line, start.col));
+
+                      const auto ev_stack_top = m_match_stack.size();
+
+                      try {
+                        ChaiScript_Parser parser;
+                        parser.parse(eval_match, "instr eval");
+                        m_match_stack.push_back(parser.ast());
+                      } catch (const exception::eval_error &e) {
+                        throw exception::eval_error(e.what(), File_Position(start.line, start.col), *m_filename);
+                      }
+
+                      build_match<eval::Arg_List_AST_Node>(ev_stack_top);
+                      build_match<eval::Fun_Call_AST_Node>(tostr_stack_top);
+                      build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
+                    } else {
+                      throw exception::eval_error("Unclosed in-string eval", File_Position(start.line, start.col), *m_filename);
+                    }
+                  } else {
+                    match.push_back('$');
+                  }
+                  cparser.saw_interpolation_marker = false;
+                } else {
+                  cparser.parse(*s, start.line, start.col, *m_filename);
+                  ++s;
+                }
+              }
+
+              return cparser.is_interpolated;
+            }();
+
+            if (is_interpolated) {
               m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
 
               build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
@@ -1129,10 +1172,14 @@ namespace chaiscript
           const auto start = m_position;
           if (Single_Quoted_String_()) {
             std::string match;
-            Char_Parser cparser(false);
 
-            for (auto s = start + 1, end = m_position - 1; s != end; ++s) {
-              cparser.parse(match, *s, start.line, start.col, *m_filename);
+            {
+              // scope for cparser destrutor
+              Char_Parser cparser(match, false);
+
+              for (auto s = start + 1, end = m_position - 1; s != end; ++s) {
+                cparser.parse(*s, start.line, start.col, *m_filename);
+              }
             }
 
             m_match_stack.push_back(make_node<eval::Single_Quoted_String_AST_Node>(match, start.line, start.col));
