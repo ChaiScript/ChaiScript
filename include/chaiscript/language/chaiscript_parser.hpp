@@ -949,6 +949,57 @@ namespace chaiscript
         return false;
       }
 
+      struct Char_Parser
+      {
+        bool is_escaped;
+        bool is_interpolated;
+        bool saw_interpolation_marker;
+        const bool interpolation_allowed;
+
+        Char_Parser(const bool t_interpolation_allowed)
+          : is_escaped(false),
+            is_interpolated(false),
+            saw_interpolation_marker(false),
+            interpolation_allowed(t_interpolation_allowed)
+        {
+        }
+
+        void parse(std::string &t_match, const char t_char, const int line, const int col, const std::string &filename) {
+          if (t_char == '\\') {
+            if (is_escaped) {
+              t_match.push_back('\\');
+              is_escaped = false;
+            } else {
+              is_escaped = true;
+            }
+          } else {
+            if (is_escaped) {
+              switch (t_char) {
+                case ('\'') : t_match.push_back('\''); break;
+                case ('\"') : t_match.push_back('\"'); break;
+                case ('?') : t_match.push_back('?'); break;
+                case ('a') : t_match.push_back('\a'); break;
+                case ('b') : t_match.push_back('\b'); break;
+                case ('f') : t_match.push_back('\f'); break;
+                case ('n') : t_match.push_back('\n'); break;
+                case ('r') : t_match.push_back('\r'); break;
+                case ('t') : t_match.push_back('\t'); break;
+                case ('v') : t_match.push_back('\v'); break;
+                case ('$') : t_match.push_back('$'); break;
+                default: throw exception::eval_error("Unknown escaped sequence in string", File_Position(line, col), filename);
+              }
+            } else if (interpolation_allowed && t_char == '$') {
+              saw_interpolation_marker = true;
+            } else {
+              t_match.push_back(t_char);
+            }
+            is_escaped = false;
+          }
+        }
+
+      };
+
+
       /// Reads (and potentially captures) a quoted string from input.  Translates escaped sequences.
       bool Quoted_String(const bool t_capture = false) {
         SkipWS();
@@ -960,19 +1011,19 @@ namespace chaiscript
 
           if (Quoted_String_()) {
             std::string match;
-            bool is_escaped = false;
-            bool is_interpolated = false;
-            bool saw_interpolation_marker = false;
+
+            Char_Parser cparser(true);
+
             const auto prev_stack_top = m_match_stack.size();
 
             auto s = start + 1, end = m_position - 1;
 
             while (s != end) {
-              if (saw_interpolation_marker) {
+              if (cparser.saw_interpolation_marker) {
                 if (*s == '{') {
                   //We've found an interpolation point
 
-                  if (is_interpolated) {
+                  if (cparser.is_interpolated) {
                     //If we've seen previous interpolation, add on instead of making a new one
                     m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
 
@@ -993,7 +1044,7 @@ namespace chaiscript
                   }
 
                   if (*s == '}') {
-                    is_interpolated = true;
+                    cparser.is_interpolated = true;
                     ++s;
 
                     const auto tostr_stack_top = m_match_stack.size();
@@ -1019,40 +1070,14 @@ namespace chaiscript
                 } else {
                   match.push_back('$');
                 }
-                saw_interpolation_marker = false;
+                cparser.saw_interpolation_marker = false;
               } else {
-                if (*s == '\\') {
-                  if (is_escaped) {
-                    match.push_back('\\');
-                    is_escaped = false;
-                  } else {
-                    is_escaped = true;
-                  }
-                } else {
-                  if (is_escaped) {
-                    switch (*s) {
-                      case ('b') : match.push_back('\b'); break;
-                      case ('f') : match.push_back('\f'); break;
-                      case ('n') : match.push_back('\n'); break;
-                      case ('r') : match.push_back('\r'); break;
-                      case ('t') : match.push_back('\t'); break;
-                      case ('\'') : match.push_back('\''); break;
-                      case ('\"') : match.push_back('\"'); break;
-                      case ('$') : match.push_back('$'); break;
-                      default: throw exception::eval_error("Unknown escaped sequence in string", File_Position(start.line, start.col), *m_filename);
-                    }
-                  } else if (*s == '$') {
-                    saw_interpolation_marker = true;
-                  } else {
-                    match.push_back(*s);
-                  }
-                  is_escaped = false;
-                }
+                cparser.parse(match, *s, start.line, start.col, *m_filename);
                 ++s;
               }
             }
 
-            if (is_interpolated) {
+            if (cparser.is_interpolated) {
               m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
 
               build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
@@ -1104,33 +1129,12 @@ namespace chaiscript
           const auto start = m_position;
           if (Single_Quoted_String_()) {
             std::string match;
-            bool is_escaped = false;
+            Char_Parser cparser(false);
+
             for (auto s = start + 1, end = m_position - 1; s != end; ++s) {
-              if (*s == '\\') {
-                if (is_escaped) {
-                  match.push_back('\\');
-                  is_escaped = false;
-                } else {
-                  is_escaped = true;
-                }
-              } else {
-                if (is_escaped) {
-                  switch (*s) {
-                    case ('b') : match.push_back('\b'); break;
-                    case ('f') : match.push_back('\f'); break;
-                    case ('n') : match.push_back('\n'); break;
-                    case ('r') : match.push_back('\r'); break;
-                    case ('t') : match.push_back('\t'); break;
-                    case ('\'') : match.push_back('\''); break;
-                    case ('\"') : match.push_back('\"'); break;
-                    default: throw exception::eval_error("Unknown escaped sequence in string", File_Position(start.line, start.col), *m_filename);
-                  }
-                } else {
-                  match.push_back(*s);
-                }
-                is_escaped = false;
-              }
+              cparser.parse(match, *s, start.line, start.col, *m_filename);
             }
+
             m_match_stack.push_back(make_node<eval::Single_Quoted_String_AST_Node>(match, start.line, start.col));
             return true;
           }
