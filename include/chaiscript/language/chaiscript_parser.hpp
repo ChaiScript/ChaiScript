@@ -949,23 +949,28 @@ namespace chaiscript
         return false;
       }
 
+      template<typename string_type>
       struct Char_Parser
       {
-        std::string &match;
+        string_type &match;
+        using char_type = typename string_type::value_type;
         bool is_escaped;
         bool is_interpolated;
         bool saw_interpolation_marker;
         bool is_octal;
+        bool is_hex;
         const bool interpolation_allowed;
 
-        std::string octal_matches;
+        string_type octal_matches;
+        string_type hex_matches;
 
-        Char_Parser(std::string &t_match, const bool t_interpolation_allowed)
+        Char_Parser(string_type &t_match, const bool t_interpolation_allowed)
           : match(t_match),
             is_escaped(false),
             is_interpolated(false),
             saw_interpolation_marker(false),
             is_octal(false),
+            is_hex(false),
             interpolation_allowed(t_interpolation_allowed)
         {
         }
@@ -974,18 +979,32 @@ namespace chaiscript
           if (is_octal) {
             process_octal();
           }
+
+          if (is_hex) {
+            process_hex();
+          }
         }
+
+        void process_hex()
+        {
+          auto val = stoll(hex_matches, 0, 16);
+          match.push_back(char_type(val));
+          hex_matches.clear();
+          is_escaped = false;
+          is_hex = false;
+        }
+
 
         void process_octal()
         {
-          int val = stoi(octal_matches, 0, 8);
-          match.push_back(char(val));
+          auto val = stoll(octal_matches, 0, 8);
+          match.push_back(char_type(val));
           octal_matches.clear();
           is_escaped = false;
           is_octal = false;
         }
 
-        void parse(const char t_char, const int line, const int col, const std::string &filename) {
+        void parse(const char_type t_char, const int line, const int col, const std::string &filename) {
           if (t_char == '\\') {
             if (is_escaped) {
               match.push_back('\\');
@@ -995,7 +1014,7 @@ namespace chaiscript
             }
           } else {
             if (is_escaped) {
-              bool is_octal_char = t_char >= '0' && t_char <= '7';
+              const bool is_octal_char = t_char >= '0' && t_char <= '7';
 
               if (is_octal) {
                 if (is_octal_char) {
@@ -1008,9 +1027,22 @@ namespace chaiscript
                   process_octal();
                   match.push_back(t_char);
                 }
+              } else if (is_hex) {
+                const bool is_hex_char = (t_char >= '0' && t_char <= '9')
+                                      || (t_char >= 'a' && t_char <= 'f')
+                                      || (t_char >= 'A' && t_char <= 'F');
+
+                if (is_hex_char) {
+                  hex_matches.push_back(t_char);
+                } else {
+                  process_hex();
+                  match.push_back(t_char);
+                }
               } else if (is_octal_char) {
                 is_octal = true;
                 octal_matches.push_back(t_char);
+              } else if (t_char == 'x') {
+                is_hex = true;
               } else {
                 switch (t_char) {
                   case ('\'') : match.push_back('\''); break;
@@ -1053,7 +1085,7 @@ namespace chaiscript
             const auto prev_stack_top = m_match_stack.size();
 
             bool is_interpolated = [&]() {
-              Char_Parser cparser(match, true);
+              Char_Parser<std::string> cparser(match, true);
 
 
               auto s = start + 1, end = m_position - 1;
@@ -1175,7 +1207,7 @@ namespace chaiscript
 
             {
               // scope for cparser destrutor
-              Char_Parser cparser(match, false);
+              Char_Parser<std::string> cparser(match, false);
 
               for (auto s = start + 1, end = m_position - 1; s != end; ++s) {
                 cparser.parse(*s, start.line, start.col, *m_filename);
