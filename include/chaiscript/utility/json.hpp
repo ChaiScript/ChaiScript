@@ -249,7 +249,7 @@ class JSON
             SetType( Class::Object ); return Internal.Map->operator[]( key );
         }
 
-        JSON& operator[]( unsigned index ) {
+        JSON& operator[]( const size_t index ) {
             SetType( Class::Array );
             if( index >= Internal.List->size() ) Internal.List->resize( index + 1 );
             return Internal.List->operator[]( index );
@@ -385,6 +385,8 @@ class JSON
                 case Class::Boolean:
                     return Internal.Bool ? "true" : "false";
             }
+
+            throw std::runtime_error("Unhandled JSON type");
         }
 
         friend std::ostream& operator<<( std::ostream&, const JSON & );

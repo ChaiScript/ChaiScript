@@ -953,7 +953,7 @@ namespace chaiscript
       struct Char_Parser
       {
         string_type &match;
-        using char_type = typename string_type::value_type;
+        typedef typename string_type::value_type char_type;
         bool is_escaped;
         bool is_interpolated;
         bool saw_interpolation_marker;
@@ -1084,7 +1084,7 @@ namespace chaiscript
             std::string match;
             const auto prev_stack_top = m_match_stack.size();
 
-            bool is_interpolated = [&]() {
+            bool is_interpolated = [&]()->bool {
               Char_Parser<std::string> cparser(match, true);
 
 

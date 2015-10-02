@@ -12,7 +12,7 @@ namespace chaiscript
       static ModulePtr library(ModulePtr m = std::make_shared<Module>())
       {
 
-        m->add(chaiscript::fun([](const std::string &t_str) { return json_wrap::from_json(t_str); }), "from_json");
+        m->add(chaiscript::fun([](const std::string &t_str) { return from_json(t_str); }), "from_json");
         m->add(chaiscript::fun(&json_wrap::to_json), "to_json");
 
         return m;
