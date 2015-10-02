@@ -1,0 +1,6 @@
+
+var m = ["a" : 1, "b" : [ 1, 2, 3 ], "c" : [1, "a string", ["d" : 15.4]]]
+
+assert_equal(from_json(to_json(m)), m)
+
+
