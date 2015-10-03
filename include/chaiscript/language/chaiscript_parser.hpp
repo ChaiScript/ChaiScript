@@ -648,87 +648,34 @@ namespace chaiscript
           }
         }
 
-
         const auto val = prefixed?std::string(t_val.begin()+2,t_val.end()):t_val;
 
-        static_assert(sizeof(long) == sizeof(uint64_t) || sizeof(long) * 2 == sizeof(uint64_t), "Unexpected sizing of integer types");
-        bool unsignedrequired = false;
+//        static_assert(sizeof(long) == sizeof(uint64_t) || sizeof(long) * 2 == sizeof(uint64_t), "Unexpected sizing of integer types");
 
         try {
           auto u = std::stoll(val,nullptr,base);
 
-          if ((u >> (sizeof(int) * 8)) > 0)
-          {
-            //requires something bigger than int
-            long_ = true;
+          if (!unsigned_ && !long_ && u >= std::numeric_limits<int>::min() && u <= std::numeric_limits<int>::max()) {
+            return const_var(static_cast<int>(u));
+          } else if ((unsigned_ || base != 10) && !long_ && u >= std::numeric_limits<unsigned int>::min() && u <= std::numeric_limits<unsigned int>::max()) {
+            return const_var(static_cast<unsigned int>(u));
+          } else if (!unsigned_ && !longlong_ && u >= std::numeric_limits<long>::min() && u <= std::numeric_limits<long>::max()) {
+            return const_var(static_cast<long>(u));
+          } else if ((unsigned_ || base != 10) && !longlong_ && u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
+            return const_var(static_cast<unsigned long>(u));
+          } else if (!unsigned_ && u >= std::numeric_limits<long long>::min() && u <= std::numeric_limits<long long>::max()) {
+            return const_var(static_cast<long long>(u));
+          } else {
+            return const_var(static_cast<unsigned long long>(u));
           }
 
-          if ((sizeof(long) < sizeof(uint64_t)) 
-              && (u >> ((sizeof(uint64_t) - sizeof(long)) * 8)) > 0)
-          {
-            //requires something bigger than long
-            longlong_ = true;
-          }
-
-          const size_t size = [&]()->size_t{
-            if (longlong_)
-            {
-              return sizeof(int64_t) * 8;
-            } else if (long_) {
-              return sizeof(long) * 8;
-            } else {
-              return sizeof(int) * 8;
-            }
-          }();
-
-          if ( (u >> (size - 1)) > 0)
-          {
-            unsignedrequired = true;
-          }
         } catch (const std::out_of_range &) {
-          // it cannot fit in a signed long long...
-          std::cout << "forcing long long for '" << val << "'\n";
-          unsignedrequired = true;
+          auto u = std::stoull(val,nullptr,base);
 
-          long_ = sizeof(unsigned long long) == sizeof(unsigned long);
-          longlong_ = sizeof(unsigned long long) != sizeof(unsigned long);
-        }
-
-        if (unsignedrequired && !unsigned_)
-        {
-          if (base != 10)
-          {
-            // with bin, hex and oct we are happy to just make it unsigned
-            unsigned_ = true;
+          if (u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
+            return const_var(static_cast<unsigned long>(u));
           } else {
-            // with decimal we must bump it up to the next size
-            if (long_)
-            {
-              longlong_ = true;
-            } else if (!long_ && !longlong_) {
-              long_ = true;
-            }
-          }
-        }
-
-        if (unsigned_)
-        {
-          if (longlong_)
-          {
-            return const_var(stoull(val,nullptr,base));
-          } else if (long_) {
-            return const_var(stoul(val,nullptr,base));
-          } else {
-            return const_var(static_cast<unsigned int>(stoul(val,nullptr,base)));
-          }
-        } else {
-          if (longlong_)
-          {
-            return const_var(stoll(val,nullptr,base));
-          } else if (long_) {
-            return const_var(stol(val,nullptr,base));
-          } else {
-            return const_var(stoi(val,nullptr,base));
+            return const_var(static_cast<unsigned long long>(u));
           }
         }
       }
