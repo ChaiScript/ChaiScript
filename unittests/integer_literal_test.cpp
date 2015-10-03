@@ -5,9 +5,10 @@
 template<typename T>
 bool test_literal(T val, const std::string &str)
 {
+  std::cout << "Comparing : " << val;
   chaiscript::ChaiScript chai;
   T val2 = chai.eval<T>(str);
-  std::cout << "Comparing : " << val << " " << val2 << '\n';
+  std::cout << " " << val2 << '\n';
   return val == val2;
 }
 

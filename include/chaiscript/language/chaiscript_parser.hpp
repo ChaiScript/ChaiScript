@@ -621,8 +621,7 @@ namespace chaiscript
 
 
 
-      template<typename IntType>
-      static Boxed_Value buildInt(const IntType &t_type, const std::string &t_val)
+      static Boxed_Value buildInt(const int base, const std::string &t_val, const bool prefixed)
       {
         bool unsigned_ = false;
         bool long_ = false;
@@ -649,52 +648,57 @@ namespace chaiscript
           }
         }
 
-        std::stringstream ss(t_val.substr(0, i));
-        ss >> t_type;
 
-        std::stringstream testu(t_val.substr(0, i));
-        uint64_t u;
-        testu >> t_type >> u;
-
-        bool unsignedrequired = false;
-
-        if ((u >> (sizeof(int) * 8)) > 0)
-        {
-          //requires something bigger than int
-          long_ = true;
-        }
+        const auto val = prefixed?std::string(t_val.begin()+2,t_val.end()):t_val;
 
         static_assert(sizeof(long) == sizeof(uint64_t) || sizeof(long) * 2 == sizeof(uint64_t), "Unexpected sizing of integer types");
+        bool unsignedrequired = false;
 
-        if ((sizeof(long) < sizeof(uint64_t)) 
-            && (u >> ((sizeof(uint64_t) - sizeof(long)) * 8)) > 0)
-        {
-          //requires something bigger than long
-          longlong_ = true;
-        }
+        try {
+          auto u = std::stoll(val,nullptr,base);
 
-
-        const size_t size = [&]()->size_t{
-          if (longlong_)
+          if ((u >> (sizeof(int) * 8)) > 0)
           {
-            return sizeof(int64_t) * 8;
-          } else if (long_) {
-            return sizeof(long) * 8;
-          } else {
-            return sizeof(int) * 8;
+            //requires something bigger than int
+            long_ = true;
           }
-        }();
 
-        if ( (u >> (size - 1)) > 0)
-        {
+          if ((sizeof(long) < sizeof(uint64_t)) 
+              && (u >> ((sizeof(uint64_t) - sizeof(long)) * 8)) > 0)
+          {
+            //requires something bigger than long
+            longlong_ = true;
+          }
+
+          const size_t size = [&]()->size_t{
+            if (longlong_)
+            {
+              return sizeof(int64_t) * 8;
+            } else if (long_) {
+              return sizeof(long) * 8;
+            } else {
+              return sizeof(int) * 8;
+            }
+          }();
+
+          if ( (u >> (size - 1)) > 0)
+          {
+            unsignedrequired = true;
+          }
+        } catch (const std::out_of_range &) {
+          // it cannot fit in a signed long long...
+          std::cout << "forcing long long for '" << val << "'\n";
           unsignedrequired = true;
+
+          long_ = sizeof(unsigned long long) == sizeof(unsigned long);
+          longlong_ = sizeof(unsigned long long) != sizeof(unsigned long);
         }
 
         if (unsignedrequired && !unsigned_)
         {
-          if (t_type == &std::hex || t_type == &std::oct)
+          if (base != 10)
           {
-            // with hex and octal we are happy to just make it unsigned
+            // with bin, hex and oct we are happy to just make it unsigned
             unsigned_ = true;
           } else {
             // with decimal we must bump it up to the next size
@@ -711,32 +715,20 @@ namespace chaiscript
         {
           if (longlong_)
           {
-            uint64_t val;
-            ss >> val;
-            return const_var(val);
+            return const_var(stoull(val,nullptr,base));
           } else if (long_) {
-            unsigned long val;
-            ss >> val;
-            return const_var(val);
+            return const_var(stoul(val,nullptr,base));
           } else {
-            unsigned int val;
-            ss >> val;
-            return const_var(val);
+            return const_var(static_cast<unsigned int>(stoul(val,nullptr,base)));
           }
         } else {
           if (longlong_)
           {
-            int64_t val;
-            ss >> val;
-            return const_var(val);
+            return const_var(stoll(val,nullptr,base));
           } else if (long_) {
-            long val;
-            ss >> val;
-            return const_var(val);
+            return const_var(stol(val,nullptr,base));
           } else {
-            int val;
-            ss >> val;
-            return const_var(val);
+            return const_var(stoi(val,nullptr,base));
           }
         }
       }
@@ -758,35 +750,15 @@ namespace chaiscript
           if (m_position.has_more() && char_in_alphabet(*m_position, detail::float_alphabet) ) {
             if (Hex_()) {
               auto match = Position::str(start, m_position);
-              auto bv = buildInt(std::hex, match);
+              auto bv = buildInt(16, match, true);
               m_match_stack.emplace_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
               return true;
             }
 
             if (Binary_()) {
               auto match = Position::str(start, m_position);
-              int64_t temp_int = 0;
-              size_t pos = 0;
-              const auto end = match.length();
-
-              while ((pos < end) && (pos < (2 + sizeof(int) * 8))) {
-                temp_int <<= 1;
-                if (match[pos] == '1') {
-                  temp_int += 1;
-                }
-                ++pos;
-              }
-
-              Boxed_Value i = [&]()->Boxed_Value{
-                if (match.length() <= sizeof(int) * 8)
-                {
-                  return const_var(static_cast<int>(temp_int));
-                } else {
-                  return const_var(temp_int);
-                }
-              }();
-
-              m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(i)));
+              auto bv = buildInt(2, match, true);
+              m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
               return true;
             }
             if (Float_()) {
@@ -799,11 +771,11 @@ namespace chaiscript
               IntSuffix_();
               auto match = Position::str(start, m_position);
               if (!match.empty() && (match[0] == '0')) {
-                auto bv = buildInt(std::oct, match);
+                auto bv = buildInt(8, match, false);
                 m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
               }
               else if (!match.empty()) {
-                auto bv = buildInt(std::dec, match);
+                auto bv = buildInt(10, match, false);
                 m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
               } else {
                 return false;
