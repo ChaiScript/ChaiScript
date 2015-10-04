@@ -676,14 +676,19 @@ namespace chaiscript
 #pragma GCC diagnostic pop
 #endif
 
-
         } catch (const std::out_of_range &) {
-          auto u = std::stoull(val,nullptr,base);
+          // too big to be signed
+          try {
+            auto u = std::stoull(val,nullptr,base);
 
-          if (u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
-            return const_var(static_cast<unsigned long>(u));
-          } else {
-            return const_var(static_cast<unsigned long long>(u));
+            if (u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
+              return const_var(static_cast<unsigned long>(u));
+            } else {
+              return const_var(static_cast<unsigned long long>(u));
+            }
+          } catch (const std::out_of_range &) {
+            // it's just simply too big
+            return const_var(std::numeric_limits<long long>::max());
           }
         }
       }
@@ -703,39 +708,44 @@ namespace chaiscript
         } else {
           const auto start = m_position;
           if (m_position.has_more() && char_in_alphabet(*m_position, detail::float_alphabet) ) {
-            if (Hex_()) {
-              auto match = Position::str(start, m_position);
-              auto bv = buildInt(16, match, true);
-              m_match_stack.emplace_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
-              return true;
-            }
+            try {
+              if (Hex_()) {
+                auto match = Position::str(start, m_position);
+                auto bv = buildInt(16, match, true);
+                m_match_stack.emplace_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                return true;
+              }
 
-            if (Binary_()) {
-              auto match = Position::str(start, m_position);
-              auto bv = buildInt(2, match, true);
-              m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
-              return true;
-            }
-            if (Float_()) {
-              auto match = Position::str(start, m_position);
-              auto bv = buildFloat(match);
-              m_match_stack.push_back(make_node<eval::Float_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
-              return true;
-            }
-            else {
-              IntSuffix_();
-              auto match = Position::str(start, m_position);
-              if (!match.empty() && (match[0] == '0')) {
-                auto bv = buildInt(8, match, false);
+              if (Binary_()) {
+                auto match = Position::str(start, m_position);
+                auto bv = buildInt(2, match, true);
                 m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                return true;
               }
-              else if (!match.empty()) {
-                auto bv = buildInt(10, match, false);
-                m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
-              } else {
-                return false;
+              if (Float_()) {
+                auto match = Position::str(start, m_position);
+                auto bv = buildFloat(match);
+                m_match_stack.push_back(make_node<eval::Float_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                return true;
               }
-              return true;
+              else {
+                IntSuffix_();
+                auto match = Position::str(start, m_position);
+                if (!match.empty() && (match[0] == '0')) {
+                  auto bv = buildInt(8, match, false);
+                  m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                }
+                else if (!match.empty()) {
+                  auto bv = buildInt(10, match, false);
+                  m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                } else {
+                  return false;
+                }
+                return true;
+              }
+            } catch (const std::invalid_argument &) {
+              // error parsing number passed in to buildFloat/buildInt
+              return false;
             }
           }
           else {
