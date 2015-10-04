@@ -650,10 +650,13 @@ namespace chaiscript
 
         const auto val = prefixed?std::string(t_val.begin()+2,t_val.end()):t_val;
 
-//        static_assert(sizeof(long) == sizeof(uint64_t) || sizeof(long) * 2 == sizeof(uint64_t), "Unexpected sizing of integer types");
-
         try {
           auto u = std::stoll(val,nullptr,base);
+
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#endif
 
           if (!unsigned_ && !long_ && u >= std::numeric_limits<int>::min() && u <= std::numeric_limits<int>::max()) {
             return const_var(static_cast<int>(u));
@@ -668,6 +671,11 @@ namespace chaiscript
           } else {
             return const_var(static_cast<unsigned long long>(u));
           }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
 
         } catch (const std::out_of_range &) {
           auto u = std::stoull(val,nullptr,base);
