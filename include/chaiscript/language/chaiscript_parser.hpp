@@ -17,8 +17,18 @@
 #include <cstring>
 
 
+
 #include "../dispatchkit/boxed_value.hpp"
 #include "chaiscript_common.hpp"
+
+
+#if defined(CHAISCRIPT_MSVC) && defined(max) && defined(min)
+#pragma push_macro("max") // Why Microsoft? why? This is worse than bad
+#undef max
+#pragma push_macro("min")
+#undef min
+#endif
+
 
 namespace chaiscript
 {
@@ -621,8 +631,7 @@ namespace chaiscript
 
 
 
-      template<typename IntType>
-      static Boxed_Value buildInt(const IntType &t_type, const std::string &t_val)
+      static Boxed_Value buildInt(const int base, const std::string &t_val, const bool prefixed)
       {
         bool unsigned_ = false;
         bool long_ = false;
@@ -649,94 +658,47 @@ namespace chaiscript
           }
         }
 
-        std::stringstream ss(t_val.substr(0, i));
-        ss >> t_type;
+        const auto val = prefixed?std::string(t_val.begin()+2,t_val.end()):t_val;
 
-        std::stringstream testu(t_val.substr(0, i));
-        uint64_t u;
-        testu >> t_type >> u;
+        try {
+          auto u = std::stoll(val,nullptr,base);
 
-        bool unsignedrequired = false;
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
+#endif
 
-        if ((u >> (sizeof(int) * 8)) > 0)
-        {
-          //requires something bigger than int
-          long_ = true;
-        }
-
-        static_assert(sizeof(long) == sizeof(uint64_t) || sizeof(long) * 2 == sizeof(uint64_t), "Unexpected sizing of integer types");
-
-        if ((sizeof(long) < sizeof(uint64_t)) 
-            && (u >> ((sizeof(uint64_t) - sizeof(long)) * 8)) > 0)
-        {
-          //requires something bigger than long
-          longlong_ = true;
-        }
-
-
-        const size_t size = [&]()->size_t{
-          if (longlong_)
-          {
-            return sizeof(int64_t) * 8;
-          } else if (long_) {
-            return sizeof(long) * 8;
+          if (!unsigned_ && !long_ && u >= std::numeric_limits<int>::min() && u <= std::numeric_limits<int>::max()) {
+            return const_var(static_cast<int>(u));
+          } else if ((unsigned_ || base != 10) && !long_ && u >= std::numeric_limits<unsigned int>::min() && u <= std::numeric_limits<unsigned int>::max()) {
+            return const_var(static_cast<unsigned int>(u));
+          } else if (!unsigned_ && !longlong_ && u >= std::numeric_limits<long>::min() && u <= std::numeric_limits<long>::max()) {
+            return const_var(static_cast<long>(u));
+          } else if ((unsigned_ || base != 10) && !longlong_ && u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
+            return const_var(static_cast<unsigned long>(u));
+          } else if (!unsigned_ && u >= std::numeric_limits<long long>::min() && u <= std::numeric_limits<long long>::max()) {
+            return const_var(static_cast<long long>(u));
           } else {
-            return sizeof(int) * 8;
+            return const_var(static_cast<unsigned long long>(u));
           }
-        }();
 
-        if ( (u >> (size - 1)) > 0)
-        {
-          unsignedrequired = true;
-        }
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
-        if (unsignedrequired && !unsigned_)
-        {
-          if (t_type == &std::hex || t_type == &std::oct)
-          {
-            // with hex and octal we are happy to just make it unsigned
-            unsigned_ = true;
-          } else {
-            // with decimal we must bump it up to the next size
-            if (long_)
-            {
-              longlong_ = true;
-            } else if (!long_ && !longlong_) {
-              long_ = true;
+        } catch (const std::out_of_range &) {
+          // too big to be signed
+          try {
+            auto u = std::stoull(val,nullptr,base);
+
+            if (u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
+              return const_var(static_cast<unsigned long>(u));
+            } else {
+              return const_var(static_cast<unsigned long long>(u));
             }
-          }
-        }
-
-        if (unsigned_)
-        {
-          if (longlong_)
-          {
-            uint64_t val;
-            ss >> val;
-            return const_var(val);
-          } else if (long_) {
-            unsigned long val;
-            ss >> val;
-            return const_var(val);
-          } else {
-            unsigned int val;
-            ss >> val;
-            return const_var(val);
-          }
-        } else {
-          if (longlong_)
-          {
-            int64_t val;
-            ss >> val;
-            return const_var(val);
-          } else if (long_) {
-            long val;
-            ss >> val;
-            return const_var(val);
-          } else {
-            int val;
-            ss >> val;
-            return const_var(val);
+          } catch (const std::out_of_range &) {
+            // it's just simply too big
+            return const_var(std::numeric_limits<long long>::max());
           }
         }
       }
@@ -756,59 +718,44 @@ namespace chaiscript
         } else {
           const auto start = m_position;
           if (m_position.has_more() && char_in_alphabet(*m_position, detail::float_alphabet) ) {
-            if (Hex_()) {
-              auto match = Position::str(start, m_position);
-              auto bv = buildInt(std::hex, match);
-              m_match_stack.emplace_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
-              return true;
-            }
-
-            if (Binary_()) {
-              auto match = Position::str(start, m_position);
-              int64_t temp_int = 0;
-              size_t pos = 0;
-              const auto end = match.length();
-
-              while ((pos < end) && (pos < (2 + sizeof(int) * 8))) {
-                temp_int <<= 1;
-                if (match[pos] == '1') {
-                  temp_int += 1;
-                }
-                ++pos;
+            try {
+              if (Hex_()) {
+                auto match = Position::str(start, m_position);
+                auto bv = buildInt(16, match, true);
+                m_match_stack.emplace_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                return true;
               }
 
-              Boxed_Value i = [&]()->Boxed_Value{
-                if (match.length() <= sizeof(int) * 8)
-                {
-                  return const_var(static_cast<int>(temp_int));
+              if (Binary_()) {
+                auto match = Position::str(start, m_position);
+                auto bv = buildInt(2, match, true);
+                m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                return true;
+              }
+              if (Float_()) {
+                auto match = Position::str(start, m_position);
+                auto bv = buildFloat(match);
+                m_match_stack.push_back(make_node<eval::Float_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                return true;
+              }
+              else {
+                IntSuffix_();
+                auto match = Position::str(start, m_position);
+                if (!match.empty() && (match[0] == '0')) {
+                  auto bv = buildInt(8, match, false);
+                  m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                }
+                else if (!match.empty()) {
+                  auto bv = buildInt(10, match, false);
+                  m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
                 } else {
-                  return const_var(temp_int);
+                  return false;
                 }
-              }();
-
-              m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(i)));
-              return true;
-            }
-            if (Float_()) {
-              auto match = Position::str(start, m_position);
-              auto bv = buildFloat(match);
-              m_match_stack.push_back(make_node<eval::Float_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
-              return true;
-            }
-            else {
-              IntSuffix_();
-              auto match = Position::str(start, m_position);
-              if (!match.empty() && (match[0] == '0')) {
-                auto bv = buildInt(std::oct, match);
-                m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                return true;
               }
-              else if (!match.empty()) {
-                auto bv = buildInt(std::dec, match);
-                m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
-              } else {
-                return false;
-              }
-              return true;
+            } catch (const std::invalid_argument &) {
+              // error parsing number passed in to buildFloat/buildInt
+              return false;
             }
           }
           else {
@@ -974,6 +921,8 @@ namespace chaiscript
             interpolation_allowed(t_interpolation_allowed)
         {
         }
+
+		Char_Parser &operator=(const Char_Parser &) = delete;
 
         ~Char_Parser(){
           if (is_octal) {
@@ -2455,6 +2404,13 @@ namespace chaiscript
     };
   }
 }
+
+
+#ifdef CHAISCRIPT_MSVC
+#pragma pop_macro("min")
+#pragma pop_macro("max")
+#endif
+
 
 #endif /* CHAISCRIPT_PARSER_HPP_ */
 

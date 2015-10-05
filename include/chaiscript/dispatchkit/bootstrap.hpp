@@ -509,6 +509,8 @@ namespace chaiscript
         bootstrap_pod_type<long>("long", m);
         bootstrap_pod_type<unsigned int>("unsigned_int", m);
         bootstrap_pod_type<unsigned long>("unsigned_long", m);
+        bootstrap_pod_type<long long>("long_long", m);
+        bootstrap_pod_type<unsigned long long>("unsigned_long_long", m);
         bootstrap_pod_type<size_t>("size_t", m);
         bootstrap_pod_type<char>("char", m);
         bootstrap_pod_type<wchar_t>("wchar_t", m);
