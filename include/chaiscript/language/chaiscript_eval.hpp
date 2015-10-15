@@ -950,7 +950,7 @@ namespace chaiscript
               }
               else if (this->children[currentCase]->identifier == AST_Node_Type::Default) {
                 this->children[currentCase]->eval(t_ss);
-                breaking = true;
+                hasMatched = true;
               }
             }
             catch (detail::Break_Loop &) {

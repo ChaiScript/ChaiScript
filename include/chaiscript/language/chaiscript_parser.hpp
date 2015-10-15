@@ -1807,6 +1807,8 @@ namespace chaiscript
 
           build_match<eval::Case_AST_Node>(prev_stack_top);
         } else if (Keyword("default")) {
+          retval = true;
+
           while (Eol()) {}
 
           if (!Block()) {
