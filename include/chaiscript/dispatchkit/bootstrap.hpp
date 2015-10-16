@@ -467,6 +467,7 @@ namespace chaiscript
         m->add(fun(&Boxed_Value::is_ref), "is_var_reference");
         m->add(fun(&Boxed_Value::is_pointer), "is_var_pointer");
         m->add(fun(&Boxed_Value::is_return_value), "is_var_return_value");
+        m->add(fun(&Boxed_Value::reset_return_value), "reset_var_return_value");
         m->add(fun(&Boxed_Value::is_type), "is_type");
         m->add(fun(&Boxed_Value::get_attr), "get_var_attr");
         m->add(fun(&Boxed_Value::copy_attrs), "copy_var_attrs");
