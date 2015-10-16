@@ -1031,13 +1031,7 @@ namespace chaiscript
           uint_fast32_t loc = t_loc.load(std::memory_order_relaxed);
           const auto funs = get_function(t_name, loc);
           if (funs.first != loc) t_loc.store(uint_fast32_t(funs.first), std::memory_order_relaxed);
-          Boxed_Value bv = dispatch::dispatch(*funs.second, params, m_conversions);
-          // the result of a clone is never to be marked as a return_value
-          // \todo see if we can eliminate this comparison
-          if (t_name == "clone") {
-            bv.reset_return_value();
-          }
-          return bv;
+          return dispatch::dispatch(*funs.second, params, m_conversions);
         }
 
 

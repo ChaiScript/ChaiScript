@@ -1,5 +1,7 @@
 var v = []
-v.push_back(3.4, 1, "bob");
+v.push_back(3.4);
+v.push_back(1);
+v.push_back("bob");
 
 assert_true(v[0] == 3.4)
 assert_true(v[1] == 1)

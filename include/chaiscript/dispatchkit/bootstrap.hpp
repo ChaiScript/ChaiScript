@@ -470,6 +470,7 @@ namespace chaiscript
         m->add(fun(&Boxed_Value::is_type), "is_type");
         m->add(fun(&Boxed_Value::get_attr), "get_var_attr");
         m->add(fun(&Boxed_Value::copy_attrs), "copy_var_attrs");
+        m->add(fun(&Boxed_Value::clone_attrs), "clone_var_attrs");
 
         m->add(fun(&Boxed_Value::get_type_info), "get_type_info");
         m->add(user_type<Type_Info>(), "Type_Info");
