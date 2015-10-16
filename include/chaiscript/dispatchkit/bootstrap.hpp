@@ -494,6 +494,7 @@ namespace chaiscript
         basic_constructors<bool>("bool", m);
         operators::assign<bool>(m);
         operators::equal<bool>(m);
+        operators::not_equal<bool>(m);
 
         m->add(fun([](const std::string &s) -> std::string { return s; }), "to_string");
         m->add(fun(&Bootstrap::bool_to_string), "to_string");
