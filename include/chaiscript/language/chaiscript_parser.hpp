@@ -660,13 +660,15 @@ namespace chaiscript
 
         const auto val = prefixed?std::string(t_val.begin()+2,t_val.end()):t_val;
 
-        try {
-          auto u = std::stoll(val,nullptr,base);
-
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
+#pragma GCC diagnostic ignored "-Wtautological-compare"
 #endif
+
+        try {
+          auto u = std::stoll(val,nullptr,base);
+
 
           if (!unsigned_ && !long_ && u >= std::numeric_limits<int>::min() && u <= std::numeric_limits<int>::max()) {
             return const_var(static_cast<int>(u));
@@ -681,10 +683,6 @@ namespace chaiscript
           } else {
             return const_var(static_cast<unsigned long long>(u));
           }
-
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
 
         } catch (const std::out_of_range &) {
           // too big to be signed
@@ -701,6 +699,11 @@ namespace chaiscript
             return const_var(std::numeric_limits<long long>::max());
           }
         }
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
       }
 
       template<typename T, typename ... Param>
