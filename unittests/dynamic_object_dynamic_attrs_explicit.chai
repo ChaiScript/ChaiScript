@@ -10,5 +10,5 @@ var o = MyClass();
 
 assert_true(o.is_explicit());
 
-assert_throws(fun[o](){o.x = 2})
+assert_throws("error", fun[o](){o.x = 2})
 

@@ -28,12 +28,22 @@ namespace chaiscript
     {
       public:
         Dynamic_Object(std::string t_type_name)
-          : m_type_name(std::move(t_type_name))
+          : m_type_name(std::move(t_type_name)), m_option_explicit(false)
         {
         }
 
-        Dynamic_Object() : m_type_name("")
+        Dynamic_Object() : m_type_name(""), m_option_explicit(false)
         {
+        }
+
+        bool is_explicit() const
+        {
+          return m_option_explicit;
+        }
+
+        void set_explicit(const bool t_explicit)
+        {
+          m_option_explicit = t_explicit;
         }
 
         std::string get_type_name() const
@@ -85,6 +95,7 @@ namespace chaiscript
 
       private:
         std::string m_type_name;
+        bool m_option_explicit;
 
         std::map<std::string, Boxed_Value> m_attrs;
     };

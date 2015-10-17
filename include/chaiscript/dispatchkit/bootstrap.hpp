@@ -440,6 +440,8 @@ namespace chaiscript
         m->add(constructor<dispatch::Dynamic_Object ()>(), "Dynamic_Object");
         m->add(fun(&dispatch::Dynamic_Object::get_type_name), "get_type_name");
         m->add(fun(&dispatch::Dynamic_Object::get_attrs), "get_attrs");
+        m->add(fun(&dispatch::Dynamic_Object::set_explicit), "set_explicit");
+        m->add(fun(&dispatch::Dynamic_Object::is_explicit), "is_explicit");
 
         m->add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::get_attr)), "get_attr");
         m->add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::get_attr)), "get_attr");
