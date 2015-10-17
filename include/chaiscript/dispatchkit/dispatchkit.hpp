@@ -1002,12 +1002,17 @@ namespace chaiscript
             }();
 
             if (!functions.empty()) {
-              if (is_no_param) {
-                std::vector<Boxed_Value> tmp_params(params);
-                tmp_params.insert(tmp_params.begin() + 1, var(t_name));
-                return do_attribute_call(2, tmp_params, functions, m_conversions);
-              } else {
-                return dispatch::dispatch(functions, {params[0], var(t_name), var(std::vector<Boxed_Value>(params.begin()+1, params.end()))}, m_conversions);
+              try {
+                if (is_no_param) {
+                  std::vector<Boxed_Value> tmp_params(params);
+                  tmp_params.insert(tmp_params.begin() + 1, var(t_name));
+                  return do_attribute_call(2, tmp_params, functions, m_conversions);
+                } else {
+                  return dispatch::dispatch(functions, {params[0], var(t_name), var(std::vector<Boxed_Value>(params.begin()+1, params.end()))}, m_conversions);
+                }
+              } catch (const dispatch::option_explicit_set &e) {
+                throw chaiscript::exception::dispatch_error(params, std::vector<Const_Proxy_Function>(funs.second->begin(), funs.second->end()), 
+                    e.what());
               }
             }
 

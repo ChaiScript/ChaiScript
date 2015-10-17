@@ -68,6 +68,13 @@ if(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(LINKER_FLAGS "${LINKER_FLAGS} -flto")
   endif()
 
+  option(GPROF_OUTPUT "Generate profile data" FALSE)
+  if (GPROF_OUTPUT)
+    add_definitions(-pg)
+    set(LINKER_FLAGS "${LINKER_FLAGS} -pg")
+  endif()
+
+
   option(PROFILE_GENERATE "Generate profile data" FALSE)
   if (PROFILE_GENERATE)
     add_definitions(-fprofile-generate)

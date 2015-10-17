@@ -760,6 +760,14 @@ namespace chaiscript
         {
         }
 
+        dispatch_error(std::vector<Boxed_Value> t_parameters, 
+            std::vector<Const_Proxy_Function> t_functions,
+            const std::string &t_desc)
+          : std::runtime_error(t_desc), parameters(std::move(t_parameters)), functions(std::move(t_functions))
+        {
+        }
+
+
         dispatch_error(const dispatch_error &) = default;
         virtual ~dispatch_error() CHAISCRIPT_NOEXCEPT {}
 
