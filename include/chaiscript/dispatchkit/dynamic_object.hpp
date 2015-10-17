@@ -24,6 +24,16 @@ namespace chaiscript
 {
   namespace dispatch
   {
+    struct option_explicit_set : std::runtime_error {
+      option_explicit_set(const std::string &t_param_name)
+        : std::runtime_error("option explicit set and parameter '" + t_param_name + "' does not exist")
+      {
+
+      }
+
+      virtual ~option_explicit_set() CHAISCRIPT_NOEXCEPT {}
+    };
+
     class Dynamic_Object
     {
       public:
@@ -79,11 +89,19 @@ namespace chaiscript
 
         Boxed_Value &method_missing(const std::string &t_method_name)
         {
+          if (m_option_explicit && m_attrs.find(t_method_name) == m_attrs.end()) {
+            throw option_explicit_set(t_method_name);
+          }
+
           return get_attr(t_method_name);
         }
 
         const Boxed_Value &method_missing(const std::string &t_method_name) const
         {
+          if (m_option_explicit && m_attrs.find(t_method_name) == m_attrs.end()) {
+            throw option_explicit_set(t_method_name);
+          }
+
           return get_attr(t_method_name);
         }
 
