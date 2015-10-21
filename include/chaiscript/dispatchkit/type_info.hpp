@@ -11,7 +11,6 @@
 #include <type_traits>
 #include <typeinfo>
 #include <string>
-#include <bitset>
 
 namespace chaiscript
 {
@@ -84,12 +83,12 @@ namespace chaiscript
           && (*m_bare_type_info) == ti;
       }
 
-      CHAISCRIPT_CONSTEXPR bool is_const() const CHAISCRIPT_NOEXCEPT { return m_flags[is_const_flag]; }
-      CHAISCRIPT_CONSTEXPR bool is_reference() const CHAISCRIPT_NOEXCEPT { return m_flags[is_reference_flag]; }
-      CHAISCRIPT_CONSTEXPR bool is_void() const CHAISCRIPT_NOEXCEPT { return m_flags[is_void_flag]; }
-      CHAISCRIPT_CONSTEXPR bool is_arithmetic() const CHAISCRIPT_NOEXCEPT { return m_flags[is_arithmetic_flag]; }
-      CHAISCRIPT_CONSTEXPR bool is_undef() const CHAISCRIPT_NOEXCEPT { return m_flags[is_undef_flag]; }
-      CHAISCRIPT_CONSTEXPR bool is_pointer() const CHAISCRIPT_NOEXCEPT { return m_flags[is_pointer_flag]; }
+      CHAISCRIPT_CONSTEXPR bool is_const() const CHAISCRIPT_NOEXCEPT { return m_flags & (1 << is_const_flag); }
+      CHAISCRIPT_CONSTEXPR bool is_reference() const CHAISCRIPT_NOEXCEPT { return m_flags & (1 << is_reference_flag); }
+      CHAISCRIPT_CONSTEXPR bool is_void() const CHAISCRIPT_NOEXCEPT { return m_flags & (1 << is_void_flag); }
+      CHAISCRIPT_CONSTEXPR bool is_arithmetic() const CHAISCRIPT_NOEXCEPT { return m_flags & (1 << is_arithmetic_flag); }
+      CHAISCRIPT_CONSTEXPR bool is_undef() const CHAISCRIPT_NOEXCEPT { return m_flags & (1 << is_undef_flag); }
+      CHAISCRIPT_CONSTEXPR bool is_pointer() const CHAISCRIPT_NOEXCEPT { return m_flags & (1 << is_pointer_flag); }
 
       std::string name() const
       {
@@ -119,7 +118,7 @@ namespace chaiscript
     private:
       const std::type_info *m_type_info;
       const std::type_info *m_bare_type_info;
-      std::bitset<6> m_flags;
+      unsigned int m_flags;
       static const int is_const_flag = 0;
       static const int is_reference_flag = 1;
       static const int is_pointer_flag = 2;
