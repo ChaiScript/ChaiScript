@@ -39,7 +39,11 @@
 #define CHAISCRIPT_GCC_4_6
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7) || defined(CHAISCRIPT_MSVC) || defined(__llvm__)
+#if defined(__llvm__)
+#define CHAISCRIPT_CLANG
+#endif
+
+#if (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7) || defined(CHAISCRIPT_MSVC) || defined(CHAISCRIPT_CLANG)
 #define CHAISCRIPT_OVERRIDE override
 #else
 #define CHAISCRIPT_OVERRIDE

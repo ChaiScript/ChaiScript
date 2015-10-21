@@ -663,7 +663,11 @@ namespace chaiscript
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
+
+#ifdef CHAISCRIPT_CLANG
 #pragma GCC diagnostic ignored "-Wtautological-compare"
+#endif
+
 #endif
 
         try {
