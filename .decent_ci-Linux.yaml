@@ -2,7 +2,7 @@ compilers:
   - name: "clang"
     version: "3.5"
     skip_packaging: true
-    cmake_extra_flags: -DUSE_LIBCXX:BOOL=OFF -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON
+    cmake_extra_flags: -DUSE_LIBCXX:BOOL=OFF -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DRUN_PERFORMANCE_TESTS:BOOL=ON
   - name: "clang"
     build_tag: "LibC++"
     version: "3.5"
@@ -20,7 +20,7 @@ compilers:
     cmake_extra_flags: -DUSE_LIBCXX:BOOL=OFF -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DENABLE_THREAD_SANITIZER:BOOL=ON
   - name: "gcc"
     version: "4.8"
-    cmake_extra_flags: -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DBUILD_TESTING:BOOL=ON
+    cmake_extra_flags: -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DBUILD_TESTING:BOOL=ON -DRUN_PERFORMANCE_TESTS:BOOL=ON
   - name: "gcc"
     version: "4.6"
     skip_packaging: true
