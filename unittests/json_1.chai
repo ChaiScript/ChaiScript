@@ -1,0 +1,3 @@
+
+
+assert_true(from_json("null").is_var_null())

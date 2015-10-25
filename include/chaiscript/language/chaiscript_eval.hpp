@@ -60,7 +60,6 @@ namespace chaiscript
 
         chaiscript::eval::detail::Stack_Push_Pop tpp(state);
         if (thisobj) state.add_object("this", *thisobj);
-        chaiscript::eval::detail::Scope_Push_Pop spp(state);
 
         if (t_locals) {
           for (const auto &local : *t_locals) {
@@ -69,7 +68,9 @@ namespace chaiscript
         }
 
         for (size_t i = 0; i < t_param_names.size(); ++i) {
-          state.add_object(t_param_names[i], t_vals[i]);
+          if (t_param_names[i] != "this") {
+            state.add_object(t_param_names[i], t_vals[i]);
+          }
         }
 
         try {
@@ -117,7 +118,7 @@ namespace chaiscript
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               fpp.save_params({t_lhs, t_rhs});
-              return t_ss->call_function(t_oper_string, t_lhs, t_rhs);
+              return t_ss->call_function(t_oper_string, m_loc, {t_lhs, t_rhs});
             }
           }
           catch(const exception::dispatch_error &e){
@@ -127,6 +128,7 @@ namespace chaiscript
 
       private:
         Operators::Opers m_oper;
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Int_AST_Node : public AST_Node {
@@ -395,6 +397,8 @@ namespace chaiscript
         { assert(children.size() == 3); }
 
         Operators::Opers m_oper;
+        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_clone_loc;
 
         virtual ~Equation_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE {
@@ -430,14 +434,14 @@ namespace chaiscript
                 } else {
                   if (!rhs.is_return_value())
                   {
-                    rhs = t_ss->call_function("clone", rhs);
+                    rhs = t_ss->call_function("clone", m_clone_loc, {rhs});
                   }
                   rhs.reset_return_value();
                 }
               }
 
               try {
-                return t_ss->call_function(this->children[1]->text, std::move(lhs), rhs);
+                return t_ss->call_function(this->children[1]->text, m_loc, {std::move(lhs), rhs});
               }
               catch(const exception::dispatch_error &e){
                 throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, *t_ss);
@@ -457,7 +461,7 @@ namespace chaiscript
           }
           else {
             try {
-              return t_ss->call_function(this->children[1]->text, std::move(lhs), rhs);
+              return t_ss->call_function(this->children[1]->text, m_loc, {std::move(lhs), rhs});
             } catch(const exception::dispatch_error &e){
               throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, *t_ss);
             }
@@ -540,7 +544,7 @@ namespace chaiscript
 
           try {
             fpp.save_params(params);
-            return t_ss->call_function("[]", params);
+            return t_ss->call_function("[]", m_loc, params);
           }
           catch(const exception::dispatch_error &e){
             throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, false, *t_ss );
@@ -562,6 +566,8 @@ namespace chaiscript
 
           return oss.str();
         }
+
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Dot_Access_AST_Node : public AST_Node {
@@ -591,7 +597,7 @@ namespace chaiscript
           fpp.save_params(params);
 
           try {
-            retval = t_ss->call_member(m_fun_name, std::move(params), has_function_params);
+            retval = t_ss->call_member(m_fun_name, m_loc, std::move(params), has_function_params);
           }
           catch(const exception::dispatch_error &e){
             if (e.functions.empty())
@@ -607,7 +613,7 @@ namespace chaiscript
 
           if (this->children[2]->identifier == AST_Node_Type::Array_Call) {
             try {
-              retval = t_ss->call_function("[]", retval, this->children[2]->children[1]->eval(t_ss));
+              retval = t_ss->call_function("[]", m_array_loc, {retval, this->children[2]->children[1]->eval(t_ss)});
             }
             catch(const exception::dispatch_error &e){
               throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, true, *t_ss);
@@ -618,6 +624,8 @@ namespace chaiscript
         }
 
       private:
+        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_array_loc;
         std::string m_fun_name;
     };
 
@@ -931,7 +939,7 @@ namespace chaiscript
               if (this->children[currentCase]->identifier == AST_Node_Type::Case) {
                 //This is a little odd, but because want to see both the switch and the case simultaneously, I do a downcast here.
                 try {
-                  if (hasMatched || boxed_cast<bool>(t_ss->call_function("==", match_value, this->children[currentCase]->children[0]->eval(t_ss)))) {
+                  if (hasMatched || boxed_cast<bool>(t_ss->call_function("==", m_loc, {match_value, this->children[currentCase]->children[0]->eval(t_ss)}))) {
                     this->children[currentCase]->eval(t_ss);
                     hasMatched = true;
                   }
@@ -942,7 +950,7 @@ namespace chaiscript
               }
               else if (this->children[currentCase]->identifier == AST_Node_Type::Default) {
                 this->children[currentCase]->eval(t_ss);
-                breaking = true;
+                hasMatched = true;
               }
             }
             catch (detail::Break_Loop &) {
@@ -952,6 +960,8 @@ namespace chaiscript
           }
           return Boxed_Value();
         }
+
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Case_AST_Node : public AST_Node {
@@ -998,7 +1008,7 @@ namespace chaiscript
               for (const auto &child : children[0]->children) {
                 auto obj = child->eval(t_ss);
                 if (!obj.is_return_value()) {
-                  vec.push_back(t_ss->call_function("clone", obj));
+                  vec.push_back(t_ss->call_function("clone", m_loc, {obj}));
                 } else {
                   vec.push_back(std::move(obj));
                 }
@@ -1015,6 +1025,8 @@ namespace chaiscript
         {
           return "[" + AST_Node::pretty_print() + "]";
         }
+
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Inline_Map_AST_Node : public AST_Node {
@@ -1029,7 +1041,7 @@ namespace chaiscript
             for (const auto &child : children[0]->children) {
               auto obj = child->children[1]->eval(t_ss);
               if (!obj.is_return_value()) {
-                obj = t_ss->call_function("clone", obj);
+                obj = t_ss->call_function("clone", m_loc, {obj});
               }
 
               retval[t_ss->boxed_cast<std::string>(child->children[0]->eval(t_ss))] = std::move(obj);
@@ -1042,6 +1054,7 @@ namespace chaiscript
           }
         }
 
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Return_AST_Node : public AST_Node {
@@ -1124,7 +1137,7 @@ namespace chaiscript
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               fpp.save_params({bv});
-              return t_ss->call_function(children[0]->text, std::move(bv));
+              return t_ss->call_function(children[0]->text, m_loc, {std::move(bv)});
             }
           } catch (const exception::dispatch_error &e) {
             throw exception::eval_error("Error with prefix operator evaluation: '" + children[0]->text + "'", e.parameters, e.functions, false, *t_ss);
@@ -1133,6 +1146,7 @@ namespace chaiscript
 
       private:
         Operators::Opers m_oper;
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Break_AST_Node : public AST_Node {
@@ -1195,14 +1209,14 @@ namespace chaiscript
           try {
             auto oper1 = children[0]->children[0]->children[0]->eval(t_ss);
             auto oper2 = children[0]->children[0]->children[1]->eval(t_ss);
-            return t_ss->call_function("generate_range",
-                oper1, oper2);
+            return t_ss->call_function("generate_range", m_loc, {oper1, oper2});
           }
           catch (const exception::dispatch_error &e) {
             throw exception::eval_error("Unable to generate range vector, while calling 'generate_range'", e.parameters, e.functions, false, *t_ss);
           }
         }
 
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Annotation_AST_Node : public AST_Node {

@@ -297,6 +297,13 @@ namespace chaiscript
         return *this;
       }
 
+      Boxed_Value &clone_attrs(const Boxed_Value &t_obj)
+      {
+        copy_attrs(t_obj);
+        reset_return_value();
+        return *this;
+      }
+
 
       /// \returns true if the two Boxed_Values share the same internal type
       static bool type_match(const Boxed_Value &l, const Boxed_Value &r) CHAISCRIPT_NOEXCEPT
@@ -330,9 +337,9 @@ namespace chaiscript
   ///
   /// @sa @ref adding_objects
   template<typename T>
-    Boxed_Value var(T t)
+    Boxed_Value var(T &&t)
     {
-      return Boxed_Value(t);
+      return Boxed_Value(std::forward<T>(t));
     }
 
   namespace detail {

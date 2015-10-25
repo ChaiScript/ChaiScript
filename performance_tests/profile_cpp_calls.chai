@@ -1,0 +1,26 @@
+
+var test_str = "bob was a string";
+
+for( var i = 0; i < 200000; ++i)
+{
+  test_str.size();
+//  test_str.find("a", i);
+  test_str.c_str();
+  test_str.erase_at(1);
+  test_str.erase_at(1);
+  test_str.erase_at(1);
+  test_str.erase_at(1);
+  test_str.erase_at(1);
+  test_str.erase_at(1);
+
+  size(test_str);
+//  test_str.find("a", i);
+  c_str(test_str);
+  erase_at(test_str, 1);
+  erase_at(test_str, 1);
+  erase_at(test_str, 1);
+  erase_at(test_str, 1);
+  erase_at(test_str, 1);
+  erase_at(test_str, 1);
+  test_str = "bob was a string";
+}

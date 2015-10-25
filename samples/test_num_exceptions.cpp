@@ -23,7 +23,7 @@ int main( int /*argc*/ , char * /*argv*/[] )
   {
     ch.eval( script );
   }
-  catch ( std::exception e )
+  catch ( const std::exception &e )
   {
     printf( " >>> Exception thrown: %s \n" , e.what( ) );
   }
