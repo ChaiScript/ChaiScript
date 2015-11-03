@@ -33,14 +33,14 @@ namespace chaiscript
     template<typename Result>
       struct Cast_Helper_Inner
       {
-        typedef std::reference_wrapper<typename std::add_const<Result>::type > Result_Type;
+        typedef typename std::add_const<Result>::type Result_Type;
 
         static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
           if (ob.get_type_info().bare_equal_type_info(typeid(Result)))
           {
             auto p = throw_if_null(ob.get_const_ptr());
-            return std::cref(*static_cast<const Result *>(p));
+            return *static_cast<const Result *>(p);
           } else {
             throw chaiscript::detail::exception::bad_any_cast();
           }
@@ -49,12 +49,6 @@ namespace chaiscript
 
     template<typename Result>
       struct Cast_Helper_Inner<const Result> : Cast_Helper_Inner<Result>
-      {
-      };
-
-    /// Cast_Helper_Inner for casting to a const & type
-    template<typename Result>
-      struct Cast_Helper_Inner<const Result &> : Cast_Helper_Inner<Result>
       {
       };
 
@@ -85,6 +79,24 @@ namespace chaiscript
           if (!ob.get_type_info().is_const() && ob.get_type_info() == typeid(Result))
           {
             return static_cast<Result *>(throw_if_null(ob.get_ptr()));
+          } else {
+            throw chaiscript::detail::exception::bad_any_cast();
+          }
+        }
+      };
+
+    /// Cast_Helper_Inner for casting to a & type
+    template<typename Result>
+      struct Cast_Helper_Inner<const Result &>
+      {
+        typedef const Result& Result_Type;
+
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
+        {
+          if (ob.get_type_info().bare_equal_type_info(typeid(Result)))
+          {
+            auto p = throw_if_null(ob.get_const_ptr());
+            return *static_cast<const Result *>(p);
           } else {
             throw chaiscript::detail::exception::bad_any_cast();
           }
