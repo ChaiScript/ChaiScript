@@ -981,6 +981,14 @@ namespace chaiscript
 
             if (is_hex_char) {
               hex_matches.push_back(t_char);
+
+              if (hex_matches.size() == 2*sizeof(char_type)) {
+                // This rule differs from the C/C++ standard, but ChaiScript
+                // does not offer the same workaround options, and having
+                // hexadecimal sequences longer than can fit into the char
+                // type is undefined behavior anyway.
+                process_hex();
+              }
               return;
             } else {
               process_hex();
