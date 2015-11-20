@@ -62,7 +62,7 @@ namespace chaiscript
         {
           if (ob.get_type_info().bare_equal_type_info(typeid(Result)))
           {
-            return static_cast<const Result *>(throw_if_null(ob.get_const_ptr()));
+            return static_cast<const Result *>(ob.get_const_ptr());
           } else {
             throw chaiscript::detail::exception::bad_any_cast();
           }
@@ -76,14 +76,25 @@ namespace chaiscript
         typedef Result * Result_Type;
         static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
-          if (!ob.get_type_info().is_const() && ob.get_type_info() == typeid(Result))
+          if (!ob.get_type_info().is_const() && ob.get_type_info().bare_equal_type_info(typeid(Result)))
           {
-            return static_cast<Result *>(throw_if_null(ob.get_ptr()));
+            return static_cast<Result *>(ob.get_ptr());
           } else {
             throw chaiscript::detail::exception::bad_any_cast();
           }
         }
       };
+
+    template<typename Result>
+    struct Cast_Helper_Inner<Result * const &> : public Cast_Helper_Inner<Result *>
+    {
+    };
+
+    template<typename Result>
+    struct Cast_Helper_Inner<const Result * const &> : public Cast_Helper_Inner<const Result *>
+    {
+    };
+
 
     /// Cast_Helper_Inner for casting to a & type
     template<typename Result>
