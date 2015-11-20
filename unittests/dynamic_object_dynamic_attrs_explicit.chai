@@ -1,0 +1,14 @@
+
+class MyClass {
+  def MyClass()
+  {
+    this.set_explicit(true);
+  }
+};
+
+var o = MyClass();
+
+assert_true(o.is_explicit());
+
+assert_throws("error", fun[o](){o.x = 2})
+

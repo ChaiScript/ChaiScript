@@ -1,0 +1,5 @@
+
+var v = []
+v.push_back(int(1));
+v[0] = 3;
+

@@ -1,0 +1,6 @@
+
+assert_equal("\71", "9")
+assert_equal("\071", "9")
+assert_equal("\71a", "9a")
+assert_equal("b\71a", "b9a")
+

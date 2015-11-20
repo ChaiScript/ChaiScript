@@ -17,8 +17,18 @@
 #include <cstring>
 
 
+
 #include "../dispatchkit/boxed_value.hpp"
 #include "chaiscript_common.hpp"
+
+
+#if defined(CHAISCRIPT_MSVC) && defined(max) && defined(min)
+#pragma push_macro("max") // Why Microsoft? why? This is worse than bad
+#undef max
+#pragma push_macro("min")
+#undef min
+#endif
+
 
 namespace chaiscript
 {
@@ -621,8 +631,7 @@ namespace chaiscript
 
 
 
-      template<typename IntType>
-      static Boxed_Value buildInt(const IntType &t_type, const std::string &t_val)
+      static Boxed_Value buildInt(const int base, const std::string &t_val, const bool prefixed)
       {
         bool unsigned_ = false;
         bool long_ = false;
@@ -649,96 +658,56 @@ namespace chaiscript
           }
         }
 
-        std::stringstream ss(t_val.substr(0, i));
-        ss >> t_type;
+        const auto val = prefixed?std::string(t_val.begin()+2,t_val.end()):t_val;
 
-        std::stringstream testu(t_val.substr(0, i));
-        uint64_t u;
-        testu >> t_type >> u;
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
 
-        bool unsignedrequired = false;
+#ifdef CHAISCRIPT_CLANG
+#pragma GCC diagnostic ignored "-Wtautological-compare"
+#endif
 
-        if ((u >> (sizeof(int) * 8)) > 0)
-        {
-          //requires something bigger than int
-          long_ = true;
-        }
+#endif
 
-        static_assert(sizeof(long) == sizeof(uint64_t) || sizeof(long) * 2 == sizeof(uint64_t), "Unexpected sizing of integer types");
-
-        if ((sizeof(long) < sizeof(uint64_t)) 
-            && (u >> ((sizeof(uint64_t) - sizeof(long)) * 8)) > 0)
-        {
-          //requires something bigger than long
-          longlong_ = true;
-        }
+        try {
+          auto u = std::stoll(val,nullptr,base);
 
 
-        const size_t size = [&]()->size_t{
-          if (longlong_)
-          {
-            return sizeof(int64_t) * 8;
-          } else if (long_) {
-            return sizeof(long) * 8;
+          if (!unsigned_ && !long_ && u >= std::numeric_limits<int>::min() && u <= std::numeric_limits<int>::max()) {
+            return const_var(static_cast<int>(u));
+          } else if ((unsigned_ || base != 10) && !long_ && u >= std::numeric_limits<unsigned int>::min() && u <= std::numeric_limits<unsigned int>::max()) {
+            return const_var(static_cast<unsigned int>(u));
+          } else if (!unsigned_ && !longlong_ && u >= std::numeric_limits<long>::min() && u <= std::numeric_limits<long>::max()) {
+            return const_var(static_cast<long>(u));
+          } else if ((unsigned_ || base != 10) && !longlong_ && u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
+            return const_var(static_cast<unsigned long>(u));
+          } else if (!unsigned_ && u >= std::numeric_limits<long long>::min() && u <= std::numeric_limits<long long>::max()) {
+            return const_var(static_cast<long long>(u));
           } else {
-            return sizeof(int) * 8;
+            return const_var(static_cast<unsigned long long>(u));
           }
-        }();
 
-        if ( (u >> (size - 1)) > 0)
-        {
-          unsignedrequired = true;
-        }
+        } catch (const std::out_of_range &) {
+          // too big to be signed
+          try {
+            auto u = std::stoull(val,nullptr,base);
 
-        if (unsignedrequired && !unsigned_)
-        {
-          if (t_type == &std::hex || t_type == &std::oct)
-          {
-            // with hex and octal we are happy to just make it unsigned
-            unsigned_ = true;
-          } else {
-            // with decimal we must bump it up to the next size
-            if (long_)
-            {
-              longlong_ = true;
-            } else if (!long_ && !longlong_) {
-              long_ = true;
+            if (u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
+              return const_var(static_cast<unsigned long>(u));
+            } else {
+              return const_var(static_cast<unsigned long long>(u));
             }
+          } catch (const std::out_of_range &) {
+            // it's just simply too big
+            return const_var(std::numeric_limits<long long>::max());
           }
         }
 
-        if (unsigned_)
-        {
-          if (longlong_)
-          {
-            uint64_t val;
-            ss >> val;
-            return const_var(val);
-          } else if (long_) {
-            unsigned long val;
-            ss >> val;
-            return const_var(val);
-          } else {
-            unsigned int val;
-            ss >> val;
-            return const_var(val);
-          }
-        } else {
-          if (longlong_)
-          {
-            int64_t val;
-            ss >> val;
-            return const_var(val);
-          } else if (long_) {
-            long val;
-            ss >> val;
-            return const_var(val);
-          } else {
-            int val;
-            ss >> val;
-            return const_var(val);
-          }
-        }
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
       }
 
       template<typename T, typename ... Param>
@@ -756,59 +725,44 @@ namespace chaiscript
         } else {
           const auto start = m_position;
           if (m_position.has_more() && char_in_alphabet(*m_position, detail::float_alphabet) ) {
-            if (Hex_()) {
-              auto match = Position::str(start, m_position);
-              auto bv = buildInt(std::hex, match);
-              m_match_stack.emplace_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
-              return true;
-            }
-
-            if (Binary_()) {
-              auto match = Position::str(start, m_position);
-              int64_t temp_int = 0;
-              size_t pos = 0;
-              const auto end = match.length();
-
-              while ((pos < end) && (pos < (2 + sizeof(int) * 8))) {
-                temp_int <<= 1;
-                if (match[pos] == '1') {
-                  temp_int += 1;
-                }
-                ++pos;
+            try {
+              if (Hex_()) {
+                auto match = Position::str(start, m_position);
+                auto bv = buildInt(16, match, true);
+                m_match_stack.emplace_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                return true;
               }
 
-              Boxed_Value i = [&]()->Boxed_Value{
-                if (match.length() <= sizeof(int) * 8)
-                {
-                  return const_var(static_cast<int>(temp_int));
+              if (Binary_()) {
+                auto match = Position::str(start, m_position);
+                auto bv = buildInt(2, match, true);
+                m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                return true;
+              }
+              if (Float_()) {
+                auto match = Position::str(start, m_position);
+                auto bv = buildFloat(match);
+                m_match_stack.push_back(make_node<eval::Float_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                return true;
+              }
+              else {
+                IntSuffix_();
+                auto match = Position::str(start, m_position);
+                if (!match.empty() && (match[0] == '0')) {
+                  auto bv = buildInt(8, match, false);
+                  m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                }
+                else if (!match.empty()) {
+                  auto bv = buildInt(10, match, false);
+                  m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
                 } else {
-                  return const_var(temp_int);
+                  return false;
                 }
-              }();
-
-              m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(i)));
-              return true;
-            }
-            if (Float_()) {
-              auto match = Position::str(start, m_position);
-              auto bv = buildFloat(match);
-              m_match_stack.push_back(make_node<eval::Float_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
-              return true;
-            }
-            else {
-              IntSuffix_();
-              auto match = Position::str(start, m_position);
-              if (!match.empty() && (match[0] == '0')) {
-                auto bv = buildInt(std::oct, match);
-                m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                return true;
               }
-              else if (!match.empty()) {
-                auto bv = buildInt(std::dec, match);
-                m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
-              } else {
-                return false;
-              }
-              return true;
+            } catch (const std::invalid_argument &) {
+              // error parsing number passed in to buildFloat/buildInt
+              return false;
             }
           }
           else {
@@ -949,6 +903,130 @@ namespace chaiscript
         return false;
       }
 
+      template<typename string_type>
+      struct Char_Parser
+      {
+        string_type &match;
+        typedef typename string_type::value_type char_type;
+        bool is_escaped;
+        bool is_interpolated;
+        bool saw_interpolation_marker;
+        bool is_octal;
+        bool is_hex;
+        const bool interpolation_allowed;
+
+        string_type octal_matches;
+        string_type hex_matches;
+
+        Char_Parser(string_type &t_match, const bool t_interpolation_allowed)
+          : match(t_match),
+            is_escaped(false),
+            is_interpolated(false),
+            saw_interpolation_marker(false),
+            is_octal(false),
+            is_hex(false),
+            interpolation_allowed(t_interpolation_allowed)
+        {
+        }
+
+		Char_Parser &operator=(const Char_Parser &) = delete;
+
+        ~Char_Parser(){
+          if (is_octal) {
+            process_octal();
+          }
+
+          if (is_hex) {
+            process_hex();
+          }
+        }
+
+        void process_hex()
+        {
+          auto val = stoll(hex_matches, 0, 16);
+          match.push_back(char_type(val));
+          hex_matches.clear();
+          is_escaped = false;
+          is_hex = false;
+        }
+
+
+        void process_octal()
+        {
+          auto val = stoll(octal_matches, 0, 8);
+          match.push_back(char_type(val));
+          octal_matches.clear();
+          is_escaped = false;
+          is_octal = false;
+        }
+
+        void parse(const char_type t_char, const int line, const int col, const std::string &filename) {
+          if (t_char == '\\') {
+            if (is_escaped) {
+              match.push_back('\\');
+              is_escaped = false;
+            } else {
+              is_escaped = true;
+            }
+          } else {
+            if (is_escaped) {
+              const bool is_octal_char = t_char >= '0' && t_char <= '7';
+
+              if (is_octal) {
+                if (is_octal_char) {
+                  octal_matches.push_back(t_char);
+
+                  if (octal_matches.size() == 3) {
+                    process_octal();
+                  }
+                } else {
+                  process_octal();
+                  match.push_back(t_char);
+                }
+              } else if (is_hex) {
+                const bool is_hex_char = (t_char >= '0' && t_char <= '9')
+                                      || (t_char >= 'a' && t_char <= 'f')
+                                      || (t_char >= 'A' && t_char <= 'F');
+
+                if (is_hex_char) {
+                  hex_matches.push_back(t_char);
+                } else {
+                  process_hex();
+                  match.push_back(t_char);
+                }
+              } else if (is_octal_char) {
+                is_octal = true;
+                octal_matches.push_back(t_char);
+              } else if (t_char == 'x') {
+                is_hex = true;
+              } else {
+                switch (t_char) {
+                  case ('\'') : match.push_back('\''); break;
+                  case ('\"') : match.push_back('\"'); break;
+                  case ('?') : match.push_back('?'); break;
+                  case ('a') : match.push_back('\a'); break;
+                  case ('b') : match.push_back('\b'); break;
+                  case ('f') : match.push_back('\f'); break;
+                  case ('n') : match.push_back('\n'); break;
+                  case ('r') : match.push_back('\r'); break;
+                  case ('t') : match.push_back('\t'); break;
+                  case ('v') : match.push_back('\v'); break;
+                  case ('$') : match.push_back('$'); break;
+                  default: throw exception::eval_error("Unknown escaped sequence in string", File_Position(line, col), filename);
+                }
+                is_escaped = false;
+              }
+            } else if (interpolation_allowed && t_char == '$') {
+              saw_interpolation_marker = true;
+            } else {
+              match.push_back(t_char);
+            }
+          }
+        }
+
+      };
+
+
       /// Reads (and potentially captures) a quoted string from input.  Translates escaped sequences.
       bool Quoted_String(const bool t_capture = false) {
         SkipWS();
@@ -960,97 +1038,75 @@ namespace chaiscript
 
           if (Quoted_String_()) {
             std::string match;
-            bool is_escaped = false;
-            bool is_interpolated = false;
-            bool saw_interpolation_marker = false;
             const auto prev_stack_top = m_match_stack.size();
 
-            auto s = start + 1, end = m_position - 1;
+            bool is_interpolated = [&]()->bool {
+              Char_Parser<std::string> cparser(match, true);
 
-            while (s != end) {
-              if (saw_interpolation_marker) {
-                if (*s == '{') {
-                  //We've found an interpolation point
 
-                  if (is_interpolated) {
-                    //If we've seen previous interpolation, add on instead of making a new one
-                    m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
+              auto s = start + 1, end = m_position - 1;
 
-                    build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
+              while (s != end) {
+                if (cparser.saw_interpolation_marker) {
+                  if (*s == '{') {
+                    //We've found an interpolation point
+
+                    if (cparser.is_interpolated) {
+                      //If we've seen previous interpolation, add on instead of making a new one
+                      m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
+
+                      build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
+                    } else {
+                      m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
+                    }
+
+                    //We've finished with the part of the string up to this point, so clear it
+                    match.clear();
+
+                    std::string eval_match;
+
+                    ++s;
+                    while ((s != end) && (*s != '}')) {
+                      eval_match.push_back(*s);
+                      ++s;
+                    }
+
+                    if (*s == '}') {
+                      cparser.is_interpolated = true;
+                      ++s;
+
+                      const auto tostr_stack_top = m_match_stack.size();
+
+                      m_match_stack.push_back(make_node<eval::Id_AST_Node>("to_string", start.line, start.col));
+
+                      const auto ev_stack_top = m_match_stack.size();
+
+                      try {
+                        ChaiScript_Parser parser;
+                        parser.parse(eval_match, "instr eval");
+                        m_match_stack.push_back(parser.ast());
+                      } catch (const exception::eval_error &e) {
+                        throw exception::eval_error(e.what(), File_Position(start.line, start.col), *m_filename);
+                      }
+
+                      build_match<eval::Arg_List_AST_Node>(ev_stack_top);
+                      build_match<eval::Fun_Call_AST_Node>(tostr_stack_top);
+                      build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
+                    } else {
+                      throw exception::eval_error("Unclosed in-string eval", File_Position(start.line, start.col), *m_filename);
+                    }
                   } else {
-                    m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
+                    match.push_back('$');
                   }
-
-                  //We've finished with the part of the string up to this point, so clear it
-                  match.clear();
-
-                  std::string eval_match;
-
+                  cparser.saw_interpolation_marker = false;
+                } else {
+                  cparser.parse(*s, start.line, start.col, *m_filename);
                   ++s;
-                  while ((s != end) && (*s != '}')) {
-                    eval_match.push_back(*s);
-                    ++s;
-                  }
-
-                  if (*s == '}') {
-                    is_interpolated = true;
-                    ++s;
-
-                    const auto tostr_stack_top = m_match_stack.size();
-
-                    m_match_stack.push_back(make_node<eval::Id_AST_Node>("to_string", start.line, start.col));
-
-                    const auto ev_stack_top = m_match_stack.size();
-
-                    try {
-                      ChaiScript_Parser parser;
-                      parser.parse(eval_match, "instr eval");
-                      m_match_stack.push_back(parser.ast());
-                    } catch (const exception::eval_error &e) {
-                      throw exception::eval_error(e.what(), File_Position(start.line, start.col), *m_filename);
-                    }
-
-                    build_match<eval::Arg_List_AST_Node>(ev_stack_top);
-                    build_match<eval::Fun_Call_AST_Node>(tostr_stack_top);
-                    build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
-                  } else {
-                    throw exception::eval_error("Unclosed in-string eval", File_Position(start.line, start.col), *m_filename);
-                  }
-                } else {
-                  match.push_back('$');
                 }
-                saw_interpolation_marker = false;
-              } else {
-                if (*s == '\\') {
-                  if (is_escaped) {
-                    match.push_back('\\');
-                    is_escaped = false;
-                  } else {
-                    is_escaped = true;
-                  }
-                } else {
-                  if (is_escaped) {
-                    switch (*s) {
-                      case ('b') : match.push_back('\b'); break;
-                      case ('f') : match.push_back('\f'); break;
-                      case ('n') : match.push_back('\n'); break;
-                      case ('r') : match.push_back('\r'); break;
-                      case ('t') : match.push_back('\t'); break;
-                      case ('\'') : match.push_back('\''); break;
-                      case ('\"') : match.push_back('\"'); break;
-                      case ('$') : match.push_back('$'); break;
-                      default: throw exception::eval_error("Unknown escaped sequence in string", File_Position(start.line, start.col), *m_filename);
-                    }
-                  } else if (*s == '$') {
-                    saw_interpolation_marker = true;
-                  } else {
-                    match.push_back(*s);
-                  }
-                  is_escaped = false;
-                }
-                ++s;
               }
-            }
+
+              return cparser.is_interpolated;
+            }();
 
             if (is_interpolated) {
               m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
@@ -1104,33 +1160,16 @@ namespace chaiscript
           const auto start = m_position;
           if (Single_Quoted_String_()) {
             std::string match;
-            bool is_escaped = false;
-            for (auto s = start + 1, end = m_position - 1; s != end; ++s) {
-              if (*s == '\\') {
-                if (is_escaped) {
-                  match.push_back('\\');
-                  is_escaped = false;
-                } else {
-                  is_escaped = true;
-                }
-              } else {
-                if (is_escaped) {
-                  switch (*s) {
-                    case ('b') : match.push_back('\b'); break;
-                    case ('f') : match.push_back('\f'); break;
-                    case ('n') : match.push_back('\n'); break;
-                    case ('r') : match.push_back('\r'); break;
-                    case ('t') : match.push_back('\t'); break;
-                    case ('\'') : match.push_back('\''); break;
-                    case ('\"') : match.push_back('\"'); break;
-                    default: throw exception::eval_error("Unknown escaped sequence in string", File_Position(start.line, start.col), *m_filename);
-                  }
-                } else {
-                  match.push_back(*s);
-                }
-                is_escaped = false;
+
+            {
+              // scope for cparser destrutor
+              Char_Parser<std::string> cparser(match, false);
+
+              for (auto s = start + 1, end = m_position - 1; s != end; ++s) {
+                cparser.parse(*s, start.line, start.col, *m_filename);
               }
             }
+
             m_match_stack.push_back(make_node<eval::Single_Quoted_String_AST_Node>(match, start.line, start.col));
             return true;
           }
@@ -1775,6 +1814,8 @@ namespace chaiscript
 
           build_match<eval::Case_AST_Node>(prev_stack_top);
         } else if (Keyword("default")) {
+          retval = true;
+
           while (Eol()) {}
 
           if (!Block()) {
@@ -2372,6 +2413,13 @@ namespace chaiscript
     };
   }
 }
+
+
+#ifdef CHAISCRIPT_MSVC
+#pragma pop_macro("min")
+#pragma pop_macro("max")
+#endif
+
 
 #endif /* CHAISCRIPT_PARSER_HPP_ */
 

@@ -40,7 +40,7 @@ namespace chaiscript
       {
         const bool has_arity_match = std::any_of(funcs.begin(), funcs.end(),
             [](const Const_Proxy_Function &f) {
-              return f->get_arity() == -1 || f->get_arity() == chaiscript::dispatch::detail::Arity<FunctionType>::arity;
+              return f->get_arity() == -1 || size_t(f->get_arity()) == chaiscript::dispatch::detail::Arity<FunctionType>::arity;
             });
 
         if (!has_arity_match) {

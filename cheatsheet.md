@@ -354,6 +354,18 @@ o.f = fun(y) { print(this.x + y); }
 o.f(10); // prints 13
 ```
 
+### Option Explicit
+
+If you want to disable dynamic parameter definitions, you can `set_explicit`.
+
+```
+class My_Class {
+  def My_Class() {
+    this.set_explicit(true);
+    this.x = 2; // this would fail with explicit set to true
+  }
+};
+
 ## method_missing
 
 A function of the signature `method_missing(object, name, param1, param2, param3)` will be called if an appropriate
