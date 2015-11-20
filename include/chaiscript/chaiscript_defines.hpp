@@ -29,8 +29,9 @@
 #define CHAISCRIPT_WINDOWS
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8) || (defined(__llvm__) && !defined(CHAISCRIPT_LIBCPP))  
+#if ( ( (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8) ) && !defined(WIN32))  || (defined(__llvm__) && !defined(CHAISCRIPT_LIBCPP))  
 /// Currently only g++>=4.8 supports this natively
+/// MinGW pretends to, but causes a crash on exit when thread_local objects are destructed
 /// \todo Make this support other compilers when possible
 #define CHAISCRIPT_HAS_THREAD_LOCAL
 #endif
