@@ -76,7 +76,7 @@ namespace chaiscript
         typedef Result * Result_Type;
         static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
         {
-          if (!ob.get_type_info().is_const() && ob.get_type_info().bare_equal_type_info(typeid(Result)))
+          if (!ob.get_type_info().is_const() && ob.get_type_info() == typeid(Result))
           {
             return static_cast<Result *>(ob.get_ptr());
           } else {
