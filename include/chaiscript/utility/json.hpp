@@ -421,22 +421,22 @@ class JSON
         Class Type;
 };
 
-JSON Array() {
+inline JSON Array() {
     return JSON::Make( JSON::Class::Array );
 }
 
 template <typename... T>
-JSON Array( T... args ) {
+inline JSON Array( T... args ) {
     JSON arr = JSON::Make( JSON::Class::Array );
     arr.append( args... );
     return arr;
 }
 
-JSON Object() {
+inline JSON Object() {
     return JSON::Make( JSON::Class::Object );
 }
 
-std::ostream& operator<<( std::ostream &os, const JSON &json ) {
+inline std::ostream& operator<<( std::ostream &os, const JSON &json ) {
     os << json.dump();
     return os;
 }
