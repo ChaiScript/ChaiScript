@@ -636,7 +636,7 @@ namespace {
     }
 }
 
-JSON JSON::Load( const string &str ) {
+inline JSON JSON::Load( const string &str ) {
     size_t offset = 0;
     return parse_next( str, offset );
 }
