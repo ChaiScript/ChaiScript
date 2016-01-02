@@ -8,6 +8,7 @@
 #define CHAISCRIPT_UTILITY_UTILITY_HPP_
 
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -60,6 +61,21 @@ namespace chaiscript
         for(const auto &fun: t_funcs)
         {
           t_module.add(fun.first, fun.second);
+        }
+      }
+      
+    template<typename Enum, typename ModuleType>
+      typename std::enable_if<std::is_enum<Enum>::value, void>::type
+      add_class(ModuleType &t_module,
+        const std::string &t_class_name,
+        const std::vector<chaiscript::Proxy_Function> &t_constructors,
+        const std::vector<std::pair<chaiscript::Boxed_Value, std::string>> &t_constants)
+      {
+        t_module.add(chaiscript::user_type<Enum>(), t_class_name);
+  
+        for (const auto &constant : t_constants)
+        {
+          t_module.add_global_const(constant.first, constant.second);
         }
       }
   }
