@@ -517,6 +517,41 @@ TEST_CASE("Utility_Test utility class wrapper")
 
 }
 
+enum Utility_Test_Numbers
+{
+	ONE,
+  TWO,
+  THREE
+};
+
+TEST_CASE("Utility_Test utility class wrapper")
+{
+
+  chaiscript::ModulePtr m = chaiscript::ModulePtr(new chaiscript::Module());
+
+  using namespace chaiscript;
+
+  chaiscript::utility::add_class<Utility_Test_Numbers>(*m,
+      "Utility_Test_Numbers",
+      {
+      },
+      { { const_var(ONE), "ONE" },
+        { const_var(TWO), "TWO" },
+        { const_var(THREE), "THREE" }
+ 
+        }
+      );
+
+
+  chaiscript::ChaiScript chai;
+  chai.add(m);
+
+  CHECK(chai.eval<Utility_Test_Numbers>("ONE ") == 0);
+  CHECK(chai.eval<Utility_Test_Numbers>("TWO ") == 1);
+  CHECK(chai.eval<Utility_Test_Numbers>("THREE ") == 2);
+
+}
+
 
 ////// Object copy count test
 
