@@ -539,11 +539,9 @@ TEST_CASE("Utility_Test utility class wrapper for enum")
 
   chaiscript::utility::add_class<Utility_Test_Numbers>(*m,
       "Utility_Test_Numbers",
-      {
-      },
-      { { const_var(ONE), "ONE" },
-        { const_var(TWO), "TWO" },
-        { const_var(THREE), "THREE" }
+      { { ONE, "ONE" },
+        { TWO, "TWO" },
+        { THREE, "THREE" }
 
         }
       );
@@ -555,6 +553,8 @@ TEST_CASE("Utility_Test utility class wrapper for enum")
   CHECK(chai.eval<Utility_Test_Numbers>("ONE ") == 0);
   CHECK(chai.eval<Utility_Test_Numbers>("TWO ") == 1);
   CHECK(chai.eval<Utility_Test_Numbers>("THREE ") == 2);
+
+  CHECK(chai.eval<bool>("ONE == 0"));
 
   chai.add(chaiscript::fun(&do_something_with_enum_vector), "do_something_with_enum_vector");
   chai.add(chaiscript::vector_conversion<std::vector<Utility_Test_Numbers>>());
