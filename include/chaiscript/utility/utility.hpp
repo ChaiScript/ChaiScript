@@ -15,6 +15,7 @@
 #include "../chaiscript.hpp"
 #include "../dispatchkit/proxy_functions.hpp"
 #include "../dispatchkit/type_info.hpp"
+#include "../dispatchkit/operators.hpp"
 
 
 namespace chaiscript 
@@ -63,7 +64,7 @@ namespace chaiscript
           t_module.add(fun.first, fun.second);
         }
       }
-      
+
     template<typename Enum, typename ModuleType>
       typename std::enable_if<std::is_enum<Enum>::value, void>::type
       add_class(ModuleType &t_module,
@@ -75,6 +76,12 @@ namespace chaiscript
 
         t_module.add(chaiscript::constructor<Enum ()>(), t_class_name);
         t_module.add(chaiscript::constructor<Enum (const Enum &)>(), t_class_name);
+
+        t_module.add([](){
+              // add some comparison and assignment operators
+              using namespace chaiscript::bootstrap::operators;
+              return assign<Enum>(not_equal<Enum>(equal<Enum>()));
+            }());
 
         for (const auto &constant : t_constants)
         {

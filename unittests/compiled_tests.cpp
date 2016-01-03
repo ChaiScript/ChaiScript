@@ -562,6 +562,11 @@ TEST_CASE("Utility_Test utility class wrapper for enum")
   CHECK_NOTHROW(chai.eval("do_something_with_enum_vector([ONE])"));
   CHECK_NOTHROW(chai.eval("[ONE]"));
 
+  CHECK(chai.eval<bool>("ONE == ONE"));
+  CHECK(chai.eval<bool>("ONE != TWO"));
+  CHECK_NOTHROW(chai.eval("var o = ONE; o = TWO"));
+
+
 }
 
 
