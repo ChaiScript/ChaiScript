@@ -72,7 +72,10 @@ namespace chaiscript
         const std::vector<std::pair<chaiscript::Boxed_Value, std::string>> &t_constants)
       {
         t_module.add(chaiscript::user_type<Enum>(), t_class_name);
-  
+
+        t_module.add(chaiscript::constructor<Enum ()>(), t_class_name);
+        t_module.add(chaiscript::constructor<Enum (const Enum &)>(), t_class_name);
+
         for (const auto &constant : t_constants)
         {
           t_module.add_global_const(constant.first, constant.second);
