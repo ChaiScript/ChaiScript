@@ -2,6 +2,7 @@
 // caught in other cpp files if chaiscript causes them
 
 #include <chaiscript/utility/utility.hpp>
+#include <chaiscript/dispatchkit/bootstrap_stl.hpp>
 
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(push)
@@ -514,6 +515,65 @@ TEST_CASE("Utility_Test utility class wrapper")
   CHECK(chai.eval<std::string>("auto t2 = Utility_Test(); t2.functionOverload(1); ") == "int");
   CHECK(chai.eval<std::string>("auto t3 = Utility_Test(); t3.functionOverload(1.1); ") == "double");
   chai.eval("t = Utility_Test();");
+
+}
+
+
+enum Utility_Test_Numbers
+{
+  ONE,
+  TWO,
+  THREE
+};
+
+void do_something_with_enum_vector(const std::vector<Utility_Test_Numbers> &v)
+{
+  CHECK(v.size() == 3);
+  CHECK(v[0] == ONE);
+  CHECK(v[1] == THREE);
+  CHECK(v[2] == TWO);
+}
+
+TEST_CASE("Utility_Test utility class wrapper for enum")
+{
+
+  chaiscript::ModulePtr m = chaiscript::ModulePtr(new chaiscript::Module());
+
+  using namespace chaiscript;
+
+  chaiscript::utility::add_class<Utility_Test_Numbers>(*m,
+      "Utility_Test_Numbers",
+      { { ONE, "ONE" },
+        { TWO, "TWO" },
+        { THREE, "THREE" }
+
+        }
+      );
+
+
+  chaiscript::ChaiScript chai;
+  chai.add(m);
+
+  CHECK(chai.eval<Utility_Test_Numbers>("ONE ") == 0);
+  CHECK(chai.eval<Utility_Test_Numbers>("TWO ") == 1);
+  CHECK(chai.eval<Utility_Test_Numbers>("THREE ") == 2);
+
+  CHECK(chai.eval<bool>("ONE == 0"));
+
+  chai.add(chaiscript::fun(&do_something_with_enum_vector), "do_something_with_enum_vector");
+  chai.add(chaiscript::vector_conversion<std::vector<Utility_Test_Numbers>>());
+  CHECK_NOTHROW(chai.eval("var a = [ONE, TWO, THREE]"));
+  CHECK_NOTHROW(chai.eval("do_something_with_enum_vector([ONE, THREE, TWO])"));
+  CHECK_NOTHROW(chai.eval("[ONE]"));
+
+  const auto v = chai.eval<std::vector<Utility_Test_Numbers>>("a");
+  CHECK(v.size() == 3);
+  CHECK(v.at(1) == TWO);
+
+  CHECK(chai.eval<bool>("ONE == ONE"));
+  CHECK(chai.eval<bool>("ONE != TWO"));
+  CHECK_NOTHROW(chai.eval("var o = ONE; o = TWO"));
+
 
 }
 
