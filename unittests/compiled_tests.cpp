@@ -526,8 +526,12 @@ enum Utility_Test_Numbers
   THREE
 };
 
-void do_something_with_enum_vector(const std::vector<Utility_Test_Numbers> &)
+void do_something_with_enum_vector(const std::vector<Utility_Test_Numbers> &v)
 {
+  CHECK(v.size() == 3);
+  CHECK(v[0] == ONE);
+  CHECK(v[1] == THREE);
+  CHECK(v[2] == TWO);
 }
 
 TEST_CASE("Utility_Test utility class wrapper for enum")
@@ -559,8 +563,12 @@ TEST_CASE("Utility_Test utility class wrapper for enum")
   chai.add(chaiscript::fun(&do_something_with_enum_vector), "do_something_with_enum_vector");
   chai.add(chaiscript::vector_conversion<std::vector<Utility_Test_Numbers>>());
   CHECK_NOTHROW(chai.eval("var a = [ONE, TWO, THREE]"));
-  CHECK_NOTHROW(chai.eval("do_something_with_enum_vector([ONE])"));
+  CHECK_NOTHROW(chai.eval("do_something_with_enum_vector([ONE, THREE, TWO])"));
   CHECK_NOTHROW(chai.eval("[ONE]"));
+
+  const auto v = chai.eval<std::vector<Utility_Test_Numbers>>("a");
+  CHECK(v.size() == 3);
+  CHECK(v.at(1) == TWO);
 
   CHECK(chai.eval<bool>("ONE == ONE"));
   CHECK(chai.eval<bool>("ONE != TWO"));
