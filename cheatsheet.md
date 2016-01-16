@@ -365,6 +365,7 @@ class My_Class {
     this.x = 2; // this would fail with explicit set to true
   }
 };
+```
 
 ## method_missing
 

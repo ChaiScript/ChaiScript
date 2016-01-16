@@ -13,9 +13,9 @@ bool run_test_type_conversion(const Boxed_Value &bv, bool expectedpass)
   try {
     To ret = chaiscript::boxed_cast<To>(bv);
     use(ret);
-  } catch (const chaiscript::exception::bad_boxed_cast &/*e*/) {
+  } catch (const chaiscript::exception::bad_boxed_cast &e) {
     if (expectedpass) {
-//      std::cerr << "Failure in run_test_type_conversion: " << e.what() << '\n';
+      std::cerr << "Failure in run_test_type_conversion: " << e.what() << '\n';
       return false;
     } else {
       return true;
