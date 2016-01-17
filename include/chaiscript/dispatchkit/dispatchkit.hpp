@@ -535,9 +535,9 @@ namespace chaiscript
 
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-          const auto itr = m_state.m_global_objects.find(name);
-          if (itr == m_state.m_global_objects.end())
-          {
+            const auto itr = m_state.m_global_objects.find(name);
+            if (itr == m_state.m_global_objects.end())
+            {
             m_state.m_global_objects.insert(std::make_pair(name, obj));
             return obj;
           } else {
@@ -549,18 +549,33 @@ namespace chaiscript
         /// Adds a new global (non-const) shared object, between all the threads
         void add_global(const Boxed_Value &obj, const std::string &name)
         {
-          validate_object_name(name);
+            validate_object_name(name);
 
-          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+            chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-          if (m_state.m_global_objects.find(name) != m_state.m_global_objects.end())
-          {
-            throw chaiscript::exception::name_conflict_error(name);
-          } else {
-            m_state.m_global_objects.insert(std::make_pair(name, obj));
-          }
+            if (m_state.m_global_objects.find(name) != m_state.m_global_objects.end())
+            {
+                throw chaiscript::exception::name_conflict_error(name);
+            } else {
+                m_state.m_global_objects.insert(std::make_pair(name, obj));
+            }
         }
 
+        /// Adds a new global (non-const) shared object, between all the threads
+        void set_global(const Boxed_Value &obj, const std::string &name)
+        {
+            validate_object_name(name);
+
+            chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+
+            const auto itr = m_state.m_global_objects.find(name);
+            if (itr != m_state.m_global_objects.end())
+            {
+                itr->second.assign(obj);
+            } else {
+                m_state.m_global_objects.insert(std::make_pair(name, obj));
+            }
+        }
 
         /// Adds a new scope to the stack
         void new_scope()
