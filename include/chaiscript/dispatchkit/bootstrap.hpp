@@ -440,6 +440,8 @@ namespace chaiscript
         m->add(constructor<dispatch::Dynamic_Object ()>(), "Dynamic_Object");
         m->add(fun(&dispatch::Dynamic_Object::get_type_name), "get_type_name");
         m->add(fun(&dispatch::Dynamic_Object::get_attrs), "get_attrs");
+        m->add(fun(&dispatch::Dynamic_Object::set_explicit), "set_explicit");
+        m->add(fun(&dispatch::Dynamic_Object::is_explicit), "is_explicit");
 
         m->add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::get_attr)), "get_attr");
         m->add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::get_attr)), "get_attr");
@@ -450,7 +452,13 @@ namespace chaiscript
         m->add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::get_attr)), "[]");
         m->add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::get_attr)), "[]");
 
-        m->eval("def Dynamic_Object::clone() { auto &new_o = Dynamic_Object(this.get_type_name()); for_each(this.get_attrs(), bind(fun(new_o, x) { new_o.get_attr(x.first) = x.second; }, new_o, _) ); return new_o; }");
+        m->eval(R""(
+          def Dynamic_Object::clone() { 
+            auto &new_o = Dynamic_Object(this.get_type_name()); 
+            for_each(this.get_attrs(), fun[new_o](x) { new_o.get_attr(x.first) = x.second; } ); 
+            new_o; 
+          }
+          )"");
 
         m->add(fun(&has_guard), "has_guard");
         m->add(fun(&get_guard), "get_guard");
@@ -460,9 +468,12 @@ namespace chaiscript
         m->add(fun(&Boxed_Value::is_const), "is_var_const");
         m->add(fun(&Boxed_Value::is_ref), "is_var_reference");
         m->add(fun(&Boxed_Value::is_pointer), "is_var_pointer");
+        m->add(fun(&Boxed_Value::is_return_value), "is_var_return_value");
+        m->add(fun(&Boxed_Value::reset_return_value), "reset_var_return_value");
         m->add(fun(&Boxed_Value::is_type), "is_type");
         m->add(fun(&Boxed_Value::get_attr), "get_var_attr");
         m->add(fun(&Boxed_Value::copy_attrs), "copy_var_attrs");
+        m->add(fun(&Boxed_Value::clone_attrs), "clone_var_attrs");
 
         m->add(fun(&Boxed_Value::get_type_info), "get_type_info");
         m->add(user_type<Type_Info>(), "Type_Info");
@@ -485,6 +496,7 @@ namespace chaiscript
         basic_constructors<bool>("bool", m);
         operators::assign<bool>(m);
         operators::equal<bool>(m);
+        operators::not_equal<bool>(m);
 
         m->add(fun([](const std::string &s) -> std::string { return s; }), "to_string");
         m->add(fun(&Bootstrap::bool_to_string), "to_string");
@@ -502,6 +514,8 @@ namespace chaiscript
         bootstrap_pod_type<long>("long", m);
         bootstrap_pod_type<unsigned int>("unsigned_int", m);
         bootstrap_pod_type<unsigned long>("unsigned_long", m);
+        bootstrap_pod_type<long long>("long_long", m);
+        bootstrap_pod_type<unsigned long long>("unsigned_long_long", m);
         bootstrap_pod_type<size_t>("size_t", m);
         bootstrap_pod_type<char>("char", m);
         bootstrap_pod_type<wchar_t>("wchar_t", m);
@@ -556,13 +570,14 @@ namespace chaiscript
             "eval_error",
             { },
             { {fun(&chaiscript::exception::eval_error::reason), "reason"},
-            {fun(std::function<std::vector<Boxed_Value> (const chaiscript::exception::eval_error &t_eval_error)>([](const chaiscript::exception::eval_error &t_eval_error) -> std::vector<Boxed_Value> { 
-                std::vector<Boxed_Value> retval;
-                std::transform(t_eval_error.call_stack.begin(), t_eval_error.call_stack.end(),
-                               std::back_inserter(retval),
-                               &chaiscript::var<std::shared_ptr<const chaiscript::AST_Node>>);
-                return retval;
-              })), "call_stack"} }
+              {fun(&chaiscript::exception::eval_error::pretty_print), "pretty_print"},
+              {fun(std::function<std::vector<Boxed_Value> (const chaiscript::exception::eval_error &t_eval_error)>([](const chaiscript::exception::eval_error &t_eval_error) -> std::vector<Boxed_Value> { 
+                  std::vector<Boxed_Value> retval;
+                  std::transform(t_eval_error.call_stack.begin(), t_eval_error.call_stack.end(),
+                                 std::back_inserter(retval),
+                                 &chaiscript::var<const std::shared_ptr<const chaiscript::AST_Node> &>);
+                  return retval;
+                })), "call_stack"} }
             );
 
 
@@ -588,7 +603,7 @@ namespace chaiscript
                 std::vector<Boxed_Value> retval;
                 std::transform(t_node.children.begin(), t_node.children.end(),
                                std::back_inserter(retval),
-                               &chaiscript::var<std::shared_ptr<chaiscript::AST_Node>>);
+                               &chaiscript::var<const std::shared_ptr<chaiscript::AST_Node> &>);
                 return retval;
               })), "children"},
               {fun(&AST_Node::replace_child), "replace_child"}

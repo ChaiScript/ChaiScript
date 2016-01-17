@@ -39,7 +39,11 @@
 #define CHAISCRIPT_GCC_4_6
 #endif
 
-#if (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7) || defined(CHAISCRIPT_MSVC) || defined(__llvm__)
+#if defined(__llvm__)
+#define CHAISCRIPT_CLANG
+#endif
+
+#if (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7) || defined(CHAISCRIPT_MSVC) || defined(CHAISCRIPT_CLANG)
 #define CHAISCRIPT_OVERRIDE override
 #else
 #define CHAISCRIPT_OVERRIDE
@@ -52,7 +56,7 @@
 #define CHAISCRIPT_MODULE_EXPORT extern "C" 
 #endif
 
-#ifdef CHAISCRIPT_MSVC
+#ifdef CHAISCRIPT_MSVC_12
 #define CHAISCRIPT_NOEXCEPT throw()
 #define CHAISCRIPT_CONSTEXPR 
 #else
@@ -65,7 +69,7 @@
 namespace chaiscript {
   static const int version_major = 5;
   static const int version_minor = 7;
-  static const int version_patch = 1;
+  static const int version_patch = 2;
 
   template<typename B, typename D, typename ...Arg>
   inline std::shared_ptr<B> make_shared(Arg && ... arg)

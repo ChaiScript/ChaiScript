@@ -1,0 +1,7 @@
+
+
+var s = ""
+
+s += to_string(fun[s](){ s += "3"; 3}() % fun[s](){ s += "2"; 2}());
+
+assert_equal(s, "321");

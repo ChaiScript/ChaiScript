@@ -1,0 +1,7 @@
+
+assert_equal("\x39", "9")
+assert_equal("\x39ec", "9ec")
+assert_equal("\x39g", "9g")
+assert_equal("b\x39g", "b9g")
+assert_equal("\x39\x38g", "98g")
+

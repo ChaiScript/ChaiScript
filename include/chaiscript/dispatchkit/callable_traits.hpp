@@ -61,6 +61,17 @@ namespace chaiscript {
         Ret (Class::*m_func)(Param...);
       };
 
+      template<typename T>
+        struct Arity
+        {
+        };
+
+      template<typename Ret, typename ... Params>
+      struct Arity<Ret (Params...)>
+        {
+          static const size_t arity = sizeof...(Params);
+        };
+
 
       template<typename T>
         struct Function_Signature

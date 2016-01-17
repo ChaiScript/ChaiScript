@@ -41,25 +41,25 @@ def new(x) {
 }
 
 def clone(double x) {
-  double(x).copy_var_attrs(x)
+  double(x).clone_var_attrs(x)
 }
 
 def clone(string x) {
-  string(x).copy_var_attrs(x)
+  string(x).clone_var_attrs(x)
 }
 
 def clone(vector x) {
-  vector(x).copy_var_attrs(x)
+  vector(x).clone_var_attrs(x)
 }
 
 
 def clone(int x) {
-  int(x).copy_var_attrs(x)
+  int(x).clone_var_attrs(x)
 }
 
 def clone(x) : function_exists(type_name(x)) && call_exists(eval(type_name(x)), x)
 {
-  eval(type_name(x))(x).copy_var_attrs(x);
+  eval(type_name(x))(x).clone_var_attrs(x);
 }
 
 
@@ -145,11 +145,6 @@ def reverse(container) {
   retval; 
 }
 
-# Return a range from a range 
-def range(r) : call_exists(empty, r) && call_exists(pop_front, r) && call_exists(pop_back, r) && call_exists(back, r) && call_exists(front, r) 
-{
-  clone(r);
-}
 
 def range(r) : call_exists(range_internal, r)
 {
@@ -157,6 +152,13 @@ def range(r) : call_exists(range_internal, r)
   ri.get_var_attr("internal_obj") := r;
   ri;
 }
+
+# Return a range from a range 
+def range(r) : call_exists(empty, r) && call_exists(pop_front, r) && call_exists(pop_back, r) && call_exists(back, r) && call_exists(front, r) 
+{
+  clone(r);
+}
+
 
 # The retro attribute that contains the underlying range 
 attr retro::m_range; 

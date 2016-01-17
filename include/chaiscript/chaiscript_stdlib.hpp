@@ -19,6 +19,7 @@
 #include "dispatchkit/bootstrap_stl.hpp"
 #include "dispatchkit/boxed_value.hpp"
 #include "language/chaiscript_prelude.chai"
+#include "utility/json_wrap.hpp"
 
 #ifndef CHAISCRIPT_NO_THREADS
 #include <future>
@@ -50,6 +51,8 @@ namespace chaiscript
         lib->add(standard_library::future_type<std::future<chaiscript::Boxed_Value>>("future"));
         lib->add(chaiscript::fun([](const std::function<chaiscript::Boxed_Value ()> &t_func){ return std::async(std::launch::async, t_func);}), "async");
 #endif
+
+        lib->add(json_wrap::library());
 
         lib->eval(ChaiScript_Prelude::chaiscript_prelude() /*, "standard prelude"*/ );
 
