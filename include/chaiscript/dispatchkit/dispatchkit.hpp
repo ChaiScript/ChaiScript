@@ -561,7 +561,7 @@ namespace chaiscript
             }
         }
 
-        /// Adds a new global (non-const) shared object, between all the threads
+        /// Updates an existing global shared object or adds a new global shared object if not found
         void set_global(const Boxed_Value &obj, const std::string &name)
         {
             validate_object_name(name);
