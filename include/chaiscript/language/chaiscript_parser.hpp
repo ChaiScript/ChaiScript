@@ -961,6 +961,40 @@ namespace chaiscript
         }
 
         void parse(const char_type t_char, const int line, const int col, const std::string &filename) {
+          const bool is_octal_char = t_char >= '0' && t_char <= '7';
+
+          if (is_octal) {
+            if (is_octal_char) {
+              octal_matches.push_back(t_char);
+
+              if (octal_matches.size() == 3) {
+                process_octal();
+              }
+              return;
+            } else {
+              process_octal();
+            }
+          } else if (is_hex) {
+            const bool is_hex_char = (t_char >= '0' && t_char <= '9')
+                                  || (t_char >= 'a' && t_char <= 'f')
+                                  || (t_char >= 'A' && t_char <= 'F');
+
+            if (is_hex_char) {
+              hex_matches.push_back(t_char);
+
+              if (hex_matches.size() == 2*sizeof(char_type)) {
+                // This rule differs from the C/C++ standard, but ChaiScript
+                // does not offer the same workaround options, and having
+                // hexadecimal sequences longer than can fit into the char
+                // type is undefined behavior anyway.
+                process_hex();
+              }
+              return;
+            } else {
+              process_hex();
+            }
+          }
+
           if (t_char == '\\') {
             if (is_escaped) {
               match.push_back('\\');
@@ -970,31 +1004,7 @@ namespace chaiscript
             }
           } else {
             if (is_escaped) {
-              const bool is_octal_char = t_char >= '0' && t_char <= '7';
-
-              if (is_octal) {
-                if (is_octal_char) {
-                  octal_matches.push_back(t_char);
-
-                  if (octal_matches.size() == 3) {
-                    process_octal();
-                  }
-                } else {
-                  process_octal();
-                  match.push_back(t_char);
-                }
-              } else if (is_hex) {
-                const bool is_hex_char = (t_char >= '0' && t_char <= '9')
-                                      || (t_char >= 'a' && t_char <= 'f')
-                                      || (t_char >= 'A' && t_char <= 'F');
-
-                if (is_hex_char) {
-                  hex_matches.push_back(t_char);
-                } else {
-                  process_hex();
-                  match.push_back(t_char);
-                }
-              } else if (is_octal_char) {
+              if (is_octal_char) {
                 is_octal = true;
                 octal_matches.push_back(t_char);
               } else if (t_char == 'x') {

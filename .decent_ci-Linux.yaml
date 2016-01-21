@@ -30,4 +30,8 @@ compilers:
     collect_performance_results: true
   - name: cppcheck
     compiler_extra_flags: --enable=all -I include --inline-suppr -Umax  --suppress="*:cmake*" --suppress="*:unittests/catch.hpp" --force
+  - name: custom_check
+    commands:
+       - ./contrib/check_for_tabs.rb
+    
 

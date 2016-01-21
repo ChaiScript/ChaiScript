@@ -83,12 +83,12 @@ namespace chaiscript
           && (*m_bare_type_info) == ti;
       }
 
-      CHAISCRIPT_CONSTEXPR bool is_const() const CHAISCRIPT_NOEXCEPT { return bool(m_flags & (1 << is_const_flag)); }
-      CHAISCRIPT_CONSTEXPR bool is_reference() const CHAISCRIPT_NOEXCEPT { return bool(m_flags & (1 << is_reference_flag)); }
-      CHAISCRIPT_CONSTEXPR bool is_void() const CHAISCRIPT_NOEXCEPT { return bool(m_flags & (1 << is_void_flag)); }
-      CHAISCRIPT_CONSTEXPR bool is_arithmetic() const CHAISCRIPT_NOEXCEPT { return bool(m_flags & (1 << is_arithmetic_flag)); }
-      CHAISCRIPT_CONSTEXPR bool is_undef() const CHAISCRIPT_NOEXCEPT { return bool(m_flags & (1 << is_undef_flag)); }
-      CHAISCRIPT_CONSTEXPR bool is_pointer() const CHAISCRIPT_NOEXCEPT { return bool(m_flags & (1 << is_pointer_flag)); }
+      CHAISCRIPT_CONSTEXPR bool is_const() const CHAISCRIPT_NOEXCEPT { return (m_flags & (1 << is_const_flag)) != 0; }
+      CHAISCRIPT_CONSTEXPR bool is_reference() const CHAISCRIPT_NOEXCEPT { return (m_flags & (1 << is_reference_flag)) != 0; }
+      CHAISCRIPT_CONSTEXPR bool is_void() const CHAISCRIPT_NOEXCEPT { return (m_flags & (1 << is_void_flag)) != 0; }
+      CHAISCRIPT_CONSTEXPR bool is_arithmetic() const CHAISCRIPT_NOEXCEPT { return (m_flags & (1 << is_arithmetic_flag)) != 0; }
+      CHAISCRIPT_CONSTEXPR bool is_undef() const CHAISCRIPT_NOEXCEPT { return (m_flags & (1 << is_undef_flag)) != 0; }
+      CHAISCRIPT_CONSTEXPR bool is_pointer() const CHAISCRIPT_NOEXCEPT { return (m_flags & (1 << is_pointer_flag)) != 0; }
 
       std::string name() const
       {
