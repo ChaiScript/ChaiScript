@@ -33,5 +33,4 @@ compilers:
   - name: custom_check
     commands:
        - ./contrib/check_for_tabs.rb
-    
 
