@@ -77,7 +77,7 @@ chai.add(chaiscript::constructor<MyType (const MyType &)>(), "MyType");
 It's not strictly necessary to add types, but it helps with many things. Cloning, better errors, etc.
 
 ```
-chai.add(chaiscript::user_type<MyClass>, "MyClass");
+chai.add(chaiscript::user_type<MyClass>(), "MyClass");
 ```
 
 ## Adding Type Conversions
