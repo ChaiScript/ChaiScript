@@ -278,7 +278,7 @@ namespace chaiscript
       bool char_in_alphabet(char c, detail::Alphabet a) const { return m_alphabet[a][static_cast<uint8_t>(c)]; }
 
       /// Prints the parsed ast_nodes as a tree
-      void debug_print(AST_NodePtr t, std::string prepend = "") {
+      void debug_print(AST_NodePtr t, std::string prepend = "") const {
         std::cout << prepend << "(" << ast_node_type_to_string(t->identifier) << ") " << t->text << " : " << t->start().line << ", " << t->start().column << '\n';
         for (unsigned int j = 0; j < t->children.size(); ++j) {
           debug_print(t->children[j], prepend + "  ");

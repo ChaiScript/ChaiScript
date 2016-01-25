@@ -177,11 +177,11 @@ namespace chaiscript
             FORMAT_MESSAGE_ALLOCATE_BUFFER | 
             FORMAT_MESSAGE_FROM_SYSTEM |
             FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL,
+            nullptr,
             t_err,
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             reinterpret_cast<StringType>(&lpMsgBuf),
-            0, NULL ) != 0 && lpMsgBuf)
+            0, nullptr ) != 0 && lpMsgBuf)
         {
           retval = lpMsgBuf;
           LocalFree(lpMsgBuf);

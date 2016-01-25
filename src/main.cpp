@@ -66,7 +66,7 @@ std::vector<std::string> default_search_paths()
 
 #ifdef CHAISCRIPT_WINDOWS  // force no unicode
   CHAR path[4096];
-  int size = GetModuleFileNameA(0, path, sizeof(path)-1);
+  int size = GetModuleFileNameA(nullptr, path, sizeof(path)-1);
 
   std::string exepath(path, size);
 
@@ -344,17 +344,16 @@ int main(int argc, char *argv[])
       mode = eFile;
     }
 
-    chaiscript::Boxed_Value val ;
     try {
       switch ( mode ) {
         case eInteractive:
           interactive(chai);
           break;
         case eCommand:
-          val = chai.eval(arg);
+          chai.eval(arg);
           break;
         case eFile:
-          val = chai.eval_file(arg);
+          chai.eval_file(arg);
       }
     }
     catch (const chaiscript::exception::eval_error &ee) {
