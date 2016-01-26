@@ -623,7 +623,7 @@ namespace chaiscript
         const std::vector<Boxed_Value> &from_vec = detail::Cast_Helper<const std::vector<Boxed_Value> &>::cast(t_bv, nullptr);
 
         To vec;
-
+        vec.reserve(from_vec.size());
         for (const Boxed_Value &bv : from_vec) {
           vec.push_back(detail::Cast_Helper<typename To::value_type>::cast(bv, nullptr));
         }
@@ -636,13 +636,15 @@ namespace chaiscript
 
 #ifndef CHAISCRIPT_MSVC_12
   template<typename To>
-  Type_Conversion initializer_list_conversion() {
+  Type_Conversion initializer_list_conversion()
+  {
     auto func = [](const Boxed_Value &t_bv) -> Boxed_Value {
       const std::vector<Boxed_Value> &from_vec = detail::Cast_Helper<const std::vector<Boxed_Value> &>::cast(t_bv, nullptr);
 
-      std::vector<To::value_type> vec;
+      std::vector<typename To::value_type> vec;
       vec.reserve(from_vec.size());
-      for (const auto &bv : from_vec) {
+      for (const auto &bv : from_vec)
+      {
         vec.push_back(detail::Cast_Helper<typename To::value_type>::cast(bv, nullptr));
       }
 

@@ -928,7 +928,8 @@ TEST_CASE("Return initializer_list")
   CHECK(typeid(decltype(initlist)) == typeid(std::initializer_list<int>));
 }
 
-bool initializer_list_of_enums_interface(std::initializer_list<Utility_Test_Numbers> initlist) {
+bool initializer_list_of_enums_interface(std::initializer_list<Utility_Test_Numbers> initlist)
+{
   return initlist.size() == 3 && *initlist.begin() == THREE;
 }
 
