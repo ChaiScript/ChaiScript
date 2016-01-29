@@ -8,3 +8,17 @@ def myFun()
 }
 
 myFun();
+
+
+def myFun2()
+{
+  assert_equal(j, 7)
+}
+
+set_global(7, "j")
+
+myFun2();
+
+set_global(5, "j")
+
+myFun();
