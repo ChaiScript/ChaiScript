@@ -32,7 +32,7 @@ namespace chaiscript
 
       protected:
         template<typename T>
-        void throw_type(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
+        static void throw_type(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
         {
           try { T t = t_engine.boxed_cast<T>(bv); throw t; } catch (const chaiscript::exception::bad_boxed_cast &) {}
         }

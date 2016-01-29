@@ -397,7 +397,7 @@ class Short_Comparison_Test {
  public:
   Short_Comparison_Test() : value_(5) {}
 
-  short get_value() { return value_; }
+  short get_value() const { return value_; }
 
   short value_;
 };

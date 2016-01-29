@@ -596,13 +596,13 @@ namespace chaiscript
 
 
         /// Pushes a new stack on to the list of stacks
-        void new_stack(Stack_Holder &t_holder)
+        static void new_stack(Stack_Holder &t_holder)
         {
           // add a new Stack with 1 element
           t_holder.stacks.emplace_back(1);
         }
 
-        void pop_stack(Stack_Holder &t_holder)
+        static void pop_stack(Stack_Holder &t_holder)
         {
           t_holder.stacks.pop_back();
         }
@@ -1082,7 +1082,7 @@ namespace chaiscript
 
         /// Returns true if a call can be made that consists of the first parameter
         /// (the function) with the remaining parameters as its arguments.
-        Boxed_Value call_exists(const std::vector<Boxed_Value> &params)
+        Boxed_Value call_exists(const std::vector<Boxed_Value> &params) const
         {
           if (params.empty())
           {
@@ -1160,12 +1160,12 @@ namespace chaiscript
           m_state = t_state;
         }
 
-        void save_function_params(Stack_Holder &t_s, std::initializer_list<Boxed_Value> t_params)
+        static void save_function_params(Stack_Holder &t_s, std::initializer_list<Boxed_Value> t_params)
         {
           t_s.call_params.back().insert(t_s.call_params.back().begin(), std::move(t_params));
         }
 
-        void save_function_params(Stack_Holder &t_s, std::vector<Boxed_Value> &&t_params)
+        static void save_function_params(Stack_Holder &t_s, std::vector<Boxed_Value> &&t_params)
         {
           for (auto &&param : t_params)
           {
@@ -1173,7 +1173,7 @@ namespace chaiscript
           }
         }
 
-        void save_function_params(Stack_Holder &t_s, const std::vector<Boxed_Value> &t_params)
+        static void save_function_params(Stack_Holder &t_s, const std::vector<Boxed_Value> &t_params)
         {
           t_s.call_params.back().insert(t_s.call_params.back().begin(), t_params.begin(), t_params.end());
         }
@@ -1240,7 +1240,7 @@ namespace chaiscript
           return m_stack_holder->stacks.back();
         }
 
-        StackData &get_stack_data(Stack_Holder &t_holder)
+        static StackData &get_stack_data(Stack_Holder &t_holder)
         {
           return t_holder.stacks.back();
         }
