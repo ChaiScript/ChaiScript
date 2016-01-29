@@ -622,17 +622,17 @@ namespace chaiscript
     ///          ChaiScript is thread-safe but provides no threading locking mechanism to the script
     ChaiScript &add_global(const Boxed_Value &t_bv, const std::string &t_name)
     {
-        m_engine.add_global(t_bv, t_name);
-        return *this;
+      m_engine.add_global(t_bv, t_name);
+      return *this;
     }
 
     ChaiScript &set_global(const Boxed_Value &t_bv, const std::string &t_name)
     {
-        m_engine.set_global(t_bv, t_name);
-        return *this;
+      m_engine.set_global(t_bv, t_name);
+      return *this;
     }
 
-      /// \brief Represents the current state of the ChaiScript system. State and be saved and restored
+    /// \brief Represents the current state of the ChaiScript system. State and be saved and restored
     /// \warning State object does not contain the user defined type conversions of the engine. They
     ///          are left out due to performance considerations involved in tracking the state
     /// \sa ChaiScript::get_state
