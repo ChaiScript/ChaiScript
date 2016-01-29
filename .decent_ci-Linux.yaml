@@ -21,6 +21,11 @@ compilers:
     cmake_extra_flags: -DUSE_LIBCXX:BOOL=OFF -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DENABLE_THREAD_SANITIZER:BOOL=ON
   - name: "gcc"
     version: "4.8"
+    build_tag: "NoThreads"
+    cmake_extra_flags: -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DBUILD_TESTING:BOOL=ON -DRUN_PERFORMANCE_TESTS:BOOL=ON -DMULTITHREAD_SUPPORT_ENABLED:BOOL=OFF
+    collect_performance_results: true
+  - name: "gcc"
+    version: "4.8"
     cmake_extra_flags: -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DBUILD_TESTING:BOOL=ON -DRUN_PERFORMANCE_TESTS:BOOL=ON
     collect_performance_results: true
   - name: "gcc"
