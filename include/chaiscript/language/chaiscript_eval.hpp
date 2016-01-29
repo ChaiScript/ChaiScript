@@ -1005,6 +1005,7 @@ namespace chaiscript
           try {
             std::vector<Boxed_Value> vec;
             if (!children.empty()) {
+              vec.reserve(children[0]->children.size());
               for (const auto &child : children[0]->children) {
                 auto obj = child->eval(t_ss);
                 if (!obj.is_return_value()) {
