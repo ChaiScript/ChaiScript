@@ -319,7 +319,7 @@ namespace chaiscript
   
     template <typename V, typename... Vcount> struct backingList { static std::initializer_list<V> list; };
     template <typename V, typename... Vcount>
-    std::initializer_list<V> backingList<V, Vcount...>::list = { (Vcount)backingValue<V>::value... };
+    std::initializer_list<V> backingList<V, Vcount...>::list = { static_cast<Vcount>(backingValue<V>::value)... };
   
     template <size_t maxLength, typename It, typename V = typename It::value_type, typename... Vcount>
     static typename std::enable_if< sizeof...(Vcount) >= maxLength,
