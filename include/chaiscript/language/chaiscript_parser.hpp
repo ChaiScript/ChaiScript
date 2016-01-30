@@ -881,9 +881,19 @@ namespace chaiscript
           char prev_char = *m_position;
           ++m_position;
 
-          while (m_position.has_more() && ((*m_position != '\"') || ((*m_position == '\"') && (prev_char == '\\')))) {
+          int in_interpolation = 0;
+          bool in_quote = false;
+
+          while (m_position.has_more() && ((*m_position != '\"') || ((*m_position == '\"') && (in_interpolation > 0)) ||  ((*m_position == '\"') && (prev_char == '\\')))) {
+
             if (!Eol_()) {
-              if (prev_char == '\\') {
+              if (prev_char == '$' && *m_position == '{') {
+                ++in_interpolation;
+              } else if (*m_position == '"') {
+                in_quote = !in_quote;
+              } else if (*m_position == '}' && !in_quote) {
+                --in_interpolation;
+              } else if (prev_char == '\\') {
                 prev_char = 0;
               } else {
                 prev_char = *m_position;
