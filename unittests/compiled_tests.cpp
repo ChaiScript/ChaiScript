@@ -913,46 +913,4 @@ TEST_CASE("Return of converted type from script")
   chai.add(chaiscript::user_type<Returned_Converted_Config>(), "Returned_Converted_Config");
 }
 
-#ifndef CHAISCRIPT_MSVC_12
-TEST_CASE("Return initializer_list")
-{
-  chaiscript::ChaiScript chai;
-  
-  chai.add(chaiscript::initializer_list_conversion<std::initializer_list<int>>());
-
-  auto initlist = chai.eval<std::initializer_list<int>>(R"(
-    return [11, 22, 33, 44];
-  )");
-
-  CHECK(initlist.size() == 4);
-  CHECK(typeid(decltype(initlist)) == typeid(std::initializer_list<int>));
-}
-
-bool initializer_list_of_enums_interface(std::initializer_list<Utility_Test_Numbers> initlist)
-{
-  return initlist.size() == 3 && *initlist.begin() == THREE;
-}
-
-TEST_CASE("Call from script with initializer_list argument")
-{
-  chaiscript::ChaiScript chai;
-  
-  chaiscript::ModulePtr m = chaiscript::ModulePtr(new chaiscript::Module());
-  chaiscript::utility::add_class<Utility_Test_Numbers>(*m,
-      "Utility_Test_Numbers",
-      { { ONE, "ONE" },
-        { TWO, "TWO" },
-        { THREE, "THREE" }
-        }
-      );
-  chai.add(m);
-  
-  chai.add(chaiscript::initializer_list_conversion<std::initializer_list<Utility_Test_Numbers>>());
-  chai.add(chaiscript::fun(&initializer_list_of_enums_interface), "initializer_list_of_enums_interface");
-
-  auto interface_result = chai.eval<bool>("return initializer_list_of_enums_interface([THREE, TWO, ONE]);");
-  
-  CHECK(interface_result == true);
-}
-#endif
 

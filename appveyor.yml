@@ -1,0 +1,16 @@
+version: 5.7.2.{build}
+os: Visual Studio 2015
+environment:
+  matrix:
+  - {}
+build_script:
+- cmd: >-
+    mkdir build
+
+    cd build
+
+    cmake c:\Projects\chaiscript -G "Visual Studio 14"
+
+    cmake --build . --config Debug
+test_script:
+- cmd: ctest -C Debug

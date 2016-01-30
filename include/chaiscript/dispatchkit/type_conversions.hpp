@@ -310,48 +310,6 @@ namespace chaiscript
       private:
         Callable m_func;
     };
-#ifndef CHAISCRIPT_MSVC_12
-		//http://stackoverflow.com/questions/18895583/convert-a-vectort-to-initializer-listt
-    constexpr size_t DEFAULT_MAX_LENGTH = 128;
-  
-    template <typename V> struct backingValue { static V value; };
-    template <typename V> V backingValue<V>::value;
-  
-    template <typename V, typename... Vcount> struct backingList { static std::initializer_list<V> list; };
-    template <typename V, typename... Vcount>
-    std::initializer_list<V> backingList<V, Vcount...>::list = { static_cast<Vcount>(backingValue<V>::value)... };
-  
-    template <size_t maxLength, typename It, typename V = typename It::value_type, typename... Vcount>
-    static typename std::enable_if< sizeof...(Vcount) >= maxLength,
-    std::initializer_list<V> >::type generate_n(It begin, It end, It current)
-    {
-      throw std::length_error("More than maxLength elements in range.");
-    }
-  
-    template <size_t maxLength = DEFAULT_MAX_LENGTH, typename It, typename V = typename It::value_type, typename... Vcount>
-    static typename std::enable_if< sizeof...(Vcount) < maxLength,
-    std::initializer_list<V> >::type generate_n(It begin, It end, It current)
-    {
-      if (current != end)
-      {
-        return generate_n<maxLength, It, V, V, Vcount...>(begin, end, ++current);
-      }
-  
-      current = begin;
-      for (auto it = backingList<V, Vcount...>::list.begin();
-      it != backingList<V, Vcount...>::list.end();
-      ++current, ++it)
-      *const_cast<V*>(&*it) = *current;
-  
-      return backingList<V, Vcount...>::list;
-    }
-  
-    template <typename It>
-    std::initializer_list<typename It::value_type> range_to_initializer_list(It begin, It end)
-    {
-      return detail::generate_n(begin, end, begin);
-    }
-#endif
   }
 
   class Type_Conversions
@@ -634,26 +592,6 @@ namespace chaiscript
       return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Type_Conversion_Impl<decltype(func)>>(user_type<std::vector<Boxed_Value>>(), user_type<To>(), func);
     }
 
-#ifndef CHAISCRIPT_MSVC_12
-  template<typename To>
-  Type_Conversion initializer_list_conversion()
-  {
-    auto func = [](const Boxed_Value &t_bv) -> Boxed_Value {
-      const std::vector<Boxed_Value> &from_vec = detail::Cast_Helper<const std::vector<Boxed_Value> &>::cast(t_bv, nullptr);
-
-      std::vector<typename To::value_type> vec;
-      vec.reserve(from_vec.size());
-      for (const auto &bv : from_vec)
-      {
-        vec.push_back(detail::Cast_Helper<typename To::value_type>::cast(bv, nullptr));
-      }
-
-      return Boxed_Value(detail::range_to_initializer_list(vec.begin(), vec.end()));
-    };
-    auto ret = chaiscript::make_shared<detail::Type_Conversion_Base, detail::Type_Conversion_Impl<decltype(func)>>(user_type<std::vector<Boxed_Value>>(), user_type<To>(), func);
-    return ret;
-  }
-#endif
 }
 
 
