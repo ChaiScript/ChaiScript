@@ -7,20 +7,22 @@ int main( int /*argc*/ , char * /*argv*/[] )
 {
   chaiscript::ChaiScript ch( chaiscript::Std_Lib::library( ) );
 
-  static const char script[ ] =
-    R""(
+
+  try
+  {
+    static const char script[ ] =
+      R""(
 
       class Rectangle
       {
         def Rectangle() { }
       }
 
-      var rect = Rectangle( );
+    var rect = Rectangle( );
 
     )"";
 
-  try
-  {
+
     ch.eval( script );
   }
   catch ( const std::exception &e )

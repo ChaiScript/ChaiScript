@@ -34,7 +34,7 @@ compilers:
     cmake_extra_flags: -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DRUN_PERFORMANCE_TESTS:BOOL=ON
     collect_performance_results: true
   - name: cppcheck
-    compiler_extra_flags: --enable=all -I include --inline-suppr -Umax  --suppress="*:cmake*" --suppress="*:unittests/catch.hpp" --force
+    compiler_extra_flags: --enable=all -I include --inline-suppr -Umax  --suppress="*:unittests/catch.hpp" --force --suppress="unusedFunction:*"
   - name: custom_check
     commands:
        - ./contrib/check_for_tabs.rb
