@@ -90,6 +90,13 @@ A helper function exists for strongly typed and ChaiScript `Vector` function con
 chai.add(chaiscript::vector_conversion<std::vector<int>>());
 ```
 
+A helper function also exists for strongly typed and ChaiScript `Map` function conversion definition:
+
+```
+chai.add(chaiscript::map_conversion<std::map<std::string, int>>());
+```
+
+
 This allows you to pass a ChaiScript function to a function requiring `std::vector<int>`
 
 ## Adding Objects

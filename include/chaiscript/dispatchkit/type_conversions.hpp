@@ -592,6 +592,24 @@ namespace chaiscript
       return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Type_Conversion_Impl<decltype(func)>>(user_type<std::vector<Boxed_Value>>(), user_type<To>(), func);
     }
 
+  template<typename To>
+    Type_Conversion map_conversion()
+    {
+      auto func = [](const Boxed_Value &t_bv) -> Boxed_Value {
+        const std::map<std::string, Boxed_Value> &from_map = detail::Cast_Helper<const std::map<std::string, Boxed_Value> &>::cast(t_bv, nullptr);
+
+        To map;
+        for (const std::pair<std::string, Boxed_Value> &p : from_map) {
+          map.insert(std::make_pair(p.first, detail::Cast_Helper<typename To::mapped_type>::cast(p.second, nullptr)));
+        }
+
+        return Boxed_Value(std::move(map));
+      };
+
+      return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Type_Conversion_Impl<decltype(func)>>(user_type<std::map<std::string, Boxed_Value>>(), user_type<To>(), func);
+    }
+
+
 }
 
 
