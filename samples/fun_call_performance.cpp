@@ -316,7 +316,7 @@ int main(int argc, char *argv[])
 
   ////for (int i = 0; i < 1000; i++)
   ////{
-  ////	chai.eval("puts(helloWorld(\"Bob12345\"));");
+  //// chai.eval("puts(helloWorld(\"Bob12345\"));");
   ////}
   //chai.eval_file("E:\\C++\\ChaiScript - 5.4.0\\samples\forx.chai");
 

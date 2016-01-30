@@ -929,7 +929,7 @@ namespace chaiscript
         {
         }
 
-		Char_Parser &operator=(const Char_Parser &) = delete;
+        Char_Parser &operator=(const Char_Parser &) = delete;
 
         ~Char_Parser(){
           if (is_octal) {
