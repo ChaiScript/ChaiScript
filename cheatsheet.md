@@ -107,8 +107,9 @@ chai.add(chaiscript::var(std::ref(somevar), "somevar"); // by reference, shared 
 auto shareddouble = std::make_shared<double>(4.3);
 chai.add(chaiscript::var(shareddouble), "shareddouble"); // by shared_ptr, shared between c++ and chai
 chai.add(chaiscript::const_var(somevar), "somevar"); // copied in and made const
-chai.add_global_const(chaiscript::const_var(somevar), "somevar"); // global const. Throws if value is non-const
-chai.add_global(chaiscript::var(somevar), "somevar"); // global non-const
+chai.add_global_const(chaiscript::const_var(somevar), "somevar"); // global const. Throws if value is non-const, throws if object exists
+chai.add_global(chaiscript::var(somevar), "somevar"); // global non-const, throws if object exists
+chai.set_global(chaiscript::var(somevar), "somevar"); // global non-const, overwrites existing object
 ```
 # Using STL
 ChaiScript recognize many types from STL, but you have to add specific instantiation yourself.
