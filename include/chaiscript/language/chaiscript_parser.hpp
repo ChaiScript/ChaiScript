@@ -2065,7 +2065,7 @@ namespace chaiscript
           }
 
           build_match<eval::Var_Decl_AST_Node>(prev_stack_top);
-        } else if (Keyword("GLOBAL")) {
+        } else if (Keyword("GLOBAL") || Keyword("global")) {
           retval = true;
 
           if (!(Reference() || Id())) {

@@ -229,11 +229,13 @@ var k = 5; // initialized to 5 (integer)
 var l := k; // reference to k
 auto &m = k; // reference to k
 
-GLOBAL g = 5; // creates a global variable. If global already exists, it is not re-added
-GLOBAL g = 2; // global 'g' now equals 2
+global g = 5; // creates a global variable. If global already exists, it is not re-added
+global g = 2; // global 'g' now equals 2
 
-GLOBAL g2;
-if (g2.is_var_undef()) { g2 = 4; } // only initialize g2 once, if GLOBAL decl hit more than once
+global g2;
+if (g2.is_var_undef()) { g2 = 4; } // only initialize g2 once, if global decl hit more than once
+
+GLOBAL g3; // all upper case version also accepted
 ```
 
 ## Built in Types
