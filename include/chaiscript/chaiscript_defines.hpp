@@ -8,11 +8,14 @@
 #define CHAISCRIPT_DEFINES_HPP_
 
 #ifdef _MSC_VER
+#define CHAISCRIPT_COMPILER_VERSION #_MSC_FULL_VER
 #define CHAISCRIPT_MSVC _MSC_VER
 #define CHAISCRIPT_HAS_DECLSPEC
 #if _MSC_VER <= 1800
 #define CHAISCRIPT_MSVC_12
 #endif
+#else
+#define CHAISCRIPT_COMPILER_VERSION __VERSION__
 #endif
 
 #ifndef CHAISCRIPT_MSVC_12
@@ -28,6 +31,25 @@
 #if defined(_WIN32) || defined(__CYGWIN__)
 #define CHAISCRIPT_WINDOWS
 #endif
+
+#if defined(_WIN32)
+#if defined(__llvm__)
+#define CHAISCRIPT_COMPILER_NAME "clang(windows)"
+#elif defined(__GNUC__)
+#define CHAISCRIPT_COMPILER_NAME "gcc(mingw)"
+#else
+#define CHAISCRIPT_COMPILER_NAME "msvc"
+#endif
+#else
+#if defined(__llvm__)
+#define CHAISCRIPT_COMPILER_NAME "clang"
+#elif defined(__GNUC__)
+#define CHAISCRIPT_COMPILER_NAME "gcc"
+#else
+#define CHAISCRIPT_COMPILER_NAME "unknown"
+#endif
+#endif
+
 
 #if (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8) || (defined(__llvm__) && !defined(CHAISCRIPT_LIBCPP))  
 /// Currently only g++>=4.8 supports this natively
@@ -64,12 +86,22 @@
 #define CHAISCRIPT_CONSTEXPR constexpr
 #endif
 
+#ifdef _DEBUG
+#define CHAISCRIPT_DEBUG true
+#else
+#define CHAISCRIPT_DEBUG false
+#endif
+
 #include <memory>
 
 namespace chaiscript {
   static const int version_major = 5;
   static const int version_minor = 7;
   static const int version_patch = 2;
+
+  static const char *compiler_version = CHAISCRIPT_COMPILER_VERSION;
+  static const char *compiler_name = CHAISCRIPT_COMPILER_NAME;
+  static const bool debug_build = CHAISCRIPT_DEBUG;
 
   template<typename B, typename D, typename ...Arg>
   inline std::shared_ptr<B> make_shared(Arg && ... arg)

@@ -398,6 +398,10 @@ namespace chaiscript
       m_engine.add(fun(&ChaiScript::version_minor), "version_minor");
       m_engine.add(fun(&ChaiScript::version_patch), "version_patch");
       m_engine.add(fun(&ChaiScript::version), "version");
+      m_engine.add(fun(&ChaiScript::compiler_version), "compiler_version");
+      m_engine.add(fun(&ChaiScript::compiler_name), "compiler_name");
+      m_engine.add(fun(&ChaiScript::compiler_id), "compiler_id");
+      m_engine.add(fun(&ChaiScript::debug_build), "debug_build");
 
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global_const(t_bv, t_name); }), "add_global_const");
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global(t_bv, t_name); }), "add_global");
@@ -552,10 +556,35 @@ namespace chaiscript
 
     static std::string version()
     {
-      std::stringstream ss;
-      ss << version_major() << "." << version_minor() << "." << version_patch();
-      return ss.str();
+      return std::to_string(version_major()) + '.' + std::to_string(version_minor()) + '.' + std::to_string(version_patch());
     }
+
+    static std::string compiler_id()
+    {
+      return compiler_name() + '-' + compiler_version();
+    }
+
+    static std::string build_id()
+    {
+      return compiler_id() + (debug_build()?"-Debug":"-Release");
+    }
+
+    static std::string compiler_version()
+    {
+      return chaiscript::compiler_version;
+    }
+
+    static std::string compiler_name()
+    {
+      return chaiscript::compiler_name;
+    }
+
+    static bool debug_build()
+    {
+      return chaiscript::debug_build;
+    }
+
+
 
     std::string get_type_name(const Type_Info &ti) const
     {
