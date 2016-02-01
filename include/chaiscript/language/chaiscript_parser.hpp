@@ -889,11 +889,13 @@ namespace chaiscript
             if (!Eol_()) {
               if (prev_char == '$' && *m_position == '{') {
                 ++in_interpolation;
-              } else if (*m_position == '"') {
+              } else if (prev_char != '\\' && *m_position == '"') {
                 in_quote = !in_quote;
               } else if (*m_position == '}' && !in_quote) {
                 --in_interpolation;
-              } else if (prev_char == '\\') {
+              } 
+              
+              if (prev_char == '\\') {
                 prev_char = 0;
               } else {
                 prev_char = *m_position;
