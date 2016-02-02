@@ -160,13 +160,14 @@ namespace chaiscript
             {
               unique_lock<mutex> lock(m_mutex);
 
-              auto itr = m_instances.find(std::this_thread::get_id());
+              const auto id = std::this_thread::get_id();
+              auto itr = m_instances.find(id);
 
               if (itr != m_instances.end()) { return itr->second; }
 
               std::shared_ptr<T> new_instance(std::make_shared<T>());
 
-              m_instances.insert(std::make_pair(std::this_thread::get_id(), new_instance));
+              m_instances.insert(std::make_pair(id, new_instance));
 
               return new_instance;
             }

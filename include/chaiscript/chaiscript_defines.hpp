@@ -51,8 +51,7 @@
 #endif
 #endif
 
-
-#if (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8) || (defined(__llvm__) && !defined(CHAISCRIPT_LIBCPP))  
+#if (defined(CHAISCRIPT_MSVC) && !defined(CHAISCRIPT_MSVC_12)) ||  (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8) || (defined(__llvm__) && !defined(CHAISCRIPT_LIBCPP))
 /// Currently only g++>=4.8 supports this natively
 /// \todo Make this support other compilers when possible
 #define CHAISCRIPT_HAS_THREAD_LOCAL

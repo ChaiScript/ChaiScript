@@ -49,13 +49,7 @@ namespace chaiscript
 
 #ifndef CHAISCRIPT_NO_THREADS
         lib->add(standard_library::future_type<std::future<chaiscript::Boxed_Value>>("future"));
-#ifdef CHAISCRIPT_MSVC
-        /// this is to work around an issue that seems to only come up on single CPU hosts on MSVC 2015 Update 1
-        /// \todo reevaluate this later
-        lib->add(chaiscript::fun([](const std::function<chaiscript::Boxed_Value ()> &t_func){ return std::async(std::thread::hardware_concurrency() <= 1 ? std::launch::deferred : std::launch::async, t_func);}), "async");
-#else
         lib->add(chaiscript::fun([](const std::function<chaiscript::Boxed_Value ()> &t_func){ return std::async(std::launch::async, t_func);}), "async");
-#endif
 #endif
 
         lib->add(json_wrap::library());
