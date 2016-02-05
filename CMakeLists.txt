@@ -397,6 +397,14 @@ if(BUILD_TESTING)
       add_test(NAME performance.${filename} COMMAND ${VALGRIND} --tool=callgrind --callgrind-out-file=callgrind.performance.${filename} $<TARGET_FILE:chai> ${CMAKE_CURRENT_SOURCE_DIR}/performance_tests/${filename})
       list(APPEND TESTS performance.${filename})
     endforeach()
+
+    add_executable(profile_cpp_calls_2 performance_tests/profile_cpp_calls_2.cpp)
+    target_link_libraries(profile_cpp_calls_2 ${LIBS})
+    add_test(NAME performance.profile_cpp_calls_2 COMMAND ${VALGRIND} --tool=callgrind --callgrind-out-file=callgrind.performance.profile_cpp_calls_2 $<TARGET_FILE:profile_cpp_calls_2>)
+
+    add_executable(profile_fun_wrappers performance_tests/profile_fun_wrappers.cpp)
+    target_link_libraries(profile_fun_wrappers ${LIBS})
+    add_test(NAME performance.profile_fun_wrappers COMMAND ${VALGRIND} --tool=callgrind --callgrind-out-file=callgrind.performance.profile_fun_wrappers $<TARGET_FILE:profile_fun_wrappers>)
   endif()
 
   set_property(TEST ${TESTS}
