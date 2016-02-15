@@ -40,7 +40,7 @@ namespace chaiscript
         {
         }
 
-        bad_boxed_cast(std::string t_what) CHAISCRIPT_NOEXCEPT
+        explicit bad_boxed_cast(std::string t_what) CHAISCRIPT_NOEXCEPT
           : to(nullptr), m_what(std::move(t_what))
         {
         }

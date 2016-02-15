@@ -46,7 +46,7 @@ namespace chaiscript {
       private:
         struct Data
         {
-          Data(const std::type_info &t_type) 
+          explicit Data(const std::type_info &t_type) 
             : m_type(t_type)
           {
           }
