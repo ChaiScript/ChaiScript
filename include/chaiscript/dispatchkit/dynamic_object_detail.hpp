@@ -84,7 +84,7 @@ namespace chaiscript
 
           virtual bool is_attribute_function() const CHAISCRIPT_OVERRIDE { return m_is_attribute; } 
 
-          virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
+          virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
           {
             if (dynamic_object_typename_match(vals, m_type_name, m_ti, t_conversions))
             {
@@ -106,7 +106,7 @@ namespace chaiscript
 
 
         protected:
-          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
+          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
           {
             if (dynamic_object_typename_match(params, m_type_name, m_ti, t_conversions))
             {
@@ -116,7 +116,7 @@ namespace chaiscript
             } 
           }
 
-          virtual bool compare_first_type(const Boxed_Value &bv, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
+          virtual bool compare_first_type(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
           {
             return dynamic_object_typename_match(bv, m_type_name, m_ti, t_conversions);
           }
@@ -134,7 +134,7 @@ namespace chaiscript
           }
 
           bool dynamic_object_typename_match(const Boxed_Value &bv, const std::string &name,
-              const std::unique_ptr<Type_Info> &ti, const Type_Conversions &t_conversions) const
+              const std::unique_ptr<Type_Info> &ti, const Type_Conversions_State &t_conversions) const
           {
             if (bv.get_type_info().bare_equal(m_doti))
             {
@@ -156,7 +156,7 @@ namespace chaiscript
           }
 
           bool dynamic_object_typename_match(const std::vector<Boxed_Value> &bvs, const std::string &name,
-              const std::unique_ptr<Type_Info> &ti, const Type_Conversions &t_conversions) const
+              const std::unique_ptr<Type_Info> &ti, const Type_Conversions_State &t_conversions) const
           {
             if (bvs.size() > 0)
             {
@@ -216,7 +216,7 @@ namespace chaiscript
             return dc && dc->m_type_name == m_type_name && (*dc->m_func) == (*m_func);
           }
 
-          virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
+          virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
           {
             std::vector<Boxed_Value> new_vals{Boxed_Value(Dynamic_Object(m_type_name))};
             new_vals.insert(new_vals.end(), vals.begin(), vals.end());
@@ -230,7 +230,7 @@ namespace chaiscript
           }
 
         protected:
-          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
+          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
           {
             auto bv = Boxed_Value(Dynamic_Object(m_type_name), true);
             std::vector<Boxed_Value> new_params{bv};

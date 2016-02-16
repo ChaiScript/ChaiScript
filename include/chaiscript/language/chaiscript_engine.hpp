@@ -368,10 +368,14 @@ namespace chaiscript
 
 //      m_engine.add(fun<Boxed_Value (const dispatch::Proxy_Function_Base *, const std::vector<Boxed_Value> &)>(std::bind(&chaiscript::dispatch::Proxy_Function_Base::operator(), std::placeholders::_1, std::placeholders::_2, std::ref(m_engine.conversions()))), "call");
 //
+//
+
       m_engine.add(fun(
             [=](const dispatch::Proxy_Function_Base &t_fun, const std::vector<Boxed_Value> &t_params) {
-              return t_fun(t_params, this->m_engine.conversions());
+              Type_Conversions_State s(this->m_engine.conversions(), this->m_engine.conversions().conversion_saves());
+              return t_fun(t_params, s);
             }), "call");
+
 
       m_engine.add(fun([this](const Type_Info &t_ti){ return m_engine.get_type_name(t_ti); }), "name");
 

@@ -314,7 +314,7 @@ namespace chaiscript
           return arity;
         }
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
         {
           return std::any_of(m_funcs.cbegin(), m_funcs.cend(),
                              [&vals, &t_conversions](const Proxy_Function &f){ return f->call_match(vals, t_conversions); });
@@ -326,7 +326,7 @@ namespace chaiscript
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
         {
           return dispatch::dispatch(m_funcs, params, t_conversions);
         }
@@ -442,7 +442,8 @@ namespace chaiscript
         template<typename Type>
           typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv) const
           {
-            return chaiscript::boxed_cast<Type>(bv, &m_conversions);
+            Type_Conversions_State state(m_conversions, m_conversions.conversion_saves());
+            return chaiscript::boxed_cast<Type>(bv, &state);
           }
 
         /// Add a new conversion for upcasting to a base class
@@ -911,7 +912,7 @@ namespace chaiscript
         }
 
         bool is_attribute_call(const std::vector<Proxy_Function> &t_funs, const std::vector<Boxed_Value> &t_params,
-            bool t_has_params) const
+            bool t_has_params, const Type_Conversions_State &t_conversions) const
         {
           if (!t_has_params || t_params.empty()) {
             return false;
@@ -919,7 +920,7 @@ namespace chaiscript
 
           for (const auto &fun : t_funs) {
             if (fun->is_attribute_function()) {
-              if (fun->compare_first_type(t_params[0], m_conversions)) {
+              if (fun->compare_first_type(t_params[0], t_conversions)) {
                 return true;
               }
             }
@@ -934,14 +935,15 @@ namespace chaiscript
 #pragma warning(push)
 #pragma warning(disable : 4715)
 #endif
-        Boxed_Value call_member(const std::string &t_name, std::atomic_uint_fast32_t &t_loc, const std::vector<Boxed_Value> &params, bool t_has_params)
+        Boxed_Value call_member(const std::string &t_name, std::atomic_uint_fast32_t &t_loc, const std::vector<Boxed_Value> &params, bool t_has_params,
+                                const Type_Conversions_State &t_conversions)
         {
           uint_fast32_t loc = t_loc.load(std::memory_order_relaxed);
           const auto funs = get_function(t_name, loc);
           if (funs.first != loc) t_loc.store(uint_fast32_t(funs.first), std::memory_order_relaxed);
 
           const auto do_attribute_call = 
-            [this](int l_num_params, const std::vector<Boxed_Value> &l_params, const std::vector<Proxy_Function> &l_funs, const Type_Conversions &l_conversions)->Boxed_Value
+            [this](int l_num_params, const std::vector<Boxed_Value> &l_params, const std::vector<Proxy_Function> &l_funs, const Type_Conversions_State &l_conversions)->Boxed_Value
             {
               std::vector<Boxed_Value> attr_params{l_params.begin(), l_params.begin() + l_num_params};
               Boxed_Value bv = dispatch::dispatch(l_funs, attr_params, l_conversions);
@@ -974,14 +976,14 @@ namespace chaiscript
               }
             };
 
-          if (is_attribute_call(*funs.second, params, t_has_params)) {
-            return do_attribute_call(1, params, *funs.second, m_conversions);
+          if (is_attribute_call(*funs.second, params, t_has_params, t_conversions)) {
+            return do_attribute_call(1, params, *funs.second, t_conversions);
           } else {
             std::exception_ptr except;
 
             if (!funs.second->empty()) {
               try {
-                return dispatch::dispatch(*funs.second, params, m_conversions);
+                return dispatch::dispatch(*funs.second, params, t_conversions);
               } catch(chaiscript::exception::dispatch_error&) {
                 except = std::current_exception();
               }
@@ -997,7 +999,7 @@ namespace chaiscript
 
               for (const auto &f : *method_missing_funs)
               {
-                if(f->compare_first_type(params[0], m_conversions)) {
+                if(f->compare_first_type(params[0], t_conversions)) {
                   fs.push_back(f);
                 }
               }
@@ -1021,9 +1023,9 @@ namespace chaiscript
                 if (is_no_param) {
                   std::vector<Boxed_Value> tmp_params(params);
                   tmp_params.insert(tmp_params.begin() + 1, var(t_name));
-                  return do_attribute_call(2, tmp_params, functions, m_conversions);
+                  return do_attribute_call(2, tmp_params, functions, t_conversions);
                 } else {
-                  return dispatch::dispatch(functions, {params[0], var(t_name), var(std::vector<Boxed_Value>(params.begin()+1, params.end()))}, m_conversions);
+                  return dispatch::dispatch(functions, {params[0], var(t_name), var(std::vector<Boxed_Value>(params.begin()+1, params.end()))}, t_conversions);
                 }
               } catch (const dispatch::option_explicit_set &e) {
                 throw chaiscript::exception::dispatch_error(params, std::vector<Const_Proxy_Function>(funs.second->begin(), funs.second->end()), 
@@ -1046,12 +1048,13 @@ namespace chaiscript
 
 
 
-        Boxed_Value call_function(const std::string &t_name, std::atomic_uint_fast32_t &t_loc, const std::vector<Boxed_Value> &params) const
+        Boxed_Value call_function(const std::string &t_name, std::atomic_uint_fast32_t &t_loc, const std::vector<Boxed_Value> &params,
+            const Type_Conversions_State &t_conversions) const
         {
           uint_fast32_t loc = t_loc.load(std::memory_order_relaxed);
           const auto funs = get_function(t_name, loc);
           if (funs.first != loc) t_loc.store(uint_fast32_t(funs.first), std::memory_order_relaxed);
-          return dispatch::dispatch(*funs.second, params, m_conversions);
+          return dispatch::dispatch(*funs.second, params, t_conversions);
         }
 
 
@@ -1105,8 +1108,9 @@ namespace chaiscript
           }
 
           const Const_Proxy_Function &f = this->boxed_cast<Const_Proxy_Function>(params[0]);
+          const Type_Conversions_State conversions(m_conversions, m_conversions.conversion_saves());
 
-          return Boxed_Value(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end()), m_conversions));
+          return Boxed_Value(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end()), conversions));
         }
 
         /// Dump all system info to stdout
@@ -1208,19 +1212,19 @@ namespace chaiscript
           save_function_params(*m_stack_holder, t_params);
         }
 
-        void new_function_call(Stack_Holder &t_s)
+        void new_function_call(Stack_Holder &t_s, Type_Conversions::Conversion_Saves &t_saves)
         {
           if (t_s.call_depth == 0)
           {
-            m_conversions.enable_conversion_saves(true);
+            m_conversions.enable_conversion_saves(t_saves, true);
           }
 
           ++t_s.call_depth;
 
-          save_function_params(m_conversions.take_saves());
+          save_function_params(m_conversions.take_saves(t_saves));
         }
 
-        void pop_function_call(Stack_Holder &t_s)
+        void pop_function_call(Stack_Holder &t_s, Type_Conversions::Conversion_Saves &t_saves)
         {
           --t_s.call_depth;
 
@@ -1229,18 +1233,18 @@ namespace chaiscript
           if (t_s.call_depth == 0)
           {
             t_s.call_params.back().clear();
-            m_conversions.enable_conversion_saves(false);
+            m_conversions.enable_conversion_saves(t_saves, false);
           }
         }
 
         void new_function_call()
         {
-          new_function_call(*m_stack_holder);
+          new_function_call(*m_stack_holder, m_conversions.conversion_saves());
         }
 
         void pop_function_call()
         {
-          pop_function_call(*m_stack_holder);
+          pop_function_call(*m_stack_holder, m_conversions.conversion_saves());
         }
 
         Stack_Holder &get_stack_holder()
@@ -1510,7 +1514,8 @@ namespace chaiscript
       public:
         Dispatch_State(Dispatch_Engine &t_engine)
           : m_engine(t_engine),
-            m_stack_holder(t_engine.get_stack_holder())
+            m_stack_holder(t_engine.get_stack_holder()),
+            m_conversions(t_engine.conversions(), t_engine.conversions().conversion_saves())
         {
         }
 
@@ -1526,6 +1531,14 @@ namespace chaiscript
           return m_stack_holder.get();
         }
 
+        const Type_Conversions_State &conversions() const {
+          return m_conversions;
+        }
+
+        Type_Conversions::Conversion_Saves &conversion_saves() const {
+          return m_conversions.saves();
+        }
+
         void add_object(const std::string &t_name, Boxed_Value obj) const {
           m_engine.get().add_object(t_name, std::move(obj), m_stack_holder.get());
         }
@@ -1533,6 +1546,7 @@ namespace chaiscript
       private:
         std::reference_wrapper<Dispatch_Engine> m_engine;
         std::reference_wrapper<Stack_Holder> m_stack_holder;
+        Type_Conversions_State m_conversions;
     };
   }
 }

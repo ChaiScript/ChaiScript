@@ -1011,7 +1011,7 @@ namespace chaiscript
       {
         typedef Boxed_Number Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *)
         {
           return Boxed_Number(ob);
         }

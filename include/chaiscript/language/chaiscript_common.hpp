@@ -582,12 +582,12 @@ namespace chaiscript
         Function_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
           : m_ds(t_ds)
         {
-          m_ds.get()->new_function_call(m_ds.get().stack_holder());
+          m_ds.get()->new_function_call(m_ds.get().stack_holder(), m_ds.get().conversion_saves());
         }
 
         ~Function_Push_Pop()
         {
-          m_ds.get()->pop_function_call(m_ds.get().stack_holder());
+          m_ds.get()->pop_function_call(m_ds.get().stack_holder(), m_ds.get().conversion_saves());
         }
 
         void save_params(const std::vector<Boxed_Value> &t_params)
