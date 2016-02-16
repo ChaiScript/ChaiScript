@@ -172,10 +172,8 @@ namespace chaiscript
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE {
           if (!m_value.is_undef())
           {
-            std::cout << "1\n";
             return m_value;
           } else {
-            std::cout << "0\n";
             try {
               return t_ss->get_object(this->text, m_loc);
             }
