@@ -1108,9 +1108,9 @@ namespace chaiscript
           }
 
           const Const_Proxy_Function &f = this->boxed_cast<Const_Proxy_Function>(params[0]);
-          const Type_Conversions_State conversions(m_conversions, m_conversions.conversion_saves());
+          const Type_Conversions_State convs(m_conversions, m_conversions.conversion_saves());
 
-          return Boxed_Value(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end()), conversions));
+          return Boxed_Value(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end()), convs));
         }
 
         /// Dump all system info to stdout
