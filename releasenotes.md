@@ -1,6 +1,29 @@
 Notes:
 =======
-Current Version: 5.7.1
+Current Version: 5.8.0
+
+### Changes since 5.7.1
+* Make all parser iterator operations range checked
+* Parse in-string eval statements once, not once for each execution
+* Fix parsing of operators (ie 1<-1 now parses)
+* Fix variable scoping for functors
+* Exception reduction
+* Various object lifetime fixes
+* Add JSON support for load / save #207
+* Numeric overload resolution fixes #209 
+* Fix long long #208 
+* Add octal escapes in strings #211
+* Fixed sizing of binary literals #213
+* Added support for != with bool values #217
+* Various value assignment vector fixes 
+* Fixed broken hex escape sequences from @ChristianKaeser
+* Multiply defined symbols fixes #232 @RaptorFactor
+* Add add_class<Enum> helper #233  @vrennert
+* Cheatsheet fixes #235 @mlamby
+* Fix parsing of strings inside of in-string eval statements
+* Allow lower-case global keyword
+* Enable thread-local on MSVC (should be significant performance boost)
+
 
 ### Changes since 5.7.0
 * Build time reduction
