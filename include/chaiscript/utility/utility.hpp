@@ -1,19 +1,21 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_UTILITY_UTILITY_HPP_
 #define CHAISCRIPT_UTILITY_UTILITY_HPP_
 
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 #include "../chaiscript.hpp"
 #include "../dispatchkit/proxy_functions.hpp"
 #include "../dispatchkit/type_info.hpp"
+#include "../dispatchkit/operators.hpp"
 
 
 namespace chaiscript 
@@ -60,6 +62,42 @@ namespace chaiscript
         for(const auto &fun: t_funcs)
         {
           t_module.add(fun.first, fun.second);
+        }
+      }
+
+    template<typename Enum, typename ModuleType>
+      typename std::enable_if<std::is_enum<Enum>::value, void>::type
+      add_class(ModuleType &t_module,
+        const std::string &t_class_name,
+#ifdef CHAISCRIPT_GCC_4_6
+        const std::vector<std::pair<int, std::string>> &t_constants
+#else
+        const std::vector<std::pair<typename std::underlying_type<Enum>::type, std::string>> &t_constants
+#endif
+        )
+      {
+        t_module.add(chaiscript::user_type<Enum>(), t_class_name);
+
+        t_module.add(chaiscript::constructor<Enum ()>(), t_class_name);
+        t_module.add(chaiscript::constructor<Enum (const Enum &)>(), t_class_name);
+
+        using namespace chaiscript::bootstrap::operators;
+        t_module.add([](){
+              // add some comparison and assignment operators
+              return assign<Enum>(not_equal<Enum>(equal<Enum>()));
+            }());
+
+#ifdef CHAISCRIPT_GCC_4_6
+        t_module.add(chaiscript::fun([](const Enum &e, const int &i) { return e == i; }), "==");
+        t_module.add(chaiscript::fun([](const int &i, const Enum &e) { return i == e; }), "==");
+#else
+        t_module.add(chaiscript::fun([](const Enum &e, const typename std::underlying_type<Enum>::type &i) { return e == i; }), "==");
+        t_module.add(chaiscript::fun([](const typename std::underlying_type<Enum>::type &i, const Enum &e) { return i == e; }), "==");
+#endif
+
+        for (const auto &constant : t_constants)
+        {
+          t_module.add_global_const(chaiscript::const_var(Enum(constant.first)), constant.second);
         }
       }
   }

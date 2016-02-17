@@ -2,6 +2,7 @@
 // caught in other cpp files if chaiscript causes them
 
 #include <chaiscript/utility/utility.hpp>
+#include <chaiscript/dispatchkit/bootstrap_stl.hpp>
 
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(push)
@@ -396,7 +397,7 @@ class Short_Comparison_Test {
  public:
   Short_Comparison_Test() : value_(5) {}
 
-  short get_value() { return value_; }
+  short get_value() const { return value_; }
 
   short value_;
 };
@@ -514,6 +515,65 @@ TEST_CASE("Utility_Test utility class wrapper")
   CHECK(chai.eval<std::string>("auto t2 = Utility_Test(); t2.functionOverload(1); ") == "int");
   CHECK(chai.eval<std::string>("auto t3 = Utility_Test(); t3.functionOverload(1.1); ") == "double");
   chai.eval("t = Utility_Test();");
+
+}
+
+
+enum Utility_Test_Numbers
+{
+  ONE,
+  TWO,
+  THREE
+};
+
+void do_something_with_enum_vector(const std::vector<Utility_Test_Numbers> &v)
+{
+  CHECK(v.size() == 3);
+  CHECK(v[0] == ONE);
+  CHECK(v[1] == THREE);
+  CHECK(v[2] == TWO);
+}
+
+TEST_CASE("Utility_Test utility class wrapper for enum")
+{
+
+  chaiscript::ModulePtr m = chaiscript::ModulePtr(new chaiscript::Module());
+
+  using namespace chaiscript;
+
+  chaiscript::utility::add_class<Utility_Test_Numbers>(*m,
+      "Utility_Test_Numbers",
+      { { ONE, "ONE" },
+        { TWO, "TWO" },
+        { THREE, "THREE" }
+
+        }
+      );
+
+
+  chaiscript::ChaiScript chai;
+  chai.add(m);
+
+  CHECK(chai.eval<Utility_Test_Numbers>("ONE ") == 0);
+  CHECK(chai.eval<Utility_Test_Numbers>("TWO ") == 1);
+  CHECK(chai.eval<Utility_Test_Numbers>("THREE ") == 2);
+
+  CHECK(chai.eval<bool>("ONE == 0"));
+
+  chai.add(chaiscript::fun(&do_something_with_enum_vector), "do_something_with_enum_vector");
+  chai.add(chaiscript::vector_conversion<std::vector<Utility_Test_Numbers>>());
+  CHECK_NOTHROW(chai.eval("var a = [ONE, TWO, THREE]"));
+  CHECK_NOTHROW(chai.eval("do_something_with_enum_vector([ONE, THREE, TWO])"));
+  CHECK_NOTHROW(chai.eval("[ONE]"));
+
+  const auto v = chai.eval<std::vector<Utility_Test_Numbers>>("a");
+  CHECK(v.size() == 3);
+  CHECK(v.at(1) == TWO);
+
+  CHECK(chai.eval<bool>("ONE == ONE"));
+  CHECK(chai.eval<bool>("ONE != TWO"));
+  CHECK_NOTHROW(chai.eval("var o = ONE; o = TWO"));
+
 
 }
 
@@ -743,3 +803,139 @@ TEST_CASE("Test Derived->Base with non-polymorphic classes")
   chai.add(chaiscript::fun(&myfunction), "myfunction");
   CHECK(chai.eval<int>("myfunction(d)") == 2);
 }
+
+
+struct TestCppVariableScope
+{
+  void print()
+  {
+    std::cout << "Printed" << std::endl;
+  }
+};
+
+TEST_CASE("Variable Scope When Calling From C++")
+{
+  chaiscript::ChaiScript chai;
+  chai.add(chaiscript::user_type<TestCppVariableScope>(), "Test");
+  chai.add(chaiscript::constructor<TestCppVariableScope()>(), "Test");
+  chai.add(chaiscript::fun(&TestCppVariableScope::print), "print");
+  chai.eval(R"(var t := Test();
+
+      def func()
+      {
+        t.print();
+      }
+
+      )");
+
+  CHECK_THROWS(chai.eval("func()"));
+
+  chai.eval("dump_object(t)");
+
+  auto func = chai.eval<std::function<void()>>("func");
+  CHECK_THROWS(func());
+}
+
+TEST_CASE("Variable Scope When Calling From C++ 2")
+{
+  chaiscript::ChaiScript chai;
+  chai.eval("var obj = 2;");
+  auto func = chai.eval<std::function<void()>>("fun(){ return obj; }");
+  CHECK_THROWS(func());
+}
+
+void ulonglong(unsigned long long i) {
+  std::cout << i << '\n';
+}
+
+
+void longlong(long long i) {
+  std::cout << i << '\n';
+}
+
+TEST_CASE("Test long long dispatch")
+{
+  chaiscript::ChaiScript chai;
+  chai.add(chaiscript::fun(&longlong), "longlong");
+  chai.add(chaiscript::fun(&ulonglong), "ulonglong");
+  chai.eval("longlong(15)");
+  chai.eval("ulonglong(15)");
+}
+
+
+struct Returned_Converted_Config
+{
+  int num_iterations;
+  int something_else;
+  std::string a_string;
+  std::function<int (const std::string &)> a_function;
+};
+
+
+
+TEST_CASE("Return of converted type from script")
+{
+  chaiscript::ChaiScript chai;
+
+  chai.add(chaiscript::constructor<Returned_Converted_Config ()>(), "Returned_Converted_Config");
+  chai.add(chaiscript::fun(&Returned_Converted_Config::num_iterations), "num_iterations");
+  chai.add(chaiscript::fun(&Returned_Converted_Config::something_else), "something_else");
+  chai.add(chaiscript::fun(&Returned_Converted_Config::a_string), "a_string");
+  chai.add(chaiscript::fun(&Returned_Converted_Config::a_function), "a_function");
+  chai.add(chaiscript::vector_conversion<std::vector<Returned_Converted_Config>>());
+
+  auto c = chai.eval<std::vector<Returned_Converted_Config>>(R"(
+    var c = Returned_Converted_Config();
+
+    c.num_iterations = 5;
+    c.something_else = c.num_iterations * 2;
+    c.a_string = "string";
+    c.a_function = fun(s) { s.size(); }
+
+    print("making vector");
+    var v = [];
+    print("adding config item");
+    v.push_back_ref(c);
+    print("returning vector");
+    v;
+
+  )");
+
+
+  std::cout << typeid(decltype(c)).name() << std::endl;
+
+  std::cout << "Info: " << c.size() << " " << &c[0] << std::endl;
+
+  std::cout << "num_iterations " << c[0].num_iterations << '\n'
+            << "something_else " << c[0].something_else << '\n'
+            << "a_string " << c[0].a_string << '\n'
+            << "a_function " << c[0].a_function("bob") << '\n';
+
+  chai.add(chaiscript::user_type<Returned_Converted_Config>(), "Returned_Converted_Config");
+}
+
+
+int get_value_a(const std::map<std::string, int> &t_m)
+{
+  return t_m.at("a");
+}
+
+
+TEST_CASE("Map conversions")
+{
+  chaiscript::ChaiScript chai;
+  chai.add(chaiscript::map_conversion<std::map<std::string, int>>());
+  chai.add(chaiscript::fun(&get_value_a), "get_value_a");
+
+  const auto c = chai.eval<int>(R"(
+    var m = ["a": 42];
+    get_value_a(m);
+  )");
+
+  CHECK(c == 42);
+
+}
+
+
+
+

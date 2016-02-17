@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_BOXED_NUMERIC_HPP_
@@ -100,6 +100,7 @@ namespace chaiscript
                 :(Common_Types::t_uint64);
       }
 
+
       static Common_Types get_common_type(const Boxed_Value &t_bv)
       {
         const Type_Info &inp_ = t_bv.get_type_info();
@@ -120,8 +121,12 @@ namespace chaiscript
           return get_common_type(sizeof(unsigned int), false);
         } else if (inp_ == typeid(long)) {
           return get_common_type(sizeof(long), true);
+        } else if (inp_ == typeid(long long)) {
+          return get_common_type(sizeof(long long), true);
         } else if (inp_ == typeid(unsigned long)) {
           return get_common_type(sizeof(unsigned long), false);
+        } else if (inp_ == typeid(unsigned long long)) {
+          return get_common_type(sizeof(unsigned long long), false);
         } else if (inp_ == typeid(std::int8_t)) {
           return Common_Types::t_int8;
         } else if (inp_ == typeid(std::int16_t)) {
@@ -513,6 +518,21 @@ namespace chaiscript
         validate_boxed_number(bv);
       }
 
+      static bool is_floating_point(const Boxed_Value &t_bv)
+      {
+        const Type_Info &inp_ = t_bv.get_type_info();
+
+        if (inp_ == typeid(double)) {
+          return true;
+        } else if (inp_ == typeid(long double)) {
+          return true;
+        } else if (inp_ == typeid(float)) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+
       Boxed_Number get_as(const Type_Info &inp_) const
       {
         if (inp_.bare_equal_type_info(typeid(int))) {
@@ -537,8 +557,12 @@ namespace chaiscript
           return Boxed_Number(get_as<unsigned int>());
         } else if (inp_.bare_equal_type_info(typeid(long))) {
           return Boxed_Number(get_as<long>());
+        } else if (inp_.bare_equal_type_info(typeid(long long))) {
+          return Boxed_Number(get_as<long long>());
         } else if (inp_.bare_equal_type_info(typeid(unsigned long))) {
           return Boxed_Number(get_as<unsigned long>());
+        } else if (inp_.bare_equal_type_info(typeid(unsigned long long))) {
+          return Boxed_Number(get_as<unsigned long long>());
         } else if (inp_.bare_equal_type_info(typeid(int8_t))) {
           return Boxed_Number(get_as<int8_t>());
         } else if (inp_.bare_equal_type_info(typeid(int16_t))) {
@@ -987,7 +1011,7 @@ namespace chaiscript
       {
         typedef Boxed_Number Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *)
         {
           return Boxed_Number(ob);
         }

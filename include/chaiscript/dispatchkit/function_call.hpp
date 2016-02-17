@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_FUNCTION_CALL_HPP_
@@ -14,10 +14,11 @@
 #include "boxed_cast.hpp"
 #include "function_call_detail.hpp"
 #include "proxy_functions.hpp"
+#include "callable_traits.hpp"
 
 namespace chaiscript {
 class Boxed_Value;
-class Type_Conversions;
+class Type_Conversions_State;
 namespace detail {
 template <typename T> struct Cast_Helper;
 }  // namespace detail
@@ -35,8 +36,17 @@ namespace chaiscript
     /// \param[in] funcs the set of functions to dispatch on.
     template<typename FunctionType>
       std::function<FunctionType>
-      functor(const std::vector<Const_Proxy_Function> &funcs, const Type_Conversions *t_conversions)
+      functor(const std::vector<Const_Proxy_Function> &funcs, const Type_Conversions_State *t_conversions)
       {
+        const bool has_arity_match = std::any_of(funcs.begin(), funcs.end(),
+            [](const Const_Proxy_Function &f) {
+              return f->get_arity() == -1 || size_t(f->get_arity()) == chaiscript::dispatch::detail::Arity<FunctionType>::arity;
+            });
+
+        if (!has_arity_match) {
+          throw exception::bad_boxed_cast(user_type<Const_Proxy_Function>(), typeid(std::function<FunctionType>));
+        }
+
         FunctionType *p=nullptr;
         return detail::build_function_caller_helper(p, funcs, t_conversions);
       }
@@ -54,7 +64,7 @@ namespace chaiscript
     /// \param[in] func A function to execute.
     template<typename FunctionType>
       std::function<FunctionType>
-      functor(Const_Proxy_Function func, const Type_Conversions *t_conversions)
+      functor(Const_Proxy_Function func, const Type_Conversions_State *t_conversions)
       {
         return functor<FunctionType>(std::vector<Const_Proxy_Function>({std::move(func)}), t_conversions);
       }
@@ -63,7 +73,7 @@ namespace chaiscript
     /// and creating a typesafe C++ function caller from it.
     template<typename FunctionType>
       std::function<FunctionType>
-      functor(const Boxed_Value &bv, const Type_Conversions *t_conversions)
+      functor(const Boxed_Value &bv, const Type_Conversions_State *t_conversions)
       {
         return functor<FunctionType>(boxed_cast<Const_Proxy_Function >(bv, t_conversions), t_conversions);
       }
@@ -76,7 +86,7 @@ namespace chaiscript
       {
         typedef std::function<Signature> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *t_conversions)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *t_conversions)
         {
           if (ob.get_type_info().bare_equal(user_type<Const_Proxy_Function>()))
           {
@@ -93,7 +103,7 @@ namespace chaiscript
       {
         typedef std::function<Signature> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *t_conversions)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *t_conversions)
         {
           if (ob.get_type_info().bare_equal(user_type<Const_Proxy_Function>()))
           {
@@ -110,7 +120,7 @@ namespace chaiscript
       {
         typedef std::function<Signature> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *t_conversions)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *t_conversions)
         {
           if (ob.get_type_info().bare_equal(user_type<Const_Proxy_Function>()))
           {

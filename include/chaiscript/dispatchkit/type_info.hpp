@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_TYPE_INFO_HPP_
@@ -32,17 +32,17 @@ namespace chaiscript
       CHAISCRIPT_CONSTEXPR Type_Info(bool t_is_const, bool t_is_reference, bool t_is_pointer, bool t_is_void, 
           bool t_is_arithmetic, const std::type_info *t_ti, const std::type_info *t_bare_ti)
         : m_type_info(t_ti), m_bare_type_info(t_bare_ti),
-        m_is_const(t_is_const), m_is_reference(t_is_reference), m_is_pointer(t_is_pointer),
-        m_is_void(t_is_void), m_is_arithmetic(t_is_arithmetic),
-        m_is_undef(false)
+          m_flags((t_is_const << is_const_flag)
+                + (t_is_reference << is_reference_flag)
+                + (t_is_pointer << is_pointer_flag)
+                + (t_is_void << is_void_flag)
+                + (t_is_arithmetic << is_arithmetic_flag))
       {
       }
 
       CHAISCRIPT_CONSTEXPR Type_Info()
         : m_type_info(nullptr), m_bare_type_info(nullptr),
-        m_is_const(false), m_is_reference(false), m_is_pointer(false),
-        m_is_void(false), m_is_arithmetic(false), 
-        m_is_undef(true)
+          m_flags(1 << is_undef_flag)
       {
       }
 
@@ -83,12 +83,12 @@ namespace chaiscript
           && (*m_bare_type_info) == ti;
       }
 
-      CHAISCRIPT_CONSTEXPR bool is_const() const CHAISCRIPT_NOEXCEPT { return m_is_const; }
-      CHAISCRIPT_CONSTEXPR bool is_reference() const CHAISCRIPT_NOEXCEPT { return m_is_reference; }
-      CHAISCRIPT_CONSTEXPR bool is_void() const CHAISCRIPT_NOEXCEPT { return m_is_void; }
-      CHAISCRIPT_CONSTEXPR bool is_arithmetic() const CHAISCRIPT_NOEXCEPT { return m_is_arithmetic; }
-      CHAISCRIPT_CONSTEXPR bool is_undef() const CHAISCRIPT_NOEXCEPT { return m_is_undef; }
-      CHAISCRIPT_CONSTEXPR bool is_pointer() const CHAISCRIPT_NOEXCEPT { return m_is_pointer; }
+      CHAISCRIPT_CONSTEXPR bool is_const() const CHAISCRIPT_NOEXCEPT { return (m_flags & (1 << is_const_flag)) != 0; }
+      CHAISCRIPT_CONSTEXPR bool is_reference() const CHAISCRIPT_NOEXCEPT { return (m_flags & (1 << is_reference_flag)) != 0; }
+      CHAISCRIPT_CONSTEXPR bool is_void() const CHAISCRIPT_NOEXCEPT { return (m_flags & (1 << is_void_flag)) != 0; }
+      CHAISCRIPT_CONSTEXPR bool is_arithmetic() const CHAISCRIPT_NOEXCEPT { return (m_flags & (1 << is_arithmetic_flag)) != 0; }
+      CHAISCRIPT_CONSTEXPR bool is_undef() const CHAISCRIPT_NOEXCEPT { return (m_flags & (1 << is_undef_flag)) != 0; }
+      CHAISCRIPT_CONSTEXPR bool is_pointer() const CHAISCRIPT_NOEXCEPT { return (m_flags & (1 << is_pointer_flag)) != 0; }
 
       std::string name() const
       {
@@ -118,12 +118,13 @@ namespace chaiscript
     private:
       const std::type_info *m_type_info;
       const std::type_info *m_bare_type_info;
-      bool m_is_const;
-      bool m_is_reference;
-      bool m_is_pointer;
-      bool m_is_void;
-      bool m_is_arithmetic;
-      bool m_is_undef;
+      unsigned int m_flags;
+      static const int is_const_flag = 0;
+      static const int is_reference_flag = 1;
+      static const int is_pointer_flag = 2;
+      static const int is_void_flag = 3;
+      static const int is_arithmetic_flag = 4;
+      static const int is_undef_flag = 5;
   };
 
   namespace detail

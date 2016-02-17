@@ -1,0 +1,14 @@
+assert_equal(from_json(
+"{\n" +
+"    \"T1\" : \"Value With a Quote : \\\"\",\n" +
+"    \"T2\" : \"Value With a Rev Solidus : \\/\",\n" +
+"    \"T3\" : \"Value with a Solidus : \\\\\",\n" +
+"    \"T4\" : \"Value with a Backspace : \\b\",\n" +
+"    \"T5\" : \"Value with a Formfeed : \\f\",\n" +
+"    \"T6\" : \"Value with a Newline : \\n\",\n" +
+"    \"T7\" : \"Value with a Carriage Return : \\r\",\n" +
+"    \"T8\" : \"Value with a Horizontal Tab : \\t\"\n" +
+"}"), [ "T1" : "Value With a Quote : \"", "T2" : "Value With a Rev Solidus : /", "T3" : "Value with a Solidus : \\", "T4" : "Value with a Backspace : \b", "T5" : "Value with a Formfeed : \f", "T6" : "Value with a Newline : \n", "T7" : "Value with a Carriage Return : \r", "T8" : "Value with a Horizontal Tab : \t" ]);
+
+
+

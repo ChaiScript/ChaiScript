@@ -6,3 +6,8 @@ x.push_front("A")
 
 assert_equal("A", x.front());
 assert_equal(3, x.back());
+
+// push_back newly constructed return value that's non-copyable
+x.push_front(async(fun(){}))
+
+

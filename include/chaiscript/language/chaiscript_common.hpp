@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_COMMON_HPP_
@@ -34,7 +34,7 @@ namespace chaiscript
   /// Types of AST nodes available to the parser and eval
   class AST_Node_Type {
   public:
-    enum Type { Error, Int, Float, Id, Char, Str, Eol, Fun_Call, Inplace_Fun_Call, Arg_List, Variable, Equation, Var_Decl,
+    enum Type { Error, Int, Float, Id, Char, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
                 Comparison, Addition, Subtraction, Multiplication, Division, Modulus, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
                 Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
                 Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, 
@@ -47,7 +47,7 @@ namespace chaiscript
 
     /// Helper lookup to get the name of each node type
     const char *ast_node_type_to_string(int ast_node_type) {
-      const char *ast_node_types[] = { "Internal Parser Error", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Inplace_Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
+      const char *ast_node_types[] = { "Internal Parser Error", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
                                     "Comparison", "Addition", "Subtraction", "Multiplication", "Division", "Modulus", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
                                     "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
                                     "Inline_Range", "Annotation", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Shift", "Equality", "Bitwise_And", "Bitwise_Xor", "Bitwise_Or", 
@@ -582,12 +582,12 @@ namespace chaiscript
         Function_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
           : m_ds(t_ds)
         {
-          m_ds.get()->new_function_call(m_ds.get().stack_holder());
+          m_ds.get()->new_function_call(m_ds.get().stack_holder(), m_ds.get().conversion_saves());
         }
 
         ~Function_Push_Pop()
         {
-          m_ds.get()->pop_function_call(m_ds.get().stack_holder());
+          m_ds.get()->pop_function_call(m_ds.get().stack_holder(), m_ds.get().conversion_saves());
         }
 
         void save_params(const std::vector<Boxed_Value> &t_params)

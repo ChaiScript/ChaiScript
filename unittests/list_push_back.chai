@@ -6,3 +6,7 @@ x.push_back("A")
 
 assert_equal(3, x.front());
 assert_equal("A", x.back());
+
+
+
+

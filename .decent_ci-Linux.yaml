@@ -2,7 +2,8 @@ compilers:
   - name: "clang"
     version: "3.5"
     skip_packaging: true
-    cmake_extra_flags: -DUSE_LIBCXX:BOOL=OFF -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON
+    cmake_extra_flags: -DUSE_LIBCXX:BOOL=OFF -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DRUN_PERFORMANCE_TESTS:BOOL=ON
+    collect_performance_results: true
   - name: "clang"
     build_tag: "LibC++"
     version: "3.5"
@@ -12,7 +13,7 @@ compilers:
     build_tag: AddressSanitizer
     version: "3.6"
     skip_packaging: true
-    cmake_extra_flags: -DUSE_LIBCXX:BOOL=OFF -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DENABLE_ADDRESS_SANITIZER:BOOL=ON
+    cmake_extra_flags: -DRUN_FUZZY_TESTS:BOOL=TRUE -DUSE_LIBCXX:BOOL=OFF -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DENABLE_ADDRESS_SANITIZER:BOOL=ON
   - name: "clang"
     build_tag: ThreadSanitizer
     version: "3.6"
@@ -20,11 +21,21 @@ compilers:
     cmake_extra_flags: -DUSE_LIBCXX:BOOL=OFF -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DENABLE_THREAD_SANITIZER:BOOL=ON
   - name: "gcc"
     version: "4.8"
-    cmake_extra_flags: -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DBUILD_TESTING:BOOL=ON
+    build_tag: "NoThreads"
+    cmake_extra_flags: -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DBUILD_TESTING:BOOL=ON -DRUN_PERFORMANCE_TESTS:BOOL=ON -DMULTITHREAD_SUPPORT_ENABLED:BOOL=OFF
+    collect_performance_results: true
+  - name: "gcc"
+    version: "4.8"
+    cmake_extra_flags: -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DBUILD_TESTING:BOOL=ON -DRUN_PERFORMANCE_TESTS:BOOL=ON
+    collect_performance_results: true
   - name: "gcc"
     version: "4.6"
     skip_packaging: true
-    cmake_extra_flags: -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON
+    cmake_extra_flags: -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DRUN_PERFORMANCE_TESTS:BOOL=ON
+    collect_performance_results: true
   - name: cppcheck
-    compiler_extra_flags: --enable=all -I include --inline-suppr -Umax  --suppress="*:cmake*" --suppress="*:unittests/catch.hpp" --force
+    compiler_extra_flags: --enable=all -I include --inline-suppr -Umax  --suppress="*:unittests/catch.hpp" --force --suppress="unusedFunction:*"
+  - name: custom_check
+    commands:
+       - ./contrib/check_for_tabs.rb
 

@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_FUNCTION_CALL_DETAIL_HPP_
@@ -31,9 +31,15 @@ namespace chaiscript
         struct Function_Caller_Ret
         {
           static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
-              const std::vector<Boxed_Value> &params, const Type_Conversions *t_conversions)
+              const std::vector<Boxed_Value> &params, const Type_Conversions_State *t_conversions)
           {
-            return boxed_cast<Ret>(dispatch::dispatch(t_funcs, params, t_conversions?*t_conversions:Type_Conversions()), t_conversions);
+            if (t_conversions) {
+              return boxed_cast<Ret>(dispatch::dispatch(t_funcs, params, *t_conversions), t_conversions);
+            } else {
+              Type_Conversions conv;
+              Type_Conversions_State state(conv, conv.conversion_saves());
+              return boxed_cast<Ret>(dispatch::dispatch(t_funcs, params, state), t_conversions);
+            }
           }
         };
 
@@ -44,9 +50,15 @@ namespace chaiscript
         struct Function_Caller_Ret<Ret, true>
         {
           static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
-              const std::vector<Boxed_Value> &params, const Type_Conversions *t_conversions)
+              const std::vector<Boxed_Value> &params, const Type_Conversions_State *t_conversions)
           {
-            return Boxed_Number(dispatch::dispatch(t_funcs, params, t_conversions?*t_conversions:Type_Conversions())).get_as<Ret>();
+            if (t_conversions) {
+              return Boxed_Number(dispatch::dispatch(t_funcs, params, *t_conversions)).get_as<Ret>();
+            } else {
+              Type_Conversions conv;
+              Type_Conversions_State state(conv, conv.conversion_saves());
+              return Boxed_Number(dispatch::dispatch(t_funcs, params, state)).get_as<Ret>();
+            }
           }
         };
 
@@ -58,9 +70,15 @@ namespace chaiscript
         struct Function_Caller_Ret<void, false>
         {
           static void call(const std::vector<Const_Proxy_Function> &t_funcs, 
-              const std::vector<Boxed_Value> &params, const Type_Conversions *t_conversions)
+              const std::vector<Boxed_Value> &params, const Type_Conversions_State *t_conversions)
           {
-            dispatch::dispatch(t_funcs, params, t_conversions?*t_conversions:Type_Conversions());
+            if (t_conversions) {
+              dispatch::dispatch(t_funcs, params, *t_conversions);
+            } else {
+              Type_Conversions conv;
+              Type_Conversions_State state(conv, conv.conversion_saves());
+              dispatch::dispatch(t_funcs, params, state);
+            }
           }
         };
 
@@ -79,11 +97,18 @@ namespace chaiscript
           template<typename ... P>
           Ret operator()(P&&  ...  param)
           {
-            return Function_Caller_Ret<Ret, std::is_arithmetic<Ret>::value && !std::is_same<Ret, bool>::value>::call(m_funcs, { 
-                box<P>(std::forward<P>(param))...
-                }, m_conversions
-
-                );
+            if (m_conversions) {
+              Type_Conversions_State state(*m_conversions, m_conversions->conversion_saves());
+              return Function_Caller_Ret<Ret, std::is_arithmetic<Ret>::value && !std::is_same<Ret, bool>::value>::call(m_funcs, { 
+                  box<P>(std::forward<P>(param))...
+                  }, &state
+                  );
+            } else {
+              return Function_Caller_Ret<Ret, std::is_arithmetic<Ret>::value && !std::is_same<Ret, bool>::value>::call(m_funcs, { 
+                  box<P>(std::forward<P>(param))...
+                  }, nullptr
+                  );
+            }
 
           }
 
@@ -114,7 +139,7 @@ namespace chaiscript
 
       /// \todo what happens if t_conversions is deleted out from under us?!
       template<typename Ret, typename ... Params>
-        std::function<Ret (Params...)> build_function_caller_helper(Ret (Params...), const std::vector<Const_Proxy_Function> &funcs, const Type_Conversions *t_conversions)
+        std::function<Ret (Params...)> build_function_caller_helper(Ret (Params...), const std::vector<Const_Proxy_Function> &funcs, const Type_Conversions_State *t_conversions)
         {
           /*
           if (funcs.size() == 1)
@@ -132,7 +157,7 @@ namespace chaiscript
           }
 */
 
-          return std::function<Ret (Params...)>(Build_Function_Caller_Helper<Ret, Params...>(funcs, t_conversions));
+          return std::function<Ret (Params...)>(Build_Function_Caller_Helper<Ret, Params...>(funcs, t_conversions?t_conversions->get():nullptr));
         }
     }
   }
