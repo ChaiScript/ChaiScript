@@ -8,7 +8,5 @@ assert_equal(3, x.front());
 assert_equal("A", x.back());
 
 
-// push_back newly constructed return value that's non-copyable
-x.push_back(async(fun(){}))
 
 

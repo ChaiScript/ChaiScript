@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_BOXED_CAST_HELPER_HPP_
@@ -16,7 +16,7 @@
 
 namespace chaiscript 
 {
-  class Type_Conversions;
+  class Type_Conversions_State;
 
   namespace detail
   {
@@ -35,7 +35,7 @@ namespace chaiscript
       {
         typedef typename std::add_const<Result>::type Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *)
         {
           if (ob.get_type_info().bare_equal_type_info(typeid(Result)))
           {
@@ -58,7 +58,7 @@ namespace chaiscript
       struct Cast_Helper_Inner<const Result *>
       {
         typedef const Result * Result_Type;
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *)
         {
           if (ob.get_type_info().bare_equal_type_info(typeid(Result)))
           {
@@ -74,7 +74,7 @@ namespace chaiscript
       struct Cast_Helper_Inner<Result *>
       {
         typedef Result * Result_Type;
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *)
         {
           if (!ob.get_type_info().is_const() && ob.get_type_info() == typeid(Result))
           {
@@ -102,7 +102,7 @@ namespace chaiscript
       {
         typedef const Result& Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *)
         {
           if (ob.get_type_info().bare_equal_type_info(typeid(Result)))
           {
@@ -122,7 +122,7 @@ namespace chaiscript
       {
         typedef Result& Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *)
         {
           if (!ob.get_type_info().is_const() && ob.get_type_info().bare_equal_type_info(typeid(Result)))
           {
@@ -139,7 +139,7 @@ namespace chaiscript
       {
         typedef std::shared_ptr<Result> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *)
         {
           return ob.get().cast<std::shared_ptr<Result> >();
         }
@@ -151,7 +151,7 @@ namespace chaiscript
       {
         typedef std::shared_ptr<const Result> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *)
         {
           if (!ob.get_type_info().is_const())
           {
@@ -191,7 +191,7 @@ namespace chaiscript
       {
         typedef Boxed_Value Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *)
         {
           return ob;
         }
@@ -203,7 +203,7 @@ namespace chaiscript
       {
         typedef std::reference_wrapper<Boxed_Value> Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *)
         {
           return std::ref(const_cast<Boxed_Value &>(ob));
         }
@@ -259,7 +259,7 @@ namespace chaiscript
       {
         typedef typename Cast_Helper_Inner<T>::Result_Type Result_Type;
 
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions *t_conversions)
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *t_conversions)
         {
           return Cast_Helper_Inner<T>::cast(ob, t_conversions);
         }

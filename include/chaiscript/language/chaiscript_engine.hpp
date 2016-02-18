@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_ENGINE_HPP_
@@ -177,11 +177,11 @@ namespace chaiscript
             FORMAT_MESSAGE_ALLOCATE_BUFFER | 
             FORMAT_MESSAGE_FROM_SYSTEM |
             FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL,
+            nullptr,
             t_err,
             MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             reinterpret_cast<StringType>(&lpMsgBuf),
-            0, NULL ) != 0 && lpMsgBuf)
+            0, nullptr ) != 0 && lpMsgBuf)
         {
           retval = lpMsgBuf;
           LocalFree(lpMsgBuf);
@@ -342,6 +342,7 @@ namespace chaiscript
       m_engine.add_reserved_word("class");
       m_engine.add_reserved_word("attr");
       m_engine.add_reserved_word("var");
+      m_engine.add_reserved_word("global");
       m_engine.add_reserved_word("GLOBAL");
       m_engine.add_reserved_word("_");
 
@@ -367,10 +368,14 @@ namespace chaiscript
 
 //      m_engine.add(fun<Boxed_Value (const dispatch::Proxy_Function_Base *, const std::vector<Boxed_Value> &)>(std::bind(&chaiscript::dispatch::Proxy_Function_Base::operator(), std::placeholders::_1, std::placeholders::_2, std::ref(m_engine.conversions()))), "call");
 //
+//
+
       m_engine.add(fun(
-            [=](const dispatch::Proxy_Function_Base &t_fun, const std::vector<Boxed_Value> &t_params) {
-              return t_fun(t_params, this->m_engine.conversions());
+            [=](const dispatch::Proxy_Function_Base &t_fun, const std::vector<Boxed_Value> &t_params) -> Boxed_Value {
+              Type_Conversions_State s(this->m_engine.conversions(), this->m_engine.conversions().conversion_saves());
+              return t_fun(t_params, s);
             }), "call");
+
 
       m_engine.add(fun([this](const Type_Info &t_ti){ return m_engine.get_type_name(t_ti); }), "name");
 
@@ -398,10 +403,14 @@ namespace chaiscript
       m_engine.add(fun(&ChaiScript::version_minor), "version_minor");
       m_engine.add(fun(&ChaiScript::version_patch), "version_patch");
       m_engine.add(fun(&ChaiScript::version), "version");
+      m_engine.add(fun(&ChaiScript::compiler_version), "compiler_version");
+      m_engine.add(fun(&ChaiScript::compiler_name), "compiler_name");
+      m_engine.add(fun(&ChaiScript::compiler_id), "compiler_id");
+      m_engine.add(fun(&ChaiScript::debug_build), "debug_build");
 
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global_const(t_bv, t_name); }), "add_global_const");
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global(t_bv, t_name); }), "add_global");
-
+      m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ set_global(t_bv, t_name); }), "set_global");
     }
 
 
@@ -552,10 +561,35 @@ namespace chaiscript
 
     static std::string version()
     {
-      std::stringstream ss;
-      ss << version_major() << "." << version_minor() << "." << version_patch();
-      return ss.str();
+      return std::to_string(version_major()) + '.' + std::to_string(version_minor()) + '.' + std::to_string(version_patch());
     }
+
+    static std::string compiler_id()
+    {
+      return compiler_name() + '-' + compiler_version();
+    }
+
+    static std::string build_id()
+    {
+      return compiler_id() + (debug_build()?"-Debug":"-Release");
+    }
+
+    static std::string compiler_version()
+    {
+      return chaiscript::compiler_version;
+    }
+
+    static std::string compiler_name()
+    {
+      return chaiscript::compiler_name;
+    }
+
+    static bool debug_build()
+    {
+      return chaiscript::debug_build;
+    }
+
+
 
     std::string get_type_name(const Type_Info &ti) const
     {
@@ -623,6 +657,12 @@ namespace chaiscript
     ChaiScript &add_global(const Boxed_Value &t_bv, const std::string &t_name)
     {
       m_engine.add_global(t_bv, t_name);
+      return *this;
+    }
+
+    ChaiScript &set_global(const Boxed_Value &t_bv, const std::string &t_name)
+    {
+      m_engine.set_global(t_bv, t_name);
       return *this;
     }
 

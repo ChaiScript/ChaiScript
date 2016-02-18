@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_EVAL_HPP_
@@ -118,7 +118,7 @@ namespace chaiscript
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               fpp.save_params({t_lhs, t_rhs});
-              return t_ss->call_function(t_oper_string, m_loc, {t_lhs, t_rhs});
+              return t_ss->call_function(t_oper_string, m_loc, {t_lhs, t_rhs}, t_ss.conversions());
             }
           }
           catch(const exception::dispatch_error &e){
@@ -253,7 +253,7 @@ namespace chaiscript
           Boxed_Value fn(this->children[0]->eval(t_ss));
 
           try {
-            return (*t_ss->boxed_cast<const Const_Proxy_Function &>(fn))(params, t_ss->conversions());
+            return (*t_ss->boxed_cast<const Const_Proxy_Function &>(fn))(params, t_ss.conversions());
           }
           catch(const exception::dispatch_error &e){
             throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, e.functions, false, *t_ss);
@@ -434,14 +434,14 @@ namespace chaiscript
                 } else {
                   if (!rhs.is_return_value())
                   {
-                    rhs = t_ss->call_function("clone", m_clone_loc, {rhs});
+                    rhs = t_ss->call_function("clone", m_clone_loc, {rhs}, t_ss.conversions());
                   }
                   rhs.reset_return_value();
                 }
               }
 
               try {
-                return t_ss->call_function(this->children[1]->text, m_loc, {std::move(lhs), rhs});
+                return t_ss->call_function(this->children[1]->text, m_loc, {std::move(lhs), rhs}, t_ss.conversions());
               }
               catch(const exception::dispatch_error &e){
                 throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, *t_ss);
@@ -461,7 +461,7 @@ namespace chaiscript
           }
           else {
             try {
-              return t_ss->call_function(this->children[1]->text, m_loc, {std::move(lhs), rhs});
+              return t_ss->call_function(this->children[1]->text, m_loc, {std::move(lhs), rhs}, t_ss.conversions());
             } catch(const exception::dispatch_error &e){
               throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, *t_ss);
             }
@@ -544,7 +544,7 @@ namespace chaiscript
 
           try {
             fpp.save_params(params);
-            return t_ss->call_function("[]", m_loc, params);
+            return t_ss->call_function("[]", m_loc, params, t_ss.conversions());
           }
           catch(const exception::dispatch_error &e){
             throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, false, *t_ss );
@@ -597,7 +597,7 @@ namespace chaiscript
           fpp.save_params(params);
 
           try {
-            retval = t_ss->call_member(m_fun_name, m_loc, std::move(params), has_function_params);
+            retval = t_ss->call_member(m_fun_name, m_loc, std::move(params), has_function_params, t_ss.conversions());
           }
           catch(const exception::dispatch_error &e){
             if (e.functions.empty())
@@ -613,7 +613,7 @@ namespace chaiscript
 
           if (this->children[2]->identifier == AST_Node_Type::Array_Call) {
             try {
-              retval = t_ss->call_function("[]", m_array_loc, {retval, this->children[2]->children[1]->eval(t_ss)});
+              retval = t_ss->call_function("[]", m_array_loc, {retval, this->children[2]->children[1]->eval(t_ss)}, t_ss.conversions());
             }
             catch(const exception::dispatch_error &e){
               throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, true, *t_ss);
@@ -939,7 +939,7 @@ namespace chaiscript
               if (this->children[currentCase]->identifier == AST_Node_Type::Case) {
                 //This is a little odd, but because want to see both the switch and the case simultaneously, I do a downcast here.
                 try {
-                  if (hasMatched || boxed_cast<bool>(t_ss->call_function("==", m_loc, {match_value, this->children[currentCase]->children[0]->eval(t_ss)}))) {
+                  if (hasMatched || boxed_cast<bool>(t_ss->call_function("==", m_loc, {match_value, this->children[currentCase]->children[0]->eval(t_ss)}, t_ss.conversions()))) {
                     this->children[currentCase]->eval(t_ss);
                     hasMatched = true;
                   }
@@ -1005,10 +1005,11 @@ namespace chaiscript
           try {
             std::vector<Boxed_Value> vec;
             if (!children.empty()) {
+              vec.reserve(children[0]->children.size());
               for (const auto &child : children[0]->children) {
                 auto obj = child->eval(t_ss);
                 if (!obj.is_return_value()) {
-                  vec.push_back(t_ss->call_function("clone", m_loc, {obj}));
+                  vec.push_back(t_ss->call_function("clone", m_loc, {obj}, t_ss.conversions()));
                 } else {
                   vec.push_back(std::move(obj));
                 }
@@ -1041,7 +1042,7 @@ namespace chaiscript
             for (const auto &child : children[0]->children) {
               auto obj = child->children[1]->eval(t_ss);
               if (!obj.is_return_value()) {
-                obj = t_ss->call_function("clone", m_loc, {obj});
+                obj = t_ss->call_function("clone", m_loc, {obj}, t_ss.conversions());
               }
 
               retval[t_ss->boxed_cast<std::string>(child->children[0]->eval(t_ss))] = std::move(obj);
@@ -1137,7 +1138,7 @@ namespace chaiscript
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               fpp.save_params({bv});
-              return t_ss->call_function(children[0]->text, m_loc, {std::move(bv)});
+              return t_ss->call_function(children[0]->text, m_loc, {std::move(bv)}, t_ss.conversions());
             }
           } catch (const exception::dispatch_error &e) {
             throw exception::eval_error("Error with prefix operator evaluation: '" + children[0]->text + "'", e.parameters, e.functions, false, *t_ss);
@@ -1209,7 +1210,7 @@ namespace chaiscript
           try {
             auto oper1 = children[0]->children[0]->children[0]->eval(t_ss);
             auto oper2 = children[0]->children[0]->children[1]->eval(t_ss);
-            return t_ss->call_function("generate_range", m_loc, {oper1, oper2});
+            return t_ss->call_function("generate_range", m_loc, {oper1, oper2}, t_ss.conversions());
           }
           catch (const exception::dispatch_error &e) {
             throw exception::eval_error("Unable to generate range vector, while calling 'generate_range'", e.parameters, e.functions, false, *t_ss);
@@ -1254,7 +1255,7 @@ namespace chaiscript
 
               if (dispatch::Param_Types(
                     std::vector<std::pair<std::string, Type_Info>>{Arg_List_AST_Node::get_arg_type(catch_block->children[0], t_ss)}
-                    ).match(std::vector<Boxed_Value>{t_except}, t_ss->conversions()))
+                    ).match(std::vector<Boxed_Value>{t_except}, t_ss.conversions()))
               {
                 t_ss.add_object(name, t_except);
 

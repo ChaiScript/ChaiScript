@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_DYNAMIC_CAST_CONVERSION_HPP_
@@ -310,12 +310,21 @@ namespace chaiscript
       private:
         Callable m_func;
     };
-
   }
 
   class Type_Conversions
   {
     public:
+      struct Conversion_Saves
+      {
+        Conversion_Saves()
+          : enabled(false)
+        {}
+
+        bool enabled;
+        std::vector<Boxed_Value> saves;
+      };
+
       struct Less_Than
       {
         bool operator()(const std::type_info *t_lhs, const std::type_info *t_rhs) const
@@ -387,15 +396,14 @@ namespace chaiscript
         } else {
           return false;
         }
-
       }
 
       template<typename To>
-        Boxed_Value boxed_type_conversion(const Boxed_Value &from) const
+        Boxed_Value boxed_type_conversion(Conversion_Saves &t_saves, const Boxed_Value &from) const
         {
           try {
             Boxed_Value ret = get_conversion(user_type<To>(), from.get_type_info())->convert(from);
-            if (m_conversion_saves->enabled) m_conversion_saves->saves.push_back(ret);
+            if (t_saves.enabled) t_saves.saves.push_back(ret);
             return ret;
           } catch (const std::out_of_range &) {
             throw exception::bad_boxed_dynamic_cast(from.get_type_info(), typeid(To), "No known conversion");
@@ -405,11 +413,11 @@ namespace chaiscript
         }
 
       template<typename From>
-        Boxed_Value boxed_type_down_conversion(const Boxed_Value &to) const
+        Boxed_Value boxed_type_down_conversion(Conversion_Saves &t_saves, const Boxed_Value &to) const
         {
           try {
             Boxed_Value ret = get_conversion(to.get_type_info(), user_type<From>())->convert_down(to);
-            if (m_conversion_saves->enabled) m_conversion_saves->saves.push_back(ret);
+            if (t_saves.enabled) t_saves.saves.push_back(ret);
             return ret;
           } catch (const std::out_of_range &) {
             throw exception::bad_boxed_dynamic_cast(to.get_type_info(), typeid(From), "No known conversion");
@@ -418,15 +426,15 @@ namespace chaiscript
           }
         }
 
-      void enable_conversion_saves(bool t_val) 
+      static void enable_conversion_saves(Conversion_Saves &t_saves, bool t_val) 
       {
-        m_conversion_saves->enabled = t_val;
+        t_saves.enabled = t_val;
       }
 
-      std::vector<Boxed_Value> take_saves()
+      std::vector<Boxed_Value> take_saves(Conversion_Saves &t_saves)
       {
         std::vector<Boxed_Value> ret;
-        std::swap(ret, m_conversion_saves->saves);
+        std::swap(ret, t_saves.saves);
         return ret;
       }
 
@@ -450,6 +458,10 @@ namespace chaiscript
         }
       }
 
+      Conversion_Saves &conversion_saves() const {
+        return *m_conversion_saves;
+      }
+
     private:
       std::set<std::shared_ptr<detail::Type_Conversion_Base> >::const_iterator find_bidir(
           const Type_Info &to, const Type_Info &from) const
@@ -459,7 +471,6 @@ namespace chaiscript
               {
                 return  (conversion->to().bare_equal(to) && conversion->from().bare_equal(from))
                      || (conversion->bidir() && conversion->from().bare_equal(to) && conversion->to().bare_equal(from));
-;
               }
         );
       }
@@ -483,15 +494,6 @@ namespace chaiscript
       }
 
 
-      struct Conversion_Saves
-      {
-        Conversion_Saves()
-          : enabled(false)
-        {}
-
-        bool enabled;
-        std::vector<Boxed_Value> saves;
-      };
 
       mutable chaiscript::detail::threading::shared_mutex m_mutex;
       std::set<std::shared_ptr<detail::Type_Conversion_Base>> m_conversions;
@@ -499,6 +501,33 @@ namespace chaiscript
       std::atomic_size_t m_num_types;
       mutable chaiscript::detail::threading::Thread_Storage<std::set<const std::type_info *, Less_Than>> m_thread_cache;
       mutable chaiscript::detail::threading::Thread_Storage<Conversion_Saves> m_conversion_saves;
+  };
+
+  class Type_Conversions_State
+  {
+    public:
+      Type_Conversions_State(const Type_Conversions &t_conversions,
+          Type_Conversions::Conversion_Saves &t_saves)
+        : m_conversions(t_conversions),
+          m_saves(t_saves)
+      {
+      }
+
+      const Type_Conversions *operator->() const {
+        return &m_conversions.get();
+      }
+
+      const Type_Conversions *get() const {
+        return &m_conversions.get();
+      }
+
+      Type_Conversions::Conversion_Saves &saves() const {
+        return m_saves;
+      }
+
+    private:
+      std::reference_wrapper<const Type_Conversions> m_conversions;
+      std::reference_wrapper<Type_Conversions::Conversion_Saves> m_saves;
   };
 
   typedef std::shared_ptr<chaiscript::detail::Type_Conversion_Base> Type_Conversion;
@@ -582,7 +611,7 @@ namespace chaiscript
         const std::vector<Boxed_Value> &from_vec = detail::Cast_Helper<const std::vector<Boxed_Value> &>::cast(t_bv, nullptr);
 
         To vec;
-
+        vec.reserve(from_vec.size());
         for (const Boxed_Value &bv : from_vec) {
           vec.push_back(detail::Cast_Helper<typename To::value_type>::cast(bv, nullptr));
         }
@@ -593,6 +622,22 @@ namespace chaiscript
       return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Type_Conversion_Impl<decltype(func)>>(user_type<std::vector<Boxed_Value>>(), user_type<To>(), func);
     }
 
+  template<typename To>
+    Type_Conversion map_conversion()
+    {
+      auto func = [](const Boxed_Value &t_bv) -> Boxed_Value {
+        const std::map<std::string, Boxed_Value> &from_map = detail::Cast_Helper<const std::map<std::string, Boxed_Value> &>::cast(t_bv, nullptr);
+
+        To map;
+        for (const std::pair<std::string, Boxed_Value> &p : from_map) {
+          map.insert(std::make_pair(p.first, detail::Cast_Helper<typename To::mapped_type>::cast(p.second, nullptr)));
+        }
+
+        return Boxed_Value(std::move(map));
+      };
+
+      return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Type_Conversion_Impl<decltype(func)>>(user_type<std::map<std::string, Boxed_Value>>(), user_type<To>(), func);
+    }
 }
 
 

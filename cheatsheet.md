@@ -90,6 +90,13 @@ A helper function exists for strongly typed and ChaiScript `Vector` function con
 chai.add(chaiscript::vector_conversion<std::vector<int>>());
 ```
 
+A helper function also exists for strongly typed and ChaiScript `Map` function conversion definition:
+
+```
+chai.add(chaiscript::map_conversion<std::map<std::string, int>>());
+```
+
+
 This allows you to pass a ChaiScript function to a function requiring `std::vector<int>`
 
 ## Adding Objects
@@ -100,8 +107,9 @@ chai.add(chaiscript::var(std::ref(somevar), "somevar"); // by reference, shared 
 auto shareddouble = std::make_shared<double>(4.3);
 chai.add(chaiscript::var(shareddouble), "shareddouble"); // by shared_ptr, shared between c++ and chai
 chai.add(chaiscript::const_var(somevar), "somevar"); // copied in and made const
-chai.add_global_const(chaiscript::const_var(somevar), "somevar"); // global const. Throws if value is non-const
-chai.add_global(chaiscript::var(somevar), "somevar"); // global non-const
+chai.add_global_const(chaiscript::const_var(somevar), "somevar"); // global const. Throws if value is non-const, throws if object exists
+chai.add_global(chaiscript::var(somevar), "somevar"); // global non-const, throws if object exists
+chai.set_global(chaiscript::var(somevar), "somevar"); // global non-const, overwrites existing object
 ```
 # Using STL
 ChaiScript recognize many types from STL, but you have to add specific instantiation yourself.
@@ -221,11 +229,13 @@ var k = 5; // initialized to 5 (integer)
 var l := k; // reference to k
 auto &m = k; // reference to k
 
-GLOBAL g = 5; // creates a global variable. If global already exists, it is not re-added
-GLOBAL g = 2; // global 'g' now equals 2
+global g = 5; // creates a global variable. If global already exists, it is not re-added
+global g = 2; // global 'g' now equals 2
 
-GLOBAL g2;
-if (g2.is_var_undef()) { g2 = 4; } // only initialize g2 once, if GLOBAL decl hit more than once
+global g2;
+if (g2.is_var_undef()) { g2 = 4; } // only initialize g2 once, if global decl hit more than once
+
+GLOBAL g3; // all upper case version also accepted
 ```
 
 ## Built in Types

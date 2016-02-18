@@ -399,7 +399,7 @@ class Short_Comparison_Test {
  public:
   Short_Comparison_Test() : value_(5) {}
 
-  short get_value() { return value_; }
+  short get_value() const { return value_; }
 
   short value_;
 };
@@ -874,6 +874,7 @@ struct Returned_Converted_Config
 };
 
 
+
 TEST_CASE("Return of converted type from script")
 {
   chaiscript::ChaiScript chai;
@@ -914,4 +915,29 @@ TEST_CASE("Return of converted type from script")
 
   chai.add(chaiscript::user_type<Returned_Converted_Config>(), "Returned_Converted_Config");
 }
+
+
+int get_value_a(const std::map<std::string, int> &t_m)
+{
+  return t_m.at("a");
+}
+
+
+TEST_CASE("Map conversions")
+{
+  chaiscript::ChaiScript chai;
+  chai.add(chaiscript::map_conversion<std::map<std::string, int>>());
+  chai.add(chaiscript::fun(&get_value_a), "get_value_a");
+
+  const auto c = chai.eval<int>(R"(
+    var m = ["a": 42];
+    get_value_a(m);
+  )");
+
+  CHECK(c == 42);
+
+}
+
+
+
 

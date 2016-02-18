@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_THREADING_HPP_
@@ -45,14 +45,14 @@ namespace chaiscript
       class unique_lock : public std::unique_lock<T>
       {
         public:
-          unique_lock(T &t) : std::unique_lock<T>(t) {}
+          explicit unique_lock(T &t) : std::unique_lock<T>(t) {}
       };
 
       template<typename T>
       class shared_lock : public std::unique_lock<T>
       {
         public:
-          shared_lock(T &t) : std::unique_lock<T>(t) {}
+          explicit shared_lock(T &t) : std::unique_lock<T>(t) {}
           void unlock() {}
       };
 
@@ -60,7 +60,7 @@ namespace chaiscript
       class lock_guard : public std::lock_guard<T>
       {
         public:
-          lock_guard(T &t) : std::lock_guard<T>(t) {}
+          explicit lock_guard(T &t) : std::lock_guard<T>(t) {}
       };
 
       class shared_mutex : public std::mutex { };
@@ -77,7 +77,7 @@ namespace chaiscript
         {
           public:
 
-            Thread_Storage(void *t_key)
+            explicit Thread_Storage(void *t_key)
               : m_key(t_key)
             {
             }
@@ -129,7 +129,7 @@ namespace chaiscript
         {
           public:
 
-            Thread_Storage(void *)
+            explicit Thread_Storage(void *)
             {
             }
 
@@ -160,13 +160,14 @@ namespace chaiscript
             {
               unique_lock<mutex> lock(m_mutex);
 
-              auto itr = m_instances.find(std::this_thread::get_id());
+              const auto id = std::this_thread::get_id();
+              auto itr = m_instances.find(id);
 
               if (itr != m_instances.end()) { return itr->second; }
 
               std::shared_ptr<T> new_instance(std::make_shared<T>());
 
-              m_instances.insert(std::make_pair(std::this_thread::get_id(), new_instance));
+              m_instances.insert(std::make_pair(id, new_instance));
 
               return new_instance;
             }
@@ -182,7 +183,7 @@ namespace chaiscript
       class unique_lock 
       {
         public:
-          unique_lock(T &) {}
+          explicit unique_lock(T &) {}
           void lock() {}
           void unlock() {}
       };
@@ -191,7 +192,7 @@ namespace chaiscript
       class shared_lock 
       {
         public:
-          shared_lock(T &) {}
+          explicit shared_lock(T &) {}
           void lock() {}
           void unlock() {}
       };
@@ -200,7 +201,7 @@ namespace chaiscript
       class lock_guard 
       {
         public:
-          lock_guard(T &) {}
+          explicit lock_guard(T &) {}
       };
 
       class shared_mutex { };
@@ -212,7 +213,7 @@ namespace chaiscript
         class Thread_Storage
         {
           public:
-            Thread_Storage(void *)
+            explicit Thread_Storage(void *)
             {
             }
 

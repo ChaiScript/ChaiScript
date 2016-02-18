@@ -1,0 +1,16 @@
+
+try {
+  eval("to_string(5) = \"some string\"")
+  assert_true(false)
+} catch (e) {
+  print("Caught Error: " + e.what());
+}
+
+
+
+try {
+  eval("var v = [1,2,3]; v.size() = 3")
+  assert_true(false)
+} catch (e) {
+  print("Caught Error: " + e.what());
+}

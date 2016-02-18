@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_COMMON_HPP_
@@ -582,12 +582,12 @@ namespace chaiscript
         Function_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
           : m_ds(t_ds)
         {
-          m_ds.get()->new_function_call(m_ds.get().stack_holder());
+          m_ds.get()->new_function_call(m_ds.get().stack_holder(), m_ds.get().conversion_saves());
         }
 
         ~Function_Push_Pop()
         {
-          m_ds.get()->pop_function_call(m_ds.get().stack_holder());
+          m_ds.get()->pop_function_call(m_ds.get().stack_holder(), m_ds.get().conversion_saves());
         }
 
         void save_params(const std::vector<Boxed_Value> &t_params)

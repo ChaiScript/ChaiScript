@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2015, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_PARSER_HPP_
@@ -278,7 +278,7 @@ namespace chaiscript
       bool char_in_alphabet(char c, detail::Alphabet a) const { return m_alphabet[a][static_cast<uint8_t>(c)]; }
 
       /// Prints the parsed ast_nodes as a tree
-      void debug_print(AST_NodePtr t, std::string prepend = "") {
+      void debug_print(AST_NodePtr t, std::string prepend = "") const {
         std::cout << prepend << "(" << ast_node_type_to_string(t->identifier) << ") " << t->text << " : " << t->start().line << ", " << t->start().column << '\n';
         for (unsigned int j = 0; j < t->children.size(); ++j) {
           debug_print(t->children[j], prepend + "  ");
@@ -881,8 +881,20 @@ namespace chaiscript
           char prev_char = *m_position;
           ++m_position;
 
-          while (m_position.has_more() && ((*m_position != '\"') || ((*m_position == '\"') && (prev_char == '\\')))) {
+          int in_interpolation = 0;
+          bool in_quote = false;
+
+          while (m_position.has_more() && ((*m_position != '\"') || ((*m_position == '\"') && (in_interpolation > 0)) ||  ((*m_position == '\"') && (prev_char == '\\')))) {
+
             if (!Eol_()) {
+              if (prev_char == '$' && *m_position == '{') {
+                ++in_interpolation;
+              } else if (prev_char != '\\' && *m_position == '"') {
+                in_quote = !in_quote;
+              } else if (*m_position == '}' && !in_quote) {
+                --in_interpolation;
+              } 
+              
               if (prev_char == '\\') {
                 prev_char = 0;
               } else {
@@ -929,7 +941,7 @@ namespace chaiscript
         {
         }
 
-		Char_Parser &operator=(const Char_Parser &) = delete;
+        Char_Parser &operator=(const Char_Parser &) = delete;
 
         ~Char_Parser(){
           if (is_octal) {
@@ -2055,7 +2067,7 @@ namespace chaiscript
           }
 
           build_match<eval::Var_Decl_AST_Node>(prev_stack_top);
-        } else if (Keyword("GLOBAL")) {
+        } else if (Keyword("GLOBAL") || Keyword("global")) {
           retval = true;
 
           if (!(Reference() || Id())) {

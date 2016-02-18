@@ -1,0 +1,17 @@
+load_module("stl_extra")
+
+auto x = List()
+// push_back newly constructed return value that's non-copyable
+x.push_front(async(fun(){}))
+
+// push_front newly constructed return value that's non-copyable
+x.push_front(async(fun(){}))
+
+
+
+// push_back newly constructed return value that's non-copyable
+
+var v = []
+v.push_back(async(fun(){}))
+
+

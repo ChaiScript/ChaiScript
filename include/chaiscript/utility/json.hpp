@@ -19,6 +19,7 @@
 #include <initializer_list>
 #include <ostream>
 #include <iostream>
+#include "../chaiscript_defines.hpp"
 
 namespace json {
 
@@ -47,6 +48,21 @@ namespace {
                 default  : output += str[i]; break;
             }
         return output;
+    }
+
+    bool isspace(const char c)
+    {
+#ifdef CHAISCRIPT_MSVC
+      // MSVC warns on these line in some circumstances
+#pragma warning(push)
+#pragma warning(disable : 6330)
+#endif
+      return ::isspace(c) != 0;
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(pop)
+#endif
+
+
     }
 }
 
