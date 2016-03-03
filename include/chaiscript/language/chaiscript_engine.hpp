@@ -505,7 +505,7 @@ namespace chaiscript
 
         // Let's see if this is a link that we should expand
         std::vector<char> buf(2048);
-        const size_t pathlen = readlink(dllpath.c_str(), &buf.front(), buf.size());
+        const size_t pathlen = static_cast<size_t>(readlink(dllpath.c_str(), &buf.front(), buf.size()));
         if (pathlen > 0 && pathlen < buf.size())
         {
           dllpath = std::string(&buf.front(), pathlen);
