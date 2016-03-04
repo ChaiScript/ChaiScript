@@ -3,7 +3,6 @@ compiler:
   - gcc
 env:
   matrix:
-    - GCC_VER="4.6"
     - GCC_VER="4.8"
     - GCC_VER="4.9"
     - GCC_VER="5"
