@@ -32,11 +32,11 @@ namespace chaiscript
       CHAISCRIPT_CONSTEXPR Type_Info(bool t_is_const, bool t_is_reference, bool t_is_pointer, bool t_is_void, 
           bool t_is_arithmetic, const std::type_info *t_ti, const std::type_info *t_bare_ti)
         : m_type_info(t_ti), m_bare_type_info(t_bare_ti),
-          m_flags((t_is_const << is_const_flag)
-                + (t_is_reference << is_reference_flag)
-                + (t_is_pointer << is_pointer_flag)
-                + (t_is_void << is_void_flag)
-                + (t_is_arithmetic << is_arithmetic_flag))
+          m_flags((static_cast<unsigned int>(t_is_const) << is_const_flag)
+                + (static_cast<unsigned int>(t_is_reference) << is_reference_flag)
+                + (static_cast<unsigned int>(t_is_pointer) << is_pointer_flag)
+                + (static_cast<unsigned int>(t_is_void) << is_void_flag)
+                + (static_cast<unsigned int>(t_is_arithmetic) << is_arithmetic_flag))
       {
       }
 

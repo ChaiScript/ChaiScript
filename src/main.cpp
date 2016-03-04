@@ -88,24 +88,24 @@ std::vector<std::string> default_search_paths()
   std::vector<char> buf(2048);
   ssize_t size = -1;
 
-  if ((size = readlink("/proc/self/exe", &buf.front(), buf.size())) != -1)
+  if ((size = readlink("/proc/self/exe", &buf.front(), buf.size())) >= 0)
   {
-    exepath = std::string(&buf.front(), size);
+    exepath = std::string(&buf.front(), static_cast<size_t>(size));
   }
 
   if (exepath.empty())
   {
-    if ((size = readlink("/proc/curproc/file", &buf.front(), buf.size())) != -1)
+    if ((size = readlink("/proc/curproc/file", &buf.front(), buf.size())) >= 0)
     {
-      exepath = std::string(&buf.front(), size);
+      exepath = std::string(&buf.front(), static_cast<size_t>(size));
     }
   }
 
   if (exepath.empty())
   {
-    if ((size = readlink("/proc/self/path/a.out", &buf.front(), buf.size())) != -1)
+    if ((size = readlink("/proc/self/path/a.out", &buf.front(), buf.size())) >= 0)
     {
-      exepath = std::string(&buf.front(), size);
+      exepath = std::string(&buf.front(), static_cast<size_t>(size));
     }
   }
 
