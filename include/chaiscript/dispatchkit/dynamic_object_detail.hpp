@@ -72,7 +72,7 @@ namespace chaiscript
           Dynamic_Object_Function &operator=(const Dynamic_Object_Function) = delete;
           Dynamic_Object_Function(Dynamic_Object_Function &) = delete;
 
-          virtual bool operator==(const Proxy_Function_Base &f) const CHAISCRIPT_OVERRIDE
+          virtual bool operator==(const Proxy_Function_Base &f) const override
           {
             if (const auto *df = dynamic_cast<const Dynamic_Object_Function *>(&f))
             {
@@ -82,9 +82,9 @@ namespace chaiscript
             }
           }
 
-          virtual bool is_attribute_function() const CHAISCRIPT_OVERRIDE { return m_is_attribute; } 
+          virtual bool is_attribute_function() const override { return m_is_attribute; } 
 
-          virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+          virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
           {
             if (dynamic_object_typename_match(vals, m_type_name, m_ti, t_conversions))
             {
@@ -94,19 +94,19 @@ namespace chaiscript
             }
           }
 
-          virtual std::vector<Const_Proxy_Function> get_contained_functions() const CHAISCRIPT_OVERRIDE
+          virtual std::vector<Const_Proxy_Function> get_contained_functions() const override
           {
             return {m_func};
           }
 
-          virtual std::string annotation() const CHAISCRIPT_OVERRIDE
+          virtual std::string annotation() const override
           {
             return m_func->annotation();
           }
 
 
         protected:
-          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
           {
             if (dynamic_object_typename_match(params, m_type_name, m_ti, t_conversions))
             {
@@ -116,7 +116,7 @@ namespace chaiscript
             } 
           }
 
-          virtual bool compare_first_type(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+          virtual bool compare_first_type(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const override
           {
             return dynamic_object_typename_match(bv, m_type_name, m_ti, t_conversions);
           }
@@ -210,13 +210,13 @@ namespace chaiscript
 
           virtual ~Dynamic_Object_Constructor() {}
 
-          virtual bool operator==(const Proxy_Function_Base &f) const CHAISCRIPT_OVERRIDE
+          virtual bool operator==(const Proxy_Function_Base &f) const override
           {
             const Dynamic_Object_Constructor *dc = dynamic_cast<const Dynamic_Object_Constructor*>(&f);
             return dc && dc->m_type_name == m_type_name && (*dc->m_func) == (*m_func);
           }
 
-          virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+          virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
           {
             std::vector<Boxed_Value> new_vals{Boxed_Value(Dynamic_Object(m_type_name))};
             new_vals.insert(new_vals.end(), vals.begin(), vals.end());
@@ -224,13 +224,13 @@ namespace chaiscript
             return m_func->call_match(new_vals, t_conversions);
           }    
 
-          virtual std::string annotation() const CHAISCRIPT_OVERRIDE
+          virtual std::string annotation() const override
           {
             return m_func->annotation();
           }
 
         protected:
-          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
           {
             auto bv = Boxed_Value(Dynamic_Object(m_type_name), true);
             std::vector<Boxed_Value> new_params{bv};

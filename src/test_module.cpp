@@ -8,17 +8,9 @@
 class TestBaseType
 {
   public:
-#ifdef CHAISCRIPT_MSVC_12
-#pragma warning(push)
-#pragma warning(disable : 4351)
-#endif
-    // MSVC 12 warns that we are using new (correct) behavior 
     TestBaseType() : val(10), const_val(15), mdarray{} { }
     TestBaseType(int) : val(10), const_val(15), mdarray{} { }
     TestBaseType(int *) : val(10), const_val(15), mdarray{} { }
-#ifdef CHAISCRIPT_MSVC_12
-#pragma warning(pop)
-#endif    
     
     TestBaseType(const TestBaseType &) = default;
     virtual ~TestBaseType() {}
@@ -84,7 +76,7 @@ class TestDerivedType : public TestBaseType
     virtual ~TestDerivedType() {}
     TestDerivedType(const TestDerivedType &) = default;
     TestDerivedType() = default;
-    virtual int func() CHAISCRIPT_OVERRIDE { return 1; }
+    virtual int func() override { return 1; }
     int derived_only_func() { return 19; }
 
   private:
@@ -179,16 +171,10 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::fun(&TestBaseType::base_only_func), "base_only_func");
   m->add(chaiscript::fun(&TestBaseType::set_string_val), "set_string_val");
 
-#ifndef CHAISCRIPT_MSVC_12
-  // we cannot support these in MSVC_12 because of a bug in the implementation of
-  // std::reference_wrapper
-  // Array types
   m->add(chaiscript::fun(&TestBaseType::mdarray), "mdarray");
   m->add(chaiscript::bootstrap::array<int[2][3][5]>("IntArray_2_3_5"));
   m->add(chaiscript::bootstrap::array<int[3][5]>("IntArray_3_5"));
   m->add(chaiscript::bootstrap::array<int[5]>("IntArray_5"));
-  // end array types
-#endif
 
   // member that is a function
   m->add(chaiscript::fun(&TestBaseType::func_member), "func_member");

@@ -113,7 +113,7 @@ namespace chaiscript
       eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname,
           const std::vector<Boxed_Value> &t_parameters, const std::vector<chaiscript::Const_Proxy_Function> &t_functions,
           bool t_dot_notation,
-          const chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_NOEXCEPT :
+          const chaiscript::detail::Dispatch_Engine &t_ss) noexcept :
         std::runtime_error(format(t_why, t_where, t_fname, t_parameters, t_dot_notation, t_ss)),
         reason(t_why), start_position(t_where), filename(t_fname), detail(format_detail(t_functions, t_dot_notation, t_ss)) 
       {}
@@ -121,18 +121,18 @@ namespace chaiscript
       eval_error(const std::string &t_why, 
            const std::vector<Boxed_Value> &t_parameters, const std::vector<chaiscript::Const_Proxy_Function> &t_functions,
            bool t_dot_notation,
-           const chaiscript::detail::Dispatch_Engine &t_ss) CHAISCRIPT_NOEXCEPT :
+           const chaiscript::detail::Dispatch_Engine &t_ss) noexcept :
         std::runtime_error(format(t_why, t_parameters, t_dot_notation, t_ss)),
         reason(t_why), detail(format_detail(t_functions, t_dot_notation, t_ss))
       {}
 
 
-      eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) CHAISCRIPT_NOEXCEPT :
+      eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname) noexcept :
         std::runtime_error(format(t_why, t_where, t_fname)),
         reason(t_why), start_position(t_where), filename(t_fname)
       {}
 
-      eval_error(const std::string &t_why) CHAISCRIPT_NOEXCEPT
+      eval_error(const std::string &t_why) noexcept
         : std::runtime_error("Error: \"" + t_why + "\" "),
         reason(t_why) 
       {}
@@ -161,7 +161,7 @@ namespace chaiscript
         return ss.str();
       }
 
-      virtual ~eval_error() CHAISCRIPT_NOEXCEPT {}
+      virtual ~eval_error() noexcept {}
 
     private:
 
@@ -420,12 +420,12 @@ namespace chaiscript
 
     /// Errors generated when loading a file
     struct file_not_found_error : std::runtime_error {
-      file_not_found_error(const std::string &t_filename) CHAISCRIPT_NOEXCEPT
+      file_not_found_error(const std::string &t_filename) noexcept
         : std::runtime_error("File Not Found: " + t_filename)
       { }
 
       file_not_found_error(const file_not_found_error &) = default;
-      virtual ~file_not_found_error() CHAISCRIPT_NOEXCEPT {}
+      virtual ~file_not_found_error() noexcept {}
     };
 
   }

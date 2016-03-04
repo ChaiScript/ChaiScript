@@ -56,14 +56,14 @@ namespace chaiscript
     class reserved_word_error : public std::runtime_error
     {
       public:
-        reserved_word_error(const std::string &t_word) CHAISCRIPT_NOEXCEPT
+        reserved_word_error(const std::string &t_word) noexcept
           : std::runtime_error("Reserved word not allowed in object name: " + t_word), m_word(t_word)
         {
         }
 
         reserved_word_error(const reserved_word_error &) = default;
 
-        virtual ~reserved_word_error() CHAISCRIPT_NOEXCEPT {}
+        virtual ~reserved_word_error() noexcept {}
 
         std::string word() const
         {
@@ -78,14 +78,14 @@ namespace chaiscript
     class illegal_name_error : public std::runtime_error
     {
       public:
-        illegal_name_error(const std::string &t_name) CHAISCRIPT_NOEXCEPT
+        illegal_name_error(const std::string &t_name) noexcept
           : std::runtime_error("Reserved name not allowed in object name: " + t_name), m_name(t_name)
         {
         }
 
         illegal_name_error(const illegal_name_error &) = default;
 
-        virtual ~illegal_name_error() CHAISCRIPT_NOEXCEPT {}
+        virtual ~illegal_name_error() noexcept {}
 
         std::string name() const
         {
@@ -101,14 +101,14 @@ namespace chaiscript
     class name_conflict_error : public std::runtime_error
     {
       public:
-        name_conflict_error(const std::string &t_name) CHAISCRIPT_NOEXCEPT
+        name_conflict_error(const std::string &t_name) noexcept
           : std::runtime_error("Name already exists in current context " + t_name), m_name(t_name)
         {
         }
 
         name_conflict_error(const name_conflict_error &) = default;
 
-        virtual ~name_conflict_error() CHAISCRIPT_NOEXCEPT {}
+        virtual ~name_conflict_error() noexcept {}
 
         std::string name() const
         {
@@ -125,13 +125,13 @@ namespace chaiscript
     class global_non_const : public std::runtime_error
     {
       public:
-        global_non_const() CHAISCRIPT_NOEXCEPT
+        global_non_const() noexcept
           : std::runtime_error("a global object must be const")
         {
         }
 
         global_non_const(const global_non_const &) = default;
-        virtual ~global_non_const() CHAISCRIPT_NOEXCEPT {}
+        virtual ~global_non_const() noexcept {}
     };
   }
 
@@ -276,7 +276,7 @@ namespace chaiscript
         {
         }
 
-        virtual bool operator==(const dispatch::Proxy_Function_Base &rhs) const CHAISCRIPT_OVERRIDE
+        virtual bool operator==(const dispatch::Proxy_Function_Base &rhs) const override
         {
           try {
             const auto &dispatch_fun = dynamic_cast<const Dispatch_Function &>(rhs);
@@ -288,7 +288,7 @@ namespace chaiscript
 
         virtual ~Dispatch_Function() {}
 
-        virtual std::vector<Const_Proxy_Function> get_contained_functions() const CHAISCRIPT_OVERRIDE
+        virtual std::vector<Const_Proxy_Function> get_contained_functions() const override
         {
           return std::vector<Const_Proxy_Function>(m_funcs.begin(), m_funcs.end());
         }
@@ -314,19 +314,19 @@ namespace chaiscript
           return arity;
         }
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
         {
           return std::any_of(m_funcs.cbegin(), m_funcs.cend(),
                              [&vals, &t_conversions](const Proxy_Function &f){ return f->call_match(vals, t_conversions); });
         }
 
-        virtual std::string annotation() const CHAISCRIPT_OVERRIDE
+        virtual std::string annotation() const override
         {
           return "Multiple method dispatch function wrapper.";
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
           return dispatch::dispatch(m_funcs, params, t_conversions);
         }
@@ -1332,13 +1332,8 @@ namespace chaiscript
           const auto lhssize = lhsparamtypes.size();
           const auto rhssize = rhsparamtypes.size();
 
-#ifdef CHAISCRIPT_HAS_MAGIC_STATICS
-          static auto boxed_type = user_type<Boxed_Value>();
-          static auto boxed_pod_type = user_type<Boxed_Number>();
-#else
-          auto boxed_type = user_type<Boxed_Value>();
-          auto boxed_pod_type = user_type<Boxed_Number>();
-#endif
+          static const auto boxed_type = user_type<Boxed_Value>();
+          static const auto boxed_pod_type = user_type<Boxed_Number>();
 
           for (size_t i = 1; i < lhssize && i < rhssize; ++i)
           {

@@ -30,7 +30,7 @@ namespace chaiscript
     {
       arithmetic_error(const std::string& reason) : std::runtime_error("Arithmetic error: " + reason) {}
       arithmetic_error(const arithmetic_error &) = default;
-      virtual ~arithmetic_error() CHAISCRIPT_NOEXCEPT {}
+      virtual ~arithmetic_error() noexcept {}
     };
   }
 }
@@ -90,7 +90,7 @@ namespace chaiscript
       {
       }
 
-      static CHAISCRIPT_CONSTEXPR Common_Types get_common_type(size_t t_size, bool t_signed)
+      static constexpr Common_Types get_common_type(size_t t_size, bool t_signed)
       {
         return   (t_size == 1 && t_signed)?(Common_Types::t_int8)
                 :(t_size == 1)?(Common_Types::t_uint8)
@@ -508,11 +508,8 @@ namespace chaiscript
       }
 
       Boxed_Number(const Boxed_Number &) = default;
-
-#if !defined(_MSC_VER) || _MSC_VER  != 1800
       Boxed_Number(Boxed_Number &&) = default;
       Boxed_Number& operator=(Boxed_Number &&) = default;
-#endif
 
       template<typename T> explicit Boxed_Number(T t)
         : bv(Boxed_Value(t))

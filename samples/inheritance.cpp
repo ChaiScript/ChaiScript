@@ -44,14 +44,14 @@ class ChaiScriptDerived : public BaseClass
       tie(t_funcs.at(1), m_validateValueImpl);
     }
 
-    std::string doSomething(float f, double d) const CHAISCRIPT_OVERRIDE
+    std::string doSomething(float f, double d) const override
     {
       assert(m_doSomethingImpl);
       return m_doSomethingImpl(*this, f, d);
     }
 
   protected:
-    bool validateValue(const std::string &t_val) CHAISCRIPT_OVERRIDE
+    bool validateValue(const std::string &t_val) override
     {
       assert(m_validateValueImpl);
       return m_validateValueImpl(*this, t_val);
