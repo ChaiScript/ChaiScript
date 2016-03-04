@@ -28,6 +28,8 @@
 
 #define CATCH_CONFIG_MAIN
 
+#include <clocale>
+
 #include "catch.hpp"
 
 // lambda_tests
