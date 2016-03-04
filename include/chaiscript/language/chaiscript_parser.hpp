@@ -621,11 +621,11 @@ namespace chaiscript
 
         if (float_)
         {
-          return const_var(std::stof(t_val.substr(0,i)));
+          return const_var(parse_num<float>(t_val.substr(0,i)));
         } else if (long_) {
-          return const_var(std::stold(t_val.substr(0,i)));
+          return const_var(parse_num<long double>(t_val.substr(0,i)));
         } else {
-          return const_var(std::stod(t_val.substr(0,i)));
+          return const_var(parse_num<double>(t_val.substr(0,i)));
         }
       }
 

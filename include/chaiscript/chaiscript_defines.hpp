@@ -93,6 +93,8 @@
 #endif
 
 #include <memory>
+#include <string>
+#include <cmath>
 
 namespace chaiscript {
   static const int version_major = 5;
@@ -117,6 +119,71 @@ namespace chaiscript {
     Iter advance_copy(Iter iter, Distance distance) {
       std::advance(iter, static_cast<typename std::iterator_traits<Iter>::difference_type>(distance));
       return iter;
+    }
+
+
+  template<typename T>
+    auto parse_num(const char *t_str) -> typename std::enable_if<std::is_integral<T>::value, T>::type
+    {
+      T t = 0;
+      for (char c = *t_str; (c = *t_str); ++t_str) {
+        if (c < '0' || c > '9') {
+          return t;
+        }
+        t *= 10;
+        t += c - '0';
+      }
+      return t;
+    }
+
+
+  template<typename T>
+    auto parse_num(const char *t_str) -> typename std::enable_if<!std::is_integral<T>::value, T>::type
+    {
+      T t = 0;
+      T base = 0;
+      T decimal_place = 0;
+      bool exponent = false;
+      bool neg_exponent = false;
+
+      const auto final_value = [](const T val, const T baseval, const bool hasexp, const bool negexp) -> T {
+        if (!hasexp) {
+          return val;
+        } else {
+          return baseval * std::pow(T(10), val*T(negexp?-1:1));
+        }
+      };
+
+      for(char c = *t_str; (c = *t_str); ++t_str) {
+        if (c == '.') {
+          decimal_place = 10;
+        } else if (c == 'e' || c == 'E') {
+          exponent = true;
+          decimal_place = 0;
+          base = t;
+          t = 0;
+        } else if (c == '-' && exponent) {
+          neg_exponent = true;
+        } else if (c == '+' && exponent) {
+          neg_exponent = false;
+        } else if (c < '0' || c > '9') {
+          return final_value(t, base, exponent, neg_exponent);
+        } else if (decimal_place == 0) {
+          t *= T(10);
+          t += T(c - '0');
+        } else {
+          t += (T(c - '0') / (T(decimal_place)));
+          decimal_place *= 10;
+        }
+      }
+
+      return final_value(t, base, exponent, neg_exponent);
+    }
+
+  template<typename T>
+    T parse_num(const std::string &t_str)
+    {
+      return parse_num<T>(t_str.c_str());
     }
 
 }
