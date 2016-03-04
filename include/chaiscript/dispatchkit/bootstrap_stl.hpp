@@ -248,13 +248,17 @@ namespace chaiscript
           m->add(
               fun(
                 [](ContainerType &c, int index) -> typename ContainerType::reference {
-                  return c.at(index);
+                  /// \todo we are prefering to keep the key as 'int' to avoid runtime conversions
+                  /// during dispatch. reevaluate
+                  return c.at(static_cast<typename ContainerType::size_type>(index));
                 }), "[]");
 
           m->add(
               fun(
                 [](const ContainerType &c, int index) -> typename ContainerType::const_reference {
-                  return c.at(index);
+                  /// \todo we are prefering to keep the key as 'int' to avoid runtime conversions
+                  /// during dispatch. reevaluate
+                  return c.at(static_cast<typename ContainerType::size_type>(index));
                 }), "[]");
 
           return m;
