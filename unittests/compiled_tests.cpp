@@ -11,19 +11,8 @@
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wparentheses"
 #endif
-
-#ifdef __llvm__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-#pragma clang diagnostic ignored "-Wold-style-cast"
-#pragma clang diagnostic ignored "-Wexit-time-destructors"
-#pragma clang diagnostic ignored "-Wfloat-equal"
-#pragma clang diagnostic ignored "-Wunreachable-code"
-#endif
-
 
 
 #define CATCH_CONFIG_MAIN
@@ -943,7 +932,7 @@ TEST_CASE("Parse floats with non-posix locale")
   std::cout << "Current locale: " << std::setlocale(LC_ALL, "en_ZA.utf8") << '\n';
   chaiscript::ChaiScript chai;
   const double parsed = chai.eval<double>("print(1.3); 1.3");
-  CHECK(parsed == 1.3);
+  CHECK(parsed == Approx(1.3));
   const std::string str = chai.eval<std::string>("to_string(1.3)");
   CHECK(str == "1.3");
 }

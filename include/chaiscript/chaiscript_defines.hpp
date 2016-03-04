@@ -168,7 +168,7 @@ namespace chaiscript {
           neg_exponent = false;
         } else if (c < '0' || c > '9') {
           return final_value(t, base, exponent, neg_exponent);
-        } else if (decimal_place == 0) {
+        } else if (decimal_place < T(10)) {
           t *= T(10);
           t += T(c - '0');
         } else {
