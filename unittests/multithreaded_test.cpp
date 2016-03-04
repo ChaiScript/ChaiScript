@@ -92,7 +92,7 @@ int main()
       return EXIT_FAILURE;
     }
 
-    if (chai.eval<size_t>("getid(" + ss.str() + ")") != i)
+    if (chai.eval<int>("getid(" + ss.str() + ")") != static_cast<int>(i))
     {
       return EXIT_FAILURE;
     }
