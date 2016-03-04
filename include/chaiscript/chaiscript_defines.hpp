@@ -97,7 +97,7 @@
 namespace chaiscript {
   static const int version_major = 5;
   static const int version_minor = 8;
-  static const int version_patch = 0;
+  static const int version_patch = 1;
 
   static const char *compiler_version = CHAISCRIPT_COMPILER_VERSION;
   static const char *compiler_name = CHAISCRIPT_COMPILER_NAME;

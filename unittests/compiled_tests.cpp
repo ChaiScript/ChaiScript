@@ -933,7 +933,17 @@ TEST_CASE("Map conversions")
   )");
 
   CHECK(c == 42);
+}
 
+
+TEST_CASE("Parse floats with non-posix locale")
+{
+  std::cout << "Current locale: " << std::setlocale(LC_ALL, "en_ZA.utf8") << '\n';
+  chaiscript::ChaiScript chai;
+  const double parsed = chai.eval<double>("print(1.3); 1.3");
+  CHECK(parsed == 1.3);
+  const std::string str = chai.eval<std::string>("to_string(1.3)");
+  CHECK(str == "1.3");
 }
 
 
