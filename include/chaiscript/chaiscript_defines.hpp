@@ -113,6 +113,12 @@ namespace chaiscript {
 #endif
   }
 
+  template<typename Iter, typename Distance>
+    Iter advance_copy(Iter iter, Distance distance) {
+      std::advance(iter, static_cast<typename std::iterator_traits<Iter>::difference_type>(distance));
+      return iter;
+    }
+
 }
 #endif
 

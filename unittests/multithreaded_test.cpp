@@ -15,7 +15,7 @@ int expected_value(int num_iters)
   return i;
 }
 
-void do_work(chaiscript::ChaiScript &c, int id)
+void do_work(chaiscript::ChaiScript &c, const size_t id)
 {
   try{
     std::stringstream ss;
@@ -67,23 +67,23 @@ int main()
   std::vector<std::shared_ptr<std::thread> > threads;
 
   // Ensure at least two, but say only 7 on an 8 core processor
-  int num_threads = std::max(static_cast<int>(std::thread::hardware_concurrency()) - 1, 2);
+  size_t num_threads = static_cast<size_t>(std::max(static_cast<int>(std::thread::hardware_concurrency()) - 1, 2));
 
   std::cout << "Num threads: " << num_threads << '\n';
 
-  for (int i = 0; i < num_threads; ++i)
+  for (size_t i = 0; i < num_threads; ++i)
   {
     threads.push_back(std::make_shared<std::thread>(do_work, std::ref(chai), i));
   }
 
-  for (int i = 0; i < num_threads; ++i)
+  for (size_t i = 0; i < num_threads; ++i)
   {
     threads[i]->join();
   }
 
 
 
-  for (int i = 0; i < num_threads; ++i)
+  for (size_t i = 0; i < num_threads; ++i)
   {
     std::stringstream ss;
     ss << i;
@@ -92,7 +92,7 @@ int main()
       return EXIT_FAILURE;
     }
 
-    if (chai.eval<int>("getid(" + ss.str() + ")") != i)
+    if (chai.eval<size_t>("getid(" + ss.str() + ")") != i)
     {
       return EXIT_FAILURE;
     }
