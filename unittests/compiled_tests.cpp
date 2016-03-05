@@ -4,7 +4,7 @@
 
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4242 4702 6330 28251)
+#pragma warning(disable : 4062 4242 4640 4702 6330 28251)
 #endif
 
 #ifdef __GNUC__
