@@ -1,18 +1,23 @@
 // All of these are necessary because of catch.hpp. It's OK, they'll be
 // caught in other cpp files if chaiscript causes them
 
-#include <chaiscript/utility/utility.hpp>
-#include <chaiscript/dispatchkit/bootstrap_stl.hpp>
 
-#ifdef CHAISCRIPT_MSVC
+#ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4190 4640 28251 4702 6330)
+#pragma warning(disable : 4242 28251)
 #endif
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wparentheses"
 #endif
+
+
+#include <chaiscript/chaiscript.hpp>
+#include <chaiscript/utility/utility.hpp>
+#include <chaiscript/dispatchkit/bootstrap_stl.hpp>
+
+
 
 
 #define CATCH_CONFIG_MAIN
@@ -929,7 +934,11 @@ TEST_CASE("Map conversions")
 
 TEST_CASE("Parse floats with non-posix locale")
 {
-  std::cout << "Current locale: " << std::setlocale(LC_ALL, "en_ZA.utf8") << '\n';
+#ifdef CHAISCRIPT_MSVC
+  std::setlocale(LC_ALL, "en-ZA");
+#else
+  std::setlocale(LC_ALL, "en_ZA.utf8");
+#endif
   chaiscript::ChaiScript chai;
   const double parsed = chai.eval<double>("print(1.3); 1.3");
   CHECK(parsed == Approx(1.3));

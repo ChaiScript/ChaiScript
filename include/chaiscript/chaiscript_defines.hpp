@@ -154,7 +154,8 @@ namespace chaiscript {
         }
       };
 
-      for(char c = *t_str; (c = *t_str); ++t_str) {
+      for(; *t_str != '\0'; ++t_str) {
+        char c = *t_str;
         if (c == '.') {
           decimal_place = 10;
         } else if (c == 'e' || c == 'E') {

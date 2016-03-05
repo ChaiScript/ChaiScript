@@ -158,7 +158,7 @@ else()
 endif()
 
 if(MSVC)
-  add_definitions(/W4)
+  add_definitions(/W4 /w14545 /w34062 /w34242 /w34254 /w34287 /w44263 /w44265 /w44296 /w44311 /w44826 /we4289 /w14546 /w14547 /w14549 /w14555 /w14619 /w14905 /w14906 /w14928)
 
   # VS2013 doesn't have magic statics
   if (MSVC_VERSION STREQUAL "1800")
