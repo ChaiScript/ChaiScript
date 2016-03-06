@@ -212,16 +212,16 @@ class JSON
         }
 
         template <typename T>
-        JSON( T b, typename enable_if<is_same<T,bool>::value>::type* = 0 ) : Internal( b ), Type( Class::Boolean ){}
+        JSON( T b, typename enable_if<is_same<T,bool>::value>::type* = nullptr ) : Internal( b ), Type( Class::Boolean ){}
 
         template <typename T>
-        JSON( T i, typename enable_if<is_integral<T>::value && !is_same<T,bool>::value>::type* = 0 ) : Internal( long(i) ), Type( Class::Integral ){}
+        JSON( T i, typename enable_if<is_integral<T>::value && !is_same<T,bool>::value>::type* = nullptr ) : Internal( long(i) ), Type( Class::Integral ){}
 
         template <typename T>
-        JSON( T f, typename enable_if<is_floating_point<T>::value>::type* = 0 ) : Internal( double(f) ), Type( Class::Floating ){}
+        JSON( T f, typename enable_if<is_floating_point<T>::value>::type* = nullptr ) : Internal( double(f) ), Type( Class::Floating ){}
 
         template <typename T>
-        JSON( T s, typename enable_if<is_convertible<T,string>::value>::type* = 0 ) : Internal( string( s ) ), Type( Class::String ){}
+        JSON( T s, typename enable_if<is_convertible<T,string>::value>::type* = nullptr ) : Internal( string( s ) ), Type( Class::String ){}
 
         JSON( std::nullptr_t ) : Internal(), Type( Class::Null ){}
 

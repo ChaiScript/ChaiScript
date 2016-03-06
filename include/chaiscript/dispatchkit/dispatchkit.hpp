@@ -591,14 +591,14 @@ namespace chaiscript
         }
 
         /// Adds a new scope to the stack
-        void new_scope(Stack_Holder &t_holder)
+        static void new_scope(Stack_Holder &t_holder)
         {
           get_stack_data(t_holder).emplace_back();
           t_holder.call_params.emplace_back();
         }
 
         /// Pops the current scope from the stack
-        void pop_scope(Stack_Holder &t_holder)
+        static void pop_scope(Stack_Holder &t_holder)
         {
           t_holder.call_params.pop_back();
           StackData &stack = get_stack_data(t_holder);
@@ -910,8 +910,8 @@ namespace chaiscript
           return m_conversions;
         }
 
-        bool is_attribute_call(const std::vector<Proxy_Function> &t_funs, const std::vector<Boxed_Value> &t_params,
-            bool t_has_params, const Type_Conversions_State &t_conversions) const
+        static bool is_attribute_call(const std::vector<Proxy_Function> &t_funs, const std::vector<Boxed_Value> &t_params,
+            bool t_has_params, const Type_Conversions_State &t_conversions)
         {
           if (!t_has_params || t_params.empty()) {
             return false;

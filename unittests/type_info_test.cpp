@@ -1,29 +1,21 @@
 // Tests to make sure that the order in which function dispatches occur is correct
 
-#include <chaiscript/chaiscript_defines.hpp>
-#include <chaiscript/dispatchkit/type_info.hpp>
-#include <iostream>
-#include <cstdlib>
-
-#ifdef CHAISCRIPT_MSVC
+#ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4190 4640 28251 4702 6330)
+#pragma warning(disable : 4062 4242 4640 4702 6330 28251)
 #endif
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshadow"
-#pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wparentheses"
 #endif
 
-#ifdef __llvm__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-#pragma clang diagnostic ignored "-Wold-style-cast"
-#pragma clang diagnostic ignored "-Wexit-time-destructors"
-#pragma clang diagnostic ignored "-Wfloat-equal"
-#pragma clang diagnostic ignored "-Wunreachable-code"
-#endif
+
+#include <chaiscript/chaiscript_defines.hpp>
+#include <chaiscript/dispatchkit/type_info.hpp>
+#include <iostream>
+#include <cstdlib>
 
 
 
