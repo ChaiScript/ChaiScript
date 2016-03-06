@@ -1,3 +1,8 @@
+<a href="https://www.patreon.com/bePatron?u=2977989&redirect_uri=https%3A%2F%2Fwww.patreon.com%2Flefticus">
+    <img height="40" width="204" src="https://s3-us-west-1.amazonaws.com/widget-images/become-patron-widget-medium%402x.png">
+</a>
+
+
 Master Status: [![Linux Build Status](https://travis-ci.org/ChaiScript/ChaiScript.png?branch=master)](https://travis-ci.org/ChaiScript/ChaiScript) [![Windows Build status](https://ci.appveyor.com/api/projects/status/6u3r4s81kkjqmsqw?svg=true)](https://ci.appveyor.com/project/lefticus/chaiscript) [![codecov.io](http://codecov.io/github/ChaiScript/ChaiScript/coverage.svg?branch=master)](http://codecov.io/github/ChaiScript/ChaiScript?branch=master)
 
 Develop Status: [![Linux Build Status](https://travis-ci.org/ChaiScript/ChaiScript.png?branch=develop)](https://travis-ci.org/ChaiScript/ChaiScript) [![Windows Build status](https://ci.appveyor.com/api/projects/status/6u3r4s81kkjqmsqw/branch/develop?svg=true)](https://ci.appveyor.com/project/lefticus/chaiscript/branch/develop) [![codecov.io](http://codecov.io/github/ChaiScript/ChaiScript/coverage.svg?branch=develop)](http://codecov.io/github/ChaiScript/ChaiScript?branch=develop)

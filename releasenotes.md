@@ -1,6 +1,11 @@
 Notes:
 =======
-Current Version: 5.8.0
+Current Version: 5.8.1
+
+### Changes since 5.8.0
+* Fix parsing of floats to be locale independent #250
+* Various warning fixes on various platforms
+
 
 ### Changes since 5.7.1
 * Make all parser iterator operations range checked
