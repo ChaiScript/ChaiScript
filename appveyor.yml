@@ -1,4 +1,4 @@
-version: 5.7.2.{build}
+version: 5.8.x.{build}
 os: Visual Studio 2015
 environment:
   matrix:
@@ -14,3 +14,9 @@ build_script:
     cmake --build . --config Debug
 test_script:
 - cmd: ctest -C Debug
+notifications:
+- provider: Webhook
+  url: https://webhooks.gitter.im/e/9ff725a985b5679d1d5d
+  on_build_success: true
+  on_build_failure: true
+  on_build_status_changed: false
