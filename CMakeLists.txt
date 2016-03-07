@@ -271,6 +271,9 @@ endif()
 
 
 if(BUILD_MODULES)
+  add_library(test_module MODULE src/test_module.cpp)
+  target_link_libraries(test_module ${LIBS})
+
   add_library(stl_extra MODULE src/stl_extra.cpp)
   target_link_libraries(stl_extra ${LIBS})
 
@@ -455,9 +458,6 @@ if(BUILD_TESTING)
     )
     target_link_libraries(multifile_test ${LIBS})
     add_test(NAME MultiFile_Test COMMAND multifile_test)
-
-    add_library(test_module MODULE src/test_module.cpp)
-    target_link_libraries(test_module ${LIBS})
 
     install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript)
   endif()
