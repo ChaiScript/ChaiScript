@@ -30,7 +30,7 @@ namespace chaiscript
     {
       arithmetic_error(const std::string& reason) : std::runtime_error("Arithmetic error: " + reason) {}
       arithmetic_error(const arithmetic_error &) = default;
-      virtual ~arithmetic_error() CHAISCRIPT_NOEXCEPT {}
+      virtual ~arithmetic_error() noexcept {}
     };
   }
 }
@@ -43,16 +43,19 @@ namespace chaiscript
 // this is OK, so we're disabling size/and sign type warnings
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(push)
-#pragma warning(disable : 4244 4018 4389 4146 4365 4267)
+#pragma warning(disable : 4244 4018 4389 4146 4365 4267 4242)
 #endif
 
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wfloat-equal"
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
 #endif
 
   /// \brief Represents any numeric type, generically. Used internally for generic operations between POD values
@@ -88,7 +91,7 @@ namespace chaiscript
       {
       }
 
-      static CHAISCRIPT_CONSTEXPR Common_Types get_common_type(size_t t_size, bool t_signed)
+      static constexpr Common_Types get_common_type(size_t t_size, bool t_signed)
       {
         return   (t_size == 1 && t_signed)?(Common_Types::t_int8)
                 :(t_size == 1)?(Common_Types::t_uint8)
@@ -506,11 +509,8 @@ namespace chaiscript
       }
 
       Boxed_Number(const Boxed_Number &) = default;
-
-#if !defined(_MSC_VER) || _MSC_VER  != 1800
       Boxed_Number(Boxed_Number &&) = default;
       Boxed_Number& operator=(Boxed_Number &&) = default;
-#endif
 
       template<typename T> explicit Boxed_Number(T t)
         : bv(Boxed_Value(t))

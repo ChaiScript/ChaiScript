@@ -54,13 +54,13 @@ namespace chaiscript
     /// \brief Thrown if an error occurs while attempting to load a binary module
     struct load_module_error : std::runtime_error
     {
-      load_module_error(const std::string &t_reason) CHAISCRIPT_NOEXCEPT
+      load_module_error(const std::string &t_reason) noexcept
         : std::runtime_error(t_reason)
       {
       }
 
       load_module_error(const load_module_error &) = default;
-      virtual ~load_module_error() CHAISCRIPT_NOEXCEPT {}
+      virtual ~load_module_error() noexcept {}
     };
   }
 
@@ -505,10 +505,10 @@ namespace chaiscript
 
         // Let's see if this is a link that we should expand
         std::vector<char> buf(2048);
-        const size_t pathlen = readlink(dllpath.c_str(), &buf.front(), buf.size());
-        if (pathlen > 0 && pathlen < buf.size())
+        const auto pathlen = readlink(dllpath.c_str(), &buf.front(), buf.size());
+        if (pathlen > 0 && static_cast<size_t>(pathlen) < buf.size())
         {
-          dllpath = std::string(&buf.front(), pathlen);
+          dllpath = std::string(&buf.front(), static_cast<size_t>(pathlen));
         }
 
         m_module_paths.insert(m_module_paths.begin(), dllpath+"/");

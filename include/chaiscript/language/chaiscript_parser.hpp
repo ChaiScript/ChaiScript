@@ -147,7 +147,7 @@ namespace chaiscript
         }
 
         size_t remaining() const {
-          return std::distance(m_pos, m_end);
+          return static_cast<size_t>(std::distance(m_pos, m_end));
         }
 
         char operator*() const {
@@ -621,11 +621,11 @@ namespace chaiscript
 
         if (float_)
         {
-          return const_var(std::stof(t_val.substr(0,i)));
+          return const_var(parse_num<float>(t_val.substr(0,i)));
         } else if (long_) {
-          return const_var(std::stold(t_val.substr(0,i)));
+          return const_var(parse_num<long double>(t_val.substr(0,i)));
         } else {
-          return const_var(std::stod(t_val.substr(0,i)));
+          return const_var(parse_num<double>(t_val.substr(0,i)));
         }
       }
 
@@ -893,8 +893,8 @@ namespace chaiscript
                 in_quote = !in_quote;
               } else if (*m_position == '}' && !in_quote) {
                 --in_interpolation;
-              } 
-              
+              }
+
               if (prev_char == '\\') {
                 prev_char = 0;
               } else {
@@ -2213,8 +2213,8 @@ namespace chaiscript
 
                 switch (m_operators[t_precedence]) {
                   case(AST_Node_Type::Ternary_Cond) :
-                    m_match_stack.erase(m_match_stack.begin() + m_match_stack.size() - 2,
-                        m_match_stack.begin() + m_match_stack.size() - 1);
+                    m_match_stack.erase(advance_copy(m_match_stack.begin(), m_match_stack.size() - 2),
+                                        advance_copy(m_match_stack.begin(), m_match_stack.size() - 1));
                     if (Symbol(":")) {
                       if (!Operator(t_precedence+1)) {
                         throw exception::eval_error("Incomplete "
@@ -2239,7 +2239,8 @@ namespace chaiscript
                   case(AST_Node_Type::Bitwise_Or) :
                   case(AST_Node_Type::Comparison) :
                     assert(m_match_stack.size() > 1);
-                    m_match_stack.erase(m_match_stack.begin() + m_match_stack.size() - 2, m_match_stack.begin() + m_match_stack.size() - 1);
+                    m_match_stack.erase(advance_copy(m_match_stack.begin(), m_match_stack.size() - 2), 
+                                        advance_copy(m_match_stack.begin(), m_match_stack.size() - 1));
                     build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, oper->text);
                     break;
 

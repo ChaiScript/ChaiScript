@@ -282,13 +282,13 @@ namespace chaiscript
     class guard_error : public std::runtime_error
     {
       public:
-        guard_error() CHAISCRIPT_NOEXCEPT
+        guard_error() noexcept
           : std::runtime_error("Guard evaluation failed")
         { }
 
         guard_error(const guard_error &) = default;
 
-        virtual ~guard_error() CHAISCRIPT_NOEXCEPT
+        virtual ~guard_error() noexcept
         { }
     };
   }
@@ -316,7 +316,7 @@ namespace chaiscript
 
         virtual ~Dynamic_Proxy_Function() {}
 
-        virtual bool operator==(const Proxy_Function_Base &rhs) const CHAISCRIPT_OVERRIDE
+        virtual bool operator==(const Proxy_Function_Base &rhs) const override
         {
           const Dynamic_Proxy_Function *prhs = dynamic_cast<const Dynamic_Proxy_Function *>(&rhs);
 
@@ -327,7 +327,7 @@ namespace chaiscript
                 && this->m_param_types == prhs->m_param_types);
         }
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
         {
           return (m_arity < 0 || (vals.size() == size_t(m_arity) && m_param_types.match(vals, t_conversions)))
             && test_guard(vals, t_conversions);
@@ -344,7 +344,7 @@ namespace chaiscript
           return m_parsenode;
         }
 
-        virtual std::string annotation() const CHAISCRIPT_OVERRIDE
+        virtual std::string annotation() const override
         {
           return m_description;
         }
@@ -419,7 +419,7 @@ namespace chaiscript
 
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
           if (call_match(params, t_conversions) && test_guard(params, t_conversions))
           {
@@ -462,19 +462,19 @@ namespace chaiscript
           assert(m_f->get_arity() < 0 || m_f->get_arity() == static_cast<int>(m_args.size()));
         }
 
-        virtual bool operator==(const Proxy_Function_Base &t_f) const CHAISCRIPT_OVERRIDE
+        virtual bool operator==(const Proxy_Function_Base &t_f) const override
         {
           return &t_f == this;
         }
 
         virtual ~Bound_Function() {}
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
         {
           return m_f->call_match(build_param_list(vals), t_conversions);
         }
 
-        virtual std::vector<Const_Proxy_Function> get_contained_functions() const CHAISCRIPT_OVERRIDE
+        virtual std::vector<Const_Proxy_Function> get_contained_functions() const override
         {
           return std::vector<Const_Proxy_Function>{m_f};
         }
@@ -511,7 +511,7 @@ namespace chaiscript
           return args;
         }
 
-        virtual std::string annotation() const CHAISCRIPT_OVERRIDE
+        virtual std::string annotation() const override
         {
           return "Bound: " + m_f->annotation();
         }
@@ -527,15 +527,8 @@ namespace chaiscript
           std::vector<Type_Info> types = t_f->get_param_types();
           assert(types.size() == t_args.size() + 1);
 
-#ifdef CHAISCRIPT_MSVC_12
-#pragma warning(push)
-#pragma warning(disable : 6011)
-#endif
           // this analysis warning is invalid in MSVC12 and doesn't exist in MSVC14
           std::vector<Type_Info> retval{types[0]};
-#ifdef CHAISCRIPT_MSVC_12
-#pragma warning(pop)
-#endif
 
           for (size_t i = 0; i < types.size() - 1; ++i)
           {
@@ -548,7 +541,7 @@ namespace chaiscript
           return retval;
         }
 
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
           return (*m_f)(build_param_list(params), t_conversions);
         }
@@ -568,12 +561,12 @@ namespace chaiscript
 
         virtual ~Proxy_Function_Impl_Base() {}
 
-        virtual std::string annotation() const CHAISCRIPT_OVERRIDE
+        virtual std::string annotation() const override
         {
           return "";
         }
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
         {
           return static_cast<int>(vals.size()) == get_arity() && (compare_types(m_types, vals, t_conversions) && compare_types_with_cast(vals, t_conversions));
         }
@@ -596,19 +589,19 @@ namespace chaiscript
 
         virtual ~Proxy_Function_Callable_Impl() {}
 
-        virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
         {
           return detail::compare_types_cast(static_cast<Func *>(nullptr), vals, t_conversions);
         }
 
-        virtual bool operator==(const Proxy_Function_Base &t_func) const CHAISCRIPT_OVERRIDE
+        virtual bool operator==(const Proxy_Function_Base &t_func) const override
         {
           return dynamic_cast<const Proxy_Function_Callable_Impl<Func, Callable> *>(&t_func) != nullptr;
         }
 
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
           typedef typename detail::Function_Signature<Func>::Return_Type Return_Type;
           return detail::Do_Call<Return_Type>::template go<Func>(m_f, params, t_conversions);
@@ -648,12 +641,12 @@ namespace chaiscript
 
         virtual ~Assignable_Proxy_Function_Impl() {}
 
-        virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
         {
           return detail::compare_types_cast(static_cast<Func *>(nullptr), vals, t_conversions);
         }
 
-        virtual bool operator==(const Proxy_Function_Base &t_func) const CHAISCRIPT_OVERRIDE
+        virtual bool operator==(const Proxy_Function_Base &t_func) const override
         {
           return dynamic_cast<const Assignable_Proxy_Function_Impl<Func> *>(&t_func) != nullptr;
         }
@@ -663,12 +656,12 @@ namespace chaiscript
           return m_f.get();
         }
 
-        virtual void assign(const std::shared_ptr<const Proxy_Function_Base> &t_rhs) CHAISCRIPT_OVERRIDE {
+        virtual void assign(const std::shared_ptr<const Proxy_Function_Base> &t_rhs) override {
           m_f.get() = dispatch::functor<Func>(t_rhs, nullptr);
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
           return detail::Do_Call<typename std::function<Func>::result_type>::template go<Func>(m_f.get(), params, t_conversions);
         }
@@ -691,9 +684,9 @@ namespace chaiscript
 
         virtual ~Attribute_Access() {}
 
-        virtual bool is_attribute_function() const CHAISCRIPT_OVERRIDE { return true; } 
+        virtual bool is_attribute_function() const override { return true; } 
 
-        virtual bool operator==(const Proxy_Function_Base &t_func) const CHAISCRIPT_OVERRIDE
+        virtual bool operator==(const Proxy_Function_Base &t_func) const override
         {
           const Attribute_Access<T, Class> * aa 
             = dynamic_cast<const Attribute_Access<T, Class> *>(&t_func);
@@ -705,7 +698,7 @@ namespace chaiscript
           }
         }
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &) const CHAISCRIPT_OVERRIDE
+        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &) const override
         {
           if (vals.size() != 1)
           {
@@ -715,13 +708,13 @@ namespace chaiscript
           return vals[0].get_type_info().bare_equal(user_type<Class>());
         }
 
-        virtual std::string annotation() const CHAISCRIPT_OVERRIDE
+        virtual std::string annotation() const override
         {
           return "";
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
           const Boxed_Value &bv = params[0];
           if (bv.is_const())
@@ -769,7 +762,7 @@ namespace chaiscript
 
 
         dispatch_error(const dispatch_error &) = default;
-        virtual ~dispatch_error() CHAISCRIPT_NOEXCEPT {}
+        virtual ~dispatch_error() noexcept {}
 
         std::vector<Boxed_Value> parameters;
         std::vector<Const_Proxy_Function> functions;

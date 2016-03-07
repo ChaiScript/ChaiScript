@@ -43,7 +43,7 @@ namespace chaiscript
       {
         virtual ~Exception_Handler_Impl1() {}
 
-        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) CHAISCRIPT_OVERRIDE
+        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) override
         {
           throw_type<T1>(bv, t_engine);
         }
@@ -53,7 +53,7 @@ namespace chaiscript
       {
         virtual ~Exception_Handler_Impl2() {}
 
-        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) CHAISCRIPT_OVERRIDE
+        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) override
         {
           throw_type<T1>(bv, t_engine);
           throw_type<T2>(bv, t_engine);
@@ -65,7 +65,7 @@ namespace chaiscript
       {
         virtual ~Exception_Handler_Impl3() {}
 
-        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) CHAISCRIPT_OVERRIDE
+        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) override
         {
           throw_type<T1>(bv, t_engine);
           throw_type<T2>(bv, t_engine);
@@ -77,7 +77,7 @@ namespace chaiscript
       {
         virtual ~Exception_Handler_Impl4() {}
 
-        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) CHAISCRIPT_OVERRIDE
+        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) override
         {
           throw_type<T1>(bv, t_engine);
           throw_type<T2>(bv, t_engine);
@@ -90,7 +90,7 @@ namespace chaiscript
       {
         virtual ~Exception_Handler_Impl5() {}
 
-        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) CHAISCRIPT_OVERRIDE
+        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) override
         {
           throw_type<T1>(bv, t_engine);
           throw_type<T2>(bv, t_engine);
