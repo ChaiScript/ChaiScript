@@ -10,6 +10,7 @@
 #include <functional>
 #include <stdexcept>
 #include <vector>
+#include <array>
 
 #include "../chaiscript_defines.hpp"
 #include "boxed_cast.hpp"
