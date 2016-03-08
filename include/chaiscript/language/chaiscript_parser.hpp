@@ -58,11 +58,6 @@ namespace chaiscript
 
     class ChaiScript_Parser {
 
-      static constexpr const char * const m_multiline_comment_begin = "/*";
-      static constexpr const char * const m_multiline_comment_end = "*/";
-      static constexpr const char * const m_singleline_comment = "//";
-
-
       static std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> build_alphabet()
       {
         std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> alphabet = {};
@@ -71,55 +66,55 @@ namespace chaiscript
           alpha.fill(false);
         }
 
-        alphabet[detail::symbol_alphabet][static_cast<int>('?')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<int>('+')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<int>('-')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<int>('*')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<int>('/')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<int>('|')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<int>('&')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<int>('^')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<int>('=')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<int>('.')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<int>('<')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<int>('>')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('?')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('+')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('-')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('*')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('/')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('|')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('&')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('^')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('=')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('.')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('<')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('>')]=true;
 
-        for ( int c = 'a' ; c <= 'z' ; ++c ) { alphabet[detail::keyword_alphabet][c]=true; }
-        for ( int c = 'A' ; c <= 'Z' ; ++c ) { alphabet[detail::keyword_alphabet][c]=true; }
-        for ( int c = '0' ; c <= '9' ; ++c ) { alphabet[detail::keyword_alphabet][c]=true; }
-        alphabet[detail::keyword_alphabet][static_cast<int>('_')]=true;
+        for ( size_t c = 'a' ; c <= 'z' ; ++c ) { alphabet[detail::keyword_alphabet][c]=true; }
+        for ( size_t c = 'A' ; c <= 'Z' ; ++c ) { alphabet[detail::keyword_alphabet][c]=true; }
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::keyword_alphabet][c]=true; }
+        alphabet[detail::keyword_alphabet][static_cast<size_t>('_')]=true;
 
-        for ( int c = '0' ; c <= '9' ; ++c ) { alphabet[detail::int_alphabet][c]=true; }
-        for ( int c = '0' ; c <= '9' ; ++c ) { alphabet[detail::float_alphabet][c]=true; }
-        alphabet[detail::float_alphabet][static_cast<int>('.')]=true;
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::int_alphabet][c]=true; }
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::float_alphabet][c]=true; }
+        alphabet[detail::float_alphabet][static_cast<size_t>('.')]=true;
 
-        for ( int c = '0' ; c <= '9' ; ++c ) { alphabet[detail::hex_alphabet][c]=true; }
-        for ( int c = 'a' ; c <= 'f' ; ++c ) { alphabet[detail::hex_alphabet][c]=true; }
-        for ( int c = 'A' ; c <= 'F' ; ++c ) { alphabet[detail::hex_alphabet][c]=true; }
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::hex_alphabet][c]=true; }
+        for ( size_t c = 'a' ; c <= 'f' ; ++c ) { alphabet[detail::hex_alphabet][c]=true; }
+        for ( size_t c = 'A' ; c <= 'F' ; ++c ) { alphabet[detail::hex_alphabet][c]=true; }
 
-        alphabet[detail::x_alphabet][static_cast<int>('x')]=true;
-        alphabet[detail::x_alphabet][static_cast<int>('X')]=true;
+        alphabet[detail::x_alphabet][static_cast<size_t>('x')]=true;
+        alphabet[detail::x_alphabet][static_cast<size_t>('X')]=true;
 
-        for ( int c = '0' ; c <= '1' ; ++c ) { alphabet[detail::bin_alphabet][c]=true; }
-        alphabet[detail::b_alphabet][static_cast<int>('b')]=true;
-        alphabet[detail::b_alphabet][static_cast<int>('B')]=true;
+        for ( size_t c = '0' ; c <= '1' ; ++c ) { alphabet[detail::bin_alphabet][c]=true; }
+        alphabet[detail::b_alphabet][static_cast<size_t>('b')]=true;
+        alphabet[detail::b_alphabet][static_cast<size_t>('B')]=true;
 
-        for ( int c = 'a' ; c <= 'z' ; ++c ) { alphabet[detail::id_alphabet][c]=true; }
-        for ( int c = 'A' ; c <= 'Z' ; ++c ) { alphabet[detail::id_alphabet][c]=true; }
-        alphabet[detail::id_alphabet][static_cast<int>('_')] = true;
+        for ( size_t c = 'a' ; c <= 'z' ; ++c ) { alphabet[detail::id_alphabet][c]=true; }
+        for ( size_t c = 'A' ; c <= 'Z' ; ++c ) { alphabet[detail::id_alphabet][c]=true; }
+        alphabet[detail::id_alphabet][static_cast<size_t>('_')] = true;
 
-        alphabet[detail::white_alphabet][static_cast<int>(' ')]=true;
-        alphabet[detail::white_alphabet][static_cast<int>('\t')]=true;
+        alphabet[detail::white_alphabet][static_cast<size_t>(' ')]=true;
+        alphabet[detail::white_alphabet][static_cast<size_t>('\t')]=true;
 
-        alphabet[detail::int_suffix_alphabet][static_cast<int>('l')] = true;
-        alphabet[detail::int_suffix_alphabet][static_cast<int>('L')] = true;
-        alphabet[detail::int_suffix_alphabet][static_cast<int>('u')] = true;
-        alphabet[detail::int_suffix_alphabet][static_cast<int>('U')] = true;
+        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('l')] = true;
+        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('L')] = true;
+        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('u')] = true;
+        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('U')] = true;
 
-        alphabet[detail::float_suffix_alphabet][static_cast<int>('l')] = true;
-        alphabet[detail::float_suffix_alphabet][static_cast<int>('L')] = true;
-        alphabet[detail::float_suffix_alphabet][static_cast<int>('f')] = true;
-        alphabet[detail::float_suffix_alphabet][static_cast<int>('F')] = true;
+        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('l')] = true;
+        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('L')] = true;
+        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('f')] = true;
+        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('F')] = true;
 
         return alphabet;
       }
@@ -130,35 +125,26 @@ namespace chaiscript
         return alpha;
       }
 
-      const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &m_alphabet = create_alphabet();
-
-      static const std::vector<std::vector<std::string>> build_operator_matches() {
-        std::vector<std::vector<std::string>> operator_matches;
-        operator_matches.emplace_back(std::initializer_list<std::string>({"?"}));
-        operator_matches.emplace_back(std::initializer_list<std::string>({"||"}));
-        operator_matches.emplace_back(std::initializer_list<std::string>({"&&"}));
-        operator_matches.emplace_back(std::initializer_list<std::string>({"|"}));
-        operator_matches.emplace_back(std::initializer_list<std::string>({"^"}));
-        operator_matches.emplace_back(std::initializer_list<std::string>({"&"}));
-        operator_matches.emplace_back(std::initializer_list<std::string>({"==", "!="}));
-        operator_matches.emplace_back(std::initializer_list<std::string>({"<", "<=", ">", ">="}));
-        operator_matches.emplace_back(std::initializer_list<std::string>({"<<", ">>"}));
-
-        //We share precedence here but then separate them later
-        operator_matches.emplace_back(std::initializer_list<std::string>({"+", "-"}));
-
-        //We share precedence here but then separate them later
-        operator_matches.emplace_back(std::initializer_list<std::string>({"*", "/", "%"}));
-
-        return operator_matches;
-      };
 
       static const std::vector<std::vector<std::string>> &create_operator_matches() {
-        static const auto operator_matches = build_operator_matches();
+        static const std::vector<std::vector<std::string>> operator_matches {
+          {"?"},
+          {"||"},
+          {"&&"},
+          {"|"},
+          {"^"},
+          {"&"},
+          {"==", "!="},
+          {"<", "<=", ">", ">="},
+          {"<<", ">>"},
+          //We share precedence here but then separate them later
+          {"+", "-"},
+          {"*", "/", "%"}
+        };
+
         return operator_matches;
       }
 
-      const std::vector<std::vector<std::string>> &m_operator_matches = create_operator_matches();
 
       static const std::array<AST_Node_Type::Type, 11> &create_operators() {
         static const std::array<AST_Node_Type::Type, 11> operators = {{
@@ -177,6 +163,12 @@ namespace chaiscript
         return operators;
       }
 
+      static constexpr const char * const m_multiline_comment_begin = "/*";
+      static constexpr const char * const m_multiline_comment_end = "*/";
+      static constexpr const char * const m_singleline_comment = "//";
+
+      const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &m_alphabet = create_alphabet();
+      const std::vector<std::vector<std::string>> &m_operator_matches = create_operator_matches();
       const std::array<AST_Node_Type::Type, 11> &m_operators = create_operators();
 
       std::shared_ptr<std::string> m_filename;
