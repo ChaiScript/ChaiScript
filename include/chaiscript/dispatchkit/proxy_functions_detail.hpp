@@ -67,57 +67,31 @@ namespace chaiscript
         }
 
 
-
-      template<size_t ... I>
-      struct Indexes
-      {
-      };
-
-      template<size_t S, size_t ... I> 
-      struct Make_Indexes
-      {
-        typedef typename Make_Indexes<S-1, I..., sizeof...(I)>::indexes indexes;
-      };
-
-      template<size_t ... I>
-      struct Make_Indexes<0, I...>
-      {
-        typedef Indexes<I...> indexes;
-      };
-
-
-
       /**
        * Used by Proxy_Function_Impl to determine if it is equivalent to another
        * Proxy_Function_Impl object. This function is primarily used to prevent
        * registration of two functions with the exact same signatures
        */
-      template<typename Ret, typename ... Params, size_t ... I>
-        bool compare_types_cast(Indexes<I...>, Ret (*)(Params...),
+      template<typename Ret, typename ... Params>
+        bool compare_types_cast(Ret (*)(Params...),
              const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions)
         {
           try {
+            int i = 0;
             (void)params; (void)t_conversions;
-            (void)std::initializer_list<int>{(boxed_cast<Params>(params[I], &t_conversions), 0)...};
+            // this is ok because the order of evaluation of initializer lists is well defined
+            (void)std::initializer_list<int>{(boxed_cast<Params>(params[i++], &t_conversions), 0)...};
             return true;
           } catch (const exception::bad_boxed_cast &) {
             return false;
           }
-
-        }
-
-      template<typename Ret, typename ... Params>
-        bool compare_types_cast(Ret (*f)(Params...),
-             const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions)
-        {
-          typedef typename Make_Indexes<sizeof...(Params)>::indexes indexes;
-          return compare_types_cast(indexes(), f, params, t_conversions);
         }
 
 
       template<typename Callable, typename Ret, typename ... Params, size_t ... I>
-        Ret call_func(const chaiscript::dispatch::detail::Function_Signature<Ret (Params...)> &, Indexes<I...>, const Callable &f,
-            const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions)
+        Ret call_func(const chaiscript::dispatch::detail::Function_Signature<Ret (Params...)> &, 
+                      std::index_sequence<I...>, const Callable &f,
+                      const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions)
         {
           (void)params; (void)t_conversions;
           return f(boxed_cast<Params>(params[I], &t_conversions)...);
@@ -134,8 +108,7 @@ namespace chaiscript
         Ret call_func(const chaiscript::dispatch::detail::Function_Signature<Ret (Params...)> &sig, const Callable &f,
             const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions)
         {
-          typedef typename Make_Indexes<sizeof...(Params)>::indexes indexes;
-          return call_func(sig, indexes(), f, params, t_conversions);
+          return call_func(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions);
         }
 
     }
