@@ -30,16 +30,12 @@ compilers:
     skip_packaging: true
     cmake_extra_flags: -DUSE_LIBCXX:BOOL=ON -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON
   - name: "gcc"
-    version: "4.8"
-    skip_packaging: true
-    cmake_extra_flags: -DBUILD_SAMPLES:BOOL=ON -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DRUN_PERFORMANCE_TESTS:BOOL=ON
-    collect_performance_results: true
-  - name: "gcc"
     version: "4.9"
     cmake_extra_flags: -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DBUILD_TESTING:BOOL=ON -DRUN_PERFORMANCE_TESTS:BOOL=ON
     collect_performance_results: true
   - name: "gcc"
     version: "4.9"
+    skip_packaging: true
     build_tag: "NoThreads"
     cmake_extra_flags: -DBUILD_PACKAGE:BOOL=ON -DBUILD_TESTING:BOOL=ON -DBUILD_TESTING:BOOL=ON -DRUN_PERFORMANCE_TESTS:BOOL=ON -DMULTITHREAD_SUPPORT_ENABLED:BOOL=OFF
     collect_performance_results: true
