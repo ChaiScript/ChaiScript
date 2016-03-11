@@ -46,7 +46,7 @@ namespace chaiscript
         }
 
         bad_boxed_cast(const bad_boxed_cast &) = default;
-        virtual ~bad_boxed_cast() noexcept {}
+        virtual ~bad_boxed_cast() noexcept = default;
 
         /// \brief Description of what error occurred
         virtual const char * what() const noexcept override

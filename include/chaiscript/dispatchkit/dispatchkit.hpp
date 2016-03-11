@@ -56,14 +56,14 @@ namespace chaiscript
     class reserved_word_error : public std::runtime_error
     {
       public:
-        reserved_word_error(const std::string &t_word) noexcept
+        explicit reserved_word_error(const std::string &t_word) noexcept
           : std::runtime_error("Reserved word not allowed in object name: " + t_word), m_word(t_word)
         {
         }
 
         reserved_word_error(const reserved_word_error &) = default;
 
-        virtual ~reserved_word_error() noexcept {}
+        virtual ~reserved_word_error() noexcept = default;
 
         std::string word() const
         {
@@ -78,14 +78,14 @@ namespace chaiscript
     class illegal_name_error : public std::runtime_error
     {
       public:
-        illegal_name_error(const std::string &t_name) noexcept
+        explicit illegal_name_error(const std::string &t_name) noexcept
           : std::runtime_error("Reserved name not allowed in object name: " + t_name), m_name(t_name)
         {
         }
 
         illegal_name_error(const illegal_name_error &) = default;
 
-        virtual ~illegal_name_error() noexcept {}
+        virtual ~illegal_name_error() noexcept = default;
 
         std::string name() const
         {
@@ -101,14 +101,14 @@ namespace chaiscript
     class name_conflict_error : public std::runtime_error
     {
       public:
-        name_conflict_error(const std::string &t_name) noexcept
+        explicit name_conflict_error(const std::string &t_name) noexcept
           : std::runtime_error("Name already exists in current context " + t_name), m_name(t_name)
         {
         }
 
         name_conflict_error(const name_conflict_error &) = default;
 
-        virtual ~name_conflict_error() noexcept {}
+        virtual ~name_conflict_error() noexcept = default;
 
         std::string name() const
         {
@@ -131,7 +131,7 @@ namespace chaiscript
         }
 
         global_non_const(const global_non_const &) = default;
-        virtual ~global_non_const() noexcept {}
+        virtual ~global_non_const() noexcept = default;
     };
   }
 
@@ -194,30 +194,28 @@ namespace chaiscript
           apply_globals(m_globals.begin(), m_globals.end(), t_engine);
         }
 
-      ~Module()
-      {
-      }
-
       bool has_function(const Proxy_Function &new_f, const std::string &name)
       {
-        return std::any_of(m_funcs.begin(), m_funcs.end(), [&](const std::pair<Proxy_Function, std::string> &existing_f) {
-          return existing_f.second == name && *(existing_f.first) == *(new_f);
-          });
+        return std::any_of(m_funcs.begin(), m_funcs.end(), 
+            [&](const std::pair<Proxy_Function, std::string> &existing_f) {
+              return existing_f.second == name && *(existing_f.first) == *(new_f);
+            }
+          );
       }
       
 
     private:
-      std::vector<std::pair<Type_Info, std::string> > m_typeinfos;
-      std::vector<std::pair<Proxy_Function, std::string> > m_funcs;
-      std::vector<std::pair<Boxed_Value, std::string> > m_globals;
+      std::vector<std::pair<Type_Info, std::string>> m_typeinfos;
+      std::vector<std::pair<Proxy_Function, std::string>> m_funcs;
+      std::vector<std::pair<Boxed_Value, std::string>> m_globals;
       std::vector<std::string> m_evals;
       std::vector<Type_Conversion> m_conversions;
 
       template<typename T, typename InItr>
         static void apply(InItr begin, const InItr end, T &t) 
         {
-          for_each(begin, end, [&t](typename std::iterator_traits<InItr>::reference obj)
-              {
+          for_each(begin, end, 
+              [&t](const auto &obj) {
                 try {
                   t.add(obj.first, obj.second);
                 } catch (const chaiscript::exception::name_conflict_error &) {
@@ -600,12 +598,10 @@ namespace chaiscript
         {
           t_holder.call_params.pop_back();
           StackData &stack = get_stack_data(t_holder);
-          if (stack.size() > 1)
-          {
-            stack.pop_back();
-          } else {
-            throw std::range_error("Unable to pop global stack");
-          }
+
+          assert(!stack.empty());
+
+          stack.pop_back();
         }
 
 
@@ -916,10 +912,8 @@ namespace chaiscript
           }
 
           for (const auto &fun : t_funs) {
-            if (fun->is_attribute_function()) {
-              if (fun->compare_first_type(t_params[0], t_conversions)) {
-                return true;
-              }
+            if (fun->is_attribute_function()
+                && fun->compare_first_type(t_params[0], t_conversions)) {
             }
           }
 
@@ -1107,7 +1101,7 @@ namespace chaiscript
           const Const_Proxy_Function &f = this->boxed_cast<Const_Proxy_Function>(params[0]);
           const Type_Conversions_State convs(m_conversions, m_conversions.conversion_saves());
 
-          return Boxed_Value(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end()), convs));
+          return const_var(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end()), convs));
         }
 
         /// Dump all system info to stdout

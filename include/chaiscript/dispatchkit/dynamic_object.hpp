@@ -33,7 +33,7 @@ namespace chaiscript
 
       option_explicit_set(const option_explicit_set &) = default;
 
-      virtual ~option_explicit_set() noexcept {}
+      virtual ~option_explicit_set() noexcept = default;
     };
 
     class Dynamic_Object
