@@ -911,13 +911,12 @@ namespace chaiscript
             return false;
           }
 
-          for (const auto &fun : t_funs) {
-            if (fun->is_attribute_function()
-                && fun->compare_first_type(t_params[0], t_conversions)) {
-            }
-          }
+          return std::any_of(std::cbegin(t_funs), std::cend(t_funs),
+              [&](const auto &fun) {
+                return fun->is_attribute_function() && fun->compare_first_type(t_params[0], t_conversions);
+              }
+            );
 
-          return false;
         }
 
 #ifdef CHAISCRIPT_MSVC
