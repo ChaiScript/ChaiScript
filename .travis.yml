@@ -3,8 +3,8 @@ compiler:
   - gcc
 env:
   matrix:
-    - GCC_VER="4.6"
-    - GCC_VER="4.8"
+    - GCC_VER="4.9"
+    - GCC_VER="5"
 
   global:
     - secure: eiaR6pXiiEpyB8+LLQ1NvZdl0Yylru1BLy9lMoHl+IpUNGGQGywmW/2WAn77rFfmR1OPA2qWQLfgPwgK0HxUA9HHlot9tre5QhiN2Lw8NOT8tCZ6tTm2+QntDBjBGJyal/knRvQkn/6qs6GxlXRerz4ArnnuPL1vESt3zwB0YtU=
@@ -13,7 +13,7 @@ env:
 
 before_install:
   - export CXX="g++-$GCC_VER" CC="gcc-$GCC_VER" GCOV="gcov-$GCC_VER"
-  - if [ "$GCC_VER" = "4.8" ]; then export COVERAGE=1 CPPCHECK=1; fi
+  - if [ "$GCC_VER" = "5" ]; then export COVERAGE=1 CPPCHECK=1; fi
   - if [ ${COVERAGE} = 1 ]; then export FUZZY_CMD="-D RUN_FUZZY_TESTS:BOOL=TRUE"; fi
   - sudo pip install cpp-coveralls
   - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y

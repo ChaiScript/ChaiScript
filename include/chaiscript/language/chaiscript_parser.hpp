@@ -58,15 +58,122 @@ namespace chaiscript
 
     class ChaiScript_Parser {
 
-      std::string m_multiline_comment_begin;
-      std::string m_multiline_comment_end;
-      std::string m_singleline_comment;
+      static std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> build_alphabet()
+      {
+        std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> alphabet = {};
+
+        for (auto &alpha : alphabet) {
+          alpha.fill(false);
+        }
+
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('?')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('+')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('-')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('*')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('/')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('|')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('&')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('^')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('=')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('.')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('<')]=true;
+        alphabet[detail::symbol_alphabet][static_cast<size_t>('>')]=true;
+
+        for ( size_t c = 'a' ; c <= 'z' ; ++c ) { alphabet[detail::keyword_alphabet][c]=true; }
+        for ( size_t c = 'A' ; c <= 'Z' ; ++c ) { alphabet[detail::keyword_alphabet][c]=true; }
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::keyword_alphabet][c]=true; }
+        alphabet[detail::keyword_alphabet][static_cast<size_t>('_')]=true;
+
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::int_alphabet][c]=true; }
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::float_alphabet][c]=true; }
+        alphabet[detail::float_alphabet][static_cast<size_t>('.')]=true;
+
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::hex_alphabet][c]=true; }
+        for ( size_t c = 'a' ; c <= 'f' ; ++c ) { alphabet[detail::hex_alphabet][c]=true; }
+        for ( size_t c = 'A' ; c <= 'F' ; ++c ) { alphabet[detail::hex_alphabet][c]=true; }
+
+        alphabet[detail::x_alphabet][static_cast<size_t>('x')]=true;
+        alphabet[detail::x_alphabet][static_cast<size_t>('X')]=true;
+
+        for ( size_t c = '0' ; c <= '1' ; ++c ) { alphabet[detail::bin_alphabet][c]=true; }
+        alphabet[detail::b_alphabet][static_cast<size_t>('b')]=true;
+        alphabet[detail::b_alphabet][static_cast<size_t>('B')]=true;
+
+        for ( size_t c = 'a' ; c <= 'z' ; ++c ) { alphabet[detail::id_alphabet][c]=true; }
+        for ( size_t c = 'A' ; c <= 'Z' ; ++c ) { alphabet[detail::id_alphabet][c]=true; }
+        alphabet[detail::id_alphabet][static_cast<size_t>('_')] = true;
+
+        alphabet[detail::white_alphabet][static_cast<size_t>(' ')]=true;
+        alphabet[detail::white_alphabet][static_cast<size_t>('\t')]=true;
+
+        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('l')] = true;
+        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('L')] = true;
+        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('u')] = true;
+        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('U')] = true;
+
+        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('l')] = true;
+        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('L')] = true;
+        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('f')] = true;
+        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('F')] = true;
+
+        return alphabet;
+      }
+
+      static const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &create_alphabet()
+      {
+        static const auto alpha = build_alphabet();
+        return alpha;
+      }
+
+
+      static const std::vector<std::vector<std::string>> &create_operator_matches() {
+        static const std::vector<std::vector<std::string>> operator_matches {
+          {"?"},
+          {"||"},
+          {"&&"},
+          {"|"},
+          {"^"},
+          {"&"},
+          {"==", "!="},
+          {"<", "<=", ">", ">="},
+          {"<<", ">>"},
+          //We share precedence here but then separate them later
+          {"+", "-"},
+          {"*", "/", "%"}
+        };
+
+        return operator_matches;
+      }
+
+
+      static const std::array<AST_Node_Type::Type, 11> &create_operators() {
+        static const std::array<AST_Node_Type::Type, 11> operators = {{
+          AST_Node_Type::Ternary_Cond,
+          AST_Node_Type::Logical_Or,
+          AST_Node_Type::Logical_And,
+          AST_Node_Type::Bitwise_Or,
+          AST_Node_Type::Bitwise_Xor,
+          AST_Node_Type::Bitwise_And,
+          AST_Node_Type::Equality,
+          AST_Node_Type::Comparison,
+          AST_Node_Type::Shift,
+          AST_Node_Type::Addition,
+          AST_Node_Type::Multiplication
+        }};
+        return operators;
+      }
+
+      static constexpr const char * const m_multiline_comment_begin = "/*";
+      static constexpr const char * const m_multiline_comment_end = "*/";
+      static constexpr const char * const m_singleline_comment = "//";
+
+      const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &m_alphabet = create_alphabet();
+      const std::vector<std::vector<std::string>> &m_operator_matches = create_operator_matches();
+      const std::array<AST_Node_Type::Type, 11> &m_operators = create_operators();
+
       std::shared_ptr<std::string> m_filename;
       std::vector<AST_NodePtr> m_match_stack;
-      bool m_alphabet[detail::max_alphabet][detail::lengthof_alphabet];
 
-      std::vector<std::vector<std::string>> m_operator_matches;
-      std::vector<AST_Node_Type::Type> m_operators;
 
       struct Position
       {
@@ -171,108 +278,13 @@ namespace chaiscript
 
       public:
       ChaiScript_Parser()
-        : m_multiline_comment_begin("/*"),
-          m_multiline_comment_end("*/"),
-          m_singleline_comment("//")
       {
         m_match_stack.reserve(2);
-        setup_operators();
       }
 
       ChaiScript_Parser(const ChaiScript_Parser &) = delete;
       ChaiScript_Parser &operator=(const ChaiScript_Parser &) = delete;
 
-      void setup_operators()
-      {
-        m_operators.emplace_back(AST_Node_Type::Ternary_Cond);
-        m_operator_matches.emplace_back(std::initializer_list<std::string>({"?"}));
-
-        m_operators.emplace_back(AST_Node_Type::Logical_Or);
-        m_operator_matches.emplace_back(std::initializer_list<std::string>({"||"}));
-
-        m_operators.emplace_back(AST_Node_Type::Logical_And);
-        m_operator_matches.emplace_back(std::initializer_list<std::string>({"&&"}));
-
-        m_operators.emplace_back(AST_Node_Type::Bitwise_Or);
-        m_operator_matches.emplace_back(std::initializer_list<std::string>({"|"}));
-
-        m_operators.emplace_back(AST_Node_Type::Bitwise_Xor);
-        m_operator_matches.emplace_back(std::initializer_list<std::string>({"^"}));
-
-        m_operators.emplace_back(AST_Node_Type::Bitwise_And);
-        m_operator_matches.emplace_back(std::initializer_list<std::string>({"&"}));
-
-        m_operators.emplace_back(AST_Node_Type::Equality);
-        m_operator_matches.emplace_back(std::initializer_list<std::string>({"==", "!="}));
-
-        m_operators.emplace_back(AST_Node_Type::Comparison);
-        m_operator_matches.emplace_back(std::initializer_list<std::string>({"<", "<=", ">", ">="}));
-
-        m_operators.emplace_back(AST_Node_Type::Shift);
-        m_operator_matches.emplace_back(std::initializer_list<std::string>({"<<", ">>"}));
-
-        //We share precedence here but then separate them later
-        m_operators.emplace_back(AST_Node_Type::Addition);
-        m_operator_matches.emplace_back(std::initializer_list<std::string>({"+", "-"}));
-
-        //We share precedence here but then separate them later
-        m_operators.emplace_back(AST_Node_Type::Multiplication);
-        m_operator_matches.emplace_back(std::initializer_list<std::string>({"*", "/", "%"}));
-
-        for (auto & elem : m_alphabet) {
-          std::fill(std::begin(elem), std::end(elem), false);
-        }
-
-        m_alphabet[detail::symbol_alphabet][static_cast<int>('?')]=true;
-        m_alphabet[detail::symbol_alphabet][static_cast<int>('+')]=true;
-        m_alphabet[detail::symbol_alphabet][static_cast<int>('-')]=true;
-        m_alphabet[detail::symbol_alphabet][static_cast<int>('*')]=true;
-        m_alphabet[detail::symbol_alphabet][static_cast<int>('/')]=true;
-        m_alphabet[detail::symbol_alphabet][static_cast<int>('|')]=true;
-        m_alphabet[detail::symbol_alphabet][static_cast<int>('&')]=true;
-        m_alphabet[detail::symbol_alphabet][static_cast<int>('^')]=true;
-        m_alphabet[detail::symbol_alphabet][static_cast<int>('=')]=true;
-        m_alphabet[detail::symbol_alphabet][static_cast<int>('.')]=true;
-        m_alphabet[detail::symbol_alphabet][static_cast<int>('<')]=true;
-        m_alphabet[detail::symbol_alphabet][static_cast<int>('>')]=true;
-
-        for ( int c = 'a' ; c <= 'z' ; ++c ) { m_alphabet[detail::keyword_alphabet][c]=true; }
-        for ( int c = 'A' ; c <= 'Z' ; ++c ) { m_alphabet[detail::keyword_alphabet][c]=true; }
-        for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::keyword_alphabet][c]=true; }
-        m_alphabet[detail::keyword_alphabet][static_cast<int>('_')]=true;
-
-        for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::int_alphabet][c]=true; }
-        for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::float_alphabet][c]=true; }
-        m_alphabet[detail::float_alphabet][static_cast<int>('.')]=true;
-
-        for ( int c = '0' ; c <= '9' ; ++c ) { m_alphabet[detail::hex_alphabet][c]=true; }
-        for ( int c = 'a' ; c <= 'f' ; ++c ) { m_alphabet[detail::hex_alphabet][c]=true; }
-        for ( int c = 'A' ; c <= 'F' ; ++c ) { m_alphabet[detail::hex_alphabet][c]=true; }
-
-        m_alphabet[detail::x_alphabet][static_cast<int>('x')]=true;
-        m_alphabet[detail::x_alphabet][static_cast<int>('X')]=true;
-
-        for ( int c = '0' ; c <= '1' ; ++c ) { m_alphabet[detail::bin_alphabet][c]=true; }
-        m_alphabet[detail::b_alphabet][static_cast<int>('b')]=true;
-        m_alphabet[detail::b_alphabet][static_cast<int>('B')]=true;
-
-        for ( int c = 'a' ; c <= 'z' ; ++c ) { m_alphabet[detail::id_alphabet][c]=true; }
-        for ( int c = 'A' ; c <= 'Z' ; ++c ) { m_alphabet[detail::id_alphabet][c]=true; }
-        m_alphabet[detail::id_alphabet][static_cast<int>('_')] = true;
-
-        m_alphabet[detail::white_alphabet][static_cast<int>(' ')]=true;
-        m_alphabet[detail::white_alphabet][static_cast<int>('\t')]=true;
-
-        m_alphabet[detail::int_suffix_alphabet][static_cast<int>('l')] = true;
-        m_alphabet[detail::int_suffix_alphabet][static_cast<int>('L')] = true;
-        m_alphabet[detail::int_suffix_alphabet][static_cast<int>('u')] = true;
-        m_alphabet[detail::int_suffix_alphabet][static_cast<int>('U')] = true;
-
-        m_alphabet[detail::float_suffix_alphabet][static_cast<int>('l')] = true;
-        m_alphabet[detail::float_suffix_alphabet][static_cast<int>('L')] = true;
-        m_alphabet[detail::float_suffix_alphabet][static_cast<int>('f')] = true;
-        m_alphabet[detail::float_suffix_alphabet][static_cast<int>('F')] = true;
-      }
 
       /// test a char in an m_alphabet
       bool char_in_alphabet(char c, detail::Alphabet a) const { return m_alphabet[a][static_cast<uint8_t>(c)]; }
@@ -423,16 +435,16 @@ namespace chaiscript
 
       /// Skips any multi-line or single-line comment
       bool SkipComment() {
-        if (Symbol_(m_multiline_comment_begin.c_str())) {
+        if (Symbol_(m_multiline_comment_begin)) {
           while (m_position.has_more()) {
-            if (Symbol_(m_multiline_comment_end.c_str())) {
+            if (Symbol_(m_multiline_comment_end)) {
               break;
             } else if (!Eol_()) {
               ++m_position;
             }
           }
           return true;
-        } else if (Symbol_(m_singleline_comment.c_str())) {
+        } else if (Symbol_(m_singleline_comment)) {
           while (m_position.has_more()) {
             if (Symbol_("\r\n")) {
               m_position -= 2;
@@ -621,11 +633,11 @@ namespace chaiscript
 
         if (float_)
         {
-          return const_var(std::stof(t_val.substr(0,i)));
+          return const_var(parse_num<float>(t_val.substr(0,i)));
         } else if (long_) {
-          return const_var(std::stold(t_val.substr(0,i)));
+          return const_var(parse_num<long double>(t_val.substr(0,i)));
         } else {
-          return const_var(std::stod(t_val.substr(0,i)));
+          return const_var(parse_num<double>(t_val.substr(0,i)));
         }
       }
 
@@ -893,8 +905,8 @@ namespace chaiscript
                 in_quote = !in_quote;
               } else if (*m_position == '}' && !in_quote) {
                 --in_interpolation;
-              } 
-              
+              }
+
               if (prev_char == '\\') {
                 prev_char = 0;
               } else {

@@ -21,17 +21,17 @@ namespace chaiscript {
       class bad_any_cast : public std::bad_cast
       {
         public:
-          bad_any_cast() CHAISCRIPT_NOEXCEPT
+          bad_any_cast() noexcept
             : m_what("bad any cast")
           {
           }
 
           bad_any_cast(const bad_any_cast &) = default;
 
-          virtual ~bad_any_cast() CHAISCRIPT_NOEXCEPT {}
+          ~bad_any_cast() noexcept override = default;
 
           /// \brief Description of what error occurred
-          virtual const char * what() const CHAISCRIPT_NOEXCEPT CHAISCRIPT_OVERRIDE
+          const char * what() const noexcept override
           {
             return m_what.c_str();
           }
@@ -53,9 +53,10 @@ namespace chaiscript {
 
           Data &operator=(const Data &) = delete;
 
-          virtual ~Data() {}
+          virtual ~Data() = default;
 
           virtual void *data() = 0;
+
           const std::type_info &type() const
           {
             return m_type;
@@ -74,14 +75,12 @@ namespace chaiscript {
             {
             }
 
-            virtual ~Data_Impl() {}
-
-            virtual void *data() CHAISCRIPT_OVERRIDE
+            virtual void *data() override
             {
               return &m_data;
             }
 
-            std::unique_ptr<Data> clone() const CHAISCRIPT_OVERRIDE
+            std::unique_ptr<Data> clone() const override
             {
               return std::unique_ptr<Data>(new Data_Impl<T>(m_data));
             }
@@ -96,6 +95,8 @@ namespace chaiscript {
       public:
         // construct/copy/destruct
         Any() = default;
+        Any(Any &&) = default;
+        Any &operator=(Any &&t_any) = default;
 
         Any(const Any &t_any) 
         { 
@@ -107,10 +108,6 @@ namespace chaiscript {
           }
         }
 
-#if !defined(_MSC_VER) || _MSC_VER  != 1800
-        Any(Any &&) = default;
-        Any &operator=(Any &&t_any) = default;
-#endif
 
         template<typename ValueType,
           typename = typename std::enable_if<!std::is_same<Any, typename std::decay<ValueType>::type>::value>::type>
@@ -138,10 +135,6 @@ namespace chaiscript {
             }
           }
 
-
-        ~Any()
-        {
-        }
 
         // modifiers
         Any & swap(Any &t_other)

@@ -30,7 +30,7 @@ namespace chaiscript
     {
       public:
         bad_boxed_cast(Type_Info t_from, const std::type_info &t_to,
-            std::string t_what) CHAISCRIPT_NOEXCEPT
+            std::string t_what) noexcept
           : from(std::move(t_from)), to(&t_to), m_what(std::move(t_what))
         {
         }
@@ -40,16 +40,16 @@ namespace chaiscript
         {
         }
 
-        explicit bad_boxed_cast(std::string t_what) CHAISCRIPT_NOEXCEPT
+        explicit bad_boxed_cast(std::string t_what) noexcept
           : to(nullptr), m_what(std::move(t_what))
         {
         }
 
         bad_boxed_cast(const bad_boxed_cast &) = default;
-        virtual ~bad_boxed_cast() CHAISCRIPT_NOEXCEPT {}
+        virtual ~bad_boxed_cast() noexcept = default;
 
         /// \brief Description of what error occurred
-        virtual const char * what() const CHAISCRIPT_NOEXCEPT CHAISCRIPT_OVERRIDE
+        virtual const char * what() const noexcept override
         {
           return m_what.c_str();
         }

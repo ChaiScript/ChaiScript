@@ -56,14 +56,14 @@ namespace chaiscript
     class reserved_word_error : public std::runtime_error
     {
       public:
-        reserved_word_error(const std::string &t_word) CHAISCRIPT_NOEXCEPT
+        explicit reserved_word_error(const std::string &t_word) noexcept
           : std::runtime_error("Reserved word not allowed in object name: " + t_word), m_word(t_word)
         {
         }
 
         reserved_word_error(const reserved_word_error &) = default;
 
-        virtual ~reserved_word_error() CHAISCRIPT_NOEXCEPT {}
+        virtual ~reserved_word_error() noexcept = default;
 
         std::string word() const
         {
@@ -78,14 +78,14 @@ namespace chaiscript
     class illegal_name_error : public std::runtime_error
     {
       public:
-        illegal_name_error(const std::string &t_name) CHAISCRIPT_NOEXCEPT
+        explicit illegal_name_error(const std::string &t_name) noexcept
           : std::runtime_error("Reserved name not allowed in object name: " + t_name), m_name(t_name)
         {
         }
 
         illegal_name_error(const illegal_name_error &) = default;
 
-        virtual ~illegal_name_error() CHAISCRIPT_NOEXCEPT {}
+        virtual ~illegal_name_error() noexcept = default;
 
         std::string name() const
         {
@@ -101,14 +101,14 @@ namespace chaiscript
     class name_conflict_error : public std::runtime_error
     {
       public:
-        name_conflict_error(const std::string &t_name) CHAISCRIPT_NOEXCEPT
+        explicit name_conflict_error(const std::string &t_name) noexcept
           : std::runtime_error("Name already exists in current context " + t_name), m_name(t_name)
         {
         }
 
         name_conflict_error(const name_conflict_error &) = default;
 
-        virtual ~name_conflict_error() CHAISCRIPT_NOEXCEPT {}
+        virtual ~name_conflict_error() noexcept = default;
 
         std::string name() const
         {
@@ -125,13 +125,13 @@ namespace chaiscript
     class global_non_const : public std::runtime_error
     {
       public:
-        global_non_const() CHAISCRIPT_NOEXCEPT
+        global_non_const() noexcept
           : std::runtime_error("a global object must be const")
         {
         }
 
         global_non_const(const global_non_const &) = default;
-        virtual ~global_non_const() CHAISCRIPT_NOEXCEPT {}
+        virtual ~global_non_const() noexcept = default;
     };
   }
 
@@ -194,30 +194,28 @@ namespace chaiscript
           apply_globals(m_globals.begin(), m_globals.end(), t_engine);
         }
 
-      ~Module()
-      {
-      }
-
       bool has_function(const Proxy_Function &new_f, const std::string &name)
       {
-        return std::any_of(m_funcs.begin(), m_funcs.end(), [&](const std::pair<Proxy_Function, std::string> &existing_f) {
-          return existing_f.second == name && *(existing_f.first) == *(new_f);
-          });
+        return std::any_of(m_funcs.begin(), m_funcs.end(), 
+            [&](const std::pair<Proxy_Function, std::string> &existing_f) {
+              return existing_f.second == name && *(existing_f.first) == *(new_f);
+            }
+          );
       }
       
 
     private:
-      std::vector<std::pair<Type_Info, std::string> > m_typeinfos;
-      std::vector<std::pair<Proxy_Function, std::string> > m_funcs;
-      std::vector<std::pair<Boxed_Value, std::string> > m_globals;
+      std::vector<std::pair<Type_Info, std::string>> m_typeinfos;
+      std::vector<std::pair<Proxy_Function, std::string>> m_funcs;
+      std::vector<std::pair<Boxed_Value, std::string>> m_globals;
       std::vector<std::string> m_evals;
       std::vector<Type_Conversion> m_conversions;
 
       template<typename T, typename InItr>
         static void apply(InItr begin, const InItr end, T &t) 
         {
-          for_each(begin, end, [&t](typename std::iterator_traits<InItr>::reference obj)
-              {
+          for_each(begin, end, 
+              [&t](const auto &obj) {
                 try {
                   t.add(obj.first, obj.second);
                 } catch (const chaiscript::exception::name_conflict_error &) {
@@ -267,7 +265,7 @@ namespace chaiscript
     /// A Proxy_Function implementation that is able to take
     /// a vector of Proxy_Functions and perform a dispatch on them. It is 
     /// used specifically in the case of dealing with Function object variables
-    class Dispatch_Function : public dispatch::Proxy_Function_Base
+    class Dispatch_Function final : public dispatch::Proxy_Function_Base
     {
       public:
         Dispatch_Function(std::vector<Proxy_Function> t_funcs)
@@ -276,7 +274,7 @@ namespace chaiscript
         {
         }
 
-        virtual bool operator==(const dispatch::Proxy_Function_Base &rhs) const CHAISCRIPT_OVERRIDE
+        bool operator==(const dispatch::Proxy_Function_Base &rhs) const override
         {
           try {
             const auto &dispatch_fun = dynamic_cast<const Dispatch_Function &>(rhs);
@@ -286,9 +284,7 @@ namespace chaiscript
           }
         }
 
-        virtual ~Dispatch_Function() {}
-
-        virtual std::vector<Const_Proxy_Function> get_contained_functions() const CHAISCRIPT_OVERRIDE
+        std::vector<Const_Proxy_Function> get_contained_functions() const override
         {
           return std::vector<Const_Proxy_Function>(m_funcs.begin(), m_funcs.end());
         }
@@ -314,19 +310,19 @@ namespace chaiscript
           return arity;
         }
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+        bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
         {
           return std::any_of(m_funcs.cbegin(), m_funcs.cend(),
                              [&vals, &t_conversions](const Proxy_Function &f){ return f->call_match(vals, t_conversions); });
         }
 
-        virtual std::string annotation() const CHAISCRIPT_OVERRIDE
+        std::string annotation() const override
         {
           return "Multiple method dispatch function wrapper.";
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const CHAISCRIPT_OVERRIDE
+        Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
           return dispatch::dispatch(m_funcs, params, t_conversions);
         }
@@ -591,23 +587,21 @@ namespace chaiscript
         }
 
         /// Adds a new scope to the stack
-        void new_scope(Stack_Holder &t_holder)
+        static void new_scope(Stack_Holder &t_holder)
         {
           get_stack_data(t_holder).emplace_back();
           t_holder.call_params.emplace_back();
         }
 
         /// Pops the current scope from the stack
-        void pop_scope(Stack_Holder &t_holder)
+        static void pop_scope(Stack_Holder &t_holder)
         {
           t_holder.call_params.pop_back();
           StackData &stack = get_stack_data(t_holder);
-          if (stack.size() > 1)
-          {
-            stack.pop_back();
-          } else {
-            throw std::range_error("Unable to pop global stack");
-          }
+
+          assert(!stack.empty());
+
+          stack.pop_back();
         }
 
 
@@ -910,18 +904,16 @@ namespace chaiscript
           return m_conversions;
         }
 
-        bool is_attribute_call(const std::vector<Proxy_Function> &t_funs, const std::vector<Boxed_Value> &t_params,
-            bool t_has_params, const Type_Conversions_State &t_conversions) const
+        static bool is_attribute_call(const std::vector<Proxy_Function> &t_funs, const std::vector<Boxed_Value> &t_params,
+            bool t_has_params, const Type_Conversions_State &t_conversions)
         {
           if (!t_has_params || t_params.empty()) {
             return false;
           }
 
           for (const auto &fun : t_funs) {
-            if (fun->is_attribute_function()) {
-              if (fun->compare_first_type(t_params[0], t_conversions)) {
-                return true;
-              }
+            if (fun->is_attribute_function()
+                && fun->compare_first_type(t_params[0], t_conversions)) {
             }
           }
 
@@ -1117,7 +1109,7 @@ namespace chaiscript
           const Const_Proxy_Function &f = this->boxed_cast<Const_Proxy_Function>(params[0]);
           const Type_Conversions_State convs(m_conversions, m_conversions.conversion_saves());
 
-          return Boxed_Value(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end()), convs));
+          return const_var(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end()), convs));
         }
 
         /// Dump all system info to stdout
@@ -1356,15 +1348,9 @@ namespace chaiscript
             const auto lhssize = lhsparamtypes.size();
             const auto rhssize = rhsparamtypes.size();
 
-#ifdef CHAISCRIPT_HAS_MAGIC_STATICS
-            static auto boxed_type = user_type<Boxed_Value>();
-            static auto boxed_pod_type = user_type<Boxed_Number>();
-            static auto dynamic_type = user_type<dispatch::Dynamic_Object>();
-#else
-            auto boxed_type = user_type<Boxed_Value>();
-            auto boxed_pod_type = user_type<Boxed_Number>();
-            auto dynamic_type = user_type<dispatch::Dynamic_Object>();
-#endif
+            constexpr auto boxed_type = user_type<Boxed_Value>();
+            constexpr auto boxed_pod_type = user_type<Boxed_Number>();
+            constexpr auto dynamic_type = user_type<dispatch::Dynamic_Object>();
 
             for (size_t i = 1; i < lhssize && i < rhssize; ++i)
             {
