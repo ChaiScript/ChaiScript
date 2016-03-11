@@ -28,10 +28,10 @@ namespace chaiscript {
 
           bad_any_cast(const bad_any_cast &) = default;
 
-          virtual ~bad_any_cast() noexcept {}
+          ~bad_any_cast() noexcept override = default;
 
           /// \brief Description of what error occurred
-          virtual const char * what() const noexcept override
+          const char * what() const noexcept override
           {
             return m_what.c_str();
           }
@@ -53,9 +53,10 @@ namespace chaiscript {
 
           Data &operator=(const Data &) = delete;
 
-          virtual ~Data() {}
+          virtual ~Data() = default;
 
           virtual void *data() = 0;
+
           const std::type_info &type() const
           {
             return m_type;
@@ -73,8 +74,6 @@ namespace chaiscript {
                 m_data(std::move(t_type))
             {
             }
-
-            virtual ~Data_Impl() {}
 
             virtual void *data() override
             {
@@ -96,6 +95,8 @@ namespace chaiscript {
       public:
         // construct/copy/destruct
         Any() = default;
+        Any(Any &&) = default;
+        Any &operator=(Any &&t_any) = default;
 
         Any(const Any &t_any) 
         { 
@@ -107,8 +108,6 @@ namespace chaiscript {
           }
         }
 
-        Any(Any &&) = default;
-        Any &operator=(Any &&t_any) = default;
 
         template<typename ValueType,
           typename = typename std::enable_if<!std::is_same<Any, typename std::decay<ValueType>::type>::value>::type>
@@ -136,10 +135,6 @@ namespace chaiscript {
             }
           }
 
-
-        ~Any()
-        {
-        }
 
         // modifiers
         Any & swap(Any &t_other)
