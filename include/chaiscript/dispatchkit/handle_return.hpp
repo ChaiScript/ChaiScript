@@ -268,7 +268,7 @@ namespace chaiscript
         {
           static Boxed_Value handle()
           {
-            return Boxed_Value(Boxed_Value::Void_Type());
+            return void_var();
           }
         };
     }

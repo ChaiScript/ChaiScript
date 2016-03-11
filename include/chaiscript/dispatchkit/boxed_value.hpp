@@ -411,6 +411,11 @@ namespace chaiscript
       return detail::const_var_impl(t);
     }
 
+  inline Boxed_Value void_var() {
+    static const auto v = Boxed_Value(Boxed_Value::Void_Type());
+    return v;
+  }
+
   inline Boxed_Value const_var(bool b) {
     static const auto t = detail::const_var_impl(true);
     static const auto f = detail::const_var_impl(false);

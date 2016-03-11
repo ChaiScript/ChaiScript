@@ -752,7 +752,7 @@ namespace chaiscript
           } catch (const exception::name_conflict_error &e) {
             throw exception::eval_error("Function redefined '" + e.name() + "'");
           }
-          return Boxed_Value();
+          return void_var();
         }
 
     };
@@ -778,7 +778,7 @@ namespace chaiscript
             // loop was broken intentionally
           }
 
-          return Boxed_Value();
+          return void_var();
         }
     };
 
@@ -795,7 +795,7 @@ namespace chaiscript
 
           children[1]->eval(t_ss);
 
-          return Boxed_Value();
+          return void_var();
         }
     };
 
@@ -839,7 +839,7 @@ namespace chaiscript
             }
           }
 
-          return Boxed_Value();
+          return void_var();
         }
 
     };
@@ -871,7 +871,7 @@ namespace chaiscript
             // loop broken
           }
 
-          return Boxed_Value();
+          return void_var();
         }
 
     };
@@ -913,7 +913,7 @@ namespace chaiscript
             }
             ++currentCase;
           }
-          return Boxed_Value();
+          return void_var();
         }
 
         mutable std::atomic_uint_fast32_t m_loc;
@@ -929,7 +929,7 @@ namespace chaiscript
 
           children[1]->eval(t_ss);
 
-          return Boxed_Value();
+          return void_var();
         }
     };
    
@@ -943,7 +943,7 @@ namespace chaiscript
 
           children[0]->eval(t_ss);
 
-          return Boxed_Value();
+          return void_var();
         }
     };
 
@@ -1019,7 +1019,7 @@ namespace chaiscript
             throw detail::Return_Value(children[0]->eval(t_ss));
           }
           else {
-            throw detail::Return_Value(Boxed_Value());
+            throw detail::Return_Value(void_var());
           }
         }
     };
@@ -1038,7 +1038,7 @@ namespace chaiscript
               }
               return children.back()->eval(t_ss);
             } else {
-              return Boxed_Value();
+              return void_var();
             }
           } catch (const detail::Continue_Loop &) {
             throw exception::eval_error("Unexpected `continue` statement outside of a loop");
@@ -1362,7 +1362,7 @@ namespace chaiscript
           } catch (const exception::name_conflict_error &e) {
             throw exception::eval_error("Method redefined '" + e.name() + "'");
           }
-          return Boxed_Value();
+          return void_var();
         }
 
     };
@@ -1397,7 +1397,7 @@ namespace chaiscript
           } catch (const exception::name_conflict_error &e) {
             throw exception::eval_error("Attribute redefined '" + e.name() + "'");
           }
-          return Boxed_Value();
+          return void_var();
         }
 
     };
