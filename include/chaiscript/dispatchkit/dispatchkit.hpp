@@ -267,7 +267,7 @@ namespace chaiscript
     /// A Proxy_Function implementation that is able to take
     /// a vector of Proxy_Functions and perform a dispatch on them. It is 
     /// used specifically in the case of dealing with Function object variables
-    class Dispatch_Function : public dispatch::Proxy_Function_Base
+    class Dispatch_Function final : public dispatch::Proxy_Function_Base
     {
       public:
         Dispatch_Function(std::vector<Proxy_Function> t_funcs)
@@ -276,7 +276,7 @@ namespace chaiscript
         {
         }
 
-        virtual bool operator==(const dispatch::Proxy_Function_Base &rhs) const override
+        bool operator==(const dispatch::Proxy_Function_Base &rhs) const override
         {
           try {
             const auto &dispatch_fun = dynamic_cast<const Dispatch_Function &>(rhs);
@@ -286,9 +286,7 @@ namespace chaiscript
           }
         }
 
-        virtual ~Dispatch_Function() {}
-
-        virtual std::vector<Const_Proxy_Function> get_contained_functions() const override
+        std::vector<Const_Proxy_Function> get_contained_functions() const override
         {
           return std::vector<Const_Proxy_Function>(m_funcs.begin(), m_funcs.end());
         }
@@ -314,19 +312,19 @@ namespace chaiscript
           return arity;
         }
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
+        bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
         {
           return std::any_of(m_funcs.cbegin(), m_funcs.cend(),
                              [&vals, &t_conversions](const Proxy_Function &f){ return f->call_match(vals, t_conversions); });
         }
 
-        virtual std::string annotation() const override
+        std::string annotation() const override
         {
           return "Multiple method dispatch function wrapper.";
         }
 
       protected:
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+        Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
           return dispatch::dispatch(m_funcs, params, t_conversions);
         }
