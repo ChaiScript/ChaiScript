@@ -23,12 +23,11 @@ namespace chaiscript
 {
   namespace detail
   {
-    /// \todo make this a variadic template
     struct Exception_Handler_Base
     {
       virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) = 0;
 
-      virtual ~Exception_Handler_Base() {}
+      virtual ~Exception_Handler_Base() = default;
 
       protected:
         template<typename T>
@@ -38,65 +37,12 @@ namespace chaiscript
         }
     };
 
-    template<typename T1>
-      struct Exception_Handler_Impl1 : Exception_Handler_Base
+    template<typename ... T>
+      struct Exception_Handler_Impl : Exception_Handler_Base
       {
-        virtual ~Exception_Handler_Impl1() {}
-
-        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) override
+        void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) override
         {
-          throw_type<T1>(bv, t_engine);
-        }
-      };
-    template<typename T1, typename T2>
-      struct Exception_Handler_Impl2 : Exception_Handler_Base
-      {
-        virtual ~Exception_Handler_Impl2() {}
-
-        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) override
-        {
-          throw_type<T1>(bv, t_engine);
-          throw_type<T2>(bv, t_engine);
-        }
-      };
-
-    template<typename T1, typename T2, typename T3>
-      struct Exception_Handler_Impl3 : Exception_Handler_Base
-      {
-        virtual ~Exception_Handler_Impl3() {}
-
-        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) override
-        {
-          throw_type<T1>(bv, t_engine);
-          throw_type<T2>(bv, t_engine);
-          throw_type<T3>(bv, t_engine);
-        }
-      };
-    template<typename T1, typename T2, typename T3, typename T4>
-      struct Exception_Handler_Impl4 : Exception_Handler_Base
-      {
-        virtual ~Exception_Handler_Impl4() {}
-
-        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) override
-        {
-          throw_type<T1>(bv, t_engine);
-          throw_type<T2>(bv, t_engine);
-          throw_type<T3>(bv, t_engine);
-          throw_type<T4>(bv, t_engine);
-        }
-      };
-    template<typename T1, typename T2, typename T3, typename T4, typename T5>
-      struct Exception_Handler_Impl5 : Exception_Handler_Base
-      {
-        virtual ~Exception_Handler_Impl5() {}
-
-        virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) override
-        {
-          throw_type<T1>(bv, t_engine);
-          throw_type<T2>(bv, t_engine);
-          throw_type<T3>(bv, t_engine);
-          throw_type<T4>(bv, t_engine);
-          throw_type<T5>(bv, t_engine);
+          (void)std::initializer_list<int>{(throw_type<T>(bv, t_engine), 0)...};
         }
       };
   }
@@ -155,42 +101,10 @@ namespace chaiscript
 
   /// \brief creates a chaiscript::Exception_Handler which handles one type of exception unboxing
   /// \sa \ref exceptions
-  template<typename T1>
+  template<typename ... T>
   Exception_Handler exception_specification()
   {
-    return Exception_Handler(new detail::Exception_Handler_Impl1<T1>());
-  }
-
-  /// \brief creates a chaiscript::Exception_Handler which handles two types of exception unboxing
-  /// \sa \ref exceptions
-  template<typename T1, typename T2>
-  Exception_Handler exception_specification()
-  {
-    return Exception_Handler(new detail::Exception_Handler_Impl2<T1, T2>());
-  }
-
-  /// \brief creates a chaiscript::Exception_Handler which handles three types of exception unboxing
-  /// \sa \ref exceptions
-  template<typename T1, typename T2, typename T3>
-  Exception_Handler exception_specification()
-  {
-    return Exception_Handler(new detail::Exception_Handler_Impl3<T1, T2, T3>());
-  }
-
-  /// \brief creates a chaiscript::Exception_Handler which handles four types of exception unboxing
-  /// \sa \ref exceptions
-  template<typename T1, typename T2, typename T3, typename T4>
-  Exception_Handler exception_specification()
-  {
-    return Exception_Handler(new detail::Exception_Handler_Impl4<T1, T2, T3, T4>());
-  }
-
-  /// \brief creates a chaiscript::Exception_Handler which handles five types of exception unboxing
-  /// \sa \ref exceptions
-  template<typename T1, typename T2, typename T3, typename T4, typename T5>
-  Exception_Handler exception_specification()
-  {
-    return Exception_Handler(new detail::Exception_Handler_Impl5<T1, T2, T3, T4, T5>());
+    return std::make_shared<detail::Exception_Handler_Impl<T...>>();
   }
 }
 
