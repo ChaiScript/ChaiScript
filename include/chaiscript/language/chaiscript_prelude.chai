@@ -215,6 +215,29 @@ def for_each(container, func) : call_exists(range, container) {
   } 
 } 
 
+def any_of(container, func) : call_exists(range, container) { 
+  var t_range := range(container); 
+  while (!t_range.empty()) { 
+    if (func(t_range.front())) {
+      return true;
+    }
+    t_range.pop_front(); 
+  }
+  false;
+}
+
+def all_of(container, func) : call_exists(range, container) { 
+  var t_range := range(container); 
+  while (!t_range.empty()) { 
+    if (!func(t_range.front())) {
+      return false;
+    }
+    t_range.pop_front(); 
+  }
+
+  true;
+}
+
 def back_inserter(container) {
   bind(push_back, container, _);
 }
