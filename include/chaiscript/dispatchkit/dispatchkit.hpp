@@ -620,7 +620,7 @@ namespace chaiscript
         /// Searches the current stack for an object of the given name
         /// includes a special overload for the _ place holder object to
         /// ensure that it is always in scope.
-        Boxed_Value get_object(const std::string &name, std::atomic_uint_fast32_t &t_loc) const
+        Boxed_Value get_object(const std::string &name, std::atomic_uint_fast32_t &t_loc, Stack_Holder &t_holder) const
         {
           enum class Loc : uint_fast32_t {
             located    = 0x80000000,
@@ -633,7 +633,7 @@ namespace chaiscript
 
           if (loc == 0)
           {
-            auto &stack = get_stack_data();
+            auto &stack = get_stack_data(t_holder);
 
             // Is it in the stack?
             for (auto stack_elem = stack.rbegin(); stack_elem != stack.rend(); ++stack_elem)
@@ -652,7 +652,7 @@ namespace chaiscript
 
             t_loc = static_cast<uint_fast32_t>(Loc::located);
           } else if (loc & static_cast<uint_fast32_t>(Loc::is_local)) {
-            auto &stack = get_stack_data();
+            auto &stack = get_stack_data(t_holder);
 
             return stack[stack.size() - 1 - ((loc & static_cast<uint_fast32_t>(Loc::stack_mask)) >> 16)][loc & static_cast<uint_fast32_t>(Loc::loc_mask)].second;
           }
@@ -1526,6 +1526,10 @@ namespace chaiscript
 
         void add_object(const std::string &t_name, Boxed_Value obj) const {
           m_engine.get().add_object(t_name, std::move(obj), m_stack_holder.get());
+        }
+
+        Boxed_Value get_object(const std::string &t_name, std::atomic_uint_fast32_t &t_loc) const {
+          return m_engine.get().get_object(t_name, t_loc, m_stack_holder.get());
         }
 
       private:
