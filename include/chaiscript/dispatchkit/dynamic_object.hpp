@@ -44,9 +44,7 @@ namespace chaiscript
         {
         }
 
-        Dynamic_Object() : m_type_name(""), m_option_explicit(false)
-        {
-        }
+        Dynamic_Object() = default;
 
         bool is_explicit() const
         {
@@ -114,8 +112,8 @@ namespace chaiscript
         }
 
       private:
-        std::string m_type_name;
-        bool m_option_explicit;
+        const std::string m_type_name = "";
+        bool m_option_explicit = false;
 
         std::map<std::string, Boxed_Value> m_attrs;
     };

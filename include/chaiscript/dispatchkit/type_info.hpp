@@ -40,17 +40,7 @@ namespace chaiscript
       {
       }
 
-      constexpr Type_Info()
-        : m_type_info(nullptr), m_bare_type_info(nullptr),
-          m_flags(1 << is_undef_flag)
-      {
-      }
-
-      Type_Info(Type_Info&&) = default;
-      Type_Info& operator=(Type_Info&&) = default;
-      Type_Info(const Type_Info&) = default;
-      Type_Info& operator=(const Type_Info&) = default;
-
+      constexpr Type_Info() = default;
 
       constexpr bool operator<(const Type_Info &ti) const noexcept
       {
@@ -113,15 +103,15 @@ namespace chaiscript
       }
 
     private:
-      const std::type_info *m_type_info;
-      const std::type_info *m_bare_type_info;
-      unsigned int m_flags;
+      const std::type_info *m_type_info = nullptr;
+      const std::type_info *m_bare_type_info = nullptr;
       static const int is_const_flag = 0;
       static const int is_reference_flag = 1;
       static const int is_pointer_flag = 2;
       static const int is_void_flag = 3;
       static const int is_arithmetic_flag = 4;
       static const int is_undef_flag = 5;
+      unsigned int m_flags = (1 << is_undef_flag);
   };
 
   namespace detail

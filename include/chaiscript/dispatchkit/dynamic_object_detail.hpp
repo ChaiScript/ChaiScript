@@ -211,15 +211,15 @@ namespace chaiscript
             return dc && dc->m_type_name == m_type_name && (*dc->m_func) == (*m_func);
           }
 
-          virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
+          bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
           {
             std::vector<Boxed_Value> new_vals{Boxed_Value(Dynamic_Object(m_type_name))};
             new_vals.insert(new_vals.end(), vals.begin(), vals.end());
 
             return m_func->call_match(new_vals, t_conversions);
-          }    
+          }
 
-          virtual std::string annotation() const override
+          std::string annotation() const override
           {
             return m_func->annotation();
           }
@@ -237,8 +237,8 @@ namespace chaiscript
           }
 
         private:
-          std::string m_type_name;
-          Proxy_Function m_func;
+          const std::string m_type_name;
+          const Proxy_Function m_func;
 
       };
     }

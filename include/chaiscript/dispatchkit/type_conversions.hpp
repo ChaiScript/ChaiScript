@@ -46,7 +46,7 @@ namespace chaiscript
 
         bad_boxed_dynamic_cast(const bad_boxed_dynamic_cast &) = default;
 
-        virtual ~bad_boxed_dynamic_cast() noexcept {}
+        virtual ~bad_boxed_dynamic_cast() noexcept = default;
     };
 
     class bad_boxed_type_cast : public bad_boxed_cast
@@ -70,7 +70,7 @@ namespace chaiscript
 
         bad_boxed_type_cast(const bad_boxed_type_cast &) = default;
 
-        virtual ~bad_boxed_type_cast() noexcept {}
+        virtual ~bad_boxed_type_cast() noexcept = default;
     };
   }
 
@@ -97,7 +97,7 @@ namespace chaiscript
           return true;
         }
 
-        virtual ~Type_Conversion_Base() {}
+        virtual ~Type_Conversion_Base() = default;
 
       protected:
         Type_Conversion_Base(const Type_Info &t_to, const Type_Info &t_from)
@@ -107,8 +107,8 @@ namespace chaiscript
 
 
       private:
-        Type_Info m_to;
-        Type_Info m_from;
+        const Type_Info m_to;
+        const Type_Info m_from;
 
     };
 
@@ -126,7 +126,7 @@ namespace chaiscript
                 if (t_from.is_const())
                 {
                   return Boxed_Value(
-                      [&]()->std::shared_ptr<const To>{
+                      [&](){
                         if (auto data = std::static_pointer_cast<const To>(detail::Cast_Helper<std::shared_ptr<const From> >::cast(t_from, nullptr)))
                         {
                           return data;
@@ -137,7 +137,7 @@ namespace chaiscript
                       );
                 } else {
                   return Boxed_Value(
-                      [&]()->std::shared_ptr<To>{
+                      [&](){
                         if (auto data = std::static_pointer_cast<To>(detail::Cast_Helper<std::shared_ptr<From> >::cast(t_from, nullptr)))
                         {
                           return data;
@@ -182,7 +182,7 @@ namespace chaiscript
                 if (t_from.is_const())
                 {
                   return Boxed_Value(
-                      [&]()->std::shared_ptr<const To>{
+                      [&](){
                         if (auto data = std::dynamic_pointer_cast<const To>(detail::Cast_Helper<std::shared_ptr<const From> >::cast(t_from, nullptr)))
                         {
                           return data;
@@ -193,7 +193,7 @@ namespace chaiscript
                       );
                 } else {
                   return Boxed_Value(
-                      [&]()->std::shared_ptr<To>{
+                      [&](){
                         if (auto data = std::dynamic_pointer_cast<To>(detail::Cast_Helper<std::shared_ptr<From> >::cast(t_from, nullptr)))
                         {
                           return data;
@@ -242,12 +242,12 @@ namespace chaiscript
         {
         }
 
-        virtual Boxed_Value convert_down(const Boxed_Value &t_base) const override
+        Boxed_Value convert_down(const Boxed_Value &t_base) const override
         {
           return Dynamic_Caster<Base, Derived>::cast(t_base);
         }
 
-        virtual Boxed_Value convert(const Boxed_Value &t_derived) const override
+        Boxed_Value convert(const Boxed_Value &t_derived) const override
         {
           return Static_Caster<Derived, Base>::cast(t_derived);
         }
@@ -262,17 +262,18 @@ namespace chaiscript
         {
         }
 
-        virtual Boxed_Value convert_down(const Boxed_Value &t_base) const override
+        Boxed_Value convert_down(const Boxed_Value &t_base) const override
         {
-          throw chaiscript::exception::bad_boxed_dynamic_cast(t_base.get_type_info(), typeid(Derived), "Unable to cast down inheritance hierarchy with non-polymorphic types");
+          throw chaiscript::exception::bad_boxed_dynamic_cast(t_base.get_type_info(), typeid(Derived), 
+              "Unable to cast down inheritance hierarchy with non-polymorphic types");
         }
 
-        virtual bool bidir() const override
+        bool bidir() const override
         {
           return false;
         }
 
-        virtual Boxed_Value convert(const Boxed_Value &t_derived) const override
+        Boxed_Value convert(const Boxed_Value &t_derived) const override
         {
           return Static_Caster<Derived, Base>::cast(t_derived);
         }
@@ -290,12 +291,12 @@ namespace chaiscript
         {
         }
 
-        virtual Boxed_Value convert_down(const Boxed_Value &) const override
+        Boxed_Value convert_down(const Boxed_Value &) const override
         {
           throw chaiscript::exception::bad_boxed_type_cast("No conversion exists");
         }
 
-        virtual Boxed_Value convert(const Boxed_Value &t_from) const override
+        Boxed_Value convert(const Boxed_Value &t_from) const override
         {
           /// \todo better handling of errors from the conversion function
           return m_func(t_from);
@@ -317,11 +318,7 @@ namespace chaiscript
     public:
       struct Conversion_Saves
       {
-        Conversion_Saves()
-          : enabled(false)
-        {}
-
-        bool enabled;
+        bool enabled = false;
         std::vector<Boxed_Value> saves;
       };
 
@@ -350,7 +347,6 @@ namespace chaiscript
           m_num_types(m_conversions.size()),
           m_thread_cache(this),
           m_conversion_saves(this)
-
       {
       }
 
@@ -448,7 +444,7 @@ namespace chaiscript
       {
         chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-        auto itr = find(to, from);
+        const auto itr = find(to, from);
 
         if (itr != m_conversions.end())
         {
