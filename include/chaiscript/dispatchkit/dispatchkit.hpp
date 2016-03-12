@@ -312,7 +312,7 @@ namespace chaiscript
 
         bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
         {
-          return std::any_of(m_funcs.cbegin(), m_funcs.cend(),
+          return std::any_of(std::begin(m_funcs), std::end(m_funcs),
                              [&vals, &t_conversions](const Proxy_Function &f){ return f->call_match(vals, t_conversions); });
         }
 
@@ -911,7 +911,7 @@ namespace chaiscript
             return false;
           }
 
-          return std::any_of(std::cbegin(t_funs), std::cend(t_funs),
+          return std::any_of(std::begin(t_funs), std::end(t_funs),
               [&](const auto &fun) {
                 return fun->is_attribute_function() && fun->compare_first_type(t_params[0], t_conversions);
               }

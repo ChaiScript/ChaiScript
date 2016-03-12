@@ -35,8 +35,7 @@ namespace chaiscript
     /// \returns A std::function object for dispatching
     /// \param[in] funcs the set of functions to dispatch on.
     template<typename FunctionType>
-      std::function<FunctionType>
-      functor(const std::vector<Const_Proxy_Function> &funcs, const Type_Conversions_State *t_conversions)
+      std::function<FunctionType> functor(const std::vector<Const_Proxy_Function> &funcs, const Type_Conversions_State *t_conversions)
       {
         const bool has_arity_match = std::any_of(funcs.begin(), funcs.end(),
             [](const Const_Proxy_Function &f) {
@@ -63,8 +62,7 @@ namespace chaiscript
     /// \returns A std::function object for dispatching
     /// \param[in] func A function to execute.
     template<typename FunctionType>
-      std::function<FunctionType>
-      functor(Const_Proxy_Function func, const Type_Conversions_State *t_conversions)
+      std::function<FunctionType> functor(Const_Proxy_Function func, const Type_Conversions_State *t_conversions)
       {
         return functor<FunctionType>(std::vector<Const_Proxy_Function>({std::move(func)}), t_conversions);
       }
@@ -72,8 +70,7 @@ namespace chaiscript
     /// Helper for automatically unboxing a Boxed_Value that contains a function object
     /// and creating a typesafe C++ function caller from it.
     template<typename FunctionType>
-      std::function<FunctionType>
-      functor(const Boxed_Value &bv, const Type_Conversions_State *t_conversions)
+      std::function<FunctionType> functor(const Boxed_Value &bv, const Type_Conversions_State *t_conversions)
       {
         return functor<FunctionType>(boxed_cast<Const_Proxy_Function >(bv, t_conversions), t_conversions);
       }
