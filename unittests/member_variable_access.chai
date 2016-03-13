@@ -8,4 +8,6 @@ assert_equal(13, t0.val)
 assert_equal(15, t0.constMe().const_val)
 assert_equal(13, t0.constMe().val)
 
+assert_equal(15, t0.get_const_val_ptr())
+assert_equal(15, t0.const_val_ptr)
 
