@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// and Jason Turner (jason@emptycrate.com)
+// and 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_PRELUDE_HPP_
@@ -9,7 +9,7 @@
 
 namespace chaiscript {
 struct ChaiScript_Prelude { 
-  static std::string chaiscript_prelude() {  return R""(
+  static std::string chaiscript_prelude() {  return R"chaiscript(
 
 def lt(l, r) { 
   if (call_exists(`<`, l, r)) { 
@@ -553,7 +553,7 @@ def find(container, value) {
 } 
 
 
-)"";
+)chaiscript";
 }
 
 };

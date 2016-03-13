@@ -453,7 +453,7 @@ namespace chaiscript
         m->add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::get_attr)), "[]");
         m->add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::get_attr)), "[]");
 
-        m->eval(R"chai(
+        m->eval(R"chaiscript(
           def Dynamic_Object::clone() { 
             auto &new_o = Dynamic_Object(this.get_type_name()); 
             for_each(this.get_attrs(), fun[new_o](x) { new_o.get_attr(x.first) = x.second; } ); 
@@ -488,7 +488,7 @@ namespace chaiscript
               return all_of(rhs_attrs, fun[lhs](x) { lhs.has_attr(x.first) && lhs.get_attr(x.first) == x.second; } );
             }
           }
-        )chai");
+        )chaiscript");
 
         m->add(fun(&has_guard), "has_guard");
         m->add(fun(&get_guard), "get_guard");
