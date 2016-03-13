@@ -705,14 +705,40 @@ namespace chaiscript
           if (bv.is_const())
           {
             const Class *o = boxed_cast<const Class *>(bv, &t_conversions);
-            return detail::Handle_Return<const typename std::add_lvalue_reference<T>::type>::handle(o->*m_attr);
+            return do_call_impl<T>(o);
           } else {
             Class *o = boxed_cast<Class *>(bv, &t_conversions);
-            return detail::Handle_Return<typename std::add_lvalue_reference<T>::type>::handle(o->*m_attr);
+            return do_call_impl<T>(o);
           }
         }
 
       private:
+        template<typename Type>
+        auto do_call_impl(Class *o) const -> std::enable_if_t<std::is_pointer<Type>::value, Boxed_Value>
+        {
+          return detail::Handle_Return<Type>::handle(o->*m_attr);
+        }
+
+        template<typename Type>
+        auto do_call_impl(const Class *o) const -> std::enable_if_t<std::is_pointer<Type>::value, Boxed_Value>
+        {
+          return detail::Handle_Return<const Type>::handle(o->*m_attr);
+        }
+
+        template<typename Type>
+        auto do_call_impl(Class *o) const -> std::enable_if_t<!std::is_pointer<Type>::value, Boxed_Value>
+        {
+          return detail::Handle_Return<const typename std::add_lvalue_reference<Type>::type>::handle(o->*m_attr);
+        }
+
+        template<typename Type>
+        auto do_call_impl(const Class *o) const -> std::enable_if_t<!std::is_pointer<Type>::value, Boxed_Value>
+        {
+          return detail::Handle_Return<const typename std::add_lvalue_reference<Type>::type>::handle(o->*m_attr);
+        }
+
+
+
         static std::vector<Type_Info> param_types()
         {
           return {user_type<T>(), user_type<Class>()};
