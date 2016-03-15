@@ -44,9 +44,7 @@ namespace chaiscript
         {
         }
 
-        Dynamic_Object() : m_type_name(""), m_option_explicit(false)
-        {
-        }
+        Dynamic_Object() = default;
 
         bool is_explicit() const
         {
@@ -84,6 +82,10 @@ namespace chaiscript
           }
         }
 
+        bool has_attr(const std::string &t_attr_name) const {
+          return m_attrs.find(t_attr_name) != m_attrs.end();
+        }
+
         Boxed_Value &get_attr(const std::string &t_attr_name)
         {
           return m_attrs[t_attr_name];
@@ -107,15 +109,14 @@ namespace chaiscript
           return get_attr(t_method_name);
         }
 
-
         std::map<std::string, Boxed_Value> get_attrs() const
         {
           return m_attrs;
         }
 
       private:
-        std::string m_type_name;
-        bool m_option_explicit;
+        const std::string m_type_name = "";
+        bool m_option_explicit = false;
 
         std::map<std::string, Boxed_Value> m_attrs;
     };

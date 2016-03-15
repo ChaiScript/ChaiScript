@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// and Jason Turner (jason@emptycrate.com)
+// and 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_PRELUDE_HPP_
@@ -9,7 +9,7 @@
 
 namespace chaiscript {
 struct ChaiScript_Prelude { 
-  static std::string chaiscript_prelude() {  return R""(
+  static std::string chaiscript_prelude() {  return R"chaiscript(
 
 def lt(l, r) { 
   if (call_exists(`<`, l, r)) { 
@@ -214,6 +214,29 @@ def for_each(container, func) : call_exists(range, container) {
     t_range.pop_front(); 
   } 
 } 
+
+def any_of(container, func) : call_exists(range, container) { 
+  var t_range := range(container); 
+  while (!t_range.empty()) { 
+    if (func(t_range.front())) {
+      return true;
+    }
+    t_range.pop_front(); 
+  }
+  false;
+}
+
+def all_of(container, func) : call_exists(range, container) { 
+  var t_range := range(container); 
+  while (!t_range.empty()) { 
+    if (!func(t_range.front())) {
+      return false;
+    }
+    t_range.pop_front(); 
+  }
+
+  true;
+}
 
 def back_inserter(container) {
   bind(push_back, container, _);
@@ -530,7 +553,7 @@ def find(container, value) {
 } 
 
 
-)"";
+)chaiscript";
 }
 
 };

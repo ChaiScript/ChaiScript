@@ -168,7 +168,7 @@ namespace chaiscript
             return m_value;
           } else {
             try {
-              return t_ss->get_object(this->text, m_loc);
+              return t_ss.get_object(this->text, m_loc);
             }
             catch (std::exception &) {
               throw exception::eval_error("Can not find object: " + this->text);

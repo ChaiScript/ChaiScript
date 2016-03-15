@@ -1,0 +1,26 @@
+class MyClass
+{
+  def MyClass()
+  {
+    this.x = 2;
+  }
+
+  var x;
+}
+
+
+var o = MyClass();
+var o2 = MyClass();
+
+o2.x = 5;
+o = o2;
+
+assert_true(o.x == 5)
+assert_true(o == o2)
+
+o2.x = 3;
+
+print(o2.x);
+print(o.x);
+
+assert_true(o != o2)

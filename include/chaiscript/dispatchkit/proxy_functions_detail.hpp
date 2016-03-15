@@ -78,6 +78,7 @@ namespace chaiscript
         {
           try {
             std::vector<Boxed_Value>::size_type i = 0;
+            (void)i;
             (void)params; (void)t_conversions;
             // this is ok because the order of evaluation of initializer lists is well defined
             (void)std::initializer_list<int>{(boxed_cast<Params>(params[i++], &t_conversions), 0)...};

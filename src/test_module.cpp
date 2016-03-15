@@ -11,7 +11,7 @@ class TestBaseType
     TestBaseType() : val(10), const_val(15), mdarray{} { }
     TestBaseType(int) : val(10), const_val(15), mdarray{} { }
     TestBaseType(int *) : val(10), const_val(15), mdarray{} { }
-    
+
     TestBaseType(const TestBaseType &) = default;
     virtual ~TestBaseType() {}
     virtual int func() { return 0; }
@@ -22,6 +22,11 @@ class TestBaseType
 
     int val;
     const int const_val;
+    const int *const_val_ptr = &const_val;
+
+    const int *get_const_val_ptr() {
+      return const_val_ptr;
+    }
 
     int mdarray[2][3][5];
     std::function<int (int)> func_member;
@@ -168,6 +173,8 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::fun(&TestBaseType::func), "func");
   m->add(chaiscript::fun(&TestBaseType::val), "val");
   m->add(chaiscript::fun(&TestBaseType::const_val), "const_val");
+  m->add(chaiscript::fun(&TestBaseType::const_val_ptr), "const_val_ptr");
+  m->add(chaiscript::fun(&TestBaseType::get_const_val_ptr), "get_const_val_ptr");
   m->add(chaiscript::fun(&TestBaseType::base_only_func), "base_only_func");
   m->add(chaiscript::fun(&TestBaseType::set_string_val), "set_string_val");
 

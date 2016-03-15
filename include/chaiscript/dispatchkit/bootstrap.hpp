@@ -442,6 +442,7 @@ namespace chaiscript
         m->add(fun(&dispatch::Dynamic_Object::get_attrs), "get_attrs");
         m->add(fun(&dispatch::Dynamic_Object::set_explicit), "set_explicit");
         m->add(fun(&dispatch::Dynamic_Object::is_explicit), "is_explicit");
+        m->add(fun(&dispatch::Dynamic_Object::has_attr), "has_attr");
 
         m->add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::get_attr)), "get_attr");
         m->add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::get_attr)), "get_attr");
@@ -452,13 +453,42 @@ namespace chaiscript
         m->add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::get_attr)), "[]");
         m->add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::get_attr)), "[]");
 
-        m->eval(R""(
+        m->eval(R"chaiscript(
           def Dynamic_Object::clone() { 
             auto &new_o = Dynamic_Object(this.get_type_name()); 
             for_each(this.get_attrs(), fun[new_o](x) { new_o.get_attr(x.first) = x.second; } ); 
             new_o; 
           }
-          )"");
+
+          def `=`(Dynamic_Object lhs, Dynamic_Object rhs) : lhs.get_type_name() == rhs.get_type_name()
+          {
+            for_each(rhs.get_attrs(), fun[lhs](x) { lhs.get_attr(x.first) = clone(x.second); } ); 
+          }
+
+          def `!=`(Dynamic_Object lhs, Dynamic_Object rhs) : lhs.get_type_name() == rhs.get_type_name()
+          {
+            var rhs_attrs := rhs.get_attrs();
+            var lhs_attrs := lhs.get_attrs();
+
+            if (rhs_attrs.size() != lhs_attrs.size()) {
+              true;
+            } else {
+              return any_of(rhs_attrs, fun[lhs](x) { !lhs.has_attr(x.first) || lhs.get_attr(x.first) != x.second; } );
+            }
+          }
+
+          def `==`(Dynamic_Object lhs, Dynamic_Object rhs) : lhs.get_type_name() == rhs.get_type_name()
+          {
+            var rhs_attrs := rhs.get_attrs();
+            var lhs_attrs := lhs.get_attrs();
+
+            if (rhs_attrs.size() != lhs_attrs.size()) {
+              false;
+            } else {
+              return all_of(rhs_attrs, fun[lhs](x) { lhs.has_attr(x.first) && lhs.get_attr(x.first) == x.second; } );
+            }
+          }
+        )chaiscript");
 
         m->add(fun(&has_guard), "has_guard");
         m->add(fun(&get_guard), "get_guard");

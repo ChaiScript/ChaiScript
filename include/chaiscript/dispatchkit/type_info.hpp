@@ -40,17 +40,7 @@ namespace chaiscript
       {
       }
 
-      constexpr Type_Info()
-        : m_type_info(nullptr), m_bare_type_info(nullptr),
-          m_flags(1 << is_undef_flag)
-      {
-      }
-
-      Type_Info(Type_Info&&) = default;
-      Type_Info& operator=(Type_Info&&) = default;
-      Type_Info(const Type_Info&) = default;
-      Type_Info& operator=(const Type_Info&) = default;
-
+      constexpr Type_Info() = default;
 
       constexpr bool operator<(const Type_Info &ti) const noexcept
       {
@@ -60,24 +50,23 @@ namespace chaiscript
       constexpr bool operator==(const Type_Info &ti) const noexcept
       {
         return ti.m_type_info == m_type_info
-          || (ti.m_type_info && m_type_info && *ti.m_type_info == *m_type_info);
+           || *ti.m_type_info == *m_type_info;
       }
 
       constexpr bool operator==(const std::type_info &ti) const noexcept
       {
-        return m_type_info != nullptr && (*m_type_info) == ti;
+        return !is_undef() && (*m_type_info) == ti;
       }
 
       constexpr bool bare_equal(const Type_Info &ti) const noexcept
       {
-        return ti.m_bare_type_info == m_bare_type_info 
-          || (ti.m_bare_type_info && m_bare_type_info && *ti.m_bare_type_info == *m_bare_type_info);
+        return ti.m_bare_type_info == m_bare_type_info
+           || *ti.m_bare_type_info == *m_bare_type_info;
       }
 
       constexpr bool bare_equal_type_info(const std::type_info &ti) const noexcept
       {
-        return m_bare_type_info != nullptr 
-          && (*m_bare_type_info) == ti;
+        return !is_undef() && (*m_bare_type_info) == ti;
       }
 
       constexpr bool is_const() const noexcept { return (m_flags & (1 << is_const_flag)) != 0; }
@@ -89,7 +78,7 @@ namespace chaiscript
 
       std::string name() const
       {
-        if (m_type_info)
+        if (!is_undef())
         {
           return m_type_info->name();
         } else {
@@ -99,7 +88,7 @@ namespace chaiscript
 
       std::string bare_name() const
       {
-        if (m_bare_type_info)
+        if (!is_undef())
         {
           return m_bare_type_info->name();
         } else {
@@ -113,15 +102,17 @@ namespace chaiscript
       }
 
     private:
-      const std::type_info *m_type_info;
-      const std::type_info *m_bare_type_info;
-      unsigned int m_flags;
+      struct Unknown_Type {};
+
+      const std::type_info *m_type_info = &typeid(Unknown_Type);
+      const std::type_info *m_bare_type_info = &typeid(Unknown_Type);
       static const int is_const_flag = 0;
       static const int is_reference_flag = 1;
       static const int is_pointer_flag = 2;
       static const int is_void_flag = 3;
       static const int is_arithmetic_flag = 4;
       static const int is_undef_flag = 5;
+      unsigned int m_flags = (1 << is_undef_flag);
   };
 
   namespace detail

@@ -60,7 +60,7 @@ namespace chaiscript
 
       static std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> build_alphabet()
       {
-        std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> alphabet = {};
+        std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> alphabet;
 
         for (auto &alpha : alphabet) {
           alpha.fill(false);
