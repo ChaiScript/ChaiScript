@@ -30,38 +30,8 @@ using std::is_convertible;
 using std::is_integral;
 using std::is_floating_point;
 
-namespace {
-    std::string json_escape( const std::string &str ) {
-        std::string output;
-        for( unsigned i = 0; i < str.length(); ++i )
-            switch( str[i] ) {
-                case '\"': output += "\\\""; break;
-                case '\\': output += "\\\\"; break;
-                case '\b': output += "\\b";  break;
-                case '\f': output += "\\f";  break;
-                case '\n': output += "\\n";  break;
-                case '\r': output += "\\r";  break;
-                case '\t': output += "\\t";  break;
-                default  : output += str[i]; break;
-            }
-        return output;
-    }
-
-    bool isspace(const char c)
-    {
-#ifdef CHAISCRIPT_MSVC
-      // MSVC warns on these line in some circumstances
-#pragma warning(push)
-#pragma warning(disable : 6330)
-#endif
-      return ::isspace(c) != 0;
-#ifdef CHAISCRIPT_MSVC
-#pragma warning(pop)
-#endif
 
 
-    }
-}
 
 class JSON
 {
@@ -153,6 +123,7 @@ class JSON
         };
 
         JSON() = default;
+        JSON( std::nullptr_t ) {} 
 
         explicit JSON(Class type)
             : internal(), Type(Class::Null)
@@ -180,11 +151,7 @@ class JSON
         template <typename T>
         JSON( T s, typename enable_if<is_convertible<T,std::string>::value>::type* = nullptr ) : internal( std::string( s ) ), Type( Class::String ){}
 
-        JSON( std::nullptr_t ) : Type( Class::Null ){}
 
-        static JSON Make( Class type ) {
-            return JSON(type);
-        }
 
         static JSON Load( const std::string & );
 
@@ -365,10 +332,25 @@ class JSON
 
             throw std::runtime_error("Unhandled JSON type");
         }
-
-        friend std::ostream& operator<<( std::ostream&, const JSON & );
+        
 
     private:
+        static std::string json_escape( const std::string &str ) {
+            std::string output;
+            for( unsigned i = 0; i < str.length(); ++i )
+                switch( str[i] ) {
+                    case '\"': output += "\\\""; break;
+                    case '\\': output += "\\\\"; break;
+                    case '\b': output += "\\b";  break;
+                    case '\f': output += "\\f";  break;
+                    case '\n': output += "\\n";  break;
+                    case '\r': output += "\\r";  break;
+                    case '\t': output += "\\t";  break;
+                    default  : output += str[i]; break;
+                }
+            return output;
+        }
+
         void set_type( Class type ) {
             if( type == Type )
                 return;
@@ -394,35 +376,29 @@ class JSON
         Class Type = Class::Null;
 };
 
-inline JSON Array() {
-    return JSON::Make( JSON::Class::Array );
-}
 
-template <typename... T>
-inline JSON Array( T... args ) {
-    JSON arr = JSON::Make( JSON::Class::Array );
-    arr.append( args... );
-    return arr;
-}
+struct JSONParser {
+    static bool isspace(const char c)
+    {
+#ifdef CHAISCRIPT_MSVC
+      // MSVC warns on these line in some circumstances
+#pragma warning(push)
+#pragma warning(disable : 6330)
+#endif
+      return ::isspace(c) != 0;
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(pop)
+#endif
 
-inline JSON Object() {
-    return JSON::Make( JSON::Class::Object );
-}
 
-inline std::ostream& operator<<( std::ostream &os, const JSON &json ) {
-    os << json.dump();
-    return os;
-}
-
-namespace {
-    JSON parse_next( const std::string &, size_t & );
-
-    void consume_ws( const std::string &str, size_t &offset ) {
-        while( isspace( str[offset] ) ) ++offset;
     }
 
-    JSON parse_object( const std::string &str, size_t &offset ) {
-        JSON Object = JSON::Make( JSON::Class::Object );
+    static void consume_ws( const std::string &str, size_t &offset ) {
+        while( isspace( str[offset] ) && offset <= str.size() ) ++offset;
+    }
+
+    static JSON parse_object( const std::string &str, size_t &offset ) {
+        JSON Object( JSON::Class::Object );
 
         ++offset;
         consume_ws( str, offset );
@@ -455,8 +431,8 @@ namespace {
         return Object;
     }
 
-    JSON parse_array( const std::string &str, size_t &offset ) {
-        JSON Array = JSON::Make( JSON::Class::Array );
+    static JSON parse_array( const std::string &str, size_t &offset ) {
+        JSON Array( JSON::Class::Array );
         unsigned index = 0;
 
         ++offset;
@@ -483,7 +459,7 @@ namespace {
         return Array;
     }
 
-    JSON parse_string( const std::string &str, size_t &offset ) {
+    static JSON parse_string( const std::string &str, size_t &offset ) {
         std::string val;
         for( char c = str[++offset]; c != '\"' ; c = str[++offset] ) {
             if( c == '\\' ) {
@@ -518,7 +494,7 @@ namespace {
         return JSON(val);
     }
 
-    JSON parse_number( const std::string &str, size_t &offset ) {
+    static JSON parse_number( const std::string &str, size_t &offset ) {
         JSON Number;
         std::string val, exp_str;
         char c = '\0';
@@ -569,7 +545,7 @@ namespace {
         return Number;
     }
 
-    JSON parse_bool( const std::string &str, size_t &offset ) {
+    static JSON parse_bool( const std::string &str, size_t &offset ) {
         JSON Bool;
         if( str.substr( offset, 4 ) == "true" ) {
             offset += 4;
@@ -583,7 +559,7 @@ namespace {
         return Bool;
     }
 
-    JSON parse_null( const std::string &str, size_t &offset ) {
+    static JSON parse_null( const std::string &str, size_t &offset ) {
         if( str.substr( offset, 4 ) != "null" ) {
             throw std::runtime_error(std::string("JSON ERROR: Null: Expected 'null', found '") + str.substr( offset, 4 ) + "'");
         }
@@ -591,7 +567,7 @@ namespace {
         return JSON();
     }
 
-    JSON parse_next( const std::string &str, size_t &offset ) {
+    static JSON parse_next( const std::string &str, size_t &offset ) {
         char value;
         consume_ws( str, offset );
         value = str[offset];
@@ -607,11 +583,12 @@ namespace {
         }
         throw std::runtime_error(std::string("JSON ERROR: Parse: Unexpected starting character '") + value + "'");
     }
-}
+
+};
 
 inline JSON JSON::Load( const std::string &str ) {
-    size_t offset = 0;
-    return parse_next( str, offset );
+  size_t offset = 0;
+  return JSONParser::parse_next( str, offset );
 }
 
 } // End Namespace json
