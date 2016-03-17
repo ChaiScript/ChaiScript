@@ -30,7 +30,7 @@ namespace chaiscript
             {
               std::map<std::string, Boxed_Value> m;
 
-              for (const auto &p : t_json.ObjectRange())
+              for (const auto &p : t_json.object_range())
               {
                 m.insert(std::make_pair(p.first, from_json(p.second)));
               }
@@ -41,7 +41,7 @@ namespace chaiscript
             {
               std::vector<Boxed_Value> vec;
 
-              for (const auto &p : t_json.ArrayRange()) 
+              for (const auto &p : t_json.array_range()) 
               {
                 vec.emplace_back(from_json(p));
               }
@@ -49,13 +49,13 @@ namespace chaiscript
               return Boxed_Value(vec);
             }
           case json::JSON::Class::String:
-            return Boxed_Value(t_json.ToString());
+            return Boxed_Value(t_json.to_string());
           case json::JSON::Class::Floating:
-            return Boxed_Value(t_json.ToFloat());
+            return Boxed_Value(t_json.to_float());
           case json::JSON::Class::Integral:
-            return Boxed_Value(t_json.ToInt());
+            return Boxed_Value(t_json.to_int());
           case json::JSON::Class::Boolean:
-            return Boxed_Value(t_json.ToBool());
+            return Boxed_Value(t_json.to_bool());
         }
 
         throw std::runtime_error("Unknown JSON type");
