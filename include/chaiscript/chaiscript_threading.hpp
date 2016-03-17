@@ -13,7 +13,6 @@
 #ifndef CHAISCRIPT_NO_THREADS
 #include <thread>
 #include <mutex>
-#include <shared_mutex>
 #else
 #ifndef CHAISCRIPT_NO_THREADS_WARNING
 #pragma message ("ChaiScript is compiling without thread safety.")
@@ -46,13 +45,13 @@ namespace chaiscript
         using unique_lock = std::unique_lock<T>;
 
       template<typename T>
-        using shared_lock = std::shared_lock<T>;
+        using shared_lock = std::unique_lock<T>;
 
       template<typename T>
         using lock_guard = std::lock_guard<T>;
 
 
-      using shared_mutex = std::shared_timed_mutex;
+      using shared_mutex = std::mutex;
 
       using std::mutex;
 
