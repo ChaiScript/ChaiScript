@@ -172,56 +172,20 @@ class JSON
         }
 
         template <typename T>
-        JSON( T b, typename enable_if<is_same<T,bool>::value>::type* = nullptr ) : internal( static_cast<bool>(b) ) {}
+        explicit JSON( T b, typename enable_if<is_same<T,bool>::value>::type* = nullptr ) : internal( static_cast<bool>(b) ) {}
 
         template <typename T>
-        JSON( T i, typename enable_if<is_integral<T>::value && !is_same<T,bool>::value>::type* = nullptr ) : internal( static_cast<long>(i) ) {}
+        explicit JSON( T i, typename enable_if<is_integral<T>::value && !is_same<T,bool>::value>::type* = nullptr ) : internal( static_cast<long>(i) ) {}
 
         template <typename T>
-        JSON( T f, typename enable_if<is_floating_point<T>::value>::type* = nullptr ) : internal( static_cast<double>(f) ) {}
+        explicit JSON( T f, typename enable_if<is_floating_point<T>::value>::type* = nullptr ) : internal( static_cast<double>(f) ) {}
 
         template <typename T>
-        JSON( T s, typename enable_if<is_convertible<T,std::string>::value>::type* = nullptr ) : internal( static_cast<std::string>(s) ) {}
+        explicit JSON( T s, typename enable_if<is_convertible<T,std::string>::value>::type* = nullptr ) : internal( static_cast<std::string>(s) ) {}
 
 
 
         static JSON Load( const std::string & );
-
-        template <typename T>
-        void append( T arg ) {
-            internal.set_type( Class::Array ); 
-            internal.List->emplace_back( arg );
-        }
-
-        template <typename T, typename... U>
-        void append( T arg, U... args ) {
-            append( arg ); 
-            append( args... );
-        }
-
-        template <typename T>
-            typename enable_if<is_same<T,bool>::value, JSON&>::type operator=( T b ) {
-                internal = Internal(static_cast<bool>(b));
-                return *this;
-            }
-
-        template <typename T>
-            typename enable_if<is_integral<T>::value && !is_same<T,bool>::value, JSON&>::type operator=( T i ) {
-                internal = Internal(static_cast<long>(i));
-                return *this;
-            }
-
-        template <typename T>
-            typename enable_if<is_floating_point<T>::value, JSON&>::type operator=( T f ) {
-                internal = Internal(static_cast<double>(f));
-                return *this;
-            }
-
-        template <typename T>
-            typename enable_if<is_convertible<T,std::string>::value, JSON&>::type operator=( T s ) {
-                internal = Internal(static_cast<std::string>(s));
-                return *this;
-            }
 
         JSON& operator[]( const std::string &key ) {
             internal.set_type( Class::Object ); 
@@ -235,8 +199,8 @@ class JSON
             }
 
             return internal.List->operator[]( index );
-           
         }
+
 
         JSON &at( const std::string &key ) {
             return operator[]( key );
@@ -253,6 +217,7 @@ class JSON
         const JSON &at( unsigned index ) const {
             return internal.List->at( index );
         }
+
 
         long length() const {
             if( internal.Type == Class::Array ) {
@@ -525,7 +490,6 @@ struct JSONParser {
     }
 
     static JSON parse_number( const std::string &str, size_t &offset ) {
-        JSON Number;
         std::string val, exp_str;
         char c = '\0';
         bool isDouble = false;
@@ -564,29 +528,27 @@ struct JSONParser {
         }
         --offset;
 
-        if( isDouble )
-            Number = chaiscript::parse_num<double>( val ) * std::pow( 10, exp );
-        else {
-            if( !exp_str.empty() )
-                Number = static_cast<double>(chaiscript::parse_num<long>( val )) * std::pow( 10, exp );
-            else
-                Number = chaiscript::parse_num<long>( val );
+        if( isDouble ) {
+            return JSON(chaiscript::parse_num<double>( val ) * std::pow( 10, exp ));
+        } else {
+            if( !exp_str.empty() ) {
+                return JSON(static_cast<double>(chaiscript::parse_num<long>( val )) * std::pow( 10, exp ));
+            } else {
+                return JSON(chaiscript::parse_num<long>( val ));
+            }
         }
-        return Number;
     }
 
     static JSON parse_bool( const std::string &str, size_t &offset ) {
-        JSON Bool;
         if( str.substr( offset, 4 ) == "true" ) {
             offset += 4;
-            Bool = true;
+            return JSON(true);
         } else if( str.substr( offset, 5 ) == "false" ) {
             offset += 5;
-            Bool = false;
+            return JSON(false);
         } else {
             throw std::runtime_error(std::string("JSON ERROR: Bool: Expected 'true' or 'false', found '") + str.substr( offset, 5 ) + "'");
         }
-        return Bool;
     }
 
     static JSON parse_null( const std::string &str, size_t &offset ) {

@@ -102,32 +102,24 @@ namespace chaiscript
 
         try {
           Boxed_Number bn(t_bv);
-          json::JSON obj;
           if (Boxed_Number::is_floating_point(t_bv))
           {
-            obj = bn.get_as<double>();
+            return json::JSON(bn.get_as<double>());
           } else {
-            obj = bn.get_as<long>();
+            return json::JSON(bn.get_as<long>());
           }
-          return obj;
         } catch (const chaiscript::detail::exception::bad_any_cast &) {
           // not a number
         }
 
         try {
-          bool b = boxed_cast<bool>(t_bv);
-          json::JSON obj;
-          obj = b;
-          return obj;
+          return json::JSON(boxed_cast<bool>(t_bv));
         } catch (const chaiscript::exception::bad_boxed_cast &) {
           // not a bool
         }
 
         try {
-          std::string s = boxed_cast<std::string>(t_bv);
-          json::JSON obj;
-          obj = s;
-          return obj;
+          return json::JSON(boxed_cast<std::string>(t_bv));
         } catch (const chaiscript::exception::bad_boxed_cast &) {
           // not a string
         }
