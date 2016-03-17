@@ -205,7 +205,7 @@ bool built_in_type_test(const T &initial, bool ispod)
 
   /** shared_ptr tests **/
 
-  std::shared_ptr<T> ip(new T(initial));
+  auto ip = std::make_shared<T>(initial);
 
   passed &= do_test<T>(var(ip), true, true, true, true, true, 
                                  true, true, true, true, true,
@@ -220,7 +220,7 @@ bool built_in_type_test(const T &initial, bool ispod)
                                        ispod, ispod, ispod, false, true);
 
   /** const shared_ptr tests **/
-  std::shared_ptr<const T> ipc(new T(initial));
+  auto ipc = std::make_shared<const T>(T(initial));
 
   passed &= do_test<T>(var(ipc), true, true, false, true, false, 
                                        true, false, true, false, true,
