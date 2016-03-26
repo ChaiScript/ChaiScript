@@ -1196,12 +1196,16 @@ namespace chaiscript
             std::string match;
 
             {
-              // scope for cparser destrutor
+              // scope for cparser destructor
               Char_Parser<std::string> cparser(match, false);
 
               for (auto s = start + 1, end = m_position - 1; s != end; ++s) {
                 cparser.parse(*s, start.line, start.col, *m_filename);
               }
+            }
+
+            if (match.size() != 1) {
+              throw exception::eval_error("Single-quoted strings must be 1 character long", File_Position(m_position.line, m_position.col), *m_filename);
             }
 
             m_match_stack.push_back(make_node<eval::Single_Quoted_String_AST_Node>(match, start.line, start.col));
