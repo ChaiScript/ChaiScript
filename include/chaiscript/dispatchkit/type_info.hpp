@@ -163,6 +163,11 @@ namespace chaiscript
       };
 
     template<typename T>
+      struct Get_Type_Info<std::shared_ptr<T> &> : Get_Type_Info<std::shared_ptr<T>>
+      {
+      };
+
+    template<typename T>
       struct Get_Type_Info<const std::shared_ptr<T> &>
       {
         typedef T type;
