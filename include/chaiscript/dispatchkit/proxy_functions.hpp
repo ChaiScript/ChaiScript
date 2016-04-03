@@ -21,15 +21,34 @@
 #include "../chaiscript_defines.hpp"
 #include "boxed_cast.hpp"
 #include "boxed_value.hpp"
-#include "proxy_functions_detail.hpp"
 #include "type_info.hpp"
 #include "dynamic_object.hpp"
+#include "callable_traits.hpp"
+#include "handle_return.hpp"
 
 namespace chaiscript {
 class Type_Conversions;
 namespace exception {
 class bad_boxed_cast;
-struct arity_error;
+    /**
+     * Exception thrown when there is a mismatch in number of
+     * parameters during Proxy_Function execution
+     */
+    struct arity_error : std::range_error
+    {
+      arity_error(int t_got, int t_expected)
+        : std::range_error("Function dispatch arity mismatch"),
+        got(t_got), expected(t_expected)
+      {
+      }
+
+      arity_error(const arity_error &) = default;
+
+      virtual ~arity_error() noexcept {}
+
+      int got;
+      int expected;
+    };
 }  // namespace exception
 }  // namespace chaiscript
 
@@ -559,6 +578,48 @@ namespace chaiscript
           return "";
         }
 
+        bool operator==(const Proxy_Function_Base &t_func) const override
+        {
+          const auto *t_other = dynamic_cast<const Proxy_Function_Impl_Base *>(&t_func);
+          return 
+            t_other != nullptr && 
+            t_other->m_types.size() == m_types.size() &&
+            [this, &t_other](){
+              auto begin1 = std::begin(m_types);
+              const auto end1 = std::end(m_types);
+              auto begin2 = std::begin(t_other->m_types);
+
+              while (begin1 != end1) {
+                if (*begin1 != *begin2) {
+                  return false;
+                }
+                if (begin1->is_const() != begin2->is_const()) {
+                  return false;
+                }
+                ++begin1;
+                ++begin2;
+              }
+
+              return true;
+            }();
+        }
+
+        template<typename ... Param>
+          static bool compare_types_with_cast_impl(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions)
+          {
+            try {
+              std::vector<Boxed_Value>::size_type i = 0;
+              (void)i; (void)params; (void)t_conversions;
+              // this is ok because the order of evaluation of initializer lists is well defined
+              (void)std::initializer_list<int>{(boxed_cast<Param>(params[i++], &t_conversions), 0)...};
+              return true;
+            } catch (const exception::bad_boxed_cast &) {
+              return false;
+            }
+          }
+
+
+ 
         bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
         {
           return static_cast<int>(vals.size()) == get_arity() 
@@ -566,41 +627,6 @@ namespace chaiscript
         }
 
         virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const = 0;
-    };
-
-
-
-    /// For any callable object
-    template<typename Func, typename Callable>
-      class Proxy_Function_Callable_Impl final : public Proxy_Function_Impl_Base
-    {
-      public:
-        Proxy_Function_Callable_Impl(Callable f)
-          : Proxy_Function_Impl_Base(detail::build_param_type_list(static_cast<Func *>(nullptr))),
-            m_f(std::move(f))
-        {
-        }
-
-        bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
-        {
-          return detail::compare_types_cast(static_cast<Func *>(nullptr), vals, t_conversions);
-        }
-
-        bool operator==(const Proxy_Function_Base &t_func) const override
-        {
-          return dynamic_cast<const Proxy_Function_Callable_Impl<Func, Callable> *>(&t_func) != nullptr;
-        }
-
-
-      protected:
-        Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
-        {
-          typedef typename detail::Function_Signature<Func>::Return_Type Return_Type;
-          return detail::Do_Call<Return_Type>::template go<Func>(m_f, params, t_conversions);
-        }
-
-      private:
-        Callable m_f;
     };
 
 
@@ -615,47 +641,6 @@ namespace chaiscript
         virtual void assign(const std::shared_ptr<const Proxy_Function_Base> &t_rhs) = 0;
     };
 
-    template<typename Func>
-      class Assignable_Proxy_Function_Impl final : public Assignable_Proxy_Function
-    {
-      public:
-        Assignable_Proxy_Function_Impl(std::reference_wrapper<std::function<Func>> t_f, std::shared_ptr<std::function<Func>> t_ptr)
-          : Assignable_Proxy_Function(detail::build_param_type_list(static_cast<Func *>(nullptr))),
-            m_f(std::move(t_f)), m_shared_ptr_holder(std::move(t_ptr))
-        {
-          assert(!m_shared_ptr_holder || m_shared_ptr_holder.get() == &m_f.get());
-        }
-
-        bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
-        {
-          return detail::compare_types_cast(static_cast<Func *>(nullptr), vals, t_conversions);
-        }
-
-        bool operator==(const Proxy_Function_Base &t_func) const override
-        {
-          return dynamic_cast<const Assignable_Proxy_Function_Impl<Func> *>(&t_func) != nullptr;
-        }
-
-        std::function<Func> internal_function() const
-        {
-          return m_f.get();
-        }
-
-        void assign(const std::shared_ptr<const Proxy_Function_Base> &t_rhs) override {
-          m_f.get() = dispatch::functor<Func>(t_rhs, nullptr);
-        }
-
-      protected:
-        Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
-        {
-          return detail::Do_Call<typename std::function<Func>::result_type>::template go<Func>(m_f.get(), params, t_conversions);
-        }
-
-
-      private:
-        std::reference_wrapper<std::function<Func>> m_f;
-        std::shared_ptr<std::function<Func>> m_shared_ptr_holder;
-    };
 
 
     /// Attribute getter Proxy_Function implementation

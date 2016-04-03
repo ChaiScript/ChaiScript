@@ -20,10 +20,18 @@ class Boxed_Number;
 
 namespace chaiscript
 {
+  template<typename T> std::shared_ptr<dispatch::Proxy_Function_Base> fun(const T &t);
+
+  template<typename Ret, typename ... Param>
+    std::shared_ptr<dispatch::Proxy_Function_Base> assignable_fun(
+        std::reference_wrapper<std::function<Ret (Param...)>> t_func,
+        std::shared_ptr<std::function<Ret (Param...)>> t_ptr
+        );
+
   namespace dispatch
   {
-    template<class T, class U> class Proxy_Function_Callable_Impl;
     template<class T> class Assignable_Proxy_Function_Impl;
+
 
     namespace detail
     {
@@ -53,7 +61,7 @@ namespace chaiscript
         {
           static Boxed_Value handle(const std::function<Ret> &f) {
             return Boxed_Value(
-                chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret, std::function<Ret>>>(f)
+                chaiscript::fun(f)
               );
           }
         };
@@ -68,7 +76,7 @@ namespace chaiscript
         {
           static Boxed_Value handle(const std::shared_ptr<std::function<Ret>> &f) {
             return Boxed_Value(
-                chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Assignable_Proxy_Function_Impl<Ret>>(std::ref(*f),f)
+                assignable_fun(std::ref(*f), f)
                 );
           }
         };
@@ -88,14 +96,13 @@ namespace chaiscript
         {
           static Boxed_Value handle(std::function<Ret> &f) {
             return Boxed_Value(
-                chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Assignable_Proxy_Function_Impl<Ret>>(std::ref(f),
-                  std::shared_ptr<std::function<Ret>>())
+                assignable_fun(std::ref(f), std::shared_ptr<std::function<Ret>>())
               );
           }
 
           static Boxed_Value handle(const std::function<Ret> &f) {
             return Boxed_Value(
-                chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret, std::function<Ret>>>(f)
+                chaiscript::fun(f)
               );
           }
         };
