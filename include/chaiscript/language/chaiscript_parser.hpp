@@ -147,7 +147,7 @@ namespace chaiscript
 
 
       static const std::array<AST_Node_Type::Type, 11> &create_operators() {
-        static const std::array<AST_Node_Type::Type, 11> operators = {{
+        static const std::array<AST_Node_Type::Type, 11> operators = { {
           AST_Node_Type::Ternary_Cond,
           AST_Node_Type::Logical_Or,
           AST_Node_Type::Logical_And,
@@ -159,7 +159,7 @@ namespace chaiscript
           AST_Node_Type::Shift,
           AST_Node_Type::Addition,
           AST_Node_Type::Multiplication
-        }};
+        } };
         return operators;
       }
 
@@ -320,7 +320,7 @@ namespace chaiscript
       static std::map<std::string, int> count_fun_calls(const AST_NodePtr &p, bool in_loop) {
         if (p->identifier == AST_Node_Type::Fun_Call) {
           if (p->children[0]->identifier == AST_Node_Type::Id) {
-            return std::map<std::string, int>{{p->children[0]->text, in_loop?99:1}};
+            return std::map<std::string, int>{ {p->children[0]->text, in_loop?99:1} };
           }
           return std::map<std::string, int>();
         } else {
