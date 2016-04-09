@@ -236,6 +236,13 @@ namespace chaiscript
           detail::input_range_type_impl<Const_Bidir_Range<ContainerType> >("Const_" + type, m);
           return m;
         }
+      template<typename ContainerType>
+        ModulePtr input_range_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          input_range_type<ContainerType>(type, *m);
+          return m;
+        }
 
 
       /// Add random_access_container concept to the given ContainerType
@@ -263,6 +270,14 @@ namespace chaiscript
 
           return m;
         }
+      template<typename ContainerType>
+        ModulePtr random_access_container_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          random_access_container_type<ContainerType>(type, *m);
+          return m;
+        }
+
 
 
       /// Add assignable concept to the given ContainerType
@@ -272,6 +287,13 @@ namespace chaiscript
         {
           copy_constructor<ContainerType>(type, m);
           operators::assign<ContainerType>(m);
+          return m;
+        }
+      template<typename ContainerType>
+        ModulePtr assignable_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          assignable_type<ContainerType>(type, *m);
           return m;
         }
 
@@ -286,6 +308,13 @@ namespace chaiscript
           m.add(fun([](ContainerType *a) { a->clear(); } ), "clear");
           return m;
         }
+      template <typename ContainerType>
+        ModulePtr container_type(const std::string& type)
+      {
+        auto m = std::make_shared<Module>();
+        container_type<ContainerType>(type, *m);
+        return m;
+      }
 
 
       /// Add default constructable concept to the given Type
@@ -296,7 +325,13 @@ namespace chaiscript
           m.add(constructor<Type ()>(), type);
           return m;
         }
-
+      template <typename Type>
+        ModulePtr default_constructible_type(const std::string& type)
+        {
+          auto m = std::make_shared<Module>();
+          default_constructible_type<Type>(type, *m);
+          return m;
+        }
 
 
 
@@ -318,7 +353,13 @@ namespace chaiscript
 
           return m;
         }
-
+      template <typename ContainerType>
+        ModulePtr sequence_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          sequence_type<ContainerType>(type, *m);
+          return m;
+        }
 
       /// Add back insertion sequence concept to the given ContainerType
       /// http://www.sgi.com/tech/stl/BackInsertionSequence.html
@@ -354,6 +395,13 @@ namespace chaiscript
               }());
 
           m.add(fun(&ContainerType::pop_back), "pop_back");
+          return m;
+        }
+      template<typename ContainerType>
+        ModulePtr back_insertion_sequence_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          back_insertion_sequence_type<ContainerType>(type, *m);
           return m;
         }
 
@@ -396,6 +444,13 @@ namespace chaiscript
           m.add(fun(static_cast<pop_ptr>(&ContainerType::pop_front)), "pop_front");
           return m;
         }
+      template<typename ContainerType>
+        ModulePtr front_insertion_sequence_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          front_insertion_sequence_type<ContainerType>(type, *m);
+          return m;
+        }
 
 
       /// bootstrap a given PairType
@@ -417,6 +472,13 @@ namespace chaiscript
 
           return m;
         }
+      template<typename PairType>
+        ModulePtr pair_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          pair_type<PairType>(type, *m);
+          return m;
+        }
 
 
 
@@ -428,6 +490,13 @@ namespace chaiscript
         {
           pair_type<typename ContainerType::value_type>(type + "_Pair", m);
 
+          return m;
+        }
+      template<typename ContainerType>
+        ModulePtr pair_associative_container_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          pair_associative_container_type<ContainerType>(type, *m);
           return m;
         }
 
@@ -455,6 +524,13 @@ namespace chaiscript
               }());
 
 
+          return m;
+        }
+      template<typename ContainerType>
+        ModulePtr unique_associative_container_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          unique_associative_container_type<ContainerType>(type, *m);
           return m;
         }
 
@@ -507,6 +583,13 @@ namespace chaiscript
 
           return m;
         }
+      template<typename MapType>
+        ModulePtr map_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          map_type<MapType>(type, *m);
+          return m;
+        }
 
 
       /// hopefully working List type
@@ -524,6 +607,13 @@ namespace chaiscript
           assignable_type<ListType>(type, m);
           input_range_type<ListType>(type, m);
 
+          return m;
+        }
+      template<typename ListType>
+        ModulePtr list_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          list_type<ListType>(type, m);
           return m;
         }
 
@@ -576,6 +666,13 @@ namespace chaiscript
 
           return m;
         }
+      template<typename VectorType>
+        ModulePtr vector_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          vector_type<VectorType>(type, *m);
+          return m;
+        }
 
       /// Add a String container
       /// http://www.sgi.com/tech/stl/basic_string.html
@@ -621,6 +718,13 @@ namespace chaiscript
 
           return m;
         }
+      template<typename String>
+        ModulePtr string_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          string_type<String>(type, *m);
+          return m;
+        }
 
 
 
@@ -635,6 +739,13 @@ namespace chaiscript
           m.add(fun(&FutureType::get), "get");
           m.add(fun(&FutureType::wait), "wait");
 
+          return m;
+        }
+      template<typename FutureType>
+        ModulePtr future_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          future_type<FutureType>(type, *m);
           return m;
         }
     }
