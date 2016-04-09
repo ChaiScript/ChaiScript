@@ -178,12 +178,6 @@ namespace chaiscript
         return *this;
       }
 
-      Module &add(const std::shared_ptr<Module> &m)
-      {
-        m->apply(*this, *this);
-        return *m;
-      }
-
       template<typename Eval, typename Engine>
         void apply(Eval &t_eval, Engine &t_engine) const
         {
