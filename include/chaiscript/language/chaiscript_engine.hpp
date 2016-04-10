@@ -33,14 +33,15 @@
 
 #if defined(_POSIX_VERSION) && !defined(__CYGWIN__) 
 #include <dlfcn.h>
-#else
+#endif
+
+
 #ifdef CHAISCRIPT_WINDOWS
-#define VC_EXTRA_LEAN
-#if !defined(WIN32_LEAN_AND_MEAN)
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
-#endif
+#include "chaiscript_windows.hpp"
+#elif _POSIX_VERSION
+#include "chaiscript_posix.hpp"
+#else
+#include "chaiscript_unknown.hpp"
 #endif
 
 
@@ -49,205 +50,9 @@
 
 namespace chaiscript
 {
-  namespace exception
-  {
-    /// \brief Thrown if an error occurs while attempting to load a binary module
-    struct load_module_error : std::runtime_error
-    {
-      load_module_error(const std::string &t_reason) noexcept
-        : std::runtime_error(t_reason)
-      {
-      }
-
-      load_module_error(const load_module_error &) = default;
-      virtual ~load_module_error() noexcept {}
-    };
-  }
 
   namespace detail
   {
-#if defined(_POSIX_VERSION) && !defined(__CYGWIN__) 
-    struct Loadable_Module
-    {
-      struct DLModule
-      {
-        DLModule(const std::string &t_filename)
-          : m_data(dlopen(t_filename.c_str(), RTLD_NOW))
-        {
-          if (!m_data)
-          {
-            throw chaiscript::exception::load_module_error(dlerror());
-          }
-        }
-
-        DLModule(const DLModule &); // Explicitly unimplemented copy constructor
-        DLModule &operator=(const DLModule &); // Explicitly unimplemented assignment operator
-
-        ~DLModule()
-        {
-          dlclose(m_data);
-        }
-
-        void *m_data;
-      };
-
-      template<typename T>
-        struct DLSym
-        {
-          DLSym(DLModule &t_mod, const std::string &t_symbol)
-            : m_symbol(cast_symbol(dlsym(t_mod.m_data, t_symbol.c_str())))
-          {
-            if (!m_symbol)
-            {
-              throw chaiscript::exception::load_module_error(dlerror());
-            }
-          }
-
-          static T cast_symbol(void *p)
-          {
-            union cast_union
-            {
-              T func_ptr;
-              void *in_ptr;
-            };
-
-            cast_union c;
-            c.in_ptr = p;
-            return c.func_ptr;
-          }
-
-          T m_symbol;
-        };
-
-      Loadable_Module(const std::string &t_module_name, const std::string &t_filename)
-        : m_dlmodule(t_filename), m_func(m_dlmodule, "create_chaiscript_module_" + t_module_name),
-        m_moduleptr(m_func.m_symbol())
-      {
-      }
-
-      DLModule m_dlmodule;
-      DLSym<Create_Module_Func> m_func;
-      ModulePtr m_moduleptr;
-    };
-#else
-
-#ifdef WIN32
-
-
-    struct Loadable_Module
-    {
-      template<typename T>
-        static std::wstring to_wstring(const T &t_str) 
-        {
-          return std::wstring(t_str.begin(), t_str.end());
-        }
-
-      template<typename T>
-        static std::string to_string(const T &t_str)
-        {
-          return std::string(t_str.begin(), t_str.end());
-        }
-
-#if defined(_UNICODE) || defined(UNICODE)
-        template<typename T>
-        static std::wstring to_proper_string(const T &t_str)
-        {
-          return to_wstring(t_str);
-        }
-#else
-      template<typename T>
-        static std::string to_proper_string(const T &t_str)
-        {
-          return to_string(t_str);
-        }
-#endif
-
-      static std::string get_error_message(DWORD t_err)
-      {
-        typedef LPTSTR StringType;
-
-#if defined(_UNICODE) || defined(UNICODE)
-        std::wstring retval = L"Unknown Error";
-#else
-        std::string retval = "Unknown Error";
-#endif
-        StringType lpMsgBuf = nullptr;
-
-        if (FormatMessage(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-            FORMAT_MESSAGE_FROM_SYSTEM |
-            FORMAT_MESSAGE_IGNORE_INSERTS,
-            nullptr,
-            t_err,
-            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            reinterpret_cast<StringType>(&lpMsgBuf),
-            0, nullptr ) != 0 && lpMsgBuf)
-        {
-          retval = lpMsgBuf;
-          LocalFree(lpMsgBuf);
-        }
-
-        return to_string(retval);
-      }
-
-      struct DLModule
-      {
-        DLModule(const std::string &t_filename)
-          : m_data(LoadLibrary(to_proper_string(t_filename).c_str()))
-        {
-          if (!m_data)
-          {
-            throw chaiscript::exception::load_module_error(get_error_message(GetLastError()));
-          }
-        }
-
-        ~DLModule()
-        {
-          FreeLibrary(m_data);
-        }
-
-        HMODULE m_data;
-      };
-
-      template<typename T>
-        struct DLSym
-        {
-          DLSym(DLModule &t_mod, const std::string &t_symbol)
-            : m_symbol(reinterpret_cast<T>(GetProcAddress(t_mod.m_data, t_symbol.c_str())))
-          {
-            if (!m_symbol)
-            {
-              throw chaiscript::exception::load_module_error(get_error_message(GetLastError()));
-            }
-          }
-
-          T m_symbol;
-        };
-
-      Loadable_Module(const std::string &t_module_name, const std::string &t_filename)
-        : m_dlmodule(t_filename), m_func(m_dlmodule, "create_chaiscript_module_" + t_module_name),
-        m_moduleptr(m_func.m_symbol())
-      {
-      }
-
-      DLModule m_dlmodule;
-      DLSym<Create_Module_Func> m_func;
-      ModulePtr m_moduleptr;
-    };
-
-#else
-    struct Loadable_Module
-    {
-      Loadable_Module(const std::string &, const std::string &)
-      {
-        throw chaiscript::exception::load_module_error("Loadable module support not available for your platform");
-      }
-
-      ModulePtr m_moduleptr;
-    };
-#endif
-#endif
-
     typedef std::shared_ptr<Loadable_Module> Loadable_Module_Ptr;
   }
 
@@ -283,8 +88,6 @@ namespace chaiscript
         return rv.retval;
       }
     }
-
-
 
 
 
