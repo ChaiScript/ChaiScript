@@ -27,45 +27,52 @@ namespace chaiscript
       }
 
     template<typename O, typename Ret, typename P1, typename ... Param>
-      std::function<Ret (Param...)> bind_first(Ret (*f)(P1, Param...), O&& o)
+      auto bind_first(Ret (*f)(P1, Param...), O&& o)
       {
-        return std::function<Ret (Param...)>(
-            [f, o](Param...param) -> Ret {
-              return f(std::forward<O>(o), std::forward<Param>(param)...);
-            }
-          );
+        return [f, o](Param...param) -> Ret {
+          return f(std::forward<O>(o), std::forward<Param>(param)...);
+        };
       }
 
     template<typename O, typename Ret, typename Class, typename ... Param>
-      std::function<Ret (Param...)> bind_first(Ret (Class::*f)(Param...), O&& o)
+      auto bind_first(Ret (Class::*f)(Param...), O&& o)
       {
-        return std::function<Ret (Param...)>(
-            [f, o](Param...param) -> Ret {
-              return (get_pointer(o)->*f)(std::forward<Param>(param)...);
-            }
-          );
+        return [f, o](Param...param) -> Ret {
+          return (get_pointer(o)->*f)(std::forward<Param>(param)...);
+        };
       }
 
     template<typename O, typename Ret, typename Class, typename ... Param>
-      std::function<Ret (Param...)> bind_first(Ret (Class::*f)(Param...) const, O&& o)
+      auto bind_first(Ret (Class::*f)(Param...) const, O&& o)
       {
-        return std::function<Ret (Param...)>(
-            [f, o](Param...param) -> Ret {
-              return (get_pointer(o)->*f)(std::forward<Param>(param)...);
-            }
-          );
+        return [f, o](Param...param) -> Ret {
+          return (get_pointer(o)->*f)(std::forward<Param>(param)...);
+        };
 
       }
 
     template<typename O, typename Ret, typename P1, typename ... Param>
-      std::function<Ret (Param...)> bind_first(const std::function<Ret (P1, Param...)> &f, O&& o)
+      auto bind_first(const std::function<Ret (P1, Param...)> &f, O&& o)
       {
-        return std::function<Ret (Param...)>(
-            [f, o](Param...param) -> Ret {
-              return f(o, std::forward<Param>(param)...);
-            });
+        return [f, o](Param...param) -> Ret {
+          return f(o, std::forward<Param>(param)...);
+        };
       }
 
+    template<typename F, typename O, typename Ret, typename Class, typename P1, typename ... Param>
+      auto bind_first(const F &fo, O&& o, Ret (Class::*f)(P1, Param...) const)
+      {
+        return [fo, o, f](Param ...param) -> Ret {
+          return (fo.*f)(o, std::forward<Param>(param)...);
+        };
+
+      }
+
+    template<typename F, typename O>
+      auto bind_first(const F &f, O&& o)
+      {
+        return bind_first(f, std::forward<O>(o), &F::operator());
+      }
 
   }
 }
