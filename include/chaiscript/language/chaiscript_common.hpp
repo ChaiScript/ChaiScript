@@ -32,28 +32,25 @@ namespace chaiscript
 
 
   /// Types of AST nodes available to the parser and eval
-  class AST_Node_Type {
-  public:
-    enum Type { Error, Int, Float, Id, Char, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
-                Comparison, Addition, Subtraction, Multiplication, Division, Modulus, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
-                Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
-                Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, 
-                Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop, Class, Binary, Arg, Global_Decl
-    };
+  enum class AST_Node_Type { Error, Int, Float, Id, Char, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
+    Comparison, Addition, Subtraction, Multiplication, Division, Modulus, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
+    Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
+    Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, 
+    Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop, Class, Binary, Arg, Global_Decl
   };
 
   namespace
   {
 
     /// Helper lookup to get the name of each node type
-    const char *ast_node_type_to_string(int ast_node_type) {
-      const char *ast_node_types[] = { "Internal Parser Error", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
+    const char *ast_node_type_to_string(AST_Node_Type ast_node_type) {
+      static const char * const ast_node_types[] = { "Internal Parser Error", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
                                     "Comparison", "Addition", "Subtraction", "Multiplication", "Division", "Modulus", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
                                     "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
                                     "Inline_Range", "Annotation", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Shift", "Equality", "Bitwise_And", "Bitwise_Xor", "Bitwise_Or", 
                                     "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Ternary Condition", "Noop", "Class", "Binary", "Arg"};
 
-      return ast_node_types[ast_node_type];
+      return ast_node_types[static_cast<int>(ast_node_type)];
     }
   }
 
@@ -166,7 +163,7 @@ namespace chaiscript
     private:
 
       template<typename T>
-        static int id(const T& t)
+        static AST_Node_Type id(const T& t)
         {
           return t->identifier;
         }
@@ -434,7 +431,7 @@ namespace chaiscript
   /// \brief Struct that doubles as both a parser ast_node and an AST node.
   struct AST_Node : std::enable_shared_from_this<AST_Node> {
     public:
-      const int identifier; //< \todo shouldn't this be a strongly typed enum value?
+      const AST_Node_Type identifier;
       const std::string text;
       Parse_Location location;
       std::vector<AST_NodePtr> children;
@@ -507,7 +504,7 @@ namespace chaiscript
       virtual ~AST_Node() {}
 
     protected:
-      AST_Node(std::string t_ast_node_text, int t_id, Parse_Location t_loc, 
+      AST_Node(std::string t_ast_node_text, AST_Node_Type t_id, Parse_Location t_loc, 
                std::vector<AST_NodePtr> t_children = std::vector<AST_NodePtr>()) :
         identifier(t_id), text(std::move(t_ast_node_text)),
         location(std::move(t_loc)),

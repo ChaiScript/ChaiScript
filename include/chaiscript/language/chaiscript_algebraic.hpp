@@ -31,7 +31,7 @@ namespace chaiscript
     };
 
     static const char *to_string(Opers t_oper) {
-      const char *opers[] = { 
+      static const char *opers[] = { 
         "",
         "==", "<", ">", "<=", ">=", "!=",
         "",

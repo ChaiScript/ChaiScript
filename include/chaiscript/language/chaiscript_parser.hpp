@@ -146,8 +146,8 @@ namespace chaiscript
       }
 
 
-      static const std::array<AST_Node_Type::Type, 11> &create_operators() {
-        static const std::array<AST_Node_Type::Type, 11> operators = { {
+      static const std::array<AST_Node_Type, 11> &create_operators() {
+        static const std::array<AST_Node_Type, 11> operators = { {
           AST_Node_Type::Ternary_Cond,
           AST_Node_Type::Logical_Or,
           AST_Node_Type::Logical_And,
@@ -169,7 +169,7 @@ namespace chaiscript
 
       const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &m_alphabet = create_alphabet();
       const std::vector<std::vector<std::string>> &m_operator_matches = create_operator_matches();
-      const std::array<AST_Node_Type::Type, 11> &m_operators = create_operators();
+      const std::array<AST_Node_Type, 11> &m_operators = create_operators();
 
       std::shared_ptr<std::string> m_filename;
       std::vector<AST_NodePtr> m_match_stack;
