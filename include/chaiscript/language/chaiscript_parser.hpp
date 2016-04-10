@@ -741,20 +741,20 @@ namespace chaiscript
               if (Hex_()) {
                 auto match = Position::str(start, m_position);
                 auto bv = buildInt(16, match, true);
-                m_match_stack.emplace_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                m_match_stack.emplace_back(make_node<eval::Constant_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
                 return true;
               }
 
               if (Binary_()) {
                 auto match = Position::str(start, m_position);
                 auto bv = buildInt(2, match, true);
-                m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                m_match_stack.push_back(make_node<eval::Constant_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
                 return true;
               }
               if (Float_()) {
                 auto match = Position::str(start, m_position);
                 auto bv = buildFloat(match);
-                m_match_stack.push_back(make_node<eval::Float_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                m_match_stack.push_back(make_node<eval::Constant_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
                 return true;
               }
               else {
@@ -762,11 +762,11 @@ namespace chaiscript
                 auto match = Position::str(start, m_position);
                 if (!match.empty() && (match[0] == '0')) {
                   auto bv = buildInt(8, match, false);
-                  m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                  m_match_stack.push_back(make_node<eval::Constant_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
                 }
                 else if (!match.empty()) {
                   auto bv = buildInt(10, match, false);
-                  m_match_stack.push_back(make_node<eval::Int_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
+                  m_match_stack.push_back(make_node<eval::Constant_AST_Node>(std::move(match), start.line, start.col, std::move(bv)));
                 } else {
                   return false;
                 }
@@ -824,16 +824,35 @@ namespace chaiscript
 
         const auto start = m_position;
         if (Id_()) {
-          m_match_stack.push_back(make_node<eval::Id_AST_Node>(
-                [&]()->std::string{
-                  if (*start == '`') {
-                    //Id Literal
-                    return Position::str(start+1, m_position-1);
-                  } else {
-                    return Position::str(start, m_position);
-                  }
-                }(),
-                start.line, start.col));
+
+          const auto text = Position::str(start, m_position);
+          if (text == "true") {
+            m_match_stack.push_back(make_node<eval::Constant_AST_Node>(text, start.line, start.col, const_var(true)));
+          } else if (text == "false") {
+            m_match_stack.push_back(make_node<eval::Constant_AST_Node>(text, start.line, start.col, const_var(false)));
+          } else if (text == "Infinity") {
+            m_match_stack.push_back(make_node<eval::Constant_AST_Node>(text, start.line, start.col, 
+                  const_var(std::numeric_limits<double>::infinity())));
+          } else if (text == "NaN") {
+            m_match_stack.push_back(make_node<eval::Constant_AST_Node>(text, start.line, start.col, 
+                  const_var(std::numeric_limits<double>::quiet_NaN())));
+          } else if (text == "_") {
+            m_match_stack.push_back(make_node<eval::Constant_AST_Node>(text, start.line, start.col, 
+                  Boxed_Value(std::make_shared<dispatch::Placeholder_Object>())));
+          } else {
+            m_match_stack.push_back(make_node<eval::Id_AST_Node>(
+                  [&]()->std::string{
+                    if (*start == '`') {
+                      // 'escaped' literal, like an operator name
+                      return Position::str(start+1, m_position-1);
+                    } else {
+                      return text;
+                    }
+                  }(),
+                  start.line, start.col));
+          }
+
+
           return true;
         } else {
           return false;

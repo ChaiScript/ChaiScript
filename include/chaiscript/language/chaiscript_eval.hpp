@@ -129,72 +129,38 @@ namespace chaiscript
         mutable std::atomic_uint_fast32_t m_loc;
     };
 
-    struct Int_AST_Node final : AST_Node {
-        Int_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, Boxed_Value t_bv) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Int, std::move(t_loc)), 
-          m_value(std::move(t_bv)) { assert(text != ""); }
 
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const override {
-          return m_value;
-        }
 
-      private:
-        Boxed_Value m_value;
-    };
+    struct Constant_AST_Node final : AST_Node {
+      Constant_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, Boxed_Value t_value)
+        : AST_Node(t_ast_node_text, AST_Node_Type::Constant, std::move(t_loc)),
+          m_value(std::move(t_value))
+      {
+      }
 
-    struct Float_AST_Node final : AST_Node {
-        Float_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, Boxed_Value t_bv) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Float, std::move(t_loc)),
-          m_value(std::move(t_bv)) { }
+      Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const override {
+        return m_value;
+      }
 
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const override {
-          return m_value;
-        }
-
-      private:
-        Boxed_Value m_value;
-
+      Boxed_Value m_value;
     };
 
     struct Id_AST_Node final : AST_Node {
         Id_AST_Node(const std::string &t_ast_node_text, Parse_Location t_loc) :
           AST_Node(t_ast_node_text, AST_Node_Type::Id, std::move(t_loc)),
-          m_value(get_value(t_ast_node_text)), m_loc(0)
+          m_loc(0)
         { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
-          if (!m_value.is_undef())
-          {
-            return m_value;
-          } else {
-            try {
-              return t_ss.get_object(this->text, m_loc);
-            }
-            catch (std::exception &) {
-              throw exception::eval_error("Can not find object: " + this->text);
-            }
+          try {
+            return t_ss.get_object(this->text, m_loc);
+          }
+          catch (std::exception &) {
+            throw exception::eval_error("Can not find object: " + this->text);
           }
         }
 
       private:
-        static Boxed_Value get_value(const std::string &t_text)
-        {
-          if (t_text == "true") {
-            return const_var(true);
-          } else if (t_text == "false") {
-            return const_var(false);
-          } else if (t_text == "Infinity") {
-            return const_var(std::numeric_limits<double>::infinity());
-          } else if (t_text == "NaN") {
-            return const_var(std::numeric_limits<double>::quiet_NaN());
-          } else if (t_text == "_") {
-            return Boxed_Value(std::make_shared<dispatch::Placeholder_Object>());
-          } else {
-            return Boxed_Value();
-          }
-        }
-
-        Boxed_Value m_value;
 
         mutable std::atomic_uint_fast32_t m_loc;
     };
@@ -207,16 +173,6 @@ namespace chaiscript
     struct Str_AST_Node final : AST_Node {
         Str_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Str, std::move(t_loc)) { }
-    };
-
-    struct Eol_AST_Node final : AST_Node {
-        Eol_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Eol, std::move(t_loc)) { }
-
-        std::string pretty_print() const override 
-        {
-          return "\n";
-        }
     };
 
 
