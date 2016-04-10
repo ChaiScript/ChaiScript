@@ -128,27 +128,6 @@ namespace chaiscript
 
     /// Builds all the requirements for ChaiScript, including its evaluator and a run of its prelude.
     void build_eval_system(const ModulePtr &t_lib) {
-      m_engine.add_reserved_word("def");
-      m_engine.add_reserved_word("fun");
-      m_engine.add_reserved_word("while");
-      m_engine.add_reserved_word("for");
-      m_engine.add_reserved_word("if");
-      m_engine.add_reserved_word("else");
-      m_engine.add_reserved_word("&&");
-      m_engine.add_reserved_word("||");
-      m_engine.add_reserved_word(",");
-      m_engine.add_reserved_word("auto");
-      m_engine.add_reserved_word("return");
-      m_engine.add_reserved_word("break");
-      m_engine.add_reserved_word("true");
-      m_engine.add_reserved_word("false");
-      m_engine.add_reserved_word("class");
-      m_engine.add_reserved_word("attr");
-      m_engine.add_reserved_word("var");
-      m_engine.add_reserved_word("global");
-      m_engine.add_reserved_word("GLOBAL");
-      m_engine.add_reserved_word("_");
-
       if (t_lib)
       {
         add(t_lib);

@@ -89,6 +89,11 @@ namespace chaiscript
           }
         }
 
+        DLModule(DLModule &&) = default;
+        DLModule &operator=(DLModule &&) = default;
+        DLModule(const DLModule &) = delete;
+        DLModule &operator=(const DLModule &) = delete;
+
         ~DLModule()
         {
           FreeLibrary(m_data);

@@ -513,7 +513,10 @@ namespace chaiscript
         std::replace(children.begin(), children.end(), t_child, t_new_child);
       }
 
-      virtual ~AST_Node() {}
+      virtual ~AST_Node() = default;
+      AST_Node(AST_Node &&) = default;
+      AST_Node &operator=(AST_Node &&) = default;
+
 
     protected:
       AST_Node(std::string t_ast_node_text, AST_Node_Type t_id, Parse_Location t_loc, 
@@ -563,6 +566,8 @@ namespace chaiscript
       /// Creates a new scope then pops it on destruction
       struct Scope_Push_Pop
       {
+        Scope_Push_Pop(Scope_Push_Pop &&) = default;
+        Scope_Push_Pop& operator=(Scope_Push_Pop &&) = default;
         Scope_Push_Pop(const Scope_Push_Pop &) = delete;
         Scope_Push_Pop& operator=(const Scope_Push_Pop &) = delete;
 
@@ -585,6 +590,8 @@ namespace chaiscript
       /// Creates a new function call and pops it on destruction
       struct Function_Push_Pop
       {
+        Function_Push_Pop(Function_Push_Pop &&) = default;
+        Function_Push_Pop& operator=(Function_Push_Pop &&) = default;
         Function_Push_Pop(const Function_Push_Pop &) = delete;
         Function_Push_Pop& operator=(const Function_Push_Pop &) = delete;
 
@@ -617,6 +624,8 @@ namespace chaiscript
       /// Creates a new scope then pops it on destruction
       struct Stack_Push_Pop
       {
+        Stack_Push_Pop(Stack_Push_Pop &&) = default;
+        Stack_Push_Pop& operator=(Stack_Push_Pop &&) = default;
         Stack_Push_Pop(const Stack_Push_Pop &) = delete;
         Stack_Push_Pop& operator=(const Stack_Push_Pop &) = delete;
 

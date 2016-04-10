@@ -418,19 +418,13 @@ namespace chaiscript
           std::vector<std::pair<std::string, Boxed_Value>> m_boxed_functions;
           std::map<std::string, Boxed_Value> m_global_objects;
           Type_Name_Map m_types;
-          std::set<std::string> m_reserved_words;
-
-          State &operator=(const State &) = default;
-          State() = default;
-          State(const State &) = default;
+          std::set<std::string> m_reserved_words 
+            = {"def", "fun", "while", "for", "if", "else", "&&", "||", ",", "auto", 
+               "return", "break", "true", "false", "class", "attr", "var", "global", "GLOBAL", "_"};
         };
 
         Dispatch_Engine()
           : m_stack_holder(this)
-        {
-        }
-
-        ~Dispatch_Engine()
         {
         }
 
@@ -892,12 +886,6 @@ namespace chaiscript
           return rets;
         }
 
-        void add_reserved_word(const std::string &name)
-        {
-          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
-
-          m_state.m_reserved_words.insert(name);
-        }
 
         const Type_Conversions &conversions() const
         {
