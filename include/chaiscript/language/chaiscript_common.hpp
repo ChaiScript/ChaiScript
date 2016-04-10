@@ -98,6 +98,18 @@ namespace chaiscript
   /// \brief Classes which may be thrown during error cases when ChaiScript is executing.
   namespace exception
   {
+    /// \brief Thrown if an error occurs while attempting to load a binary module
+    struct load_module_error : std::runtime_error
+    {
+      load_module_error(const std::string &t_reason) noexcept
+        : std::runtime_error(t_reason)
+      {
+      }
+
+      load_module_error(const load_module_error &) = default;
+      virtual ~load_module_error() noexcept {}
+    };
+
 
     /// Errors generated during parsing or evaluation
     struct eval_error : std::runtime_error {

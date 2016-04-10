@@ -103,7 +103,7 @@ namespace chaiscript
             Operators::Opers t_oper, const std::string &t_oper_string, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs) const
         {
           try {
-            if (t_oper != Operators::invalid && t_lhs.get_type_info().is_arithmetic() && t_rhs.get_type_info().is_arithmetic())
+            if (t_oper != Operators::Opers::invalid && t_lhs.get_type_info().is_arithmetic() && t_rhs.get_type_info().is_arithmetic())
             {
               // If it's an arithmetic operation we want to short circuit dispatch
               try{
@@ -384,7 +384,7 @@ namespace chaiscript
           Boxed_Value rhs = this->children[2]->eval(t_ss); 
           Boxed_Value lhs = this->children[0]->eval(t_ss);
 
-          if (m_oper != Operators::invalid && lhs.get_type_info().is_arithmetic() &&
+          if (m_oper != Operators::Opers::invalid && lhs.get_type_info().is_arithmetic() &&
               rhs.get_type_info().is_arithmetic())
           {
             try {
@@ -392,7 +392,7 @@ namespace chaiscript
             } catch (const std::exception &) {
               throw exception::eval_error("Error with unsupported arithmetic assignment operation");
             }
-          } else if (m_oper == Operators::assign) {
+          } else if (m_oper == Operators::Opers::assign) {
             if (lhs.is_return_value()) {
               throw exception::eval_error("Error, cannot assign to temporary value.");
             }
@@ -1076,7 +1076,7 @@ namespace chaiscript
 
           try {
             // short circuit arithmetic operations
-            if (m_oper != Operators::invalid && m_oper != Operators::bitwise_and && bv.get_type_info().is_arithmetic())
+            if (m_oper != Operators::Opers::invalid && m_oper != Operators::Opers::bitwise_and && bv.get_type_info().is_arithmetic())
             {
               return Boxed_Number::do_oper(m_oper, bv);
             } else {
