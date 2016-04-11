@@ -508,11 +508,6 @@ namespace chaiscript
       }
 
 
-      void replace_child(const AST_NodePtr &t_child, const AST_NodePtr &t_new_child)
-      {
-        std::replace(children.begin(), children.end(), t_child, t_new_child);
-      }
-
       virtual ~AST_Node() = default;
       AST_Node(AST_Node &&) = default;
       AST_Node &operator=(AST_Node &&) = default;

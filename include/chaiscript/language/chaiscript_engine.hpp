@@ -619,16 +619,14 @@ namespace chaiscript
 
       std::string errstring;
 
-      for (std::vector<exception::load_module_error>::const_iterator itr = errors.begin();
-           itr != errors.end();
-           ++itr)
+      for (const auto &err : errors)
       {
         if (!errstring.empty())
         {
           errstring += "; ";
         }
 
-        errstring += itr->what();
+        errstring += err.what();
       }
 
       throw chaiscript::exception::load_module_error("Unable to find module: " + t_module_name + " Errors: " + errstring);
@@ -668,14 +666,7 @@ namespace chaiscript
     /// \throw chaiscript::exception::eval_error In the case that evaluation fails.
     Boxed_Value operator()(const std::string &t_script, const Exception_Handler &t_handler = Exception_Handler())
     {
-      try {
-        return do_eval(t_script);
-      } catch (Boxed_Value &bv) {
-        if (t_handler) {
-          t_handler->handle(bv, m_engine);
-        }
-        throw;
-      }
+      return eval(t_script, t_handler);
     }
 
     /// \brief Evaluates a string and returns a typesafe result.
@@ -694,14 +685,7 @@ namespace chaiscript
     template<typename T>
     T eval(const std::string &t_input, const Exception_Handler &t_handler = Exception_Handler(), const std::string &t_filename="__EVAL__")
     {
-      try {
-        return m_engine.boxed_cast<T>(do_eval(t_input, t_filename));
-      } catch (Boxed_Value &bv) {
-        if (t_handler) {
-          t_handler->handle(bv, m_engine);
-        }
-        throw;
-      }
+      return m_engine.boxed_cast<T>(eval(t_input, t_handler, t_filename));
     }
 
     /// \brief casts an object while applying any Dynamic_Conversion available
@@ -740,14 +724,7 @@ namespace chaiscript
     /// \return result of the script execution
     /// \throw chaiscript::exception::eval_error In the case that evaluation fails.
     Boxed_Value eval_file(const std::string &t_filename, const Exception_Handler &t_handler = Exception_Handler()) {
-      try {
-        return do_eval(load_file(t_filename), t_filename);
-      } catch (Boxed_Value &bv) {
-        if (t_handler) {
-          t_handler->handle(bv, m_engine);
-        }
-        throw;
-      }
+      return eval(load_file(t_filename), t_handler, t_filename);
     }
 
     /// \brief Loads the file specified by filename, evaluates it, and returns the type safe result.
@@ -760,14 +737,7 @@ namespace chaiscript
     ///        to the requested type.
     template<typename T>
     T eval_file(const std::string &t_filename, const Exception_Handler &t_handler = Exception_Handler()) {
-      try {
-        return m_engine.boxed_cast<T>(do_eval(load_file(t_filename), t_filename));
-      } catch (Boxed_Value &bv) {
-        if (t_handler) {
-          t_handler->handle(bv, m_engine);
-        }
-        throw;
-      }
+      return m_engine.boxed_cast<T>(eval_file(t_filename, t_handler));
     }
   };
 

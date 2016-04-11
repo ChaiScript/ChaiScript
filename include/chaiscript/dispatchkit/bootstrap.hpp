@@ -629,14 +629,13 @@ namespace chaiscript
               {fun(&AST_Node::start), "start"},
               {fun(&AST_Node::end), "end"},
               {fun(&AST_Node::to_string), "to_string"},
-              {fun(std::function<std::vector<Boxed_Value> (const chaiscript::AST_Node &t_node)>([](const chaiscript::AST_Node &t_node) -> std::vector<Boxed_Value> { 
+              {fun([](const chaiscript::AST_Node &t_node) -> std::vector<Boxed_Value> { 
                 std::vector<Boxed_Value> retval;
                 std::transform(t_node.children.begin(), t_node.children.end(),
                                std::back_inserter(retval),
                                &chaiscript::var<const std::shared_ptr<chaiscript::AST_Node> &>);
                 return retval;
-              })), "children"},
-              {fun(&AST_Node::replace_child), "replace_child"}
+              }), "children"}
             }
             );
 
