@@ -2036,7 +2036,7 @@ namespace chaiscript
                   func_call->children.insert(func_call->children.begin(), dot_access->children.back());
                   dot_access->children.pop_back();
                   dot_access->children.push_back(std::move(func_call));
-                  if (dot_access->children.size() != 3) throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
+                  if (dot_access->children.size() != 2) throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
                   m_match_stack.push_back(std::move(dot_access));
                 }
               }
@@ -2049,13 +2049,13 @@ namespace chaiscript
 
               build_match<eval::Array_Call_AST_Node>(prev_stack_top);
             }
-            else if (Symbol(".", true)) {
+            else if (Symbol(".")) {
               has_more = true;
               if (!(Id())) {
                 throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
               }
 
-              if ( std::distance(m_match_stack.begin() + static_cast<int>(prev_stack_top), m_match_stack.end()) != 3) {
+              if ( std::distance(m_match_stack.begin() + static_cast<int>(prev_stack_top), m_match_stack.end()) != 2) {
                 throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
               }
               build_match<eval::Dot_Access_AST_Node>(prev_stack_top);
@@ -2221,61 +2221,59 @@ namespace chaiscript
         if (t_precedence < m_operators.size()) {
           if (Operator(t_precedence+1)) {
             retval = true;
-            if (Operator_Helper(t_precedence)) {
-              do {
-                while (Eol()) {}
-                if (!Operator(t_precedence+1)) {
-                  throw exception::eval_error("Incomplete "
-                      + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
-                      File_Position(m_position.line, m_position.col), *m_filename);
-                }
+            while (Operator_Helper(t_precedence)) {
+              while (Eol()) {}
+              if (!Operator(t_precedence+1)) {
+                throw exception::eval_error("Incomplete "
+                    + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
+                    File_Position(m_position.line, m_position.col), *m_filename);
+              }
 
-                AST_NodePtr oper = m_match_stack.at(m_match_stack.size()-2);
+              AST_NodePtr oper = m_match_stack.at(m_match_stack.size()-2);
 
-                switch (m_operators[t_precedence]) {
-                  case(AST_Node_Type::Ternary_Cond) :
-                    m_match_stack.erase(advance_copy(m_match_stack.begin(), m_match_stack.size() - 2),
-                                        advance_copy(m_match_stack.begin(), m_match_stack.size() - 1));
-                    if (Symbol(":")) {
-                      if (!Operator(t_precedence+1)) {
-                        throw exception::eval_error("Incomplete "
-                            + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
-                            File_Position(m_position.line, m_position.col), *m_filename);
-                      }
-                      build_match<eval::Ternary_Cond_AST_Node>(prev_stack_top);
-                    }
-                    else {
+              switch (m_operators[t_precedence]) {
+                case(AST_Node_Type::Ternary_Cond) :
+                  m_match_stack.erase(advance_copy(m_match_stack.begin(), m_match_stack.size() - 2),
+                      advance_copy(m_match_stack.begin(), m_match_stack.size() - 1));
+                  if (Symbol(":")) {
+                    if (!Operator(t_precedence+1)) {
                       throw exception::eval_error("Incomplete "
                           + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
                           File_Position(m_position.line, m_position.col), *m_filename);
                     }
-                    break;
+                    build_match<eval::Ternary_Cond_AST_Node>(prev_stack_top);
+                  }
+                  else {
+                    throw exception::eval_error("Incomplete "
+                        + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
+                        File_Position(m_position.line, m_position.col), *m_filename);
+                  }
+                  break;
 
-                  case(AST_Node_Type::Addition) :
-                  case(AST_Node_Type::Multiplication) :
-                  case(AST_Node_Type::Shift) :
-                  case(AST_Node_Type::Equality) :
-                  case(AST_Node_Type::Bitwise_And) :
-                  case(AST_Node_Type::Bitwise_Xor) :
-                  case(AST_Node_Type::Bitwise_Or) :
-                  case(AST_Node_Type::Comparison) :
-                    assert(m_match_stack.size() > 1);
-                    m_match_stack.erase(advance_copy(m_match_stack.begin(), m_match_stack.size() - 2), 
-                                        advance_copy(m_match_stack.begin(), m_match_stack.size() - 1));
-                    build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, oper->text);
-                    break;
+                case(AST_Node_Type::Addition) :
+                case(AST_Node_Type::Multiplication) :
+                case(AST_Node_Type::Shift) :
+                case(AST_Node_Type::Equality) :
+                case(AST_Node_Type::Bitwise_And) :
+                case(AST_Node_Type::Bitwise_Xor) :
+                case(AST_Node_Type::Bitwise_Or) :
+                case(AST_Node_Type::Comparison) :
+                  assert(m_match_stack.size() > 1);
+                  m_match_stack.erase(advance_copy(m_match_stack.begin(), m_match_stack.size() - 2), 
+                      advance_copy(m_match_stack.begin(), m_match_stack.size() - 1));
+                  build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, oper->text);
+                  break;
 
-                  case(AST_Node_Type::Logical_And) :
-                    build_match<eval::Logical_And_AST_Node>(prev_stack_top);
-                    break;
-                  case(AST_Node_Type::Logical_Or) :
-                    build_match<eval::Logical_Or_AST_Node>(prev_stack_top);
-                    break;
+                case(AST_Node_Type::Logical_And) :
+                  build_match<eval::Logical_And_AST_Node>(prev_stack_top);
+                  break;
+                case(AST_Node_Type::Logical_Or) :
+                  build_match<eval::Logical_Or_AST_Node>(prev_stack_top);
+                  break;
 
-                  default:
-                    throw exception::eval_error("Internal error: unhandled ast_node", File_Position(m_position.line, m_position.col), *m_filename);
-                }
-              } while (Operator_Helper(t_precedence));
+                default:
+                  throw exception::eval_error("Internal error: unhandled ast_node", File_Position(m_position.line, m_position.col), *m_filename);
+              }
             }
           }
         }

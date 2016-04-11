@@ -505,8 +505,8 @@ namespace chaiscript
         Dot_Access_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Dot_Access, std::move(t_loc), std::move(t_children)),
           m_fun_name(
-              ((children[2]->identifier == AST_Node_Type::Fun_Call) || (children[2]->identifier == AST_Node_Type::Array_Call))?
-              children[2]->children[0]->text:children[2]->text) { }
+              ((children[1]->identifier == AST_Node_Type::Fun_Call) || (children[1]->identifier == AST_Node_Type::Array_Call))?
+              children[1]->children[0]->text:children[1]->text) { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
@@ -516,9 +516,9 @@ namespace chaiscript
           std::vector<Boxed_Value> params{retval};
 
           bool has_function_params = false;
-          if (children[2]->children.size() > 1) {
+          if (children[1]->children.size() > 1) {
             has_function_params = true;
-            for (const auto &child : children[2]->children[1]->children) {
+            for (const auto &child : children[1]->children[1]->children) {
               params.push_back(child->eval(t_ss));
             }
           }
@@ -540,9 +540,9 @@ namespace chaiscript
             retval = std::move(rv.retval);
           }
 
-          if (this->children[2]->identifier == AST_Node_Type::Array_Call) {
+          if (this->children[1]->identifier == AST_Node_Type::Array_Call) {
             try {
-              retval = t_ss->call_function("[]", m_array_loc, {retval, this->children[2]->children[1]->eval(t_ss)}, t_ss.conversions());
+              retval = t_ss->call_function("[]", m_array_loc, {retval, this->children[1]->children[1]->eval(t_ss)}, t_ss.conversions());
             }
             catch(const exception::dispatch_error &e){
               throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, true, *t_ss);
