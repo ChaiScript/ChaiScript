@@ -1615,7 +1615,7 @@ namespace chaiscript
           while (has_matches) {
             while (Eol()) {}
             has_matches = false;
-            if (Keyword("catch", false)) {
+            if (Keyword("catch")) {
               const auto catch_stack_top = m_match_stack.size();
               if (Char('(')) {
                 if (!(Arg() && Char(')'))) {
@@ -1638,7 +1638,7 @@ namespace chaiscript
             }
           }
           while (Eol()) {}
-          if (Keyword("finally", false)) {
+          if (Keyword("finally")) {
             const auto finally_stack_top = m_match_stack.size();
 
             while (Eol()) {}
