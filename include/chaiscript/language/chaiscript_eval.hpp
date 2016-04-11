@@ -737,6 +737,7 @@ namespace chaiscript
           } else {
             if (children.size() > 2) {
               size_t i = 2;
+              /// \todo these string comparisons are clunky
               while (i < children.size()) {
                 if (children[i]->text == "else") {
                   return children[i+1]->eval(t_ss);
