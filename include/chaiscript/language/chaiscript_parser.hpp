@@ -1272,7 +1272,7 @@ namespace chaiscript
       }
 
       /// Reads (and potentially captures) a string from input if it matches the parameter
-      bool Keyword(const char *t_s, bool t_capture = false) {
+      bool Keyword(const char *t_s) {
         SkipWS();
         const auto start = m_position;
         bool retval = Keyword_(t_s);
@@ -1282,9 +1282,6 @@ namespace chaiscript
           retval = false;
         }
 
-        if ( t_capture && retval ) {
-          m_match_stack.push_back(make_node<eval::Str_AST_Node>(Position::str(start, m_position), start.line, start.col));
-        }
         return retval;
       }
 
@@ -1553,7 +1550,7 @@ namespace chaiscript
 
           bool is_method = false;
 
-          if (Symbol("::", false)) {
+          if (Symbol("::")) {
             //We're now a method
             is_method = true;
 
@@ -1682,12 +1679,11 @@ namespace chaiscript
           while (has_matches) {
             while (Eol()) {}
             has_matches = false;
-            if (Keyword("else", true)) {
+            const auto line = m_position.line;
+            const auto col = m_position.col;
+            if (Keyword("else")) {
               if (Keyword("if")) {
-                const AST_NodePtr back(m_match_stack.back());
-                m_match_stack.back() = 
-                  chaiscript::make_shared<AST_Node, eval::If_AST_Node>("else if", back->location, back->children);
-                m_match_stack.back()->annotation = back->annotation;
+                m_match_stack.emplace_back(make_node<eval::If_AST_Node>("else if", line, col, std::vector<AST_NodePtr>()));
                 if (!Char('(')) {
                   throw exception::eval_error("Incomplete 'else if' expression", File_Position(m_position.line, m_position.col), *m_filename);
                 }
@@ -1703,6 +1699,7 @@ namespace chaiscript
                 }
                 has_matches = true;
               } else {
+                m_match_stack.emplace_back(make_node<eval::If_AST_Node>("else", line, col, std::vector<AST_NodePtr>()));
                 while (Eol()) {}
 
                 if (!Block()) {
@@ -2105,7 +2102,7 @@ namespace chaiscript
           if (!Id()) {
             throw exception::eval_error("Incomplete attribute declaration", File_Position(m_position.line, m_position.col), *m_filename);
           }
-          if (!Symbol("::", false)) {
+          if (!Symbol("::")) {
             throw exception::eval_error("Incomplete attribute declaration", File_Position(m_position.line, m_position.col), *m_filename);
           }
           if (!Id()) {
@@ -2169,7 +2166,7 @@ namespace chaiscript
       bool Reference() {
         const auto prev_stack_top = m_match_stack.size();
 
-        if (Symbol("&", false)) {
+        if (Symbol("&")) {
           if (!Id()) {
             throw exception::eval_error("Incomplete '&' expression", File_Position(m_position.line, m_position.col), *m_filename);
           }
@@ -2345,26 +2342,25 @@ namespace chaiscript
 
       /// Parses a string of binary equation operators
       bool Equation() {
-        bool retval = false;
-
         const auto prev_stack_top = m_match_stack.size();
 
         if (Operator()) {
-          retval = true;
-          if (Symbol("=", true, true) || Symbol(":=", true, true) || Symbol("+=", true, true) ||
-              Symbol("-=", true, true) || Symbol("*=", true, true) || Symbol("/=", true, true) ||
-              Symbol("%=", true, true) || Symbol("<<=", true, true) || Symbol(">>=", true, true) ||
-              Symbol("&=", true, true) || Symbol("^=", true, true) || Symbol("|=", true, true)) {
-            SkipWS(true);
-            if (!Equation()) {
-              throw exception::eval_error("Incomplete equation", File_Position(m_position.line, m_position.col), *m_filename);
-            }
+          for (const auto sym : {"=", ":=", "+=", "-=", "*=", "/=", "%=", "<<=", ">>=", "&=", "^=", "|="}) 
+          {
+            if (Symbol(sym, false, true)) {
+              SkipWS(true);
+              if (!Equation()) {
+                throw exception::eval_error("Incomplete equation", File_Position(m_position.line, m_position.col), *m_filename);
+              }
 
-            build_match<eval::Equation_AST_Node>(prev_stack_top);
+              build_match<eval::Equation_AST_Node>(prev_stack_top, sym);
+              return true;
+            }
           }
+          return true;
         }
 
-        return retval;
+        return false;
       }
 
       /// Parses statements allowed inside of a class block

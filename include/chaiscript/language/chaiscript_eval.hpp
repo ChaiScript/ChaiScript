@@ -327,13 +327,13 @@ namespace chaiscript
     struct Equation_AST_Node final : AST_Node {
         Equation_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Equation, std::move(t_loc), std::move(t_children)), 
-          m_oper(Operators::to_operator(children[1]->text))
-        { assert(children.size() == 3); }
+          m_oper(Operators::to_operator(text))
+        { assert(children.size() == 2); }
 
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-          Boxed_Value rhs = this->children[2]->eval(t_ss); 
+          Boxed_Value rhs = this->children[1]->eval(t_ss); 
           Boxed_Value lhs = this->children[0]->eval(t_ss);
 
           if (m_oper != Operators::Opers::invalid && lhs.get_type_info().is_arithmetic() &&
@@ -371,17 +371,17 @@ namespace chaiscript
               }
 
               try {
-                return t_ss->call_function(this->children[1]->text, m_loc, {std::move(lhs), rhs}, t_ss.conversions());
+                return t_ss->call_function(this->text, m_loc, {std::move(lhs), rhs}, t_ss.conversions());
               }
               catch(const exception::dispatch_error &e){
-                throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, *t_ss);
+                throw exception::eval_error("Unable to find appropriate'" + this->text + "' operator.", e.parameters, e.functions, false, *t_ss);
               }
             }
             catch(const exception::dispatch_error &e){
               throw exception::eval_error("Missing clone or copy constructor for right hand side of equation", e.parameters, e.functions, false, *t_ss);
             }
           }
-          else if (this->children[1]->text == ":=") {
+          else if (this->text == ":=") {
             if (lhs.is_undef() || Boxed_Value::type_match(lhs, rhs)) {
               lhs.assign(rhs);
               lhs.reset_return_value();
@@ -391,9 +391,9 @@ namespace chaiscript
           }
           else {
             try {
-              return t_ss->call_function(this->children[1]->text, m_loc, {std::move(lhs), rhs}, t_ss.conversions());
+              return t_ss->call_function(this->text, m_loc, {std::move(lhs), rhs}, t_ss.conversions());
             } catch(const exception::dispatch_error &e){
-              throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, *t_ss);
+              throw exception::eval_error("Unable to find appropriate'" + this->text + "' operator.", e.parameters, e.functions, false, *t_ss);
             }
           }
 
