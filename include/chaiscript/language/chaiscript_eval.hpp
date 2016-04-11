@@ -562,41 +562,6 @@ namespace chaiscript
         const std::string m_fun_name;
     };
 
-    struct Quoted_String_AST_Node final : AST_Node {
-        Quoted_String_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Quoted_String, std::move(t_loc)),
-          m_value(const_var(text)) { }
-
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const override {
-          return m_value;
-        }
-
-        std::string pretty_print() const override 
-        {
-          return "\"" + text + "\"";
-        }
-
-      private:
-        Boxed_Value m_value;
-    };
-
-    struct Single_Quoted_String_AST_Node final : AST_Node {
-        Single_Quoted_String_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Single_Quoted_String, std::move(t_loc)),
-          m_value(const_var(char(text.at(0)))) { }
-
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const override{
-          return m_value;
-        }
-
-        std::string pretty_print() const override 
-        {
-          return "'" + text + "'";
-        }
-
-      private:
-        Boxed_Value m_value;
-    };
 
     struct Lambda_AST_Node final : AST_Node {
         Lambda_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :

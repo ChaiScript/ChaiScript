@@ -1106,11 +1106,11 @@ namespace chaiscript
 
                     if (cparser.is_interpolated) {
                       //If we've seen previous interpolation, add on instead of making a new one
-                      m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
+                      m_match_stack.push_back(make_node<eval::Constant_AST_Node>(match, start.line, start.col, const_var(match)));
 
                       build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
                     } else {
-                      m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
+                      m_match_stack.push_back(make_node<eval::Constant_AST_Node>(match, start.line, start.col, const_var(match)));
                     }
 
                     //We've finished with the part of the string up to this point, so clear it
@@ -1162,11 +1162,11 @@ namespace chaiscript
             }();
 
             if (is_interpolated) {
-              m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node>(match, start.line, start.col, const_var(match)));
 
               build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
             } else {
-              m_match_stack.push_back(make_node<eval::Quoted_String_AST_Node>(match, start.line, start.col));
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node>(match, start.line, start.col, const_var(match)));
             }
             return true;
           } else {
@@ -1227,7 +1227,7 @@ namespace chaiscript
               throw exception::eval_error("Single-quoted strings must be 1 character long", File_Position(m_position.line, m_position.col), *m_filename);
             }
 
-            m_match_stack.push_back(make_node<eval::Single_Quoted_String_AST_Node>(match, start.line, start.col));
+            m_match_stack.push_back(make_node<eval::Constant_AST_Node>(match, start.line, start.col, const_var(char(match.at(0)))));
             return true;
           }
           else {
