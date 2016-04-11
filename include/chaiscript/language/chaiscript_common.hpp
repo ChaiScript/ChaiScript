@@ -32,7 +32,7 @@ namespace chaiscript
 
 
   /// Types of AST nodes available to the parser and eval
-  enum class AST_Node_Type { Error, Id, Char, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
+  enum class AST_Node_Type { Error, Id, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
     Comparison, Addition, Subtraction, Multiplication, Division, Modulus, Array_Call, Dot_Access,
     Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
     Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, 
@@ -44,7 +44,7 @@ namespace chaiscript
 
     /// Helper lookup to get the name of each node type
     const char *ast_node_type_to_string(AST_Node_Type ast_node_type) {
-      static const char * const ast_node_types[] = { "Internal Parser Error", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
+      static const char * const ast_node_types[] = { "Internal Parser Error", "Id", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
                                     "Comparison", "Addition", "Subtraction", "Multiplication", "Division", "Modulus", "Array_Call", "Dot_Access", 
                                     "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
                                     "Inline_Range", "Annotation", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Shift", "Equality", "Bitwise_And", "Bitwise_Xor", "Bitwise_Or", 

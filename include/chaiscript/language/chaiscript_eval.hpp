@@ -165,10 +165,6 @@ namespace chaiscript
         mutable std::atomic_uint_fast32_t m_loc;
     };
 
-    struct Char_AST_Node final : AST_Node {
-        Char_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Char, std::move(t_loc)) { }
-    };
 
     struct Str_AST_Node final : AST_Node {
         Str_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
@@ -989,11 +985,11 @@ namespace chaiscript
     struct Prefix_AST_Node final : AST_Node {
         Prefix_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Prefix, std::move(t_loc), std::move(t_children)),
-          m_oper(Operators::to_operator(children[0]->text, true))
+          m_oper(Operators::to_operator(text, true))
         { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override{
-          Boxed_Value bv(children[1]->eval(t_ss));
+          Boxed_Value bv(children[0]->eval(t_ss));
 
           try {
             // short circuit arithmetic operations
@@ -1003,10 +999,10 @@ namespace chaiscript
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               fpp.save_params({bv});
-              return t_ss->call_function(children[0]->text, m_loc, {std::move(bv)}, t_ss.conversions());
+              return t_ss->call_function(text, m_loc, {std::move(bv)}, t_ss.conversions());
             }
           } catch (const exception::dispatch_error &e) {
-            throw exception::eval_error("Error with prefix operator evaluation: '" + children[0]->text + "'", e.parameters, e.functions, false, *t_ss);
+            throw exception::eval_error("Error with prefix operator evaluation: '" + text + "'", e.parameters, e.functions, false, *t_ss);
           }
         }
 

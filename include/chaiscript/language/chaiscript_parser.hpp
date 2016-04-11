@@ -1247,20 +1247,9 @@ namespace chaiscript
       }
 
       /// Reads (and potentially captures) a char from input if it matches the parameter
-      bool Char(const char t_c, bool t_capture = false) {
+      bool Char(const char t_c) {
         SkipWS();
-
-        if (!t_capture) {
-          return Char_(t_c);
-        } else {
-          const auto start = m_position;
-          if (Char_(t_c)) {
-            m_match_stack.push_back(make_node<eval::Char_AST_Node>(Position::str(start, m_position), start.line, start.col));
-            return true;
-          } else {
-            return false;
-          }
-        }
+        return Char_(t_c);
       }
 
       /// Reads a string from input if it matches the parameter, without skipping initial whitespace
@@ -2200,13 +2189,13 @@ namespace chaiscript
         for (const auto &oper : prefix_opers)
         {
           bool is_char = oper.size() == 1;
-          if ((is_char && Char(oper[0], true)) || (!is_char && Symbol(oper.c_str(), true)))
+          if ((is_char && Char(oper[0])) || (!is_char && Symbol(oper.c_str())))
           {
             if (!Operator(m_operators.size()-1)) {
               throw exception::eval_error("Incomplete prefix '" + oper + "' expression", File_Position(m_position.line, m_position.col), *m_filename);
             }
 
-            build_match<eval::Prefix_AST_Node>(prev_stack_top);
+            build_match<eval::Prefix_AST_Node>(prev_stack_top, oper);
             return true;
           }
         }
