@@ -52,7 +52,7 @@ namespace chaiscript
     }
 
     template<typename T, typename = typename std::enable_if<std::is_array<T>::value>::type >
-      Module& array(const std::string &type, Module& m)
+      void array(const std::string &type, Module& m)
       {
         typedef typename std::remove_extent<T>::type ReturnType;
         const auto extent = std::extent<T>::value;
@@ -83,9 +83,6 @@ namespace chaiscript
               [extent](const T &) {
                 return extent;
               }), "size");
-
-
-        return m;
       }
 
     /// \brief Adds a copy constructor for the given type to the given Model
@@ -94,9 +91,9 @@ namespace chaiscript
     /// \tparam T The type to add a copy constructor for
     /// \returns The passed in Module
     template<typename T>
-    Module& copy_constructor(const std::string &type, Module& m)
+    void copy_constructor(const std::string &type, Module& m)
     {
-      return m.add(constructor<T (const T &)>(), type);
+      m.add(constructor<T (const T &)>(), type);
     }
 
     /// \brief Add all comparison operators for the templated type. Used during bootstrap, also available to users.
@@ -104,7 +101,7 @@ namespace chaiscript
     /// \param[in,out] m module to add comparison operators to
     /// \returns the passed in Module.
     template<typename T>
-    Module& opers_comparison(Module& m)
+    void opers_comparison(Module& m)
     {
       operators::equal<T>(m);
       operators::greater_than<T>(m);
@@ -112,7 +109,6 @@ namespace chaiscript
       operators::less_than<T>(m);
       operators::less_than_equal<T>(m);
       operators::not_equal<T>(m);
-      return m;
     }
 
 
@@ -125,11 +121,10 @@ namespace chaiscript
     /// \sa copy_constructor
     /// \sa constructor
     template<typename T>
-    Module& basic_constructors(const std::string &type, Module& m)
+    void basic_constructors(const std::string &type, Module& m)
     {
       m.add(constructor<T ()>(), type);
       copy_constructor<T>(type, m);
-      return m;
     }
 
     /// \brief Adds a constructor for a POD type 
@@ -137,9 +132,9 @@ namespace chaiscript
     /// \param[in] type The name of the type
     /// \param[in,out] m The Module to add the constructor to
     template<typename T>
-    Module& construct_pod(const std::string &type, Module& m)
+    void construct_pod(const std::string &type, Module& m)
     {
-      return m.add(fun(&detail::construct_pod<T>), type);
+      m.add(fun(&detail::construct_pod<T>), type);
     }
 
 
@@ -183,14 +178,13 @@ namespace chaiscript
     /// Add all common functions for a POD type. All operators, and
     /// common conversions
     template<typename T>
-    Module& bootstrap_pod_type(const std::string &name, Module& m)
+    void bootstrap_pod_type(const std::string &name, Module& m)
     {
       m.add(user_type<T>(), name);
       m.add(constructor<T()>(), name);
       construct_pod<T>(name, m);
 
       m.add(fun(&parse_string<T>), "to_" + name);
-      return m;
     }
 
 
@@ -402,7 +396,7 @@ namespace chaiscript
       /// \brief perform all common bootstrap functions for std::string, void and POD types
       /// \param[in,out] m Module to add bootstrapped functions to
       /// \returns passed in Module
-      static Module& bootstrap(Module& m)
+      static void bootstrap(Module& m)
       {
         m.add(user_type<void>(), "void");
         m.add(user_type<bool>(), "bool");
@@ -645,10 +639,6 @@ namespace chaiscript
             { {fun(&parser::ChaiScript_Parser::parse), "parse"},
               {fun(&parser::ChaiScript_Parser::ast), "ast"} }
             );
-
-
-
-        return m;
       }
     };
   }
