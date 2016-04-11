@@ -52,12 +52,12 @@ namespace chaiscript
     }
 
     template<typename T, typename = typename std::enable_if<std::is_array<T>::value>::type >
-      ModulePtr array(const std::string &type, ModulePtr m = std::make_shared<Module>())
+      void array(const std::string &type, Module& m)
       {
         typedef typename std::remove_extent<T>::type ReturnType;
         const auto extent = std::extent<T>::value;
-        m->add(user_type<T>(), type);
-        m->add(fun(
+        m.add(user_type<T>(), type);
+        m.add(fun(
               [extent](T& t, size_t index)->ReturnType &{
                 if (extent > 0 && index >= extent) {
                   throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
@@ -68,7 +68,7 @@ namespace chaiscript
               ), "[]"
             );
 
-        m->add(fun(
+        m.add(fun(
               [extent](const T &t, size_t index)->const ReturnType &{
                 if (extent > 0 && index >= extent) {
                   throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
@@ -79,33 +79,29 @@ namespace chaiscript
               ), "[]"
             );
 
-        m->add(fun(
+        m.add(fun(
               [extent](const T &) {
                 return extent;
               }), "size");
-
-
-        return m;
       }
 
     /// \brief Adds a copy constructor for the given type to the given Model
     /// \param[in] type The name of the type. The copy constructor will be named "type".
     /// \param[in,out] m The Module to add the copy constructor to
     /// \tparam T The type to add a copy constructor for
-    /// \returns The passed in ModulePtr, or the newly constructed one if the default param is used
+    /// \returns The passed in Module
     template<typename T>
-    ModulePtr copy_constructor(const std::string &type, ModulePtr m = std::make_shared<Module>())
+    void copy_constructor(const std::string &type, Module& m)
     {
-      m->add(constructor<T (const T &)>(), type);
-      return m;
+      m.add(constructor<T (const T &)>(), type);
     }
 
     /// \brief Add all comparison operators for the templated type. Used during bootstrap, also available to users.
     /// \tparam T Type to create comparison operators for
     /// \param[in,out] m module to add comparison operators to
-    /// \returns the passed in ModulePtr or the newly constructed one if the default params are used.
+    /// \returns the passed in Module.
     template<typename T>
-    ModulePtr opers_comparison(ModulePtr m = std::make_shared<Module>())
+    void opers_comparison(Module& m)
     {
       operators::equal<T>(m);
       operators::greater_than<T>(m);
@@ -113,7 +109,6 @@ namespace chaiscript
       operators::less_than<T>(m);
       operators::less_than_equal<T>(m);
       operators::not_equal<T>(m);
-      return m;
     }
 
 
@@ -122,15 +117,14 @@ namespace chaiscript
     /// \param[in] type The name of the type to add the constructors for.
     /// \param[in,out] m The Module to add the basic constructors to
     /// \tparam T Type to generate basic constructors for
-    /// \returns The passed in ModulePtr, or the newly constructed one if the default param is used
+    /// \returns The passed in Module
     /// \sa copy_constructor
     /// \sa constructor
     template<typename T>
-    ModulePtr basic_constructors(const std::string &type, ModulePtr m = std::make_shared<Module>())
+    void basic_constructors(const std::string &type, Module& m)
     {
-      m->add(constructor<T ()>(), type);
+      m.add(constructor<T ()>(), type);
       copy_constructor<T>(type, m);
-      return m;
     }
 
     /// \brief Adds a constructor for a POD type 
@@ -138,10 +132,9 @@ namespace chaiscript
     /// \param[in] type The name of the type
     /// \param[in,out] m The Module to add the constructor to
     template<typename T>
-    ModulePtr construct_pod(const std::string &type, ModulePtr m = std::make_shared<Module>())
+    void construct_pod(const std::string &type, Module& m)
     {
-      m->add(fun(&detail::construct_pod<T>), type);
-      return m;
+      m.add(fun(&detail::construct_pod<T>), type);
     }
 
 
@@ -185,14 +178,13 @@ namespace chaiscript
     /// Add all common functions for a POD type. All operators, and
     /// common conversions
     template<typename T>
-    ModulePtr bootstrap_pod_type(const std::string &name, ModulePtr m = std::make_shared<Module>())
+    void bootstrap_pod_type(const std::string &name, Module& m)
     {
-      m->add(user_type<T>(), name);
-      m->add(constructor<T()>(), name);
+      m.add(user_type<T>(), name);
+      m.add(constructor<T()>(), name);
       construct_pod<T>(name, m);
 
-      m->add(fun(&parse_string<T>), "to_" + name);
-      return m;
+      m.add(fun(&parse_string<T>), "to_" + name);
     }
 
 
@@ -261,41 +253,41 @@ namespace chaiscript
 
 
       /// Add all arithmetic operators for PODs
-      static void opers_arithmetic_pod(ModulePtr m = std::make_shared<Module>())
+      static void opers_arithmetic_pod(Module& m)
       {
-        m->add(fun(&Boxed_Number::equals), "==");
-        m->add(fun(&Boxed_Number::less_than), "<");
-        m->add(fun(&Boxed_Number::greater_than), ">");
-        m->add(fun(&Boxed_Number::greater_than_equal), ">=");
-        m->add(fun(&Boxed_Number::less_than_equal), "<=");
-        m->add(fun(&Boxed_Number::not_equal), "!=");
+        m.add(fun(&Boxed_Number::equals), "==");
+        m.add(fun(&Boxed_Number::less_than), "<");
+        m.add(fun(&Boxed_Number::greater_than), ">");
+        m.add(fun(&Boxed_Number::greater_than_equal), ">=");
+        m.add(fun(&Boxed_Number::less_than_equal), "<=");
+        m.add(fun(&Boxed_Number::not_equal), "!=");
 
-        m->add(fun(&Boxed_Number::pre_decrement), "--");
-        m->add(fun(&Boxed_Number::pre_increment), "++");
-        m->add(fun(&Boxed_Number::sum), "+");
-        m->add(fun(&Boxed_Number::unary_plus), "+");
-        m->add(fun(&Boxed_Number::unary_minus), "-");
-        m->add(fun(&Boxed_Number::difference), "-");
-        m->add(fun(&Boxed_Number::assign_bitwise_and), "&=");
-        m->add(fun(&Boxed_Number::assign), "=");
-        m->add(fun(&Boxed_Number::assign_bitwise_or), "|=");
-        m->add(fun(&Boxed_Number::assign_bitwise_xor), "^=");
-        m->add(fun(&Boxed_Number::assign_remainder), "%=");
-        m->add(fun(&Boxed_Number::assign_shift_left), "<<=");
-        m->add(fun(&Boxed_Number::assign_shift_right), ">>=");
-        m->add(fun(&Boxed_Number::bitwise_and), "&");
-        m->add(fun(&Boxed_Number::bitwise_complement), "~");
-        m->add(fun(&Boxed_Number::bitwise_xor), "^");
-        m->add(fun(&Boxed_Number::bitwise_or), "|");
-        m->add(fun(&Boxed_Number::assign_product), "*=");
-        m->add(fun(&Boxed_Number::assign_quotient), "/=");
-        m->add(fun(&Boxed_Number::assign_sum), "+=");
-        m->add(fun(&Boxed_Number::assign_difference), "-=");
-        m->add(fun(&Boxed_Number::quotient), "/");
-        m->add(fun(&Boxed_Number::shift_left), "<<");
-        m->add(fun(&Boxed_Number::product), "*");
-        m->add(fun(&Boxed_Number::remainder), "%");
-        m->add(fun(&Boxed_Number::shift_right), ">>");
+        m.add(fun(&Boxed_Number::pre_decrement), "--");
+        m.add(fun(&Boxed_Number::pre_increment), "++");
+        m.add(fun(&Boxed_Number::sum), "+");
+        m.add(fun(&Boxed_Number::unary_plus), "+");
+        m.add(fun(&Boxed_Number::unary_minus), "-");
+        m.add(fun(&Boxed_Number::difference), "-");
+        m.add(fun(&Boxed_Number::assign_bitwise_and), "&=");
+        m.add(fun(&Boxed_Number::assign), "=");
+        m.add(fun(&Boxed_Number::assign_bitwise_or), "|=");
+        m.add(fun(&Boxed_Number::assign_bitwise_xor), "^=");
+        m.add(fun(&Boxed_Number::assign_remainder), "%=");
+        m.add(fun(&Boxed_Number::assign_shift_left), "<<=");
+        m.add(fun(&Boxed_Number::assign_shift_right), ">>=");
+        m.add(fun(&Boxed_Number::bitwise_and), "&");
+        m.add(fun(&Boxed_Number::bitwise_complement), "~");
+        m.add(fun(&Boxed_Number::bitwise_xor), "^");
+        m.add(fun(&Boxed_Number::bitwise_or), "|");
+        m.add(fun(&Boxed_Number::assign_product), "*=");
+        m.add(fun(&Boxed_Number::assign_quotient), "/=");
+        m.add(fun(&Boxed_Number::assign_sum), "+=");
+        m.add(fun(&Boxed_Number::assign_difference), "-=");
+        m.add(fun(&Boxed_Number::quotient), "/");
+        m.add(fun(&Boxed_Number::shift_left), "<<");
+        m.add(fun(&Boxed_Number::product), "*");
+        m.add(fun(&Boxed_Number::remainder), "%");
+        m.add(fun(&Boxed_Number::shift_right), ">>");
 
 
      }
@@ -403,57 +395,57 @@ namespace chaiscript
     public:
       /// \brief perform all common bootstrap functions for std::string, void and POD types
       /// \param[in,out] m Module to add bootstrapped functions to
-      /// \returns passed in ModulePtr, or newly created one if default argument is used
-      static ModulePtr bootstrap(ModulePtr m = std::make_shared<Module>())
+      /// \returns passed in Module
+      static void bootstrap(Module& m)
       {
-        m->add(user_type<void>(), "void");
-        m->add(user_type<bool>(), "bool");
-        m->add(user_type<Boxed_Value>(), "Object");
-        m->add(user_type<Boxed_Number>(), "Number");
-        m->add(user_type<Proxy_Function>(), "Function");
-        m->add(user_type<dispatch::Assignable_Proxy_Function>(), "Assignable_Function");
-        m->add(user_type<std::exception>(), "exception");
+        m.add(user_type<void>(), "void");
+        m.add(user_type<bool>(), "bool");
+        m.add(user_type<Boxed_Value>(), "Object");
+        m.add(user_type<Boxed_Number>(), "Number");
+        m.add(user_type<Proxy_Function>(), "Function");
+        m.add(user_type<dispatch::Assignable_Proxy_Function>(), "Assignable_Function");
+        m.add(user_type<std::exception>(), "exception");
 
-        m->add(fun(&dispatch::Proxy_Function_Base::get_arity), "get_arity");
-        m->add(fun(&dispatch::Proxy_Function_Base::annotation), "get_annotation");
-        m->add(fun(&dispatch::Proxy_Function_Base::operator==), "==");
-
-
-        m->add(fun(return_boxed_value_vector(&dispatch::Proxy_Function_Base::get_param_types)), "get_param_types");
-        m->add(fun(return_boxed_value_vector(&dispatch::Proxy_Function_Base::get_contained_functions)), "get_contained_functions");
+        m.add(fun(&dispatch::Proxy_Function_Base::get_arity), "get_arity");
+        m.add(fun(&dispatch::Proxy_Function_Base::annotation), "get_annotation");
+        m.add(fun(&dispatch::Proxy_Function_Base::operator==), "==");
 
 
-        m->add(user_type<std::out_of_range>(), "out_of_range");
-        m->add(user_type<std::logic_error>(), "logic_error");
-        m->add(chaiscript::base_class<std::exception, std::logic_error>());
-        m->add(chaiscript::base_class<std::logic_error, std::out_of_range>());
-        m->add(chaiscript::base_class<std::exception, std::out_of_range>());
+        m.add(fun(return_boxed_value_vector(&dispatch::Proxy_Function_Base::get_param_types)), "get_param_types");
+        m.add(fun(return_boxed_value_vector(&dispatch::Proxy_Function_Base::get_contained_functions)), "get_contained_functions");
 
-        m->add(user_type<std::runtime_error>(), "runtime_error");
-        m->add(chaiscript::base_class<std::exception, std::runtime_error>());
 
-        m->add(constructor<std::runtime_error (const std::string &)>(), "runtime_error");
-        m->add(fun(std::function<std::string (const std::runtime_error &)>(&what)), "what");
+        m.add(user_type<std::out_of_range>(), "out_of_range");
+        m.add(user_type<std::logic_error>(), "logic_error");
+        m.add(chaiscript::base_class<std::exception, std::logic_error>());
+        m.add(chaiscript::base_class<std::logic_error, std::out_of_range>());
+        m.add(chaiscript::base_class<std::exception, std::out_of_range>());
 
-        m->add(user_type<dispatch::Dynamic_Object>(), "Dynamic_Object");
-        m->add(constructor<dispatch::Dynamic_Object (const std::string &)>(), "Dynamic_Object");
-        m->add(constructor<dispatch::Dynamic_Object ()>(), "Dynamic_Object");
-        m->add(fun(&dispatch::Dynamic_Object::get_type_name), "get_type_name");
-        m->add(fun(&dispatch::Dynamic_Object::get_attrs), "get_attrs");
-        m->add(fun(&dispatch::Dynamic_Object::set_explicit), "set_explicit");
-        m->add(fun(&dispatch::Dynamic_Object::is_explicit), "is_explicit");
-        m->add(fun(&dispatch::Dynamic_Object::has_attr), "has_attr");
+        m.add(user_type<std::runtime_error>(), "runtime_error");
+        m.add(chaiscript::base_class<std::exception, std::runtime_error>());
 
-        m->add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::get_attr)), "get_attr");
-        m->add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::get_attr)), "get_attr");
+        m.add(constructor<std::runtime_error (const std::string &)>(), "runtime_error");
+        m.add(fun(std::function<std::string (const std::runtime_error &)>(&what)), "what");
 
-        m->add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::method_missing)), "method_missing");
-        m->add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::method_missing)), "method_missing");
+        m.add(user_type<dispatch::Dynamic_Object>(), "Dynamic_Object");
+        m.add(constructor<dispatch::Dynamic_Object (const std::string &)>(), "Dynamic_Object");
+        m.add(constructor<dispatch::Dynamic_Object ()>(), "Dynamic_Object");
+        m.add(fun(&dispatch::Dynamic_Object::get_type_name), "get_type_name");
+        m.add(fun(&dispatch::Dynamic_Object::get_attrs), "get_attrs");
+        m.add(fun(&dispatch::Dynamic_Object::set_explicit), "set_explicit");
+        m.add(fun(&dispatch::Dynamic_Object::is_explicit), "is_explicit");
+        m.add(fun(&dispatch::Dynamic_Object::has_attr), "has_attr");
 
-        m->add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::get_attr)), "[]");
-        m->add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::get_attr)), "[]");
+        m.add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::get_attr)), "get_attr");
+        m.add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::get_attr)), "get_attr");
 
-        m->eval(R"chaiscript(
+        m.add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::method_missing)), "method_missing");
+        m.add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::method_missing)), "method_missing");
+
+        m.add(fun(static_cast<Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &)>(&dispatch::Dynamic_Object::get_attr)), "[]");
+        m.add(fun(static_cast<const Boxed_Value & (dispatch::Dynamic_Object::*)(const std::string &) const>(&dispatch::Dynamic_Object::get_attr)), "[]");
+
+        m.eval(R"chaiscript(
           def Dynamic_Object::clone() { 
             auto &new_o = Dynamic_Object(this.get_type_name()); 
             for_each(this.get_attrs(), fun[new_o](x) { new_o.get_attr(x.first) = x.second; } ); 
@@ -490,37 +482,37 @@ namespace chaiscript
           }
         )chaiscript");
 
-        m->add(fun(&has_guard), "has_guard");
-        m->add(fun(&get_guard), "get_guard");
+        m.add(fun(&has_guard), "has_guard");
+        m.add(fun(&get_guard), "get_guard");
 
-        m->add(fun(&Boxed_Value::is_undef), "is_var_undef");
-        m->add(fun(&Boxed_Value::is_null), "is_var_null");
-        m->add(fun(&Boxed_Value::is_const), "is_var_const");
-        m->add(fun(&Boxed_Value::is_ref), "is_var_reference");
-        m->add(fun(&Boxed_Value::is_pointer), "is_var_pointer");
-        m->add(fun(&Boxed_Value::is_return_value), "is_var_return_value");
-        m->add(fun(&Boxed_Value::reset_return_value), "reset_var_return_value");
-        m->add(fun(&Boxed_Value::is_type), "is_type");
-        m->add(fun(&Boxed_Value::get_attr), "get_var_attr");
-        m->add(fun(&Boxed_Value::copy_attrs), "copy_var_attrs");
-        m->add(fun(&Boxed_Value::clone_attrs), "clone_var_attrs");
+        m.add(fun(&Boxed_Value::is_undef), "is_var_undef");
+        m.add(fun(&Boxed_Value::is_null), "is_var_null");
+        m.add(fun(&Boxed_Value::is_const), "is_var_const");
+        m.add(fun(&Boxed_Value::is_ref), "is_var_reference");
+        m.add(fun(&Boxed_Value::is_pointer), "is_var_pointer");
+        m.add(fun(&Boxed_Value::is_return_value), "is_var_return_value");
+        m.add(fun(&Boxed_Value::reset_return_value), "reset_var_return_value");
+        m.add(fun(&Boxed_Value::is_type), "is_type");
+        m.add(fun(&Boxed_Value::get_attr), "get_var_attr");
+        m.add(fun(&Boxed_Value::copy_attrs), "copy_var_attrs");
+        m.add(fun(&Boxed_Value::clone_attrs), "clone_var_attrs");
 
-        m->add(fun(&Boxed_Value::get_type_info), "get_type_info");
-        m->add(user_type<Type_Info>(), "Type_Info");
-        m->add(constructor<Type_Info (const Type_Info &)>(), "Type_Info");
+        m.add(fun(&Boxed_Value::get_type_info), "get_type_info");
+        m.add(user_type<Type_Info>(), "Type_Info");
+        m.add(constructor<Type_Info (const Type_Info &)>(), "Type_Info");
 
 
         operators::equal<Type_Info>(m);
 
-        m->add(fun(&Type_Info::is_const), "is_type_const");
-        m->add(fun(&Type_Info::is_reference), "is_type_reference");
-        m->add(fun(&Type_Info::is_void), "is_type_void");
-        m->add(fun(&Type_Info::is_undef), "is_type_undef");
-        m->add(fun(&Type_Info::is_pointer), "is_type_pointer");
-        m->add(fun(&Type_Info::is_arithmetic), "is_type_arithmetic");
-        m->add(fun(&Type_Info::name), "cpp_name");
-        m->add(fun(&Type_Info::bare_name), "cpp_bare_name");
-        m->add(fun(&Type_Info::bare_equal), "bare_equal");
+        m.add(fun(&Type_Info::is_const), "is_type_const");
+        m.add(fun(&Type_Info::is_reference), "is_type_reference");
+        m.add(fun(&Type_Info::is_void), "is_type_void");
+        m.add(fun(&Type_Info::is_undef), "is_type_undef");
+        m.add(fun(&Type_Info::is_pointer), "is_type_pointer");
+        m.add(fun(&Type_Info::is_arithmetic), "is_type_arithmetic");
+        m.add(fun(&Type_Info::name), "cpp_name");
+        m.add(fun(&Type_Info::bare_name), "cpp_bare_name");
+        m.add(fun(&Type_Info::bare_equal), "bare_equal");
 
 
         basic_constructors<bool>("bool", m);
@@ -528,14 +520,14 @@ namespace chaiscript
         operators::equal<bool>(m);
         operators::not_equal<bool>(m);
 
-        m->add(fun([](const std::string &s) -> std::string { return s; }), "to_string");
-        m->add(fun(&Bootstrap::bool_to_string), "to_string");
-        m->add(fun(&unknown_assign), "=");
-        m->add(fun(&throw_exception), "throw");
-        m->add(fun(&what), "what");
+        m.add(fun([](const std::string &s) -> std::string { return s; }), "to_string");
+        m.add(fun(&Bootstrap::bool_to_string), "to_string");
+        m.add(fun(&unknown_assign), "=");
+        m.add(fun(&throw_exception), "throw");
+        m.add(fun(&what), "what");
 
-        m->add(fun(&to_string<char>), "to_string");
-        m->add(fun(&Boxed_Number::to_string), "to_string");
+        m.add(fun(&to_string<char>), "to_string");
+        m.add(fun(&Boxed_Number::to_string), "to_string");
 
         bootstrap_pod_type<double>("double", m);
         bootstrap_pod_type<long double>("long_double", m);
@@ -565,38 +557,38 @@ namespace chaiscript
         opers_arithmetic_pod(m);
 
 
-        m->add(fun(&print), "print_string");
-        m->add(fun(&println), "println_string");
+        m.add(fun(&print), "print_string");
+        m.add(fun(&println), "println_string");
 
-        m->add(dispatch::make_dynamic_proxy_function(&bind_function), "bind");
+        m.add(dispatch::make_dynamic_proxy_function(&bind_function), "bind");
 
-        m->add(fun(&shared_ptr_unconst_clone<dispatch::Proxy_Function_Base>), "clone");
-        m->add(fun(&ptr_assign<std::remove_const<dispatch::Proxy_Function_Base>::type>), "=");
-        m->add(fun(&ptr_assign<std::add_const<dispatch::Proxy_Function_Base>::type>), "=");
-        m->add(chaiscript::base_class<dispatch::Proxy_Function_Base, dispatch::Assignable_Proxy_Function>());
-        m->add(fun(
+        m.add(fun(&shared_ptr_unconst_clone<dispatch::Proxy_Function_Base>), "clone");
+        m.add(fun(&ptr_assign<std::remove_const<dispatch::Proxy_Function_Base>::type>), "=");
+        m.add(fun(&ptr_assign<std::add_const<dispatch::Proxy_Function_Base>::type>), "=");
+        m.add(chaiscript::base_class<dispatch::Proxy_Function_Base, dispatch::Assignable_Proxy_Function>());
+        m.add(fun(
                   [](dispatch::Assignable_Proxy_Function &t_lhs, const std::shared_ptr<const dispatch::Proxy_Function_Base> &t_rhs) {
                     t_lhs.assign(t_rhs);
                   }
                 ), "="
               );
 
-        m->add(fun(&Boxed_Value::type_match), "type_match");
+        m.add(fun(&Boxed_Value::type_match), "type_match");
 
 
-        m->add(chaiscript::fun(&has_parse_tree), "has_parse_tree");
-        m->add(chaiscript::fun(&get_parse_tree), "get_parse_tree");
+        m.add(chaiscript::fun(&has_parse_tree), "has_parse_tree");
+        m.add(chaiscript::fun(&get_parse_tree), "get_parse_tree");
 
-        m->add(chaiscript::base_class<std::runtime_error, chaiscript::exception::eval_error>());
+        m.add(chaiscript::base_class<std::runtime_error, chaiscript::exception::eval_error>());
 
-        m->add(chaiscript::user_type<chaiscript::exception::arithmetic_error>(), "arithmetic_error");
-        m->add(chaiscript::base_class<std::runtime_error, chaiscript::exception::arithmetic_error>());
+        m.add(chaiscript::user_type<chaiscript::exception::arithmetic_error>(), "arithmetic_error");
+        m.add(chaiscript::base_class<std::runtime_error, chaiscript::exception::arithmetic_error>());
 
 
 //        chaiscript::bootstrap::standard_library::vector_type<std::vector<std::shared_ptr<chaiscript::AST_Node> > >("AST_NodeVector", m);
 
 
-        chaiscript::utility::add_class<chaiscript::exception::eval_error>(*m,
+        chaiscript::utility::add_class<chaiscript::exception::eval_error>(m,
             "eval_error",
             { },
             { {fun(&chaiscript::exception::eval_error::reason), "reason"},
@@ -611,7 +603,7 @@ namespace chaiscript
             );
 
 
-        chaiscript::utility::add_class<chaiscript::File_Position>(*m,
+        chaiscript::utility::add_class<chaiscript::File_Position>(m,
             "File_Position",
             { constructor<File_Position()>(),
               constructor<File_Position(int, int)>() },
@@ -620,7 +612,7 @@ namespace chaiscript
             );
 
 
-        chaiscript::utility::add_class<AST_Node>(*m, 
+        chaiscript::utility::add_class<AST_Node>(m,
             "AST_Node",
             {  },
             { {fun(&AST_Node::text), "text"},
@@ -641,16 +633,12 @@ namespace chaiscript
             );
 
 
-        chaiscript::utility::add_class<parser::ChaiScript_Parser>(*m,
+        chaiscript::utility::add_class<parser::ChaiScript_Parser>(m,
             "ChaiScript_Parser",
             { constructor<parser::ChaiScript_Parser ()>() },
             { {fun(&parser::ChaiScript_Parser::parse), "parse"},
               {fun(&parser::ChaiScript_Parser::ast), "ast"} }
             );
-
-
-
-        return m;
       }
     };
   }
