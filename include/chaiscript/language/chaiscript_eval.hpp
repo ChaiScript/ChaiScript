@@ -166,11 +166,6 @@ namespace chaiscript
     };
 
 
-    struct Str_AST_Node final : AST_Node {
-        Str_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Str, std::move(t_loc)) { }
-    };
-
 
     struct Fun_Call_AST_Node final : AST_Node {
         Fun_Call_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
@@ -1323,12 +1318,12 @@ namespace chaiscript
     struct Logical_And_AST_Node final : AST_Node {
         Logical_And_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Logical_And, std::move(t_loc), std::move(t_children)) 
-        { assert(children.size() == 3); }
+        { assert(children.size() == 2); }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
         {
           return const_var(get_bool_condition(children[0]->eval(t_ss))
-              && get_bool_condition(children[2]->eval(t_ss)));
+              && get_bool_condition(children[1]->eval(t_ss)));
         }
 
         std::string pretty_print() const override
@@ -1340,12 +1335,12 @@ namespace chaiscript
     struct Logical_Or_AST_Node final : AST_Node {
         Logical_Or_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Logical_Or, std::move(t_loc), std::move(t_children)) 
-        { assert(children.size() == 3); }
+        { assert(children.size() == 2); }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
         {
           return const_var(get_bool_condition(children[0]->eval(t_ss))
-              || get_bool_condition(children[2]->eval(t_ss)));
+              || get_bool_condition(children[1]->eval(t_ss)));
         }
 
         std::string pretty_print() const override

@@ -1315,7 +1315,7 @@ namespace chaiscript
       }
 
       /// Reads (and potentially captures) a symbol group from input if it matches the parameter
-      bool Symbol(const char *t_s, const bool t_capture = false, const bool t_disallow_prevention=false) {
+      bool Symbol(const char *t_s, const bool t_disallow_prevention=false) {
         SkipWS();
         const auto start = m_position;
         bool retval = Symbol_(t_s);
@@ -1328,10 +1328,6 @@ namespace chaiscript
             m_position = start;
             retval = false;
           }
-        }
-
-        if ( t_capture && retval ) {
-          m_match_stack.push_back(make_node<eval::Str_AST_Node>(Position::str(start, m_position), start.line, start.col));
         }
 
         return retval;
@@ -2205,9 +2201,10 @@ namespace chaiscript
         return Var_Decl() || Dot_Fun_Array() || Prefix();
       }
 
-      bool Operator_Helper(const size_t t_precedence) {
+      bool Operator_Helper(const size_t t_precedence, std::string &oper) {
         for (auto & elem : m_operator_matches[t_precedence]) {
-          if (Symbol(elem.c_str(), true)) {
+          if (Symbol(elem.c_str())) {
+            oper = elem;
             return true;
           }
         }
@@ -2221,7 +2218,8 @@ namespace chaiscript
         if (t_precedence < m_operators.size()) {
           if (Operator(t_precedence+1)) {
             retval = true;
-            while (Operator_Helper(t_precedence)) {
+            std::string oper;
+            while (Operator_Helper(t_precedence, oper)) {
               while (Eol()) {}
               if (!Operator(t_precedence+1)) {
                 throw exception::eval_error("Incomplete "
@@ -2229,12 +2227,8 @@ namespace chaiscript
                     File_Position(m_position.line, m_position.col), *m_filename);
               }
 
-              AST_NodePtr oper = m_match_stack.at(m_match_stack.size()-2);
-
               switch (m_operators[t_precedence]) {
                 case(AST_Node_Type::Ternary_Cond) :
-                  m_match_stack.erase(advance_copy(m_match_stack.begin(), m_match_stack.size() - 2),
-                      advance_copy(m_match_stack.begin(), m_match_stack.size() - 1));
                   if (Symbol(":")) {
                     if (!Operator(t_precedence+1)) {
                       throw exception::eval_error("Incomplete "
@@ -2258,17 +2252,14 @@ namespace chaiscript
                 case(AST_Node_Type::Bitwise_Xor) :
                 case(AST_Node_Type::Bitwise_Or) :
                 case(AST_Node_Type::Comparison) :
-                  assert(m_match_stack.size() > 1);
-                  m_match_stack.erase(advance_copy(m_match_stack.begin(), m_match_stack.size() - 2), 
-                      advance_copy(m_match_stack.begin(), m_match_stack.size() - 1));
-                  build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, oper->text);
+                  build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, oper);
                   break;
 
                 case(AST_Node_Type::Logical_And) :
-                  build_match<eval::Logical_And_AST_Node>(prev_stack_top);
+                  build_match<eval::Logical_And_AST_Node>(prev_stack_top, oper);
                   break;
                 case(AST_Node_Type::Logical_Or) :
-                  build_match<eval::Logical_Or_AST_Node>(prev_stack_top);
+                  build_match<eval::Logical_Or_AST_Node>(prev_stack_top, oper);
                   break;
 
                 default:
@@ -2345,7 +2336,7 @@ namespace chaiscript
         if (Operator()) {
           for (const auto sym : {"=", ":=", "+=", "-=", "*=", "/=", "%=", "<<=", ">>=", "&=", "^=", "|="}) 
           {
-            if (Symbol(sym, false, true)) {
+            if (Symbol(sym, true)) {
               SkipWS(true);
               if (!Equation()) {
                 throw exception::eval_error("Incomplete equation", File_Position(m_position.line, m_position.col), *m_filename);
