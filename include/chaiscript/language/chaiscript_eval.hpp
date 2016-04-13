@@ -93,11 +93,6 @@ namespace chaiscript
           return do_oper(t_ss, m_oper, text, lhs, rhs);
         }
 
-        std::string pretty_print() const override 
-        {
-          return "(" + this->children[0]->pretty_print() + " " + text + " " + this->children[1]->pretty_print() + ")";
-        }
-
       protected:
         Boxed_Value do_oper(const chaiscript::detail::Dispatch_State &t_ss, 
             Operators::Opers t_oper, const std::string &t_oper_string, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs) const
@@ -212,25 +207,6 @@ namespace chaiscript
           }
         }
 
-        std::string pretty_print() const override 
-        {
-          std::ostringstream oss;
-
-          int count = 0;
-          for (const auto &child : this->children) {
-            oss << child->pretty_print();
-
-            if (count == 0)
-            {
-              oss << "(";
-            }
-            ++count;
-          }
-
-          oss << ")";
-
-          return oss.str();
-        }
 
     };
 
@@ -240,40 +216,12 @@ namespace chaiscript
         Arg_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Arg_List, std::move(t_loc), std::move(t_children)) { }
 
-        std::string pretty_print() const override 
-        {
-          std::ostringstream oss;
-          for (size_t j = 0; j < this->children.size(); ++j) {
-            if (j != 0)
-            {
-              oss << " ";
-            }
-
-            oss << this->children[j]->pretty_print();
-          }
-
-          return oss.str();
-        }
     };
 
     struct Arg_List_AST_Node final : AST_Node {
         Arg_List_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Arg_List, std::move(t_loc), std::move(t_children)) { }
 
-        std::string pretty_print() const override 
-        {
-          std::ostringstream oss;
-          for (size_t j = 0; j < this->children.size(); ++j) {
-            if (j != 0)
-            {
-              oss << ", ";
-            }
-
-            oss << this->children[j]->pretty_print();
-          }
-
-          return oss.str();
-        }
 
         static std::string get_arg_name(const AST_NodePtr &t_node) {
           if (t_node->children.empty())
@@ -451,10 +399,6 @@ namespace chaiscript
 
         }
 
-        std::string pretty_print() const override 
-        {
-          return "var " + this->children[0]->text;
-        }
 
     };
 
@@ -477,20 +421,6 @@ namespace chaiscript
           }
         }
 
-        std::string pretty_print() const override 
-        {
-          std::ostringstream oss;
-          oss << this->children[0]->pretty_print();
-
-          for (size_t i = 1; i < this->children.size(); ++i)
-          {
-            oss << "[";
-            oss << this->children[i]->pretty_print();
-            oss << "]";
-          }
-
-          return oss.str();
-        }
 
       private:
         mutable std::atomic_uint_fast32_t m_loc;
@@ -884,11 +814,6 @@ namespace chaiscript
           catch (const exception::dispatch_error &) {
             throw exception::eval_error("Can not find appropriate 'clone' or copy constructor for vector elements");
           }
-        }
-
-        std::string pretty_print() const override
-        {
-          return "[" + AST_Node::pretty_print() + "]";
         }
 
       private:
@@ -1327,10 +1252,6 @@ namespace chaiscript
               && get_bool_condition(children[1]->eval(t_ss)));
         }
 
-        std::string pretty_print() const override
-        {
-          return "(" + AST_Node::pretty_print() + ")";
-        }
     };
 
     struct Logical_Or_AST_Node final : AST_Node {
@@ -1343,12 +1264,6 @@ namespace chaiscript
           return const_var(get_bool_condition(children[0]->eval(t_ss))
               || get_bool_condition(children[1]->eval(t_ss)));
         }
-
-        std::string pretty_print() const override
-        {
-          return "(" + AST_Node::pretty_print() + ")";
-        }
-
     };
   }
 

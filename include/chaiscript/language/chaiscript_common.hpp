@@ -461,7 +461,7 @@ namespace chaiscript
         return location.end;
       }
 
-      virtual std::string pretty_print() const
+      std::string pretty_print() const
       {
         std::ostringstream oss;
 
@@ -528,7 +528,7 @@ namespace chaiscript
       }
 
     private:
-      // Copy and assignment explicitly unimplemented
+      // Copy and assignment explicitly deleted
       AST_Node(const AST_Node &) = delete;
       AST_Node& operator=(const AST_Node &) = delete;
   };
