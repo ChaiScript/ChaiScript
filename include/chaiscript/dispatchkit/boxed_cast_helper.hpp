@@ -29,7 +29,7 @@ namespace chaiscript
         throw std::runtime_error("Attempted to dereference null Boxed_Value");
       }
 
-    const void *verify_type(const Boxed_Value &ob, const std::type_info &ti, const void *ptr) {
+    static const void *verify_type(const Boxed_Value &ob, const std::type_info &ti, const void *ptr) {
       if (!ob.get_type_info().bare_equal_type_info(ti)) {
         throw chaiscript::detail::exception::bad_any_cast();
       } else {
@@ -37,20 +37,13 @@ namespace chaiscript
       }
     }
 
-    void *verify_type(const Boxed_Value &ob, const std::type_info &ti, void *ptr) {
+    static void *verify_type(const Boxed_Value &ob, const std::type_info &ti, void *ptr) {
       if (ptr == nullptr || !ob.get_type_info().bare_equal_type_info(ti)) {
         throw chaiscript::detail::exception::bad_any_cast();
       } else {
         return ptr;
       }
     }
-
-    /*
-    template<typename Result, typename = enable_if<Result>>
-      Result cast_helper_inner(const Boxed_Value &ob, const Type_Conversions_State *)
-      {
-      }
-*/
 
     /// Generic Cast_Helper_Inner, for casting to any type
     template<typename Result>
