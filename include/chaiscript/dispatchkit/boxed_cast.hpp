@@ -69,7 +69,7 @@ namespace chaiscript
   /// assert(i == 5);
   /// \endcode
   template<typename Type>
-  typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv, const Type_Conversions_State *t_conversions = nullptr)
+  auto boxed_cast(const Boxed_Value &bv, const Type_Conversions_State *t_conversions = nullptr) -> decltype(detail::Cast_Helper<Type>::cast(bv, nullptr))
   {
     if (!t_conversions || bv.get_type_info().bare_equal(user_type<Type>()) || (t_conversions && !(*t_conversions)->convertable_type<Type>())) {
       try {

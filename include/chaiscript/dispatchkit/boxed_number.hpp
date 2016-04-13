@@ -1009,9 +1009,7 @@ namespace chaiscript
     template<>
       struct Cast_Helper<Boxed_Number>
       {
-        typedef Boxed_Number Result_Type;
-
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *)
+        static Boxed_Number cast(const Boxed_Value &ob, const Type_Conversions_State *)
         {
           return Boxed_Number(ob);
         }

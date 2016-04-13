@@ -424,7 +424,7 @@ namespace chaiscript
 
         /// \brief casts an object while applying any Dynamic_Conversion available
         template<typename Type>
-          typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv) const
+          auto boxed_cast(const Boxed_Value &bv) const -> decltype(chaiscript::boxed_cast<Type>(bv, nullptr)) 
           {
             Type_Conversions_State state(m_conversions, m_conversions.conversion_saves());
             return chaiscript::boxed_cast<Type>(bv, &state);
