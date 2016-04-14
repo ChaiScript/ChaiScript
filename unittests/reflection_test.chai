@@ -4,19 +4,8 @@ auto& a = parser.ast()
 
 assert_equal(eval(a), 7)
 
-auto& childs = a.children.front().children
-auto& node = childs[0]
-
-auto& parser2 = ChaiScript_Parser()
-parser2.parse("9", "INPUT")
-
-
-a.children.front().replace_child(childs[0], parser2.ast())
-
-assert_equal(eval(a), 13)
-assert_equal(node.filename, "INPUT")
-
-
+assert_equal(1, a.children.size());
+assert_equal("3 + 4", a.children[0].text());
 
 def my_fun()
 {
