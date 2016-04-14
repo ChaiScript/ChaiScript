@@ -138,15 +138,6 @@ namespace chaiscript
     }
 
 
-    /// to_string function for internal use. Uses ostream operator<<
-    template<typename Input>
-    std::string to_string(Input i)
-    {
-      std::stringstream ss;
-      ss << i;
-      return ss.str();
-    }
-
     /// Internal function for converting from a string to a value
     /// uses ostream operator >> to perform the conversion
     template<typename Input>
@@ -288,8 +279,6 @@ namespace chaiscript
         m.add(fun(&Boxed_Number::product), "*");
         m.add(fun(&Boxed_Number::remainder), "%");
         m.add(fun(&Boxed_Number::shift_right), ">>");
-
-
      }
 
       /// Create a bound function object. The first param is the function to bind
@@ -329,26 +318,6 @@ namespace chaiscript
         }
       }
 
-      static void throw_exception(const Boxed_Value &bv) {
-        throw bv;
-      }
-
-      static std::string what(const std::exception &e)
-      {
-        return e.what();
-      }
-
-      /// Boolean specialization of internal to_string function
-      static std::string bool_to_string(bool b)
-      {
-        if (b)
-        {
-          return "true";
-        } else {
-          return "false";
-        }
-      }
-
       template<typename FunctionType>
         static std::vector<Boxed_Value> do_return_boxed_value_vector(FunctionType f,
             const dispatch::Proxy_Function_Base *b)
@@ -384,7 +353,7 @@ namespace chaiscript
       }
 
       template<typename Function>
-      static std::function<std::vector<Boxed_Value> (const dispatch::Proxy_Function_Base*)> return_boxed_value_vector(const Function &f)
+      static auto return_boxed_value_vector(const Function &f)
       {
         return [f](const dispatch::Proxy_Function_Base *b) {
           return do_return_boxed_value_vector(f, b);
@@ -414,6 +383,7 @@ namespace chaiscript
         m.add(fun(return_boxed_value_vector(&dispatch::Proxy_Function_Base::get_param_types)), "get_param_types");
         m.add(fun(return_boxed_value_vector(&dispatch::Proxy_Function_Base::get_contained_functions)), "get_contained_functions");
 
+        m.add(fun([](const std::exception &e){ return std::string(e.what()); }), "what");
 
         m.add(user_type<std::out_of_range>(), "out_of_range");
         m.add(user_type<std::logic_error>(), "logic_error");
@@ -425,7 +395,6 @@ namespace chaiscript
         m.add(chaiscript::base_class<std::exception, std::runtime_error>());
 
         m.add(constructor<std::runtime_error (const std::string &)>(), "runtime_error");
-        m.add(fun(std::function<std::string (const std::runtime_error &)>(&what)), "what");
 
         m.add(user_type<dispatch::Dynamic_Object>(), "Dynamic_Object");
         m.add(constructor<dispatch::Dynamic_Object (const std::string &)>(), "Dynamic_Object");
@@ -520,13 +489,12 @@ namespace chaiscript
         operators::equal<bool>(m);
         operators::not_equal<bool>(m);
 
-        m.add(fun([](const std::string &s) -> std::string { return s; }), "to_string");
-        m.add(fun(&Bootstrap::bool_to_string), "to_string");
+        m.add(fun([](const std::string &s) { return s; }), "to_string");
+        m.add(fun([](const bool b) { return std::string(b?"true":"false"); }), "to_string");
         m.add(fun(&unknown_assign), "=");
-        m.add(fun(&throw_exception), "throw");
-        m.add(fun(&what), "what");
+        m.add(fun([](const Boxed_Value &bv) { throw bv; }), "throw");
 
-        m.add(fun(&to_string<char>), "to_string");
+        m.add(fun([](const char c) { return std::string(1, c); }), "to_string");
         m.add(fun(&Boxed_Number::to_string), "to_string");
 
         bootstrap_pod_type<double>("double", m);
@@ -593,13 +561,13 @@ namespace chaiscript
             { },
             { {fun(&chaiscript::exception::eval_error::reason), "reason"},
               {fun(&chaiscript::exception::eval_error::pretty_print), "pretty_print"},
-              {fun(std::function<std::vector<Boxed_Value> (const chaiscript::exception::eval_error &t_eval_error)>([](const chaiscript::exception::eval_error &t_eval_error) -> std::vector<Boxed_Value> { 
+              {fun([](const chaiscript::exception::eval_error &t_eval_error) { 
                   std::vector<Boxed_Value> retval;
                   std::transform(t_eval_error.call_stack.begin(), t_eval_error.call_stack.end(),
                                  std::back_inserter(retval),
                                  &chaiscript::var<const std::shared_ptr<const chaiscript::AST_Node> &>);
                   return retval;
-                })), "call_stack"} }
+                }), "call_stack"} }
             );
 
 
