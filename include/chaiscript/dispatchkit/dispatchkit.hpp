@@ -424,10 +424,10 @@ namespace chaiscript
 
         /// \brief casts an object while applying any Dynamic_Conversion available
         template<typename Type>
-          auto boxed_cast(const Boxed_Value &bv) const -> decltype(chaiscript::boxed_cast<Type>(bv, nullptr)) 
+          decltype(auto) boxed_cast(const Boxed_Value &bv) const
           {
             Type_Conversions_State state(m_conversions, m_conversions.conversion_saves());
-            return chaiscript::boxed_cast<Type>(bv, &state);
+            return(chaiscript::boxed_cast<Type>(bv, &state));
           }
 
         /// Add a new conversion for upcasting to a base class

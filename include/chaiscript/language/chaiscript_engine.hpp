@@ -690,9 +690,9 @@ namespace chaiscript
 
     /// \brief casts an object while applying any Dynamic_Conversion available
     template<typename Type>
-      auto boxed_cast(const Boxed_Value &bv) const -> decltype(m_engine.boxed_cast<Type>(bv))
+      decltype(auto) boxed_cast(const Boxed_Value &bv) const
       {
-        return m_engine.boxed_cast<Type>(bv);
+        return(m_engine.boxed_cast<Type>(bv));
       }
  
 

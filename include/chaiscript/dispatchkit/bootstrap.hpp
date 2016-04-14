@@ -548,9 +548,11 @@ namespace chaiscript
         m.add(chaiscript::fun(&get_parse_tree), "get_parse_tree");
 
         m.add(chaiscript::base_class<std::runtime_error, chaiscript::exception::eval_error>());
+        m.add(chaiscript::base_class<std::exception, chaiscript::exception::eval_error>());
 
         m.add(chaiscript::user_type<chaiscript::exception::arithmetic_error>(), "arithmetic_error");
         m.add(chaiscript::base_class<std::runtime_error, chaiscript::exception::arithmetic_error>());
+        m.add(chaiscript::base_class<std::exception, chaiscript::exception::arithmetic_error>());
 
 
 //        chaiscript::bootstrap::standard_library::vector_type<std::vector<std::shared_ptr<chaiscript::AST_Node> > >("AST_NodeVector", m);

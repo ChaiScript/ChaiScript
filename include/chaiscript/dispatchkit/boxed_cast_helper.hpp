@@ -30,18 +30,18 @@ namespace chaiscript
       }
 
     static const void *verify_type(const Boxed_Value &ob, const std::type_info &ti, const void *ptr) {
-      if (!ob.get_type_info().bare_equal_type_info(ti)) {
-        throw chaiscript::detail::exception::bad_any_cast();
-      } else {
+      if (ob.get_type_info().bare_equal_type_info(ti)) {
         return throw_if_null(ptr);
+      } else {
+        throw chaiscript::detail::exception::bad_any_cast();
       }
     }
 
     static void *verify_type(const Boxed_Value &ob, const std::type_info &ti, void *ptr) {
-      if (ptr == nullptr || !ob.get_type_info().bare_equal_type_info(ti)) {
-        throw chaiscript::detail::exception::bad_any_cast();
+      if (!ob.is_const() && ob.get_type_info().bare_equal_type_info(ti)) {
+        return throw_if_null(ptr);
       } else {
-        return ptr;
+        throw chaiscript::detail::exception::bad_any_cast();
       }
     }
 
@@ -242,9 +242,9 @@ namespace chaiscript
     template<typename T>
       struct Cast_Helper
       {
-        static auto cast(const Boxed_Value &ob, const Type_Conversions_State *t_conversions) -> decltype(Cast_Helper_Inner<T>::cast(ob, t_conversions))
+        static decltype(auto) cast(const Boxed_Value &ob, const Type_Conversions_State *t_conversions)
         {
-          return Cast_Helper_Inner<T>::cast(ob, t_conversions);
+          return(Cast_Helper_Inner<T>::cast(ob, t_conversions));
         }
       };
   }
