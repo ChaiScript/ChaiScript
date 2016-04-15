@@ -1,0 +1,7 @@
+load_module("stl_extra");
+
+auto uint16v = u16vector();
+
+uint16v.reserve(5);
+assert_true(uint16v.capacity() >= 5);
+
