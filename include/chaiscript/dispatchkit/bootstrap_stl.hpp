@@ -297,8 +297,8 @@ namespace chaiscript
       template<typename ContainerType>
         void resizable_type(const std::string &/*type*/, Module& m)
         {
-          m.add(fun([](ContainerType *a, ContainerType::size_type n, ContainerType::value_type val) { return a->resize(n, val); } ), "resize");
-          m.add(fun([](ContainerType *a, ContainerType::size_type n) { return a->resize(n, ContainerType::value_type()); } ), "resize");
+          m.add(fun([](ContainerType *a, typename ContainerType::size_type n, const typename ContainerType::value_type& val) { return a->resize(n, val); } ), "resize");
+          m.add(fun([](ContainerType *a, typename ContainerType::size_type n) { return a->resize(n); } ), "resize");
         }
       template<typename ContainerType>
         ModulePtr resizable_type(const std::string &type)
@@ -314,7 +314,7 @@ namespace chaiscript
       template<typename ContainerType>
         void reservable_type(const std::string &/*type*/, Module& m)
         {
-          m.add(fun([](ContainerType *a, ContainerType::size_type n) { return a->reserve(n); } ), "reserve");
+          m.add(fun([](ContainerType *a, typename ContainerType::size_type n) { return a->reserve(n); } ), "reserve");
         }
       template<typename ContainerType>
         ModulePtr reservable_type(const std::string &type)
