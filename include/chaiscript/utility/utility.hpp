@@ -15,7 +15,7 @@
 #include "../chaiscript.hpp"
 #include "../dispatchkit/proxy_functions.hpp"
 #include "../dispatchkit/type_info.hpp"
-//#include "../dispatchkit/operators.hpp"
+#include "../dispatchkit/operators.hpp"
 
 
 namespace chaiscript 

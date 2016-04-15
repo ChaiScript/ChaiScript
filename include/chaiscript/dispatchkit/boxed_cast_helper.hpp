@@ -29,6 +29,23 @@ namespace chaiscript
         throw std::runtime_error("Attempted to dereference null Boxed_Value");
       }
 
+    static const void *verify_type_no_throw(const Boxed_Value &ob, const std::type_info &ti, const void *ptr) {
+      if (ob.get_type_info() == ti) {
+        return ptr;
+      } else {
+        throw chaiscript::detail::exception::bad_any_cast();
+      }
+    }
+
+    static void *verify_type_no_throw(const Boxed_Value &ob, const std::type_info &ti, void *ptr) {
+      if (!ob.is_const() && ob.get_type_info() == ti) {
+        return ptr;
+      } else {
+        throw chaiscript::detail::exception::bad_any_cast();
+      }
+    }
+
+
     static const void *verify_type(const Boxed_Value &ob, const std::type_info &ti, const void *ptr) {
       if (ob.get_type_info().bare_equal_type_info(ti)) {
         return throw_if_null(ptr);
@@ -65,9 +82,9 @@ namespace chaiscript
     template<typename Result>
       struct Cast_Helper_Inner<const Result *>
       {
-        static auto cast(const Boxed_Value &ob, const Type_Conversions_State *)
+        static const Result * cast(const Boxed_Value &ob, const Type_Conversions_State *)
         {
-          return static_cast<const Result *>(verify_type(ob, typeid(Result), ob.get_const_ptr()));
+          return static_cast<const Result *>(verify_type_no_throw(ob, typeid(Result), ob.get_const_ptr()));
         }
       };
 
@@ -75,9 +92,9 @@ namespace chaiscript
     template<typename Result>
       struct Cast_Helper_Inner<Result *>
       {
-        static auto cast(const Boxed_Value &ob, const Type_Conversions_State *)
+        static Result * cast(const Boxed_Value &ob, const Type_Conversions_State *)
         {
-          return static_cast<Result *>(verify_type(ob, typeid(Result), ob.get_ptr()));
+          return static_cast<Result *>(verify_type_no_throw(ob, typeid(Result), ob.get_ptr()));
         }
       };
 
