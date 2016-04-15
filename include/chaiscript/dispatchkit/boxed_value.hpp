@@ -226,48 +226,47 @@ namespace chaiscript
         return m_data->m_type_info.bare_equal(ti);
       }
 
-      template<typename T>
-      struct Sentinel {
-        Sentinel(std::shared_ptr<T> &ptr, Data &data)
-          : m_ptr(ptr), m_data(data)
-        {
-        }
-
-        ~Sentinel()
-        {
-          // save new pointer data
-          m_data.get().m_data_ptr = m_ptr.get().get();
-          m_data.get().m_const_data_ptr = m_ptr.get().get();
-        }
-
-        Sentinel& operator=(Sentinel&&s) {
-          m_ptr = std::move(s.m_ptr);
-          m_data = std::move(s.m_data);
-        }
-
-        Sentinel(Sentinel &&s)
-          : m_ptr(std::move(s.m_ptr)),
-            m_data(std::move(s.m_data))
-        {
-        }
-
-        operator std::shared_ptr<T>&() const
-        {
-          return m_ptr.get();
-        }
-
-        Sentinel &operator=(const Sentinel &) = delete;
-        Sentinel(Sentinel&) = delete;
-
-        std::reference_wrapper<std::shared_ptr<T>> m_ptr;
-        std::reference_wrapper<Data> m_data;
-      };
-
 
       template<typename T>
-      Sentinel<T> pointer_sentinel(std::shared_ptr<T> &ptr) const
+      auto pointer_sentinel(std::shared_ptr<T> &ptr) const
       {
-        return Sentinel<T>(ptr, *(m_data.get()));
+        struct Sentinel {
+          Sentinel(std::shared_ptr<T> &ptr, Data &data)
+            : m_ptr(ptr), m_data(data)
+          {
+          }
+
+          ~Sentinel()
+          {
+            // save new pointer data
+            m_data.get().m_data_ptr = m_ptr.get().get();
+            m_data.get().m_const_data_ptr = m_ptr.get().get();
+          }
+
+          Sentinel& operator=(Sentinel&&s) {
+            m_ptr = std::move(s.m_ptr);
+            m_data = std::move(s.m_data);
+          }
+
+          Sentinel(Sentinel &&s)
+            : m_ptr(std::move(s.m_ptr)),
+            m_data(std::move(s.m_data))
+          {
+          }
+
+          operator std::shared_ptr<T>&() const
+          {
+            return m_ptr.get();
+          }
+
+          Sentinel &operator=(const Sentinel &) = delete;
+          Sentinel(Sentinel&) = delete;
+
+          std::reference_wrapper<std::shared_ptr<T>> m_ptr;
+          std::reference_wrapper<Data> m_data;
+        };
+
+        return Sentinel(ptr, *(m_data.get()));
       }
 
       bool is_null() const noexcept
