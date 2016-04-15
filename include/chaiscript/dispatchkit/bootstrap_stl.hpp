@@ -295,22 +295,34 @@ namespace chaiscript
       /// Add container resize concept to the given ContainerType
       /// http://www.cplusplus.com/reference/stl/
       template<typename ContainerType>
-      ModulePtr resizable_type(const std::string &/*type*/, ModulePtr m = std::make_shared<Module>())
-      {
-          m->add(fun([](ContainerType *a, ContainerType::size_type n, ContainerType::value_type val) { return a->resize(n, val); } ), "resize");
-          m->add(fun([](ContainerType *a, ContainerType::size_type n) { return a->resize(n, ContainerType::value_type()); } ), "resize");
+        void resizable_type(const std::string &/*type*/, Module& m)
+        {
+          m.add(fun([](ContainerType *a, ContainerType::size_type n, ContainerType::value_type val) { return a->resize(n, val); } ), "resize");
+          m.add(fun([](ContainerType *a, ContainerType::size_type n) { return a->resize(n, ContainerType::value_type()); } ), "resize");
+        }
+      template<typename ContainerType>
+        ModulePtr resizable_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          resizable_type<ContainerType>(type, *m);
           return m;
-      }
+        }
 
 
       /// Add container reserve concept to the given ContainerType
       /// http://www.cplusplus.com/reference/stl/
       template<typename ContainerType>
-      ModulePtr reservable_type(const std::string &/*type*/, ModulePtr m = std::make_shared<Module>())
-      {
-          m->add(fun([](ContainerType *a, ContainerType::size_type n) { return a->reserve(n); } ), "reserve");
+        void reservable_type(const std::string &/*type*/, Module& m)
+        {
+          m.add(fun([](ContainerType *a, ContainerType::size_type n) { return a->reserve(n); } ), "reserve");
+        }
+      template<typename ContainerType>
+        ModulePtr reservable_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          reservable_type<ContainerType>(type, *m);
           return m;
-      }
+        }
 
 
       /// Add container concept to the given ContainerType
