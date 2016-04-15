@@ -292,6 +292,27 @@ namespace chaiscript
         }
 
 
+      /// Add container resize concept to the given ContainerType
+      /// http://www.cplusplus.com/reference/stl/
+      template<typename ContainerType>
+      ModulePtr resizable_type(const std::string &/*type*/, ModulePtr m = std::make_shared<Module>())
+      {
+          m->add(fun([](ContainerType *a, ContainerType::size_type n, ContainerType::value_type val) { return a->resize(n, val); } ), "resize");
+          m->add(fun([](ContainerType *a, ContainerType::size_type n) { return a->resize(n, ContainerType::value_type()); } ), "resize");
+          return m;
+      }
+
+
+      /// Add container reserve concept to the given ContainerType
+      /// http://www.cplusplus.com/reference/stl/
+      template<typename ContainerType>
+      ModulePtr reservable_type(const std::string &/*type*/, ModulePtr m = std::make_shared<Module>())
+      {
+          m->add(fun([](ContainerType *a, ContainerType::size_type n) { return a->reserve(n); } ), "reserve");
+          return m;
+      }
+
+
       /// Add container concept to the given ContainerType
       /// http://www.sgi.com/tech/stl/Container.html
       template<typename ContainerType>
@@ -581,6 +602,7 @@ namespace chaiscript
           front_insertion_sequence_type<ListType>(type, m);
           back_insertion_sequence_type<ListType>(type, m);
           sequence_type<ListType>(type, m);
+          resizable_type<ListType>(type, m);
           container_type<ListType>(type, m);
           default_constructible_type<ListType>(type, m);
           assignable_type<ListType>(type, m);
@@ -612,6 +634,8 @@ namespace chaiscript
           back_insertion_sequence_type<VectorType>(type, m);
           sequence_type<VectorType>(type, m);
           random_access_container_type<VectorType>(type, m);
+          resizable_type<VectorType>(type, m);
+          reservable_type<VectorType>(type, m);
           container_type<VectorType>(type, m);
           default_constructible_type<VectorType>(type, m);
           assignable_type<VectorType>(type, m);

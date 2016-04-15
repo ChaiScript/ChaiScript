@@ -1,0 +1,13 @@
+load_module("stl_extra");
+
+auto uint16v = u16vector();
+
+uint16v.resize(2);
+assert_equal(uint16v.size(), 2);
+
+uint16v.resize(6, 3);
+assert_equal(uint16v[5], 3);
+
+uint16v.resize(0);
+assert_equal(uint16v.size(), 0);
+
