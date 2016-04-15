@@ -315,6 +315,7 @@ namespace chaiscript
         void reservable_type(const std::string &/*type*/, Module& m)
         {
           m.add(fun([](ContainerType *a, typename ContainerType::size_type n) { return a->reserve(n); } ), "reserve");
+          m.add(fun([](const ContainerType *a) { return a->capacity(); } ), "capacity");
         }
       template<typename ContainerType>
         ModulePtr reservable_type(const std::string &type)
