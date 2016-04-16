@@ -295,8 +295,13 @@ namespace chaiscript
             try {
 
               if (lhs.is_undef()) {
-                if (!this->children.empty()
-                    && this->children[0]->identifier == AST_Node_Type::Reference)
+                if ((!this->children.empty()
+                     && ((this->children[0]->identifier == AST_Node_Type::Reference)
+                         || (!this->children[0]->children.empty()
+                              && this->children[0]->children[0]->identifier == AST_Node_Type::Reference)
+                       )
+                    )
+                   )
                 {
                   /// \todo This does not handle the case of an unassigned reference variable
                   ///       being assigned outside of its declaration
