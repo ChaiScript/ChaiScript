@@ -1579,27 +1579,10 @@ namespace chaiscript
           while (has_matches) {
             while (Eol()) {}
             has_matches = false;
-            const auto line = m_position.line;
-            const auto col = m_position.col;
             if (Keyword("else")) {
-              if (Keyword("if")) {
-                m_match_stack.emplace_back(make_node<eval::If_AST_Node>("else if", line, col, std::vector<AST_NodePtr>()));
-                if (!Char('(')) {
-                  throw exception::eval_error("Incomplete 'else if' expression", File_Position(m_position.line, m_position.col), *m_filename);
-                }
-
-                if (!(Operator() && Char(')'))) {
-                  throw exception::eval_error("Incomplete 'else if' expression", File_Position(m_position.line, m_position.col), *m_filename);
-                }
-
-                while (Eol()) {}
-
-                if (!Block()) {
-                  throw exception::eval_error("Incomplete 'else if' block", File_Position(m_position.line, m_position.col), *m_filename);
-                }
+              if (If()) {
                 has_matches = true;
               } else {
-                m_match_stack.emplace_back(make_node<eval::If_AST_Node>("else", line, col, std::vector<AST_NodePtr>()));
                 while (Eol()) {}
 
                 if (!Block()) {

@@ -653,33 +653,22 @@ namespace chaiscript
 
     struct If_AST_Node final : AST_Node {
         If_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::If, std::move(t_loc), std::move(t_children)) { }
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::If, std::move(t_loc), std::move(t_children)) 
+        { 
+          assert(children.size() == 2 || children.size() == 3);
+        }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
-
           if (get_bool_condition(children[0]->eval(t_ss))) {
             return children[1]->eval(t_ss);
           } else {
-            if (children.size() > 2) {
-              size_t i = 2;
-              /// \todo these string comparisons are clunky
-              while (i < children.size()) {
-                if (children[i]->text == "else") {
-                  return children[i+1]->eval(t_ss);
-                }
-                else if (children[i]->text == "else if") {
-                  if (get_bool_condition(children[i+1]->eval(t_ss))) {
-                    return children[i+2]->eval(t_ss);
-                  }
-                }
-                i += 3;
-              }
+            if (children.size() == 3) {
+              return children[2]->eval(t_ss);
+            } else {
+              return void_var();
             }
           }
-
-          return void_var();
         }
-
     };
 
     struct For_AST_Node final : AST_Node {
