@@ -146,19 +146,19 @@ namespace chaiscript
       }
 
 
-      static const std::array<AST_Node_Type, 11> &create_operators() {
-        static const std::array<AST_Node_Type, 11> operators = { {
-          AST_Node_Type::Ternary_Cond,
-          AST_Node_Type::Logical_Or,
-          AST_Node_Type::Logical_And,
-          AST_Node_Type::Bitwise_Or,
-          AST_Node_Type::Bitwise_Xor,
-          AST_Node_Type::Bitwise_And,
-          AST_Node_Type::Equality,
-          AST_Node_Type::Comparison,
-          AST_Node_Type::Shift,
-          AST_Node_Type::Addition,
-          AST_Node_Type::Multiplication
+      static const std::array<Operator_Precidence, 11> &create_operators() {
+        static const std::array<Operator_Precidence, 11> operators = { {
+          Operator_Precidence::Ternary_Cond,
+          Operator_Precidence::Logical_Or,
+          Operator_Precidence::Logical_And,
+          Operator_Precidence::Bitwise_Or,
+          Operator_Precidence::Bitwise_Xor,
+          Operator_Precidence::Bitwise_And,
+          Operator_Precidence::Equality,
+          Operator_Precidence::Comparison,
+          Operator_Precidence::Shift,
+          Operator_Precidence::Addition,
+          Operator_Precidence::Multiplication
         } };
         return operators;
       }
@@ -170,7 +170,7 @@ namespace chaiscript
 
       const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &m_alphabet = create_alphabet();
       const std::vector<std::vector<std::string>> &m_operator_matches = create_operator_matches();
-      const std::array<AST_Node_Type, 11> &m_operators = create_operators();
+      const std::array<Operator_Precidence, 11> &m_operators = create_operators();
 
       std::shared_ptr<std::string> m_filename;
       std::vector<AST_NodePtr> m_match_stack;
@@ -881,11 +881,11 @@ namespace chaiscript
       {
         string_type &match;
         typedef typename string_type::value_type char_type;
-        bool is_escaped;
-        bool is_interpolated;
-        bool saw_interpolation_marker;
-        bool is_octal;
-        bool is_hex;
+        bool is_escaped = false;
+        bool is_interpolated = false;
+        bool saw_interpolation_marker = false;
+        bool is_octal = false;
+        bool is_hex = false;
         const bool interpolation_allowed;
 
         string_type octal_matches;
@@ -893,11 +893,6 @@ namespace chaiscript
 
         Char_Parser(string_type &t_match, const bool t_interpolation_allowed)
           : match(t_match),
-            is_escaped(false),
-            is_interpolated(false),
-            saw_interpolation_marker(false),
-            is_octal(false),
-            is_hex(false),
             interpolation_allowed(t_interpolation_allowed)
         {
         }
@@ -1034,13 +1029,11 @@ namespace chaiscript
                   if (*s == '{') {
                     //We've found an interpolation point
 
+                    m_match_stack.push_back(make_node<eval::Constant_AST_Node>(match, start.line, start.col, const_var(match)));
+
                     if (cparser.is_interpolated) {
                       //If we've seen previous interpolation, add on instead of making a new one
-                      m_match_stack.push_back(make_node<eval::Constant_AST_Node>(match, start.line, start.col, const_var(match)));
-
                       build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
-                    } else {
-                      m_match_stack.push_back(make_node<eval::Constant_AST_Node>(match, start.line, start.col, const_var(match)));
                     }
 
                     //We've finished with the part of the string up to this point, so clear it
@@ -1091,13 +1084,12 @@ namespace chaiscript
               return cparser.is_interpolated;
             }();
 
-            if (is_interpolated) {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node>(match, start.line, start.col, const_var(match)));
+            m_match_stack.push_back(make_node<eval::Constant_AST_Node>(match, start.line, start.col, const_var(match)));
 
+            if (is_interpolated) {
               build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, "+");
-            } else {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node>(match, start.line, start.col, const_var(match)));
             }
+
             return true;
           } else {
             return false;
@@ -1302,14 +1294,13 @@ namespace chaiscript
         if (Arg(false)) {
           retval = true;
           while (Eol()) {}
-          if (Char(',')) {
-            do {
-              while (Eol()) {}
-              if (!Arg(false)) {
-                throw exception::eval_error("Unexpected value in parameter list", File_Position(m_position.line, m_position.col), *m_filename);
-              }
-            } while (Char(','));
-          }
+
+          while (Char(',')) {
+            while (Eol()) {}
+            if (!Arg(false)) {
+              throw exception::eval_error("Unexpected value in parameter list", File_Position(m_position.line, m_position.col), *m_filename);
+            }
+          } 
         }
         build_match<eval::Arg_List_AST_Node>(prev_stack_top);
 
@@ -1328,13 +1319,12 @@ namespace chaiscript
         if (Arg()) {
           retval = true;
           while (Eol()) {}
-          if (Char(',')) {
-            do {
-              while (Eol()) {}
-              if (!Arg()) {
-                throw exception::eval_error("Unexpected value in parameter list", File_Position(m_position.line, m_position.col), *m_filename);
-              }
-            } while (Char(','));
+
+          while (Char(',')) {
+            while (Eol()) {}
+            if (!Arg()) {
+              throw exception::eval_error("Unexpected value in parameter list", File_Position(m_position.line, m_position.col), *m_filename);
+            }
           }
         }
         build_match<eval::Arg_List_AST_Node>(prev_stack_top);
@@ -1355,13 +1345,11 @@ namespace chaiscript
         if (Equation()) {
           retval = true;
           while (Eol()) {}
-          if (Char(',')) {
-            do {
-              while (Eol()) {}
-              if (!Equation()) {
-                throw exception::eval_error("Unexpected value in parameter list", File_Position(m_position.line, m_position.col), *m_filename);
-              }
-            } while (Char(','));
+          while (Char(',')) {
+            while (Eol()) {}
+            if (!Equation()) {
+              throw exception::eval_error("Unexpected value in parameter list", File_Position(m_position.line, m_position.col), *m_filename);
+            }
           }
         }
 
@@ -1385,25 +1373,21 @@ namespace chaiscript
         } else if (Map_Pair()) {
           retval = true;
           while (Eol()) {}
-          if (Char(',')) {
-            do {
-              while (Eol()) {}
-              if (!Map_Pair()) {
-                throw exception::eval_error("Unexpected value in container", File_Position(m_position.line, m_position.col), *m_filename);
-              }
-            } while (Char(','));
+          while (Char(',')) {
+            while (Eol()) {}
+            if (!Map_Pair()) {
+              throw exception::eval_error("Unexpected value in container", File_Position(m_position.line, m_position.col), *m_filename);
+            }
           }
           build_match<eval::Arg_List_AST_Node>(prev_stack_top);
         } else if (Operator()) {
           retval = true;
           while (Eol()) {}
-          if (Char(',')) {
-            do {
-              while (Eol()) {}
-              if (!Operator()) {
-                throw exception::eval_error("Unexpected value in container", File_Position(m_position.line, m_position.col), *m_filename);
-              }
-            } while (Char(','));
+          while (Char(',')) {
+            while (Eol()) {}
+            if (!Operator()) {
+              throw exception::eval_error("Unexpected value in container", File_Position(m_position.line, m_position.col), *m_filename);
+            }
           }
           build_match<eval::Arg_List_AST_Node>(prev_stack_top);
         }
@@ -2142,36 +2126,33 @@ namespace chaiscript
             while (Operator_Helper(t_precedence, oper)) {
               while (Eol()) {}
               if (!Operator(t_precedence+1)) {
-                throw exception::eval_error("Incomplete "
-                    + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
+                throw exception::eval_error("Incomplete '" + oper + "' expression",
                     File_Position(m_position.line, m_position.col), *m_filename);
               }
 
               switch (m_operators[t_precedence]) {
-                case(AST_Node_Type::Ternary_Cond) :
+                case(Operator_Precidence::Ternary_Cond) :
                   if (Symbol(":")) {
                     if (!Operator(t_precedence+1)) {
-                      throw exception::eval_error("Incomplete "
-                          + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
+                      throw exception::eval_error("Incomplete '" + oper + "' expression",
                           File_Position(m_position.line, m_position.col), *m_filename);
                     }
                     build_match<eval::Ternary_Cond_AST_Node>(prev_stack_top);
                   }
                   else {
-                    throw exception::eval_error("Incomplete "
-                        + std::string(ast_node_type_to_string(m_operators[t_precedence])) + " expression",
+                    throw exception::eval_error("Incomplete '" + oper + "' expression",
                         File_Position(m_position.line, m_position.col), *m_filename);
                   }
                   break;
 
-                case(AST_Node_Type::Addition) :
-                case(AST_Node_Type::Multiplication) :
-                case(AST_Node_Type::Shift) :
-                case(AST_Node_Type::Equality) :
-                case(AST_Node_Type::Bitwise_And) :
-                case(AST_Node_Type::Bitwise_Xor) :
-                case(AST_Node_Type::Bitwise_Or) :
-                case(AST_Node_Type::Comparison) :
+                case(Operator_Precidence::Addition) :
+                case(Operator_Precidence::Multiplication) :
+                case(Operator_Precidence::Shift) :
+                case(Operator_Precidence::Equality) :
+                case(Operator_Precidence::Bitwise_And) :
+                case(Operator_Precidence::Bitwise_Xor) :
+                case(Operator_Precidence::Bitwise_Or) :
+                case(Operator_Precidence::Comparison) :
                   {
                     bool folded = false;
                     const auto size = m_match_stack.size();
@@ -2205,10 +2186,10 @@ namespace chaiscript
 
                   break;
 
-                case(AST_Node_Type::Logical_And) :
+                case(Operator_Precidence::Logical_And) :
                   build_match<eval::Logical_And_AST_Node>(prev_stack_top, oper);
                   break;
-                case(AST_Node_Type::Logical_Or) :
+                case(Operator_Precidence::Logical_Or) :
                   build_match<eval::Logical_Or_AST_Node>(prev_stack_top, oper);
                   break;
 
