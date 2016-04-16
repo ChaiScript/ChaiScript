@@ -1983,11 +1983,14 @@ namespace chaiscript
         } else if (Keyword("auto") || Keyword("var") ) {
           retval = true;
 
-          if (!(Reference() || Id())) {
+          if (Reference()) {
+            // we built a reference node - continue
+          } else if (Id()) {
+            build_match<eval::Var_Decl_AST_Node>(prev_stack_top);
+          } else {
             throw exception::eval_error("Incomplete variable declaration", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
-          build_match<eval::Var_Decl_AST_Node>(prev_stack_top);
         } else if (Keyword("GLOBAL") || Keyword("global")) {
           retval = true;
 

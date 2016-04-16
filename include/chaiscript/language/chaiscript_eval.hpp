@@ -295,9 +295,8 @@ namespace chaiscript
             try {
 
               if (lhs.is_undef()) {
-                if (!this->children.empty() && 
-                    !this->children[0]->children.empty() 
-                    && this->children[0]->children[0]->identifier == AST_Node_Type::Reference)
+                if (!this->children.empty()
+                    && this->children[0]->identifier == AST_Node_Type::Reference)
                 {
                   /// \todo This does not handle the case of an unassigned reference variable
                   ///       being assigned outside of its declaration
@@ -379,27 +378,19 @@ namespace chaiscript
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Var_Decl, std::move(t_loc), std::move(t_children)) { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
-          if (this->children[0]->identifier == AST_Node_Type::Reference)
-          {
-            return this->children[0]->eval(t_ss);
-          } else {
-            const std::string &idname = this->children[0]->text;
+          const std::string &idname = this->children[0]->text;
 
-            try {
-              Boxed_Value bv;
-              t_ss.add_object(idname, bv);
-              return bv;
-            }
-            catch (const exception::reserved_word_error &) {
-              throw exception::eval_error("Reserved word used as variable '" + idname + "'");
-            } catch (const exception::name_conflict_error &e) {
-              throw exception::eval_error("Variable redefined '" + e.name() + "'");
-            }
+          try {
+            Boxed_Value bv;
+            t_ss.add_object(idname, bv);
+            return bv;
           }
-
+          catch (const exception::reserved_word_error &) {
+            throw exception::eval_error("Reserved word used as variable '" + idname + "'");
+          } catch (const exception::name_conflict_error &e) {
+            throw exception::eval_error("Variable redefined '" + e.name() + "'");
+          }
         }
-
-
     };
 
 
