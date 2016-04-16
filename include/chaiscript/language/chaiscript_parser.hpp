@@ -177,8 +177,7 @@ namespace chaiscript
 
       struct Position
       {
-        Position()
-          : line(-1), col(-1), m_last_col(-1) {}
+        Position() = default;
 
         Position(std::string::const_iterator t_pos, std::string::const_iterator t_end)
           : line(1), col(1), m_pos(std::move(t_pos)), m_end(std::move(t_end)), m_last_col(1)
@@ -265,13 +264,13 @@ namespace chaiscript
           }
         }
 
-        int line;
-        int col;
+        int line = -1;
+        int col = -1;
 
         private:
           std::string::const_iterator m_pos;
           std::string::const_iterator m_end;
-          int m_last_col;
+          int m_last_col = -1;
       };
 
       Position m_position;
@@ -297,59 +296,12 @@ namespace chaiscript
         }
       }
 
-
-      /// Shows the current stack of matched ast_nodes
-      void show_match_stack() const {
-        for (auto & elem : m_match_stack) {
-          //debug_print(match_stack[i]);
-          std::cout << elem->to_string();
-        }
-      }
-
-      /// Clears the stack of matched ast_nodes
-      void clear_match_stack() {
-        m_match_stack.clear();
-      }
-
       /// Returns the front-most AST node
       AST_NodePtr ast() const {
         if (m_match_stack.empty()) throw exception::eval_error("Attempted to access AST of failed parse.");
         return m_match_stack.front();
       }
 
-      static std::map<std::string, int> count_fun_calls(const AST_NodePtr &p, bool in_loop) {
-        if (p->identifier == AST_Node_Type::Fun_Call) {
-          if (p->children[0]->identifier == AST_Node_Type::Id) {
-            return std::map<std::string, int>{ {p->children[0]->text, in_loop?99:1} };
-          }
-          return std::map<std::string, int>();
-        } else {
-          std::map<std::string, int> counts;
-          for (const auto &child : p->children) {
-            auto childcounts = count_fun_calls(child, in_loop || p->identifier == AST_Node_Type::For || p->identifier == AST_Node_Type::While);
-            for (const auto &count : childcounts) {
-              counts[count.first] += count.second;
-            }
-          }
-          return counts;
-        }
-
-      }
-
-
-      static void optimize_blocks(AST_NodePtr &p)
-      {
-        for (auto &c : p->children)
-        {
-          if (c->identifier == AST_Node_Type::Block) {
-            if (c->children.size() == 1) {
-              // std::cout << "swapping out block child for block\n";
-              c = c->children[0];
-            }
-          }
-          optimize_blocks(c);
-        }
-      }
 
       static void optimize_returns(AST_NodePtr &p)
       {
@@ -371,19 +323,8 @@ namespace chaiscript
       }
 
 
-      static int count_nodes(const AST_NodePtr &p)
-      {
-        int count = 1;
-        for (auto &c : p->children) {
-          count += count_nodes(c);
-        }
-        return count;
-      }
-
-      AST_NodePtr optimized_ast(bool t_optimize_blocks = false, bool t_optimize_returns = true) {
+      AST_NodePtr optimized_ast(bool t_optimize_returns = true) {
         AST_NodePtr p = ast();
-        //Note, optimize_blocks is currently broken; it breaks stack management
-        if (t_optimize_blocks) { optimize_blocks(p); }
         if (t_optimize_returns) { optimize_returns(p); }
         return p;
       }
