@@ -204,8 +204,6 @@ namespace chaiscript
           return m_arity;
         }
 
-        virtual std::string annotation() const = 0;
-
         static bool compare_type_to_param(const Type_Info &ti, const Boxed_Value &bv, const Type_Conversions_State &t_conversions)
         {
           if (ti.is_undef() 
@@ -306,11 +304,10 @@ namespace chaiscript
             int t_arity=-1,
             AST_NodePtr t_parsenode = AST_NodePtr(),
             Param_Types t_param_types = Param_Types(),
-            std::string t_description = "",
             Proxy_Function t_guard = Proxy_Function())
           : Proxy_Function_Base(build_param_type_list(t_param_types), t_arity),
             m_param_types(std::move(t_param_types)),
-            m_guard(std::move(t_guard)), m_parsenode(std::move(t_parsenode)), m_description(std::move(t_description))
+            m_guard(std::move(t_guard)), m_parsenode(std::move(t_parsenode))
         {
         }
 
@@ -341,11 +338,6 @@ namespace chaiscript
         AST_NodePtr get_parse_tree() const
         {
           return m_parsenode;
-        }
-
-        virtual std::string annotation() const override
-        {
-          return m_description;
         }
 
 
@@ -387,7 +379,6 @@ namespace chaiscript
         Param_Types m_param_types;
         Proxy_Function m_guard;
         AST_NodePtr m_parsenode;
-        std::string m_description;
     };
 
 
@@ -401,13 +392,11 @@ namespace chaiscript
             int t_arity=-1,
             AST_NodePtr t_parsenode = AST_NodePtr(),
             Param_Types t_param_types = Param_Types(),
-            std::string t_description = "",
             Proxy_Function t_guard = Proxy_Function())
           : Dynamic_Proxy_Function(
                 t_arity,
                 std::move(t_parsenode),
                 std::move(t_param_types),
-                std::move(t_description),
                 std::move(t_guard)
               ),
             m_f(std::move(t_f))
@@ -506,10 +495,6 @@ namespace chaiscript
           return args;
         }
 
-        virtual std::string annotation() const override
-        {
-          return "Bound: " + m_f->annotation();
-        }
 
       protected:
         static std::vector<Type_Info> build_param_type_info(const Const_Proxy_Function &t_f, 
@@ -552,11 +537,6 @@ namespace chaiscript
         Proxy_Function_Impl_Base(const std::vector<Type_Info> &t_types)
           : Proxy_Function_Base(t_types, static_cast<int>(t_types.size()) - 1)
         {
-        }
-
-        std::string annotation() const override
-        {
-          return "";
         }
 
         bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
@@ -690,11 +670,6 @@ namespace chaiscript
           }
 
           return vals[0].get_type_info().bare_equal(user_type<Class>());
-        }
-
-        std::string annotation() const override
-        {
-          return "";
         }
 
       protected:

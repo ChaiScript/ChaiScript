@@ -35,7 +35,7 @@ namespace chaiscript
   enum class AST_Node_Type { Error, Id, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
     Comparison, Addition, Subtraction, Multiplication, Division, Modulus, Array_Call, Dot_Access,
     Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
-    Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, 
+    Inline_Range, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, 
     Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop, Class, Binary, Arg, Global_Decl, Constant
   };
 
@@ -47,7 +47,7 @@ namespace chaiscript
       static const char * const ast_node_types[] = { "Internal Parser Error", "Id", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
                                     "Comparison", "Addition", "Subtraction", "Multiplication", "Division", "Modulus", "Array_Call", "Dot_Access", 
                                     "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
-                                    "Inline_Range", "Annotation", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Shift", "Equality", "Bitwise_And", "Bitwise_Xor", "Bitwise_Or", 
+                                    "Inline_Range", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Shift", "Equality", "Bitwise_And", "Bitwise_Xor", "Bitwise_Or", 
                                     "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Ternary Condition", "Noop", "Class", "Binary", "Arg", "Constant"};
 
       return ast_node_types[static_cast<int>(ast_node_type)];
@@ -447,7 +447,6 @@ namespace chaiscript
       const std::string text;
       Parse_Location location;
       std::vector<AST_NodePtr> children;
-      AST_NodePtr annotation;
 
       const std::string &filename() const {
         return *location.filename;

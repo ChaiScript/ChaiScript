@@ -376,7 +376,6 @@ namespace chaiscript
         m.add(user_type<std::exception>(), "exception");
 
         m.add(fun(&dispatch::Proxy_Function_Base::get_arity), "get_arity");
-        m.add(fun(&dispatch::Proxy_Function_Base::annotation), "get_annotation");
         m.add(fun(&dispatch::Proxy_Function_Base::operator==), "==");
 
 

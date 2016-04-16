@@ -166,6 +166,7 @@ namespace chaiscript
       static constexpr const char * const m_multiline_comment_begin = "/*";
       static constexpr const char * const m_multiline_comment_end = "*/";
       static constexpr const char * const m_singleline_comment = "//";
+      static constexpr const char * const m_annotation = "#";
 
       const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &m_alphabet = create_alphabet();
       const std::vector<std::vector<std::string>> &m_operator_matches = create_operator_matches();
@@ -386,6 +387,19 @@ namespace chaiscript
           }
           return true;
         } else if (Symbol_(m_singleline_comment)) {
+          while (m_position.has_more()) {
+            if (Symbol_("\r\n")) {
+              m_position -= 2;
+              break;
+            } else if (Char_('\n')) {
+              --m_position;
+              break;
+            } else {
+              ++m_position;
+            }
+          }
+          return true;
+        } else if (Symbol_(m_annotation)) {
           while (m_position.has_more()) {
             if (Symbol_("\r\n")) {
               m_position -= 2;
@@ -821,31 +835,6 @@ namespace chaiscript
       }
 
 
-
-      /// Checks for a node annotation of the form "#<annotation>"
-      bool Annotation() {
-        SkipWS();
-        const auto start = m_position;
-        if (Symbol_("#")) {
-          do {
-            while (m_position.has_more()) {
-              if (Eol_()) {
-                break;
-              }
-              else {
-                ++m_position;
-              }
-            }
-          } while (Symbol("#"));
-
-          auto match = Position::str(start, m_position);
-          m_match_stack.push_back(make_node<eval::Annotation_AST_Node>(std::move(match), start.line, start.col));
-          return true;
-        }
-        else {
-          return false;
-        }
-      }
 
       /// Reads a quoted string from input, without skipping initial whitespace
       bool Quoted_String_() {
@@ -1468,13 +1457,6 @@ namespace chaiscript
       /// Reads a function definition from input
       bool Def(const bool t_class_context = false) {
         bool retval = false;
-        AST_NodePtr annotation;
-
-        if (Annotation()) {
-          while (Eol_()) {}
-          annotation = m_match_stack.back();
-          m_match_stack.pop_back();
-        }
 
         const auto prev_stack_top = m_match_stack.size();
 
@@ -1522,9 +1504,6 @@ namespace chaiscript
             build_match<eval::Def_AST_Node>(prev_stack_top);
           }
 
-          if (annotation) {
-            m_match_stack.back()->annotation = std::move(annotation);
-          }
         }
 
         return retval;

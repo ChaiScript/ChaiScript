@@ -310,11 +310,6 @@ namespace chaiscript
                              [&vals, &t_conversions](const Proxy_Function &f){ return f->call_match(vals, t_conversions); });
         }
 
-        std::string annotation() const override
-        {
-          return "Multiple method dispatch function wrapper.";
-        }
-
       protected:
         Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
@@ -1046,11 +1041,7 @@ namespace chaiscript
         void dump_function(const std::pair<const std::string, Proxy_Function > &f) const
         {
           std::vector<Type_Info> params = f.second->get_param_types();
-          std::string annotation = f.second->annotation();
 
-          if (annotation.size() > 0) {
-            std::cout << annotation;
-          }
           dump_type(params.front());
           std::cout << " " << f.first << "(";
 
@@ -1523,4 +1514,5 @@ namespace chaiscript
 }
 
 #endif
+
 

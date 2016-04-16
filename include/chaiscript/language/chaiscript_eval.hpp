@@ -578,7 +578,6 @@ namespace chaiscript
 
           try {
             const std::string & l_function_name = this->children[0]->text;
-            const std::string & l_annotation = this->annotation?this->annotation->text:"";
             const auto & func_node = this->children.back();
             t_ss->add(
                 dispatch::make_dynamic_proxy_function(
@@ -587,7 +586,7 @@ namespace chaiscript
                     return detail::eval_function(engine, func_node, t_param_names, t_params);
                   },
                   static_cast<int>(numparams), this->children.back(),
-                  param_types, l_annotation, guard), l_function_name);
+                  param_types, guard), l_function_name);
           }
           catch (const exception::reserved_word_error &e) {
             throw exception::eval_error("Reserved word used as function name '" + e.word() + "'");
@@ -991,11 +990,6 @@ namespace chaiscript
         mutable std::atomic_uint_fast32_t m_loc;
     };
 
-    struct Annotation_AST_Node final : AST_Node {
-        Annotation_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Annotation, std::move(t_loc)) { }
-    };
-
     struct Try_AST_Node final : AST_Node {
         Try_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Try, std::move(t_loc), std::move(t_children)) { }
@@ -1162,7 +1156,6 @@ namespace chaiscript
           }
 
           try {
-            const std::string & l_annotation = annotation?annotation->text:"";
             const std::string & function_name = children[static_cast<size_t>(1 + class_offset)]->text;
             auto node = children.back();
 
@@ -1175,7 +1168,7 @@ namespace chaiscript
                         [engine, t_param_names, node](const std::vector<Boxed_Value> &t_params) {
                           return chaiscript::eval::detail::eval_function(engine, node, t_param_names, t_params);
                         },
-                        static_cast<int>(numparams), node, param_types, l_annotation, guard
+                        static_cast<int>(numparams), node, param_types, guard
                       )
                     ),
                   function_name);
@@ -1191,7 +1184,7 @@ namespace chaiscript
                       [engine, t_param_names, node](const std::vector<Boxed_Value> &t_params) {
                         return chaiscript::eval::detail::eval_function(engine, node, t_param_names, t_params);
                       },
-                      static_cast<int>(numparams), node, param_types, l_annotation, guard), type), 
+                      static_cast<int>(numparams), node, param_types, guard), type), 
                   function_name);
             }
           }
