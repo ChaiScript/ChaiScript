@@ -29,7 +29,8 @@ namespace chaiscript
         throw std::runtime_error("Attempted to dereference null Boxed_Value");
       }
 
-    static const void *verify_type_no_throw(const Boxed_Value &ob, const std::type_info &ti, const void *ptr) {
+    template<typename T>
+    static const T *verify_type_no_throw(const Boxed_Value &ob, const std::type_info &ti, const T *ptr) {
       if (ob.get_type_info() == ti) {
         return ptr;
       } else {
@@ -37,7 +38,8 @@ namespace chaiscript
       }
     }
 
-    static void *verify_type_no_throw(const Boxed_Value &ob, const std::type_info &ti, void *ptr) {
+    template<typename T>
+    static T *verify_type_no_throw(const Boxed_Value &ob, const std::type_info &ti, T *ptr) {
       if (!ob.is_const() && ob.get_type_info() == ti) {
         return ptr;
       } else {
@@ -46,7 +48,8 @@ namespace chaiscript
     }
 
 
-    static const void *verify_type(const Boxed_Value &ob, const std::type_info &ti, const void *ptr) {
+    template<typename T>
+    static const T *verify_type(const Boxed_Value &ob, const std::type_info &ti, const T *ptr) {
       if (ob.get_type_info().bare_equal_type_info(ti)) {
         return throw_if_null(ptr);
       } else {
@@ -54,7 +57,8 @@ namespace chaiscript
       }
     }
 
-    static void *verify_type(const Boxed_Value &ob, const std::type_info &ti, void *ptr) {
+    template<typename T>
+    static T *verify_type(const Boxed_Value &ob, const std::type_info &ti, T *ptr) {
       if (!ob.is_const() && ob.get_type_info().bare_equal_type_info(ti)) {
         return throw_if_null(ptr);
       } else {

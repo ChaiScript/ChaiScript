@@ -243,16 +243,8 @@ namespace chaiscript
             m_data.get().m_const_data_ptr = m_ptr.get().get();
           }
 
-          Sentinel& operator=(Sentinel&&s) {
-            m_ptr = std::move(s.m_ptr);
-            m_data = std::move(s.m_data);
-          }
-
-          Sentinel(Sentinel &&s)
-            : m_ptr(std::move(s.m_ptr)),
-            m_data(std::move(s.m_data))
-          {
-          }
+          Sentinel& operator=(Sentinel&&s) = default;
+          Sentinel(Sentinel &&s) = default;
 
           operator std::shared_ptr<T>&() const
           {

@@ -727,13 +727,13 @@ namespace chaiscript
         template<typename Type>
         auto do_call_impl(Class *o) const -> std::enable_if_t<!std::is_pointer<Type>::value, Boxed_Value>
         {
-          return detail::Handle_Return<const typename std::add_lvalue_reference<Type>::type>::handle(o->*m_attr);
+          return detail::Handle_Return<typename std::add_lvalue_reference<Type>::type>::handle(o->*m_attr);
         }
 
         template<typename Type>
         auto do_call_impl(const Class *o) const -> std::enable_if_t<!std::is_pointer<Type>::value, Boxed_Value>
         {
-          return detail::Handle_Return<const typename std::add_lvalue_reference<Type>::type>::handle(o->*m_attr);
+          return detail::Handle_Return<typename std::add_lvalue_reference<typename std::add_const<Type>::type>::type>::handle(o->*m_attr);
         }
 
 
