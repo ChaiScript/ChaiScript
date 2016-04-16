@@ -77,9 +77,9 @@ namespace chaiscript
 
       struct Object_Data
       {
-        static std::unique_ptr<Data> get(Boxed_Value::Void_Type, bool t_return_value)
+        static std::shared_ptr<Data> get(Boxed_Value::Void_Type, bool t_return_value)
         {
-          return std::make_unique<Data>(
+          return std::make_shared<Data>(
                 detail::Get_Type_Info<void>::get(),
                 chaiscript::detail::Any(), 
                 false,
@@ -89,15 +89,15 @@ namespace chaiscript
         }
 
         template<typename T>
-          static std::unique_ptr<Data> get(const std::shared_ptr<T> *obj, bool t_return_value)
+          static std::shared_ptr<Data> get(const std::shared_ptr<T> *obj, bool t_return_value)
           {
             return get(*obj, t_return_value);
           }
 
         template<typename T>
-          static std::unique_ptr<Data> get(const std::shared_ptr<T> &obj, bool t_return_value)
+          static std::shared_ptr<Data> get(const std::shared_ptr<T> &obj, bool t_return_value)
           {
-            return std::make_unique<Data>(
+            return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(), 
                   chaiscript::detail::Any(obj), 
                   false,
@@ -107,10 +107,10 @@ namespace chaiscript
           }
 
         template<typename T>
-          static std::unique_ptr<Data> get(std::shared_ptr<T> &&obj, bool t_return_value)
+          static std::shared_ptr<Data> get(std::shared_ptr<T> &&obj, bool t_return_value)
           {
             auto ptr = obj.get();
-            return std::make_unique<Data>(
+            return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(), 
                   chaiscript::detail::Any(std::move(obj)), 
                   false,
@@ -120,23 +120,23 @@ namespace chaiscript
           }
 
         template<typename T>
-          static std::unique_ptr<Data> get(T *t, bool t_return_value)
+          static std::shared_ptr<Data> get(T *t, bool t_return_value)
           {
             return get(std::ref(*t), t_return_value);
           }
 
         template<typename T>
-          static std::unique_ptr<Data> get(const T *t, bool t_return_value)
+          static std::shared_ptr<Data> get(const T *t, bool t_return_value)
           {
             return get(std::cref(*t), t_return_value);
           }
 
 
         template<typename T>
-          static std::unique_ptr<Data> get(std::reference_wrapper<T> obj, bool t_return_value)
+          static std::shared_ptr<Data> get(std::reference_wrapper<T> obj, bool t_return_value)
           {
             auto p = &obj.get();
-            return std::make_unique<Data>(
+            return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(),
                   chaiscript::detail::Any(std::move(obj)),
                   true,
@@ -146,11 +146,11 @@ namespace chaiscript
           }
 
         template<typename T>
-          static std::unique_ptr<Data> get(T t, bool t_return_value)
+          static std::shared_ptr<Data> get(T t, bool t_return_value)
           {
             auto p = std::make_shared<T>(std::move(t));
             auto ptr = p.get();
-            return std::make_unique<Data>(
+            return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(), 
                   chaiscript::detail::Any(std::move(p)),
                   false,
@@ -159,9 +159,9 @@ namespace chaiscript
                 );
           }
 
-        static std::unique_ptr<Data> get()
+        static std::shared_ptr<Data> get()
         {
-          return std::make_unique<Data>(
+          return std::make_shared<Data>(
                 Type_Info(),
                 chaiscript::detail::Any(),
                 false,
