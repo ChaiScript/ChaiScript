@@ -376,7 +376,6 @@ namespace chaiscript
       typedef std::vector<Scope> StackData;
 
       Stack_Holder()
-        : call_depth(0)
       {
         stacks.reserve(2);
         stacks.emplace_back(1);
@@ -387,7 +386,7 @@ namespace chaiscript
       std::vector<StackData> stacks;
 
       std::vector<std::vector<Boxed_Value>> call_params;
-      int call_depth;
+      int call_depth = 0;
     };
 
     /// Main class for the dispatchkit. Handles management
@@ -1328,10 +1327,6 @@ namespace chaiscript
 
             if (rt.bare_equal(boxed_type))
             {
-              if (lt.bare_equal(boxed_pod_type))
-              {
-                return true;
-              }
               return true;
             }
 

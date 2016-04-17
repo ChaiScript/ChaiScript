@@ -570,17 +570,17 @@ namespace chaiscript
         Scope_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
           : m_ds(t_ds)
         {
-          m_ds.get()->new_scope(m_ds.get().stack_holder());
+          m_ds->new_scope(m_ds.stack_holder());
         }
 
         ~Scope_Push_Pop()
         {
-          m_ds.get()->pop_scope(m_ds.get().stack_holder());
+          m_ds->pop_scope(m_ds.stack_holder());
         }
 
 
         private:
-        std::reference_wrapper<const chaiscript::detail::Dispatch_State> m_ds;
+          const chaiscript::detail::Dispatch_State &m_ds;
       };
 
       /// Creates a new function call and pops it on destruction
@@ -594,27 +594,27 @@ namespace chaiscript
         Function_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
           : m_ds(t_ds)
         {
-          m_ds.get()->new_function_call(m_ds.get().stack_holder(), m_ds.get().conversion_saves());
+          m_ds->new_function_call(m_ds.stack_holder(), m_ds.conversion_saves());
         }
 
         ~Function_Push_Pop()
         {
-          m_ds.get()->pop_function_call(m_ds.get().stack_holder(), m_ds.get().conversion_saves());
+          m_ds->pop_function_call(m_ds.stack_holder(), m_ds.conversion_saves());
         }
 
         void save_params(const std::vector<Boxed_Value> &t_params)
         {
-          m_ds.get()->save_function_params(t_params);
+          m_ds->save_function_params(t_params);
         }
 
         void save_params(std::initializer_list<Boxed_Value> t_params)
         {
-          m_ds.get()->save_function_params(std::move(t_params));
+          m_ds->save_function_params(std::move(t_params));
         }
 
 
         private:
-          std::reference_wrapper<const chaiscript::detail::Dispatch_State> m_ds;
+          const chaiscript::detail::Dispatch_State &m_ds;
       };
 
       /// Creates a new scope then pops it on destruction
@@ -628,17 +628,17 @@ namespace chaiscript
         Stack_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
           : m_ds(t_ds)
         {
-          m_ds.get()->new_stack(m_ds.get().stack_holder());
+          m_ds->new_stack(m_ds.stack_holder());
         }
 
         ~Stack_Push_Pop()
         {
-          m_ds.get()->pop_stack(m_ds.get().stack_holder());
+          m_ds->pop_stack(m_ds.stack_holder());
         }
 
 
         private:
-          std::reference_wrapper<const chaiscript::detail::Dispatch_State> m_ds;
+          const chaiscript::detail::Dispatch_State &m_ds;
       };
     }
   }
