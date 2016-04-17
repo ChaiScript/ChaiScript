@@ -469,7 +469,7 @@ namespace chaiscript
         oss << text;
 
         for (auto & elem : this->children) {
-          oss << elem->pretty_print();
+          oss << elem->pretty_print() << ' ';
         }
 
         return oss.str();
@@ -512,6 +512,8 @@ namespace chaiscript
       virtual ~AST_Node() = default;
       AST_Node(AST_Node &&) = default;
       AST_Node &operator=(AST_Node &&) = default;
+      AST_Node(const AST_Node &) = delete;
+      AST_Node& operator=(const AST_Node &) = delete;
 
 
     protected:
@@ -528,10 +530,6 @@ namespace chaiscript
         throw std::runtime_error("Undispatched ast_node (internal error)");
       }
 
-    private:
-      // Copy and assignment explicitly deleted
-      AST_Node(const AST_Node &) = delete;
-      AST_Node& operator=(const AST_Node &) = delete;
   };
 
 

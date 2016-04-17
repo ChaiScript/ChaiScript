@@ -496,6 +496,7 @@ namespace chaiscript
         m.add(fun([](const char c) { return std::string(1, c); }), "to_string");
         m.add(fun(&Boxed_Number::to_string), "to_string");
 
+        
         bootstrap_pod_type<double>("double", m);
         bootstrap_pod_type<long double>("long_double", m);
         bootstrap_pod_type<float>("float", m);
@@ -519,9 +520,19 @@ namespace chaiscript
         bootstrap_pod_type<std::uint32_t>("uint32_t", m);
         bootstrap_pod_type<std::uint64_t>("uint64_t", m);
 
+
         operators::logical_compliment<bool>(m);
 
         opers_arithmetic_pod(m);
+
+        m.add(fun(&ChaiScript::version_major), "version_major");
+        m.add(fun(&ChaiScript::version_minor), "version_minor");
+        m.add(fun(&ChaiScript::version_patch), "version_patch");
+        m.add(fun(&ChaiScript::version), "version");
+        m.add(fun(&ChaiScript::compiler_version), "compiler_version");
+        m.add(fun(&ChaiScript::compiler_name), "compiler_name");
+        m.add(fun(&ChaiScript::compiler_id), "compiler_id");
+        m.add(fun(&ChaiScript::debug_build), "debug_build");
 
 
         m.add(fun(&print), "print_string");
@@ -600,13 +611,6 @@ namespace chaiscript
             }
             );
 
-
-        chaiscript::utility::add_class<parser::ChaiScript_Parser>(m,
-            "ChaiScript_Parser",
-            { constructor<parser::ChaiScript_Parser ()>() },
-            { {fun(&parser::ChaiScript_Parser::parse), "parse"},
-              {fun(&parser::ChaiScript_Parser::ast), "ast"} }
-            );
       }
     };
   }

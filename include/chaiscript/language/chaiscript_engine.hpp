@@ -179,16 +179,9 @@ namespace chaiscript
       m_engine.add(fun([this](const std::string &t_file){ return internal_eval_file(t_file); }), "eval_file");
       m_engine.add(fun([this](const std::string &t_str){ return internal_eval(t_str); }), "eval");
       m_engine.add(fun([this](const AST_NodePtr &t_ast){ return eval(t_ast); }), "eval");
+
       m_engine.add(fun(&parse), "parse");
 
-      m_engine.add(fun(&ChaiScript::version_major), "version_major");
-      m_engine.add(fun(&ChaiScript::version_minor), "version_minor");
-      m_engine.add(fun(&ChaiScript::version_patch), "version_patch");
-      m_engine.add(fun(&ChaiScript::version), "version");
-      m_engine.add(fun(&ChaiScript::compiler_version), "compiler_version");
-      m_engine.add(fun(&ChaiScript::compiler_name), "compiler_name");
-      m_engine.add(fun(&ChaiScript::compiler_id), "compiler_id");
-      m_engine.add(fun(&ChaiScript::debug_build), "debug_build");
 
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global_const(t_bv, t_name); }), "add_global_const");
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global(t_bv, t_name); }), "add_global");
