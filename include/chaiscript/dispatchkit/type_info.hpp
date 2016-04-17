@@ -29,8 +29,8 @@ namespace chaiscript
   class Type_Info
   {
     public:
-      constexpr Type_Info(bool t_is_const, bool t_is_reference, bool t_is_pointer, bool t_is_void, 
-          bool t_is_arithmetic, const std::type_info *t_ti, const std::type_info *t_bare_ti)
+      constexpr Type_Info(const bool t_is_const, const bool t_is_reference, const bool t_is_pointer, const bool t_is_void, 
+          const bool t_is_arithmetic, const std::type_info *t_ti, const std::type_info *t_bare_ti)
         : m_type_info(t_ti), m_bare_type_info(t_bare_ti),
           m_flags((static_cast<unsigned int>(t_is_const) << is_const_flag)
                 + (static_cast<unsigned int>(t_is_reference) << is_reference_flag)
@@ -121,9 +121,7 @@ namespace chaiscript
     template<typename T>
       struct Get_Type_Info
       {
-        typedef T type;
-
-        static Type_Info get()
+        static constexpr Type_Info get()
         {
           return Type_Info(std::is_const<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::value, 
               std::is_reference<T>::value, std::is_pointer<T>::value, 
@@ -138,9 +136,9 @@ namespace chaiscript
     template<typename T>
       struct Get_Type_Info<std::shared_ptr<T> >
       {
-        typedef T type;
+//        typedef T type;
 
-        static Type_Info get()
+        static constexpr Type_Info get()
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
@@ -158,9 +156,7 @@ namespace chaiscript
     template<typename T>
       struct Get_Type_Info<const std::shared_ptr<T> &>
       {
-        typedef T type;
-
-        static Type_Info get()
+        static constexpr Type_Info get()
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
@@ -173,9 +169,7 @@ namespace chaiscript
     template<typename T>
       struct Get_Type_Info<std::reference_wrapper<T> >
       {
-        typedef T type;
-
-        static Type_Info get()
+        static constexpr Type_Info get()
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
@@ -188,9 +182,7 @@ namespace chaiscript
     template<typename T>
       struct Get_Type_Info<const std::reference_wrapper<T> &>
       {
-        typedef T type;
-
-        static Type_Info get()
+        static constexpr Type_Info get()
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
@@ -212,7 +204,7 @@ namespace chaiscript
   /// chaiscript::Type_Info ti = chaiscript::user_type(i);
   /// \endcode
   template<typename T>
-   Type_Info user_type(const T &/*t*/)
+  constexpr Type_Info user_type(const T &/*t*/)
   {
     return detail::Get_Type_Info<T>::get();
   }
@@ -227,7 +219,7 @@ namespace chaiscript
   /// chaiscript::Type_Info ti = chaiscript::user_type<int>();
   /// \endcode
   template<typename T>
-   Type_Info user_type()
+  constexpr Type_Info user_type()
   {
     return detail::Get_Type_Info<T>::get();
   }
