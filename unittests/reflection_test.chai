@@ -1,6 +1,4 @@
-auto& parser = ChaiScript_Parser()
-auto parse_success = parser.parse("3 + 4", "INPUT")
-auto& a = parser.ast()
+auto a = parse("3 + 4")
 
 assert_equal(eval(a), 7)
 
