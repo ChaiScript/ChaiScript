@@ -43,7 +43,6 @@ namespace chaiscript
 
   namespace
   {
-
     /// Helper lookup to get the name of each node type
     const char *ast_node_type_to_string(AST_Node_Type ast_node_type) {
       static const char * const ast_node_types[] = { "Id", "Fun_Call", "Arg_List", "Equation", "Var_Decl",
@@ -109,7 +108,7 @@ namespace chaiscript
       }
 
       load_module_error(const load_module_error &) = default;
-      virtual ~load_module_error() noexcept {}
+      virtual ~load_module_error() noexcept = default;
     };
 
 
@@ -172,7 +171,7 @@ namespace chaiscript
         return ss.str();
       }
 
-      virtual ~eval_error() noexcept {}
+      virtual ~eval_error() noexcept = default;
 
     private:
 

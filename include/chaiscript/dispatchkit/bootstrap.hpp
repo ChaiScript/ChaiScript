@@ -7,32 +7,8 @@
 #ifndef CHAISCRIPT_BOOTSTRAP_HPP_
 #define CHAISCRIPT_BOOTSTRAP_HPP_
 
-#include <cstdint>
-#include <exception>
-#include <functional>
-#include <memory>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <type_traits>
-#include <vector>
-#include <iterator>
-
-#include "bad_boxed_cast.hpp"
-#include "boxed_cast.hpp"
-#include "boxed_number.hpp"
-#include "boxed_value.hpp"
-#include "dispatchkit.hpp"
-#include "type_conversions.hpp"
-#include "dynamic_object.hpp"
-#include "operators.hpp"
-#include "proxy_constructors.hpp"
-#include "proxy_functions.hpp"
-#include "proxy_functions_detail.hpp"
-#include "register_function.hpp"
-#include "type_info.hpp"
 #include "../utility/utility.hpp"
-#include "../language/chaiscript_common.hpp"
+#include "register_function.hpp"
 
 namespace chaiscript 
 {
@@ -525,14 +501,15 @@ namespace chaiscript
 
         opers_arithmetic_pod(m);
 
-        m.add(fun(&ChaiScript::version_major), "version_major");
-        m.add(fun(&ChaiScript::version_minor), "version_minor");
-        m.add(fun(&ChaiScript::version_patch), "version_patch");
-        m.add(fun(&ChaiScript::version), "version");
-        m.add(fun(&ChaiScript::compiler_version), "compiler_version");
-        m.add(fun(&ChaiScript::compiler_name), "compiler_name");
-        m.add(fun(&ChaiScript::compiler_id), "compiler_id");
-        m.add(fun(&ChaiScript::debug_build), "debug_build");
+        
+        m.add(fun(&Build_Info::version_major), "version_major");
+        m.add(fun(&Build_Info::version_minor), "version_minor");
+        m.add(fun(&Build_Info::version_patch), "version_patch");
+        m.add(fun(&Build_Info::version), "version");
+        m.add(fun(&Build_Info::compiler_version), "compiler_version");
+        m.add(fun(&Build_Info::compiler_name), "compiler_name");
+        m.add(fun(&Build_Info::compiler_id), "compiler_id");
+        m.add(fun(&Build_Info::debug_build), "debug_build");
 
 
         m.add(fun(&print), "print_string");

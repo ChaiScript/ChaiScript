@@ -292,7 +292,7 @@ namespace chaiscript
 
 
       // attempt to load the stdlib
-      load_module("chaiscript_stdlib-" + version());
+      load_module("chaiscript_stdlib-" + Build_Info::version());
 
       build_eval_system(ModulePtr());
     }
@@ -317,53 +317,6 @@ namespace chaiscript
         throw chaiscript::exception::eval_error("Unknown error while parsing");
       }
     }
-
-
-    static int version_major()
-    {
-      return chaiscript::version_major;
-    }
-
-    static int version_minor()
-    {
-      return chaiscript::version_minor;
-    }
-
-    static int version_patch()
-    {
-      return chaiscript::version_patch;
-    }
-
-    static std::string version()
-    {
-      return std::to_string(version_major()) + '.' + std::to_string(version_minor()) + '.' + std::to_string(version_patch());
-    }
-
-    static std::string compiler_id()
-    {
-      return compiler_name() + '-' + compiler_version();
-    }
-
-    static std::string build_id()
-    {
-      return compiler_id() + (debug_build()?"-Debug":"-Release");
-    }
-
-    static std::string compiler_version()
-    {
-      return chaiscript::compiler_version;
-    }
-
-    static std::string compiler_name()
-    {
-      return chaiscript::compiler_name;
-    }
-
-    static bool debug_build()
-    {
-      return chaiscript::debug_build;
-    }
-
 
 
     std::string get_type_name(const Type_Info &ti) const
@@ -580,7 +533,7 @@ namespace chaiscript
     {
       std::vector<exception::load_module_error> errors;
       std::string version_stripped_name = t_module_name;
-      size_t version_pos = version_stripped_name.find("-"+version());
+      size_t version_pos = version_stripped_name.find("-" + Build_Info::version());
       if (version_pos != std::string::npos)
       {
         version_stripped_name.erase(version_pos);
