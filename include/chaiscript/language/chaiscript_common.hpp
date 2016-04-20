@@ -32,28 +32,26 @@ namespace chaiscript
 
 
   /// Types of AST nodes available to the parser and eval
-  class AST_Node_Type {
-  public:
-    enum Type { Error, Int, Float, Id, Char, Str, Eol, Fun_Call, Arg_List, Variable, Equation, Var_Decl,
-                Comparison, Addition, Subtraction, Multiplication, Division, Modulus, Array_Call, Dot_Access, Quoted_String, Single_Quoted_String,
-                Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
-                Inline_Range, Annotation, Try, Catch, Finally, Method, Attr_Decl, Shift, Equality, Bitwise_And, Bitwise_Xor, Bitwise_Or, 
-                Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop, Class, Binary, Arg, Global_Decl
-    };
+  enum class AST_Node_Type { Id, Fun_Call, Arg_List, Equation, Var_Decl,
+    Array_Call, Dot_Access,
+    Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
+    Inline_Range, Try, Catch, Finally, Method, Attr_Decl,  
+    Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop, Class, Binary, Arg, Global_Decl, Constant
   };
+
+  enum class Operator_Precidence { Ternary_Cond, Logical_Or, Logical_And, Bitwise_Or, Bitwise_Xor, Bitwise_And, Equality, Comparison, Shift, Addition, Multiplication };
 
   namespace
   {
-
     /// Helper lookup to get the name of each node type
-    const char *ast_node_type_to_string(int ast_node_type) {
-      const char *ast_node_types[] = { "Internal Parser Error", "Int", "Float", "Id", "Char", "Str", "Eol", "Fun_Call", "Arg_List", "Variable", "Equation", "Var_Decl",
-                                    "Comparison", "Addition", "Subtraction", "Multiplication", "Division", "Modulus", "Array_Call", "Dot_Access", "Quoted_String", "Single_Quoted_String",
+    const char *ast_node_type_to_string(AST_Node_Type ast_node_type) {
+      static const char * const ast_node_types[] = { "Id", "Fun_Call", "Arg_List", "Equation", "Var_Decl",
+                                    "Array_Call", "Dot_Access", 
                                     "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
-                                    "Inline_Range", "Annotation", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Shift", "Equality", "Bitwise_And", "Bitwise_Xor", "Bitwise_Or", 
-                                    "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Ternary Condition", "Noop", "Class", "Binary", "Arg"};
+                                    "Inline_Range", "Try", "Catch", "Finally", "Method", "Attr_Decl",
+                                    "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Ternary Condition", "Noop", "Class", "Binary", "Arg", "Constant"};
 
-      return ast_node_types[ast_node_type];
+      return ast_node_types[static_cast<int>(ast_node_type)];
     }
   }
 
@@ -101,6 +99,18 @@ namespace chaiscript
   /// \brief Classes which may be thrown during error cases when ChaiScript is executing.
   namespace exception
   {
+    /// \brief Thrown if an error occurs while attempting to load a binary module
+    struct load_module_error : std::runtime_error
+    {
+      load_module_error(const std::string &t_reason) noexcept
+        : std::runtime_error(t_reason)
+      {
+      }
+
+      load_module_error(const load_module_error &) = default;
+      virtual ~load_module_error() noexcept = default;
+    };
+
 
     /// Errors generated during parsing or evaluation
     struct eval_error : std::runtime_error {
@@ -161,12 +171,12 @@ namespace chaiscript
         return ss.str();
       }
 
-      virtual ~eval_error() noexcept {}
+      virtual ~eval_error() noexcept = default;
 
     private:
 
       template<typename T>
-        static int id(const T& t)
+        static AST_Node_Type id(const T& t)
         {
           return t->identifier;
         }
@@ -434,11 +444,10 @@ namespace chaiscript
   /// \brief Struct that doubles as both a parser ast_node and an AST node.
   struct AST_Node : std::enable_shared_from_this<AST_Node> {
     public:
-      const int identifier; //< \todo shouldn't this be a strongly typed enum value?
+      const AST_Node_Type identifier;
       const std::string text;
       Parse_Location location;
       std::vector<AST_NodePtr> children;
-      AST_NodePtr annotation;
 
       const std::string &filename() const {
         return *location.filename;
@@ -452,14 +461,14 @@ namespace chaiscript
         return location.end;
       }
 
-      virtual std::string pretty_print() const
+      std::string pretty_print() const
       {
         std::ostringstream oss;
 
         oss << text;
 
         for (auto & elem : this->children) {
-          oss << elem->pretty_print();
+          oss << elem->pretty_print() << ' ';
         }
 
         return oss.str();
@@ -499,15 +508,15 @@ namespace chaiscript
       }
 
 
-      void replace_child(const AST_NodePtr &t_child, const AST_NodePtr &t_new_child)
-      {
-        std::replace(children.begin(), children.end(), t_child, t_new_child);
-      }
+      virtual ~AST_Node() = default;
+      AST_Node(AST_Node &&) = default;
+      AST_Node &operator=(AST_Node &&) = default;
+      AST_Node(const AST_Node &) = delete;
+      AST_Node& operator=(const AST_Node &) = delete;
 
-      virtual ~AST_Node() {}
 
     protected:
-      AST_Node(std::string t_ast_node_text, int t_id, Parse_Location t_loc, 
+      AST_Node(std::string t_ast_node_text, AST_Node_Type t_id, Parse_Location t_loc, 
                std::vector<AST_NodePtr> t_children = std::vector<AST_NodePtr>()) :
         identifier(t_id), text(std::move(t_ast_node_text)),
         location(std::move(t_loc)),
@@ -520,10 +529,6 @@ namespace chaiscript
         throw std::runtime_error("Undispatched ast_node (internal error)");
       }
 
-    private:
-      // Copy and assignment explicitly unimplemented
-      AST_Node(const AST_Node &) = delete;
-      AST_Node& operator=(const AST_Node &) = delete;
   };
 
 
@@ -554,77 +559,83 @@ namespace chaiscript
       /// Creates a new scope then pops it on destruction
       struct Scope_Push_Pop
       {
+        Scope_Push_Pop(Scope_Push_Pop &&) = default;
+        Scope_Push_Pop& operator=(Scope_Push_Pop &&) = default;
         Scope_Push_Pop(const Scope_Push_Pop &) = delete;
         Scope_Push_Pop& operator=(const Scope_Push_Pop &) = delete;
 
         Scope_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
           : m_ds(t_ds)
         {
-          m_ds.get()->new_scope(m_ds.get().stack_holder());
+          m_ds->new_scope(m_ds.stack_holder());
         }
 
         ~Scope_Push_Pop()
         {
-          m_ds.get()->pop_scope(m_ds.get().stack_holder());
+          m_ds->pop_scope(m_ds.stack_holder());
         }
 
 
         private:
-        std::reference_wrapper<const chaiscript::detail::Dispatch_State> m_ds;
+          const chaiscript::detail::Dispatch_State &m_ds;
       };
 
       /// Creates a new function call and pops it on destruction
       struct Function_Push_Pop
       {
+        Function_Push_Pop(Function_Push_Pop &&) = default;
+        Function_Push_Pop& operator=(Function_Push_Pop &&) = default;
         Function_Push_Pop(const Function_Push_Pop &) = delete;
         Function_Push_Pop& operator=(const Function_Push_Pop &) = delete;
 
         Function_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
           : m_ds(t_ds)
         {
-          m_ds.get()->new_function_call(m_ds.get().stack_holder(), m_ds.get().conversion_saves());
+          m_ds->new_function_call(m_ds.stack_holder(), m_ds.conversion_saves());
         }
 
         ~Function_Push_Pop()
         {
-          m_ds.get()->pop_function_call(m_ds.get().stack_holder(), m_ds.get().conversion_saves());
+          m_ds->pop_function_call(m_ds.stack_holder(), m_ds.conversion_saves());
         }
 
         void save_params(const std::vector<Boxed_Value> &t_params)
         {
-          m_ds.get()->save_function_params(t_params);
+          m_ds->save_function_params(t_params);
         }
 
         void save_params(std::initializer_list<Boxed_Value> t_params)
         {
-          m_ds.get()->save_function_params(std::move(t_params));
+          m_ds->save_function_params(std::move(t_params));
         }
 
 
         private:
-          std::reference_wrapper<const chaiscript::detail::Dispatch_State> m_ds;
+          const chaiscript::detail::Dispatch_State &m_ds;
       };
 
       /// Creates a new scope then pops it on destruction
       struct Stack_Push_Pop
       {
+        Stack_Push_Pop(Stack_Push_Pop &&) = default;
+        Stack_Push_Pop& operator=(Stack_Push_Pop &&) = default;
         Stack_Push_Pop(const Stack_Push_Pop &) = delete;
         Stack_Push_Pop& operator=(const Stack_Push_Pop &) = delete;
 
         Stack_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
           : m_ds(t_ds)
         {
-          m_ds.get()->new_stack(m_ds.get().stack_holder());
+          m_ds->new_stack(m_ds.stack_holder());
         }
 
         ~Stack_Push_Pop()
         {
-          m_ds.get()->pop_stack(m_ds.get().stack_holder());
+          m_ds->pop_stack(m_ds.stack_holder());
         }
 
 
         private:
-          std::reference_wrapper<const chaiscript::detail::Dispatch_State> m_ds;
+          const chaiscript::detail::Dispatch_State &m_ds;
       };
     }
   }

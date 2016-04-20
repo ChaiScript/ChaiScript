@@ -7,32 +7,8 @@
 #ifndef CHAISCRIPT_BOOTSTRAP_HPP_
 #define CHAISCRIPT_BOOTSTRAP_HPP_
 
-#include <cstdint>
-#include <exception>
-#include <functional>
-#include <memory>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <type_traits>
-#include <vector>
-#include <iterator>
-
-#include "bad_boxed_cast.hpp"
-#include "boxed_cast.hpp"
-#include "boxed_number.hpp"
-#include "boxed_value.hpp"
-#include "dispatchkit.hpp"
-#include "type_conversions.hpp"
-#include "dynamic_object.hpp"
-#include "operators.hpp"
-#include "proxy_constructors.hpp"
-#include "proxy_functions.hpp"
-#include "proxy_functions_detail.hpp"
-#include "register_function.hpp"
-#include "type_info.hpp"
 #include "../utility/utility.hpp"
-#include "../language/chaiscript_common.hpp"
+#include "register_function.hpp"
 
 namespace chaiscript 
 {
@@ -137,15 +113,6 @@ namespace chaiscript
       m.add(fun(&detail::construct_pod<T>), type);
     }
 
-
-    /// to_string function for internal use. Uses ostream operator<<
-    template<typename Input>
-    std::string to_string(Input i)
-    {
-      std::stringstream ss;
-      ss << i;
-      return ss.str();
-    }
 
     /// Internal function for converting from a string to a value
     /// uses ostream operator >> to perform the conversion
@@ -288,8 +255,6 @@ namespace chaiscript
         m.add(fun(&Boxed_Number::product), "*");
         m.add(fun(&Boxed_Number::remainder), "%");
         m.add(fun(&Boxed_Number::shift_right), ">>");
-
-
      }
 
       /// Create a bound function object. The first param is the function to bind
@@ -329,26 +294,6 @@ namespace chaiscript
         }
       }
 
-      static void throw_exception(const Boxed_Value &bv) {
-        throw bv;
-      }
-
-      static std::string what(const std::exception &e)
-      {
-        return e.what();
-      }
-
-      /// Boolean specialization of internal to_string function
-      static std::string bool_to_string(bool b)
-      {
-        if (b)
-        {
-          return "true";
-        } else {
-          return "false";
-        }
-      }
-
       template<typename FunctionType>
         static std::vector<Boxed_Value> do_return_boxed_value_vector(FunctionType f,
             const dispatch::Proxy_Function_Base *b)
@@ -384,7 +329,7 @@ namespace chaiscript
       }
 
       template<typename Function>
-      static std::function<std::vector<Boxed_Value> (const dispatch::Proxy_Function_Base*)> return_boxed_value_vector(const Function &f)
+      static auto return_boxed_value_vector(const Function &f)
       {
         return [f](const dispatch::Proxy_Function_Base *b) {
           return do_return_boxed_value_vector(f, b);
@@ -407,13 +352,13 @@ namespace chaiscript
         m.add(user_type<std::exception>(), "exception");
 
         m.add(fun(&dispatch::Proxy_Function_Base::get_arity), "get_arity");
-        m.add(fun(&dispatch::Proxy_Function_Base::annotation), "get_annotation");
         m.add(fun(&dispatch::Proxy_Function_Base::operator==), "==");
 
 
         m.add(fun(return_boxed_value_vector(&dispatch::Proxy_Function_Base::get_param_types)), "get_param_types");
         m.add(fun(return_boxed_value_vector(&dispatch::Proxy_Function_Base::get_contained_functions)), "get_contained_functions");
 
+        m.add(fun([](const std::exception &e){ return std::string(e.what()); }), "what");
 
         m.add(user_type<std::out_of_range>(), "out_of_range");
         m.add(user_type<std::logic_error>(), "logic_error");
@@ -425,7 +370,6 @@ namespace chaiscript
         m.add(chaiscript::base_class<std::exception, std::runtime_error>());
 
         m.add(constructor<std::runtime_error (const std::string &)>(), "runtime_error");
-        m.add(fun(std::function<std::string (const std::runtime_error &)>(&what)), "what");
 
         m.add(user_type<dispatch::Dynamic_Object>(), "Dynamic_Object");
         m.add(constructor<dispatch::Dynamic_Object (const std::string &)>(), "Dynamic_Object");
@@ -520,15 +464,15 @@ namespace chaiscript
         operators::equal<bool>(m);
         operators::not_equal<bool>(m);
 
-        m.add(fun([](const std::string &s) -> std::string { return s; }), "to_string");
-        m.add(fun(&Bootstrap::bool_to_string), "to_string");
+        m.add(fun([](const std::string &s) { return s; }), "to_string");
+        m.add(fun([](const bool b) { return std::string(b?"true":"false"); }), "to_string");
         m.add(fun(&unknown_assign), "=");
-        m.add(fun(&throw_exception), "throw");
-        m.add(fun(&what), "what");
+        m.add(fun([](const Boxed_Value &bv) { throw bv; }), "throw");
 
-        m.add(fun(&to_string<char>), "to_string");
+        m.add(fun([](const char c) { return std::string(1, c); }), "to_string");
         m.add(fun(&Boxed_Number::to_string), "to_string");
 
+        
         bootstrap_pod_type<double>("double", m);
         bootstrap_pod_type<long double>("long_double", m);
         bootstrap_pod_type<float>("float", m);
@@ -552,9 +496,20 @@ namespace chaiscript
         bootstrap_pod_type<std::uint32_t>("uint32_t", m);
         bootstrap_pod_type<std::uint64_t>("uint64_t", m);
 
+
         operators::logical_compliment<bool>(m);
 
         opers_arithmetic_pod(m);
+
+        
+        m.add(fun(&Build_Info::version_major), "version_major");
+        m.add(fun(&Build_Info::version_minor), "version_minor");
+        m.add(fun(&Build_Info::version_patch), "version_patch");
+        m.add(fun(&Build_Info::version), "version");
+        m.add(fun(&Build_Info::compiler_version), "compiler_version");
+        m.add(fun(&Build_Info::compiler_name), "compiler_name");
+        m.add(fun(&Build_Info::compiler_id), "compiler_id");
+        m.add(fun(&Build_Info::debug_build), "debug_build");
 
 
         m.add(fun(&print), "print_string");
@@ -580,9 +535,11 @@ namespace chaiscript
         m.add(chaiscript::fun(&get_parse_tree), "get_parse_tree");
 
         m.add(chaiscript::base_class<std::runtime_error, chaiscript::exception::eval_error>());
+        m.add(chaiscript::base_class<std::exception, chaiscript::exception::eval_error>());
 
         m.add(chaiscript::user_type<chaiscript::exception::arithmetic_error>(), "arithmetic_error");
         m.add(chaiscript::base_class<std::runtime_error, chaiscript::exception::arithmetic_error>());
+        m.add(chaiscript::base_class<std::exception, chaiscript::exception::arithmetic_error>());
 
 
 //        chaiscript::bootstrap::standard_library::vector_type<std::vector<std::shared_ptr<chaiscript::AST_Node> > >("AST_NodeVector", m);
@@ -593,13 +550,13 @@ namespace chaiscript
             { },
             { {fun(&chaiscript::exception::eval_error::reason), "reason"},
               {fun(&chaiscript::exception::eval_error::pretty_print), "pretty_print"},
-              {fun(std::function<std::vector<Boxed_Value> (const chaiscript::exception::eval_error &t_eval_error)>([](const chaiscript::exception::eval_error &t_eval_error) -> std::vector<Boxed_Value> { 
+              {fun([](const chaiscript::exception::eval_error &t_eval_error) { 
                   std::vector<Boxed_Value> retval;
                   std::transform(t_eval_error.call_stack.begin(), t_eval_error.call_stack.end(),
                                  std::back_inserter(retval),
                                  &chaiscript::var<const std::shared_ptr<const chaiscript::AST_Node> &>);
                   return retval;
-                })), "call_stack"} }
+                }), "call_stack"} }
             );
 
 
@@ -621,24 +578,16 @@ namespace chaiscript
               {fun(&AST_Node::start), "start"},
               {fun(&AST_Node::end), "end"},
               {fun(&AST_Node::to_string), "to_string"},
-              {fun(std::function<std::vector<Boxed_Value> (const chaiscript::AST_Node &t_node)>([](const chaiscript::AST_Node &t_node) -> std::vector<Boxed_Value> { 
+              {fun([](const chaiscript::AST_Node &t_node) -> std::vector<Boxed_Value> { 
                 std::vector<Boxed_Value> retval;
                 std::transform(t_node.children.begin(), t_node.children.end(),
                                std::back_inserter(retval),
                                &chaiscript::var<const std::shared_ptr<chaiscript::AST_Node> &>);
                 return retval;
-              })), "children"},
-              {fun(&AST_Node::replace_child), "replace_child"}
+              }), "children"}
             }
             );
 
-
-        chaiscript::utility::add_class<parser::ChaiScript_Parser>(m,
-            "ChaiScript_Parser",
-            { constructor<parser::ChaiScript_Parser ()>() },
-            { {fun(&parser::ChaiScript_Parser::parse), "parse"},
-              {fun(&parser::ChaiScript_Parser::ast), "ast"} }
-            );
       }
     };
   }

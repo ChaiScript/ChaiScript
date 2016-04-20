@@ -69,11 +69,11 @@ namespace chaiscript
   /// assert(i == 5);
   /// \endcode
   template<typename Type>
-  typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv, const Type_Conversions_State *t_conversions = nullptr)
+  decltype(auto) boxed_cast(const Boxed_Value &bv, const Type_Conversions_State *t_conversions = nullptr)
   {
     if (!t_conversions || bv.get_type_info().bare_equal(user_type<Type>()) || (t_conversions && !(*t_conversions)->convertable_type<Type>())) {
       try {
-        return detail::Cast_Helper<Type>::cast(bv, t_conversions);
+        return(detail::Cast_Helper<Type>::cast(bv, t_conversions));
       } catch (const chaiscript::detail::exception::bad_any_cast &) {
       }
     }
@@ -84,11 +84,11 @@ namespace chaiscript
       try {
         // We will not catch any bad_boxed_dynamic_cast that is thrown, let the user get it
         // either way, we are not responsible if it doesn't work
-        return detail::Cast_Helper<Type>::cast((*t_conversions)->boxed_type_conversion<Type>(t_conversions->saves(), bv), t_conversions);
+        return(detail::Cast_Helper<Type>::cast((*t_conversions)->boxed_type_conversion<Type>(t_conversions->saves(), bv), t_conversions));
       } catch (...) {
         try {
           // try going the other way
-          return detail::Cast_Helper<Type>::cast((*t_conversions)->boxed_type_down_conversion<Type>(t_conversions->saves(), bv), t_conversions);
+          return(detail::Cast_Helper<Type>::cast((*t_conversions)->boxed_type_down_conversion<Type>(t_conversions->saves(), bv), t_conversions));
         } catch (const chaiscript::detail::exception::bad_any_cast &) {
           throw exception::bad_boxed_cast(bv.get_type_info(), typeid(Type));
         }

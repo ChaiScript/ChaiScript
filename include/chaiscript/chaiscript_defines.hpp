@@ -89,6 +89,54 @@ namespace chaiscript {
 #endif
   }
 
+  struct Build_Info {
+    static int version_major()
+    {
+      return chaiscript::version_major;
+    }
+
+    static int version_minor()
+    {
+      return chaiscript::version_minor;
+    }
+
+    static int version_patch()
+    {
+      return chaiscript::version_patch;
+    }
+
+    static std::string version()
+    {
+      return std::to_string(version_major()) + '.' + std::to_string(version_minor()) + '.' + std::to_string(version_patch());
+    }
+
+    static std::string compiler_id()
+    {
+      return compiler_name() + '-' + compiler_version();
+    }
+
+    static std::string build_id()
+    {
+      return compiler_id() + (debug_build()?"-Debug":"-Release");
+    }
+
+    static std::string compiler_version()
+    {
+      return chaiscript::compiler_version;
+    }
+
+    static std::string compiler_name()
+    {
+      return chaiscript::compiler_name;
+    }
+
+    static bool debug_build()
+    {
+      return chaiscript::debug_build;
+    }
+  };
+
+
   template<typename Iter, typename Distance>
     Iter advance_copy(Iter iter, Distance distance) {
       std::advance(iter, static_cast<typename std::iterator_traits<Iter>::difference_type>(distance));

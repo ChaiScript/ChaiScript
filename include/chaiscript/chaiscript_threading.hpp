@@ -108,6 +108,9 @@ namespace chaiscript
 
 #else
 
+#pragma message ("Threading without thread_local support is not well supported.")
+
+
       /// Typesafe thread specific storage. If threading is enabled, this class uses a mutex protected map. If
       /// threading is not enabled, the class always returns the same data, regardless of which thread it is called from.
       /// 

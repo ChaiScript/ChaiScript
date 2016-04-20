@@ -695,11 +695,10 @@
 /// Begins a function or method definition
 ///
 /// ~~~~~~~~
-/// Function Definition ::= [annotation + CR/LF] "def" identifier "(" [[type] arg ("," [type] arg)*] ")" [":" guard] block
-/// Method Definition ::= [annotation + CR/LF] "def" class_name "::" method_name "(" [[type] arg ("," [type] arg)*] ")" [":" guard] block
+/// Function Definition ::= "def" identifier "(" [[type] arg ("," [type] arg)*] ")" [":" guard] block
+/// Method Definition ::= "def" class_name "::" method_name "(" [[type] arg ("," [type] arg)*] ")" [":" guard] block
 /// ~~~~~~~~
 /// 
-/// annotation: meta-annotation on function, currently used as documentation. Optional.
 /// identifier: name of function. Required.
 /// args: comma-delimited list of parameter names with optional type specifiers. Optional.
 /// guards: guarding statement that act as a prerequisite for the function. Optional.

@@ -93,17 +93,12 @@ namespace chaiscript
           return do_oper(t_ss, m_oper, text, lhs, rhs);
         }
 
-        std::string pretty_print() const override 
-        {
-          return "(" + this->children[0]->pretty_print() + " " + text + " " + this->children[1]->pretty_print() + ")";
-        }
-
       protected:
         Boxed_Value do_oper(const chaiscript::detail::Dispatch_State &t_ss, 
             Operators::Opers t_oper, const std::string &t_oper_string, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs) const
         {
           try {
-            if (t_oper != Operators::invalid && t_lhs.get_type_info().is_arithmetic() && t_rhs.get_type_info().is_arithmetic())
+            if (t_oper != Operators::Opers::invalid && t_lhs.get_type_info().is_arithmetic() && t_rhs.get_type_info().is_arithmetic())
             {
               // If it's an arithmetic operation we want to short circuit dispatch
               try{
@@ -129,95 +124,42 @@ namespace chaiscript
         mutable std::atomic_uint_fast32_t m_loc;
     };
 
-    struct Int_AST_Node final : AST_Node {
-        Int_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, Boxed_Value t_bv) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Int, std::move(t_loc)), 
-          m_value(std::move(t_bv)) { assert(text != ""); }
 
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const override {
-          return m_value;
-        }
 
-      private:
-        Boxed_Value m_value;
-    };
+    struct Constant_AST_Node final : AST_Node {
+      Constant_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, Boxed_Value t_value)
+        : AST_Node(t_ast_node_text, AST_Node_Type::Constant, std::move(t_loc)),
+          m_value(std::move(t_value))
+      {
+      }
 
-    struct Float_AST_Node final : AST_Node {
-        Float_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, Boxed_Value t_bv) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Float, std::move(t_loc)),
-          m_value(std::move(t_bv)) { }
+      Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const override {
+        return m_value;
+      }
 
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const override {
-          return m_value;
-        }
-
-      private:
-        Boxed_Value m_value;
-
+      Boxed_Value m_value;
     };
 
     struct Id_AST_Node final : AST_Node {
         Id_AST_Node(const std::string &t_ast_node_text, Parse_Location t_loc) :
           AST_Node(t_ast_node_text, AST_Node_Type::Id, std::move(t_loc)),
-          m_value(get_value(t_ast_node_text)), m_loc(0)
+          m_loc(0)
         { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
-          if (!m_value.is_undef())
-          {
-            return m_value;
-          } else {
-            try {
-              return t_ss.get_object(this->text, m_loc);
-            }
-            catch (std::exception &) {
-              throw exception::eval_error("Can not find object: " + this->text);
-            }
+          try {
+            return t_ss.get_object(this->text, m_loc);
+          }
+          catch (std::exception &) {
+            throw exception::eval_error("Can not find object: " + this->text);
           }
         }
 
       private:
-        static Boxed_Value get_value(const std::string &t_text)
-        {
-          if (t_text == "true") {
-            return const_var(true);
-          } else if (t_text == "false") {
-            return const_var(false);
-          } else if (t_text == "Infinity") {
-            return const_var(std::numeric_limits<double>::infinity());
-          } else if (t_text == "NaN") {
-            return const_var(std::numeric_limits<double>::quiet_NaN());
-          } else if (t_text == "_") {
-            return Boxed_Value(std::make_shared<dispatch::Placeholder_Object>());
-          } else {
-            return Boxed_Value();
-          }
-        }
-
-        Boxed_Value m_value;
 
         mutable std::atomic_uint_fast32_t m_loc;
     };
 
-    struct Char_AST_Node final : AST_Node {
-        Char_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Char, std::move(t_loc)) { }
-    };
-
-    struct Str_AST_Node final : AST_Node {
-        Str_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Str, std::move(t_loc)) { }
-    };
-
-    struct Eol_AST_Node final : AST_Node {
-        Eol_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Eol, std::move(t_loc)) { }
-
-        std::string pretty_print() const override 
-        {
-          return "\n";
-        }
-    };
 
 
     struct Fun_Call_AST_Node final : AST_Node {
@@ -265,25 +207,6 @@ namespace chaiscript
           }
         }
 
-        std::string pretty_print() const override 
-        {
-          std::ostringstream oss;
-
-          int count = 0;
-          for (const auto &child : this->children) {
-            oss << child->pretty_print();
-
-            if (count == 0)
-            {
-              oss << "(";
-            }
-            ++count;
-          }
-
-          oss << ")";
-
-          return oss.str();
-        }
 
     };
 
@@ -293,40 +216,12 @@ namespace chaiscript
         Arg_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Arg_List, std::move(t_loc), std::move(t_children)) { }
 
-        std::string pretty_print() const override 
-        {
-          std::ostringstream oss;
-          for (size_t j = 0; j < this->children.size(); ++j) {
-            if (j != 0)
-            {
-              oss << " ";
-            }
-
-            oss << this->children[j]->pretty_print();
-          }
-
-          return oss.str();
-        }
     };
 
     struct Arg_List_AST_Node final : AST_Node {
         Arg_List_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Arg_List, std::move(t_loc), std::move(t_children)) { }
 
-        std::string pretty_print() const override 
-        {
-          std::ostringstream oss;
-          for (size_t j = 0; j < this->children.size(); ++j) {
-            if (j != 0)
-            {
-              oss << ", ";
-            }
-
-            oss << this->children[j]->pretty_print();
-          }
-
-          return oss.str();
-        }
 
         static std::string get_arg_name(const AST_NodePtr &t_node) {
           if (t_node->children.empty())
@@ -375,16 +270,16 @@ namespace chaiscript
     struct Equation_AST_Node final : AST_Node {
         Equation_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Equation, std::move(t_loc), std::move(t_children)), 
-          m_oper(Operators::to_operator(children[1]->text))
-        { assert(children.size() == 3); }
+          m_oper(Operators::to_operator(text))
+        { assert(children.size() == 2); }
 
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-          Boxed_Value rhs = this->children[2]->eval(t_ss); 
+          Boxed_Value rhs = this->children[1]->eval(t_ss); 
           Boxed_Value lhs = this->children[0]->eval(t_ss);
 
-          if (m_oper != Operators::invalid && lhs.get_type_info().is_arithmetic() &&
+          if (m_oper != Operators::Opers::invalid && lhs.get_type_info().is_arithmetic() &&
               rhs.get_type_info().is_arithmetic())
           {
             try {
@@ -392,7 +287,7 @@ namespace chaiscript
             } catch (const std::exception &) {
               throw exception::eval_error("Error with unsupported arithmetic assignment operation");
             }
-          } else if (m_oper == Operators::assign) {
+          } else if (m_oper == Operators::Opers::assign) {
             if (lhs.is_return_value()) {
               throw exception::eval_error("Error, cannot assign to temporary value.");
             }
@@ -400,9 +295,13 @@ namespace chaiscript
             try {
 
               if (lhs.is_undef()) {
-                if (!this->children.empty() && 
-                    !this->children[0]->children.empty() 
-                    && this->children[0]->children[0]->identifier == AST_Node_Type::Reference)
+                if ((!this->children.empty()
+                     && ((this->children[0]->identifier == AST_Node_Type::Reference)
+                         || (!this->children[0]->children.empty()
+                              && this->children[0]->children[0]->identifier == AST_Node_Type::Reference)
+                       )
+                    )
+                   )
                 {
                   /// \todo This does not handle the case of an unassigned reference variable
                   ///       being assigned outside of its declaration
@@ -419,17 +318,17 @@ namespace chaiscript
               }
 
               try {
-                return t_ss->call_function(this->children[1]->text, m_loc, {std::move(lhs), rhs}, t_ss.conversions());
+                return t_ss->call_function(this->text, m_loc, {std::move(lhs), rhs}, t_ss.conversions());
               }
               catch(const exception::dispatch_error &e){
-                throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, *t_ss);
+                throw exception::eval_error("Unable to find appropriate'" + this->text + "' operator.", e.parameters, e.functions, false, *t_ss);
               }
             }
             catch(const exception::dispatch_error &e){
               throw exception::eval_error("Missing clone or copy constructor for right hand side of equation", e.parameters, e.functions, false, *t_ss);
             }
           }
-          else if (this->children[1]->text == ":=") {
+          else if (this->text == ":=") {
             if (lhs.is_undef() || Boxed_Value::type_match(lhs, rhs)) {
               lhs.assign(rhs);
               lhs.reset_return_value();
@@ -439,9 +338,9 @@ namespace chaiscript
           }
           else {
             try {
-              return t_ss->call_function(this->children[1]->text, m_loc, {std::move(lhs), rhs}, t_ss.conversions());
+              return t_ss->call_function(this->text, m_loc, {std::move(lhs), rhs}, t_ss.conversions());
             } catch(const exception::dispatch_error &e){
-              throw exception::eval_error("Unable to find appropriate'" + this->children[1]->text + "' operator.", e.parameters, e.functions, false, *t_ss);
+              throw exception::eval_error("Unable to find appropriate'" + this->text + "' operator.", e.parameters, e.functions, false, *t_ss);
             }
           }
 
@@ -484,31 +383,19 @@ namespace chaiscript
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Var_Decl, std::move(t_loc), std::move(t_children)) { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
-          if (this->children[0]->identifier == AST_Node_Type::Reference)
-          {
-            return this->children[0]->eval(t_ss);
-          } else {
-            const std::string &idname = this->children[0]->text;
+          const std::string &idname = this->children[0]->text;
 
-            try {
-              Boxed_Value bv;
-              t_ss.add_object(idname, bv);
-              return bv;
-            }
-            catch (const exception::reserved_word_error &) {
-              throw exception::eval_error("Reserved word used as variable '" + idname + "'");
-            } catch (const exception::name_conflict_error &e) {
-              throw exception::eval_error("Variable redefined '" + e.name() + "'");
-            }
+          try {
+            Boxed_Value bv;
+            t_ss.add_object(idname, bv);
+            return bv;
           }
-
+          catch (const exception::reserved_word_error &) {
+            throw exception::eval_error("Reserved word used as variable '" + idname + "'");
+          } catch (const exception::name_conflict_error &e) {
+            throw exception::eval_error("Variable redefined '" + e.name() + "'");
+          }
         }
-
-        std::string pretty_print() const override 
-        {
-          return "var " + this->children[0]->text;
-        }
-
     };
 
 
@@ -530,20 +417,6 @@ namespace chaiscript
           }
         }
 
-        std::string pretty_print() const override 
-        {
-          std::ostringstream oss;
-          oss << this->children[0]->pretty_print();
-
-          for (size_t i = 1; i < this->children.size(); ++i)
-          {
-            oss << "[";
-            oss << this->children[i]->pretty_print();
-            oss << "]";
-          }
-
-          return oss.str();
-        }
 
       private:
         mutable std::atomic_uint_fast32_t m_loc;
@@ -553,8 +426,8 @@ namespace chaiscript
         Dot_Access_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Dot_Access, std::move(t_loc), std::move(t_children)),
           m_fun_name(
-              ((children[2]->identifier == AST_Node_Type::Fun_Call) || (children[2]->identifier == AST_Node_Type::Array_Call))?
-              children[2]->children[0]->text:children[2]->text) { }
+              ((children[1]->identifier == AST_Node_Type::Fun_Call) || (children[1]->identifier == AST_Node_Type::Array_Call))?
+              children[1]->children[0]->text:children[1]->text) { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
@@ -564,9 +437,9 @@ namespace chaiscript
           std::vector<Boxed_Value> params{retval};
 
           bool has_function_params = false;
-          if (children[2]->children.size() > 1) {
+          if (children[1]->children.size() > 1) {
             has_function_params = true;
-            for (const auto &child : children[2]->children[1]->children) {
+            for (const auto &child : children[1]->children[1]->children) {
               params.push_back(child->eval(t_ss));
             }
           }
@@ -588,9 +461,9 @@ namespace chaiscript
             retval = std::move(rv.retval);
           }
 
-          if (this->children[2]->identifier == AST_Node_Type::Array_Call) {
+          if (this->children[1]->identifier == AST_Node_Type::Array_Call) {
             try {
-              retval = t_ss->call_function("[]", m_array_loc, {retval, this->children[2]->children[1]->eval(t_ss)}, t_ss.conversions());
+              retval = t_ss->call_function("[]", m_array_loc, {retval, this->children[1]->children[1]->eval(t_ss)}, t_ss.conversions());
             }
             catch(const exception::dispatch_error &e){
               throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, true, *t_ss);
@@ -606,41 +479,6 @@ namespace chaiscript
         const std::string m_fun_name;
     };
 
-    struct Quoted_String_AST_Node final : AST_Node {
-        Quoted_String_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Quoted_String, std::move(t_loc)),
-          m_value(const_var(text)) { }
-
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const override {
-          return m_value;
-        }
-
-        std::string pretty_print() const override 
-        {
-          return "\"" + text + "\"";
-        }
-
-      private:
-        Boxed_Value m_value;
-    };
-
-    struct Single_Quoted_String_AST_Node final : AST_Node {
-        Single_Quoted_String_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Single_Quoted_String, std::move(t_loc)),
-          m_value(const_var(char(text.at(0)))) { }
-
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const override{
-          return m_value;
-        }
-
-        std::string pretty_print() const override 
-        {
-          return "'" + text + "'";
-        }
-
-      private:
-        Boxed_Value m_value;
-    };
 
     struct Lambda_AST_Node final : AST_Node {
         Lambda_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
@@ -736,7 +574,6 @@ namespace chaiscript
 
           try {
             const std::string & l_function_name = this->children[0]->text;
-            const std::string & l_annotation = this->annotation?this->annotation->text:"";
             const auto & func_node = this->children.back();
             t_ss->add(
                 dispatch::make_dynamic_proxy_function(
@@ -745,7 +582,7 @@ namespace chaiscript
                     return detail::eval_function(engine, func_node, t_param_names, t_params);
                   },
                   static_cast<int>(numparams), this->children.back(),
-                  param_types, l_annotation, guard), l_function_name);
+                  param_types, guard), l_function_name);
           }
           catch (const exception::reserved_word_error &e) {
             throw exception::eval_error("Reserved word used as function name '" + e.word() + "'");
@@ -816,32 +653,22 @@ namespace chaiscript
 
     struct If_AST_Node final : AST_Node {
         If_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::If, std::move(t_loc), std::move(t_children)) { }
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::If, std::move(t_loc), std::move(t_children)) 
+        { 
+          assert(children.size() == 2 || children.size() == 3);
+        }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
-
           if (get_bool_condition(children[0]->eval(t_ss))) {
             return children[1]->eval(t_ss);
           } else {
-            if (children.size() > 2) {
-              size_t i = 2;
-              while (i < children.size()) {
-                if (children[i]->text == "else") {
-                  return children[i+1]->eval(t_ss);
-                }
-                else if (children[i]->text == "else if") {
-                  if (get_bool_condition(children[i+1]->eval(t_ss))) {
-                    return children[i+2]->eval(t_ss);
-                  }
-                }
-                i += 3;
-              }
+            if (children.size() == 3) {
+              return children[2]->eval(t_ss);
+            } else {
+              return void_var();
             }
           }
-
-          return void_var();
         }
-
     };
 
     struct For_AST_Node final : AST_Node {
@@ -973,11 +800,6 @@ namespace chaiscript
           }
         }
 
-        std::string pretty_print() const override
-        {
-          return "[" + AST_Node::pretty_print() + "]";
-        }
-
       private:
         mutable std::atomic_uint_fast32_t m_loc;
     };
@@ -1068,24 +890,24 @@ namespace chaiscript
     struct Prefix_AST_Node final : AST_Node {
         Prefix_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Prefix, std::move(t_loc), std::move(t_children)),
-          m_oper(Operators::to_operator(children[0]->text, true))
+          m_oper(Operators::to_operator(text, true))
         { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override{
-          Boxed_Value bv(children[1]->eval(t_ss));
+          Boxed_Value bv(children[0]->eval(t_ss));
 
           try {
             // short circuit arithmetic operations
-            if (m_oper != Operators::invalid && m_oper != Operators::bitwise_and && bv.get_type_info().is_arithmetic())
+            if (m_oper != Operators::Opers::invalid && m_oper != Operators::Opers::bitwise_and && bv.get_type_info().is_arithmetic())
             {
               return Boxed_Number::do_oper(m_oper, bv);
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               fpp.save_params({bv});
-              return t_ss->call_function(children[0]->text, m_loc, {std::move(bv)}, t_ss.conversions());
+              return t_ss->call_function(text, m_loc, {std::move(bv)}, t_ss.conversions());
             }
           } catch (const exception::dispatch_error &e) {
-            throw exception::eval_error("Error with prefix operator evaluation: '" + children[0]->text + "'", e.parameters, e.functions, false, *t_ss);
+            throw exception::eval_error("Error with prefix operator evaluation: '" + text + "'", e.parameters, e.functions, false, *t_ss);
           }
         }
 
@@ -1151,11 +973,6 @@ namespace chaiscript
 
       private:
         mutable std::atomic_uint_fast32_t m_loc;
-    };
-
-    struct Annotation_AST_Node final : AST_Node {
-        Annotation_AST_Node(std::string t_ast_node_text, Parse_Location t_loc) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Annotation, std::move(t_loc)) { }
     };
 
     struct Try_AST_Node final : AST_Node {
@@ -1324,7 +1141,6 @@ namespace chaiscript
           }
 
           try {
-            const std::string & l_annotation = annotation?annotation->text:"";
             const std::string & function_name = children[static_cast<size_t>(1 + class_offset)]->text;
             auto node = children.back();
 
@@ -1337,7 +1153,7 @@ namespace chaiscript
                         [engine, t_param_names, node](const std::vector<Boxed_Value> &t_params) {
                           return chaiscript::eval::detail::eval_function(engine, node, t_param_names, t_params);
                         },
-                        static_cast<int>(numparams), node, param_types, l_annotation, guard
+                        static_cast<int>(numparams), node, param_types, guard
                       )
                     ),
                   function_name);
@@ -1353,7 +1169,7 @@ namespace chaiscript
                       [engine, t_param_names, node](const std::vector<Boxed_Value> &t_params) {
                         return chaiscript::eval::detail::eval_function(engine, node, t_param_names, t_params);
                       },
-                      static_cast<int>(numparams), node, param_types, l_annotation, guard), type), 
+                      static_cast<int>(numparams), node, param_types, guard), type), 
                   function_name);
             }
           }
@@ -1406,36 +1222,26 @@ namespace chaiscript
     struct Logical_And_AST_Node final : AST_Node {
         Logical_And_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Logical_And, std::move(t_loc), std::move(t_children)) 
-        { assert(children.size() == 3); }
+        { assert(children.size() == 2); }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
         {
           return const_var(get_bool_condition(children[0]->eval(t_ss))
-              && get_bool_condition(children[2]->eval(t_ss)));
+              && get_bool_condition(children[1]->eval(t_ss)));
         }
 
-        std::string pretty_print() const override
-        {
-          return "(" + AST_Node::pretty_print() + ")";
-        }
     };
 
     struct Logical_Or_AST_Node final : AST_Node {
         Logical_Or_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Logical_Or, std::move(t_loc), std::move(t_children)) 
-        { assert(children.size() == 3); }
+        { assert(children.size() == 2); }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
         {
           return const_var(get_bool_condition(children[0]->eval(t_ss))
-              || get_bool_condition(children[2]->eval(t_ss)));
+              || get_bool_condition(children[1]->eval(t_ss)));
         }
-
-        std::string pretty_print() const override
-        {
-          return "(" + AST_Node::pretty_print() + ")";
-        }
-
     };
   }
 

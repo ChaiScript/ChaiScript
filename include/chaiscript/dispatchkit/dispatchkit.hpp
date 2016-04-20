@@ -310,11 +310,6 @@ namespace chaiscript
                              [&vals, &t_conversions](const Proxy_Function &f){ return f->call_match(vals, t_conversions); });
         }
 
-        std::string annotation() const override
-        {
-          return "Multiple method dispatch function wrapper.";
-        }
-
       protected:
         Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
@@ -381,7 +376,6 @@ namespace chaiscript
       typedef std::vector<Scope> StackData;
 
       Stack_Holder()
-        : call_depth(0)
       {
         stacks.reserve(2);
         stacks.emplace_back(1);
@@ -392,7 +386,7 @@ namespace chaiscript
       std::vector<StackData> stacks;
 
       std::vector<std::vector<Boxed_Value>> call_params;
-      int call_depth;
+      int call_depth = 0;
     };
 
     /// Main class for the dispatchkit. Handles management
@@ -412,11 +406,9 @@ namespace chaiscript
           std::vector<std::pair<std::string, Boxed_Value>> m_boxed_functions;
           std::map<std::string, Boxed_Value> m_global_objects;
           Type_Name_Map m_types;
-          std::set<std::string> m_reserved_words;
-
-          State &operator=(const State &) = default;
-          State() = default;
-          State(const State &) = default;
+          std::set<std::string> m_reserved_words 
+            = {"def", "fun", "while", "for", "if", "else", "&&", "||", ",", "auto", 
+               "return", "break", "true", "false", "class", "attr", "var", "global", "GLOBAL", "_"};
         };
 
         Dispatch_Engine()
@@ -424,16 +416,12 @@ namespace chaiscript
         {
         }
 
-        ~Dispatch_Engine()
-        {
-        }
-
         /// \brief casts an object while applying any Dynamic_Conversion available
         template<typename Type>
-          typename detail::Cast_Helper<Type>::Result_Type boxed_cast(const Boxed_Value &bv) const
+          decltype(auto) boxed_cast(const Boxed_Value &bv) const
           {
             Type_Conversions_State state(m_conversions, m_conversions.conversion_saves());
-            return chaiscript::boxed_cast<Type>(bv, &state);
+            return(chaiscript::boxed_cast<Type>(bv, &state));
           }
 
         /// Add a new conversion for upcasting to a base class
@@ -886,12 +874,6 @@ namespace chaiscript
           return rets;
         }
 
-        void add_reserved_word(const std::string &name)
-        {
-          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
-
-          m_state.m_reserved_words.insert(name);
-        }
 
         const Type_Conversions &conversions() const
         {
@@ -1065,11 +1047,7 @@ namespace chaiscript
             typed_params = func->get_dynamic_param_types().types();
           }
 
-          std::string annotation = f.second->annotation();
 
-          if (annotation.size() > 0) {
-            std::cout << annotation;
-          }
           dump_type(params.front());
           std::cout << " " << f.first << "(";
 
@@ -1395,10 +1373,6 @@ namespace chaiscript
 
               if (rt.bare_equal(boxed_type))
               {
-                if (lt.bare_equal(boxed_pod_type))
-                {
-                  return true;
-                }
                 return true;
               }
 
@@ -1611,4 +1585,5 @@ namespace chaiscript
 }
 
 #endif
+
 

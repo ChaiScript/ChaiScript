@@ -223,8 +223,6 @@ namespace chaiscript
           return m_arity;
         }
 
-        virtual std::string annotation() const = 0;
-
         static bool compare_type_to_param(const Type_Info &ti, const Boxed_Value &bv, const Type_Conversions_State &t_conversions)
         {
           if (ti.is_undef() 
@@ -332,11 +330,10 @@ namespace chaiscript
             int t_arity=-1,
             AST_NodePtr t_parsenode = AST_NodePtr(),
             Param_Types t_param_types = Param_Types(),
-            std::string t_description = "",
             Proxy_Function t_guard = Proxy_Function())
           : Proxy_Function_Base(build_param_type_list(t_param_types), t_arity),
             m_param_types(std::move(t_param_types)),
-            m_guard(std::move(t_guard)), m_parsenode(std::move(t_parsenode)), m_description(std::move(t_description))
+            m_guard(std::move(t_guard)), m_parsenode(std::move(t_parsenode))
         {
         }
 
@@ -367,11 +364,6 @@ namespace chaiscript
         AST_NodePtr get_parse_tree() const
         {
           return m_parsenode;
-        }
-
-        virtual std::string annotation() const override
-        {
-          return m_description;
         }
 
         virtual Param_Types get_dynamic_param_types() const {
@@ -418,7 +410,6 @@ namespace chaiscript
         Param_Types m_param_types;
         Proxy_Function m_guard;
         AST_NodePtr m_parsenode;
-        std::string m_description;
     };
 
 
@@ -432,13 +423,11 @@ namespace chaiscript
             int t_arity=-1,
             AST_NodePtr t_parsenode = AST_NodePtr(),
             Param_Types t_param_types = Param_Types(),
-            std::string t_description = "",
             Proxy_Function t_guard = Proxy_Function())
           : Dynamic_Proxy_Function(
                 t_arity,
                 std::move(t_parsenode),
                 std::move(t_param_types),
-                std::move(t_description),
                 std::move(t_guard)
               ),
             m_f(std::move(t_f))
@@ -537,10 +526,6 @@ namespace chaiscript
           return args;
         }
 
-        virtual std::string annotation() const override
-        {
-          return "Bound: " + m_f->annotation();
-        }
 
       protected:
         static std::vector<Type_Info> build_param_type_info(const Const_Proxy_Function &t_f, 
@@ -585,11 +570,6 @@ namespace chaiscript
         {
         }
 
-        std::string annotation() const override
-        {
-          return "";
-        }
-
         bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
         {
           return static_cast<int>(vals.size()) == get_arity() 
@@ -626,8 +606,7 @@ namespace chaiscript
       protected:
         Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
-          typedef typename detail::Function_Signature<Func>::Return_Type Return_Type;
-          return detail::Do_Call<Return_Type>::template go<Func>(m_f, params, t_conversions);
+          return detail::call_func(detail::Function_Signature<Func>(), m_f, params, t_conversions);
         }
 
       private:
@@ -679,7 +658,7 @@ namespace chaiscript
       protected:
         Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
-          return detail::Do_Call<typename std::function<Func>::result_type>::template go<Func>(m_f.get(), params, t_conversions);
+          return detail::call_func(detail::Function_Signature<Func>(), m_f.get(), params, t_conversions);
         }
 
 
@@ -724,11 +703,6 @@ namespace chaiscript
           return vals[0].get_type_info().bare_equal(user_type<Class>());
         }
 
-        std::string annotation() const override
-        {
-          return "";
-        }
-
       protected:
         Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
@@ -759,13 +733,13 @@ namespace chaiscript
         template<typename Type>
         auto do_call_impl(Class *o) const -> std::enable_if_t<!std::is_pointer<Type>::value, Boxed_Value>
         {
-          return detail::Handle_Return<const typename std::add_lvalue_reference<Type>::type>::handle(o->*m_attr);
+          return detail::Handle_Return<typename std::add_lvalue_reference<Type>::type>::handle(o->*m_attr);
         }
 
         template<typename Type>
         auto do_call_impl(const Class *o) const -> std::enable_if_t<!std::is_pointer<Type>::value, Boxed_Value>
         {
-          return detail::Handle_Return<const typename std::add_lvalue_reference<Type>::type>::handle(o->*m_attr);
+          return detail::Handle_Return<typename std::add_lvalue_reference<typename std::add_const<Type>::type>::type>::handle(o->*m_attr);
         }
 
 

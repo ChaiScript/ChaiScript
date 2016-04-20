@@ -109,12 +109,6 @@ namespace chaiscript
             return {m_func};
           }
 
-          std::string annotation() const override
-          {
-            return m_func->annotation();
-          }
-
-
         protected:
           virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
           {
@@ -241,11 +235,6 @@ namespace chaiscript
             new_vals.insert(new_vals.end(), vals.begin(), vals.end());
 
             return m_func->call_match(new_vals, t_conversions);
-          }
-
-          std::string annotation() const override
-          {
-            return m_func->annotation();
           }
 
         protected:

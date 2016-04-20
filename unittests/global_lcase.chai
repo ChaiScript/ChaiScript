@@ -16,3 +16,8 @@ def f() {
 
 f();
 
+
+global &h = v;
+assert_true(h == v)
+v = 3;
+assert_true(h == 3)
