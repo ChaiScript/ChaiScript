@@ -181,20 +181,15 @@ namespace chaiscript
         //! to the passed in values
         bool filter(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const
         {
+          assert(m_arity == -1 || (m_arity > 1 && vals.size() == m_arity));
+
           if (m_arity < 0)
           {
             return true;
-          } else if (static_cast<size_t>(m_arity) == vals.size()) {
-            if (m_arity == 0)
-            {
-              return true;
-            } else if (m_arity > 1) {
-              return compare_type_to_param(m_types[1], vals[0], t_conversions) && compare_type_to_param(m_types[2], vals[1], t_conversions);
-            } else {
-              return compare_type_to_param(m_types[1], vals[0], t_conversions);
-            }
+          } else if (m_arity > 1) {
+            return compare_type_to_param(m_types[1], vals[0], t_conversions) && compare_type_to_param(m_types[2], vals[1], t_conversions);
           } else {
-            return false;
+            return compare_type_to_param(m_types[1], vals[0], t_conversions);
           }
         }
 
@@ -887,7 +882,7 @@ namespace chaiscript
           for (const auto &func : ordered_funcs )
           {
             try {
-              if (func.first == i && func.second->filter(plist, t_conversions))
+              if (func.first == i && (i == 0 || func.second->filter(plist, t_conversions)))
               {
                 return (*(func.second))(plist, t_conversions);
               }
