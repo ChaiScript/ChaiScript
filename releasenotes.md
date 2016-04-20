@@ -1,6 +1,10 @@
 Notes:
 =======
-Current Version: 5.8.1
+Current Version: 5.8.2
+
+### Changes since 5.8.1
+* Allow casting to non-const & std::shared_ptr<T>
+
 
 ### Changes since 5.8.0
 * Fix parsing of floats to be locale independent #250

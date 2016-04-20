@@ -173,6 +173,21 @@ namespace chaiscript
       {
       };
 
+    template<typename Result>
+      struct Cast_Helper_Inner<std::shared_ptr<Result> &>
+      {
+        static_assert(!std::is_const<Result>::value, "Non-const reference to std::shared_ptr<const T> is not supported");
+
+        typedef Boxed_Value::Sentinel<Result> Result_Type;
+
+        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *)
+        {
+          std::shared_ptr<Result> &res = ob.get().cast<std::shared_ptr<Result> >();
+          return ob.pointer_sentinel(res);
+        }
+      };
+
+
     /// Cast_Helper_Inner for casting to a const std::shared_ptr<const> & type
     template<typename Result>
       struct Cast_Helper_Inner<const std::shared_ptr<const Result> > : Cast_Helper_Inner<std::shared_ptr<const Result> >

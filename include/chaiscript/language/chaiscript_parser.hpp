@@ -23,6 +23,7 @@
 
 
 #if defined(CHAISCRIPT_MSVC) && defined(max) && defined(min)
+#define CHAISCRIPT_PUSHED_MIN_MAX
 #pragma push_macro("max") // Why Microsoft? why? This is worse than bad
 #undef max
 #pragma push_macro("min")
@@ -147,7 +148,7 @@ namespace chaiscript
 
 
       static const std::array<AST_Node_Type::Type, 11> &create_operators() {
-        static const std::array<AST_Node_Type::Type, 11> operators = {{
+        static const std::array<AST_Node_Type::Type, 11> operators = { {
           AST_Node_Type::Ternary_Cond,
           AST_Node_Type::Logical_Or,
           AST_Node_Type::Logical_And,
@@ -159,7 +160,7 @@ namespace chaiscript
           AST_Node_Type::Shift,
           AST_Node_Type::Addition,
           AST_Node_Type::Multiplication
-        }};
+        } };
         return operators;
       }
 
@@ -320,7 +321,7 @@ namespace chaiscript
       static std::map<std::string, int> count_fun_calls(const AST_NodePtr &p, bool in_loop) {
         if (p->identifier == AST_Node_Type::Fun_Call) {
           if (p->children[0]->identifier == AST_Node_Type::Id) {
-            return std::map<std::string, int>{{p->children[0]->text, in_loop?99:1}};
+            return std::map<std::string, int>{ {p->children[0]->text, in_loop?99:1} };
           }
           return std::map<std::string, int>();
         } else {
@@ -1196,12 +1197,16 @@ namespace chaiscript
             std::string match;
 
             {
-              // scope for cparser destrutor
+              // scope for cparser destructor
               Char_Parser<std::string> cparser(match, false);
 
               for (auto s = start + 1, end = m_position - 1; s != end; ++s) {
                 cparser.parse(*s, start.line, start.col, *m_filename);
               }
+            }
+
+            if (match.size() != 1) {
+              throw exception::eval_error("Single-quoted strings must be 1 character long", File_Position(m_position.line, m_position.col), *m_filename);
             }
 
             m_match_stack.push_back(make_node<eval::Single_Quoted_String_AST_Node>(match, start.line, start.col));
@@ -2450,7 +2455,8 @@ namespace chaiscript
 }
 
 
-#ifdef CHAISCRIPT_MSVC
+#if defined(CHAISCRIPT_MSVC) && defined(CHAISCRIPT_PUSHED_MIN_MAX)
+#undef CHAISCRIPT_PUSHED_MIN_MAX
 #pragma pop_macro("min")
 #pragma pop_macro("max")
 #endif

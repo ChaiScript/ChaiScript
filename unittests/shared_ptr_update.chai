@@ -1,0 +1,25 @@
+load_module("test_module")
+
+auto o := null_factory();
+
+assert_true(o.is_var_null());
+
+update_shared_ptr(o);
+
+assert_false(o.is_var_null());
+assert_true(o.base_only_func() == -9);
+
+nullify_shared_ptr(o);
+o.nullify_shared_ptr();
+
+assert_true(o.is_var_null());
+
+try {
+  o.func();
+} catch (e) {
+  exit(0);
+}
+
+assert_true(false);
+
+

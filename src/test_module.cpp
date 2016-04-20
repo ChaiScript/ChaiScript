@@ -111,6 +111,16 @@ std::shared_ptr<TestBaseType> null_factory()
   return std::shared_ptr<TestBaseType>();
 }
 
+void update_shared_ptr(std::shared_ptr<TestBaseType> &ptr)
+{
+  ptr = std::make_shared<TestDerivedType>();
+}
+
+void nullify_shared_ptr(std::shared_ptr<TestBaseType> &ptr)
+{
+  ptr = nullptr;
+}
+
 std::string hello_world()
 {
   return "Hello World";
@@ -179,9 +189,9 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::fun(&TestBaseType::set_string_val), "set_string_val");
 
   m->add(chaiscript::fun(&TestBaseType::mdarray), "mdarray");
-  m->add(chaiscript::bootstrap::array<int[2][3][5]>("IntArray_2_3_5"));
-  m->add(chaiscript::bootstrap::array<int[3][5]>("IntArray_3_5"));
-  m->add(chaiscript::bootstrap::array<int[5]>("IntArray_5"));
+  chaiscript::bootstrap::array<int[2][3][5]>("IntArray_2_3_5", *m);
+  chaiscript::bootstrap::array<int[3][5]>("IntArray_3_5", *m);
+  chaiscript::bootstrap::array<int[5]>("IntArray_5", *m);
 
   // member that is a function
   m->add(chaiscript::fun(&TestBaseType::func_member), "func_member");
@@ -201,6 +211,10 @@ CHAISCRIPT_MODULE_EXPORT  chaiscript::ModulePtr create_chaiscript_module_test_mo
   m->add(chaiscript::fun(&Type2::get_str), "get_str");
   m->add(chaiscript::type_conversion<const char *, std::string>());
   m->add(chaiscript::constructor<Type2 (const TestBaseType &)>(), "Type2");
+
+  m->add(chaiscript::fun(&update_shared_ptr), "update_shared_ptr");
+  m->add(chaiscript::fun(&nullify_shared_ptr), "nullify_shared_ptr");
+
 
   return m;
 }

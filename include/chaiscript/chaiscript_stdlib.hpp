@@ -40,19 +40,20 @@ namespace chaiscript
       {
         using namespace bootstrap;
 
-        ModulePtr lib = Bootstrap::bootstrap();
+        auto lib = std::make_shared<Module>();
+        Bootstrap::bootstrap(*lib);
 
-        lib->add(standard_library::vector_type<std::vector<Boxed_Value> >("Vector"));
-        lib->add(standard_library::string_type<std::string>("string"));
-        lib->add(standard_library::map_type<std::map<std::string, Boxed_Value> >("Map"));
-        lib->add(standard_library::pair_type<std::pair<Boxed_Value, Boxed_Value > >("Pair"));
+        standard_library::vector_type<std::vector<Boxed_Value> >("Vector", *lib);
+        standard_library::string_type<std::string>("string", *lib);
+        standard_library::map_type<std::map<std::string, Boxed_Value> >("Map", *lib);
+        standard_library::pair_type<std::pair<Boxed_Value, Boxed_Value > >("Pair", *lib);
 
 #ifndef CHAISCRIPT_NO_THREADS
-        lib->add(standard_library::future_type<std::future<chaiscript::Boxed_Value>>("future"));
+        standard_library::future_type<std::future<chaiscript::Boxed_Value>>("future", *lib);
         lib->add(chaiscript::fun([](const std::function<chaiscript::Boxed_Value ()> &t_func){ return std::async(std::launch::async, t_func);}), "async");
 #endif
 
-        lib->add(json_wrap::library());
+        json_wrap::library(*lib);
 
         lib->eval(ChaiScript_Prelude::chaiscript_prelude() /*, "standard prelude"*/ );
 

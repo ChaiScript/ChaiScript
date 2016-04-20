@@ -371,6 +371,9 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
       }
     }
+    catch (const chaiscript::exception::load_module_error &e) {
+      std::cout << "Unhandled module load error\n" << e.what() << '\n';
+    }
 
 //    catch (std::exception &e) {
 //      std::cout << e.what() << '\n';

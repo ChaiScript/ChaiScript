@@ -54,12 +54,13 @@ bool test_type_conversion(const Boxed_Value &bv, bool expectedpass)
 }
 
 template<typename Type>
-bool do_test(const Boxed_Value &bv, bool T, bool ConstT, bool TRef, bool ConstTRef, bool TPtr, bool ConstTPtr, bool TPtrConst,
-    bool ConstTPtrConst, bool SharedPtrT, bool SharedConstPtrT,
-    bool ConstSharedPtrT, bool ConstSharedConstPtrT, bool ConstSharedPtrTRef, bool ConstSharedPtrTConstRef,
-    bool WrappedRef, bool WrappedConstRef, bool ConstWrappedRef, bool ConstWrappedConstRef,
-    bool ConstWrappedRefRef, bool ConstWrappedConstRefRef, bool Number,
-    bool ConstNumber, bool ConstNumberRef, bool TPtrConstRef, bool ConstTPtrConstRef)
+bool do_test(const Boxed_Value &bv, 
+    bool T, bool ConstT, bool TRef, bool ConstTRef, bool TPtr, 
+    bool ConstTPtr, bool TPtrConst, bool ConstTPtrConst, bool SharedPtrT, bool SharedConstPtrT, 
+    bool SharedPtrTRef, bool ConstSharedPtrT, bool ConstSharedConstPtrT, bool ConstSharedPtrTRef, bool ConstSharedPtrTConstRef,
+    bool WrappedRef, bool WrappedConstRef, bool ConstWrappedRef, bool ConstWrappedConstRef, bool ConstWrappedRefRef, 
+    bool ConstWrappedConstRefRef, bool Number, bool ConstNumber, bool ConstNumberRef, bool TPtrConstRef, 
+    bool ConstTPtrConstRef)
 {
   bool passed = true;
   passed &= test_type_conversion<Type>(bv, T);
@@ -72,8 +73,8 @@ bool do_test(const Boxed_Value &bv, bool T, bool ConstT, bool TRef, bool ConstTR
   passed &= test_type_conversion<const Type * const>(bv, ConstTPtrConst);
   passed &= test_type_conversion<std::shared_ptr<Type> >(bv, SharedPtrT);
   passed &= test_type_conversion<std::shared_ptr<const Type> >(bv, SharedConstPtrT);
-  passed &= test_type_conversion<std::shared_ptr<Type> &>(bv, false);
-  passed &= test_type_conversion<std::shared_ptr<const Type> &>(bv, false);
+  passed &= test_type_conversion<std::shared_ptr<Type> &>(bv, SharedPtrTRef);
+  //passed &= test_type_conversion<std::shared_ptr<const Type> &>(bv, false);
   passed &= test_type_conversion<const std::shared_ptr<Type> >(bv, ConstSharedPtrT);
   passed &= test_type_conversion<const std::shared_ptr<const Type> >(bv, ConstSharedConstPtrT);
   passed &= test_type_conversion<const std::shared_ptr<Type> &>(bv, ConstSharedPtrTRef);
@@ -115,37 +116,37 @@ bool built_in_type_test(const T &initial, bool ispod)
   T i = T(initial);
   passed &= do_test<T>(var(i), true, true, true, true, true, 
                                  true, true, true, true, true,
-                                 true, true, true, true, true,
+                                 true, true, true, true, true, true,
                                  true, true, true, true, true,
                                  ispod, ispod, ispod, true, true);
 
   passed &= do_test<T>(const_var(i), true, true, false, true, false, 
                                        true, false, true, false, true,
-                                       false, true, false, true, false,
+                                       false, false, true, false, true, false,
                                        true, false, true, false, true,
                                        ispod, ispod, ispod, false, true);
 
   passed &= do_test<T>(var(&i), true, true, true, true, true, 
                                  true, true, true, false, false,
-                                 false, false, false, false, true,
+                                 false, false, false, false, false, true,
                                  true, true, true, true, true,
                                  ispod, ispod, ispod, true, true);
 
   passed &= do_test<T>(const_var(&i), true, true, false, true, false, 
                                  true, false, true, false, false,
-                                 false, false, false, false, false,
+                                 false, false, false, false, false, false,
                                  true, false, true, false, true,
                                  ispod, ispod, ispod, false, true);
 
   passed &= do_test<T>(var(std::ref(i)), true, true, true, true, true, 
                                  true, true, true, false, false,
-                                 false, false, false, false, true,
+                                 false, false, false, false, false, true,
                                  true, true, true, true, true,
                                  ispod, ispod, ispod, true, true);
 
   passed &= do_test<T>(var(std::cref(i)), true, true, false, true, false, 
                                  true, false, true, false, false,
-                                 false, false, false, false, false,
+                                 false, false, false, false, false, false,
                                  true, false, true, false, true,
                                  ispod, ispod, ispod, false, true);
 
@@ -156,33 +157,33 @@ bool built_in_type_test(const T &initial, bool ispod)
 
   passed &= do_test<T>(var(i), true, true, true, true, true, 
                                  true, true, true, true, true,
-                                 true, true, true, true, true,
+                                 true, true, true, true, true, true,
                                  true, true, true, true, true,
                                  ispod, ispod, ispod, true, true);
 
   // But a pointer or reference to it should be necessarily const
   passed &= do_test<T>(var(&ir), true, true, false, true, false, 
                                  true, false, true, false, false,
-                                 false, false, false, false, false,
+                                 false, false, false, false, false, false,
                                  true, false, true, false, true,
                                  ispod, ispod, ispod, false, true);
 
   passed &= do_test<T>(var(std::ref(ir)), true, true, false, true, false, 
                                  true, false, true, false, false,
-                                 false, false, false, false, false,
+                                 false, false, false, false, false, false,
                                  true, false, true, false, true,
                                  ispod, ispod, ispod, false, true);
 
   // Make sure const of const works too
   passed &= do_test<T>(const_var(&ir), true, true, false, true, false, 
                                  true, false, true, false, false,
-                                 false, false, false, false, false,
+                                 false, false, false, false, false, false,
                                  true, false, true, false, true,
                                  ispod, ispod, ispod, false, true);
 
   passed &= do_test<T>(const_var(std::ref(ir)), true, true, false, true, false, 
                                  true, false, true, false, false,
-                                 false, false, false, false, false,
+                                 false, false, false, false, false, false,
                                  true, false, true, false, true,
                                  ispod, ispod, ispod, false, true);
 
@@ -192,46 +193,46 @@ bool built_in_type_test(const T &initial, bool ispod)
   const T*cip = &i;
   passed &= do_test<T>(var(cip), true, true, false, true, false, 
                                  true, false, true, false, false,
-                                 false, false, false, false, false,
+                                 false, false, false, false, false, false,
                                  true, false, true, false, true,
                                  ispod, ispod, ispod, false, true);
 
   // make sure const of const works
   passed &= do_test<T>(const_var(cip), true, true, false, true, false, 
                                  true, false, true, false, false,
-                                 false, false, false, false, false,
+                                 false, false, false, false, false, false,
                                  true, false, true, false, true,
                                  ispod, ispod, ispod, false, true);
 
   /** shared_ptr tests **/
 
-  std::shared_ptr<T> ip(new T(initial));
+  auto ip = std::make_shared<T>(initial);
 
   passed &= do_test<T>(var(ip), true, true, true, true, true, 
                                  true, true, true, true, true,
-                                 true, true, true, true, true,
+                                 true, true, true, true, true, true,
                                  true, true, true, true, true,
                                  ispod, ispod, ispod, true, true);
 
   passed &= do_test<T>(const_var(ip), true, true, false, true, false, 
                                        true, false, true, false, true,
-                                       false, true, false, true, false,
+                                       false, false, true, false, true, false,
                                        true, false, true, false, true,
                                        ispod, ispod, ispod, false, true);
 
   /** const shared_ptr tests **/
-  std::shared_ptr<const T> ipc(new T(initial));
+  auto ipc = std::make_shared<const T>(T(initial));
 
   passed &= do_test<T>(var(ipc), true, true, false, true, false, 
                                        true, false, true, false, true,
-                                       false, true, false, true, false,
+                                       false, false, true, false, true, false,
                                        true, false, true, false, true,
                                        ispod, ispod, ispod, false, true);
 
   // const of this should be the same, making sure it compiles
   passed &= do_test<T>(const_var(ipc), true, true, false, true, false, 
                                        true, false, true, false, true,
-                                       false, true, false, true, false,
+                                       false, false, true, false, true, false,
                                        true, false, true, false, true,
                                        ispod, ispod, ispod, false, true);
 

@@ -163,6 +163,28 @@ chaiscript::Boxed_Number(chai.eval("5.3 + 2.1")).get_as<int>(); // works with an
 static_cast<int>(chai.eval<double>("5.3+2.1")); // this version only works if we know that it's a double
 ```
 
+### Conversion Caveats
+
+Conversion to `std::shared_ptr<T> &` is supported for function calls, but if you attempt to keep a reference to a `shared_ptr<>` you might invoke undefined behavior
+
+```cpp
+// ok this is supported, you can register it with chaiscript engine
+void nullify_shared_ptr(std::shared_ptr<int> &t) {
+  t == nullptr
+}
+```
+
+```cpp
+int main()
+{
+  // do some stuff and create a chaiscript instance
+  std::shared_ptr<int> &ptr = chai.eval<std::shared_ptr<int> &>(somevalue);
+  // DO NOT do this. Taking a non-const reference to a shared_ptr is not 
+  // supported and causes undefined behavior in the chaiscript engine
+}
+```
+
+
 ## Sharing Values
 
 ```
