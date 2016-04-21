@@ -81,6 +81,20 @@ namespace chaiscript
       }
     }
 
+    struct Compiled_AST_Node : AST_Node {
+        Compiled_AST_Node(std::string t_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children, 
+            std::function<Boxed_Value (const std::vector<AST_NodePtr> &, const chaiscript::detail::Dispatch_State &t_ss)> t_func) :
+          AST_Node(std::move(t_text), AST_Node_Type::Compiled, std::move(t_loc), std::move(t_children)),
+          m_func(std::move(t_func))
+        { }
+
+        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
+          return m_func(children, t_ss);
+        }
+
+        std::function<Boxed_Value (const std::vector<AST_NodePtr> &, const chaiscript::detail::Dispatch_State &t_ss)> m_func;
+    };
+
     struct Binary_Operator_AST_Node : AST_Node {
         Binary_Operator_AST_Node(const std::string &t_oper, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(t_oper, AST_Node_Type::Binary, std::move(t_loc), std::move(t_children)),

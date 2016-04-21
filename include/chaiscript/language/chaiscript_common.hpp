@@ -36,7 +36,7 @@ namespace chaiscript
     Array_Call, Dot_Access,
     Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
     Inline_Range, Try, Catch, Finally, Method, Attr_Decl,  
-    Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop, Class, Binary, Arg, Global_Decl, Constant
+    Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop, Class, Binary, Arg, Global_Decl, Constant, Compiled
   };
 
   enum class Operator_Precidence { Ternary_Cond, Logical_Or, Logical_And, Bitwise_Or, Bitwise_Xor, Bitwise_And, Equality, Comparison, Shift, Addition, Multiplication };
@@ -49,7 +49,7 @@ namespace chaiscript
                                     "Array_Call", "Dot_Access", 
                                     "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
                                     "Inline_Range", "Try", "Catch", "Finally", "Method", "Attr_Decl",
-                                    "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Ternary Condition", "Noop", "Class", "Binary", "Arg", "Constant"};
+                                    "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Ternary Condition", "Noop", "Class", "Binary", "Arg", "Global_Decl", "Constant", "Compiled"};
 
       return ast_node_types[static_cast<int>(ast_node_type)];
     }
