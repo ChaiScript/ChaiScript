@@ -82,10 +82,11 @@ namespace chaiscript
     }
 
     struct Compiled_AST_Node : AST_Node {
-        Compiled_AST_Node(std::string t_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children, 
+        Compiled_AST_Node(AST_NodePtr t_original_node, std::vector<AST_NodePtr> t_children,
             std::function<Boxed_Value (const std::vector<AST_NodePtr> &, const chaiscript::detail::Dispatch_State &t_ss)> t_func) :
-          AST_Node(std::move(t_text), AST_Node_Type::Compiled, std::move(t_loc), std::move(t_children)),
-          m_func(std::move(t_func))
+          AST_Node(t_original_node->text, AST_Node_Type::Compiled, t_original_node->location, std::move(t_children)),
+          m_func(std::move(t_func)),
+          m_original_node(std::move(t_original_node))
         { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
@@ -93,6 +94,7 @@ namespace chaiscript
         }
 
         std::function<Boxed_Value (const std::vector<AST_NodePtr> &, const chaiscript::detail::Dispatch_State &t_ss)> m_func;
+        AST_NodePtr m_original_node;
     };
 
     struct Binary_Operator_AST_Node : AST_Node {
@@ -170,7 +172,6 @@ namespace chaiscript
         }
 
       private:
-
         mutable std::atomic_uint_fast32_t m_loc;
     };
 

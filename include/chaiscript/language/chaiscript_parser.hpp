@@ -20,7 +20,7 @@
 
 #include "../dispatchkit/boxed_value.hpp"
 #include "chaiscript_common.hpp"
-
+#include "chaiscript_optimizer.hpp"
 
 #if defined(CHAISCRIPT_MSVC) && defined(max) && defined(min)
 #pragma push_macro("max") // Why Microsoft? why? This is worse than bad
@@ -276,8 +276,11 @@ namespace chaiscript
 
       Position m_position;
 
+      optimizer::For_Loop_Optimizer m_optimizer;
+
       public:
       ChaiScript_Parser()
+        : m_optimizer(optimizer::For_Loop_Optimizer())
       {
         m_match_stack.reserve(2);
       }
@@ -368,10 +371,12 @@ namespace chaiscript
 
         /// \todo fix the fact that a successful match that captured no ast_nodes doesn't have any real start position
         m_match_stack.push_back(
-            chaiscript::make_shared<chaiscript::AST_Node, NodeType>(
-              std::move(t_text),
-              std::move(filepos),
-              std::move(new_children)));
+            m_optimizer.optimize(
+              chaiscript::make_shared<chaiscript::AST_Node, NodeType>(
+                std::move(t_text),
+                std::move(filepos),
+                std::move(new_children)))
+            );
       }
 
 
@@ -1687,56 +1692,6 @@ namespace chaiscript
       }
 
 
-      auto standard_for_loop(const size_t t_prev_top) {
-        assert(t_prev_top = m_match_stack.size() - 4);
-
-        struct Result {
-          Result(const bool t_is, std::string t_id, const int t_start, const int t_stop)
-            : is_standard(t_is), id(std::move(t_id)), start(t_start), stop(t_stop) {}
-          Result() = default;
-          bool is_standard = false;
-          std::string id = "";
-          int start = 0;
-          int stop = 0;
-        };
-
-        const auto eq_node = m_match_stack.at(t_prev_top);
-        const auto binary_node = m_match_stack.at(t_prev_top+1);
-        const auto prefix_node = m_match_stack.at(t_prev_top+2);
-
-        if (eq_node->identifier == AST_Node_Type::Equation
-            && eq_node->children.size() == 2
-            && eq_node->children[0]->identifier == AST_Node_Type::Var_Decl
-            && eq_node->children[1]->identifier == AST_Node_Type::Constant
-            && binary_node->identifier == AST_Node_Type::Binary
-            && binary_node->children.size() == 2
-            && binary_node->text == "<"
-            && binary_node->children[0]->identifier == AST_Node_Type::Id
-            && binary_node->children[0]->text == eq_node->children[0]->children.at(0)->text
-            && binary_node->children[1]->identifier == AST_Node_Type::Constant
-            && prefix_node->identifier == AST_Node_Type::Prefix
-            && prefix_node->children.size() == 1
-            && prefix_node->text == "++"
-            && prefix_node->children[0]->identifier == AST_Node_Type::Id
-            && prefix_node->children[0]->text == eq_node->children[0]->children.at(0)->text)
-        {
-          const Boxed_Value &begin = std::dynamic_pointer_cast<const eval::Constant_AST_Node>(eq_node->children[1])->m_value;
-          const Boxed_Value &end = std::dynamic_pointer_cast<const eval::Constant_AST_Node>(binary_node->children[1])->m_value;
-          const std::string &id = prefix_node->children[0]->text;
-
-          if (begin.get_type_info().bare_equal(user_type<int>()) 
-              && end.get_type_info().bare_equal(user_type<int>())) {
-            return Result(true, id, boxed_cast<int>(begin), boxed_cast<int>(end));
-          } else {
-            return Result();
-          }
-        } else {
-          return Result();
-        }
-      }
-
-
-
       /// Reads a for block from input
       bool For() {
         bool retval = false;
@@ -1760,48 +1715,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'for' block", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
-          const auto for_loop_params = standard_for_loop(prev_stack_top);
-          if (for_loop_params.is_standard) {
-            const auto body = m_match_stack.back();
-            const auto start = m_match_stack[prev_stack_top]->location;
-            m_match_stack.pop_back();
-            m_match_stack.pop_back();
-            m_match_stack.pop_back();
-            m_match_stack.pop_back();
-
-            m_match_stack.push_back(
-              make_node<eval::Compiled_AST_Node>(std::string(), start.start.line, start.start.column, std::vector<AST_NodePtr>({body}),
-
-                [for_loop_params](const std::vector<AST_NodePtr> &children, const chaiscript::detail::Dispatch_State &t_ss) {
-                  assert(children.size() == 1);
-                  chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
-
-                  int i = for_loop_params.start;
-                  t_ss.add_object(for_loop_params.id, var(&i));
-
-                  try {
-                    for (; i < for_loop_params.stop; ++i) {
-                      try {
-                        // Body of Loop
-                        children[0]->eval(t_ss);
-                      } catch (eval::detail::Continue_Loop &) {
-                        // we got a continue exception, which means all of the remaining 
-                        // loop implementation is skipped and we just need to continue to
-                        // the next iteration step
-                      }
-                    }
-                  } catch (eval::detail::Break_Loop &) {
-                    // loop broken
-                  }
-
-                  return void_var();
-                }
-              )
-            );
-
-          } else {
-            build_match<eval::For_AST_Node>(prev_stack_top);
-          }
+          build_match<eval::For_AST_Node>(prev_stack_top);
         }
 
         return retval;
