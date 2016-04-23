@@ -180,7 +180,8 @@ namespace chaiscript
       m_engine.add(fun([this](const std::string &t_str){ return internal_eval(t_str); }), "eval");
       m_engine.add(fun([this](const AST_NodePtr &t_ast){ return eval(t_ast); }), "eval");
 
-      m_engine.add(fun(&parse), "parse");
+      m_engine.add(fun([](const std::string &t_str, const bool t_dump){ return parse(t_str, t_dump); }), "parse");
+      m_engine.add(fun([](const std::string &t_str){ return parse(t_str); }), "parse");
 
 
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global_const(t_bv, t_name); }), "add_global_const");
@@ -291,8 +292,21 @@ namespace chaiscript
 #endif
 
 
-      // attempt to load the stdlib
-      load_module("chaiscript_stdlib-" + Build_Info::version());
+      try {
+        // attempt to load the stdlib
+        load_module("chaiscript_stdlib-" + Build_Info::version());
+      } catch (const exception::load_module_error &t_err) {
+        std::cout << "An error occured while trying to load the chaiscript standard library.\n"
+                  << "\n"
+                  << "You must either provide a standard library, or compile it in.\n"
+                  << "For an example of compiling the standard library in,\n"
+                  << "see: https://gist.github.com/lefticus/9456197\n"
+                  << "Compiling the stdlib in is the recommended and MOST SUPPORTED method.\n"
+                  << "\n"
+                  << "\n"
+                  << t_err.what();
+        throw;
+      }
 
       build_eval_system(ModulePtr());
     }
@@ -307,11 +321,14 @@ namespace chaiscript
       }
     }
 
-    static AST_NodePtr parse(const std::string &t_input)
+    static AST_NodePtr parse(const std::string &t_input, const bool t_debug_print = false)
     {
       parser::ChaiScript_Parser parser;
       if (parser.parse(t_input, "PARSE")) {
-        //parser.show_match_stack();
+        const auto ast = parser.optimized_ast();
+        if (t_debug_print) {
+          parser.debug_print(ast);
+        }
         return parser.optimized_ast();
       } else {
         throw chaiscript::exception::eval_error("Unknown error while parsing");
@@ -563,19 +580,7 @@ namespace chaiscript
         }
       }
 
-      std::string errstring;
-
-      for (const auto &err : errors)
-      {
-        if (!errstring.empty())
-        {
-          errstring += "; ";
-        }
-
-        errstring += err.what();
-      }
-
-      throw chaiscript::exception::load_module_error("Unable to find module: " + t_module_name + " Errors: " + errstring);
+      throw chaiscript::exception::load_module_error(t_module_name, errors);
     }
 
     /// \brief Load a binary module from a dynamic library. Works on platforms that support

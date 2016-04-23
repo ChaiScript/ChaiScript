@@ -107,8 +107,26 @@ namespace chaiscript
       {
       }
 
+      load_module_error(const std::string &t_name, const std::vector<load_module_error> &t_errors)
+        : std::runtime_error(format_error(t_name, t_errors))
+      {
+      }
+
       load_module_error(const load_module_error &) = default;
       virtual ~load_module_error() noexcept = default;
+
+      static std::string format_error(const std::string &t_name, const std::vector<load_module_error> &t_errors)
+      {
+        std::stringstream ss;
+        ss << "Error loading module '" << t_name << "'\n"
+           << "  The following locations were searched:\n";
+
+        for (const auto &err : t_errors) {
+          ss << "    " << err.what() << "\n";
+        }
+
+        return ss.str();
+      }
     };
 
 
