@@ -72,17 +72,14 @@ namespace chaiscript
 
     chaiscript::detail::Dispatch_Engine m_engine;
 
+    std::unique_ptr<parser::ChaiScript_Parser_Base> m_parser;
+
     /// Evaluates the given string in by parsing it and running the results through the evaluator
     Boxed_Value do_eval(const std::string &t_input, const std::string &t_filename = "__EVAL__", bool /* t_internal*/  = false) 
     {
       try {
-        parser::ChaiScript_Parser parser;
-        if (parser.parse(t_input, t_filename)) {
-          //parser.show_match_stack();
-          return parser.optimized_ast()->eval(m_engine);
-        } else {
-          return Boxed_Value();
-        }
+        const auto p = m_parser->parse(t_input, t_filename);
+        return p->eval(m_engine);
       }
       catch (chaiscript::eval::detail::Return_Value &rv) {
         return rv.retval;
@@ -180,8 +177,8 @@ namespace chaiscript
       m_engine.add(fun([this](const std::string &t_str){ return internal_eval(t_str); }), "eval");
       m_engine.add(fun([this](const AST_NodePtr &t_ast){ return eval(t_ast); }), "eval");
 
-      m_engine.add(fun([](const std::string &t_str, const bool t_dump){ return parse(t_str, t_dump); }), "parse");
-      m_engine.add(fun([](const std::string &t_str){ return parse(t_str); }), "parse");
+      m_engine.add(fun([this](const std::string &t_str, const bool t_dump){ return parse(t_str, t_dump); }), "parse");
+      m_engine.add(fun([this](const std::string &t_str){ return parse(t_str); }), "parse");
 
 
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global_const(t_bv, t_name); }), "add_global_const");
@@ -221,7 +218,8 @@ namespace chaiscript
     ChaiScript(const ModulePtr &t_lib,
                std::vector<std::string> t_modulepaths = std::vector<std::string>(),
                       std::vector<std::string> t_usepaths = std::vector<std::string>())
-      : m_module_paths(std::move(t_modulepaths)), m_use_paths(std::move(t_usepaths))
+      : m_module_paths(std::move(t_modulepaths)), m_use_paths(std::move(t_usepaths)),
+        m_parser(std::make_unique<parser::ChaiScript_Parser<optimizer::For_Loop_Optimizer>>())
     {
       if (m_module_paths.empty())
       {
@@ -245,7 +243,8 @@ namespace chaiscript
     /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
     ChaiScript( std::vector<std::string> t_modulepaths = std::vector<std::string>(),
                       std::vector<std::string> t_usepaths = std::vector<std::string>())
-      : m_module_paths(std::move(t_modulepaths)), m_use_paths(std::move(t_usepaths))
+      : m_module_paths(std::move(t_modulepaths)), m_use_paths(std::move(t_usepaths)),
+        m_parser(std::make_unique<parser::ChaiScript_Parser<optimizer::For_Loop_Optimizer>>())
     {
       if (m_module_paths.empty())
       {
@@ -321,18 +320,13 @@ namespace chaiscript
       }
     }
 
-    static AST_NodePtr parse(const std::string &t_input, const bool t_debug_print = false)
+    AST_NodePtr parse(const std::string &t_input, const bool t_debug_print = false)
     {
-      parser::ChaiScript_Parser parser;
-      if (parser.parse(t_input, "PARSE")) {
-        const auto ast = parser.optimized_ast();
-        if (t_debug_print) {
-          parser.debug_print(ast);
-        }
-        return parser.optimized_ast();
-      } else {
-        throw chaiscript::exception::eval_error("Unknown error while parsing");
+      const auto ast = m_parser->parse(t_input, "PARSE");
+      if (t_debug_print) {
+        m_parser->debug_print(ast);
       }
+      return ast;
     }
 
 

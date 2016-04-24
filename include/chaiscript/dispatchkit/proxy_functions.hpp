@@ -181,7 +181,7 @@ namespace chaiscript
         //! to the passed in values
         bool filter(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const
         {
-          assert(m_arity == -1 || (m_arity > 1 && vals.size() == m_arity));
+          assert(m_arity == -1 || (m_arity > 0 && static_cast<int>(vals.size()) == m_arity));
 
           if (m_arity < 0)
           {

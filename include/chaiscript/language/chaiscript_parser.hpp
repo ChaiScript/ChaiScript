@@ -56,7 +56,21 @@ namespace chaiscript
       };
     }
 
-    class ChaiScript_Parser {
+    class ChaiScript_Parser_Base
+    {
+      public:
+        virtual AST_NodePtr parse(const std::string &t_input, const std::string &t_fname) = 0;
+        virtual void debug_print(AST_NodePtr t, std::string prepend = "") const = 0;
+        virtual ~ChaiScript_Parser_Base() = default;
+        ChaiScript_Parser_Base() = default;
+        ChaiScript_Parser_Base(const ChaiScript_Parser_Base &) = default;
+        ChaiScript_Parser_Base(ChaiScript_Parser_Base &&) = default;
+        ChaiScript_Parser_Base &operator=(ChaiScript_Parser_Base &&) = delete;
+        ChaiScript_Parser_Base &operator=(const ChaiScript_Parser_Base &&) = delete;
+    };
+
+    template<typename Optimizer>
+    class ChaiScript_Parser : public ChaiScript_Parser_Base {
 
       static std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> build_alphabet()
       {
@@ -276,24 +290,26 @@ namespace chaiscript
 
       Position m_position;
 
-      optimizer::For_Loop_Optimizer m_optimizer;
+      Optimizer m_optimizer;
 
       public:
-      ChaiScript_Parser()
-        : m_optimizer(optimizer::For_Loop_Optimizer())
+      explicit ChaiScript_Parser(Optimizer optimizer=Optimizer())
+        : m_optimizer(std::move(optimizer))
       {
         m_match_stack.reserve(2);
       }
 
-      ChaiScript_Parser(const ChaiScript_Parser &) = delete;
+      ChaiScript_Parser(const ChaiScript_Parser &) = default;
       ChaiScript_Parser &operator=(const ChaiScript_Parser &) = delete;
+      ChaiScript_Parser(ChaiScript_Parser &&) = default;
+      ChaiScript_Parser &operator=(ChaiScript_Parser &&) = delete;
 
 
       /// test a char in an m_alphabet
       bool char_in_alphabet(char c, detail::Alphabet a) const { return m_alphabet[a][static_cast<uint8_t>(c)]; }
 
       /// Prints the parsed ast_nodes as a tree
-      void debug_print(AST_NodePtr t, std::string prepend = "") const {
+      void debug_print(AST_NodePtr t, std::string prepend = "") const override {
         std::cout << prepend << "(" << ast_node_type_to_string(t->identifier) << ") " << t->text << " : " << t->start().line << ", " << t->start().column << '\n';
         for (unsigned int j = 0; j < t->children.size(); ++j) {
           debug_print(t->children[j], prepend + "  ");
@@ -301,10 +317,6 @@ namespace chaiscript
       }
 
       /// Returns the front-most AST node
-      AST_NodePtr ast() const {
-        if (m_match_stack.empty()) throw exception::eval_error("Attempted to access AST of failed parse.");
-        return m_match_stack.front();
-      }
 
 
       static void optimize_returns(AST_NodePtr &p)
@@ -327,10 +339,10 @@ namespace chaiscript
       }
 
 
-      AST_NodePtr optimized_ast(bool t_optimize_returns = true) {
-        AST_NodePtr p = ast();
-        if (t_optimize_returns) { optimize_returns(p); }
-        return p;
+      AST_NodePtr ast(bool t_optimize_returns = true) {
+        auto ptr = m_match_stack.front();
+        if (t_optimize_returns) { optimize_returns(ptr); }
+        return ptr;
       }
 
 
@@ -1063,9 +1075,7 @@ namespace chaiscript
                       const auto ev_stack_top = m_match_stack.size();
 
                       try {
-                        ChaiScript_Parser parser;
-                        parser.parse(eval_match, "instr eval");
-                        m_match_stack.push_back(parser.ast());
+                        m_match_stack.push_back(parse(eval_match, "instr eval"));
                       } catch (const exception::eval_error &e) {
                         throw exception::eval_error(e.what(), File_Position(start.line, start.col), *m_filename);
                       }
@@ -2342,8 +2352,15 @@ namespace chaiscript
         return retval;
       }
 
+      AST_NodePtr parse(const std::string &t_input, const std::string &t_fname) override
+      {
+        ChaiScript_Parser<Optimizer> parser(*this);
+
+        return parser.parse_internal(t_input, t_fname);
+      }
+
       /// Parses the given input string, tagging parsed ast_nodes with the given m_filename.
-      bool parse(const std::string &t_input, std::string t_fname) {
+      AST_NodePtr parse_internal(const std::string &t_input, std::string t_fname) {
         m_position = Position(t_input.begin(), t_input.end());
         m_filename = std::make_shared<std::string>(std::move(t_fname));
 
@@ -2359,12 +2376,12 @@ namespace chaiscript
             throw exception::eval_error("Unparsed input", File_Position(m_position.line, m_position.col), t_fname);
           } else {
             build_match<eval::File_AST_Node>(0);
-          //  debug_print(ast());
-            return true;
           }
         } else {
-          return false;
+          m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Noop_AST_Node>());
         }
+
+        return ast();
       }
     };
   }
