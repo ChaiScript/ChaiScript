@@ -318,35 +318,6 @@ namespace chaiscript
         }
       }
 
-      /// Returns the front-most AST node
-
-
-      static void optimize_returns(AST_NodePtr &p)
-      {
-        for (auto &c : p->children)
-        {
-          if (c->identifier == AST_Node_Type::Def && c->children.size() > 0) {
-            auto &last_child = c->children.back();
-            if (last_child->identifier == AST_Node_Type::Block) {
-              auto &block_last_child = last_child->children.back();
-              if (block_last_child->identifier == AST_Node_Type::Return) {
-                if (block_last_child->children.size() == 1) {
-                  block_last_child = block_last_child->children[0];
-                }
-              }
-            }
-          }
-          optimize_returns(c);
-        }
-      }
-
-
-      AST_NodePtr ast(bool t_optimize_returns = true) {
-        auto ptr = m_match_stack.front();
-        if (t_optimize_returns) { optimize_returns(ptr); }
-        return ptr;
-      }
-
 
       /// Helper function that collects ast_nodes from a starting position to the top of the stack into a new AST node
       template<typename NodeType>
@@ -2383,7 +2354,7 @@ namespace chaiscript
           m_match_stack.push_back(chaiscript::make_shared<AST_Node, eval::Noop_AST_Node>());
         }
 
-        return ast();
+        return m_match_stack.front();
       }
     };
   }

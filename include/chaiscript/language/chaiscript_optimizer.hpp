@@ -13,6 +13,20 @@
 namespace chaiscript {
   namespace optimizer {
 
+    template<typename ... T>
+      struct Optimizer : T...
+    {
+      Optimizer() = default;
+      Optimizer(T ... t)
+        : T(std::move(t))...
+      {
+      }
+
+      AST_NodePtr optimize(AST_NodePtr p) {
+        (void)std::initializer_list<int>{ (p = T::optimize(p), 0)... };
+        return p;
+      }
+    };
 
     template<typename T>
       auto child_at(const T &node, const size_t offset) {
@@ -35,8 +49,31 @@ namespace chaiscript {
     template<typename T>
       AST_NodePtr make_compiled_node(const AST_NodePtr &original_node, std::vector<AST_NodePtr> children, T callable)
       {
-        return chaiscript::make_shared<AST_Node, eval::Compiled_AST_Node>(original_node, children, std::move(callable));
+        return chaiscript::make_shared<AST_Node, eval::Compiled_AST_Node>(original_node, std::move(children), std::move(callable));
       }
+
+
+    struct Return_Optimizer {
+      AST_NodePtr optimize(const AST_NodePtr &p)
+      {
+        if (p->identifier == AST_Node_Type::Def
+            && !p->children.empty())
+        {
+          auto &last_child = p->children.back();
+          if (last_child->identifier == AST_Node_Type::Block) {
+            auto &block_last_child = last_child->children.back();
+            if (block_last_child->identifier == AST_Node_Type::Return) {
+              if (block_last_child->children.size() == 1) {
+                last_child->children.back() = block_last_child->children[0];
+              }
+            }
+          }
+        }
+
+        return p;
+      }
+    };
+
 
     struct For_Loop_Optimizer {
       AST_NodePtr optimize(const AST_NodePtr &for_node) {
