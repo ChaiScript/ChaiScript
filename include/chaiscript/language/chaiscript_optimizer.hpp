@@ -74,23 +74,61 @@ namespace chaiscript {
       }
     };
 
+    template<typename T>
+    bool contains_var_decl_in_scope(const T &node)
+    {
+      if (node->identifier == AST_Node_Type::Var_Decl) {
+        return true;
+      }
+
+      const auto num = child_count(node);
+
+      for (size_t i = 0; i < num; ++i) {
+        const auto &child = child_at(node, i);
+        if (child->identifier != AST_Node_Type::Block
+            && contains_var_decl_in_scope(child)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    struct Block {
+      AST_NodePtr optimize(const AST_NodePtr &node) {
+        if (node->identifier == AST_Node_Type::Block
+            && node->children.size() == 1
+            && !contains_var_decl_in_scope(node))
+        {
+          return node->children[0];
+        } else {
+          return node;
+        }
+      }
+    };
+
     struct Constant_Fold {
       AST_NodePtr optimize(const AST_NodePtr &node) {
+
         if (node->identifier == AST_Node_Type::Binary
             && node->children.size() == 2
             && node->children[0]->identifier == AST_Node_Type::Constant
             && node->children[1]->identifier == AST_Node_Type::Constant)
         {
-          const auto oper = node->text;
-          const auto parsed = Operators::to_operator(oper);
-          if (parsed != Operators::Opers::invalid) {
-            const auto lhs = std::dynamic_pointer_cast<eval::Constant_AST_Node>(node->children[0])->m_value;
-            const auto rhs = std::dynamic_pointer_cast<eval::Constant_AST_Node>(node->children[1])->m_value;
-            if (lhs.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic()) {
-              const auto val  = Boxed_Number::do_oper(parsed, lhs, rhs);
-              const auto match = node->children[0]->text + " " + oper + " " + node->children[1]->text;
-              return chaiscript::make_shared<AST_Node, eval::Constant_AST_Node>(std::move(match), node->location, std::move(val));
+          try {
+            const auto oper = node->text;
+            const auto parsed = Operators::to_operator(oper);
+            if (parsed != Operators::Opers::invalid) {
+              const auto lhs = std::dynamic_pointer_cast<eval::Constant_AST_Node>(node->children[0])->m_value;
+              const auto rhs = std::dynamic_pointer_cast<eval::Constant_AST_Node>(node->children[1])->m_value;
+              if (lhs.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic()) {
+                const auto val  = Boxed_Number::do_oper(parsed, lhs, rhs);
+                const auto match = node->children[0]->text + " " + oper + " " + node->children[1]->text;
+                return chaiscript::make_shared<AST_Node, eval::Constant_AST_Node>(std::move(match), node->location, std::move(val));
+              }
             }
+          } catch (const std::exception &) {
+            //failure to fold, that's OK
           }
         }
 
