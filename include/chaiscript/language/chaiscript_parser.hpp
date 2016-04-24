@@ -2129,37 +2129,7 @@ namespace chaiscript
                 case(Operator_Precidence::Bitwise_Xor) :
                 case(Operator_Precidence::Bitwise_Or) :
                 case(Operator_Precidence::Comparison) :
-                  {
-                    bool folded = false;
-                    const auto size = m_match_stack.size();
-
-                    try {
-                      if (m_match_stack[size - 1]->identifier == AST_Node_Type::Constant
-                          && m_match_stack[size - 2]->identifier == AST_Node_Type::Constant) {
-                        const auto parsed = Operators::to_operator(oper);
-                        if (parsed != Operators::Opers::invalid) {
-                          const auto lhs = std::dynamic_pointer_cast<eval::Constant_AST_Node>(m_match_stack[size-2])->m_value;
-                          const auto rhs = std::dynamic_pointer_cast<eval::Constant_AST_Node>(m_match_stack[size-1])->m_value;
-                          if (lhs.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic()) {
-                            const auto val  = Boxed_Number::do_oper(parsed, lhs, rhs);
-                            const auto start = m_match_stack[size-2]->location;
-                            const auto match = m_match_stack[size-2]->text + " " + oper + " " + m_match_stack[size-1]->text;
-                            m_match_stack.resize(size-2);
-                            m_match_stack.push_back(
-                                make_node<eval::Constant_AST_Node>(std::move(match), start.start.line, start.start.column, std::move(val)));
-                            folded = true;
-                          }
-                        }
-                      }
-                    } catch (const std::exception &) {
-                      //failure to fold
-                    }
-
-                    if (!folded) {
-                      build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, oper);
-                    }
-                  }
-
+                  build_match<eval::Binary_Operator_AST_Node>(prev_stack_top, oper);
                   break;
 
                 case(Operator_Precidence::Logical_And) :

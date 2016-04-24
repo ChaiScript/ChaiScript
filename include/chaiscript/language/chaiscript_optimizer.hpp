@@ -53,7 +53,7 @@ namespace chaiscript {
       }
 
 
-    struct Return_Optimizer {
+    struct Return {
       AST_NodePtr optimize(const AST_NodePtr &p)
       {
         if (p->identifier == AST_Node_Type::Def
@@ -74,8 +74,31 @@ namespace chaiscript {
       }
     };
 
+    struct Constant_Fold {
+      AST_NodePtr optimize(const AST_NodePtr &node) {
+        if (node->identifier == AST_Node_Type::Binary
+            && node->children.size() == 2
+            && node->children[0]->identifier == AST_Node_Type::Constant
+            && node->children[1]->identifier == AST_Node_Type::Constant)
+        {
+          const auto oper = node->text;
+          const auto parsed = Operators::to_operator(oper);
+          if (parsed != Operators::Opers::invalid) {
+            const auto lhs = std::dynamic_pointer_cast<eval::Constant_AST_Node>(node->children[0])->m_value;
+            const auto rhs = std::dynamic_pointer_cast<eval::Constant_AST_Node>(node->children[1])->m_value;
+            if (lhs.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic()) {
+              const auto val  = Boxed_Number::do_oper(parsed, lhs, rhs);
+              const auto match = node->children[0]->text + " " + oper + " " + node->children[1]->text;
+              return chaiscript::make_shared<AST_Node, eval::Constant_AST_Node>(std::move(match), node->location, std::move(val));
+            }
+          }
+        }
 
-    struct For_Loop_Optimizer {
+        return node;
+      }
+    };
+
+    struct For_Loop {
       AST_NodePtr optimize(const AST_NodePtr &for_node) {
 
         if (for_node->identifier != AST_Node_Type::For) {
