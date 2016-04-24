@@ -63,10 +63,12 @@ namespace chaiscript
         virtual void debug_print(AST_NodePtr t, std::string prepend = "") const = 0;
         virtual ~ChaiScript_Parser_Base() = default;
         ChaiScript_Parser_Base() = default;
-        ChaiScript_Parser_Base(const ChaiScript_Parser_Base &) = default;
         ChaiScript_Parser_Base(ChaiScript_Parser_Base &&) = default;
         ChaiScript_Parser_Base &operator=(ChaiScript_Parser_Base &&) = delete;
         ChaiScript_Parser_Base &operator=(const ChaiScript_Parser_Base &&) = delete;
+
+      protected:
+        ChaiScript_Parser_Base(const ChaiScript_Parser_Base &) = default;
     };
 
     template<typename Optimizer>
@@ -2355,7 +2357,7 @@ namespace chaiscript
       AST_NodePtr parse(const std::string &t_input, const std::string &t_fname) override
       {
         ChaiScript_Parser<Optimizer> parser(*this);
-
+        parser.m_match_stack.clear();
         return parser.parse_internal(t_input, t_fname);
       }
 
