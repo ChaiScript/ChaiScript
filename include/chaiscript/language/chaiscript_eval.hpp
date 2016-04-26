@@ -653,7 +653,7 @@ namespace chaiscript
 
     struct Ternary_Cond_AST_Node final : AST_Node {
         Ternary_Cond_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::If, std::move(t_loc), std::move(t_children)) 
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Ternary_Cond, std::move(t_loc), std::move(t_children)) 
           { assert(children.size() == 3); }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {

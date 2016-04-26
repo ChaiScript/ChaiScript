@@ -107,6 +107,26 @@ namespace chaiscript {
       }
     };
 
+    struct If {
+      AST_NodePtr optimize(const AST_NodePtr &node) {
+        if ((node->identifier == AST_Node_Type::If || node->identifier == AST_Node_Type::Ternary_Cond)
+             && node->children.size() >= 2
+             && node->children[0]->identifier == AST_Node_Type::Constant)
+        {
+          const auto condition = std::dynamic_pointer_cast<eval::Constant_AST_Node>(node->children[0])->m_value;
+          if (condition.get_type_info().bare_equal_type_info(typeid(bool))) {
+            if (boxed_cast<bool>(condition)) {
+              return node->children[1];
+            } else if (node->children.size() == 3) {
+              return node->children[2];
+            }
+          }
+        }
+
+        return node;
+      }
+    };
+
     struct Constant_Fold {
       AST_NodePtr optimize(const AST_NodePtr &node) {
 
