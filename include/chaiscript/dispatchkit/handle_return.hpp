@@ -116,6 +116,24 @@ namespace chaiscript
         };
 
       template<typename Ret>
+        struct Handle_Return<Ret *&>
+        {
+          static Boxed_Value handle(Ret *p)
+          {
+            return Boxed_Value(p, true);
+          }
+        };
+
+      template<typename Ret>
+        struct Handle_Return<const Ret *&>
+        {
+          static Boxed_Value handle(const Ret *p)
+          {
+            return Boxed_Value(p, true);
+          }
+        };
+
+      template<typename Ret>
         struct Handle_Return<Ret *>
         {
           static Boxed_Value handle(Ret *p)
