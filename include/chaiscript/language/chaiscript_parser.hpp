@@ -23,6 +23,7 @@
 #include "chaiscript_optimizer.hpp"
 
 #if defined(CHAISCRIPT_MSVC) && defined(max) && defined(min)
+#define CHAISCRIPT_PUSHED_MIN_MAX
 #pragma push_macro("max") // Why Microsoft? why? This is worse than bad
 #undef max
 #pragma push_macro("min")
@@ -2331,7 +2332,8 @@ namespace chaiscript
 }
 
 
-#ifdef CHAISCRIPT_MSVC
+#if defined(CHAISCRIPT_MSVC) && defined(CHAISCRIPT_PUSHED_MIN_MAX)
+#undef CHAISCRIPT_PUSHED_MIN_MAX
 #pragma pop_macro("min")
 #pragma pop_macro("max")
 #endif

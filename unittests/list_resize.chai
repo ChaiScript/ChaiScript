@@ -1,0 +1,13 @@
+load_module("stl_extra");
+
+auto list = List();
+
+list.resize(2);
+assert_equal(list.size(), 2);
+
+list.resize(6, "AAA");
+assert_equal(list.back(), "AAA");
+
+list.resize(0);
+assert_equal(list.size(), 0);
+

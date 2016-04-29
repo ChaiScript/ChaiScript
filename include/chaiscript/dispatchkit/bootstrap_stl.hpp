@@ -292,6 +292,40 @@ namespace chaiscript
         }
 
 
+      /// Add container resize concept to the given ContainerType
+      /// http://www.cplusplus.com/reference/stl/
+      template<typename ContainerType>
+        void resizable_type(const std::string &/*type*/, Module& m)
+        {
+          m.add(fun([](ContainerType *a, typename ContainerType::size_type n, const typename ContainerType::value_type& val) { return a->resize(n, val); } ), "resize");
+          m.add(fun([](ContainerType *a, typename ContainerType::size_type n) { return a->resize(n); } ), "resize");
+        }
+      template<typename ContainerType>
+        ModulePtr resizable_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          resizable_type<ContainerType>(type, *m);
+          return m;
+        }
+
+
+      /// Add container reserve concept to the given ContainerType
+      /// http://www.cplusplus.com/reference/stl/
+      template<typename ContainerType>
+        void reservable_type(const std::string &/*type*/, Module& m)
+        {
+          m.add(fun([](ContainerType *a, typename ContainerType::size_type n) { return a->reserve(n); } ), "reserve");
+          m.add(fun([](const ContainerType *a) { return a->capacity(); } ), "capacity");
+        }
+      template<typename ContainerType>
+        ModulePtr reservable_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          reservable_type<ContainerType>(type, *m);
+          return m;
+        }
+
+
       /// Add container concept to the given ContainerType
       /// http://www.sgi.com/tech/stl/Container.html
       template<typename ContainerType>
@@ -581,6 +615,7 @@ namespace chaiscript
           front_insertion_sequence_type<ListType>(type, m);
           back_insertion_sequence_type<ListType>(type, m);
           sequence_type<ListType>(type, m);
+          resizable_type<ListType>(type, m);
           container_type<ListType>(type, m);
           default_constructible_type<ListType>(type, m);
           assignable_type<ListType>(type, m);
@@ -612,6 +647,8 @@ namespace chaiscript
           back_insertion_sequence_type<VectorType>(type, m);
           sequence_type<VectorType>(type, m);
           random_access_container_type<VectorType>(type, m);
+          resizable_type<VectorType>(type, m);
+          reservable_type<VectorType>(type, m);
           container_type<VectorType>(type, m);
           default_constructible_type<VectorType>(type, m);
           assignable_type<VectorType>(type, m);
