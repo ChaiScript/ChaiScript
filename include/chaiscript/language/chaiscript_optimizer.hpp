@@ -141,7 +141,7 @@ namespace chaiscript {
             && node->children[1]->identifier == AST_Node_Type::Constant)
         {
           try {
-            const auto oper = node->text;
+            const auto &oper = node->text;
             const auto parsed = Operators::to_operator(oper);
             if (parsed != Operators::Opers::invalid) {
               const auto lhs = std::dynamic_pointer_cast<eval::Constant_AST_Node<T>>(node->children[0])->m_value;
@@ -155,6 +155,34 @@ namespace chaiscript {
           } catch (const std::exception &) {
             //failure to fold, that's OK
           }
+        } else if (node->identifier == AST_Node_Type::Fun_Call
+                   && node->children.size() == 2
+                   && node->children[0]->identifier == AST_Node_Type::Id
+                   && node->children[1]->identifier == AST_Node_Type::Arg_List
+                   && node->children[1]->children.size() == 1
+                   && node->children[1]->children[0]->identifier == AST_Node_Type::Constant) {
+
+          const auto arg = std::dynamic_pointer_cast<eval::Constant_AST_Node<T>>(node->children[1]->children[0])->m_value;
+          if (arg.get_type_info().is_arithmetic()) {
+            const auto &fun_name = node->children[0]->text;
+
+            const auto make_constant = [&node, &fun_name](auto val){
+              const auto match = fun_name + "(" + node->children[1]->children[0]->text + ")";
+              return chaiscript::make_shared<eval::AST_Node_Impl<T>, eval::Constant_AST_Node<T>>(std::move(match), node->location, Boxed_Value(val));
+            };
+
+            if (fun_name == "double") {
+              return make_constant(Boxed_Number(arg).get_as<double>());
+            } else if (fun_name == "int") {
+              return make_constant(Boxed_Number(arg).get_as<int>());
+            } else if (fun_name == "float") {
+              return make_constant(Boxed_Number(arg).get_as<float>());
+            } else if (fun_name == "long") {
+              return make_constant(Boxed_Number(arg).get_as<long>());
+            }
+
+          }
+
         }
 
         return node;

@@ -502,7 +502,7 @@ namespace chaiscript
       {
       }
 
-      Boxed_Number(Boxed_Value v)
+      explicit Boxed_Number(Boxed_Value v)
         : bv(std::move(v))
       {
         validate_boxed_number(bv);
@@ -693,131 +693,131 @@ namespace chaiscript
 
       static Boxed_Number pre_decrement(Boxed_Number t_lhs)
       {
-        return oper(Operators::Opers::pre_decrement, t_lhs.bv);
+        return Boxed_Number(oper(Operators::Opers::pre_decrement, t_lhs.bv));
       }
 
       static Boxed_Number pre_increment(Boxed_Number t_lhs) 
       {
-        return oper(Operators::Opers::pre_increment, t_lhs.bv);
+        return Boxed_Number(oper(Operators::Opers::pre_increment, t_lhs.bv));
       }
 
       static const Boxed_Number sum(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs) 
       {
-        return oper(Operators::Opers::sum, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::sum, t_lhs.bv, t_rhs.bv));
       }
 
       static const Boxed_Number unary_plus(const Boxed_Number &t_lhs) 
       {
-        return oper(Operators::Opers::unary_plus, t_lhs.bv);
+        return Boxed_Number(oper(Operators::Opers::unary_plus, t_lhs.bv));
       }
 
       static const Boxed_Number unary_minus(const Boxed_Number &t_lhs)
       {
-        return oper(Operators::Opers::unary_minus, t_lhs.bv);
+        return Boxed_Number(oper(Operators::Opers::unary_minus, t_lhs.bv));
       }
 
       static const Boxed_Number difference(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs) 
       {
-        return oper(Operators::Opers::difference, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::difference, t_lhs.bv, t_rhs.bv));
       }
 
       static Boxed_Number assign_bitwise_and(Boxed_Number t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::assign_bitwise_and, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::assign_bitwise_and, t_lhs.bv, t_rhs.bv));
       }
 
       static Boxed_Number assign(Boxed_Number t_lhs, const Boxed_Number &t_rhs) 
       {
-        return oper(Operators::Opers::assign, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::assign, t_lhs.bv, t_rhs.bv));
       }
 
       static Boxed_Number assign_bitwise_or(Boxed_Number t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::assign_bitwise_or, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::assign_bitwise_or, t_lhs.bv, t_rhs.bv));
       }
 
       static Boxed_Number assign_bitwise_xor(Boxed_Number t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::assign_bitwise_xor, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::assign_bitwise_xor, t_lhs.bv, t_rhs.bv));
       }
 
       static Boxed_Number assign_remainder(Boxed_Number t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::assign_remainder, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::assign_remainder, t_lhs.bv, t_rhs.bv));
       }
 
       static Boxed_Number assign_shift_left(Boxed_Number t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::assign_shift_left, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::assign_shift_left, t_lhs.bv, t_rhs.bv));
       }
 
       static Boxed_Number assign_shift_right(Boxed_Number t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::assign_shift_right, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::assign_shift_right, t_lhs.bv, t_rhs.bv));
       }
 
       static const Boxed_Number bitwise_and(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::bitwise_and, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::bitwise_and, t_lhs.bv, t_rhs.bv));
       }
 
       static const Boxed_Number bitwise_complement(const Boxed_Number &t_lhs)
       {
-        return oper(Operators::Opers::bitwise_complement, t_lhs.bv, Boxed_Value(0));
+        return Boxed_Number(oper(Operators::Opers::bitwise_complement, t_lhs.bv, Boxed_Value(0)));
       }
 
       static const Boxed_Number bitwise_xor(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::bitwise_xor, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::bitwise_xor, t_lhs.bv, t_rhs.bv));
       }
 
       static const Boxed_Number bitwise_or(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::bitwise_or, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::bitwise_or, t_lhs.bv, t_rhs.bv));
       }
 
       static Boxed_Number assign_product(Boxed_Number t_lhs, const Boxed_Number &t_rhs) 
       {
-        return oper(Operators::Opers::assign_product, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::assign_product, t_lhs.bv, t_rhs.bv));
       }
 
       static Boxed_Number assign_quotient(Boxed_Number t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::assign_quotient, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::assign_quotient, t_lhs.bv, t_rhs.bv));
       }
 
       static Boxed_Number assign_sum(Boxed_Number t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::assign_sum, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::assign_sum, t_lhs.bv, t_rhs.bv));
       }
       static Boxed_Number assign_difference(Boxed_Number t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::assign_difference, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::assign_difference, t_lhs.bv, t_rhs.bv));
       }
 
       static const Boxed_Number quotient(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs) 
       {
-        return oper(Operators::Opers::quotient, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::quotient, t_lhs.bv, t_rhs.bv));
       }
 
       static const Boxed_Number shift_left(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::shift_left, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::shift_left, t_lhs.bv, t_rhs.bv));
       }
 
       static const Boxed_Number product(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::product, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::product, t_lhs.bv, t_rhs.bv));
       }
 
       static const Boxed_Number remainder(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::remainder, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::remainder, t_lhs.bv, t_rhs.bv));
       }
 
       static const Boxed_Number shift_right(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs)
       {
-        return oper(Operators::Opers::shift_right, t_lhs.bv, t_rhs.bv);
+        return Boxed_Number(oper(Operators::Opers::shift_right, t_lhs.bv, t_rhs.bv));
       }
 
 
