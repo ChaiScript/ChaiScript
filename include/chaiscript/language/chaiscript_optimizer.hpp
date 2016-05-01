@@ -22,39 +22,41 @@ namespace chaiscript {
       {
       }
 
-      AST_NodePtr optimize(AST_NodePtr p) {
+      template<typename Tracer>
+      auto optimize(eval::AST_Node_Impl_Ptr<Tracer> p) {
         (void)std::initializer_list<int>{ (p = T::optimize(p), 0)... };
         return p;
       }
     };
 
     template<typename T>
-      auto child_at(const T &node, const size_t offset) {
+      auto child_at(const eval::AST_Node_Impl_Ptr<T> &node, const size_t offset) {
         if (node->identifier == AST_Node_Type::Compiled) {
-          return dynamic_cast<const eval::Compiled_AST_Node&>(*node).m_original_node->children[offset];
+          return dynamic_cast<const eval::Compiled_AST_Node<T>&>(*node).m_original_node->children[offset];
         } else {
           return node->children[offset];
         }
       }
 
     template<typename T>
-      auto child_count(const T &node) {
+      auto child_count(const eval::AST_Node_Impl_Ptr<T> &node) {
         if (node->identifier == AST_Node_Type::Compiled) {
-          return dynamic_cast<const eval::Compiled_AST_Node&>(*node).m_original_node->children.size();
+          return dynamic_cast<const eval::Compiled_AST_Node<T>&>(*node).m_original_node->children.size();
         } else {
           return node->children.size();
         }
       }
 
-    template<typename T>
-      AST_NodePtr make_compiled_node(const AST_NodePtr &original_node, std::vector<AST_NodePtr> children, T callable)
+    template<typename T, typename Callable>
+      auto make_compiled_node(const eval::AST_Node_Impl_Ptr<T> &original_node, std::vector<eval::AST_Node_Impl_Ptr<T>> children, Callable callable)
       {
-        return chaiscript::make_shared<AST_Node, eval::Compiled_AST_Node>(original_node, std::move(children), std::move(callable));
+        return chaiscript::make_shared<eval::AST_Node_Impl<T>, eval::Compiled_AST_Node<T>>(original_node, std::move(children), std::move(callable));
       }
 
 
     struct Return {
-      AST_NodePtr optimize(const AST_NodePtr &p)
+      template<typename T>
+      auto optimize(const eval::AST_Node_Impl_Ptr<T> &p)
       {
         if (p->identifier == AST_Node_Type::Def
             && !p->children.empty())
@@ -95,7 +97,8 @@ namespace chaiscript {
     }
 
     struct Block {
-      AST_NodePtr optimize(const AST_NodePtr &node) {
+      template<typename T>
+      auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
         if (node->identifier == AST_Node_Type::Block
             && node->children.size() == 1
             && !contains_var_decl_in_scope(node))
@@ -108,12 +111,13 @@ namespace chaiscript {
     };
 
     struct If {
-      AST_NodePtr optimize(const AST_NodePtr &node) {
+      template<typename T>
+      auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
         if ((node->identifier == AST_Node_Type::If || node->identifier == AST_Node_Type::Ternary_Cond)
              && node->children.size() >= 2
              && node->children[0]->identifier == AST_Node_Type::Constant)
         {
-          const auto condition = std::dynamic_pointer_cast<eval::Constant_AST_Node>(node->children[0])->m_value;
+          const auto condition = std::dynamic_pointer_cast<eval::Constant_AST_Node<T>>(node->children[0])->m_value;
           if (condition.get_type_info().bare_equal_type_info(typeid(bool))) {
             if (boxed_cast<bool>(condition)) {
               return node->children[1];
@@ -128,7 +132,8 @@ namespace chaiscript {
     };
 
     struct Constant_Fold {
-      AST_NodePtr optimize(const AST_NodePtr &node) {
+      template<typename T>
+      auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
 
         if (node->identifier == AST_Node_Type::Binary
             && node->children.size() == 2
@@ -139,12 +144,12 @@ namespace chaiscript {
             const auto oper = node->text;
             const auto parsed = Operators::to_operator(oper);
             if (parsed != Operators::Opers::invalid) {
-              const auto lhs = std::dynamic_pointer_cast<eval::Constant_AST_Node>(node->children[0])->m_value;
-              const auto rhs = std::dynamic_pointer_cast<eval::Constant_AST_Node>(node->children[1])->m_value;
+              const auto lhs = std::dynamic_pointer_cast<eval::Constant_AST_Node<T>>(node->children[0])->m_value;
+              const auto rhs = std::dynamic_pointer_cast<eval::Constant_AST_Node<T>>(node->children[1])->m_value;
               if (lhs.get_type_info().is_arithmetic() && rhs.get_type_info().is_arithmetic()) {
                 const auto val  = Boxed_Number::do_oper(parsed, lhs, rhs);
                 const auto match = node->children[0]->text + " " + oper + " " + node->children[1]->text;
-                return chaiscript::make_shared<AST_Node, eval::Constant_AST_Node>(std::move(match), node->location, std::move(val));
+                return chaiscript::make_shared<eval::AST_Node_Impl<T>, eval::Constant_AST_Node<T>>(std::move(match), node->location, std::move(val));
               }
             }
           } catch (const std::exception &) {
@@ -157,7 +162,8 @@ namespace chaiscript {
     };
 
     struct For_Loop {
-      AST_NodePtr optimize(const AST_NodePtr &for_node) {
+      template<typename T>
+      auto optimize(const eval::AST_Node_Impl_Ptr<T> &for_node) {
 
         if (for_node->identifier != AST_Node_Type::For) {
           return for_node;
@@ -183,8 +189,8 @@ namespace chaiscript {
             && child_at(prefix_node, 0)->identifier == AST_Node_Type::Id
             && child_at(prefix_node, 0)->text == child_at(child_at(eq_node,0), 0)->text)
         {
-          const Boxed_Value &begin = std::dynamic_pointer_cast<const eval::Constant_AST_Node>(child_at(eq_node, 1))->m_value;
-          const Boxed_Value &end = std::dynamic_pointer_cast<const eval::Constant_AST_Node>(child_at(binary_node, 1))->m_value;
+          const Boxed_Value &begin = std::dynamic_pointer_cast<const eval::Constant_AST_Node<T>>(child_at(eq_node, 1))->m_value;
+          const Boxed_Value &end = std::dynamic_pointer_cast<const eval::Constant_AST_Node<T>>(child_at(binary_node, 1))->m_value;
           const std::string &id = child_at(prefix_node, 0)->text;
 
           if (begin.get_type_info().bare_equal(user_type<int>()) 
@@ -196,7 +202,7 @@ namespace chaiscript {
             const auto body = child_at(for_node, 3);
 
             return make_compiled_node(for_node, {body}, 
-                [id, start_int, end_int](const std::vector<AST_NodePtr> &children, const chaiscript::detail::Dispatch_State &t_ss) {
+                [id, start_int, end_int](const std::vector<eval::AST_Node_Impl_Ptr<T>> &children, const chaiscript::detail::Dispatch_State &t_ss) {
                   assert(children.size() == 1);
                   chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 

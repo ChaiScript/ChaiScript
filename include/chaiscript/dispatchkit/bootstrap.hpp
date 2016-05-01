@@ -580,7 +580,8 @@ namespace chaiscript
               {fun(&AST_Node::to_string), "to_string"},
               {fun([](const chaiscript::AST_Node &t_node) -> std::vector<Boxed_Value> { 
                 std::vector<Boxed_Value> retval;
-                std::transform(t_node.children.begin(), t_node.children.end(),
+                const auto children = t_node.get_children();
+                std::transform(children.begin(), children.end(),
                                std::back_inserter(retval),
                                &chaiscript::var<const std::shared_ptr<chaiscript::AST_Node> &>);
                 return retval;

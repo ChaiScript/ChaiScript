@@ -70,9 +70,9 @@ namespace chaiscript
     std::vector<std::string> m_module_paths;
     std::vector<std::string> m_use_paths;
 
-    chaiscript::detail::Dispatch_Engine m_engine;
-
     std::unique_ptr<parser::ChaiScript_Parser_Base> m_parser;
+
+    chaiscript::detail::Dispatch_Engine m_engine;
 
     /// Evaluates the given string in by parsing it and running the results through the evaluator
     Boxed_Value do_eval(const std::string &t_input, const std::string &t_filename = "__EVAL__", bool /* t_internal*/  = false) 
@@ -219,7 +219,9 @@ namespace chaiscript
                std::vector<std::string> t_modulepaths = std::vector<std::string>(),
                       std::vector<std::string> t_usepaths = std::vector<std::string>())
       : m_module_paths(std::move(t_modulepaths)), m_use_paths(std::move(t_usepaths)),
-        m_parser(std::make_unique<parser::ChaiScript_Parser<optimizer::Optimizer<optimizer::Block, optimizer::Constant_Fold, optimizer::If, optimizer::Return, optimizer::For_Loop>>>())
+        m_parser(std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer<optimizer::Block, optimizer::Constant_Fold, optimizer::If, optimizer::Return, optimizer::For_Loop>>>()),
+        m_engine(*m_parser)
+
     {
       if (m_module_paths.empty())
       {
@@ -244,7 +246,8 @@ namespace chaiscript
     ChaiScript( std::vector<std::string> t_modulepaths = std::vector<std::string>(),
                       std::vector<std::string> t_usepaths = std::vector<std::string>())
       : m_module_paths(std::move(t_modulepaths)), m_use_paths(std::move(t_usepaths)),
-        m_parser(std::make_unique<parser::ChaiScript_Parser<optimizer::Optimizer<optimizer::Block, optimizer::Constant_Fold, optimizer::If, optimizer::Return, optimizer::For_Loop>>>())
+        m_parser(std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer<optimizer::Block, optimizer::Constant_Fold, optimizer::If, optimizer::Return, optimizer::For_Loop>>>()),
+        m_engine(*m_parser)
     {
       if (m_module_paths.empty())
       {

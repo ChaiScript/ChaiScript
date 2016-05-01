@@ -37,12 +37,16 @@ class Boxed_Number;
 }  // namespace chaiscript
 
 namespace chaiscript {
+  namespace parser {
+    class ChaiScript_Parser_Base;
+  }
 namespace dispatch {
 class Dynamic_Proxy_Function;
 class Proxy_Function_Base;
 struct Placeholder_Object;
 }  // namespace dispatch
 }  // namespace chaiscript
+
 
 
 /// \namespace chaiscript::dispatch
@@ -411,8 +415,10 @@ namespace chaiscript
                "return", "break", "true", "false", "class", "attr", "var", "global", "GLOBAL", "_"};
         };
 
-        Dispatch_Engine()
-          : m_stack_holder(this)
+        Dispatch_Engine(chaiscript::parser::ChaiScript_Parser_Base &parser)
+          : m_stack_holder(this),
+            m_parser(parser)
+
         {
         }
 
@@ -1231,6 +1237,11 @@ namespace chaiscript
           return m_stack_holder->stacks.back();
         }
 
+        parser::ChaiScript_Parser_Base &get_parser()
+        {
+          return m_parser.get();
+        }
+
       private:
 
         const std::vector<std::pair<std::string, Boxed_Value>> &get_boxed_functions_int() const
@@ -1456,6 +1467,7 @@ namespace chaiscript
 
         Type_Conversions m_conversions;
         chaiscript::detail::threading::Thread_Storage<Stack_Holder> m_stack_holder;
+        std::reference_wrapper<parser::ChaiScript_Parser_Base> m_parser;
 
         mutable std::atomic_uint_fast32_t m_method_missing_loc;
 

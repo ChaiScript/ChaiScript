@@ -465,7 +465,6 @@ namespace chaiscript
       const AST_Node_Type identifier;
       const std::string text;
       Parse_Location location;
-      std::vector<AST_NodePtr> children;
 
       const std::string &filename() const {
         return *location.filename;
@@ -485,12 +484,15 @@ namespace chaiscript
 
         oss << text;
 
-        for (auto & elem : this->children) {
+        for (auto & elem : this->get_children()) {
           oss << elem->pretty_print() << ' ';
         }
 
         return oss.str();
       }
+
+      virtual std::vector<AST_NodePtr> get_children() const = 0;
+      virtual Boxed_Value eval(const chaiscript::detail::Dispatch_State &t_e) const = 0;
 
 
       /// Prints the contents of an AST node, including its children, recursively
@@ -500,21 +502,12 @@ namespace chaiscript
         oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
             << this->text << " : " << this->location.start.line << ", " << this->location.start.column << '\n';
 
-        for (auto & elem : this->children) {
+        for (auto & elem : this->get_children()) {
           oss << elem->to_string(t_prepend + "  ");
         }
         return oss.str();
       }
 
-      Boxed_Value eval(const chaiscript::detail::Dispatch_State &t_e) const
-      {
-        try {
-          return eval_internal(t_e);
-        } catch (exception::eval_error &ee) {
-          ee.call_stack.push_back(shared_from_this());
-          throw;
-        }
-      }
 
       static bool get_bool_condition(const Boxed_Value &t_bv) {
         try {
@@ -534,21 +527,39 @@ namespace chaiscript
 
 
     protected:
-      AST_Node(std::string t_ast_node_text, AST_Node_Type t_id, Parse_Location t_loc, 
-               std::vector<AST_NodePtr> t_children = std::vector<AST_NodePtr>()) :
-        identifier(t_id), text(std::move(t_ast_node_text)),
-        location(std::move(t_loc)),
-        children(std::move(t_children))
+      AST_Node(std::string t_ast_node_text, AST_Node_Type t_id, Parse_Location t_loc)
+        : identifier(t_id), text(std::move(t_ast_node_text)),
+          location(std::move(t_loc))
       {
       }
 
-      virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const
-      {
-        throw std::runtime_error("Undispatched ast_node (internal error)");
-      }
 
   };
 
+  namespace parser {
+    class ChaiScript_Parser_Base
+    {
+      public:
+        virtual AST_NodePtr parse(const std::string &t_input, const std::string &t_fname) = 0;
+        virtual void debug_print(AST_NodePtr t, std::string prepend = "") const = 0;
+        virtual void *get_tracer_ptr() = 0;
+        virtual ~ChaiScript_Parser_Base() = default;
+        ChaiScript_Parser_Base() = default;
+        ChaiScript_Parser_Base(ChaiScript_Parser_Base &&) = default;
+        ChaiScript_Parser_Base &operator=(ChaiScript_Parser_Base &&) = delete;
+        ChaiScript_Parser_Base &operator=(const ChaiScript_Parser_Base &&) = delete;
+
+        template<typename T>
+        T &get_tracer()
+        {
+          // to do type check this somehow?
+          return static_cast<T&>(*get_tracer_ptr());
+        }
+
+      protected:
+        ChaiScript_Parser_Base(const ChaiScript_Parser_Base &) = default;
+    };
+  }
 
   namespace eval
   {
