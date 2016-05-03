@@ -244,7 +244,7 @@ namespace chaiscript
           Boxed_Value fn(this->children[0]->eval(t_ss));
 
           try {
-            return (*t_ss->boxed_cast<const Const_Proxy_Function &>(fn))(params, t_ss.conversions());
+            return (*t_ss->boxed_cast<const dispatch::Proxy_Function_Base *>(fn))(params, t_ss.conversions());
           }
           catch(const exception::dispatch_error &e){
             throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, e.functions, false, *t_ss);
