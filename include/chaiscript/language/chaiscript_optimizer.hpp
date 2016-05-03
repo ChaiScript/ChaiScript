@@ -31,11 +31,20 @@ namespace chaiscript {
 
     template<typename T>
       auto child_at(const eval::AST_Node_Impl_Ptr<T> &node, const size_t offset) {
+        if (node->children[offset]->identifier == AST_Node_Type::Compiled) {
+          return dynamic_cast<const eval::Compiled_AST_Node<T>&>(*node->children[offset]).m_original_node;
+        } else {
+          return node->children[offset];
+        }
+
+
+        /*
         if (node->identifier == AST_Node_Type::Compiled) {
           return dynamic_cast<const eval::Compiled_AST_Node<T>&>(*node).m_original_node->children[offset];
         } else {
           return node->children[offset];
         }
+        */
       }
 
     template<typename T>
@@ -88,6 +97,7 @@ namespace chaiscript {
       for (size_t i = 0; i < num; ++i) {
         const auto &child = child_at(node, i);
         if (child->identifier != AST_Node_Type::Block
+            && child->identifier != AST_Node_Type::For
             && contains_var_decl_in_scope(child)) {
           return true;
         }
@@ -99,14 +109,19 @@ namespace chaiscript {
     struct Block {
       template<typename T>
       auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
-        if (node->identifier == AST_Node_Type::Block
-            && node->children.size() == 1
-            && !contains_var_decl_in_scope(node))
+        if (node->identifier == AST_Node_Type::Block)
         {
-          return node->children[0];
-        } else {
-          return node;
+          if (!contains_var_decl_in_scope(node))
+          {
+            if (node->children.size() == 1) {
+              return node->children[0];
+            } else {
+              return chaiscript::make_shared<eval::AST_Node_Impl<T>, eval::Scopeless_Block_AST_Node<T>>(node->text, node->location, node->children);
+            }
+          }
         }
+
+        return node;
       }
     };
 

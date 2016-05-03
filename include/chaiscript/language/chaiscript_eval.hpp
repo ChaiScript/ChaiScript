@@ -636,6 +636,20 @@ namespace chaiscript
     };
 
     template<typename T>
+    struct Scopeless_Block_AST_Node final : AST_Node_Impl<T> {
+        Scopeless_Block_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
+          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Scopeless_Block, std::move(t_loc), std::move(t_children)) { }
+
+        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
+          const auto num_children = this->children.size();
+          for (size_t i = 0; i < num_children-1; ++i) {
+            this->children[i]->eval(t_ss);
+          }
+          return this->children.back()->eval(t_ss);
+        }
+    };
+
+    template<typename T>
     struct Block_AST_Node final : AST_Node_Impl<T> {
         Block_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Block, std::move(t_loc), std::move(t_children)) { }

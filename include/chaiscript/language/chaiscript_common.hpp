@@ -34,7 +34,7 @@ namespace chaiscript
   /// Types of AST nodes available to the parser and eval
   enum class AST_Node_Type { Id, Fun_Call, Arg_List, Equation, Var_Decl,
     Array_Call, Dot_Access,
-    Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
+    Lambda, Block, Scopeless_Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
     Inline_Range, Try, Catch, Finally, Method, Attr_Decl,  
     Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop, Class, Binary, Arg, Global_Decl, Constant, Compiled
   };
@@ -47,7 +47,7 @@ namespace chaiscript
     const char *ast_node_type_to_string(AST_Node_Type ast_node_type) {
       static const char * const ast_node_types[] = { "Id", "Fun_Call", "Arg_List", "Equation", "Var_Decl",
                                     "Array_Call", "Dot_Access", 
-                                    "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
+                                    "Lambda", "Block", "Scopeless_Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
                                     "Inline_Range", "Try", "Catch", "Finally", "Method", "Attr_Decl",
                                     "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Ternary Condition", "Noop", "Class", "Binary", "Arg", "Global_Decl", "Constant", "Compiled"};
 
