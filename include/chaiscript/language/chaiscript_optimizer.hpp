@@ -131,6 +131,34 @@ namespace chaiscript {
       }
     };
 
+    struct Partial_Fold {
+      template<typename T>
+      auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
+
+        // Fold right side
+        if (node->identifier == AST_Node_Type::Binary
+            && node->children.size() == 2
+            && node->children[0]->identifier != AST_Node_Type::Constant
+            && node->children[1]->identifier == AST_Node_Type::Constant)
+        {
+          try {
+            const auto &oper = node->text;
+            const auto parsed = Operators::to_operator(oper);
+            if (parsed != Operators::Opers::invalid) {
+              const auto rhs = std::dynamic_pointer_cast<eval::Constant_AST_Node<T>>(node->children[1])->m_value;
+              if (rhs.get_type_info().is_arithmetic()) {
+                return chaiscript::make_shared<eval::AST_Node_Impl<T>, eval::Fold_Right_Binary_Operator_AST_Node<T>>(node->text, node->location, node->children, rhs);
+              }
+            }
+          } catch (const std::exception &) {
+            //failure to fold, that's OK
+          }
+        }
+
+        return node;
+      }
+    };
+
     struct Constant_Fold {
       template<typename T>
       auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {

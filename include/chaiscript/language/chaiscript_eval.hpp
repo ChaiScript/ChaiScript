@@ -141,11 +141,59 @@ namespace chaiscript
         AST_Node_Impl_Ptr<T> m_original_node;
     };
 
+
+    template<typename T>
+    struct Fold_Right_Binary_Operator_AST_Node : AST_Node_Impl<T> {
+        Fold_Right_Binary_Operator_AST_Node(const std::string &t_oper, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children, Boxed_Value t_rhs) :
+          AST_Node_Impl<T>(t_oper, AST_Node_Type::Binary, std::move(t_loc), std::move(t_children)),
+          m_oper(Operators::to_operator(t_oper)),
+          m_rhs(std::move(t_rhs)),
+          m_loc(0)
+        { }
+
+        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
+          return do_oper(t_ss, this->text, this->children[0]->eval(t_ss));
+        }
+
+      protected:
+        Boxed_Value do_oper(const chaiscript::detail::Dispatch_State &t_ss, 
+            const std::string &t_oper_string, const Boxed_Value &t_lhs) const
+        {
+          try {
+            if (t_lhs.get_type_info().is_arithmetic())
+            {
+              // If it's an arithmetic operation we want to short circuit dispatch
+              try{
+                return Boxed_Number::do_oper(m_oper, t_lhs, m_rhs);
+              } catch (const chaiscript::exception::arithmetic_error &) {
+                throw;
+              } catch (...) {
+                throw exception::eval_error("Error with numeric operator calling: " + t_oper_string);
+              }
+            } else {
+              chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
+              fpp.save_params({t_lhs, m_rhs});
+              return t_ss->call_function(t_oper_string, m_loc, {t_lhs, m_rhs}, t_ss.conversions());
+            }
+          }
+          catch(const exception::dispatch_error &e){
+            throw exception::eval_error("Can not find appropriate '" + t_oper_string + "' operator.", e.parameters, e.functions, false, *t_ss);
+          }
+        }
+
+      private:
+        Operators::Opers m_oper;
+        Boxed_Value m_rhs;
+        mutable std::atomic_uint_fast32_t m_loc;
+    };
+
+
     template<typename T>
     struct Binary_Operator_AST_Node : AST_Node_Impl<T> {
         Binary_Operator_AST_Node(const std::string &t_oper, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(t_oper, AST_Node_Type::Binary, std::move(t_loc), std::move(t_children)),
-          m_oper(Operators::to_operator(t_oper))
+          m_oper(Operators::to_operator(t_oper)),
+          m_loc(0)
         { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {

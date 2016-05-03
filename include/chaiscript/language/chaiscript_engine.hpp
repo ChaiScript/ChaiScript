@@ -219,7 +219,7 @@ namespace chaiscript
                std::vector<std::string> t_modulepaths = std::vector<std::string>(),
                       std::vector<std::string> t_usepaths = std::vector<std::string>())
       : m_module_paths(std::move(t_modulepaths)), m_use_paths(std::move(t_usepaths)),
-        m_parser(std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer<optimizer::Block, optimizer::Constant_Fold, optimizer::If, optimizer::Return, optimizer::For_Loop>>>()),
+        m_parser(std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer<optimizer::Block, optimizer::Partial_Fold, optimizer::Constant_Fold, optimizer::If, optimizer::Return, optimizer::For_Loop>>>()),
         m_engine(*m_parser)
 
     {
@@ -246,7 +246,7 @@ namespace chaiscript
     ChaiScript( std::vector<std::string> t_modulepaths = std::vector<std::string>(),
                       std::vector<std::string> t_usepaths = std::vector<std::string>())
       : m_module_paths(std::move(t_modulepaths)), m_use_paths(std::move(t_usepaths)),
-        m_parser(std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer<optimizer::Block, optimizer::Constant_Fold, optimizer::If, optimizer::Return, optimizer::For_Loop>>>()),
+        m_parser(std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer<optimizer::Block, optimizer::Partial_Fold, optimizer::Constant_Fold, optimizer::If, optimizer::Return, optimizer::For_Loop>>>()),
         m_engine(*m_parser)
     {
       if (m_module_paths.empty())
