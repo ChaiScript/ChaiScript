@@ -202,6 +202,40 @@ namespace chaiscript
     };
 
     template<typename T>
+    struct Caching_Id_AST_Node final : AST_Node_Impl<T> {
+        Caching_Id_AST_Node(const std::string &t_ast_node_text, Parse_Location t_loc) :
+          AST_Node_Impl<T>(t_ast_node_text, AST_Node_Type::Caching_Id, std::move(t_loc)),
+          m_loc(0),
+          m_cache(this)
+        { }
+
+        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
+          try {
+            const uint32_t loc = m_loc;
+            if (loc == 0) {
+              Boxed_Value bv = t_ss.get_object(this->text, m_loc);
+              if ((m_loc & 0x40000000) == 0) {
+                *m_cache = bv;
+              }
+              return bv;
+            } else if ((loc & 0x40000000) != 0) {
+              /// \todo this is a magic number now to see if it's a local - we shouldn't be doing this
+              return t_ss.get_object(this->text, m_loc);
+            } else {
+              return *m_cache;
+            }
+          }
+          catch (std::exception &) {
+            throw exception::eval_error("Can not find object: " + this->text);
+          }
+        }
+
+      private:
+        mutable std::atomic_uint_fast32_t m_loc;
+        mutable chaiscript::detail::threading::Thread_Storage<Boxed_Value> m_cache;
+    };
+
+    template<typename T>
     struct Id_AST_Node final : AST_Node_Impl<T> {
         Id_AST_Node(const std::string &t_ast_node_text, Parse_Location t_loc) :
           AST_Node_Impl<T>(t_ast_node_text, AST_Node_Type::Id, std::move(t_loc)),
@@ -710,21 +744,6 @@ namespace chaiscript
         }
     };
 
-    template<typename T>
-    struct Ternary_Cond_AST_Node final : AST_Node_Impl<T> {
-        Ternary_Cond_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
-          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Ternary_Cond, std::move(t_loc), std::move(t_children)) 
-          { assert(this->children.size() == 3); }
-
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
-          if (this->get_bool_condition(this->children[0]->eval(t_ss))) {
-            return this->children[1]->eval(t_ss);
-          } else {
-            return this->children[2]->eval(t_ss);
-          }
-        }
-
-    };
 
     template<typename T>
     struct If_AST_Node final : AST_Node_Impl<T> {

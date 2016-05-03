@@ -2106,7 +2106,7 @@ namespace chaiscript
                       throw exception::eval_error("Incomplete '" + oper + "' expression",
                           File_Position(m_position.line, m_position.col), *m_filename);
                     }
-                    build_match<eval::Ternary_Cond_AST_Node<Tracer>>(prev_stack_top);
+                    build_match<eval::If_AST_Node<Tracer>>(prev_stack_top);
                   }
                   else {
                     throw exception::eval_error("Incomplete '" + oper + "' expression",

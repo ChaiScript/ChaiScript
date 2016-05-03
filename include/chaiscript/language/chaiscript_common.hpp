@@ -32,7 +32,7 @@ namespace chaiscript
 
 
   /// Types of AST nodes available to the parser and eval
-  enum class AST_Node_Type { Id, Fun_Call, Arg_List, Equation, Var_Decl,
+  enum class AST_Node_Type { Id, Caching_Id, Fun_Call, Arg_List, Equation, Var_Decl,
     Array_Call, Dot_Access,
     Lambda, Block, Def, While, If, For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
     Inline_Range, Try, Catch, Finally, Method, Attr_Decl,  
@@ -45,7 +45,7 @@ namespace chaiscript
   {
     /// Helper lookup to get the name of each node type
     const char *ast_node_type_to_string(AST_Node_Type ast_node_type) {
-      static const char * const ast_node_types[] = { "Id", "Fun_Call", "Arg_List", "Equation", "Var_Decl",
+      static const char * const ast_node_types[] = { "Id", "Caching_Id", "Fun_Call", "Arg_List", "Equation", "Var_Decl",
                                     "Array_Call", "Dot_Access", 
                                     "Lambda", "Block", "Def", "While", "If", "For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
                                     "Inline_Range", "Try", "Catch", "Finally", "Method", "Attr_Decl",
@@ -553,7 +553,7 @@ namespace chaiscript
         T &get_tracer()
         {
           // to do type check this somehow?
-          return static_cast<T&>(*get_tracer_ptr());
+          return *static_cast<T*>(get_tracer_ptr());
         }
 
       protected:
