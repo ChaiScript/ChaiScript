@@ -137,13 +137,6 @@ namespace chaiscript {
   };
 
 
-  template<typename Iter, typename Distance>
-    Iter advance_copy(Iter iter, Distance distance) {
-      std::advance(iter, static_cast<typename std::iterator_traits<Iter>::difference_type>(distance));
-      return iter;
-    }
-
-
   template<typename T>
     auto parse_num(const char *t_str) -> typename std::enable_if<std::is_integral<T>::value, T>::type
     {

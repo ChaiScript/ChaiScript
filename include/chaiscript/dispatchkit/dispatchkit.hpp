@@ -1410,7 +1410,7 @@ namespace chaiscript
         static typename Container::const_iterator find_keyed_value(const Container &t_c, const Key &t_key, const size_t t_hint)
           {
             if (t_c.size() > t_hint && t_c[t_hint].first == t_key) {
-              return advance_copy(t_c.begin(), t_hint);
+              return std::next(t_c.begin(), t_hint);
             } else {
               return find_keyed_value(t_c, t_key);
             }
