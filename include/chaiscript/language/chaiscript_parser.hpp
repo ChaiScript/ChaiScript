@@ -200,8 +200,7 @@ namespace chaiscript
           if (m_pos != m_end) {
             if (*m_pos == '\n') {
               ++line;
-              m_last_col = col;
-              col = 1;
+              m_last_col = std::exchange(col, 1);
             } else {
               ++col;
             }
