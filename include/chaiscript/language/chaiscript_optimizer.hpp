@@ -125,6 +125,39 @@ namespace chaiscript {
       }
     };
 
+    struct Unused_Return {
+      template<typename T>
+        auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
+          if ((node->identifier == AST_Node_Type::Block
+              || node->identifier == AST_Node_Type::Scopeless_Block)
+              && node->children.size() > 0)
+          {
+            for (size_t i = 0; i < node->children.size()-1; ++i) {
+              auto child = node->children[i];
+              if (child->identifier == AST_Node_Type::Fun_Call) {
+                node->children[i] = chaiscript::make_shared<eval::AST_Node_Impl<T>, eval::Unused_Return_Fun_Call_AST_Node<T>>(child->text, child->location, std::move(child->children));
+              }
+            }
+          } else if ((node->identifier == AST_Node_Type::For
+                      || node->identifier == AST_Node_Type::While)
+                     && child_count(node) > 0) {
+            auto child = child_at(node, child_count(node) - 1);
+            if (child->identifier == AST_Node_Type::Block
+                || child->identifier == AST_Node_Type::Scopeless_Block)
+            {
+              auto num_sub_children = child_count(child);
+              for (size_t i = 0; i < num_sub_children; ++i) {
+                auto sub_child = child_at(child, i);
+                if (sub_child->identifier == AST_Node_Type::Fun_Call) {
+                  child->children[i] = chaiscript::make_shared<eval::AST_Node_Impl<T>, eval::Unused_Return_Fun_Call_AST_Node<T>>(sub_child->text, sub_child->location, std::move(sub_child->children));
+                }
+              }
+            }
+          }
+          return node;
+        }
+    };
+
     struct If {
       template<typename T>
       auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
