@@ -285,6 +285,13 @@ namespace chaiscript
       Tracer m_tracer;
       Optimizer m_optimizer;
 
+      void validate_object_name(const std::string &name) const
+      {
+        if (!valid_object_name(name)) {
+          throw exception::eval_error("Invalid Object Name: " + name, File_Position(m_position.line, m_position.col), *m_filename);
+        }
+      }
+
       public:
       explicit ChaiScript_Parser(Tracer tracer = Tracer(), Optimizer optimizer=Optimizer())
         : m_tracer(std::move(tracer)),
@@ -756,13 +763,18 @@ namespace chaiscript
       }
 
       /// Reads (and potentially captures) an identifier from input
-      bool Id() {
+      bool Id(const bool validate) {
         SkipWS();
 
         const auto start = m_position;
         if (Id_()) {
 
           const auto text = Position::str(start, m_position);
+
+          if (validate) {
+            validate_object_name(text);
+          }
+
           if (text == "true") {
             m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, const_var(true)));
           } else if (text == "false") {
@@ -801,14 +813,14 @@ namespace chaiscript
         const auto prev_stack_top = m_match_stack.size();
         SkipWS();
 
-        if (!Id()) {
+        if (!Id(true)) {
           return false;
         }
 
         SkipWS();
 
         if (t_type_allowed) {
-          Id();
+          Id(true);
         }
 
         build_match<eval::Arg_AST_Node<Tracer>>(prev_stack_top);
@@ -1427,7 +1439,7 @@ namespace chaiscript
         if (Keyword("def")) {
           retval = true;
 
-          if (!Id()) {
+          if (!Id(true)) {
             throw exception::eval_error("Missing function name in definition", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
@@ -1437,7 +1449,7 @@ namespace chaiscript
             //We're now a method
             is_method = true;
 
-            if (!Id()) {
+            if (!Id(true)) {
               throw exception::eval_error("Missing method name in definition", File_Position(m_position.line, m_position.col), *m_filename);
             }
           }
@@ -1588,7 +1600,7 @@ namespace chaiscript
         if (Keyword("class")) {
           retval = true;
 
-          if (!Id()) {
+          if (!Id(true)) {
             throw exception::eval_error("Missing class name in definition", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
@@ -1871,7 +1883,7 @@ namespace chaiscript
 
         const auto prev_stack_top = m_match_stack.size();
         if (Lambda() || Num(true) || Quoted_String(true) || Single_Quoted_String(true) ||
-            Paren_Expression() || Inline_Container() || Id())
+            Paren_Expression() || Inline_Container() || Id(false))
         {
           retval = true;
           bool has_more = true;
@@ -1916,7 +1928,7 @@ namespace chaiscript
             }
             else if (Symbol(".")) {
               has_more = true;
-              if (!(Id())) {
+              if (!(Id(true))) {
                 throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
               }
 
@@ -1940,7 +1952,7 @@ namespace chaiscript
         if (t_class_context && (Keyword("attr") || Keyword("auto") || Keyword("var"))) {
           retval = true;
 
-          if (!Id()) {
+          if (!Id(true)) {
             throw exception::eval_error("Incomplete attribute declaration", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
@@ -1950,7 +1962,7 @@ namespace chaiscript
 
           if (Reference()) {
             // we built a reference node - continue
-          } else if (Id()) {
+          } else if (Id(true)) {
             build_match<eval::Var_Decl_AST_Node<Tracer>>(prev_stack_top);
           } else {
             throw exception::eval_error("Incomplete variable declaration", File_Position(m_position.line, m_position.col), *m_filename);
@@ -1959,7 +1971,7 @@ namespace chaiscript
         } else if (Keyword("GLOBAL") || Keyword("global")) {
           retval = true;
 
-          if (!(Reference() || Id())) {
+          if (!(Reference() || Id(true))) {
             throw exception::eval_error("Incomplete global declaration", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
@@ -1967,13 +1979,13 @@ namespace chaiscript
         } else if (Keyword("attr")) {
           retval = true;
 
-          if (!Id()) {
+          if (!Id(true)) {
             throw exception::eval_error("Incomplete attribute declaration", File_Position(m_position.line, m_position.col), *m_filename);
           }
           if (!Symbol("::")) {
             throw exception::eval_error("Incomplete attribute declaration", File_Position(m_position.line, m_position.col), *m_filename);
           }
-          if (!Id()) {
+          if (!Id(true)) {
             throw exception::eval_error("Missing attribute name in definition", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
@@ -2035,7 +2047,7 @@ namespace chaiscript
         const auto prev_stack_top = m_match_stack.size();
 
         if (Symbol("&")) {
-          if (!Id()) {
+          if (!Id(true)) {
             throw exception::eval_error("Incomplete '&' expression", File_Position(m_position.line, m_position.col), *m_filename);
           }
 

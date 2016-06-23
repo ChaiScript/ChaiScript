@@ -527,12 +527,7 @@ namespace chaiscript
               }
             }();
 
-          try {
-            return t_ss->add_global_no_throw(Boxed_Value(), idname);
-          }
-          catch (const exception::reserved_word_error &) {
-            throw exception::eval_error("Reserved word used as global '" + idname + "'");
-          }
+          return t_ss->add_global_no_throw(Boxed_Value(), idname);
 
         }
     };
@@ -550,9 +545,6 @@ namespace chaiscript
             Boxed_Value bv;
             t_ss.add_object(idname, bv);
             return bv;
-          }
-          catch (const exception::reserved_word_error &) {
-            throw exception::eval_error("Reserved word used as variable '" + idname + "'");
           } catch (const exception::name_conflict_error &e) {
             throw exception::eval_error("Variable redefined '" + e.name() + "'");
           }
@@ -763,9 +755,6 @@ namespace chaiscript
                   },
                   static_cast<int>(numparams), this->children.back(),
                   param_types, guard), l_function_name);
-          }
-          catch (const exception::reserved_word_error &e) {
-            throw exception::eval_error("Reserved word used as function name '" + e.word() + "'");
           } catch (const exception::name_conflict_error &e) {
             throw exception::eval_error("Function redefined '" + e.name() + "'");
           }
@@ -1069,14 +1058,9 @@ namespace chaiscript
         { assert(children.size() == 1); }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override{
-          try {
-            Boxed_Value bv;
-            t_ss.add_object(this->children[0]->text, bv);
-            return bv;
-          }
-          catch (const exception::reserved_word_error &) {
-            throw exception::eval_error("Reserved word used as variable '" + this->children[0]->text + "'");
-          }
+          Boxed_Value bv;
+          t_ss.add_object(this->children[0]->text, bv);
+          return bv;
         }
     };
 
@@ -1377,9 +1361,6 @@ namespace chaiscript
                       static_cast<int>(numparams), node, param_types, guard), type), 
                   function_name);
             }
-          }
-          catch (const exception::reserved_word_error &e) {
-            throw exception::eval_error("Reserved word used as method name '" + e.word() + "'");
           } catch (const exception::name_conflict_error &e) {
             throw exception::eval_error("Method redefined '" + e.name() + "'");
           }
@@ -1412,10 +1393,6 @@ namespace chaiscript
                      true
 
                 ), this->children[static_cast<size_t>(1 + class_offset)]->text);
-
-          }
-          catch (const exception::reserved_word_error &) {
-            throw exception::eval_error("Reserved word used as attribute '" + this->children[static_cast<size_t>(1 + class_offset)]->text + "'");
           } catch (const exception::name_conflict_error &e) {
             throw exception::eval_error("Attribute redefined '" + e.name() + "'");
           }

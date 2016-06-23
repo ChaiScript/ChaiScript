@@ -387,6 +387,7 @@ namespace chaiscript
     /// \sa Boxed_Value::is_const
     ChaiScript &add_global_const(const Boxed_Value &t_bv, const std::string &t_name)
     {
+      validate_object_name(t_name);
       m_engine.add_global_const(t_bv, t_name);
       return *this;
     }
@@ -398,12 +399,14 @@ namespace chaiscript
     ///          ChaiScript is thread-safe but provides no threading locking mechanism to the script
     ChaiScript &add_global(const Boxed_Value &t_bv, const std::string &t_name)
     {
+      validate_object_name(t_name);
       m_engine.add_global(t_bv, t_name);
       return *this;
     }
 
     ChaiScript &set_global(const Boxed_Value &t_bv, const std::string &t_name)
     {
+      validate_object_name(t_name);
       m_engine.set_global(t_bv, t_name);
       return *this;
     }
@@ -503,6 +506,7 @@ namespace chaiscript
     template<typename T>
     ChaiScript &add(const T &t_t, const std::string &t_name)
     {
+      validate_object_name(t_name);
       m_engine.add(t_t, t_name);
       return *this;
     }

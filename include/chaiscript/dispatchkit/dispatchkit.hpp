@@ -410,9 +410,6 @@ namespace chaiscript
           std::vector<std::pair<std::string, Boxed_Value>> m_boxed_functions;
           std::map<std::string, Boxed_Value> m_global_objects;
           Type_Name_Map m_types;
-          std::set<std::string> m_reserved_words 
-            = {"def", "fun", "while", "for", "if", "else", "&&", "||", ",", "auto", 
-               "return", "break", "true", "false", "class", "attr", "var", "global", "GLOBAL", "_"};
         };
 
         Dispatch_Engine(chaiscript::parser::ChaiScript_Parser_Base &parser)
@@ -439,7 +436,6 @@ namespace chaiscript
         /// Add a new named Proxy_Function to the system
         void add(const Proxy_Function &f, const std::string &name)
         {
-          validate_object_name(name);
           add_function(f, name);
         }
 
@@ -447,7 +443,6 @@ namespace chaiscript
         /// is not available in the current scope it is created
         void add(Boxed_Value obj, const std::string &name)
         {
-          validate_object_name(name);
           auto &stack = get_stack_data();
 
           for (auto stack_elem = stack.rbegin(); stack_elem != stack.rend(); ++stack_elem)
@@ -497,7 +492,6 @@ namespace chaiscript
         /// Adds a new global shared object, between all the threads
         void add_global_const(const Boxed_Value &obj, const std::string &name)
         {
-          validate_object_name(name);
           if (!obj.is_const())
           {
             throw chaiscript::exception::global_non_const();
@@ -516,8 +510,6 @@ namespace chaiscript
         /// Adds a new global (non-const) shared object, between all the threads
         Boxed_Value add_global_no_throw(const Boxed_Value &obj, const std::string &name)
         {
-          validate_object_name(name);
-
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           const auto itr = m_state.m_global_objects.find(name);
@@ -534,8 +526,6 @@ namespace chaiscript
         /// Adds a new global (non-const) shared object, between all the threads
         void add_global(const Boxed_Value &obj, const std::string &name)
         {
-          validate_object_name(name);
-
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           if (m_state.m_global_objects.find(name) != m_state.m_global_objects.end())
@@ -549,8 +539,6 @@ namespace chaiscript
         /// Updates an existing global shared object or adds a new global shared object if not found
         void set_global(const Boxed_Value &obj, const std::string &name)
         {
-          validate_object_name(name);
-
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
           const auto itr = m_state.m_global_objects.find(name);
@@ -1359,20 +1347,6 @@ namespace chaiscript
         }
 
 
-        /// Throw a reserved_word exception if the name is not allowed
-        void validate_object_name(const std::string &name) const
-        {
-          if (name.find("::") != std::string::npos) {
-            throw chaiscript::exception::illegal_name_error(name);
-          }
-
-          chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
-
-          if (m_state.m_reserved_words.find(name) != m_state.m_reserved_words.end())
-          {
-            throw chaiscript::exception::reserved_word_error(name);
-          }
-        }
 
         template<typename Container, typename Key, typename Value>
           static void add_keyed_value(Container &t_c, const Key &t_key, Value &&t_value)
