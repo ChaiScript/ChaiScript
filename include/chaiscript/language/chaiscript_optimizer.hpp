@@ -137,7 +137,8 @@ namespace chaiscript {
             for (size_t i = 0; i < num_children; ++i) {
               auto child = node->children[i];
               if ( (child->identifier != AST_Node_Type::Id
-                    && child->identifier != AST_Node_Type::Constant)
+                    && child->identifier != AST_Node_Type::Constant
+                    && child->identifier != AST_Node_Type::Noop)
                   || i == num_children - 1) {
                 keepers.push_back(i);
               }
@@ -245,7 +246,46 @@ namespace chaiscript {
       template<typename T>
       auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
 
-        if (node->identifier == AST_Node_Type::Binary
+        if (node->identifier == AST_Node_Type::Prefix
+            && node->children.size() == 1
+            && node->children[0]->identifier == AST_Node_Type::Constant)
+        {
+          try {
+            const auto &oper = node->text;
+            const auto parsed = Operators::to_operator(oper, true);
+            const auto lhs = std::dynamic_pointer_cast<eval::Constant_AST_Node<T>>(node->children[0])->m_value;
+            const auto match = oper + node->children[0]->text;
+
+            if (parsed != Operators::Opers::invalid && parsed != Operators::Opers::bitwise_and && lhs.get_type_info().is_arithmetic()) {
+              const auto val  = Boxed_Number::do_oper(parsed, lhs);
+              return chaiscript::make_shared<eval::AST_Node_Impl<T>, eval::Constant_AST_Node<T>>(std::move(match), node->location, std::move(val));
+            } else if (lhs.get_type_info().bare_equal_type_info(typeid(bool)) && oper == "!") {
+              return chaiscript::make_shared<eval::AST_Node_Impl<T>, eval::Constant_AST_Node<T>>(std::move(match), node->location, Boxed_Value(!boxed_cast<bool>(lhs)));
+            }
+          } catch (const std::exception &e) {
+            //failure to fold, that's OK
+          }
+        } else if ((node->identifier == AST_Node_Type::Logical_And || node->identifier == AST_Node_Type::Logical_Or)
+            && node->children.size() == 2
+            && node->children[0]->identifier == AST_Node_Type::Constant
+            && node->children[1]->identifier == AST_Node_Type::Constant)
+        {
+          try {
+            const auto lhs = std::dynamic_pointer_cast<eval::Constant_AST_Node<T>>(node->children[0])->m_value;
+            const auto rhs = std::dynamic_pointer_cast<eval::Constant_AST_Node<T>>(node->children[1])->m_value;
+            if (lhs.get_type_info().bare_equal_type_info(typeid(bool)) && rhs.get_type_info().bare_equal_type_info(typeid(bool))) {
+              const auto match = node->children[0]->text + " " + node->text + " " + node->children[1]->text;
+              const auto val = [lhs_val = boxed_cast<bool>(lhs), rhs_val = boxed_cast<bool>(rhs), id = node->identifier] {
+                if (id == AST_Node_Type::Logical_And) { return Boxed_Value(lhs_val && rhs_val); }
+                else { return Boxed_Value(lhs_val || rhs_val); }
+              }();
+
+              return chaiscript::make_shared<eval::AST_Node_Impl<T>, eval::Constant_AST_Node<T>>(std::move(match), node->location, std::move(val));
+            }
+          } catch (const std::exception &) {
+            //failure to fold, that's OK
+          }
+        } else if (node->identifier == AST_Node_Type::Binary
             && node->children.size() == 2
             && node->children[0]->identifier == AST_Node_Type::Constant
             && node->children[1]->identifier == AST_Node_Type::Constant)
@@ -289,7 +329,10 @@ namespace chaiscript {
               return make_constant(Boxed_Number(arg).get_as<float>());
             } else if (fun_name == "long") {
               return make_constant(Boxed_Number(arg).get_as<long>());
+            } else if (fun_name == "size_t") {
+              return make_constant(Boxed_Number(arg).get_as<size_t>());
             }
+
 
           }
 

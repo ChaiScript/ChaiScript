@@ -1184,7 +1184,7 @@ private:
     struct Break_AST_Node final : AST_Node_Impl<T> {
         Break_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Break, std::move(t_loc), std::move(t_children)) { }
-        
+
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const override{
           throw detail::Break_Loop();
         }
