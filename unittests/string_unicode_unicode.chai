@@ -1,5 +1,5 @@
-assert_equal('\u0220', 'Ü')
-assert_equal("U for \u0220mlauts", "U for Ümlauts")
-assert_equal("More \u0220ml\u0228\u0252ts", "More Ümläüts")
+assert_equal('\uc39c', 'Ü')
+assert_equal("U for \uc39cmlauts", "U for Ümlauts")
+assert_equal("More \uc39cml\uc3a4\uc3bcts", "More Ümläüts")
 
-assert_equal("Happy \u30C4 face", "Happy ツ face")
+assert_equal("Thorn \uc3be sign", "Thorn þ sign")
