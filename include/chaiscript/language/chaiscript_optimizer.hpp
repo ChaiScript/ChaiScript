@@ -125,6 +125,40 @@ namespace chaiscript {
       }
     };
 
+    struct Dead_Code {
+      template<typename T>
+        auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
+          if (node->identifier == AST_Node_Type::Block)
+          {
+            std::vector<size_t> keepers;
+            const auto num_children = node->children.size();
+            keepers.reserve(num_children);
+
+            for (size_t i = 0; i < num_children; ++i) {
+              auto child = node->children[i];
+              if ( (child->identifier != AST_Node_Type::Id
+                    && child->identifier != AST_Node_Type::Constant)
+                  || i == num_children - 1) {
+                keepers.push_back(i);
+              }
+            }
+
+            if (keepers.size() == num_children) {
+              return node;
+            } else {
+              std::vector<eval::AST_Node_Impl_Ptr<T>> new_children;
+              for (const auto x : keepers)
+              {
+                new_children.push_back(node->children[x]);
+              }
+              return chaiscript::make_shared<eval::AST_Node_Impl<T>, eval::Block_AST_Node<T>>(node->text, node->location, new_children);
+            }
+          } else {
+            return node;
+          }
+        }
+    };
+
     struct Unused_Return {
       template<typename T>
         auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {

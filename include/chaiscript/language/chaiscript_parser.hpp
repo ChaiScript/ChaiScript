@@ -1591,10 +1591,18 @@ namespace chaiscript
             }
           }
 
+          const auto num_children = m_match_stack.size() - prev_stack_top;
+
+          if ((is_if_init && num_children == 3)
+              || (!is_if_init && num_children == 2)) {
+            m_match_stack.push_back(chaiscript::make_shared<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
+          }
+
           if (!is_if_init) {
             build_match<eval::If_AST_Node<Tracer>>(prev_stack_top);
           } else {
-            build_match<eval::If_Init_AST_Node<Tracer>>(prev_stack_top);
+            build_match<eval::If_AST_Node<Tracer>>(prev_stack_top+1);
+            build_match<eval::Block_AST_Node<Tracer>>(prev_stack_top);
           }
         }
 
@@ -1682,7 +1690,7 @@ namespace chaiscript
           {
             return false;
           } else {
-            m_match_stack.push_back(chaiscript::make_shared<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
+            m_match_stack.push_back(chaiscript::make_shared<eval::AST_Node_Impl<Tracer>, eval::Constant_AST_Node<Tracer>>(Boxed_Value(true)));
           }
         }
 

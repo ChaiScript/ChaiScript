@@ -242,6 +242,12 @@ namespace chaiscript
       {
       }
 
+      Constant_AST_Node(Boxed_Value t_value)
+        : AST_Node_Impl<T>("", AST_Node_Type::Constant, Parse_Location()),
+          m_value(std::move(t_value))
+      {
+      }
+
       Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const override {
         return m_value;
       }
@@ -823,46 +829,20 @@ namespace chaiscript
 
     };
 
-    template<typename T>
-    struct If_Init_AST_Node final : AST_Node_Impl<T> {
-        If_Init_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
-          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::If, std::move(t_loc), std::move(t_children)) 
-        { 
-          assert(this->children.size() == 3 || this->children.size() == 4);
-        }
-
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
-          chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
-          this->children[0]->eval(t_ss);
-          if (this->get_bool_condition(this->children[1]->eval(t_ss))) {
-            return this->children[2]->eval(t_ss);
-          } else {
-            if (this->children.size() == 4) {
-              return this->children[3]->eval(t_ss);
-            } else {
-              return void_var();
-            }
-          }
-        }
-    };
 
     template<typename T>
     struct If_AST_Node final : AST_Node_Impl<T> {
         If_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::If, std::move(t_loc), std::move(t_children)) 
         { 
-          assert(this->children.size() == 2 || this->children.size() == 3);
+          assert(this->children.size() == 3);
         }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
           if (this->get_bool_condition(this->children[0]->eval(t_ss))) {
             return this->children[1]->eval(t_ss);
           } else {
-            if (this->children.size() == 3) {
-              return this->children[2]->eval(t_ss);
-            } else {
-              return void_var();
-            }
+            return this->children[2]->eval(t_ss);
           }
         }
     };
@@ -1227,10 +1207,11 @@ private:
         { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const override{
-          // It's a no-op, that evaluates to "true"
-          // the magic-static version of const_var(true) helps us here
-          return const_var(true);
+          // It's a no-op, that evaluates to "void"
+          return val;
         }
+
+        Boxed_Value val = void_var();
     };
 
     template<typename T>
