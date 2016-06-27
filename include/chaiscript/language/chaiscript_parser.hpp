@@ -1557,7 +1557,13 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'if' expression", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
-          if (!(Operator() && Char(')'))) {
+          if (!Equation()) {
+            throw exception::eval_error("Incomplete 'if' expression", File_Position(m_position.line, m_position.col), *m_filename);
+          }
+
+          const bool is_if_init = Eol() && Equation();
+
+          if (!Char(')')) {
             throw exception::eval_error("Incomplete 'if' expression", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
@@ -1585,7 +1591,11 @@ namespace chaiscript
             }
           }
 
-          build_match<eval::If_AST_Node<Tracer>>(prev_stack_top);
+          if (!is_if_init) {
+            build_match<eval::If_AST_Node<Tracer>>(prev_stack_top);
+          } else {
+            build_match<eval::If_Init_AST_Node<Tracer>>(prev_stack_top);
+          }
         }
 
         return retval;

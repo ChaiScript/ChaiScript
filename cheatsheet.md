@@ -278,6 +278,18 @@ while (some_condition()) { /* do something */ }
 for (x : [1,2,3]) { print(i); }
 ```
 
+## Conditionals
+
+```
+if (expression) { }
+```
+
+```
+// C++17-style init-if blocks
+// Value of 'statement' is scoped for entire `if` block
+if (statement; expression) { }
+```
+
 ## Built in Types
 
 ```
