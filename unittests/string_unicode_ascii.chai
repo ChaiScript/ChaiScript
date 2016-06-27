@@ -1,0 +1,8 @@
+assert_equal('\u0020', ' ')
+assert_equal('\u0021', '!')
+assert_equal('\u0030', '0')
+assert_equal('\u0040', '@')
+assert_equal('\u005B', '[')
+assert_equal('\u005d', ']')
+assert_equal('\u0061', 'a')
+assert_equal('\u007e', '~')

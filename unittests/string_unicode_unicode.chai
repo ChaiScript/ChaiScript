@@ -1,0 +1,5 @@
+assert_equal('\u0220', 'Ü')
+assert_equal("U for \u0220mlauts", "U for Ümlauts")
+assert_equal("More \u0220ml\u0228\u0252ts", "More Ümläüts")
+
+assert_equal("Happy \u30C4 face", "Happy ツ face")
