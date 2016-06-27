@@ -58,26 +58,32 @@ namespace chaiscript
 
       // Generic for u16, u32 and (probably) wchar
       template<typename string_type>
-      string_type str_from_ll(long long val)
+      struct Char_Parser_Helper
       {
-        return string_type(1, string_type::value_type(val)); //size, character
-      }
+        static string_type str_from_ll(long long val)
+        {
+          return string_type(1, string_type::value_type(val)); //size, character
+        }
+      };
 
       // Specialization for char
       template<>
-      std::string str_from_ll<std::string>(long long val)
+      struct Char_Parser_Helper<std::string>
       {
-        std::string::value_type c[2];
-        c[1] = std::string::value_type(val);
-        c[0] = std::string::value_type(val >> 8);
-
-        if (c[0] == 0)
+        static std::string str_from_ll(long long val)
         {
-          return std::string(1, c[1]); //size, character
-        }
+          std::string::value_type c[2];
+          c[1] = std::string::value_type(val);
+          c[0] = std::string::value_type(val >> 8);
 
-        return std::string(c, 2); //char buffer, size
-      }
+          if (c[0] == 0)
+          {
+            return std::string(1, c[1]); //size, character
+          }
+
+          return std::string(c, 2); //char buffer, size
+        }
+      };
     }
 
     class ChaiScript_Parser {
@@ -1019,7 +1025,7 @@ namespace chaiscript
         {
           auto val = stoll(hex_matches, 0, 16);
           hex_matches.clear();
-          match += detail::str_from_ll<string_type>(val);
+          match += detail::Char_Parser_Helper<string_type>::str_from_ll(val);
           is_escaped = false;
           is_unicode = false;
         }
