@@ -55,6 +55,29 @@ namespace chaiscript
           ,   max_alphabet
           ,   lengthof_alphabet = 256
       };
+
+      // Generic for u16, u32 and (probably) wchar
+      template<typename string_type>
+      static string_type str_from_ll(long long val)
+      {
+        return string_type(1, string_type::value_type(val)); //size, character
+      }
+
+      // Specialization for char
+      template<>
+      static std::string str_from_ll<std::string>(long long val)
+      {
+        std::string::value_type c[2];
+        c[1] = std::string::value_type(val);
+        c[0] = std::string::value_type(val >> 8);
+
+        if (c[0] == 0)
+        {
+          return std::string(1, c[1]); //size, character
+        }
+
+        return std::string(c, 2); //char buffer, size
+      }
     }
 
     class ChaiScript_Parser {
@@ -928,29 +951,6 @@ namespace chaiscript
         return false;
       }
 
-      // Generic for u16, u32 and (probably) wchar
-      template<typename string_type>
-      static string_type str_from_ll(long long val)
-      {
-        return string_type(1, string_type::value_type(val)); //size, character
-      }
-
-      // Specialization for char
-      template<>
-      static std::string str_from_ll<std::string>(long long val)
-      {
-        std::string::value_type c[2];
-        c[1] = std::string::value_type(val);
-        c[0] = std::string::value_type(val >> 8);
-
-        if (c[0] == 0)
-        {
-          return std::string(1, c[1]); //size, character
-        }
-
-        return std::string(c, 2); //char buffer, size
-      }
-
       template<typename string_type>
       struct Char_Parser
       {
@@ -1019,7 +1019,7 @@ namespace chaiscript
         {
           auto val = stoll(hex_matches, 0, 16);
           hex_matches.clear();
-          match += str_from_ll<string_type>(val);
+          match += detail::str_from_ll<string_type>(val);
           is_escaped = false;
           is_unicode = false;
         }
