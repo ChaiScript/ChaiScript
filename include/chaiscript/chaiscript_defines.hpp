@@ -60,6 +60,10 @@
 #define CHAISCRIPT_MODULE_EXPORT extern "C" 
 #endif
 
+#if defined(CHAISCRIPT_MSVC) || (defined(__GNUC__) && __GNUC__ >= 5) || defined(CHAISCRIPT_CLANG)
+#define CHAISCRIPT_UTF16_UTF32
+#endif
+
 #ifdef _DEBUG
 #define CHAISCRIPT_DEBUG true
 #else

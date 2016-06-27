@@ -15,8 +15,11 @@
 #include <vector>
 #include <cctype>
 #include <cstring>
+
+#if defined(CHAISCRIPT_UTF16_UTF32)
 #include <locale>
 #include <codecvt>
+#endif
 
 
 
@@ -62,29 +65,11 @@ namespace chaiscript
       template<typename string_type>
       struct Char_Parser_Helper
       {
-        typedef typename string_type::value_type target_char_type;
-
-        static string_type str_from_ll(long long val)
+        // common for all implementations
+        static std::string u8str_from_ll(long long val)
         {
-          // make proper UTF-8 string
-          const std::string intermediate = Char_Parser_Helper<std::string>::str_from_ll(val);
-          // prepare converter
-          std::wstring_convert<std::codecvt_utf8<target_char_type>, target_char_type> converter;
-          // convert
-          const string_type result = converter.from_bytes(intermediate);
+          typedef std::string::value_type char_type;
 
-          return result;
-        }
-      };
-
-      // Specialization for char AKA UTF-8
-      template<>
-      struct Char_Parser_Helper<std::string>
-      {
-        typedef std::string::value_type char_type;
-
-        static std::string str_from_ll(long long val)
-        {
           char_type c[2];
           c[1] = char_type(val);
           c[0] = char_type(val >> 8);
@@ -95,6 +80,31 @@ namespace chaiscript
           }
 
           return std::string(c, 2); // char buffer, size
+        }
+
+        static string_type str_from_ll(long long val)
+        {
+          typedef typename string_type::value_type target_char_type;
+#if defined (CHAISCRIPT_UTF16_UTF32)
+          // prepare converter
+          std::wstring_convert<std::codecvt_utf8<target_char_type>, target_char_type> converter;
+          // convert
+          return converter.from_bytes(u8str_from_ll(val));
+#else
+          // no conversion available, just put value as character
+          return string_type(1, target_char_type(val)); // size, character
+#endif
+        }
+      };
+
+      // Specialization for char AKA UTF-8
+      template<>
+      struct Char_Parser_Helper<std::string>
+      {
+        static std::string str_from_ll(long long val)
+        {
+          // little SFINAE trick to avoid base class
+          return Char_Parser_Helper<std::true_type>::u8str_from_ll(val);
         }
       };
     }
