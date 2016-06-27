@@ -928,6 +928,29 @@ namespace chaiscript
         return false;
       }
 
+      // Generic for u16, u32 and (probably) wchar
+      template<typename string_type>
+      static string_type str_from_ll(long long val)
+      {
+        return string_type(1, string_type::value_type(val)); //size, character
+      }
+
+      // Specialization for char
+      template<>
+      static std::string str_from_ll<std::string>(long long val)
+      {
+        std::string::value_type c[2];
+        c[1] = val;
+        c[0] = val >> 8;
+
+        if (c[0] == 0)
+        {
+          return std::string(1, c[1]); //size, character
+        }
+
+        return std::string(c, 2); //char buffer, size
+      }
+
       template<typename string_type>
       struct Char_Parser
       {
@@ -938,6 +961,7 @@ namespace chaiscript
         bool saw_interpolation_marker;
         bool is_octal;
         bool is_hex;
+        bool is_unicode;
         const bool interpolation_allowed;
 
         string_type octal_matches;
@@ -950,6 +974,7 @@ namespace chaiscript
             saw_interpolation_marker(false),
             is_octal(false),
             is_hex(false),
+            is_unicode(false),
             interpolation_allowed(t_interpolation_allowed)
         {
         }
@@ -963,6 +988,10 @@ namespace chaiscript
 
           if (is_hex) {
             process_hex();
+          }
+
+          if (is_unicode) {
+            process_unicode();
           }
         }
 
@@ -985,8 +1014,22 @@ namespace chaiscript
           is_octal = false;
         }
 
+
+        void process_unicode()
+        {
+          auto val = stoll(hex_matches, 0, 16);
+          hex_matches.clear();
+          match += str_from_ll<string_type>(val);
+          is_escaped = false;
+          is_unicode = false;
+        }
+
         void parse(const char_type t_char, const int line, const int col, const std::string &filename) {
           const bool is_octal_char = t_char >= '0' && t_char <= '7';
+
+          const bool is_hex_char  = (t_char >= '0' && t_char <= '9')
+                                 || (t_char >= 'a' && t_char <= 'f')
+                                 || (t_char >= 'A' && t_char <= 'F');
 
           if (is_octal) {
             if (is_octal_char) {
@@ -1000,10 +1043,6 @@ namespace chaiscript
               process_octal();
             }
           } else if (is_hex) {
-            const bool is_hex_char = (t_char >= '0' && t_char <= '9')
-                                  || (t_char >= 'a' && t_char <= 'f')
-                                  || (t_char >= 'A' && t_char <= 'F');
-
             if (is_hex_char) {
               hex_matches.push_back(t_char);
 
@@ -1017,6 +1056,21 @@ namespace chaiscript
               return;
             } else {
               process_hex();
+            }
+          } else if (is_unicode) {
+            if (is_hex_char) {
+              hex_matches.push_back(t_char);
+
+            if(hex_matches.size() == 4) {
+              // Format is specified to be 'slash'uABCD
+              // on collecting from A to D do parsing
+              process_unicode();
+            }
+            return;
+            } else {
+              // Not a unicode anymore, try parsing any way
+              // May be someone used 'slash'uAA only
+              process_unicode();
             }
           }
 
@@ -1034,6 +1088,8 @@ namespace chaiscript
                 octal_matches.push_back(t_char);
               } else if (t_char == 'x') {
                 is_hex = true;
+              } else if (t_char == 'u') {
+                is_unicode = true;
               } else {
                 switch (t_char) {
                   case ('\'') : match.push_back('\''); break;
