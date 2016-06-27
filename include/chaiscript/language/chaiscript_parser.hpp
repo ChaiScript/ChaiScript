@@ -15,6 +15,8 @@
 #include <vector>
 #include <cctype>
 #include <cstring>
+#include <locale>
+#include <codecvt>
 
 
 
@@ -56,32 +58,43 @@ namespace chaiscript
           ,   lengthof_alphabet = 256
       };
 
-      // Generic for u16, u32 and (probably) wchar
+      // Generic for u16, u32 and wchar
       template<typename string_type>
       struct Char_Parser_Helper
       {
+        typedef typename string_type::value_type target_char_type;
+
         static string_type str_from_ll(long long val)
         {
-          return string_type(1, string_type::value_type(val)); //size, character
+          // make proper UTF-8 string
+          const std::string intermediate = Char_Parser_Helper<std::string>::str_from_ll(val);
+          // prepare converter
+          std::wstring_convert<std::codecvt_utf8<target_char_type>, target_char_type> converter;
+          // convert
+          const string_type result = converter.from_bytes(intermediate);
+
+          return result;
         }
       };
 
-      // Specialization for char
+      // Specialization for char AKA UTF-8
       template<>
       struct Char_Parser_Helper<std::string>
       {
+        typedef std::string::value_type char_type;
+
         static std::string str_from_ll(long long val)
         {
-          std::string::value_type c[2];
-          c[1] = std::string::value_type(val);
-          c[0] = std::string::value_type(val >> 8);
+          char_type c[2];
+          c[1] = char_type(val);
+          c[0] = char_type(val >> 8);
 
           if (c[0] == 0)
           {
-            return std::string(1, c[1]); //size, character
+            return std::string(1, c[1]); // size, character
           }
 
-          return std::string(c, 2); //char buffer, size
+          return std::string(c, 2); // char buffer, size
         }
       };
     }
