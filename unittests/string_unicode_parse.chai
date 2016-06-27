@@ -6,6 +6,6 @@ assert_equal('\udd', '\uDD')
 assert_equal('\u0ee', '\uEE')
 assert_equal('\ue', '\u000E')
 
-assert_equal("\u30\u31\u32", "123")
-assert_equal("\u33Test", "4Test")
+assert_equal("\u30\u31\u32", "012")
+assert_equal("\u33Test", "3Test")
 assert_equal("Test\u0040", "Test@")

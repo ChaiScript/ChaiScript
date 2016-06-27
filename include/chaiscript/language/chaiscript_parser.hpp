@@ -58,14 +58,14 @@ namespace chaiscript
 
       // Generic for u16, u32 and (probably) wchar
       template<typename string_type>
-      static string_type str_from_ll(long long val)
+      string_type str_from_ll(long long val)
       {
         return string_type(1, string_type::value_type(val)); //size, character
       }
 
       // Specialization for char
       template<>
-      static std::string str_from_ll<std::string>(long long val)
+      std::string str_from_ll<std::string>(long long val)
       {
         std::string::value_type c[2];
         c[1] = std::string::value_type(val);
