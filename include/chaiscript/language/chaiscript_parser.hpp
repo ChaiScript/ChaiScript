@@ -940,8 +940,8 @@ namespace chaiscript
       static std::string str_from_ll<std::string>(long long val)
       {
         std::string::value_type c[2];
-        c[1] = val;
-        c[0] = val >> 8;
+        c[1] = std::string::value_type(val);
+        c[0] = std::string::value_type(val >> 8);
 
         if (c[0] == 0)
         {
