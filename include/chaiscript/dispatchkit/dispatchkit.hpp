@@ -465,6 +465,26 @@ namespace chaiscript
         /// Adds a named object to the current scope
         /// \warning This version does not check the validity of the name
         /// it is meant for internal use only
+        Boxed_Value &add_get_object(const std::string &t_name, Boxed_Value obj, Stack_Holder &t_holder)
+        {
+          auto &stack_elem = get_stack_data(t_holder).back();
+
+          if (std::any_of(stack_elem.begin(), stack_elem.end(),
+              [&](const std::pair<std::string, Boxed_Value> &o) {
+                return o.first == t_name;
+              }))
+          {
+            throw chaiscript::exception::name_conflict_error(t_name);
+          }
+
+          stack_elem.emplace_back(t_name, std::move(obj));
+          return stack_elem.back().second;
+        }
+
+
+        /// Adds a named object to the current scope
+        /// \warning This version does not check the validity of the name
+        /// it is meant for internal use only
         void add_object(const std::string &t_name, Boxed_Value obj, Stack_Holder &t_holder)
         {
           auto &stack_elem = get_stack_data(t_holder).back();
@@ -477,7 +497,7 @@ namespace chaiscript
             throw chaiscript::exception::name_conflict_error(t_name);
           }
 
-          get_stack_data(t_holder).back().emplace_back(t_name, std::move(obj));
+          stack_elem.emplace_back(t_name, std::move(obj));
         }
 
 
@@ -1478,8 +1498,12 @@ namespace chaiscript
           return m_conversions.saves();
         }
 
+        Boxed_Value &add_get_object(const std::string &t_name, Boxed_Value obj) const {
+          return m_engine.get().add_get_object(t_name, std::move(obj), m_stack_holder.get());
+        }
+
         void add_object(const std::string &t_name, Boxed_Value obj) const {
-          m_engine.get().add_object(t_name, std::move(obj), m_stack_holder.get());
+          return m_engine.get().add_object(t_name, std::move(obj), m_stack_holder.get());
         }
 
         Boxed_Value get_object(const std::string &t_name, std::atomic_uint_fast32_t &t_loc) const {

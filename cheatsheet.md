@@ -111,6 +111,7 @@ chai.add_global_const(chaiscript::const_var(somevar), "somevar"); // global cons
 chai.add_global(chaiscript::var(somevar), "somevar"); // global non-const, throws if object exists
 chai.set_global(chaiscript::var(somevar), "somevar"); // global non-const, overwrites existing object
 ```
+
 # Using STL
 ChaiScript recognize many types from STL, but you have to add specific instantiation yourself.
 
@@ -258,6 +259,23 @@ global g2;
 if (g2.is_var_undef()) { g2 = 4; } // only initialize g2 once, if global decl hit more than once
 
 GLOBAL g3; // all upper case version also accepted
+```
+
+## Looping
+
+```
+// c-style for loops
+for (var i = 0; i < 100; ++i) { print(i); }
+```
+
+```
+// while
+while (some_condition()) { /* do something */ }
+```
+
+```
+// ranged for
+for (x : [1,2,3]) { print(i); }
 ```
 
 ## Built in Types

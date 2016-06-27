@@ -845,6 +845,89 @@ namespace chaiscript
     };
 
     template<typename T>
+    struct Ranged_For_AST_Node final : AST_Node_Impl<T> {
+        Ranged_For_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
+          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Ranged_For, std::move(t_loc), std::move(t_children)),
+          m_range_loc(0),
+          m_empty_loc(0),
+          m_front_loc(0),
+          m_pop_front_loc(0)
+          { assert(this->children.size() == 3); }
+
+        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override{
+          const auto get_function = [&t_ss](const std::string &t_name, auto &t_hint){
+            uint_fast32_t hint = t_hint;
+            auto funs = t_ss->get_function(t_name, hint);
+            if (funs.first != hint) t_hint = uint_fast32_t(funs.first);
+            return std::move(funs.second);
+          };
+
+          const auto call_function = [&t_ss](const auto &t_funcs, const Boxed_Value &t_param) {
+            return dispatch::dispatch(*t_funcs, {t_param}, t_ss.conversions());
+          };
+
+
+          const std::string &loop_var_name = this->children[0]->text;
+          Boxed_Value range_expression_result = this->children[1]->eval(t_ss);
+
+
+          const auto do_loop = [&loop_var_name, &t_ss, this](const auto &ranged_thing){
+            try {
+              chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+              Boxed_Value &obj = t_ss.add_get_object(loop_var_name, void_var());
+              for (auto loop_var : ranged_thing) {
+                obj = Boxed_Value(std::move(loop_var));
+                try {
+                  this->children[2]->eval(t_ss);
+                } catch (detail::Continue_Loop &) {
+                }
+              }
+            } catch (detail::Break_Loop &) {
+              // loop broken
+            }
+            return void_var();
+          };
+
+          if (range_expression_result.get_type_info().bare_equal_type_info(typeid(std::vector<Boxed_Value>))) {
+            return do_loop(boxed_cast<const std::vector<Boxed_Value> &>(range_expression_result));
+          } else if (range_expression_result.get_type_info().bare_equal_type_info(typeid(std::map<std::string, Boxed_Value>))) {
+            return do_loop(boxed_cast<const std::map<std::string, Boxed_Value> &>(range_expression_result));
+          } else {
+            const auto range_funcs = get_function("range", m_range_loc);
+            const auto empty_funcs = get_function("empty", m_empty_loc);
+            const auto front_funcs = get_function("front", m_front_loc);
+            const auto pop_front_funcs = get_function("pop_front", m_pop_front_loc);
+
+            try {
+              const auto range_obj = call_function(range_funcs, range_expression_result);
+              chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+              Boxed_Value &obj = t_ss.add_get_object(loop_var_name, void_var());
+              while (!boxed_cast<bool>(call_function(empty_funcs, range_obj))) {
+                obj = call_function(front_funcs, range_obj);
+                try {
+                  this->children[2]->eval(t_ss);
+                } catch (detail::Continue_Loop &) {
+                }
+                call_function(pop_front_funcs, range_obj);
+              }
+            } catch (detail::Break_Loop &) {
+              // loop broken
+            }
+            return void_var();
+          }
+
+        }
+
+private:
+        mutable std::atomic_uint_fast32_t m_range_loc;
+        mutable std::atomic_uint_fast32_t m_empty_loc;
+        mutable std::atomic_uint_fast32_t m_front_loc;
+        mutable std::atomic_uint_fast32_t m_pop_front_loc;
+
+    };
+
+
+    template<typename T>
     struct For_AST_Node final : AST_Node_Impl<T> {
         For_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::For, std::move(t_loc), std::move(t_children)) 

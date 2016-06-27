@@ -1647,14 +1647,20 @@ namespace chaiscript
         return retval;
       }
 
+      /// Reads the ranged `for` conditions from input
+      bool Range_Expression() {
+        // the first element will have already been captured by the For_Guards() call that preceeds it
+        return Char(':') && Equation();
+      }
 
-      /// Reads the C-style for conditions from input
+
+      /// Reads the C-style `for` conditions from input
       bool For_Guards() {
         if (!(Equation() && Eol()))
         {
           if (!Eol())
           {
-            throw exception::eval_error("'for' loop initial statment missing", File_Position(m_position.line, m_position.col), *m_filename);
+            return false;
           } else {
             m_match_stack.push_back(chaiscript::make_shared<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
           }
@@ -1664,7 +1670,7 @@ namespace chaiscript
         {
           if (!Eol())
           {
-            throw exception::eval_error("'for' loop condition missing", File_Position(m_position.line, m_position.col), *m_filename);
+            return false;
           } else {
             m_match_stack.push_back(chaiscript::make_shared<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
           }
@@ -1692,7 +1698,8 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'for' expression", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
-          if (!(For_Guards() && Char(')'))) {
+          const bool classic_for = For_Guards() && Char(')');
+          if (!classic_for && !(Range_Expression() && Char(')'))) {
             throw exception::eval_error("Incomplete 'for' expression", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
@@ -1702,7 +1709,11 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'for' block", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
-          build_match<eval::For_AST_Node<Tracer>>(prev_stack_top);
+          if (classic_for) {
+            build_match<eval::For_AST_Node<Tracer>>(prev_stack_top);
+          } else {
+            build_match<eval::Ranged_For_AST_Node<Tracer>>(prev_stack_top);
+          }
         }
 
         return retval;
