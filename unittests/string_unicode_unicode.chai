@@ -1,0 +1,5 @@
+assert_equal("\uc39c", "Ü")
+assert_equal("U for \uc39cmlauts", "U for Ümlauts")
+assert_equal("More \uc39cml\uc3a4\uc3bcts", "More Ümläüts")
+
+assert_equal("Thorn \uc3be sign", "Thorn þ sign")

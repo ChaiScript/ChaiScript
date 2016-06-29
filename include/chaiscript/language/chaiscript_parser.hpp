@@ -16,6 +16,11 @@
 #include <cctype>
 #include <cstring>
 
+#if defined(CHAISCRIPT_UTF16_UTF32)
+#include <locale>
+#include <codecvt>
+#endif
+
 
 
 #include "../dispatchkit/boxed_value.hpp"
@@ -54,6 +59,53 @@ namespace chaiscript
           ,   float_suffix_alphabet
           ,   max_alphabet
           ,   lengthof_alphabet = 256
+      };
+
+      // Generic for u16, u32 and wchar
+      template<typename string_type>
+      struct Char_Parser_Helper
+      {
+        // common for all implementations
+        static std::string u8str_from_ll(long long val)
+        {
+          typedef std::string::value_type char_type;
+
+          char_type c[2];
+          c[1] = char_type(val);
+          c[0] = char_type(val >> 8);
+
+          if (c[0] == 0)
+          {
+            return std::string(1, c[1]); // size, character
+          }
+
+          return std::string(c, 2); // char buffer, size
+        }
+
+        static string_type str_from_ll(long long val)
+        {
+          typedef typename string_type::value_type target_char_type;
+#if defined (CHAISCRIPT_UTF16_UTF32)
+          // prepare converter
+          std::wstring_convert<std::codecvt_utf8<target_char_type>, target_char_type> converter;
+          // convert
+          return converter.from_bytes(u8str_from_ll(val));
+#else
+          // no conversion available, just put value as character
+          return string_type(1, target_char_type(val)); // size, character
+#endif
+        }
+      };
+
+      // Specialization for char AKA UTF-8
+      template<>
+      struct Char_Parser_Helper<std::string>
+      {
+        static std::string str_from_ll(long long val)
+        {
+          // little SFINAE trick to avoid base class
+          return Char_Parser_Helper<std::true_type>::u8str_from_ll(val);
+        }
       };
     }
 
@@ -938,6 +990,7 @@ namespace chaiscript
         bool saw_interpolation_marker;
         bool is_octal;
         bool is_hex;
+        bool is_unicode;
         const bool interpolation_allowed;
 
         string_type octal_matches;
@@ -950,6 +1003,7 @@ namespace chaiscript
             saw_interpolation_marker(false),
             is_octal(false),
             is_hex(false),
+            is_unicode(false),
             interpolation_allowed(t_interpolation_allowed)
         {
         }
@@ -963,6 +1017,10 @@ namespace chaiscript
 
           if (is_hex) {
             process_hex();
+          }
+
+          if (is_unicode) {
+            process_unicode();
           }
         }
 
@@ -985,8 +1043,22 @@ namespace chaiscript
           is_octal = false;
         }
 
+
+        void process_unicode()
+        {
+          auto val = stoll(hex_matches, 0, 16);
+          hex_matches.clear();
+          match += detail::Char_Parser_Helper<string_type>::str_from_ll(val);
+          is_escaped = false;
+          is_unicode = false;
+        }
+
         void parse(const char_type t_char, const int line, const int col, const std::string &filename) {
           const bool is_octal_char = t_char >= '0' && t_char <= '7';
+
+          const bool is_hex_char  = (t_char >= '0' && t_char <= '9')
+                                 || (t_char >= 'a' && t_char <= 'f')
+                                 || (t_char >= 'A' && t_char <= 'F');
 
           if (is_octal) {
             if (is_octal_char) {
@@ -1000,10 +1072,6 @@ namespace chaiscript
               process_octal();
             }
           } else if (is_hex) {
-            const bool is_hex_char = (t_char >= '0' && t_char <= '9')
-                                  || (t_char >= 'a' && t_char <= 'f')
-                                  || (t_char >= 'A' && t_char <= 'F');
-
             if (is_hex_char) {
               hex_matches.push_back(t_char);
 
@@ -1017,6 +1085,21 @@ namespace chaiscript
               return;
             } else {
               process_hex();
+            }
+          } else if (is_unicode) {
+            if (is_hex_char) {
+              hex_matches.push_back(t_char);
+
+            if(hex_matches.size() == 4) {
+              // Format is specified to be 'slash'uABCD
+              // on collecting from A to D do parsing
+              process_unicode();
+            }
+            return;
+            } else {
+              // Not a unicode anymore, try parsing any way
+              // May be someone used 'slash'uAA only
+              process_unicode();
             }
           }
 
@@ -1034,6 +1117,8 @@ namespace chaiscript
                 octal_matches.push_back(t_char);
               } else if (t_char == 'x') {
                 is_hex = true;
+              } else if (t_char == 'u') {
+                is_unicode = true;
               } else {
                 switch (t_char) {
                   case ('\'') : match.push_back('\''); break;
