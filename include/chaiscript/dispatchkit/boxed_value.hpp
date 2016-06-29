@@ -231,8 +231,8 @@ namespace chaiscript
       auto pointer_sentinel(std::shared_ptr<T> &ptr) const
       {
         struct Sentinel {
-          Sentinel(std::shared_ptr<T> &ptr, Data &data)
-            : m_ptr(ptr), m_data(data)
+          Sentinel(std::shared_ptr<T> &t_ptr, Data &data)
+            : m_ptr(t_ptr), m_data(data)
           {
           }
 

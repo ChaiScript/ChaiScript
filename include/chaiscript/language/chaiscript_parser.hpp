@@ -113,7 +113,7 @@ namespace chaiscript
 
     template<typename Tracer, typename Optimizer>
     class ChaiScript_Parser final : public ChaiScript_Parser_Base {
-      void *get_tracer_ptr() {
+      void *get_tracer_ptr() override {
         return &m_tracer;
       }
 
@@ -339,7 +339,7 @@ namespace chaiscript
 
       void validate_object_name(const std::string &name) const
       {
-        if (!valid_object_name(name)) {
+        if (!Name_Validator::valid_object_name(name)) {
           throw exception::eval_error("Invalid Object Name: " + name, File_Position(m_position.line, m_position.col), *m_filename);
         }
       }
@@ -2256,8 +2256,8 @@ namespace chaiscript
                   build_match<eval::Logical_Or_AST_Node<Tracer>>(prev_stack_top, oper);
                   break;
 
-                default:
-                  throw exception::eval_error("Internal error: unhandled ast_node", File_Position(m_position.line, m_position.col), *m_filename);
+//                default:
+//                  throw exception::eval_error("Internal error: unhandled ast_node", File_Position(m_position.line, m_position.col), *m_filename);
               }
             }
           }

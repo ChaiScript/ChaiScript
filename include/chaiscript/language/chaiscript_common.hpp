@@ -26,30 +26,31 @@ struct AST_Node;
 
 namespace chaiscript
 {
-  static bool is_reserved_word(const std::string &name)
-  {
-    static const std::set<std::string> m_reserved_words 
-      = {"def", "fun", "while", "for", "if", "else", "&&", "||", ",", "auto", 
-        "return", "break", "true", "false", "class", "attr", "var", "global", "GLOBAL", "_"};
-    return m_reserved_words.count(name) > 0;
-  }
-
-  static bool valid_object_name(const std::string &name)
-  {
-    return name.find("::") == std::string::npos && !is_reserved_word(name);
-  }
-
-  static void validate_object_name(const std::string &name)
-  {
-    if (is_reserved_word(name)) {
-      throw exception::reserved_word_error(name);
+  struct Name_Validator {
+    static bool is_reserved_word(const std::string &name)
+    {
+      static const std::set<std::string> m_reserved_words 
+        = {"def", "fun", "while", "for", "if", "else", "&&", "||", ",", "auto", 
+          "return", "break", "true", "false", "class", "attr", "var", "global", "GLOBAL", "_"};
+      return m_reserved_words.count(name) > 0;
     }
 
-    if (name.find("::") != std::string::npos) {
-      throw exception::illegal_name_error(name);
+    static bool valid_object_name(const std::string &name)
+    {
+      return name.find("::") == std::string::npos && !is_reserved_word(name);
     }
-  }
 
+    static void validate_object_name(const std::string &name)
+    {
+      if (is_reserved_word(name)) {
+        throw exception::reserved_word_error(name);
+      }
+
+      if (name.find("::") != std::string::npos) {
+        throw exception::illegal_name_error(name);
+      }
+    }
+  };
 
   /// Signature of module entry point that all binary loadable modules must implement.
   typedef ModulePtr (*Create_Module_Func)();
@@ -577,7 +578,7 @@ namespace chaiscript
         T &get_tracer()
         {
           // to do type check this somehow?
-          return static_cast<T&>(*get_tracer_ptr());
+          return *static_cast<T*>(get_tracer_ptr());
         }
 
       protected:

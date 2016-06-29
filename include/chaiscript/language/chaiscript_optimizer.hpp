@@ -262,7 +262,7 @@ namespace chaiscript {
             } else if (lhs.get_type_info().bare_equal_type_info(typeid(bool)) && oper == "!") {
               return chaiscript::make_shared<eval::AST_Node_Impl<T>, eval::Constant_AST_Node<T>>(std::move(match), node->location, Boxed_Value(!boxed_cast<bool>(lhs)));
             }
-          } catch (const std::exception &e) {
+          } catch (const std::exception &) {
             //failure to fold, that's OK
           }
         } else if ((node->identifier == AST_Node_Type::Logical_And || node->identifier == AST_Node_Type::Logical_Or)
