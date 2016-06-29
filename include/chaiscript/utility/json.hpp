@@ -47,6 +47,79 @@ class JSON
     };
 
   private:
+
+    struct QuickFlatMap
+    {
+      auto find(const std::string &s) {
+        return std::find_if(std::begin(data), std::end(data), [&s](const auto &d) { return d.first == s; });
+      }
+
+      auto find(const std::string &s) const {
+        return std::find_if(std::begin(data), std::end(data), [&s](const auto &d) { return d.first == s; });
+      }
+
+      auto size() const {
+        return data.size();
+      }
+
+      auto begin() const {
+        return data.begin();
+      }
+
+      auto end() const {
+        return data.end();
+      }
+
+
+      auto begin() {
+        return data.begin();
+      }
+
+      auto end() {
+        return data.end();
+      }
+
+
+      JSON &operator[](const std::string &s) {
+        const auto itr = find(s);
+        if (itr != data.end()) {
+          return itr->second;
+        } else {
+          data.emplace_back(s, JSON());
+          return data.back().second;
+        }
+      }
+
+      JSON &at(const std::string &s) {
+        const auto itr = find(s);
+        if (itr != data.end()) {
+          return itr->second;
+        } else {
+          throw std::out_of_range("Unknown key: " + s);
+        }
+      }
+
+      const JSON &at(const std::string &s) const {
+        const auto itr = find(s);
+        if (itr != data.end()) {
+          return itr->second;
+        } else {
+          throw std::out_of_range("Unknown key: " + s);
+        }
+      }
+
+      size_t count(const std::string &s) const {
+        return (find(s) != data.end())?1:0;
+      }
+
+      std::vector<std::pair<std::string, JSON>> data;
+
+      using iterator = decltype(data)::iterator;
+      using const_iterator = decltype(data)::const_iterator;
+
+
+    };
+
     struct Internal {
       template<typename T>
         auto clone(const std::unique_ptr<T> &ptr) {
@@ -100,7 +173,7 @@ class JSON
         String.reset();
 
         switch( type ) {
-          case Class::Object:    Map    = std::make_unique<std::map<std::string,JSON>>(); break;
+          case Class::Object:    Map    = std::make_unique<QuickFlatMap>(); break;
           case Class::Array:     List   = std::make_unique<std::vector<JSON>>();      break;
           case Class::String:    String = std::make_unique<std::string>();           break;
           case Class::Floating:  Float  = 0.0;                    break;
@@ -116,7 +189,7 @@ class JSON
       Internal &operator=(Internal &&) = default;
 
       std::unique_ptr<std::vector<JSON>>      List;
-      std::unique_ptr<std::map<std::string,JSON>> Map;
+      std::unique_ptr<QuickFlatMap> Map;
       std::unique_ptr<std::string>           String;
       double              Float = 0;
       long                Int = 0;
@@ -229,7 +302,7 @@ class JSON
 
     bool has_key( const std::string &key ) const {
       if( internal.Type == Class::Object ) {
-        return internal.Map->find( key ) != internal.Map->end();
+        return internal.Map->count(key) != 0;
       }
 
       return false;
@@ -274,11 +347,11 @@ class JSON
       return ok ? internal.Bool : false;
     }
 
-    JSONWrapper<std::map<std::string,JSON>> object_range() {
+    JSONWrapper<QuickFlatMap> object_range() {
       if( internal.Type == Class::Object ) {
-        return JSONWrapper<std::map<std::string,JSON>>( internal.Map.get() );
+        return JSONWrapper<QuickFlatMap>( internal.Map.get() );
       } else {
-        return JSONWrapper<std::map<std::string,JSON>>( nullptr );
+        return JSONWrapper<QuickFlatMap>( nullptr );
       }
     }
 
@@ -290,11 +363,11 @@ class JSON
       }
     }
 
-    JSONConstWrapper<std::map<std::string,JSON>> object_range() const {
+    JSONConstWrapper<QuickFlatMap> object_range() const {
       if( internal.Type == Class::Object ) {
-        return JSONConstWrapper<std::map<std::string,JSON>>( internal.Map.get() );
+        return JSONConstWrapper<QuickFlatMap>( internal.Map.get() );
       } else {
-        return JSONConstWrapper<std::map<std::string,JSON>>( nullptr );
+        return JSONConstWrapper<QuickFlatMap>( nullptr );
       }
     }
 

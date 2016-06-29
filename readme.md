@@ -43,10 +43,9 @@ languages:
 Requirements
 ============
 
-ChaiScript requires a C++11 compiler to build with support for variadic 
-templates.  It has been tested with gcc 4.6 and clang 3.1 (with libcxx). MacOS 
-10.8 (Mountain Lion) is also known to support the C++11 build with Apple's 
-clang 4.0. MSVC 2013 or newer is supports also. For more information see the build 
+ChaiScript requires a C++14 compiler to build with support for variadic 
+templates.  It has been tested with gcc 4.9 and clang 3.6 (with libcxx). 
+For more information see the build 
 [dashboard](http://chaiscript.com/ChaiScript-BuildResults/index.html).
 
 Usage

@@ -73,7 +73,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
 
   //Create a new system object and share it with the chaiscript engine
   System system;
-  chai.add(var(&system), "system");
+  chai.add_global(var(&system), "system");
 
   //Add a bound callback method
   chai.add(fun(&System::add_callback, std::ref(system)), "add_callback_bound");
