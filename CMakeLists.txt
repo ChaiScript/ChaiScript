@@ -295,7 +295,7 @@ if (RUN_FUZZY_TESTS)
   file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/unittests")
 
   execute_process(
-    COMMAND ${CMAKE_COMMAND} -E tar xjf ${CMAKE_CURRENT_SOURCE_DIR}/unittests/fuzzy_tests-2015-07-16.tar.bz2
+    COMMAND ${CMAKE_COMMAND} -E tar xjf ${CMAKE_CURRENT_SOURCE_DIR}/unittests/fuzzy_tests-2016-06-29.tar.bz2
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/unittests
     )
 

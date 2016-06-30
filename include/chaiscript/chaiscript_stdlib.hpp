@@ -16,6 +16,8 @@
 #include "chaiscript_defines.hpp"
 #include "language/chaiscript_common.hpp"
 
+#include "dispatchkit/function_call.hpp"
+
 //#include "dispatchkit/dispatchkit.hpp"
 #include "dispatchkit/operators.hpp"
 #include "dispatchkit/bootstrap.hpp"
