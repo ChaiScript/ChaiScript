@@ -17,13 +17,32 @@ namespace chaiscript
     namespace detail
     {
 
-      template<typename Class, typename ... Params  >
-        Proxy_Function build_constructor_(Class (*)(Params...))
+      template<typename Class, typename ... Params, size_t ... I >
+        Proxy_Function build_constructor_(Class (*)(Params...), std::index_sequence<I...>)
         {
-          auto call = dispatch::detail::Constructor<Class, Params...>();
+          return [](){
+            class Func final : public dispatch::Proxy_Function_Impl_Base
+            {
+              public:
+                Func()
+                  : dispatch::Proxy_Function_Impl_Base({user_type<std::shared_ptr<Class>>(), user_type<Params>()...})
+                  {
+                  }
 
-          return Proxy_Function(
-            chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<std::shared_ptr<Class> (Params...), decltype(call)>>(call));
+                bool compare_types_with_cast(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+                {
+                  return compare_types_with_cast_impl<Params...>(params, t_conversions);
+                }
+
+              protected:
+                Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+                {
+                  return Handle_Return<std::shared_ptr<Class>>::handle(std::make_shared<Class>(boxed_cast<Params>(params[I], &t_conversions)...));
+                }
+            };
+
+            return chaiscript::make_shared<dispatch::Proxy_Function_Base, Func>();
+          }();
         }
     }
   }
@@ -44,7 +63,7 @@ namespace chaiscript
     Proxy_Function constructor()
     {
       T *f = nullptr;
-      return (dispatch::detail::build_constructor_(f));
+      return dispatch::detail::build_constructor_(f, std::make_index_sequence<dispatch::detail::Arity<T>::arity>());
     }
 
 }

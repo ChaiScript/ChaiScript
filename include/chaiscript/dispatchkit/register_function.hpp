@@ -11,6 +11,8 @@
 
 #include "bind_first.hpp"
 #include "proxy_functions.hpp"
+#include "handle_return.hpp"
+#include "function_call.hpp"
 
 namespace chaiscript
 {
@@ -35,44 +37,395 @@ namespace chaiscript
   /// \endcode
   /// 
   /// \sa \ref adding_functions
+  //
+  //
+  template<typename ... Param, size_t ... I>
+    Proxy_Function assignable_fun(
+        std::reference_wrapper<std::function<void (Param...)>> t_func,
+        std::shared_ptr<std::function<void (Param...)>> t_ptr,
+        std::index_sequence<I...>)
+    {
+      return [t_func, t_ptr](){
+        class Func final : public dispatch::Assignable_Proxy_Function
+        {
+          public:
+            Func(std::reference_wrapper<std::function<void (Param...)>> t_f, std::shared_ptr<std::function<void (Param...)>> t_p)
+              : Assignable_Proxy_Function({user_type<void>(), user_type<Param>()...}),
+                m_f(std::move(t_f)), m_shared_ptr_holder(std::move(t_p))
+              {
+                assert(!m_shared_ptr_holder || m_shared_ptr_holder.get() == &m_f.get());
+              }
+
+            bool compare_types_with_cast(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              return compare_types_with_cast_impl<Param...>(params, t_conversions);
+            }
+
+            void assign(const std::shared_ptr<const Proxy_Function_Base> &t_rhs) override {
+              m_f.get() = dispatch::functor<void (Param...)>(t_rhs, nullptr);
+            }
+
+          protected:
+            Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              m_f(boxed_cast<Param>(params.at(I), &t_conversions)...);
+              return dispatch::detail::Handle_Return<void>::handle();
+            }
+
+          private:
+            std::reference_wrapper<std::function<void (Param...)>> m_f;
+            std::shared_ptr<std::function<void (Param...)>> m_shared_ptr_holder;
+        };
+
+        return chaiscript::make_shared<dispatch::Proxy_Function_Base, Func>(t_func, t_ptr);
+      }();
+    }
+
+  template<typename Ret, typename ... Param, size_t ... I>
+    Proxy_Function assignable_fun(
+        std::reference_wrapper<std::function<Ret (Param...)>> t_func,
+        std::shared_ptr<std::function<Ret (Param...)>> t_ptr,
+        std::index_sequence<I...>)
+    {
+      return [t_func, t_ptr](){
+        class Func final : public dispatch::Assignable_Proxy_Function
+        {
+          public:
+            Func(std::reference_wrapper<std::function<Ret (Param...)>> t_f, std::shared_ptr<std::function<Ret (Param...)>> t_p)
+              : Assignable_Proxy_Function({user_type<Ret>(), user_type<Param>()...}),
+                m_f(std::move(t_f)), m_shared_ptr_holder(std::move(t_p))
+              {
+                assert(!m_shared_ptr_holder || m_shared_ptr_holder.get() == &m_f.get());
+              }
+
+            bool compare_types_with_cast(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              return compare_types_with_cast_impl<Param...>(params, t_conversions);
+            }
+
+            void assign(const std::shared_ptr<const Proxy_Function_Base> &t_rhs) override {
+              m_f.get() = dispatch::functor<Ret (Param...)>(t_rhs, nullptr);
+            }
+
+          protected:
+            Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              return dispatch::detail::Handle_Return<Ret>::handle(m_f(boxed_cast<Param>(params.at(I), &t_conversions)...));
+            }
+
+          private:
+            std::reference_wrapper<std::function<Ret (Param...)>> m_f;
+            std::shared_ptr<std::function<Ret (Param...)>> m_shared_ptr_holder;
+        };
+
+        return chaiscript::make_shared<dispatch::Proxy_Function_Base, Func>(t_func, t_ptr);
+      }();
+    }
+
+  template<typename Ret, typename ... Param>
+    Proxy_Function assignable_fun(
+        std::reference_wrapper<std::function<Ret (Param...)>> t_func,
+        std::shared_ptr<std::function<Ret (Param...)>> t_ptr
+        )
+    {
+      return assignable_fun(std::move(t_func), std::move(t_ptr), std::make_index_sequence<sizeof...(Param)>());
+    }
+
+
+  template<typename T, typename ... Param, size_t ... I>
+    Proxy_Function fun(const T &t_func, void (*)(Param...), std::index_sequence<I...>)
+    {
+      return [t_func](){
+        class Func final : public dispatch::Proxy_Function_Impl_Base
+        {
+          public:
+            Func(const T &func)
+              : dispatch::Proxy_Function_Impl_Base({user_type<void>(), user_type<Param>()...}),
+                m_f(func)
+            {
+            }
+
+            bool compare_types_with_cast(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              return compare_types_with_cast_impl<Param...>(params, t_conversions);
+            }
+
+          protected:
+            Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              m_f(boxed_cast<Param>(params[I], &t_conversions)...);
+              return dispatch::detail::Handle_Return<void>::handle();
+            }
+
+          private:
+            T m_f;
+        };
+
+        return chaiscript::make_shared<dispatch::Proxy_Function_Base, Func>(t_func);
+      }();
+    }
+
+  template<typename Ret, typename T, typename ... Param, size_t ... I>
+    Proxy_Function fun(const T &t_func, Ret (*)(Param...), std::index_sequence<I...>)
+    {
+      return [t_func](){
+        class Func final : public dispatch::Proxy_Function_Impl_Base
+        {
+          public:
+            Func(const T &func)
+              : dispatch::Proxy_Function_Impl_Base({user_type<Ret>(), user_type<Param>()...}),
+                m_f(func)
+            {
+            }
+
+            bool compare_types_with_cast(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              return compare_types_with_cast_impl<Param...>(params, t_conversions);
+            }
+
+          protected:
+            Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              return dispatch::detail::Handle_Return<Ret>::handle(m_f(boxed_cast<Param>(params.at(I), &t_conversions)...));
+            }
+
+          private:
+            T m_f;
+        };
+
+        return chaiscript::make_shared<dispatch::Proxy_Function_Base, Func>(t_func);
+      }();
+    }
+
   template<typename T>
     Proxy_Function fun(const T &t)
     {
       typedef typename dispatch::detail::Callable_Traits<T>::Signature Signature;
-
-      return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Signature, T>>(t));
+      Signature *f = nullptr;
+      return fun(t, f, std::make_index_sequence<dispatch::detail::Arity<Signature>::arity>());
     }
 
-  template<typename Ret, typename ... Param>
-    Proxy_Function fun(Ret (*func)(Param...))
+  template<typename ... Param, size_t ... I>
+    Proxy_Function fun(void (*t_func)(Param...), std::index_sequence<I...>)
     {
-      auto fun_call = dispatch::detail::Fun_Caller<Ret, Param...>(func);
+      return [t_func](){
+        class Func final : public dispatch::Proxy_Function_Impl_Base
+        {
+          public:
+            Func(decltype(t_func) func)
+              : dispatch::Proxy_Function_Impl_Base({user_type<void>(), user_type<Param>()...}),
+                m_f(func)
+            {
+            }
 
-      return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (Param...), decltype(fun_call)>>(fun_call));
+            bool compare_types_with_cast(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              return compare_types_with_cast_impl<Param...>(params, t_conversions);
+            }
+
+          protected:
+            Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              (*m_f)(boxed_cast<Param>(params[I], &t_conversions)...);
+              return dispatch::detail::Handle_Return<void>::handle();
+            }
+
+          private:
+            decltype(t_func) m_f;
+        };
+
+        return chaiscript::make_shared<dispatch::Proxy_Function_Base, Func>(t_func);
+      }();
+    }
+
+  template<typename Ret, typename ... Param, size_t ... I>
+    Proxy_Function fun(Ret (*t_func)(Param...), std::index_sequence<I...>)
+    {
+      return [t_func](){
+        class Func final : public dispatch::Proxy_Function_Impl_Base
+        {
+          public:
+            Func(decltype(t_func) func)
+              : dispatch::Proxy_Function_Impl_Base({user_type<Ret>(), user_type<Param>()...}),
+                m_f(func)
+            {
+            }
+
+            bool compare_types_with_cast(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              return compare_types_with_cast_impl<Param...>(params, t_conversions);
+            }
+
+          protected:
+            Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              return dispatch::detail::Handle_Return<Ret>::handle((*m_f)(boxed_cast<Param>(params[I], &t_conversions)...));
+            }
+
+          private:
+            decltype(t_func) m_f;
+        };
+
+        return chaiscript::make_shared<dispatch::Proxy_Function_Base, Func>(t_func);
+      }();
+    }
+
+
+
+  template<typename Class, typename ... Param, size_t ... I>
+    Proxy_Function fun(void (Class::*t_func)(Param...) const, std::index_sequence<I...>)
+    {
+      return [t_func](){
+        class Func final : public dispatch::Proxy_Function_Impl_Base
+        {
+          public:
+            Func(decltype(t_func) func)
+              : dispatch::Proxy_Function_Impl_Base({user_type<void>(), user_type<const Class &>(), user_type<Param>()...}),
+                m_f(func)
+            {
+            }
+
+            bool compare_types_with_cast(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              return compare_types_with_cast_impl<const Class &, Param...>(params, t_conversions);
+            }
+
+          protected:
+            Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              const Class &o = static_cast<const Class &>(boxed_cast<const Class &>(params[0], &t_conversions));
+              (o.*m_f)(boxed_cast<Param>(params[I+1], &t_conversions)...);
+              return dispatch::detail::Handle_Return<void>::handle();
+            }
+
+          private:
+            decltype(t_func) m_f;
+        };
+
+        return chaiscript::make_shared<dispatch::Proxy_Function_Base, Func>(t_func);
+      }();
+    }
+
+  template<typename Ret, typename Class, typename ... Param, size_t ... I>
+    Proxy_Function fun(Ret (Class::*t_func)(Param...) const, std::index_sequence<I...>)
+    {
+      return [t_func](){
+        class Func final : public dispatch::Proxy_Function_Impl_Base
+        {
+          public:
+            Func(decltype(t_func) func)
+              : dispatch::Proxy_Function_Impl_Base({user_type<Ret>(), user_type<const Class &>(), user_type<Param>()...}),
+                m_f(func)
+            {
+            }
+
+            bool compare_types_with_cast(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              return compare_types_with_cast_impl<const Class &, Param...>(params, t_conversions);
+            }
+
+          protected:
+            Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              const Class &o = static_cast<const Class &>(boxed_cast<const Class &>(params[0], &t_conversions));
+              return dispatch::detail::Handle_Return<Ret>::handle((o.*m_f)(boxed_cast<Param>(params[I+1], &t_conversions)...));
+            }
+
+          private:
+            decltype(t_func) m_f;
+        };
+
+        return chaiscript::make_shared<dispatch::Proxy_Function_Base, Func>(t_func);
+      }();
+    }
+
+
+  template<typename Class, typename ... Param, size_t ... I>
+    Proxy_Function fun(void (Class::*t_func)(Param...), std::index_sequence<I...>)
+    {
+      return [t_func](){
+        class Func final : public dispatch::Proxy_Function_Impl_Base
+        {
+          public:
+            Func(decltype(t_func) func)
+              : dispatch::Proxy_Function_Impl_Base({user_type<void>(), user_type<Class &>(), user_type<Param>()...}),
+                m_f(func)
+            {
+            }
+
+            bool compare_types_with_cast(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              return compare_types_with_cast_impl<Class &, Param...>(params, t_conversions);
+            }
+
+          protected:
+            Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              Class &o = static_cast<Class &>(boxed_cast<Class &>(params[0], &t_conversions));
+              (o.*m_f)(boxed_cast<Param>(params[I+1], &t_conversions)...);
+              return dispatch::detail::Handle_Return<void>::handle();
+            }
+
+          private:
+            decltype(t_func) m_f;
+        };
+
+        return chaiscript::make_shared<dispatch::Proxy_Function_Base, Func>(t_func);
+      }();
+    }
+
+  template<typename Ret, typename Class, typename ... Param, size_t ... I>
+    Proxy_Function fun(Ret (Class::*t_func)(Param...), std::index_sequence<I...>)
+    {
+      return [t_func](){
+        class Func final : public dispatch::Proxy_Function_Impl_Base
+        {
+          public:
+            Func(decltype(t_func) func)
+              : dispatch::Proxy_Function_Impl_Base({user_type<Ret>(), user_type<Class &>(), user_type<Param>()...}),
+                m_f(func)
+            {
+            }
+
+            bool compare_types_with_cast(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              return compare_types_with_cast_impl<Class &, Param...>(params, t_conversions);
+            }
+
+          protected:
+            Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+            {
+              Class &o = static_cast<Class &>(boxed_cast<Class &>(params[0], &t_conversions));
+              return dispatch::detail::Handle_Return<Ret>::handle((o.*m_f)(boxed_cast<Param>(params[I+1], &t_conversions)...));
+            }
+
+          private:
+            decltype(t_func) m_f;
+        };
+
+        return chaiscript::make_shared<dispatch::Proxy_Function_Base, Func>(t_func);
+      }();
 
     }
 
   template<typename Ret, typename Class, typename ... Param>
     Proxy_Function fun(Ret (Class::*t_func)(Param...) const)
     {
-      auto call = dispatch::detail::Const_Caller<Ret, Class, Param...>(t_func);
-
-      return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (const Class &, Param...), decltype(call)>>(call));
+      return fun(t_func, std::make_index_sequence<sizeof...(Param)>());
     }
+
+  template<typename Ret, typename ... Param>
+    Proxy_Function fun(Ret (*func)(Param...))
+    {
+      return fun(func, std::make_index_sequence<sizeof...(Param)>());
+    }
+
 
   template<typename Ret, typename Class, typename ... Param>
     Proxy_Function fun(Ret (Class::*t_func)(Param...))
     {
-      auto call = dispatch::detail::Caller<Ret, Class, Param...>(t_func);
-
-      return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (Class &, Param...), decltype(call)>>(call));
-
+      return fun(t_func, std::make_index_sequence<sizeof...(Param)>());
     }
-
 
   template<typename T, typename Class /*, typename = typename std::enable_if<std::is_member_object_pointer<T>::value>::type*/>
     Proxy_Function fun(T Class::* m /*, typename std::enable_if<std::is_member_object_pointer<T>::value>::type* = 0*/ )

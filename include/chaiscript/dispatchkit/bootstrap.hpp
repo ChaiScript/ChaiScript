@@ -28,7 +28,6 @@
 #include "operators.hpp"
 #include "proxy_constructors.hpp"
 #include "proxy_functions.hpp"
-#include "proxy_functions_detail.hpp"
 #include "register_function.hpp"
 #include "type_info.hpp"
 #include "../utility/utility.hpp"

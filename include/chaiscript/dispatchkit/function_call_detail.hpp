@@ -141,22 +141,6 @@ namespace chaiscript
       template<typename Ret, typename ... Params>
         std::function<Ret (Params...)> build_function_caller_helper(Ret (Params...), const std::vector<Const_Proxy_Function> &funcs, const Type_Conversions_State *t_conversions)
         {
-          /*
-          if (funcs.size() == 1)
-          {
-            std::shared_ptr<const Proxy_Function_Impl<Ret (Params...)>> pfi = 
-              std::dynamic_pointer_cast<const Proxy_Function_Impl<Ret (Params...)> >
-                (funcs[0]);
-
-            if (pfi)
-            {
-              return pfi->internal_function();
-            } 
-            // looks like this either wasn't a Proxy_Function_Impl or the types didn't match
-            // we cannot make any other guesses or assumptions really, so continuing
-          }
-*/
-
           return std::function<Ret (Params...)>(Build_Function_Caller_Helper<Ret, Params...>(funcs, t_conversions?t_conversions->get():nullptr));
         }
     }

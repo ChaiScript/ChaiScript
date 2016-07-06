@@ -24,7 +24,6 @@
 #include "../dispatchkit/dispatchkit.hpp"
 #include "../dispatchkit/dynamic_object_detail.hpp"
 #include "../dispatchkit/proxy_functions.hpp"
-#include "../dispatchkit/proxy_functions_detail.hpp"
 #include "../dispatchkit/register_function.hpp"
 #include "../dispatchkit/type_info.hpp"
 #include "chaiscript_algebraic.hpp"
