@@ -816,16 +816,24 @@
 /// @namespace chaiscript::detail
 /// @brief Classes and functions reserved for internal use. Items in this namespace are not supported.
 
-#include "chaiscript_defines.hpp"
-
-#include "dispatchkit/dispatchkit.hpp"
-#include "dispatchkit/function_call.hpp"
-#include "dispatchkit/dynamic_object.hpp"
-#include "dispatchkit/boxed_number.hpp"
-
-#include "language/chaiscript_eval.hpp"
-#include "language/chaiscript_engine.hpp"
+#include "chaiscript_basic.hpp"
+#include "language/chaiscript_parser.hpp"
+#include "chaiscript_stdlib.hpp"
 
 
+namespace chaiscript 
+{
+  class ChaiScript : public ChaiScript_Basic
+  {
+    ChaiScript(std::vector<std::string> t_modulepaths = {},
+               std::vector<std::string> t_usepaths = {})
+      : ChaiScript_Basic(
+          chaiscript::Std_Lib::library(),
+          std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer_Default>>(),
+          t_modulepaths, t_usepaths)
+    {
+    }
+  };
+}
 
 #endif /* CHAISCRIPT_HPP_ */

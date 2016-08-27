@@ -77,7 +77,7 @@ namespace chaiscript
 
       struct Object_Data
       {
-        static std::shared_ptr<Data> get(Boxed_Value::Void_Type, bool t_return_value)
+        static auto get(Boxed_Value::Void_Type, bool t_return_value)
         {
           return std::make_shared<Data>(
                 detail::Get_Type_Info<void>::get(),
@@ -89,13 +89,13 @@ namespace chaiscript
         }
 
         template<typename T>
-          static std::shared_ptr<Data> get(const std::shared_ptr<T> *obj, bool t_return_value)
+          static auto get(const std::shared_ptr<T> *obj, bool t_return_value)
           {
             return get(*obj, t_return_value);
           }
 
         template<typename T>
-          static std::shared_ptr<Data> get(const std::shared_ptr<T> &obj, bool t_return_value)
+          static auto get(const std::shared_ptr<T> &obj, bool t_return_value)
           {
             return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(), 
@@ -107,7 +107,7 @@ namespace chaiscript
           }
 
         template<typename T>
-          static std::shared_ptr<Data> get(std::shared_ptr<T> &&obj, bool t_return_value)
+          static auto get(std::shared_ptr<T> &&obj, bool t_return_value)
           {
             auto ptr = obj.get();
             return std::make_shared<Data>(
@@ -120,20 +120,20 @@ namespace chaiscript
           }
 
         template<typename T>
-          static std::shared_ptr<Data> get(T *t, bool t_return_value)
+          static auto get(T *t, bool t_return_value)
           {
             return get(std::ref(*t), t_return_value);
           }
 
         template<typename T>
-          static std::shared_ptr<Data> get(const T *t, bool t_return_value)
+          static auto get(const T *t, bool t_return_value)
           {
             return get(std::cref(*t), t_return_value);
           }
 
 
         template<typename T>
-          static std::shared_ptr<Data> get(std::reference_wrapper<T> obj, bool t_return_value)
+          static auto get(std::reference_wrapper<T> obj, bool t_return_value)
           {
             auto p = &obj.get();
             return std::make_shared<Data>(
@@ -146,7 +146,7 @@ namespace chaiscript
           }
 
         template<typename T>
-          static std::shared_ptr<Data> get(T t, bool t_return_value)
+          static auto get(T t, bool t_return_value)
           {
             auto p = std::make_shared<T>(std::move(t));
             auto ptr = p.get();
@@ -182,10 +182,7 @@ namespace chaiscript
         }
 
       /// Unknown-type constructor
-      Boxed_Value()
-        : m_data(Object_Data::get())
-      {
-      }
+      Boxed_Value() = default;
 
       Boxed_Value(Boxed_Value&&) = default;
       Boxed_Value& operator=(Boxed_Value&&) = default;
@@ -349,7 +346,7 @@ namespace chaiscript
         : m_data(t_data) {
       }
 
-      std::shared_ptr<Data> m_data;
+      std::shared_ptr<Data> m_data = Object_Data::get();
   };
 
   /// @brief Creates a Boxed_Value. If the object passed in is a value type, it is copied. If it is a pointer, std::shared_ptr, or std::reference_type

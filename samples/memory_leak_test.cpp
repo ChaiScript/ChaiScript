@@ -1,7 +1,6 @@
 #include <iostream>
 
 #include <chaiscript/chaiscript.hpp>
-#include <chaiscript/chaiscript_stdlib.hpp>
 
 #ifdef READLINE_AVAILABLE
 #include <readline/readline.h>
@@ -32,16 +31,9 @@ void function(void)
 class test
 {
   chaiscript::ChaiScript chai;
-  chaiscript::ChaiScript::State backupState;
+  chaiscript::ChaiScript::State backupState = chai.get_state();
 
   public:
-  test()
-    : chai(chaiscript::Std_Lib::library())
-  {
-    backupState = chai.get_state();
-  }
-  ~test(){}
-
   void ResetState()
   {
     chai.set_state(backupState);

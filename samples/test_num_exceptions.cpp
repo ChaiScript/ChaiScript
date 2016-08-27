@@ -1,11 +1,10 @@
 #include <chaiscript/chaiscript.hpp>
-#include <chaiscript/chaiscript_stdlib.hpp>
 #include <chaiscript/dispatchkit/bootstrap_stl.hpp>
 #include <chaiscript/dispatchkit/function_call.hpp>
 
 int main( int /*argc*/ , char * /*argv*/[] )
 {
-  chaiscript::ChaiScript ch( chaiscript::Std_Lib::library( ) );
+  chaiscript::ChaiScript ch;
 
 
   try

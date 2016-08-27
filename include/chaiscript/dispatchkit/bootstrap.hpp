@@ -15,18 +15,6 @@ namespace chaiscript
   /// \brief Classes and functions useful for bootstrapping of ChaiScript and adding of new types
   namespace bootstrap
   {
-    namespace detail
-    {
-      /// \brief Constructs a new POD value object from a Boxed_Number
-      /// \param[in] v Boxed_Number to copy into the new object
-      /// \returns The newly created object.
-      template<typename P1>
-      std::shared_ptr<P1> construct_pod(const Boxed_Number &v)
-      {
-        return std::make_shared<P1>(v.get_as<P1>());
-      }
-    }
-
     template<typename T, typename = typename std::enable_if<std::is_array<T>::value>::type >
       void array(const std::string &type, Module& m)
       {
@@ -110,7 +98,7 @@ namespace chaiscript
     template<typename T>
     void construct_pod(const std::string &type, Module& m)
     {
-      m.add(fun(&detail::construct_pod<T>), type);
+      m.add(fun([](const Boxed_Number &bn){ return bn.get_as<T>(); }), type);
     }
 
 
@@ -161,15 +149,14 @@ namespace chaiscript
     /// for handling of Proxy_Function object (that is,
     /// function variables.
     template<typename Type>
-    std::shared_ptr<Type> shared_ptr_clone(const std::shared_ptr<Type> &p)
+    auto shared_ptr_clone(const std::shared_ptr<Type> &p)
     {
       return p;
     }
 
     /// Specific version of shared_ptr_clone just for Proxy_Functions
     template<typename Type>
-    std::shared_ptr<typename std::remove_const<Type>::type> 
-        shared_ptr_unconst_clone(const std::shared_ptr<typename std::add_const<Type>::type> &p)
+    auto shared_ptr_unconst_clone(const std::shared_ptr<typename std::add_const<Type>::type> &p)
     {
       return std::const_pointer_cast<typename std::remove_const<Type>::type>(p);
     }

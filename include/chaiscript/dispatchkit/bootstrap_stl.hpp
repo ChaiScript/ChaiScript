@@ -41,7 +41,6 @@ namespace chaiscript
         struct Bidir_Range
         {
           typedef Container container_type;
-          typedef typename std::iterator_traits<typename Container::iterator>::reference reference_type;
 
           Bidir_Range(Container &c)
             : m_begin(c.begin()), m_end(c.end())
@@ -71,16 +70,16 @@ namespace chaiscript
             --m_end;
           }
 
-          reference_type front() const
+          decltype(auto) front() const
           {
             if (empty())
             {
               throw std::range_error("Range empty");
             }
-            return *m_begin;
+            return (*m_begin);
           }
 
-          reference_type back() const
+          decltype(auto) back() const
           {
             if (empty())
             {
@@ -88,7 +87,7 @@ namespace chaiscript
             }
             typename Container::iterator pos = m_end;
             --pos;
-            return *(pos);
+            return (*(pos));
           }
 
           typename Container::iterator m_begin;
@@ -129,24 +128,24 @@ namespace chaiscript
             --m_end;
           }
 
-          const_reference_type front() const
+          decltype(auto) front() const
           {
             if (empty())
             {
               throw std::range_error("Range empty");
             }
-            return *m_begin;
+            return (*m_begin);
           }
 
-          const_reference_type back() const
+          decltype(auto) back() const
           {
             if (empty())
             {
               throw std::range_error("Range empty");
             }
-            typename Container::const_iterator pos = m_end;
+            auto pos = m_end;
             --pos;
-            return *(pos);
+            return (*(pos));
           }
 
           typename Container::const_iterator m_begin;
@@ -482,12 +481,8 @@ namespace chaiscript
         {
           m.add(user_type<PairType>(), type);
 
-
-          typename PairType::first_type PairType::* f = &PairType::first;
-          typename PairType::second_type PairType::* s = &PairType::second;
-
-          m.add(fun(f), "first");
-          m.add(fun(s), "second");
+          m.add(fun(&PairType::first), "first");
+          m.add(fun(&PairType::second), "second");
 
           basic_constructors<PairType>(type, m);
           m.add(constructor<PairType (const typename PairType::first_type &, const typename PairType::second_type &)>(), type);
@@ -605,7 +600,6 @@ namespace chaiscript
         }
 
 
-      /// hopefully working List type
       /// http://www.sgi.com/tech/stl/List.html
       template<typename ListType>
         void list_type(const std::string &type, Module& m)

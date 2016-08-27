@@ -16,10 +16,6 @@
 #include <cctype>
 #include <cstring>
 
-#if defined(CHAISCRIPT_UTF16_UTF32)
-#include <locale>
-#include <codecvt>
-#endif
 
 
 
@@ -27,6 +23,11 @@
 #include "chaiscript_common.hpp"
 #include "chaiscript_optimizer.hpp"
 #include "chaiscript_tracer.hpp"
+
+#if defined(CHAISCRIPT_UTF16_UTF32)
+#include <locale>
+#include <codecvt>
+#endif
 
 #if defined(CHAISCRIPT_MSVC) && defined(max) && defined(min)
 #define CHAISCRIPT_PUSHED_MIN_MAX

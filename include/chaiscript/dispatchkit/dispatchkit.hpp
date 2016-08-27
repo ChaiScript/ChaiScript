@@ -8,7 +8,6 @@
 #define CHAISCRIPT_DISPATCHKIT_HPP_
 
 #include <algorithm>
-#include <deque>
 #include <iostream>
 #include <list>
 #include <map>
@@ -31,6 +30,7 @@
 #include "proxy_constructors.hpp"
 #include "proxy_functions.hpp"
 #include "type_info.hpp"
+#include "short_alloc.hpp"
 
 namespace chaiscript {
 class Boxed_Number;
@@ -376,20 +376,55 @@ namespace chaiscript
   {
     struct Stack_Holder
     {
-      typedef std::vector<std::pair<std::string, Boxed_Value>> Scope;
-      typedef std::vector<Scope> StackData;
+      //template <class T, std::size_t BufSize = sizeof(T)*20000>
+      //  using SmallVector = std::vector<T, short_alloc<T, BufSize>>;
+
+      template <class T>
+        using SmallVector = std::vector<T>;
+      
+
+      typedef SmallVector<std::pair<std::string, Boxed_Value>> Scope;
+      typedef SmallVector<Scope> StackData;
+      typedef SmallVector<StackData> Stacks;
+      typedef SmallVector<Boxed_Value> Call_Param_List;
+      typedef SmallVector<Call_Param_List> Call_Params;
 
       Stack_Holder()
       {
-        stacks.reserve(2);
-        stacks.emplace_back(1);
-        call_params.emplace_back();
-        call_params.back().reserve(2);
+        push_stack();
+        push_call_params();
       }
 
-      std::vector<StackData> stacks;
+      void push_stack_data()
+      {
+        stacks.back().emplace_back();
+//        stacks.back().emplace_back(Scope(scope_allocator));
+      }
 
-      std::vector<std::vector<Boxed_Value>> call_params;
+      void push_stack()
+      {
+        stacks.emplace_back(1);
+//        stacks.emplace_back(StackData(1, Scope(scope_allocator), stack_data_allocator));
+      }
+
+      void push_call_params()
+      {
+        call_params.emplace_back();
+//        call_params.emplace_back(Call_Param_List(call_param_list_allocator));
+      }
+
+      //Scope::allocator_type::arena_type scope_allocator;
+      //StackData::allocator_type::arena_type stack_data_allocator;
+      //Stacks::allocator_type::arena_type stacks_allocator;
+      //Call_Param_List::allocator_type::arena_type call_param_list_allocator;
+      //Call_Params::allocator_type::arena_type call_params_allocator;
+
+//      Stacks stacks = Stacks(stacks_allocator);
+//      Call_Params call_params = Call_Params(call_params_allocator);
+
+      Stacks stacks;
+      Call_Params call_params;
+
       int call_depth = 0;
     };
 
@@ -401,7 +436,7 @@ namespace chaiscript
       public:
         typedef std::map<std::string, chaiscript::Type_Info> Type_Name_Map;
         typedef std::vector<std::pair<std::string, Boxed_Value>> Scope;
-        typedef std::vector<Scope> StackData;
+        typedef Stack_Holder::StackData StackData;
 
         struct State
         {
@@ -585,8 +620,8 @@ namespace chaiscript
         /// Adds a new scope to the stack
         static void new_scope(Stack_Holder &t_holder)
         {
-          get_stack_data(t_holder).emplace_back();
-          t_holder.call_params.emplace_back();
+          t_holder.push_stack_data();
+          t_holder.push_call_params();
         }
 
         /// Pops the current scope from the stack
@@ -605,7 +640,7 @@ namespace chaiscript
         static void new_stack(Stack_Holder &t_holder)
         {
           // add a new Stack with 1 element
-          t_holder.stacks.emplace_back(1);
+          t_holder.push_stack();
         }
 
         static void pop_stack(Stack_Holder &t_holder)
@@ -817,7 +852,7 @@ namespace chaiscript
         {
           auto &stack = get_stack_data();
           auto &scope = stack.front();
-          scope = std::vector<std::pair<std::string, Boxed_Value>>(t_locals.begin(), t_locals.end());
+          scope.assign(t_locals.begin(), t_locals.end());
         }
 
 

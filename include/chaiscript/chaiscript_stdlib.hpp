@@ -44,8 +44,6 @@ namespace chaiscript
 
       static ModulePtr library()
       {
- //       using namespace bootstrap;
-
         auto lib = std::make_shared<Module>();
         bootstrap::Bootstrap::bootstrap(*lib);
 

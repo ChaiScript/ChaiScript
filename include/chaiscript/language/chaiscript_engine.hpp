@@ -17,6 +17,7 @@
 #include <set>
 #include <stdexcept>
 #include <vector>
+#include <cstring>
 
 #include "../chaiscript_defines.hpp"
 #include "../chaiscript_threading.hpp"
@@ -46,7 +47,6 @@
 
 
 #include "../dispatchkit/exception_specification.hpp"
-#include "chaiscript_parser.hpp"
 
 namespace chaiscript
 {
@@ -58,7 +58,7 @@ namespace chaiscript
 
 
   /// \brief The main object that the ChaiScript user will use.
-  class ChaiScript {
+  class ChaiScript_Basic {
 
     mutable chaiscript::detail::threading::shared_mutex m_mutex;
     mutable chaiscript::detail::threading::recursive_mutex m_use_mutex;
@@ -215,13 +215,14 @@ namespace chaiscript
     /// \param[in] t_lib Standard library to apply to this ChaiScript instance
     /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
     /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
-    ChaiScript(const ModulePtr &t_lib,
-               std::vector<std::string> t_modulepaths = std::vector<std::string>(),
-                      std::vector<std::string> t_usepaths = std::vector<std::string>())
-      : m_module_paths(std::move(t_modulepaths)), m_use_paths(std::move(t_usepaths)),
-        m_parser(std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer<optimizer::Partial_Fold, optimizer::Unused_Return, optimizer::Constant_Fold, optimizer::If, optimizer::Return, optimizer::Dead_Code, optimizer::Block, optimizer::For_Loop>>>()),
+    ChaiScript_Basic(const ModulePtr &t_lib,
+                     std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
+                     std::vector<std::string> t_modulepaths = {},
+                     std::vector<std::string> t_usepaths = {})
+      : m_module_paths(std::move(t_modulepaths)),
+        m_use_paths(std::move(t_usepaths)),
+        m_parser(std::move(parser)),
         m_engine(*m_parser)
-
     {
       if (m_module_paths.empty())
       {
@@ -243,10 +244,12 @@ namespace chaiscript
     ///
     /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
     /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
-    ChaiScript( std::vector<std::string> t_modulepaths = std::vector<std::string>(),
-                      std::vector<std::string> t_usepaths = std::vector<std::string>())
-      : m_module_paths(std::move(t_modulepaths)), m_use_paths(std::move(t_usepaths)),
-        m_parser(std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer<optimizer::Partial_Fold, optimizer::Unused_Return, optimizer::Constant_Fold, optimizer::If, optimizer::Return, optimizer::Dead_Code, optimizer::Block, optimizer::For_Loop>>>()),
+    ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
+                     std::vector<std::string> t_modulepaths = {},
+                     std::vector<std::string> t_usepaths = {})
+      : m_module_paths(std::move(t_modulepaths)), 
+        m_use_paths(std::move(t_usepaths)),
+        m_parser(std::move(parser)),
         m_engine(*m_parser)
     {
       if (m_module_paths.empty())
@@ -265,14 +268,14 @@ namespace chaiscript
 
       union cast_union
       {
-        Boxed_Value (ChaiScript::*in_ptr)(const std::string&);
+        Boxed_Value (ChaiScript_Basic::*in_ptr)(const std::string&);
         void *out_ptr;
       };
 
       Dl_info rInfo; 
       memset( &rInfo, 0, sizeof(rInfo) ); 
       cast_union u;
-      u.in_ptr = &ChaiScript::use;
+      u.in_ptr = &ChaiScript_Basic::use;
       if ( dladdr(static_cast<void*>(u.out_ptr), &rInfo) && rInfo.dli_fname ) { 
         std::string dllpath(rInfo.dli_fname);
         const size_t lastslash = dllpath.rfind('/');
@@ -385,7 +388,7 @@ namespace chaiscript
     /// \param[in] t_name Name of the value to add
     /// \throw chaiscript::exception::global_non_const If t_bv is not a constant object
     /// \sa Boxed_Value::is_const
-    ChaiScript &add_global_const(const Boxed_Value &t_bv, const std::string &t_name)
+    ChaiScript_Basic &add_global_const(const Boxed_Value &t_bv, const std::string &t_name)
     {
       Name_Validator::validate_object_name(t_name);
       m_engine.add_global_const(t_bv, t_name);
@@ -397,14 +400,14 @@ namespace chaiscript
     /// \param[in] t_name Name of the value to add
     /// \warning The user is responsible for making sure the object is thread-safe if necessary
     ///          ChaiScript is thread-safe but provides no threading locking mechanism to the script
-    ChaiScript &add_global(const Boxed_Value &t_bv, const std::string &t_name)
+    ChaiScript_Basic &add_global(const Boxed_Value &t_bv, const std::string &t_name)
     {
       Name_Validator::validate_object_name(t_name);
       m_engine.add_global(t_bv, t_name);
       return *this;
     }
 
-    ChaiScript &set_global(const Boxed_Value &t_bv, const std::string &t_name)
+    ChaiScript_Basic &set_global(const Boxed_Value &t_bv, const std::string &t_name)
     {
       Name_Validator::validate_object_name(t_name);
       m_engine.set_global(t_bv, t_name);
@@ -504,7 +507,7 @@ namespace chaiscript
     ///
     /// \sa \ref adding_items
     template<typename T>
-    ChaiScript &add(const T &t_t, const std::string &t_name)
+    ChaiScript_Basic &add(const T &t_t, const std::string &t_name)
     {
       Name_Validator::validate_object_name(t_name);
       m_engine.add(t_t, t_name);
@@ -520,7 +523,7 @@ namespace chaiscript
     /// chaiscript::ChaiScript chai;
     /// chai.add(chaiscript::base_class<std::runtime_error, chaiscript::dispatch_error>());
     /// \endcode
-    ChaiScript &add(const Type_Conversion &d)
+    ChaiScript_Basic &add(const Type_Conversion &d)
     {
       m_engine.add(d);
       return *this;
@@ -529,7 +532,7 @@ namespace chaiscript
     /// \brief Adds all elements of a module to ChaiScript runtime
     /// \param[in] t_p The module to add.
     /// \sa chaiscript::Module
-    ChaiScript &add(const ModulePtr &t_p)
+    ChaiScript_Basic &add(const ModulePtr &t_p)
     {
       t_p->apply(*this, this->get_eval_engine());
       return *this;

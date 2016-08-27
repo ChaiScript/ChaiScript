@@ -417,6 +417,8 @@ namespace chaiscript {
       }
     };
 
+    typedef Optimizer<optimizer::Partial_Fold, optimizer::Unused_Return, optimizer::Constant_Fold, 
+      optimizer::If, optimizer::Return, optimizer::Dead_Code, optimizer::Block, optimizer::For_Loop> Optimizer_Default; 
 
   }
 }

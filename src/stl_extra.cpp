@@ -4,7 +4,7 @@
 // Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
-#include <chaiscript/chaiscript.hpp>
+#include <chaiscript/chaiscript_basic.hpp>
 #include <chaiscript/dispatchkit/bootstrap_stl.hpp>
 #include <list>
 #include <string>

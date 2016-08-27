@@ -12,7 +12,10 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include <chaiscript/chaiscript.hpp>
+#include <chaiscript/chaiscript_basic.hpp>
+#include "../static_libs/chaiscript_parser.hpp"
+#include "../static_libs/chaiscript_stdlib.hpp"
+
 
 #ifdef READLINE_AVAILABLE
 #include <readline/readline.h>
@@ -217,7 +220,7 @@ void myexit(int return_val) {
   exit(return_val);
 }
 
-void interactive(chaiscript::ChaiScript& chai)
+void interactive(chaiscript::ChaiScript_Basic& chai)
 {
   using_history();
 
@@ -288,7 +291,7 @@ int main(int argc, char *argv[])
     modulepaths.push_back(modulepath);
   }
 
-  chaiscript::ChaiScript chai(modulepaths,usepaths);
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser(),modulepaths,usepaths);
 
   chai.add(chaiscript::fun(&myexit), "exit");
   chai.add(chaiscript::fun(&myexit), "quit");

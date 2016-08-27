@@ -249,27 +249,30 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LINKER_FLAGS}")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${LINKER_FLAGS}")
 
+add_library(stdlib STATIC static_libs/chaiscript_stdlib.cpp)
+add_library(parser STATIC static_libs/chaiscript_parser.cpp)
 
-add_library(chaiscript_stdlib-${CHAI_VERSION} MODULE src/chaiscript_stdlib.cpp)
+add_library(chaiscript_stdlib-${CHAI_VERSION} MODULE src/chaiscript_stdlib_module.cpp)
 target_link_libraries(chaiscript_stdlib-${CHAI_VERSION} ${LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
+set(CHAISCRIPT_LIBS stdlib parser)
+
 add_executable(chai src/main.cpp ${Chai_INCLUDES})
-target_link_libraries(chai ${LIBS})
-add_dependencies(chai chaiscript_stdlib-${CHAI_VERSION})
+target_link_libraries(chai ${LIBS} ${CHAISCRIPT_LIBS})
 
 if(BUILD_SAMPLES)
   add_executable(example samples/example.cpp)
   target_link_libraries(example ${LIBS})
   add_executable(test_num_exceptions samples/test_num_exceptions.cpp)
-  target_link_libraries(test_num_exceptions ${LIBS})
+  target_link_libraries(test_num_exceptions ${LIBS} ${CHAISCRIPT_LIBS})
   add_executable(memory_leak_test samples/memory_leak_test.cpp)
-  target_link_libraries(memory_leak_test ${LIBS})
+  target_link_libraries(memory_leak_test ${LIBS} ${CHAISCRIPT_LIBS})
   add_executable(inheritance samples/inheritance.cpp)
-  target_link_libraries(inheritance ${LIBS})
+  target_link_libraries(inheritance ${LIBS} ${CHAISCRIPT_LIBS})
   add_executable(factory samples/factory.cpp)
-  target_link_libraries(factory ${LIBS})
+  target_link_libraries(factory ${LIBS} ${CHAISCRIPT_LIBS})
   add_executable(fun_call_performance samples/fun_call_performance.cpp)
-  target_link_libraries(fun_call_performance ${LIBS})
+  target_link_libraries(fun_call_performance ${LIBS} ${CHAISCRIPT_LIBS})
 endif()
 
 
@@ -421,7 +424,7 @@ if(BUILD_TESTING)
 
   if(NOT UNIT_TEST_LIGHT)
     add_executable(compiled_tests unittests/compiled_tests.cpp)
-    target_link_libraries(compiled_tests ${LIBS})
+    target_link_libraries(compiled_tests ${LIBS} ${CHAISCRIPT_LIBS})
     ADD_CATCH_TESTS(compiled_tests)
 
 
@@ -434,11 +437,11 @@ if(BUILD_TESTING)
     add_test(NAME Type_Info_Test COMMAND type_info_test)
 
     add_executable(c_linkage_test unittests/c_linkage_test.cpp)
-    target_link_libraries(c_linkage_test ${LIBS})
+    target_link_libraries(c_linkage_test ${LIBS} ${CHAISCRIPT_LIBS})
     add_test(NAME C_Linkage_Test COMMAND c_linkage_test)
 
     add_executable(integer_literal_test unittests/integer_literal_test.cpp)
-    target_link_libraries(integer_literal_test ${LIBS})
+    target_link_libraries(integer_literal_test ${LIBS} ${CHAISCRIPT_LIBS})
     add_test(NAME Integer_Literal_Test COMMAND integer_literal_test)
 
     if(MULTITHREAD_SUPPORT_ENABLED)

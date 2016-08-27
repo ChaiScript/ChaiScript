@@ -2,7 +2,8 @@
 
 #include <algorithm>
 
-#include <chaiscript/chaiscript.hpp>
+#include <chaiscript/chaiscript_basic.hpp>
+#include <chaiscript/language/chaiscript_parser.hpp>
 
 int expected_value(int num_iters)
 {
@@ -62,7 +63,12 @@ int main()
     modulepaths.push_back(modulepath);
   }
 
-  chaiscript::ChaiScript chai(modulepaths,usepaths);
+  
+  // For this test we are going to load the dynamic stdlib
+  // to make sure it continues to work
+  chaiscript::ChaiScript_Basic chai(
+      std::make_unique<chaiscript::parser::ChaiScript_Parser<chaiscript::eval::Noop_Tracer, chaiscript::optimizer::Optimizer_Default>>(),
+      modulepaths,usepaths);
 
   std::vector<std::shared_ptr<std::thread> > threads;
 

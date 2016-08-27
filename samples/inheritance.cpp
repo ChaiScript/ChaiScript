@@ -1,5 +1,4 @@
 #include <chaiscript/chaiscript.hpp>
-#include <chaiscript/chaiscript_stdlib.hpp>
 
 class BaseClass
 {
@@ -70,7 +69,7 @@ class ChaiScriptDerived : public BaseClass
 
 int main()
 {
-  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
+  chaiscript::ChaiScript chai;
   chai.add(chaiscript::fun(&BaseClass::doSomething), "doSomething");
   chai.add(chaiscript::fun(&BaseClass::setValue), "setValue");
   chai.add(chaiscript::fun(&BaseClass::getValue), "getValue");
