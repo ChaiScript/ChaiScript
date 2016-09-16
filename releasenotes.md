@@ -1,6 +1,45 @@
 Notes:
 =======
-Current Version: 5.8.3
+Current Version: 6.0.0
+
+### Changes since 5.8.3
+
+*6.0.0 is a massive rework compared to 5.x. It now requires a C++14 enabled compiler*
+
+#### Compiler Requirements
+
+* MSVC 2015 or greater
+* g++ 4.9 or greater
+* clang 3.6 or greater
+
+#### Breaking Changes
+
+* Instantiating a ChaiScript object now, by default, builds the stdlib in
+  * This was done to address the most common support issues of loading stdlib dynamically at runtime
+  * If you want the old behavior, use include/chaiscript/chaiscript_basic.hpp
+* Headers have been reorganized to fully separate stdlib/parser/engine from each other (some faster builds)
+* Bootstrap functions no longer return a reference to the module added to (compile time savings)
+* It's now no longer possible modify AST_Nodes (compile time, runtime efficiency)
+* Function annotations no longer exist (simplifies code, reduces compile time, compile size)
+
+#### New Features Added
+
+* Modular optimization system; this can be accessed via the ChaiScript_Basic interface
+* Execution tracing capability; also accessed via ChaiScript_Basic interface
+
+#### Improvements
+
+* Compile time improvements
+* Compile size improvements
+* Significant runtime improvements (see "Modular optimization system")
+
+#### Improvements Still Need To Be Made
+
+* File location tracking has been rewritten; this currently means error location reporting is not as good as it was
+* Tracing capability needs to be tested and vetted
+
+
+
 
 ### Changes since 5.8.2
 * Add support for reference of pointer return types
