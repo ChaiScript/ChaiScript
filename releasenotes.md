@@ -1,6 +1,9 @@
 Notes:
 =======
-Current Version: 5.8.2
+Current Version: 5.8.3
+
+### Changes since 5.8.2
+* Add support for reference of pointer return types
 
 ### Changes since 5.8.1
 * Allow casting to non-const & std::shared_ptr<T>
