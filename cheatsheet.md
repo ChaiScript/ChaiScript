@@ -23,6 +23,13 @@ chaiscript::ChaiScript chai(chaiscript::Std_Lib::library()); // compiles in stdl
 
 ```
 chai.add(chaiscript::fun(&function_name), "function_name");
+chai.add(chaiscript::fun(&Class::method_name), "method_name");
+chai.add(chaiscript::fun(&Class::member_name), "member_name");
+```
+
+### Bound Member Functions
+
+```
 chai.add(chaiscript::fun(&Class::method_name, Class_instance_ptr), "method_name");
 chai.add(chaiscript::fun(&Class::member_name, Class_instance_ptr), "member_name");
 ```
