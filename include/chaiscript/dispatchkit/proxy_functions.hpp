@@ -846,15 +846,14 @@ namespace chaiscript
                          plist.begin(),
                          std::back_inserter(newplist),
                          [](const Type_Info &ti, const Boxed_Value &param) -> Boxed_Value {
-                           if (ti.is_arithmetic() && param.get_type_info().is_arithmetic()) {
+                           if (ti.is_arithmetic() && param.get_type_info().is_arithmetic()
+                               && param.get_type_info() != ti) {
                              return Boxed_Number(param).get_as(ti).bv;
                            } else {
                              return param;
                            }
                          }
                        );
-
-
 
           try {
             return (*(matching_func->second))(newplist, t_conversions);
