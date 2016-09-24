@@ -1,6 +1,9 @@
 Notes:
 =======
-Current Version: 5.8.3
+Current Version: 5.8.4
+
+### Changes since 5.8.3
+* Fix case with some numeric conversions mixed with numerics that do not need conversion
 
 ### Changes since 5.8.2
 * Add support for reference of pointer return types
