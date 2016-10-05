@@ -47,6 +47,16 @@ namespace chaiscript
         return m_type_info < ti.m_type_info;
       }
 
+      constexpr bool operator!=(const Type_Info &ti) const noexcept
+      {
+        return !(operator==(ti));
+      }
+
+      constexpr bool operator!=(const std::type_info &ti) const noexcept
+      {
+        return !(operator==(ti));
+      }
+
       constexpr bool operator==(const Type_Info &ti) const noexcept
       {
         return ti.m_type_info == m_type_info

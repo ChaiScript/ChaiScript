@@ -952,4 +952,24 @@ TEST_CASE("Parse floats with non-posix locale")
 
 
 
+bool FindBitmap(int &ox, int &oy, long) {
+  ox = 1; 
+  oy = 2; 
+  return true;
+}
+
+TEST_CASE("Mismatched numeric types only convert necessary params")
+{
+  chaiscript::ChaiScript chai;
+
+  chai.add(chaiscript::fun(&FindBitmap), "FindBitmap");
+  int x = 0;
+  int y = 0;
+  chai.add(chaiscript::var(&x), "x");
+  chai.add(chaiscript::var(&y), "y");
+  chai.eval( "if ( FindBitmap ( x, y, 0) ) { print(\"found at \" + to_string(x) + \", \" + to_string(y))}" );
+  CHECK(x == 1);
+  CHECK(y == 2);
+
+}
 
