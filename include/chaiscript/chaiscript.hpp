@@ -825,14 +825,15 @@ namespace chaiscript
 {
   class ChaiScript : public ChaiScript_Basic
   {
-    ChaiScript(std::vector<std::string> t_modulepaths = {},
-               std::vector<std::string> t_usepaths = {})
-      : ChaiScript_Basic(
-          chaiscript::Std_Lib::library(),
-          std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer_Default>>(),
-          t_modulepaths, t_usepaths)
-    {
-    }
+    public:
+      ChaiScript(std::vector<std::string> t_modulepaths = {},
+          std::vector<std::string> t_usepaths = {})
+        : ChaiScript_Basic(
+            chaiscript::Std_Lib::library(),
+            std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer_Default>>(),
+            t_modulepaths, t_usepaths)
+        {
+        }
   };
 }
 
