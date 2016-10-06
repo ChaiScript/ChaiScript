@@ -337,7 +337,6 @@ namespace chaiscript
         : m_mutex(),
           m_conversions(),
           m_convertableTypes(),
-          m_num_types(0),
           m_thread_cache(this),
           m_conversion_saves(this)
       {
@@ -498,7 +497,7 @@ namespace chaiscript
       mutable chaiscript::detail::threading::shared_mutex m_mutex;
       std::set<std::shared_ptr<detail::Type_Conversion_Base>> m_conversions;
       std::set<const std::type_info *, Less_Than> m_convertableTypes;
-      std::atomic_size_t m_num_types;
+      std::atomic_size_t m_num_types = {0};
       mutable chaiscript::detail::threading::Thread_Storage<std::set<const std::type_info *, Less_Than>> m_thread_cache;
       mutable chaiscript::detail::threading::Thread_Storage<Conversion_Saves> m_conversion_saves;
   };

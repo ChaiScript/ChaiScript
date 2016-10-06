@@ -128,7 +128,7 @@ namespace chaiscript
 
       private:
         Operators::Opers m_oper;
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     struct Int_AST_Node : public AST_Node {
@@ -203,7 +203,7 @@ namespace chaiscript
 
         Boxed_Value m_value;
 
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     struct Char_AST_Node : public AST_Node {
@@ -397,8 +397,8 @@ namespace chaiscript
         { assert(children.size() == 3); }
 
         Operators::Opers m_oper;
-        mutable std::atomic_uint_fast32_t m_loc;
-        mutable std::atomic_uint_fast32_t m_clone_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
+        mutable std::atomic_uint_fast32_t m_clone_loc = {0};
 
         virtual ~Equation_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE {
@@ -567,7 +567,7 @@ namespace chaiscript
           return oss.str();
         }
 
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     struct Dot_Access_AST_Node : public AST_Node {
@@ -624,8 +624,8 @@ namespace chaiscript
         }
 
       private:
-        mutable std::atomic_uint_fast32_t m_loc;
-        mutable std::atomic_uint_fast32_t m_array_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
+        mutable std::atomic_uint_fast32_t m_array_loc = {0};
         std::string m_fun_name;
     };
 
@@ -961,7 +961,7 @@ namespace chaiscript
           return Boxed_Value();
         }
 
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     struct Case_AST_Node : public AST_Node {
@@ -1027,7 +1027,7 @@ namespace chaiscript
           return "[" + AST_Node::pretty_print() + "]";
         }
 
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     struct Inline_Map_AST_Node : public AST_Node {
@@ -1055,7 +1055,7 @@ namespace chaiscript
           }
         }
 
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     struct Return_AST_Node : public AST_Node {
@@ -1147,7 +1147,7 @@ namespace chaiscript
 
       private:
         Operators::Opers m_oper;
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     struct Break_AST_Node : public AST_Node {
@@ -1217,7 +1217,7 @@ namespace chaiscript
           }
         }
 
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     struct Annotation_AST_Node : public AST_Node {
