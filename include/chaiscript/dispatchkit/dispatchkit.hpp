@@ -430,7 +430,8 @@ namespace chaiscript
         };
 
         Dispatch_Engine()
-          : m_stack_holder(this)
+          : m_stack_holder(this),
+            m_method_missing_loc(0)
         {
         }
 
@@ -1503,7 +1504,7 @@ namespace chaiscript
         Type_Conversions m_conversions;
         chaiscript::detail::threading::Thread_Storage<Stack_Holder> m_stack_holder;
 
-        mutable std::atomic_uint_fast32_t m_method_missing_loc = {0};
+        mutable std::atomic_uint_fast32_t m_method_missing_loc;
 
         State m_state;
     };

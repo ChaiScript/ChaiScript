@@ -85,7 +85,8 @@ namespace chaiscript
       public:
         Binary_Operator_AST_Node(const std::string &t_oper, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(t_oper, AST_Node_Type::Binary, std::move(t_loc), std::move(t_children)),
-          m_oper(Operators::to_operator(t_oper))
+          m_oper(Operators::to_operator(t_oper)),
+          m_loc(0)
       { }
 
         virtual ~Binary_Operator_AST_Node() {}
@@ -128,7 +129,7 @@ namespace chaiscript
 
       private:
         Operators::Opers m_oper;
-        mutable std::atomic_uint_fast32_t m_loc = {0};
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Int_AST_Node : public AST_Node {
@@ -166,7 +167,7 @@ namespace chaiscript
         Id_AST_Node(const std::string &t_ast_node_text, Parse_Location t_loc) :
           AST_Node(t_ast_node_text, AST_Node_Type::Id, std::move(t_loc)),
           m_value(get_value(t_ast_node_text)), m_loc(0)
-      { }
+        { }
 
         virtual ~Id_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE {
@@ -203,7 +204,7 @@ namespace chaiscript
 
         Boxed_Value m_value;
 
-        mutable std::atomic_uint_fast32_t m_loc = {0};
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Char_AST_Node : public AST_Node {
@@ -393,12 +394,15 @@ namespace chaiscript
       public:
         Equation_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Equation, std::move(t_loc), std::move(t_children)), 
-          m_oper(Operators::to_operator(children[1]->text))
+          m_oper(Operators::to_operator(children[1]->text)),
+          m_loc(0),
+          m_clone_loc(0)
+
         { assert(children.size() == 3); }
 
         Operators::Opers m_oper;
-        mutable std::atomic_uint_fast32_t m_loc = {0};
-        mutable std::atomic_uint_fast32_t m_clone_loc = {0};
+        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_clone_loc;
 
         virtual ~Equation_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE {
@@ -535,7 +539,7 @@ namespace chaiscript
     struct Array_Call_AST_Node : public AST_Node {
       public:
         Array_Call_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Array_Call, std::move(t_loc), std::move(t_children)) { }
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Array_Call, std::move(t_loc), std::move(t_children)), m_loc(0) { }
         virtual ~Array_Call_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE{
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
@@ -567,13 +571,15 @@ namespace chaiscript
           return oss.str();
         }
 
-        mutable std::atomic_uint_fast32_t m_loc = {0};
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Dot_Access_AST_Node : public AST_Node {
       public:
         Dot_Access_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Dot_Access, std::move(t_loc), std::move(t_children)),
+          m_loc(0),
+          m_array_loc(0),
           m_fun_name(
               ((children[2]->identifier == AST_Node_Type::Fun_Call) || (children[2]->identifier == AST_Node_Type::Array_Call))?
               children[2]->children[0]->text:children[2]->text) { }
@@ -624,8 +630,8 @@ namespace chaiscript
         }
 
       private:
-        mutable std::atomic_uint_fast32_t m_loc = {0};
-        mutable std::atomic_uint_fast32_t m_array_loc = {0};
+        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_array_loc;
         std::string m_fun_name;
     };
 
@@ -923,7 +929,7 @@ namespace chaiscript
     struct Switch_AST_Node : public AST_Node {
       public:
         Switch_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Switch, std::move(t_loc), std::move(t_children)) { }
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Switch, std::move(t_loc), std::move(t_children)), m_loc(0) { }
         virtual ~Switch_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE {
           bool breaking = false;
@@ -961,7 +967,7 @@ namespace chaiscript
           return Boxed_Value();
         }
 
-        mutable std::atomic_uint_fast32_t m_loc = {0};
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Case_AST_Node : public AST_Node {
@@ -999,7 +1005,10 @@ namespace chaiscript
     struct Inline_Array_AST_Node : public AST_Node {
       public:
         Inline_Array_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Inline_Array, std::move(t_loc), std::move(t_children)) { }
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Inline_Array, std::move(t_loc), std::move(t_children)),
+          m_loc(0)
+        { }
+
         virtual ~Inline_Array_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE {
           try {
@@ -1027,13 +1036,13 @@ namespace chaiscript
           return "[" + AST_Node::pretty_print() + "]";
         }
 
-        mutable std::atomic_uint_fast32_t m_loc = {0};
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Inline_Map_AST_Node : public AST_Node {
       public:
         Inline_Map_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Inline_Map, std::move(t_loc), std::move(t_children)) { }
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Inline_Map, std::move(t_loc), std::move(t_children)), m_loc(0) { }
         virtual ~Inline_Map_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE{
           try {
@@ -1055,7 +1064,7 @@ namespace chaiscript
           }
         }
 
-        mutable std::atomic_uint_fast32_t m_loc = {0};
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Return_AST_Node : public AST_Node {
@@ -1123,7 +1132,8 @@ namespace chaiscript
       public:
         Prefix_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
           AST_Node(std::move(t_ast_node_text), AST_Node_Type::Prefix, std::move(t_loc), std::move(t_children)),
-          m_oper(Operators::to_operator(children[0]->text, true))
+          m_oper(Operators::to_operator(children[0]->text, true)),
+          m_loc(0)
         { }
 
         virtual ~Prefix_AST_Node() {}
@@ -1147,7 +1157,7 @@ namespace chaiscript
 
       private:
         Operators::Opers m_oper;
-        mutable std::atomic_uint_fast32_t m_loc = {0};
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Break_AST_Node : public AST_Node {
@@ -1204,7 +1214,7 @@ namespace chaiscript
     struct Inline_Range_AST_Node : public AST_Node {
       public:
         Inline_Range_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_NodePtr> t_children) :
-          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Inline_Range, std::move(t_loc), std::move(t_children)) { }
+          AST_Node(std::move(t_ast_node_text), AST_Node_Type::Inline_Range, std::move(t_loc), std::move(t_children)), m_loc(0) { }
         virtual ~Inline_Range_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE{
           try {
@@ -1217,7 +1227,7 @@ namespace chaiscript
           }
         }
 
-        mutable std::atomic_uint_fast32_t m_loc = {0};
+        mutable std::atomic_uint_fast32_t m_loc;
     };
 
     struct Annotation_AST_Node : public AST_Node {
