@@ -971,3 +971,13 @@ TEST_CASE("Mismatched numeric types only convert necessary params")
 
 }
 
+TEST_CASE("type_conversion to bool")
+{
+  auto module = std::make_shared<chaiscript::Module>();
+  struct T {
+    operator bool() const { return true; }
+  };
+  module->add(chaiscript::type_conversion<T, bool>());
+}
+
+
