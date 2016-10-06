@@ -219,6 +219,10 @@ namespace chaiscript
         m_operators.emplace_back(AST_Node_Type::Multiplication);
         m_operator_matches.emplace_back(std::initializer_list<std::string>({"*", "/", "%"}));
 
+        // Prefix placeholder
+        m_operators.emplace_back(AST_Node_Type::Prefix);
+        m_operator_matches.emplace_back(std::initializer_list<std::string>({}));
+
         for (auto & elem : m_alphabet) {
           std::fill(std::begin(elem), std::end(elem), false);
         }
@@ -2197,7 +2201,7 @@ namespace chaiscript
         bool retval = false;
         const auto prev_stack_top = m_match_stack.size();
 
-        if (t_precedence < m_operators.size()) {
+        if (m_operators[t_precedence] != AST_Node_Type::Prefix) {
           if (Operator(t_precedence+1)) {
             retval = true;
             if (Operator_Helper(t_precedence)) {
@@ -2257,8 +2261,7 @@ namespace chaiscript
               } while (Operator_Helper(t_precedence));
             }
           }
-        }
-        else {
+        } else {
           return Value();
         }
 
