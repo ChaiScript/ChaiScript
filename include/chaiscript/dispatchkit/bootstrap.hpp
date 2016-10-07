@@ -156,7 +156,7 @@ namespace chaiscript
 
     /// Specific version of shared_ptr_clone just for Proxy_Functions
     template<typename Type>
-    std::shared_ptr<typename std::add_const<Type>::type> shared_ptr_unconst_clone(const std::shared_ptr<typename std::add_const<Type>::type> &p)
+    std::shared_ptr<typename std::remove_const<Type>::type> shared_ptr_unconst_clone(const std::shared_ptr<typename std::add_const<Type>::type> &p)
     {
       return std::const_pointer_cast<typename std::remove_const<Type>::type>(p);
     }
