@@ -2164,7 +2164,7 @@ namespace chaiscript
       /// Reads a unary prefixed expression from input
       bool Prefix() {
         const auto prev_stack_top = m_match_stack.size();
-        const std::vector<std::string> prefix_opers{"++", "--", "-", "+", "!", "~", "&"};
+        const std::vector<std::string> prefix_opers{"++", "--", "-", "+", "!", "~"};
 
         for (const auto &oper : prefix_opers)
         {
