@@ -450,7 +450,6 @@ namespace chaiscript
         Dispatch_Engine(chaiscript::parser::ChaiScript_Parser_Base &parser)
           : m_stack_holder(this),
             m_parser(parser)
-
         {
         }
 
@@ -1498,7 +1497,7 @@ namespace chaiscript
         chaiscript::detail::threading::Thread_Storage<Stack_Holder> m_stack_holder;
         std::reference_wrapper<parser::ChaiScript_Parser_Base> m_parser;
 
-        mutable std::atomic_uint_fast32_t m_method_missing_loc;
+        mutable std::atomic_uint_fast32_t m_method_missing_loc = {0};
 
         State m_state;
     };

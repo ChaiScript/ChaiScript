@@ -86,8 +86,6 @@ namespace chaiscript
       }
     }
 
-
-
     template<typename T>
     struct AST_Node_Impl : AST_Node 
     {
@@ -147,8 +145,7 @@ namespace chaiscript
         Fold_Right_Binary_Operator_AST_Node(const std::string &t_oper, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children, Boxed_Value t_rhs) :
           AST_Node_Impl<T>(t_oper, AST_Node_Type::Binary, std::move(t_loc), std::move(t_children)),
           m_oper(Operators::to_operator(t_oper)),
-          m_rhs(std::move(t_rhs)),
-          m_loc(0)
+          m_rhs(std::move(t_rhs))
         { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
@@ -184,7 +181,7 @@ namespace chaiscript
       private:
         Operators::Opers m_oper;
         Boxed_Value m_rhs;
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
 
@@ -192,8 +189,7 @@ namespace chaiscript
     struct Binary_Operator_AST_Node : AST_Node_Impl<T> {
         Binary_Operator_AST_Node(const std::string &t_oper, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(t_oper, AST_Node_Type::Binary, std::move(t_loc), std::move(t_children)),
-          m_oper(Operators::to_operator(t_oper)),
-          m_loc(0)
+          m_oper(Operators::to_operator(t_oper))
         { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
@@ -230,7 +226,7 @@ namespace chaiscript
 
       private:
         Operators::Opers m_oper;
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
 
@@ -258,8 +254,7 @@ namespace chaiscript
     template<typename T>
     struct Id_AST_Node final : AST_Node_Impl<T> {
         Id_AST_Node(const std::string &t_ast_node_text, Parse_Location t_loc) :
-          AST_Node_Impl<T>(t_ast_node_text, AST_Node_Type::Id, std::move(t_loc)),
-          m_loc(0)
+          AST_Node_Impl<T>(t_ast_node_text, AST_Node_Type::Id, std::move(t_loc))
         { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
@@ -272,7 +267,7 @@ namespace chaiscript
         }
 
       private:
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
 
@@ -514,8 +509,8 @@ namespace chaiscript
 
       private:
         Operators::Opers m_oper;
-        mutable std::atomic_uint_fast32_t m_loc;
-        mutable std::atomic_uint_fast32_t m_clone_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
+        mutable std::atomic_uint_fast32_t m_clone_loc = {0};
     };
 
     template<typename T>
@@ -579,7 +574,7 @@ namespace chaiscript
 
 
       private:
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     template<typename T>
@@ -635,8 +630,8 @@ namespace chaiscript
         }
 
       private:
-        mutable std::atomic_uint_fast32_t m_loc;
-        mutable std::atomic_uint_fast32_t m_array_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
+        mutable std::atomic_uint_fast32_t m_array_loc = {0};
         const std::string m_fun_name;
     };
 
@@ -850,11 +845,7 @@ namespace chaiscript
     template<typename T>
     struct Ranged_For_AST_Node final : AST_Node_Impl<T> {
         Ranged_For_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
-          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Ranged_For, std::move(t_loc), std::move(t_children)),
-          m_range_loc(0),
-          m_empty_loc(0),
-          m_front_loc(0),
-          m_pop_front_loc(0)
+          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Ranged_For, std::move(t_loc), std::move(t_children))
           { assert(this->children.size() == 3); }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override{
@@ -921,12 +912,11 @@ namespace chaiscript
 
         }
 
-private:
-        mutable std::atomic_uint_fast32_t m_range_loc;
-        mutable std::atomic_uint_fast32_t m_empty_loc;
-        mutable std::atomic_uint_fast32_t m_front_loc;
-        mutable std::atomic_uint_fast32_t m_pop_front_loc;
-
+      private:
+        mutable std::atomic_uint_fast32_t m_range_loc = {0};
+        mutable std::atomic_uint_fast32_t m_empty_loc = {0};
+        mutable std::atomic_uint_fast32_t m_front_loc = {0};
+        mutable std::atomic_uint_fast32_t m_pop_front_loc = {0};
     };
 
 
@@ -1004,7 +994,7 @@ private:
           return void_var();
         }
 
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     template<typename T>
@@ -1065,7 +1055,7 @@ private:
         }
 
       private:
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     template<typename T>
@@ -1073,7 +1063,8 @@ private:
         Inline_Map_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Inline_Map, std::move(t_loc), std::move(t_children)) { }
 
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override{
+        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
+        {
           try {
             std::map<std::string, Boxed_Value> retval;
 
@@ -1094,7 +1085,7 @@ private:
         }
 
       private:
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     template<typename T>
@@ -1176,8 +1167,8 @@ private:
         }
 
       private:
-        Operators::Opers m_oper;
-        mutable std::atomic_uint_fast32_t m_loc;
+        Operators::Opers m_oper = Operators::Opers::invalid;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     template<typename T>
@@ -1243,7 +1234,7 @@ private:
         }
 
       private:
-        mutable std::atomic_uint_fast32_t m_loc;
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     template<typename T>

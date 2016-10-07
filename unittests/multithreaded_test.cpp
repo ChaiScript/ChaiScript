@@ -16,7 +16,7 @@ int expected_value(int num_iters)
   return i;
 }
 
-void do_work(chaiscript::ChaiScript &c, const size_t id)
+void do_work(chaiscript::ChaiScript_Basic &c, const size_t id)
 {
   try{
     std::stringstream ss;

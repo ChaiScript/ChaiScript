@@ -64,7 +64,9 @@ namespace chaiscript
     Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop, Class, Binary, Arg, Global_Decl, Constant, Compiled
   };
 
-  enum class Operator_Precidence { Ternary_Cond, Logical_Or, Logical_And, Bitwise_Or, Bitwise_Xor, Bitwise_And, Equality, Comparison, Shift, Addition, Multiplication };
+  enum class Operator_Precidence { Ternary_Cond, Logical_Or, 
+    Logical_And, Bitwise_Or, Bitwise_Xor, Bitwise_And, 
+    Equality, Comparison, Shift, Addition, Multiplication, Prefix };
 
   namespace
   {

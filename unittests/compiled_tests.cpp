@@ -960,7 +960,7 @@ bool FindBitmap(int &ox, int &oy, long) {
 
 TEST_CASE("Mismatched numeric types only convert necessary params")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
 
   chai.add(chaiscript::fun(&FindBitmap), "FindBitmap");
   int x = 0;
@@ -972,4 +972,14 @@ TEST_CASE("Mismatched numeric types only convert necessary params")
   CHECK(y == 2);
 
 }
+
+TEST_CASE("type_conversion to bool")
+{
+  auto module = std::make_shared<chaiscript::Module>();
+  struct T {
+    operator bool() const { return true; }
+  };
+  module->add(chaiscript::type_conversion<T, bool>());
+}
+
 

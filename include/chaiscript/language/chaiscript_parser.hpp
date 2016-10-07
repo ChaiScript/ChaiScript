@@ -199,15 +199,16 @@ namespace chaiscript
           {"<<", ">>"},
           //We share precedence here but then separate them later
           {"+", "-"},
-          {"*", "/", "%"}
+          {"*", "/", "%"},
+          {"++", "--", "-", "+", "!", "~"}
         };
 
         return operator_matches;
       }
 
 
-      static const std::array<Operator_Precidence, 11> &create_operators() {
-        static const std::array<Operator_Precidence, 11> operators = { {
+      static const std::array<Operator_Precidence, 12> &create_operators() {
+        static const std::array<Operator_Precidence, 12> operators = { {
           Operator_Precidence::Ternary_Cond,
           Operator_Precidence::Logical_Or,
           Operator_Precidence::Logical_And,
@@ -218,7 +219,8 @@ namespace chaiscript
           Operator_Precidence::Comparison,
           Operator_Precidence::Shift,
           Operator_Precidence::Addition,
-          Operator_Precidence::Multiplication
+          Operator_Precidence::Multiplication,
+          Operator_Precidence::Prefix
         } };
         return operators;
       }
@@ -230,7 +232,7 @@ namespace chaiscript
 
       const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &m_alphabet = create_alphabet();
       const std::vector<std::vector<std::string>> &m_operator_matches = create_operator_matches();
-      const std::array<Operator_Precidence, 11> &m_operators = create_operators();
+      const std::array<Operator_Precidence, 12> &m_operators = create_operators();
 
       std::shared_ptr<std::string> m_filename;
       std::vector<eval::AST_Node_Impl_Ptr<Tracer>> m_match_stack;
@@ -357,7 +359,6 @@ namespace chaiscript
       ChaiScript_Parser &operator=(const ChaiScript_Parser &) = delete;
       ChaiScript_Parser(ChaiScript_Parser &&) = default;
       ChaiScript_Parser &operator=(ChaiScript_Parser &&) = delete;
-
 
       /// test a char in an m_alphabet
       bool char_in_alphabet(char c, detail::Alphabet a) const { return m_alphabet[a][static_cast<uint8_t>(c)]; }
@@ -2175,15 +2176,15 @@ namespace chaiscript
       /// Reads a unary prefixed expression from input
       bool Prefix() {
         const auto prev_stack_top = m_match_stack.size();
-        const std::vector<std::string> prefix_opers{"++", "--", "-", "+", "!", "~", "&"};
+        constexpr const std::array<const char *, 6> prefix_opers{"++", "--", "-", "+", "!", "~"};
 
         for (const auto &oper : prefix_opers)
         {
-          bool is_char = oper.size() == 1;
-          if ((is_char && Char(oper[0])) || (!is_char && Symbol(oper.c_str())))
+          bool is_char = strlen(oper) == 1;
+          if ((is_char && Char(oper[0])) || (!is_char && Symbol(oper)))
           {
             if (!Operator(m_operators.size()-1)) {
-              throw exception::eval_error("Incomplete prefix '" + oper + "' expression", File_Position(m_position.line, m_position.col), *m_filename);
+              throw exception::eval_error("Incomplete prefix '" + std::string(oper) + "' expression", File_Position(m_position.line, m_position.col), *m_filename);
             }
 
             build_match<eval::Prefix_AST_Node<Tracer>>(prev_stack_top, oper);
@@ -2213,7 +2214,7 @@ namespace chaiscript
         bool retval = false;
         const auto prev_stack_top = m_match_stack.size();
 
-        if (t_precedence < m_operators.size()) {
+        if (m_operators[t_precedence] != Operator_Precidence::Prefix) {
           if (Operator(t_precedence+1)) {
             retval = true;
             std::string oper;
@@ -2256,14 +2257,16 @@ namespace chaiscript
                 case(Operator_Precidence::Logical_Or) :
                   build_match<eval::Logical_Or_AST_Node<Tracer>>(prev_stack_top, oper);
                   break;
+                case(Operator_Precidence::Prefix) :
+                  assert(false); // cannot reach here because of if() statement at the top
+                  break;
 
 //                default:
 //                  throw exception::eval_error("Internal error: unhandled ast_node", File_Position(m_position.line, m_position.col), *m_filename);
               }
             }
           }
-        }
-        else {
+        } else {
           return Value();
         }
 
