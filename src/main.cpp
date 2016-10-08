@@ -128,7 +128,7 @@ std::vector<std::string> default_search_paths()
   size_t secondtolastslash = exepath.rfind('/', lastslash - 1);
   if (lastslash != std::string::npos)
   {
-    paths.push_back(exepath.substr(0, lastslash));
+    paths.push_back(exepath.substr(0, lastslash+1));
   }
 
   if (secondtolastslash != std::string::npos)
