@@ -65,7 +65,7 @@ namespace chaiscript {
 
     struct Return {
       template<typename T>
-      auto optimize(const eval::AST_Node_Impl_Ptr<T> &p)
+      static auto optimize(const eval::AST_Node_Impl_Ptr<T> &p)
       {
         if (p->identifier == AST_Node_Type::Def
             && !p->children.empty())
@@ -108,7 +108,7 @@ namespace chaiscript {
 
     struct Block {
       template<typename T>
-      auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
+        static auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
         if (node->identifier == AST_Node_Type::Block)
         {
           if (!contains_var_decl_in_scope(node))
@@ -127,7 +127,7 @@ namespace chaiscript {
 
     struct Dead_Code {
       template<typename T>
-        auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
+        static auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
           if (node->identifier == AST_Node_Type::Block)
           {
             std::vector<size_t> keepers;
@@ -162,7 +162,7 @@ namespace chaiscript {
 
     struct Unused_Return {
       template<typename T>
-        auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
+        static auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
           if ((node->identifier == AST_Node_Type::Block
               || node->identifier == AST_Node_Type::Scopeless_Block)
               && node->children.size() > 0)
@@ -195,7 +195,7 @@ namespace chaiscript {
 
     struct If {
       template<typename T>
-      auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
+        static auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
         if ((node->identifier == AST_Node_Type::If || node->identifier == AST_Node_Type::Ternary_Cond)
              && node->children.size() >= 2
              && node->children[0]->identifier == AST_Node_Type::Constant)
@@ -216,7 +216,7 @@ namespace chaiscript {
 
     struct Partial_Fold {
       template<typename T>
-      auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
+        static auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
 
         // Fold right side
         if (node->identifier == AST_Node_Type::Binary
@@ -244,7 +244,7 @@ namespace chaiscript {
 
     struct Constant_Fold {
       template<typename T>
-      auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
+        static auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
 
         if (node->identifier == AST_Node_Type::Prefix
             && node->children.size() == 1
@@ -344,7 +344,7 @@ namespace chaiscript {
 
     struct For_Loop {
       template<typename T>
-      auto optimize(const eval::AST_Node_Impl_Ptr<T> &for_node) {
+        static auto optimize(const eval::AST_Node_Impl_Ptr<T> &for_node) {
 
         if (for_node->identifier != AST_Node_Type::For) {
           return for_node;
