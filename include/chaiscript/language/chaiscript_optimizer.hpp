@@ -24,7 +24,7 @@ namespace chaiscript {
 
       template<typename Tracer>
       auto optimize(eval::AST_Node_Impl_Ptr<Tracer> p) {
-        (void)std::initializer_list<int>{ (p = T::optimize(p), 0)... };
+        (void)std::initializer_list<int>{ (p = static_cast<T&>(*this).optimize(p), 0)... };
         return p;
       }
     };
