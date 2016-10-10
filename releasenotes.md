@@ -5,6 +5,7 @@ Current Version: 5.8.5
 ### Changes since 5.8.4
 * Fix order of operations for prefix operators
 * Make sure atomics are initialized properly
+* Remove parsing of unused prefix `&` operator
 
 ### Changes since 5.8.3
 * Fix case with some numeric conversions mixed with numerics that do not need conversion
