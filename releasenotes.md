@@ -2,7 +2,7 @@ Notes:
 =======
 Current Version: 6.0.0
 
-### Changes since 5.8.5
+### Changes since 5.8.6
 
 *6.0.0 is a massive rework compared to 5.x. It now requires a C++14 enabled compiler*
 
@@ -38,6 +38,9 @@ Current Version: 6.0.0
 
 * File location tracking has been rewritten; this currently means error location reporting is not as good as it was
 * Tracing capability needs to be tested and vetted
+
+### Changes since 5.8.5
+* Optimize away `return` statements in lambdas also
 
 ### Changes since 5.8.4
 * Fix order of operations for prefix operators

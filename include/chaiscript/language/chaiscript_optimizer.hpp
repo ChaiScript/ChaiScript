@@ -67,7 +67,7 @@ namespace chaiscript {
       template<typename T>
       auto optimize(const eval::AST_Node_Impl_Ptr<T> &p)
       {
-        if (p->identifier == AST_Node_Type::Def
+        if ( (p->identifier == AST_Node_Type::Def || p->identifier == AST_Node_Type::Lambda)
             && !p->children.empty())
         {
           auto &last_child = p->children.back();
