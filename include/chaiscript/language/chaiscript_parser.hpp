@@ -347,7 +347,7 @@ namespace chaiscript
       {
         for (auto &c : p->children)
         {
-          if (c->identifier == AST_Node_Type::Def && c->children.size() > 0) {
+          if ( (c->identifier == AST_Node_Type::Def || c->identifier == AST_Node_Type::Lambda) && c->children.size() > 0) {
             auto &last_child = c->children.back();
             if (last_child->identifier == AST_Node_Type::Block) {
               auto &block_last_child = last_child->children.back();
