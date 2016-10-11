@@ -1,6 +1,10 @@
 Notes:
 =======
-Current Version: 5.8.5
+
+Current Version: 5.8.6
+
+### Changes since 5.8.5
+* Optimize away `return` statements in lambdas also
 
 ### Changes since 5.8.4
 * Fix order of operations for prefix operators
