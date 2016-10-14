@@ -455,6 +455,13 @@ the contained function.
 
 If both a 2 parameter and a 3 parameter signature match, the 3 parameter function always wins.
 
+## Context
+
+ * `__LINE__` Current file line number
+ * `__FILE__` Full path of current file
+ * `__CLASS__` Name of current class
+ * `__FUNC__` Mame of current function
+
 
 # Built In Functions
 

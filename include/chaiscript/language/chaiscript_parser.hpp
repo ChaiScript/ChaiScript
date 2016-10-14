@@ -839,6 +839,41 @@ namespace chaiscript
           } else if (text == "NaN") {
             m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
                   const_var(std::numeric_limits<double>::quiet_NaN())));
+          } else if (text == "__LINE__") {
+            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
+                  const_var(start.line)));
+          } else if (text == "__FILE__") {
+            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
+                  const_var(m_filename)));
+          } else if (text == "__FUNC__") {
+            const std::string fun_name = [&]()->std::string{
+              for (size_t idx = m_match_stack.size() - 1; idx > 0; --idx)
+              {
+                if (m_match_stack[idx-1]->identifier == AST_Node_Type::Id
+                    && m_match_stack[idx-0]->identifier == AST_Node_Type::Arg_List) {
+                  return m_match_stack[idx-1]->text;
+                }
+              }
+              return "NOT_IN_FUNCTION";
+            }();
+
+            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
+                  const_var(std::move(fun_name))));
+          } else if (text == "__CLASS__") {
+            const std::string fun_name = [&]()->std::string{
+              for (size_t idx = m_match_stack.size() - 1; idx > 1; --idx)
+              {
+                if (m_match_stack[idx-2]->identifier == AST_Node_Type::Id
+                    && m_match_stack[idx-1]->identifier == AST_Node_Type::Id
+                    && m_match_stack[idx-0]->identifier == AST_Node_Type::Arg_List) {
+                  return m_match_stack[idx-2]->text;
+                }
+              }
+              return "NOT_IN_CLASS";
+            }();
+
+            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
+                  const_var(std::move(fun_name))));
           } else if (text == "_") {
             m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
                   Boxed_Value(std::make_shared<dispatch::Placeholder_Object>())));
@@ -1517,13 +1552,17 @@ namespace chaiscript
       }
 
       /// Reads a function definition from input
-      bool Def(const bool t_class_context = false) {
+      bool Def(const bool t_class_context = false, const std::string &t_class_name = "") {
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
 
         if (Keyword("def")) {
           retval = true;
+
+          if (t_class_context) {
+            m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>(t_class_name, m_position.line, m_position.col));
+          }
 
           if (!Id(true)) {
             throw exception::eval_error("Missing function name in definition", File_Position(m_position.line, m_position.col), *m_filename);
@@ -1708,10 +1747,11 @@ namespace chaiscript
             throw exception::eval_error("Missing class name in definition", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
+          const auto class_name = m_match_stack.back()->text;
 
           while (Eol()) {}
 
-          if (!Class_Block()) {
+          if (!Class_Block(class_name)) {
             throw exception::eval_error("Incomplete 'class' block", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
@@ -1908,7 +1948,7 @@ namespace chaiscript
 
 
       /// Reads a curly-brace C-style class block from input
-      bool Class_Block() {
+      bool Class_Block(const std::string &t_class_name) {
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
@@ -1916,7 +1956,7 @@ namespace chaiscript
         if (Char('{')) {
           retval = true;
 
-          Class_Statements();
+          Class_Statements(t_class_name);
           if (!Char('}')) {
             throw exception::eval_error("Incomplete class block", File_Position(m_position.line, m_position.col), *m_filename);
           }
@@ -2059,13 +2099,15 @@ namespace chaiscript
       }
 
       /// Reads a variable declaration from input
-      bool Var_Decl(const bool t_class_context = false) {
+      bool Var_Decl(const bool t_class_context = false, const std::string &t_class_name = "") {
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
 
         if (t_class_context && (Keyword("attr") || Keyword("auto") || Keyword("var"))) {
           retval = true;
+
+          m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>(t_class_name, m_position.line, m_position.col));
 
           if (!Id(true)) {
             throw exception::eval_error("Incomplete attribute declaration", File_Position(m_position.line, m_position.col), *m_filename);
@@ -2176,7 +2218,7 @@ namespace chaiscript
       /// Reads a unary prefixed expression from input
       bool Prefix() {
         const auto prev_stack_top = m_match_stack.size();
-        constexpr const std::array<const char *, 6> prefix_opers{"++", "--", "-", "+", "!", "~"};
+        constexpr const std::array<const char *, 6> prefix_opers{{"++", "--", "-", "+", "!", "~"}};
 
         for (const auto &oper : prefix_opers)
         {
@@ -2351,7 +2393,7 @@ namespace chaiscript
       }
 
       /// Parses statements allowed inside of a class block
-      bool Class_Statements() {
+      bool Class_Statements(const std::string &t_class_name) {
         bool retval = false;
 
         bool has_more = true;
@@ -2359,7 +2401,7 @@ namespace chaiscript
 
         while (has_more) {
           const auto start = m_position;
-          if (Def(true) || Var_Decl(true)) {
+          if (Def(true, t_class_name) || Var_Decl(true, t_class_name)) {
             if (!saw_eol) {
               throw exception::eval_error("Two function definitions missing line separator", File_Position(start.line, start.col), *m_filename);
             }

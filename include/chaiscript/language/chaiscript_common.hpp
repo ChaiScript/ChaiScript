@@ -31,7 +31,8 @@ namespace chaiscript
     {
       static const std::set<std::string> m_reserved_words 
         = {"def", "fun", "while", "for", "if", "else", "&&", "||", ",", "auto", 
-          "return", "break", "true", "false", "class", "attr", "var", "global", "GLOBAL", "_"};
+          "return", "break", "true", "false", "class", "attr", "var", "global", "GLOBAL", "_",
+          "__LINE__", "__FILE__", "__FUNC__", "__CLASS__"};
       return m_reserved_words.count(name) > 0;
     }
 
