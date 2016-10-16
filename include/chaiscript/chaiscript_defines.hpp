@@ -12,6 +12,9 @@
 #define CHAISCRIPT_COMPILER_VERSION CHAISCRIPT_STRINGIZE(_MSC_FULL_VER)
 #define CHAISCRIPT_MSVC _MSC_VER
 #define CHAISCRIPT_HAS_DECLSPEC
+
+static_assert(_MSC_FULL_VER >= 190024210, "Visual C++ 2015 Update 3 or later required");
+
 #else
 #define CHAISCRIPT_COMPILER_VERSION __VERSION__
 #endif
@@ -145,7 +148,7 @@ namespace chaiscript {
     auto parse_num(const char *t_str) -> typename std::enable_if<std::is_integral<T>::value, T>::type
     {
       T t = 0;
-      for (char c = *t_str; (c = *t_str); ++t_str) {
+      for (char c = *t_str; (c = *t_str) != 0; ++t_str) {
         if (c < '0' || c > '9') {
           return t;
         }
