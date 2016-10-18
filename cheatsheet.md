@@ -128,14 +128,12 @@ math["sin"] = chaiscript::var(chaiscript::fun([](const double x) { return sin(x)
 chai.register_namespace(math, "math");
 ```
 
-Namespaces are imported to make them available for scripting
-
-Importing via C++ (_not generally recommended_)
+Import namespace via C++ (_not generally recommended_)
 ```
 chai.import("math");
 ```
 
-Importing via ChaiScript (recommended)
+Import namespace via ChaiScript (_recommended_)
 ```
 import("math")
 print(math.pi) // prints 3.14159
