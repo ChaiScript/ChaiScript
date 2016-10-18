@@ -115,7 +115,15 @@ namespace chaiscript
             const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions)
         {
           call_func(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions);
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4702)
+#endif
+          // MSVC is reporting that this is unreachable code - and it's wrong.
           return Handle_Return<void>::handle();
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(pop)
+#endif
         }
 
     }
