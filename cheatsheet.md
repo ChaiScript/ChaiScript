@@ -119,6 +119,18 @@ chai.add_global(chaiscript::var(somevar), "somevar"); // global non-const, throw
 chai.set_global(chaiscript::var(somevar), "somevar"); // global non-const, overwrites existing object
 ```
 
+## Adding Namespaces
+
+```
+chaiscript::Namespace math;
+math["pi"] = chaiscript::const_var(3.14159);
+math["sin"] = chaiscript::var(chaiscript::fun([](const double x) { return sin(x); }));
+chai.register_namespace(math, "math");
+```
+
+Namespaces are imported to make them available for scripting
+```
+
 # Using STL
 ChaiScript recognize many types from STL, but you have to add specific instantiation yourself.
 
@@ -421,6 +433,20 @@ var o = Dynamic_Object();
 o.x = 3;
 o.f = fun(y) { print(this.x + y); }
 o.f(10); // prints 13
+```
+
+## Namespaces
+
+Namespaces in ChaiScript are Dynamic Objects with global scope
+
+```
+namespace("math") // create a new namespace
+
+math.square = fun(x) { x * x } // add a function to the "math" namespace
+math.sum_squares = fun(x, y) { math.square(x) + math.square(y) }
+
+print(math.square(4)) // prints 16
+print(math.sum_squares(2, 5)) // prints 29
 ```
 
 ### Option Explicit
