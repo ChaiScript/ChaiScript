@@ -1,0 +1,9 @@
+namespace("parent")
+namespace("child")
+
+child.x = 3.0
+parent.child = child
+parent.child.x = 5.0
+
+assert_equal(3.0, child.x)
+assert_equal(5.0, parent.child.x)
