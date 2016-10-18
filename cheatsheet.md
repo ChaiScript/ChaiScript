@@ -130,16 +130,18 @@ chai.register_namespace(math, "math");
 
 Namespaces are imported to make them available for scripting
 
+Importing via C++ (_not generally recommended_)
 ```
-chai.import("math"); // importing via C++ (_not generally recommended_)
+chai.import("math");
 ```
 
+Importing via ChaiScript (recommended)
 ```
-import("math") // importing via ChaiScript (_recommended_)
+import("math")
 print(math.pi) // prints 3.14159
 ```
 
-### Delayed Namespace Generation
+#### Delayed Namespace Generation
 
 Passing a lambda function that returns a namespace will delay the namespace generation until `import` is called.  
 This saves memory and computing costs if a namespace is not imported into every ChaiScript instance.
