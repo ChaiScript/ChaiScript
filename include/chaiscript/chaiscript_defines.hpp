@@ -206,6 +206,18 @@ namespace chaiscript {
       return parse_num<T>(t_str.c_str());
     }
 
+  enum class Options
+  {
+    No_Load_Modules,
+    Load_Modules,
+    No_External_Scripts,
+    External_Scripts
+  };
+
+  static inline std::vector<Options> default_options()
+  {
+    return {Options::Load_Modules, Options::External_Scripts};
+  };
 }
 #endif
 

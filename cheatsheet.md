@@ -465,6 +465,23 @@ If both a 2 parameter and a 3 parameter signature match, the 3 parameter functio
 
 # Built In Functions
 
+## Disabling Built-Ins
+
+When constructing a ChaiScript object, a vector of parameters can be passed in to disable or enable various built-in methods.
+
+Current options:
+
+```
+enum class Options
+{
+  Load_Modules,
+  No_Load_Modules,
+  External_Scripts,
+  No_External_Scripts
+};
+```
+
+
 ## Evaluation
 
 ```
@@ -476,4 +493,7 @@ use("filename") // evals file exactly once and returns value of last statement
 
 Both `use` and `eval_file` search the 'usepaths' passed to the ChaiScript constructor
 
+## JSON
 
+ * `from_json` converts a JSON string into its strongly typed (map, vector, int, double, string) representations
+ * `to_json` converts a ChaiScript object (either a `Object` or one of map, vector, int, double, string) tree into its JSON string representation

@@ -982,4 +982,75 @@ TEST_CASE("type_conversion to bool")
   module->add(chaiscript::type_conversion<T, bool>());
 }
 
+TEST_CASE("Test stdlib options")
+{
+  const auto test_has_external_scripts = [](chaiscript::ChaiScript_Basic &chai) { 
+    CHECK_NOTHROW(chai.eval("`use`"));
+    CHECK_NOTHROW(chai.eval("`eval_file`"));
+  };
+
+  const auto test_no_external_scripts = [](chaiscript::ChaiScript_Basic &chai) { 
+    CHECK_THROWS(chai.eval("`use`"));
+    CHECK_THROWS(chai.eval("`eval_file`"));
+  };
+
+  const auto test_has_load_modules = [](chaiscript::ChaiScript_Basic &chai) { 
+    CHECK_NOTHROW(chai.eval("`load_module`"));
+  };
+
+  const auto test_no_load_modules = [](chaiscript::ChaiScript_Basic &chai) { 
+    CHECK_THROWS(chai.eval("`load_module`"));
+  };
+
+  SECTION( "Defaults" ) {
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+    test_has_external_scripts(chai);
+    test_has_load_modules(chai);
+  }
+
+  SECTION( "Load_Modules, External_Scripts" ) {
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser(), {}, {}, 
+        {chaiscript::Options::Load_Modules, chaiscript::Options::External_Scripts} );
+    test_has_external_scripts(chai);
+    test_has_load_modules(chai);
+  }
+
+  SECTION( "No_Load_Modules, No_External_Scripts" ) {
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser(), {}, {}, 
+        {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts} );
+    test_no_external_scripts(chai);
+    test_no_load_modules(chai);
+  }
+
+  SECTION( "No_Load_Modules, Load_Modules" ) {
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser(), {}, {}, 
+        {chaiscript::Options::No_Load_Modules, chaiscript::Options::Load_Modules} );
+    test_no_external_scripts(chai);
+    test_no_load_modules(chai);
+  }
+
+  SECTION( "No_External_Scripts, External_Scripts" ) {
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser(), {}, {}, 
+        {chaiscript::Options::No_External_Scripts, chaiscript::Options::External_Scripts} );
+    test_no_external_scripts(chai);
+    test_no_load_modules(chai);
+  }
+
+  SECTION( "No_External_Scripts, Load_Modules" ) {
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser(), {}, {}, 
+        {chaiscript::Options::No_External_Scripts, chaiscript::Options::Load_Modules} );
+    test_no_external_scripts(chai);
+    test_has_load_modules(chai);
+  }
+
+  SECTION( "External_Scripts, No_Load_Modules" ) {
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser(), {}, {}, 
+        {chaiscript::Options::External_Scripts, chaiscript::Options::No_Load_Modules} );
+    test_has_external_scripts(chai);
+    test_no_load_modules(chai);
+  }
+
+
+}
+
 

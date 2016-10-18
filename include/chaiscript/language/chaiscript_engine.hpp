@@ -124,7 +124,7 @@ namespace chaiscript
     }
 
     /// Builds all the requirements for ChaiScript, including its evaluator and a run of its prelude.
-    void build_eval_system(const ModulePtr &t_lib) {
+    void build_eval_system(const ModulePtr &t_lib, const std::vector<Options> &t_opts) {
       if (t_lib)
       {
         add(t_lib);
@@ -169,11 +169,20 @@ namespace chaiscript
 
 
 
-      m_engine.add(fun([this](const std::string &t_module, const std::string &t_file){ return load_module(t_module, t_file); }), "load_module");
-      m_engine.add(fun([this](const std::string &t_module){ return load_module(t_module); }), "load_module");
+      if (std::find(t_opts.begin(), t_opts.end(), Options::No_Load_Modules) == t_opts.end()
+          && std::find(t_opts.begin(), t_opts.end(), Options::Load_Modules) != t_opts.end()) 
+      {
+        m_engine.add(fun([this](const std::string &t_module, const std::string &t_file){ return load_module(t_module, t_file); }), "load_module");
+        m_engine.add(fun([this](const std::string &t_module){ return load_module(t_module); }), "load_module");
+      }
 
-      m_engine.add(fun([this](const std::string &t_file){ return use(t_file); }), "use");
-      m_engine.add(fun([this](const std::string &t_file){ return internal_eval_file(t_file); }), "eval_file");
+      if (std::find(t_opts.begin(), t_opts.end(), Options::No_External_Scripts) == t_opts.end()
+          && std::find(t_opts.begin(), t_opts.end(), Options::External_Scripts) != t_opts.end())
+      {
+        m_engine.add(fun([this](const std::string &t_file){ return use(t_file); }), "use");
+        m_engine.add(fun([this](const std::string &t_file){ return internal_eval_file(t_file); }), "eval_file");
+      }
+
       m_engine.add(fun([this](const std::string &t_str){ return internal_eval(t_str); }), "eval");
       m_engine.add(fun([this](const AST_NodePtr &t_ast){ return eval(t_ast); }), "eval");
 
@@ -210,58 +219,28 @@ namespace chaiscript
       }
     }
 
+    std::vector<std::string> ensure_minimum_path_vec(std::vector<std::string> paths)
+    {
+      if (paths.empty()) { return {""}; }
+      else { return paths; }
+    }
+
   public:
+
     /// \brief Constructor for ChaiScript
     /// \param[in] t_lib Standard library to apply to this ChaiScript instance
     /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
     /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
     ChaiScript_Basic(const ModulePtr &t_lib,
                      std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
-                     std::vector<std::string> t_modulepaths = {},
-                     std::vector<std::string> t_usepaths = {})
-      : m_module_paths(std::move(t_modulepaths)),
-        m_use_paths(std::move(t_usepaths)),
+                     std::vector<std::string> t_module_paths = {},
+                     std::vector<std::string> t_use_paths = {},
+                     const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options())
+      : m_module_paths(ensure_minimum_path_vec(std::move(t_module_paths))),
+        m_use_paths(ensure_minimum_path_vec(std::move(t_use_paths))),
         m_parser(std::move(parser)),
         m_engine(*m_parser)
     {
-      if (m_module_paths.empty())
-      {
-        m_module_paths.push_back("");
-      }
-
-      if (m_use_paths.empty())
-      {
-        m_use_paths.push_back("");
-      }
-
-      build_eval_system(t_lib);
-    }
-
-    /// \brief Constructor for ChaiScript.
-    /// 
-    /// This version of the ChaiScript constructor attempts to find the stdlib module to load
-    /// at runtime generates an error if it cannot be found.
-    ///
-    /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
-    /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
-    ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
-                     std::vector<std::string> t_modulepaths = {},
-                     std::vector<std::string> t_usepaths = {})
-      : m_module_paths(std::move(t_modulepaths)), 
-        m_use_paths(std::move(t_usepaths)),
-        m_parser(std::move(parser)),
-        m_engine(*m_parser)
-    {
-      if (m_module_paths.empty())
-      {
-        m_module_paths.push_back("");
-      }
-
-      if (m_use_paths.empty())
-      {
-        m_use_paths.push_back("");
-      }
-
 #if defined(_POSIX_VERSION) && !defined(__CYGWIN__) 
       // If on Unix, add the path of the current executable to the module search path
       // as windows would do
@@ -295,8 +274,22 @@ namespace chaiscript
         m_module_paths.insert(m_module_paths.begin(), dllpath+"/");
       }
 #endif
+      build_eval_system(t_lib, t_opts);
+    }
 
-
+    /// \brief Constructor for ChaiScript.
+    /// 
+    /// This version of the ChaiScript constructor attempts to find the stdlib module to load
+    /// at runtime generates an error if it cannot be found.
+    ///
+    /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
+    /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
+    ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
+                     std::vector<std::string> t_module_paths = {},
+                     std::vector<std::string> t_use_paths = {},
+                     const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options())
+      : ChaiScript_Basic({}, std::move(parser), t_module_paths, t_use_paths, t_opts)
+    {
       try {
         // attempt to load the stdlib
         load_module("chaiscript_stdlib-" + Build_Info::version());
@@ -312,8 +305,6 @@ namespace chaiscript
                   << t_err.what();
         throw;
       }
-
-      build_eval_system(ModulePtr());
     }
 
 
