@@ -773,7 +773,7 @@ namespace chaiscript
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
           try {
-            while (this->get_bool_condition(this->children[0]->eval(t_ss))) {
+            while (this->get_bool_condition(this->children[0]->eval(t_ss), t_ss)) {
               try {
                 this->children[1]->eval(t_ss);
               } catch (detail::Continue_Loop &) {
@@ -815,13 +815,12 @@ namespace chaiscript
           { assert(this->children.size() == 3); }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
-          if (this->get_bool_condition(this->children[0]->eval(t_ss))) {
+          if (this->get_bool_condition(this->children[0]->eval(t_ss), t_ss)) {
             return this->children[1]->eval(t_ss);
           } else {
             return this->children[2]->eval(t_ss);
           }
         }
-
     };
 
 
@@ -834,7 +833,7 @@ namespace chaiscript
         }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
-          if (this->get_bool_condition(this->children[0]->eval(t_ss))) {
+          if (this->get_bool_condition(this->children[0]->eval(t_ss), t_ss)) {
             return this->children[1]->eval(t_ss);
           } else {
             return this->children[2]->eval(t_ss);
@@ -932,7 +931,7 @@ namespace chaiscript
           try {
             for (
                 this->children[0]->eval(t_ss);
-                this->get_bool_condition(this->children[1]->eval(t_ss));
+                this->get_bool_condition(this->children[1]->eval(t_ss), t_ss);
                 this->children[2]->eval(t_ss)
                 ) {
               try {
@@ -1482,8 +1481,8 @@ namespace chaiscript
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
         {
-          return const_var(this->get_bool_condition(this->children[0]->eval(t_ss))
-              && this->get_bool_condition(this->children[1]->eval(t_ss)));
+          return const_var(this->get_bool_condition(this->children[0]->eval(t_ss), t_ss)
+              && this->get_bool_condition(this->children[1]->eval(t_ss), t_ss));
         }
 
     };
@@ -1496,8 +1495,8 @@ namespace chaiscript
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
         {
-          return const_var(this->get_bool_condition(this->children[0]->eval(t_ss))
-              || this->get_bool_condition(this->children[1]->eval(t_ss)));
+          return const_var(this->get_bool_condition(this->children[0]->eval(t_ss), t_ss)
+              || this->get_bool_condition(this->children[1]->eval(t_ss), t_ss));
         }
     };
   }
