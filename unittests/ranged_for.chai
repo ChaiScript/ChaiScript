@@ -1,0 +1,21 @@
+var sum = 0;
+
+for (x : [1,2,3,4]) {
+  sum += x;
+}
+
+assert_equal(sum, 10)
+
+var result = 0.0;
+
+for (x : retro(range([1,2,3,4]))) {
+  if (result == 0.0) {
+    result = x;
+  } else {
+    result /= x;
+  }
+}
+
+assert_true(result > .6 && result < .7);
+
+

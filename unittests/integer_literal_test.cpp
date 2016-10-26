@@ -1,4 +1,7 @@
-#include <chaiscript/chaiscript.hpp>
+#include <chaiscript/chaiscript_basic.hpp>
+#include "../static_libs/chaiscript_parser.hpp"
+#include "../static_libs/chaiscript_stdlib.hpp"
+
 
 #define TEST_LITERAL(v) test_literal(v, #v)
 
@@ -6,7 +9,7 @@ template<typename T>
 bool test_literal(T val, const std::string &str)
 {
   std::cout << "Comparing : " << val;
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   T val2 = chai.eval<T>(str);
   std::cout << " " << val2 << '\n';
   return val == val2;

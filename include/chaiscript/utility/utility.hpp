@@ -12,9 +12,8 @@
 #include <utility>
 #include <vector>
 
-#include "../chaiscript.hpp"
-#include "../dispatchkit/proxy_functions.hpp"
-#include "../dispatchkit/type_info.hpp"
+#include "../language/chaiscript_common.hpp"
+#include "../dispatchkit/register_function.hpp"
 #include "../dispatchkit/operators.hpp"
 
 

@@ -21,10 +21,7 @@ namespace chaiscript {
       class bad_any_cast : public std::bad_cast
       {
         public:
-          bad_any_cast() noexcept
-            : m_what("bad any cast")
-          {
-          }
+          bad_any_cast() = default;
 
           bad_any_cast(const bad_any_cast &) = default;
 
@@ -37,7 +34,7 @@ namespace chaiscript {
           }
 
         private:
-          std::string m_what;
+          std::string m_what = "bad any cast";
       };
     }
   
@@ -151,8 +148,7 @@ namespace chaiscript {
 
         const std::type_info & type() const
         {
-          if (m_data)
-          {
+          if (m_data) {
             return m_data->type();
           } else {
             return typeid(void);

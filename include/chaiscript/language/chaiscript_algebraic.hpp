@@ -13,7 +13,7 @@ namespace chaiscript
 {
 
   struct Operators {
-    enum Opers
+    enum class Opers
     {
       boolean_flag,
       equals, less_than, greater_than, less_than_equal, greater_than_equal, not_equal, 
@@ -31,7 +31,7 @@ namespace chaiscript
     };
 
     static const char *to_string(Opers t_oper) {
-      const char *opers[] = { 
+      static const char *opers[] = { 
         "",
         "==", "<", ">", "<=", ">=", "!=",
         "",
@@ -46,80 +46,80 @@ namespace chaiscript
         "+", "/", "*", "-", "+", "-",
         ""
       };
-      return opers[t_oper];
+      return opers[static_cast<int>(t_oper)];
     }
 
     static Opers to_operator(const std::string &t_str, bool t_is_unary = false)
     {
       if (t_str == "==")
       {
-        return equals;
+        return Opers::equals;
       } else if (t_str == "<") {
-        return less_than;
+        return Opers::less_than;
       } else if (t_str == ">") {
-        return greater_than;
+        return Opers::greater_than;
       } else if (t_str == "<=") {
-        return less_than_equal; 
+        return Opers::less_than_equal; 
       } else if (t_str == ">=") {
-        return greater_than_equal;
+        return Opers::greater_than_equal;
       } else if (t_str == "!=") {
-        return not_equal;
+        return Opers::not_equal;
       } else if (t_str == "=") {
-        return assign;
+        return Opers::assign;
       } else if (t_str == "++") {
-        return pre_increment;
+        return Opers::pre_increment;
       } else if (t_str == "--") {
-        return pre_decrement;
+        return Opers::pre_decrement;
       } else if (t_str == "*=") {
-        return assign_product;
+        return Opers::assign_product;
       } else if (t_str == "+=") {
-        return assign_sum;
+        return Opers::assign_sum;
       } else if (t_str == "-=") {
-        return assign_difference;
+        return Opers::assign_difference;
       } else if (t_str == "&=") {
-        return assign_bitwise_and;
+        return Opers::assign_bitwise_and;
       } else if (t_str == "|=") {
-        return assign_bitwise_or;
+        return Opers::assign_bitwise_or;
       } else if (t_str == "<<=") {
-        return assign_shift_left;
+        return Opers::assign_shift_left;
       } else if (t_str == ">>=") {
-        return assign_shift_right;
+        return Opers::assign_shift_right;
       } else if (t_str == "%=") {
-        return assign_remainder;
+        return Opers::assign_remainder;
       } else if (t_str == "^=") {
-        return assign_bitwise_xor;
+        return Opers::assign_bitwise_xor;
       } else if (t_str == "<<") {
-        return shift_left;
+        return Opers::shift_left;
       } else if (t_str == ">>") {
-        return shift_right;
+        return Opers::shift_right;
       } else if (t_str == "%") {
-        return remainder;
+        return Opers::remainder;
       } else if (t_str == "&") { 
-        return bitwise_and;
+        return Opers::bitwise_and;
       } else if (t_str == "|") {
-        return bitwise_or;
+        return Opers::bitwise_or;
       } else if (t_str == "^") {
-        return bitwise_xor;
+        return Opers::bitwise_xor;
       } else if (t_str == "~") {
-        return bitwise_complement;
+        return Opers::bitwise_complement;
       } else if (t_str == "+") {
         if (t_is_unary) {
-          return unary_plus;
+          return Opers::unary_plus;
         } else {
-          return sum;
+          return Opers::sum;
         }
       } else if (t_str == "-") {
         if (t_is_unary) {
-          return unary_minus;
+          return Opers::unary_minus;
         } else {
-          return difference;
+          return Opers::difference;
         }
       } else if (t_str == "/") {
-        return quotient;
+        return Opers::quotient;
       } else if (t_str == "*") {
-        return product;
+        return Opers::product;
       } else {
-        return invalid;
+        return Opers::invalid;
       } 
     }
 

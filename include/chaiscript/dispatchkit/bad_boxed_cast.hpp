@@ -41,7 +41,7 @@ namespace chaiscript
         }
 
         explicit bad_boxed_cast(std::string t_what) noexcept
-          : to(nullptr), m_what(std::move(t_what))
+          : m_what(std::move(t_what))
         {
         }
 
@@ -55,7 +55,7 @@ namespace chaiscript
         }
 
         Type_Info from; ///< Type_Info contained in the Boxed_Value
-        const std::type_info *to; ///< std::type_info of the desired (but failed) result type
+        const std::type_info *to = nullptr; ///< std::type_info of the desired (but failed) result type
 
       private:
         std::string m_what;

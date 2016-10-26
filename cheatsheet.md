@@ -27,6 +27,13 @@ chai.add(chaiscript::fun(&Class::method_name), "method_name");
 chai.add(chaiscript::fun(&Class::member_name), "member_name");
 ```
 
+### Bound Member Functions
+
+```
+chai.add(chaiscript::fun(&Class::method_name, Class_instance_ptr), "method_name");
+chai.add(chaiscript::fun(&Class::member_name, Class_instance_ptr), "member_name");
+```
+
 ### With Overloads 
 
 #### Preferred
@@ -84,6 +91,33 @@ chai.add(chaiscript::user_type<MyClass>(), "MyClass");
 
 User defined type conversions are possible, defined in either script or in C++.
 
+
+### ChaiScript Defined Conversions
+
+Function objects (including lambdas) can be used to add type conversions
+from inside of ChaiScript:
+
+```
+add_type_conversion(type("string"), type("Type_Info"), fun(s) { return type(s); });
+```
+
+### C++ Defined Conversions
+
+Invoking a C++ type conversion possible with `static_cast`
+
+```
+chai.add(chaiscript::type_conversion<T, bool>());
+```
+
+Calling a user defined type conversion that takes a lambda
+
+```
+chai.add(chaiscript::type_conversion<TestBaseType, Type2>([](const TestBaseType &t_bt) { /* return converted thing */ }));
+```
+
+
+### Helpers
+
 A helper function exists for strongly typed and ChaiScript `Vector` function conversion definition:
 
 ```
@@ -95,6 +129,7 @@ A helper function also exists for strongly typed and ChaiScript `Map` function c
 ```
 chai.add(chaiscript::map_conversion<std::map<std::string, int>>());
 ```
+
 
 
 This allows you to pass a ChaiScript function to a function requiring `std::vector<int>`
@@ -111,6 +146,7 @@ chai.add_global_const(chaiscript::const_var(somevar), "somevar"); // global cons
 chai.add_global(chaiscript::var(somevar), "somevar"); // global non-const, throws if object exists
 chai.set_global(chaiscript::var(somevar), "somevar"); // global non-const, overwrites existing object
 ```
+
 # Using STL
 ChaiScript recognize many types from STL, but you have to add specific instantiation yourself.
 
@@ -258,6 +294,35 @@ global g2;
 if (g2.is_var_undef()) { g2 = 4; } // only initialize g2 once, if global decl hit more than once
 
 GLOBAL g3; // all upper case version also accepted
+```
+
+## Looping
+
+```
+// c-style for loops
+for (var i = 0; i < 100; ++i) { print(i); }
+```
+
+```
+// while
+while (some_condition()) { /* do something */ }
+```
+
+```
+// ranged for
+for (x : [1,2,3]) { print(i); }
+```
+
+## Conditionals
+
+```
+if (expression) { }
+```
+
+```
+// C++17-style init-if blocks
+// Value of 'statement' is scoped for entire `if` block
+if (statement; expression) { }
 ```
 
 ## Built in Types
@@ -418,8 +483,32 @@ the contained function.
 
 If both a 2 parameter and a 3 parameter signature match, the 3 parameter function always wins.
 
+## Context
+
+ * `__LINE__` Current file line number
+ * `__FILE__` Full path of current file
+ * `__CLASS__` Name of current class
+ * `__FUNC__` Mame of current function
+
 
 # Built In Functions
+
+## Disabling Built-Ins
+
+When constructing a ChaiScript object, a vector of parameters can be passed in to disable or enable various built-in methods.
+
+Current options:
+
+```
+enum class Options
+{
+  Load_Modules,
+  No_Load_Modules,
+  External_Scripts,
+  No_External_Scripts
+};
+```
+
 
 ## Evaluation
 
@@ -432,4 +521,7 @@ use("filename") // evals file exactly once and returns value of last statement
 
 Both `use` and `eval_file` search the 'usepaths' passed to the ChaiScript constructor
 
+## JSON
 
+ * `from_json` converts a JSON string into its strongly typed (map, vector, int, double, string) representations
+ * `to_json` converts a ChaiScript object (either a `Object` or one of map, vector, int, double, string) tree into its JSON string representation

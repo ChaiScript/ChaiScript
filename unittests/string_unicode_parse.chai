@@ -1,0 +1,11 @@
+assert_equal('\u00aa', '\u00AA')
+assert_equal('\u00bb', '\uBB')
+assert_equal('\ucc', '\u00CC')
+assert_equal('\udd', '\uDD')
+
+assert_equal('\u0ee', '\uEE')
+assert_equal('\ue', '\u000E')
+
+assert_equal("\u30\u31\u32", "012")
+assert_equal("\u33Test", "3Test")
+assert_equal("Test\u0040", "Test@")

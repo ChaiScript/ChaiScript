@@ -1,5 +1,4 @@
 #include <chaiscript/chaiscript.hpp>
-#include <chaiscript/chaiscript_stdlib.hpp>
 
 class Entity
 {
@@ -57,7 +56,7 @@ class Factory
 
 int main()
 {
-  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
+  chaiscript::ChaiScript chai;
 
   chai.add(chaiscript::fun(&Entity::width), "width");
   chai.add(chaiscript::fun(&Entity::height), "height");

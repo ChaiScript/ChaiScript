@@ -16,9 +16,12 @@
 
 
 #include <chaiscript/chaiscript.hpp>
+#include <chaiscript/chaiscript_basic.hpp>
 #include <chaiscript/utility/utility.hpp>
 #include <chaiscript/dispatchkit/bootstrap_stl.hpp>
 
+#include "../static_libs/chaiscript_parser.hpp"
+#include "../static_libs/chaiscript_stdlib.hpp"
 
 
 
@@ -34,7 +37,7 @@ TEST_CASE("C++11 Lambdas Can Be Registered")
 
   // We cannot deduce the type of a lambda expression, you must either wrap it
   // in an std::function or provide the signature
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
 
   chai.add(chaiscript::fun([]()->std::string { return "hello"; } ), "f1");
 
@@ -49,7 +52,7 @@ TEST_CASE("C++11 Lambdas Can Be Registered")
 // dynamic_object tests
 TEST_CASE("Dynamic_Object attributes can be shared with C++")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
 
   chai("attr bob::z; def bob::bob() { this.z = 10 }; auto x = bob()");
 
@@ -77,7 +80,7 @@ TEST_CASE("Dynamic_Object attributes can be shared with C++")
 TEST_CASE("Function objects can be created from chaiscript functions")
 {
 
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
 
   chai.eval("def func() { print(\"Hello World\"); } ");
 
@@ -91,7 +94,7 @@ TEST_CASE("Function objects can be created from chaiscript functions")
 
 TEST_CASE("ChaiScript can be created and destroyed on heap")
 {
-  chaiscript::ChaiScript *chai = new chaiscript::ChaiScript();
+  auto *chai = new chaiscript::ChaiScript_Basic(create_chaiscript_stdlib(),create_chaiscript_parser());
   delete chai;
 }
 
@@ -123,7 +126,7 @@ void arithmetic_conversions_f_func_return(const std::function<unsigned int (unsi
 
 TEST_CASE("Test automatic arithmetic conversions")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
 
   chai.add(chaiscript::fun(&arithmetic_conversions_f1), "f1");
   chai.add(chaiscript::fun(&arithmetic_conversions_f2), "f2");
@@ -164,7 +167,7 @@ TEST_CASE("Test automatic arithmetic conversions")
 
 TEST_CASE("Generic exception handling with C++")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
 
   try {
     chai.eval("throw(runtime_error(\"error\"));");
@@ -177,7 +180,7 @@ TEST_CASE("Generic exception handling with C++")
 
 TEST_CASE("Throw an int")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
 
   try {
     chai.eval("throw(1)", chaiscript::exception_specification<int>());
@@ -189,7 +192,7 @@ TEST_CASE("Throw an int")
 
 TEST_CASE("Throw int or double")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
 
   try {
     chai.eval("throw(1.0)", chaiscript::exception_specification<int, double>());
@@ -201,7 +204,7 @@ TEST_CASE("Throw int or double")
 
 TEST_CASE("Throw a runtime_error")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
 
   try {
     chai.eval("throw(runtime_error(\"error\"))", chaiscript::exception_specification<int, double, float, const std::string &, const std::exception &>());
@@ -221,7 +224,7 @@ TEST_CASE("Throw a runtime_error")
 
 TEST_CASE("Throw unhandled type")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
 
   try {
     chai.eval("throw(\"error\")", chaiscript::exception_specification<int, double, float, const std::exception &>());
@@ -250,7 +253,7 @@ int expected_eval_errors_test_one(const int &)
 
 TEST_CASE("No unexpected exceptions leak")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   chai.add(chaiscript::fun(&expected_eval_errors_test_one), "test_fun");
 
   chai.eval("def guard_fun(i) : i.get_type_info().is_type_arithmetic() {} ");
@@ -313,7 +316,7 @@ int function_ordering_test_two(int &)
 
 TEST_CASE("Function ordering")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   chai.eval("def test_fun(x) { return 3; }");
   chai.eval("def test_fun(x) : x == \"hi\" { return 4; }");
   chai.eval("def test_fun(double d) { return 5; }");
@@ -339,7 +342,7 @@ int functor_cast_test_call(const std::function<int (int)> &f, int val)
 TEST_CASE("Functor cast")
 {
 
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
 
   chai.add(chaiscript::fun(&functor_cast_test_call), "test_call");
 
@@ -358,10 +361,10 @@ int set_state_test_myfun()
 
 TEST_CASE("Set and restore chai state")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
 
   // save the initial state of globals and locals
-  chaiscript::ChaiScript::State firststate = chai.get_state();
+  auto firststate = chai.get_state();
   std::map<std::string, chaiscript::Boxed_Value> locals = chai.get_locals();
 
   // add some new globals and locals
@@ -404,7 +407,7 @@ class Short_Comparison_Test {
 
 TEST_CASE("Short comparison with int")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   chai.add(chaiscript::user_type<Short_Comparison_Test>(), "Test");
   chai.add(chaiscript::constructor<Short_Comparison_Test()>(), "Test");
 
@@ -427,7 +430,7 @@ class Type_Name_MyClass
 
 TEST_CASE("Test lookup of type names")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   auto type = chaiscript::user_type<Type_Name_MyClass>();
   chai.add(type, "MyClass");
 
@@ -453,13 +456,13 @@ int simultaneous_chaiscript_do_something_else(int i)
 
 TEST_CASE("Simultaneous ChaiScript tests")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   chai.add(chaiscript::fun(&simultaneous_chaiscript_do_something), "do_something");
   chai.add(chaiscript::var(1), "i");
 
   for (int i = 0; i < 10; ++i)
   {
-    chaiscript::ChaiScript chai2;
+    chaiscript::ChaiScript_Basic chai2(create_chaiscript_stdlib(),create_chaiscript_parser());
     chai2.add(chaiscript::fun(&simultaneous_chaiscript_do_something_else), "do_something_else");
 
     CHECK(chai.eval<int>("do_something(" + std::to_string(i) + ")") == i + 2);
@@ -508,7 +511,7 @@ TEST_CASE("Utility_Test utility class wrapper")
       );
 
 
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   chai.add(m);
 
   CHECK(chai.eval<std::string>("auto t = Utility_Test(); t.function2(); ") == "Function2");
@@ -551,7 +554,7 @@ TEST_CASE("Utility_Test utility class wrapper for enum")
       );
 
 
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   chai.add(m);
 
   CHECK(chai.eval<Utility_Test_Numbers>("ONE ") == 0);
@@ -646,7 +649,7 @@ TEST_CASE("Object copy counts")
   m->add(chaiscript::constructor<Object_Copy_Count_Test(const Object_Copy_Count_Test &)>(), "Object_Copy_Count_Test");
   m->add(chaiscript::fun(&object_copy_count_create), "create");
 
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   chai.add(m);
 
   chai.eval(" { auto i = create(); } ");
@@ -702,7 +705,7 @@ TEST_CASE("Object lifetime tests")
   m->add(chaiscript::constructor<Object_Lifetime_Test(const Object_Lifetime_Test &)>(), "Object_Lifetime_Test");
   m->add(chaiscript::fun(&Object_Lifetime_Test::count), "count");
 
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   chai.add(m);
 
   CHECK(chai.eval<int>("count()") == 0);
@@ -755,7 +758,7 @@ Object_Lifetime_Vector2<float> Object_Lifetime_Vector2_GetValue()
 
 TEST_CASE("Object lifetime test 2")
 {
-  chaiscript::ChaiScript _script;
+  chaiscript::ChaiScript_Basic _script(create_chaiscript_stdlib(),create_chaiscript_parser());
 
   //Registering stuff
   _script.add(chaiscript::user_type<Object_Lifetime_Vector2<float>>(), "Object_Lifetime_Vector2f");
@@ -796,7 +799,7 @@ int myfunction(Non_Poly_Base *)
 
 TEST_CASE("Test Derived->Base with non-polymorphic classes")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   chai.add(chaiscript::base_class<Non_Poly_Base, Non_Poly_Derived>());
   Non_Poly_Derived d;
   chai.add(chaiscript::var(&d), "d");
@@ -815,7 +818,7 @@ struct TestCppVariableScope
 
 TEST_CASE("Variable Scope When Calling From C++")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   chai.add(chaiscript::user_type<TestCppVariableScope>(), "Test");
   chai.add(chaiscript::constructor<TestCppVariableScope()>(), "Test");
   chai.add(chaiscript::fun(&TestCppVariableScope::print), "print");
@@ -838,7 +841,7 @@ TEST_CASE("Variable Scope When Calling From C++")
 
 TEST_CASE("Variable Scope When Calling From C++ 2")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   chai.eval("var obj = 2;");
   auto func = chai.eval<std::function<void()>>("fun(){ return obj; }");
   CHECK_THROWS(func());
@@ -855,7 +858,7 @@ void longlong(long long i) {
 
 TEST_CASE("Test long long dispatch")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   chai.add(chaiscript::fun(&longlong), "longlong");
   chai.add(chaiscript::fun(&ulonglong), "ulonglong");
   chai.eval("longlong(15)");
@@ -875,7 +878,7 @@ struct Returned_Converted_Config
 
 TEST_CASE("Return of converted type from script")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
 
   chai.add(chaiscript::constructor<Returned_Converted_Config ()>(), "Returned_Converted_Config");
   chai.add(chaiscript::fun(&Returned_Converted_Config::num_iterations), "num_iterations");
@@ -923,7 +926,7 @@ int get_value_a(const std::map<std::string, int> &t_m)
 
 TEST_CASE("Map conversions")
 {
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   chai.add(chaiscript::map_conversion<std::map<std::string, int>>());
   chai.add(chaiscript::fun(&get_value_a), "get_value_a");
 
@@ -943,7 +946,7 @@ TEST_CASE("Parse floats with non-posix locale")
 #else
   std::setlocale(LC_ALL, "en_ZA.utf8");
 #endif
-  chaiscript::ChaiScript chai;
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   const double parsed = chai.eval<double>("print(1.3); 1.3");
   CHECK(parsed == Approx(1.3));
   const std::string str = chai.eval<std::string>("to_string(1.3)");
@@ -951,5 +954,111 @@ TEST_CASE("Parse floats with non-posix locale")
 }
 
 
+
+bool FindBitmap(int &ox, int &oy, long) {
+  ox = 1; 
+  oy = 2; 
+  return true;
+}
+
+TEST_CASE("Mismatched numeric types only convert necessary params")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+
+  chai.add(chaiscript::fun(&FindBitmap), "FindBitmap");
+  int x = 0;
+  int y = 0;
+  chai.add(chaiscript::var(&x), "x");
+  chai.add(chaiscript::var(&y), "y");
+  chai.eval( "if ( FindBitmap ( x, y, 0) ) { print(\"found at \" + to_string(x) + \", \" + to_string(y))}" );
+  CHECK(x == 1);
+  CHECK(y == 2);
+
+}
+
+TEST_CASE("type_conversion to bool")
+{
+  auto module = std::make_shared<chaiscript::Module>();
+  struct T {
+    operator bool() const { return true; }
+  };
+  module->add(chaiscript::type_conversion<T, bool>());
+}
+
+TEST_CASE("Make sure ChaiScript object still compiles / executes")
+{
+  chaiscript::ChaiScript chai;
+}
+
+TEST_CASE("Test stdlib options")
+{
+  const auto test_has_external_scripts = [](chaiscript::ChaiScript_Basic &chai) { 
+    CHECK_NOTHROW(chai.eval("`use`"));
+    CHECK_NOTHROW(chai.eval("`eval_file`"));
+  };
+
+  const auto test_no_external_scripts = [](chaiscript::ChaiScript_Basic &chai) { 
+    CHECK_THROWS(chai.eval("`use`"));
+    CHECK_THROWS(chai.eval("`eval_file`"));
+  };
+
+  const auto test_has_load_modules = [](chaiscript::ChaiScript_Basic &chai) { 
+    CHECK_NOTHROW(chai.eval("`load_module`"));
+  };
+
+  const auto test_no_load_modules = [](chaiscript::ChaiScript_Basic &chai) { 
+    CHECK_THROWS(chai.eval("`load_module`"));
+  };
+
+  SECTION( "Defaults" ) {
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+    test_has_external_scripts(chai);
+    test_has_load_modules(chai);
+  }
+
+  SECTION( "Load_Modules, External_Scripts" ) {
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser(), {}, {}, 
+        {chaiscript::Options::Load_Modules, chaiscript::Options::External_Scripts} );
+    test_has_external_scripts(chai);
+    test_has_load_modules(chai);
+  }
+
+  SECTION( "No_Load_Modules, No_External_Scripts" ) {
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser(), {}, {}, 
+        {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts} );
+    test_no_external_scripts(chai);
+    test_no_load_modules(chai);
+  }
+
+  SECTION( "No_Load_Modules, Load_Modules" ) {
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser(), {}, {}, 
+        {chaiscript::Options::No_Load_Modules, chaiscript::Options::Load_Modules} );
+    test_no_external_scripts(chai);
+    test_no_load_modules(chai);
+  }
+
+  SECTION( "No_External_Scripts, External_Scripts" ) {
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser(), {}, {}, 
+        {chaiscript::Options::No_External_Scripts, chaiscript::Options::External_Scripts} );
+    test_no_external_scripts(chai);
+    test_no_load_modules(chai);
+  }
+
+  SECTION( "No_External_Scripts, Load_Modules" ) {
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser(), {}, {}, 
+        {chaiscript::Options::No_External_Scripts, chaiscript::Options::Load_Modules} );
+    test_no_external_scripts(chai);
+    test_has_load_modules(chai);
+  }
+
+  SECTION( "External_Scripts, No_Load_Modules" ) {
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser(), {}, {}, 
+        {chaiscript::Options::External_Scripts, chaiscript::Options::No_Load_Modules} );
+    test_has_external_scripts(chai);
+    test_no_load_modules(chai);
+  }
+
+
+}
 
 

@@ -81,9 +81,7 @@ namespace chaiscript
     template<typename Signature>
       struct Cast_Helper<const std::function<Signature> &>
       {
-        typedef std::function<Signature> Result_Type;
-
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *t_conversions)
+        static std::function<Signature> cast(const Boxed_Value &ob, const Type_Conversions_State *t_conversions)
         {
           if (ob.get_type_info().bare_equal(user_type<Const_Proxy_Function>()))
           {
@@ -98,9 +96,7 @@ namespace chaiscript
     template<typename Signature>
       struct Cast_Helper<std::function<Signature> >
       {
-        typedef std::function<Signature> Result_Type;
-
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *t_conversions)
+        static std::function<Signature> cast(const Boxed_Value &ob, const Type_Conversions_State *t_conversions)
         {
           if (ob.get_type_info().bare_equal(user_type<Const_Proxy_Function>()))
           {
@@ -115,9 +111,7 @@ namespace chaiscript
     template<typename Signature>
       struct Cast_Helper<const std::function<Signature> >
       {
-        typedef std::function<Signature> Result_Type;
-
-        static Result_Type cast(const Boxed_Value &ob, const Type_Conversions_State *t_conversions)
+        static std::function<Signature> cast(const Boxed_Value &ob, const Type_Conversions_State *t_conversions)
         {
           if (ob.get_type_info().bare_equal(user_type<Const_Proxy_Function>()))
           {

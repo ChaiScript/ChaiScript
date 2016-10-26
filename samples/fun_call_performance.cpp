@@ -13,7 +13,6 @@
 #endif
 
 #include <chaiscript/chaiscript.hpp>
-#include <chaiscript/chaiscript_stdlib.hpp>
 
 #ifdef READLINE_AVAILABLE
 #include <readline/readline.h>
@@ -291,7 +290,7 @@ int main(int argc, char *argv[])
   }
 
   //chaiscript::ChaiScript chai(modulepaths, usepaths);
-  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library(), usepaths);
+  chaiscript::ChaiScript chai(usepaths);
 
   chai.add(chaiscript::fun(&myexit), "exit");
   chai.add(chaiscript::fun(&myexit), "quit");

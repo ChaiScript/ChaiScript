@@ -12,6 +12,9 @@
 #define CHAISCRIPT_COMPILER_VERSION CHAISCRIPT_STRINGIZE(_MSC_FULL_VER)
 #define CHAISCRIPT_MSVC _MSC_VER
 #define CHAISCRIPT_HAS_DECLSPEC
+
+static_assert(_MSC_FULL_VER >= 190024210, "Visual C++ 2015 Update 3 or later required");
+
 #else
 #define CHAISCRIPT_COMPILER_VERSION __VERSION__
 #endif
@@ -60,6 +63,10 @@
 #define CHAISCRIPT_MODULE_EXPORT extern "C" 
 #endif
 
+#if defined(CHAISCRIPT_MSVC) || (defined(__GNUC__) && __GNUC__ >= 5) || defined(CHAISCRIPT_CLANG)
+#define CHAISCRIPT_UTF16_UTF32
+#endif
+
 #ifdef _DEBUG
 #define CHAISCRIPT_DEBUG true
 #else
@@ -89,18 +96,59 @@ namespace chaiscript {
 #endif
   }
 
-  template<typename Iter, typename Distance>
-    Iter advance_copy(Iter iter, Distance distance) {
-      std::advance(iter, static_cast<typename std::iterator_traits<Iter>::difference_type>(distance));
-      return iter;
+  struct Build_Info {
+    static int version_major()
+    {
+      return chaiscript::version_major;
     }
+
+    static int version_minor()
+    {
+      return chaiscript::version_minor;
+    }
+
+    static int version_patch()
+    {
+      return chaiscript::version_patch;
+    }
+
+    static std::string version()
+    {
+      return std::to_string(version_major()) + '.' + std::to_string(version_minor()) + '.' + std::to_string(version_patch());
+    }
+
+    static std::string compiler_id()
+    {
+      return compiler_name() + '-' + compiler_version();
+    }
+
+    static std::string build_id()
+    {
+      return compiler_id() + (debug_build()?"-Debug":"-Release");
+    }
+
+    static std::string compiler_version()
+    {
+      return chaiscript::compiler_version;
+    }
+
+    static std::string compiler_name()
+    {
+      return chaiscript::compiler_name;
+    }
+
+    static bool debug_build()
+    {
+      return chaiscript::debug_build;
+    }
+  };
 
 
   template<typename T>
     auto parse_num(const char *t_str) -> typename std::enable_if<std::is_integral<T>::value, T>::type
     {
       T t = 0;
-      for (char c = *t_str; (c = *t_str); ++t_str) {
+      for (char c = *t_str; (c = *t_str) != 0; ++t_str) {
         if (c < '0' || c > '9') {
           return t;
         }
@@ -161,6 +209,18 @@ namespace chaiscript {
       return parse_num<T>(t_str.c_str());
     }
 
+  enum class Options
+  {
+    No_Load_Modules,
+    Load_Modules,
+    No_External_Scripts,
+    External_Scripts
+  };
+
+  static inline std::vector<Options> default_options()
+  {
+    return {Options::Load_Modules, Options::External_Scripts};
+  }
 }
 #endif
 

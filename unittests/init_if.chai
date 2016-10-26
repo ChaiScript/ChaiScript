@@ -1,0 +1,7 @@
+if (var x = 2; x == 3) {
+  assert_true(false);
+} else if (var y = 3; y == 6) {
+  assert_true(false);
+} else { 
+  assert_equal(5, y + x);
+}

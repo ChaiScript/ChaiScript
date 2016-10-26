@@ -1,0 +1,4 @@
+
+var i = 2;
+
+assert_equal(++i * i, 9)

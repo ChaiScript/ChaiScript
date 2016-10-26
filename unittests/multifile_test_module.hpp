@@ -1,4 +1,4 @@
-#include <chaiscript/chaiscript.hpp>
+#include <chaiscript/chaiscript_basic.hpp>
 
 class Multi_Test_Module
 {

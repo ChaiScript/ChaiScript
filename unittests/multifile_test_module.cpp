@@ -1,4 +1,4 @@
-#include <chaiscript/chaiscript.hpp>
+#include <chaiscript/chaiscript_basic.hpp>
 
 #include "multifile_test_module.hpp"
 
