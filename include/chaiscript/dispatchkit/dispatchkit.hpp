@@ -977,14 +977,21 @@ namespace chaiscript
 
                 This_Foist fi(*this, l_params.front());
 
-                auto func = boxed_cast<const dispatch::Proxy_Function_Base *>(bv);
                 try {
-                  return (*func)({l_params.begin() + l_num_params, l_params.end()}, l_conversions);
+                  auto func = boxed_cast<const dispatch::Proxy_Function_Base *>(bv);
+                  try {
+                    return (*func)({l_params.begin() + l_num_params, l_params.end()}, l_conversions);
+                  } catch (const chaiscript::exception::bad_boxed_cast &) {
+                  } catch (const chaiscript::exception::arity_error &) {
+                  } catch (const chaiscript::exception::guard_error &) {
+                  }
+                  throw chaiscript::exception::dispatch_error({l_params.begin() + l_num_params, l_params.end()}, 
+                      std::vector<Const_Proxy_Function>{boxed_cast<Const_Proxy_Function>(bv)});
                 } catch (const chaiscript::exception::bad_boxed_cast &) {
-                } catch (const chaiscript::exception::arity_error &) {
-                } catch (const chaiscript::exception::guard_error &) {
+                  // unable to convert bv into a Proxy_Function_Base
+                  throw chaiscript::exception::dispatch_error({l_params.begin() + l_num_params, l_params.end()}, 
+                      std::vector<Const_Proxy_Function>(l_funs.begin(), l_funs.end()));
                 }
-                throw chaiscript::exception::dispatch_error({l_params.begin() + l_num_params, l_params.end()}, std::vector<Const_Proxy_Function>{boxed_cast<Const_Proxy_Function>(bv)});
               } else {
                 return bv;
               }
