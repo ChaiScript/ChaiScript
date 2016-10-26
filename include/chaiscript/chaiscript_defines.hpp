@@ -220,7 +220,7 @@ namespace chaiscript {
   static inline std::vector<Options> default_options()
   {
     return {Options::Load_Modules, Options::External_Scripts};
-  };
+  }
 }
 #endif
 
