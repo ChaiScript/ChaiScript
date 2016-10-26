@@ -809,7 +809,7 @@ namespace chaiscript
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
           try {
-            while (get_bool_condition(this->children[0]->eval(t_ss))) {
+            while (get_bool_condition(this->children[0]->eval(t_ss), t_ss)) {
               try {
                 this->children[1]->eval(t_ss);
               } catch (detail::Continue_Loop &) {
@@ -851,7 +851,7 @@ namespace chaiscript
           { assert(children.size() == 3); }
         virtual ~Ternary_Cond_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE {
-          if (get_bool_condition(children[0]->eval(t_ss))) {
+          if (get_bool_condition(children[0]->eval(t_ss), t_ss)) {
             return children[1]->eval(t_ss);
           }
           else {
@@ -868,7 +868,7 @@ namespace chaiscript
         virtual ~If_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE{
 
-          if (get_bool_condition(children[0]->eval(t_ss))) {
+          if (get_bool_condition(children[0]->eval(t_ss), t_ss)) {
             return children[1]->eval(t_ss);
           } else {
             if (children.size() > 2) {
@@ -878,7 +878,7 @@ namespace chaiscript
                   return children[i+1]->eval(t_ss);
                 }
                 else if (children[i]->text == "else if") {
-                  if (get_bool_condition(children[i+1]->eval(t_ss))) {
+                  if (get_bool_condition(children[i+1]->eval(t_ss), t_ss)) {
                     return children[i+2]->eval(t_ss);
                   }
                 }
@@ -905,7 +905,7 @@ namespace chaiscript
           try {
             for (
                 children[0]->eval(t_ss);
-                get_bool_condition(children[1]->eval(t_ss));
+                get_bool_condition(children[1]->eval(t_ss), t_ss);
                 children[2]->eval(t_ss)
                 ) {
               try {
@@ -1498,8 +1498,8 @@ namespace chaiscript
 
         virtual ~Logical_And_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE{
-          return const_var(get_bool_condition(children[0]->eval(t_ss))
-              && get_bool_condition(children[2]->eval(t_ss)));
+          return const_var(get_bool_condition(children[0]->eval(t_ss), t_ss)
+              && get_bool_condition(children[2]->eval(t_ss), t_ss));
         }
 
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE
@@ -1515,8 +1515,8 @@ namespace chaiscript
         { assert(children.size() == 3); }
         virtual ~Logical_Or_AST_Node() {}
         virtual Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const CHAISCRIPT_OVERRIDE{
-          return const_var(get_bool_condition(children[0]->eval(t_ss))
-              || get_bool_condition(children[2]->eval(t_ss)));
+          return const_var(get_bool_condition(children[0]->eval(t_ss), t_ss)
+              || get_bool_condition(children[2]->eval(t_ss), t_ss));
         }
 
         virtual std::string pretty_print() const CHAISCRIPT_OVERRIDE

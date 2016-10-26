@@ -489,9 +489,9 @@ namespace chaiscript
         }
       }
 
-      static bool get_bool_condition(const Boxed_Value &t_bv) {
+      static bool get_bool_condition(const Boxed_Value &t_bv, const chaiscript::detail::Dispatch_State &t_ss) {
         try {
-          return boxed_cast<bool>(t_bv);
+          return t_ss->boxed_cast<bool>(t_bv);
         }
         catch (const exception::bad_boxed_cast &) {
           throw exception::eval_error("Condition not boolean");

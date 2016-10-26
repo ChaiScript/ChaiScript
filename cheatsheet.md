@@ -84,6 +84,33 @@ chai.add(chaiscript::user_type<MyClass>(), "MyClass");
 
 User defined type conversions are possible, defined in either script or in C++.
 
+
+### ChaiScript Defined Conversions
+
+Function objects (including lambdas) can be used to add type conversions
+from inside of ChaiScript:
+
+```
+add_type_conversion(type("string"), type("Type_Info"), fun(s) { return type(s); });
+```
+
+### C++ Defined Conversions
+
+Invoking a C++ type conversion possible with `static_cast`
+
+```
+chai.add(chaiscript::type_conversion<T, bool>());
+```
+
+Calling a user defined type conversion that takes a lambda
+
+```
+chai.add(chaiscript::type_conversion<TestBaseType, Type2>([](const TestBaseType &t_bt) { /* return converted thing */ }));
+```
+
+
+### Helpers
+
 A helper function exists for strongly typed and ChaiScript `Vector` function conversion definition:
 
 ```
@@ -95,6 +122,7 @@ A helper function also exists for strongly typed and ChaiScript `Map` function c
 ```
 chai.add(chaiscript::map_conversion<std::map<std::string, int>>());
 ```
+
 
 
 This allows you to pass a ChaiScript function to a function requiring `std::vector<int>`
