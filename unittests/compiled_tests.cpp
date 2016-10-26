@@ -15,6 +15,7 @@
 #endif
 
 
+#include <chaiscript/chaiscript.hpp>
 #include <chaiscript/chaiscript_basic.hpp>
 #include <chaiscript/utility/utility.hpp>
 #include <chaiscript/dispatchkit/bootstrap_stl.hpp>
@@ -980,6 +981,11 @@ TEST_CASE("type_conversion to bool")
     operator bool() const { return true; }
   };
   module->add(chaiscript::type_conversion<T, bool>());
+}
+
+TEST_CASE("Make sure ChaiScript object still compiles / executes")
+{
+  chaiscript::ChaiScript chai;
 }
 
 TEST_CASE("Test stdlib options")
