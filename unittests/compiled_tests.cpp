@@ -988,6 +988,34 @@ TEST_CASE("Make sure ChaiScript object still compiles / executes")
   chaiscript::ChaiScript chai;
 }
 
+struct Count_Tracer
+{
+  int count = 0;
+  template<typename T>
+    void trace(const chaiscript::detail::Dispatch_State &, const chaiscript::eval::AST_Node_Impl<T> *)
+    {
+      ++count;
+    }
+};
+
+
+TEST_CASE("Test count tracer")
+{
+  typedef chaiscript::parser::ChaiScript_Parser< chaiscript::eval::Tracer<Count_Tracer>, chaiscript::optimizer::Optimizer_Default >  Parser_Type;
+
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library(),
+      std::make_unique<Parser_Type>());
+
+  Parser_Type &parser = dynamic_cast<Parser_Type &>(chai.get_parser());
+
+  const auto count = parser.get_tracer().count;
+
+  chai.eval("");
+
+  CHECK(parser.get_tracer().count > count);
+}
+
+
 TEST_CASE("Test stdlib options")
 {
   const auto test_has_external_scripts = [](chaiscript::ChaiScript_Basic &chai) { 

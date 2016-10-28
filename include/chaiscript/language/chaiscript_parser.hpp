@@ -355,6 +355,16 @@ namespace chaiscript
         m_match_stack.reserve(2);
       }
 
+      Tracer &get_tracer() 
+      {
+        return m_tracer;
+      }
+
+      Optimizer &get_optimizer()
+      {
+        return m_optimizer;
+      }
+
       ChaiScript_Parser(const ChaiScript_Parser &) = default;
       ChaiScript_Parser &operator=(const ChaiScript_Parser &) = delete;
       ChaiScript_Parser(ChaiScript_Parser &&) = default;

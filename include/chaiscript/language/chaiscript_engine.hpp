@@ -307,6 +307,10 @@ namespace chaiscript
       }
     }
 
+    parser::ChaiScript_Parser_Base &get_parser()
+    {
+      return *m_parser;
+    }
 
     const Boxed_Value eval(const AST_NodePtr &t_ast)
     {
