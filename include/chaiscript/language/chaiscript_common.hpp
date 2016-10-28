@@ -72,7 +72,7 @@ namespace chaiscript
   namespace
   {
     /// Helper lookup to get the name of each node type
-    const char *ast_node_type_to_string(AST_Node_Type ast_node_type) {
+    inline const char *ast_node_type_to_string(AST_Node_Type ast_node_type) {
       static const char * const ast_node_types[] = { "Id", "Fun_Call", "Unused_Return_Fun_Call", "Arg_List", "Equation", "Var_Decl",
                                     "Array_Call", "Dot_Access", 
                                     "Lambda", "Block", "Scopeless_Block", "Def", "While", "If", "For", "Ranged_For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
@@ -141,7 +141,7 @@ namespace chaiscript
       }
 
       load_module_error(const load_module_error &) = default;
-      virtual ~load_module_error() noexcept = default;
+      ~load_module_error() noexcept override = default;
 
       static std::string format_error(const std::string &t_name, const std::vector<load_module_error> &t_errors)
       {
@@ -200,7 +200,7 @@ namespace chaiscript
         std::ostringstream ss;
 
         ss << what();
-        if (call_stack.size() > 0) {
+        if (!call_stack.empty()) {
           ss << "during evaluation at (" << fname(call_stack[0]) << " " << startpos(call_stack[0]) << ")\n";
           ss << '\n' << detail << '\n';
           ss << "  " << fname(call_stack[0]) << " (" << startpos(call_stack[0]) << ") '" << pretty(call_stack[0]) << "'";
@@ -217,7 +217,7 @@ namespace chaiscript
         return ss.str();
       }
 
-      virtual ~eval_error() noexcept = default;
+      ~eval_error() noexcept override = default;
 
     private:
 
@@ -481,7 +481,7 @@ namespace chaiscript
       { }
 
       file_not_found_error(const file_not_found_error &) = default;
-      virtual ~file_not_found_error() noexcept {}
+      ~file_not_found_error() noexcept override = default;
     };
 
   }
@@ -603,13 +603,13 @@ namespace chaiscript
 
       /// Special type indicating a call to 'break'
       struct Break_Loop {
-        Break_Loop() { }
+        Break_Loop() = default;
       };
 
 
       /// Special type indicating a call to 'continue'
       struct Continue_Loop {
-        Continue_Loop() { }
+        Continue_Loop() = default;
       };
 
 
@@ -663,7 +663,7 @@ namespace chaiscript
 
         void save_params(std::initializer_list<Boxed_Value> t_params)
         {
-          m_ds->save_function_params(std::move(t_params));
+          m_ds->save_function_params(t_params);
         }
 
 

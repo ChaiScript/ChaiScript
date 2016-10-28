@@ -63,7 +63,7 @@ namespace chaiscript
 
         void push_front(std::string t_name, Type_Info t_ti)
         {
-          m_types.emplace(m_types.begin(), std::move(t_name), std::move(t_ti));
+          m_types.emplace(m_types.begin(), std::move(t_name), t_ti);
           update_has_types();
         }
 
@@ -74,8 +74,8 @@ namespace chaiscript
 
         bool match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const
         {
-          if (!m_has_types) return true;
-          if (vals.size() != m_types.size()) return false;
+          if (!m_has_types) { return true; }
+          if (vals.size() != m_types.size()) { return false; }
 
           for (size_t i = 0; i < vals.size(); ++i)
           {
@@ -282,7 +282,7 @@ namespace chaiscript
 
         guard_error(const guard_error &) = default;
 
-        virtual ~guard_error() noexcept = default;
+        ~guard_error() noexcept override = default;
     };
   }
 
@@ -307,18 +307,18 @@ namespace chaiscript
         }
 
 
-        virtual bool operator==(const Proxy_Function_Base &rhs) const override
+        bool operator==(const Proxy_Function_Base &rhs) const override
         {
           const Dynamic_Proxy_Function *prhs = dynamic_cast<const Dynamic_Proxy_Function *>(&rhs);
 
           return this == &rhs
-            || (prhs
+            || ((prhs != nullptr)
                 && this->m_arity == prhs->m_arity
                 && !this->m_guard && !prhs->m_guard
                 && this->m_param_types == prhs->m_param_types);
         }
 
-        virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
+        bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
         {
           return (m_arity < 0 || (vals.size() == size_t(m_arity) && m_param_types.match(vals, t_conversions)))
             && test_guard(vals, t_conversions);
@@ -516,7 +516,7 @@ namespace chaiscript
           return retval;
         }
 
-        virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+        Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
           return (*m_f)(build_param_list(params), t_conversions);
         }
@@ -742,7 +742,7 @@ namespace chaiscript
 
 
         dispatch_error(const dispatch_error &) = default;
-        virtual ~dispatch_error() noexcept = default;
+        ~dispatch_error() noexcept override = default;
 
         std::vector<Boxed_Value> parameters;
         std::vector<Const_Proxy_Function> functions;
@@ -759,7 +759,7 @@ namespace chaiscript
         {
           const std::vector<Type_Info> &types = t_func->get_param_types();
 
-          if (t_func->get_arity() == -1) return false;
+          if (t_func->get_arity() == -1) { return false; }
 
           assert(plist.size() == types.size() - 1);
 

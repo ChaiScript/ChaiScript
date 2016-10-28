@@ -64,7 +64,7 @@ namespace chaiscript
         }();
 
         chaiscript::eval::detail::Stack_Push_Pop tpp(state);
-        if (thisobj) state.add_object("this", *thisobj);
+        if (thisobj) { state.add_object("this", *thisobj); }
 
         if (t_locals) {
           for (const auto &local : *t_locals) {
@@ -91,7 +91,7 @@ namespace chaiscript
     {
       AST_Node_Impl(std::string t_ast_node_text, AST_Node_Type t_id, Parse_Location t_loc, 
                std::vector<AST_Node_Impl_Ptr<T>> t_children = std::vector<AST_Node_Impl_Ptr<T>>())
-        : AST_Node(std::move(t_ast_node_text), std::move(t_id), std::move(t_loc)),
+        : AST_Node(std::move(t_ast_node_text), t_id, std::move(t_loc)),
           children(std::move(t_children))
       {
       }
@@ -851,7 +851,7 @@ namespace chaiscript
           const auto get_function = [&t_ss](const std::string &t_name, auto &t_hint){
             uint_fast32_t hint = t_hint;
             auto funs = t_ss->get_function(t_name, hint);
-            if (funs.first != hint) t_hint = uint_fast32_t(funs.first);
+            if (funs.first != hint) { t_hint = uint_fast32_t(funs.first); }
             return std::move(funs.second);
           };
 

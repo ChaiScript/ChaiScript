@@ -255,7 +255,7 @@ namespace chaiscript
       memset( &rInfo, 0, sizeof(rInfo) ); 
       cast_union u;
       u.in_ptr = &ChaiScript_Basic::use;
-      if ( dladdr(static_cast<void*>(u.out_ptr), &rInfo) && rInfo.dli_fname ) { 
+      if ( (dladdr(static_cast<void*>(u.out_ptr), &rInfo) != 0) && (rInfo.dli_fname != nullptr) ) { 
         std::string dllpath(rInfo.dli_fname);
         const size_t lastslash = dllpath.rfind('/');
         if (lastslash != std::string::npos)

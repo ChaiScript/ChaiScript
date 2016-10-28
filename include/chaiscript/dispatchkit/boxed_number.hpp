@@ -30,7 +30,7 @@ namespace chaiscript
     {
       arithmetic_error(const std::string& reason) : std::runtime_error("Arithmetic error: " + reason) {}
       arithmetic_error(const arithmetic_error &) = default;
-      virtual ~arithmetic_error() noexcept = default;
+      ~arithmetic_error() noexcept override = default;
     };
   }
 }

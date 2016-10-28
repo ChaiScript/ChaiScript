@@ -243,7 +243,7 @@ namespace chaiscript
         Position() = default;
 
         Position(std::string::const_iterator t_pos, std::string::const_iterator t_end)
-          : line(1), col(1), m_pos(std::move(t_pos)), m_end(std::move(t_end)), m_last_col(1)
+          : line(1), col(1), m_pos(t_pos), m_end(t_end), m_last_col(1)
         {
         }
 
@@ -868,7 +868,7 @@ namespace chaiscript
             }();
 
             m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
-                  const_var(std::move(fun_name))));
+                  const_var(fun_name)));
           } else if (text == "__CLASS__") {
             const std::string fun_name = [&]()->std::string{
               for (size_t idx = m_match_stack.size() - 1; idx > 1; --idx)
@@ -883,7 +883,7 @@ namespace chaiscript
             }();
 
             m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
-                  const_var(std::move(fun_name))));
+                  const_var(fun_name)));
           } else if (text == "_") {
             m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
                   Boxed_Value(std::make_shared<dispatch::Placeholder_Object>())));
@@ -1009,7 +1009,7 @@ namespace chaiscript
 
         void process_hex()
         {
-          auto val = stoll(hex_matches, 0, 16);
+          auto val = stoll(hex_matches, nullptr, 16);
           match.push_back(char_type(val));
           hex_matches.clear();
           is_escaped = false;
@@ -1019,7 +1019,7 @@ namespace chaiscript
 
         void process_octal()
         {
-          auto val = stoll(octal_matches, 0, 8);
+          auto val = stoll(octal_matches, nullptr, 8);
           match.push_back(char_type(val));
           octal_matches.clear();
           is_escaped = false;
@@ -1029,7 +1029,7 @@ namespace chaiscript
 
         void process_unicode()
         {
-          auto val = stoll(hex_matches, 0, 16);
+          auto val = stoll(hex_matches, nullptr, 16);
           hex_matches.clear();
           match += detail::Char_Parser_Helper<string_type>::str_from_ll(val);
           is_escaped = false;
@@ -2072,17 +2072,21 @@ namespace chaiscript
               /// \todo Work around for method calls until we have a better solution
               if (!m_match_stack.back()->children.empty()) {
                 if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Dot_Access) {
-                  if (m_match_stack.empty()) throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
-                  if (m_match_stack.back()->children.empty()) throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
+                  if (m_match_stack.empty()) { throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
+}
+                  if (m_match_stack.back()->children.empty()) { throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
+}
                   auto dot_access = m_match_stack.back()->children[0];
                   auto func_call = m_match_stack.back();
                   m_match_stack.pop_back();
                   func_call->children.erase(func_call->children.begin());
-                  if (dot_access->children.empty()) throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
+                  if (dot_access->children.empty()) { throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
+}
                   func_call->children.insert(func_call->children.begin(), dot_access->children.back());
                   dot_access->children.pop_back();
                   dot_access->children.push_back(std::move(func_call));
-                  if (dot_access->children.size() != 2) throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
+                  if (dot_access->children.size() != 2) { throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
+}
                   m_match_stack.push_back(std::move(dot_access));
                 }
               }
@@ -2192,7 +2196,7 @@ namespace chaiscript
           if (!Char(']')) {
             throw exception::eval_error("Missing closing square bracket ']' in container initializer", File_Position(m_position.line, m_position.col), *m_filename);
           }
-          if ((prev_stack_top != m_match_stack.size()) && (m_match_stack.back()->children.size() > 0)) {
+          if ((prev_stack_top != m_match_stack.size()) && (!m_match_stack.back()->children.empty())) {
             if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Value_Range) {
               build_match<eval::Inline_Range_AST_Node<Tracer>>(prev_stack_top);
             }

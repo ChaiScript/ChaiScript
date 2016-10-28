@@ -84,12 +84,14 @@ arena<N, alignment>::deallocate(char* p, std::size_t n) noexcept
     assert(pointer_in_buffer(ptr_) && "short_alloc has outlived arena");
     if (pointer_in_buffer(p))
     {
-        n = align_up(n);
-        if (p + n == ptr_)
-            ptr_ = p;
+      n = align_up(n);
+      if (p + n == ptr_) {
+        ptr_ = p;
+      }
     }
-    else
-        ::operator delete(p);
+    else {
+      ::operator delete(p);
+    }
 }
 
 template <class T, std::size_t N, std::size_t Align = alignof(std::max_align_t)>

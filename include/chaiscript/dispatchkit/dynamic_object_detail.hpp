@@ -99,7 +99,7 @@ namespace chaiscript
           }
 
         protected:
-          virtual Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+          Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
           {
             if (dynamic_object_typename_match(params, m_type_name, m_ti, t_conversions))
             {
@@ -109,7 +109,7 @@ namespace chaiscript
             } 
           }
 
-          virtual bool compare_first_type(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const override
+          bool compare_first_type(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const override
           {
             return dynamic_object_typename_match(bv, m_type_name, m_ti, t_conversions);
           }
@@ -151,7 +151,7 @@ namespace chaiscript
           bool dynamic_object_typename_match(const std::vector<Boxed_Value> &bvs, const std::string &name,
               const std::unique_ptr<Type_Info> &ti, const Type_Conversions_State &t_conversions) const
           {
-            if (bvs.size() > 0)
+            if (!bvs.empty())
             {
               return dynamic_object_typename_match(bvs[0], name, ti, t_conversions);
             } else {
@@ -202,7 +202,7 @@ namespace chaiscript
           bool operator==(const Proxy_Function_Base &f) const override
           {
             const Dynamic_Object_Constructor *dc = dynamic_cast<const Dynamic_Object_Constructor*>(&f);
-            return dc && dc->m_type_name == m_type_name && (*dc->m_func) == (*m_func);
+            return (dc != nullptr) && dc->m_type_name == m_type_name && (*dc->m_func) == (*m_func);
           }
 
           bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override

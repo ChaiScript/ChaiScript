@@ -44,7 +44,7 @@ namespace chaiscript
 
       arity_error(const arity_error &) = default;
 
-      virtual ~arity_error() noexcept {}
+      ~arity_error() noexcept override = default;
 
       int got;
       int expected;
