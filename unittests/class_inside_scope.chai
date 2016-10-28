@@ -1,8 +1,8 @@
 
 
-{
-  class C {
-    var data;
-    def C() {}
-  }
+try {
+  parse("{  class C {    var data;    def C() {}  } }")
+  assert_false(true)
+} catch  (e) {
+  assert_true(true)
 }

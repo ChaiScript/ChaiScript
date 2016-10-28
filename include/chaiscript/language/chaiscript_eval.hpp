@@ -1313,11 +1313,8 @@ namespace chaiscript
           try {
             retval = this->children[0]->eval(t_ss);
           }
-          catch (exception::eval_error &) {
-            if (this->children.back()->identifier == AST_Node_Type::Finally) {
-              this->children.back()->children[0]->eval(t_ss);
-            }
-            throw;
+          catch (const exception::eval_error &e) {
+            retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
           }
           catch (const std::runtime_error &e) {
             retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
