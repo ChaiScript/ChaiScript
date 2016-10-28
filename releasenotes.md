@@ -5,6 +5,9 @@ Current Version: 5.8.6
 
 ### Changes since 5.8.5
 * Optimize away `return` statements in lambdas also
+* Allow conversions to bool in conditionals
+* Don't allow `class` statements inside of scopes
+* Properly error when a dynamic object non-function member is called
 
 ### Changes since 5.8.4
 * Fix order of operations for prefix operators
