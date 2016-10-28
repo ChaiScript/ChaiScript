@@ -1735,12 +1735,16 @@ namespace chaiscript
       }
 
       /// Reads a class block from input
-      bool Class() {
+      bool Class(const bool t_class_allowed) {
         bool retval = false;
 
         size_t prev_stack_top = m_match_stack.size();
 
         if (Keyword("class")) {
+          if (!t_class_allowed) {
+            throw exception::eval_error("Class definitions only allowed at top scope", File_Position(m_position.line, m_position.col), *m_filename);
+          }
+
           retval = true;
 
           if (!Id(true)) {
@@ -2421,7 +2425,7 @@ namespace chaiscript
       }
 
       /// Top level parser, starts parsing of all known parses
-      bool Statements() {
+      bool Statements(const bool t_class_allowed = false) {
         bool retval = false;
 
         bool has_more = true;
@@ -2429,7 +2433,7 @@ namespace chaiscript
 
         while (has_more) {
           const auto start = m_position;
-          if (Def() || Try() || If() || While() || Class() || For() || Switch()) {
+          if (Def() || Try() || If() || While() || Class(t_class_allowed) || For() || Switch()) {
             if (!saw_eol) {
               throw exception::eval_error("Two function definitions missing line separator", File_Position(start.line, start.col), *m_filename);
             }
@@ -2492,7 +2496,7 @@ namespace chaiscript
           /// \todo respect // -*- coding: utf-8 -*- on line 1 or 2 see: http://evanjones.ca/python-utf8.html)
         }
 
-        if (Statements()) {
+        if (Statements(true)) {
           if (m_position.has_more()) {
             throw exception::eval_error("Unparsed input", File_Position(m_position.line, m_position.col), t_fname);
           } else {
