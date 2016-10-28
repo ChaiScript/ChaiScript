@@ -53,7 +53,7 @@ namespace chaiscript
             m_doti(user_type<Dynamic_Object>())
         {}
 
-        Param_Types(std::vector<std::pair<std::string, Type_Info>> t_types)
+        explicit Param_Types(std::vector<std::pair<std::string, Type_Info>> t_types)
           : m_types(std::move(t_types)),
             m_has_types(false),
             m_doti(user_type<Dynamic_Object>())
@@ -529,7 +529,7 @@ namespace chaiscript
     class Proxy_Function_Impl_Base : public Proxy_Function_Base
     {
       public:
-        Proxy_Function_Impl_Base(const std::vector<Type_Info> &t_types)
+        explicit Proxy_Function_Impl_Base(const std::vector<Type_Info> &t_types)
           : Proxy_Function_Base(t_types, static_cast<int>(t_types.size()) - 1)
         {
         }
@@ -550,7 +550,7 @@ namespace chaiscript
       class Proxy_Function_Callable_Impl final : public Proxy_Function_Impl_Base
     {
       public:
-        Proxy_Function_Callable_Impl(Callable f)
+        explicit Proxy_Function_Callable_Impl(Callable f)
           : Proxy_Function_Impl_Base(detail::build_param_type_list(static_cast<Func *>(nullptr))),
             m_f(std::move(f))
         {
@@ -581,7 +581,7 @@ namespace chaiscript
     class Assignable_Proxy_Function : public Proxy_Function_Impl_Base
     {
       public:
-        Assignable_Proxy_Function(const std::vector<Type_Info> &t_types)
+        explicit Assignable_Proxy_Function(const std::vector<Type_Info> &t_types)
           : Proxy_Function_Impl_Base(t_types)
         {
         }
@@ -637,7 +637,7 @@ namespace chaiscript
       class Attribute_Access final : public Proxy_Function_Base
     {
       public:
-        Attribute_Access(T Class::* t_attr)
+        explicit Attribute_Access(T Class::* t_attr)
           : Proxy_Function_Base(param_types(), 1),
             m_attr(t_attr)
         {

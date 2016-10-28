@@ -110,13 +110,13 @@ public:
     short_alloc(const short_alloc&) = default;
     short_alloc& operator=(const short_alloc&) = delete;
 
-    short_alloc(arena_type& a) noexcept : a_(a)
+    explicit short_alloc(arena_type& a) noexcept : a_(a)
     {
         static_assert(size % alignment == 0,
                       "size N needs to be a multiple of alignment Align");
     }
     template <class U>
-        short_alloc(const short_alloc<U, N, alignment>& a) noexcept
+        explicit short_alloc(const short_alloc<U, N, alignment>& a) noexcept
             : a_(a.a_) {}
 
     template <class _Up> struct rebind {using other = short_alloc<_Up, N, alignment>;};

@@ -23,7 +23,7 @@ namespace chaiscript {
       struct Tracer : T...
     {
       Tracer() = default;
-      Tracer(T ... t)
+      explicit Tracer(T ... t)
         : T(std::move(t))...
       {
       }

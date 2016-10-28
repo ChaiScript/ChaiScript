@@ -130,7 +130,7 @@ namespace chaiscript
     /// \brief Thrown if an error occurs while attempting to load a binary module
     struct load_module_error : std::runtime_error
     {
-      load_module_error(const std::string &t_reason) noexcept
+      explicit load_module_error(const std::string &t_reason) noexcept
         : std::runtime_error(t_reason)
       {
       }
@@ -188,7 +188,7 @@ namespace chaiscript
         reason(t_why), start_position(t_where), filename(t_fname)
       {}
 
-      eval_error(const std::string &t_why) noexcept
+      explicit eval_error(const std::string &t_why) noexcept
         : std::runtime_error("Error: \"" + t_why + "\" "),
         reason(t_why) 
       {}
@@ -476,7 +476,7 @@ namespace chaiscript
 
     /// Errors generated when loading a file
     struct file_not_found_error : std::runtime_error {
-      file_not_found_error(const std::string &t_filename) noexcept
+      explicit file_not_found_error(const std::string &t_filename) noexcept
         : std::runtime_error("File Not Found: " + t_filename)
       { }
 
@@ -597,7 +597,7 @@ namespace chaiscript
       struct Return_Value {
         Boxed_Value retval;
 
-        Return_Value(Boxed_Value t_return_value) : retval(std::move(t_return_value)) { }
+        explicit Return_Value(Boxed_Value t_return_value) : retval(std::move(t_return_value)) { }
       };
 
 
@@ -621,7 +621,7 @@ namespace chaiscript
         Scope_Push_Pop(const Scope_Push_Pop &) = delete;
         Scope_Push_Pop& operator=(const Scope_Push_Pop &) = delete;
 
-        Scope_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
+        explicit Scope_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
           : m_ds(t_ds)
         {
           m_ds->new_scope(m_ds.stack_holder());
@@ -645,7 +645,7 @@ namespace chaiscript
         Function_Push_Pop(const Function_Push_Pop &) = delete;
         Function_Push_Pop& operator=(const Function_Push_Pop &) = delete;
 
-        Function_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
+        explicit Function_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
           : m_ds(t_ds)
         {
           m_ds->new_function_call(m_ds.stack_holder(), m_ds.conversion_saves());
@@ -679,7 +679,7 @@ namespace chaiscript
         Stack_Push_Pop(const Stack_Push_Pop &) = delete;
         Stack_Push_Pop& operator=(const Stack_Push_Pop &) = delete;
 
-        Stack_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
+        explicit Stack_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
           : m_ds(t_ds)
         {
           m_ds->new_stack(m_ds.stack_holder());

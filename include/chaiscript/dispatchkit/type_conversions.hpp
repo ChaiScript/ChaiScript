@@ -39,7 +39,7 @@ namespace chaiscript
         {
         }
 
-        bad_boxed_dynamic_cast(const std::string &w) noexcept
+        explicit bad_boxed_dynamic_cast(const std::string &w) noexcept
           : bad_boxed_cast(w)
         {
         }
@@ -63,7 +63,7 @@ namespace chaiscript
         {
         }
 
-        bad_boxed_type_cast(const std::string &w) noexcept
+        explicit bad_boxed_type_cast(const std::string &w) noexcept
           : bad_boxed_cast(w)
         {
         }

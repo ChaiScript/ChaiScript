@@ -17,7 +17,7 @@ namespace chaiscript {
       struct Optimizer : T...
     {
       Optimizer() = default;
-      Optimizer(T ... t)
+      explicit Optimizer(T ... t)
         : T(std::move(t))...
       {
       }

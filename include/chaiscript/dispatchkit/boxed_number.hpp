@@ -28,7 +28,7 @@ namespace chaiscript
   {
     struct arithmetic_error : std::runtime_error
     {
-      arithmetic_error(const std::string& reason) : std::runtime_error("Arithmetic error: " + reason) {}
+      explicit arithmetic_error(const std::string& reason) : std::runtime_error("Arithmetic error: " + reason) {}
       arithmetic_error(const arithmetic_error &) = default;
       ~arithmetic_error() noexcept override = default;
     };

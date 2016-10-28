@@ -79,7 +79,7 @@ namespace chaiscript
     {
       try {
         const auto p = m_parser->parse(t_input, t_filename);
-        return p->eval(m_engine);
+        return p->eval(chaiscript::detail::Dispatch_State(m_engine));
       }
       catch (chaiscript::eval::detail::Return_Value &rv) {
         return rv.retval;
@@ -284,7 +284,7 @@ namespace chaiscript
     ///
     /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
     /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
-    ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
+    explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
                      std::vector<std::string> t_module_paths = {},
                      std::vector<std::string> t_use_paths = {},
                      const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options())
@@ -315,7 +315,7 @@ namespace chaiscript
     const Boxed_Value eval(const AST_NodePtr &t_ast)
     {
       try {
-        return t_ast->eval(m_engine);
+        return t_ast->eval(chaiscript::detail::Dispatch_State(m_engine));
       } catch (const exception::eval_error &t_ee) {
         throw Boxed_Value(t_ee);
       }

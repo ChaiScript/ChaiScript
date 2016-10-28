@@ -238,7 +238,7 @@ namespace chaiscript
       {
       }
 
-      Constant_AST_Node(Boxed_Value t_value)
+      explicit Constant_AST_Node(Boxed_Value t_value)
         : AST_Node_Impl<T>("", AST_Node_Type::Constant, Parse_Location()),
           m_value(std::move(t_value))
       {

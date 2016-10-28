@@ -266,7 +266,7 @@ namespace chaiscript
     class Dispatch_Function final : public dispatch::Proxy_Function_Base
     {
       public:
-        Dispatch_Function(std::vector<Proxy_Function> t_funcs)
+        explicit Dispatch_Function(std::vector<Proxy_Function> t_funcs)
           : Proxy_Function_Base(build_type_infos(t_funcs), calculate_arity(t_funcs)),
             m_funcs(std::move(t_funcs))
         {
@@ -447,7 +447,7 @@ namespace chaiscript
           Type_Name_Map m_types;
         };
 
-        Dispatch_Engine(chaiscript::parser::ChaiScript_Parser_Base &parser)
+        explicit Dispatch_Engine(chaiscript::parser::ChaiScript_Parser_Base &parser)
           : m_stack_holder(this),
             m_parser(parser)
         {
@@ -1516,7 +1516,7 @@ namespace chaiscript
     class Dispatch_State
     {
       public:
-        Dispatch_State(Dispatch_Engine &t_engine)
+        explicit Dispatch_State(Dispatch_Engine &t_engine)
           : m_engine(t_engine),
             m_stack_holder(t_engine.get_stack_holder()),
             m_conversions(t_engine.conversions(), t_engine.conversions().conversion_saves())
