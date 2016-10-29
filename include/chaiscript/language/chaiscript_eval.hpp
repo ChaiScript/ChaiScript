@@ -270,60 +270,13 @@ namespace chaiscript
         mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
-
     template<typename T>
-    struct Unused_Return_Fun_Call_AST_Node final : AST_Node_Impl<T> {
-        Unused_Return_Fun_Call_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
-          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Unused_Return_Fun_Call, std::move(t_loc), std::move(t_children)) { }
-
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
-        {
-          chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-
-          std::vector<Boxed_Value> params;
-
-          params.reserve(this->children[1]->children.size());
-          for (const auto &child : this->children[1]->children) {
-            params.push_back(child->eval(t_ss));
-          }
-
-          Boxed_Value fn(this->children[0]->eval(t_ss));
-
-          try {
-            return (*t_ss->boxed_cast<const dispatch::Proxy_Function_Base *>(fn))(params, t_ss.conversions());
-          }
-          catch(const exception::dispatch_error &e){
-            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, e.functions, false, *t_ss);
-          }
-          catch(const exception::bad_boxed_cast &){
-            try {
-              Const_Proxy_Function f = t_ss->boxed_cast<const Const_Proxy_Function &>(fn);
-              // handle the case where there is only 1 function to try to call and dispatch fails on it
-              throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, {f}, false, *t_ss);
-            } catch (const exception::bad_boxed_cast &) {
-              throw exception::eval_error("'" + this->children[0]->pretty_print() + "' does not evaluate to a function.");
-            }
-          }
-          catch(const exception::arity_error &e){
-            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
-          }
-          catch(const exception::guard_error &e){
-            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
-          }
-          catch(detail::Return_Value &rv) {
-            return rv.retval;
-          }
-        }
-    };
-
-
-
-    template<typename T>
-    struct Fun_Call_AST_Node final : AST_Node_Impl<T> {
+    struct Fun_Call_AST_Node : AST_Node_Impl<T> {
         Fun_Call_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Fun_Call, std::move(t_loc), std::move(t_children)) { }
 
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
+        template<bool Save_Params>
+        Boxed_Value do_eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
         {
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
@@ -334,7 +287,9 @@ namespace chaiscript
             params.push_back(child->eval(t_ss));
           }
 
-          fpp.save_params(params);
+          if (Save_Params) {
+            fpp.save_params(params);
+          }
 
           Boxed_Value fn(this->children[0]->eval(t_ss));
 
@@ -364,8 +319,26 @@ namespace chaiscript
           }
         }
 
+        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
+        {
+          return do_eval_internal<true>(t_ss);
+        }
 
     };
+
+
+    template<typename T>
+    struct Unused_Return_Fun_Call_AST_Node final : Fun_Call_AST_Node<T> {
+        Unused_Return_Fun_Call_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
+          Fun_Call_AST_Node<T>(std::move(t_ast_node_text), std::move(t_loc), std::move(t_children)) { }
+
+        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
+        {
+          return this->template do_eval_internal<false>(t_ss);
+        }
+    };
+
+
 
 
 
@@ -805,21 +778,6 @@ namespace chaiscript
           this->children[1]->eval(t_ss);
 
           return void_var();
-        }
-    };
-
-    template<typename T>
-    struct Ternary_Cond_AST_Node final : AST_Node_Impl<T> {
-        Ternary_Cond_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
-          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Ternary_Cond, std::move(t_loc), std::move(t_children)) 
-          { assert(this->children.size() == 3); }
-
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
-          if (this->get_bool_condition(this->children[0]->eval(t_ss), t_ss)) {
-            return this->children[1]->eval(t_ss);
-          } else {
-            return this->children[2]->eval(t_ss);
-          }
         }
     };
 

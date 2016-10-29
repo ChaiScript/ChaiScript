@@ -196,7 +196,7 @@ namespace chaiscript {
     struct If {
       template<typename T>
       auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
-        if ((node->identifier == AST_Node_Type::If || node->identifier == AST_Node_Type::Ternary_Cond)
+        if ((node->identifier == AST_Node_Type::If)
              && node->children.size() >= 2
              && node->children[0]->identifier == AST_Node_Type::Constant)
         {
