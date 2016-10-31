@@ -276,7 +276,7 @@ namespace chaiscript
           AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Fun_Call, std::move(t_loc), std::move(t_children)) { }
 
         template<bool Save_Params>
-        Boxed_Value do_eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
+        Boxed_Value do_eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const
         {
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
