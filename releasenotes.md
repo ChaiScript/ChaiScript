@@ -27,6 +27,8 @@ Current Version: 6.0.0
 * Modular optimization system; this can be accessed via the ChaiScript_Basic interface
 * Execution tracing capability; also accessed via ChaiScript_Basic interface
 * range-based for loops `for( id : container ) { }`
+* If-init expressions (ala C++17)
+
 
 #### Improvements
 
