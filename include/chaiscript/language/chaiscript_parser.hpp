@@ -225,10 +225,18 @@ namespace chaiscript
         return operators;
       }
 
-      static constexpr const char * const m_multiline_comment_begin = "/*";
-      static constexpr const char * const m_multiline_comment_end = "*/";
-      static constexpr const char * const m_singleline_comment = "//";
-      static constexpr const char * const m_annotation = "#";
+      static constexpr const char m_multiline_comment_begin[] = "/*";
+      static constexpr const char m_multiline_comment_end[] = "*/";
+      static constexpr const char m_singleline_comment[] = "//";
+      static constexpr const char m_annotation[] = "#";
+      static constexpr const char m_cr_lf[] = "\r\n";
+      enum {
+           m_multiline_comment_begin_len = sizeof(m_multiline_comment_begin)-1
+          ,m_multiline_comment_end_len   = sizeof(m_multiline_comment_end)-1
+          ,m_singleline_comment_len      = sizeof(m_singleline_comment)-1
+          ,m_annotation_len              = sizeof(m_annotation)-1
+          ,m_cr_lf_len                   = sizeof(m_cr_lf)-1
+      };
 
       const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &m_alphabet = create_alphabet();
       const std::vector<std::vector<std::string>> &m_operator_matches = create_operator_matches();
@@ -430,18 +438,18 @@ namespace chaiscript
 
       /// Skips any multi-line or single-line comment
       bool SkipComment() {
-        if (Symbol_(m_multiline_comment_begin)) {
+        if (Symbol_(m_multiline_comment_begin, m_multiline_comment_begin_len)) {
           while (m_position.has_more()) {
-            if (Symbol_(m_multiline_comment_end)) {
+            if (Symbol_(m_multiline_comment_end, m_multiline_comment_end_len)) {
               break;
             } else if (!Eol_()) {
               ++m_position;
             }
           }
           return true;
-        } else if (Symbol_(m_singleline_comment)) {
+        } else if (Symbol_(m_singleline_comment, m_singleline_comment_len)) {
           while (m_position.has_more()) {
-            if (Symbol_("\r\n")) {
+            if (Symbol_(m_cr_lf, m_cr_lf_len)) {
               m_position -= 2;
               break;
             } else if (Char_('\n')) {
@@ -452,9 +460,9 @@ namespace chaiscript
             }
           }
           return true;
-        } else if (Symbol_(m_annotation)) {
+        } else if (Symbol_(m_annotation, m_annotation_len)) {
           while (m_position.has_more()) {
-            if (Symbol_("\r\n")) {
+            if (Symbol_(m_cr_lf, m_cr_lf_len)) {
               m_position -= 2;
               break;
             } else if (Char_('\n')) {
@@ -1331,9 +1339,7 @@ namespace chaiscript
       }
 
       /// Reads a symbol group from input if it matches the parameter, without skipping initial whitespace
-      bool Symbol_(const char *t_s) {
-        const auto len = strlen(t_s);
-
+      bool Symbol_(const char *t_s, std::size_t len) {
         if (m_position.remaining() >= len) {
           auto tmp = m_position;
           for (size_t i = 0; m_position.has_more() && i < len; ++i) {
@@ -1363,7 +1369,7 @@ namespace chaiscript
       bool Symbol(const char *t_s, const bool t_disallow_prevention=false) {
         SkipWS();
         const auto start = m_position;
-        bool retval = Symbol_(t_s);
+        bool retval = Symbol_(t_s, std::strlen(t_s));
 
         // ignore substring matches
         if (retval && m_position.has_more() && (t_disallow_prevention == false) && char_in_alphabet(*m_position,detail::symbol_alphabet)) {
@@ -1382,7 +1388,7 @@ namespace chaiscript
       bool Eol_(const bool t_eos = false) {
         bool retval = false;
 
-        if (m_position.has_more() && (Symbol_("\r\n") || Char_('\n'))) {
+        if (m_position.has_more() && (Symbol_(m_cr_lf, m_cr_lf_len) || Char_('\n'))) {
           retval = true;
           //++m_position.line;
           m_position.col = 1;
@@ -2523,6 +2529,16 @@ namespace chaiscript
         return m_match_stack.front();
       }
     };
+    template<typename Tracer, typename Optimizer>
+    constexpr const char ChaiScript_Parser<Tracer, Optimizer>::m_multiline_comment_begin[];
+    template<typename Tracer, typename Optimizer>
+    constexpr const char ChaiScript_Parser<Tracer, Optimizer>::m_multiline_comment_end[];
+    template<typename Tracer, typename Optimizer>
+    constexpr const char ChaiScript_Parser<Tracer, Optimizer>::m_singleline_comment[];
+    template<typename Tracer, typename Optimizer>
+    constexpr const char ChaiScript_Parser<Tracer, Optimizer>::m_annotation[];
+    template<typename Tracer, typename Optimizer>
+    constexpr const char ChaiScript_Parser<Tracer, Optimizer>::m_cr_lf[];
   }
 }
 
