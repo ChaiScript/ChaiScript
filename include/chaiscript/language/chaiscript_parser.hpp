@@ -326,9 +326,10 @@ namespace chaiscript
           return static_cast<size_t>(std::distance(m_pos, m_end));
         }
 
-        char operator*() const {
+        const char& operator*() const {
           if (m_pos == m_end) {
-            return '\0';
+            static const char ktmp ='\0';
+            return ktmp;
           } else {
             return *m_pos;
           }
@@ -435,6 +436,16 @@ namespace chaiscript
             );
       }
 
+
+       /// Reads a symbol group from input if it matches the parameter, without skipping initial whitespace
+      #define Symbol_(t_s, len) \
+      ( \
+        m_position.remaining() >= len \
+        ? std::memcmp(t_s, &(*m_position), len) == 0 \
+          ? ((m_position += len),true) \
+          :false \
+        :false \
+      )
 
       /// Skips any multi-line or single-line comment
       bool SkipComment() {
@@ -841,73 +852,76 @@ namespace chaiscript
         const auto start = m_position;
         if (Id_()) {
 
-          const auto text = Position::str(start, m_position);
+          auto text = Position::str(start, m_position);
+          const auto text_hash = fnv1a_32(text.c_str());
 
           if (validate) {
             validate_object_name(text);
           }
 
-          if (text == "true") {
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, const_var(true)));
-          } else if (text == "false") {
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, const_var(false)));
-          } else if (text == "Infinity") {
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
-                  const_var(std::numeric_limits<double>::infinity())));
-          } else if (text == "NaN") {
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
-                  const_var(std::numeric_limits<double>::quiet_NaN())));
-          } else if (text == "__LINE__") {
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
-                  const_var(start.line)));
-          } else if (text == "__FILE__") {
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
-                  const_var(m_filename)));
-          } else if (text == "__FUNC__") {
-            const std::string fun_name = [&]()->std::string{
+          switch (text_hash) {
+            case fnv1a_32("true"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col, const_var(true)));
+            } break;
+            case fnv1a_32("false"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col, const_var(false)));
+            } break;
+            case fnv1a_32("Infinity"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+                const_var(std::numeric_limits<double>::infinity())));
+            } break;
+            case fnv1a_32("NaN"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+                const_var(std::numeric_limits<double>::quiet_NaN())));
+            } break;
+            case fnv1a_32("__LINE__"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+                const_var(start.line)));
+            } break;
+            case fnv1a_32("__FILE__"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+                const_var(m_filename)));
+            } break;
+            case fnv1a_32("__FUNC__"): {
+              std::string fun_name = "NOT_IN_FUNCTION";
               for (size_t idx = m_match_stack.size() - 1; idx > 0; --idx)
               {
                 if (m_match_stack[idx-1]->identifier == AST_Node_Type::Id
                     && m_match_stack[idx-0]->identifier == AST_Node_Type::Arg_List) {
-                  return m_match_stack[idx-1]->text;
+                  fun_name = m_match_stack[idx-1]->text;
                 }
               }
-              return "NOT_IN_FUNCTION";
-            }();
 
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
-                  const_var(fun_name)));
-          } else if (text == "__CLASS__") {
-            const std::string fun_name = [&]()->std::string{
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+                const_var(fun_name)));
+            } break;
+            case fnv1a_32("__CLASS__"): {
+              std::string fun_name = "NOT_IN_CLASS";
               for (size_t idx = m_match_stack.size() - 1; idx > 1; --idx)
               {
                 if (m_match_stack[idx-2]->identifier == AST_Node_Type::Id
                     && m_match_stack[idx-1]->identifier == AST_Node_Type::Id
                     && m_match_stack[idx-0]->identifier == AST_Node_Type::Arg_List) {
-                  return m_match_stack[idx-2]->text;
+                  fun_name = m_match_stack[idx-2]->text;
                 }
               }
-              return "NOT_IN_CLASS";
-            }();
 
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
-                  const_var(fun_name)));
-          } else if (text == "_") {
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
-                  Boxed_Value(std::make_shared<dispatch::Placeholder_Object>())));
-          } else {
-            m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>(
-                  [&]()->std::string{
-                    if (*start == '`') {
-                      // 'escaped' literal, like an operator name
-                      return Position::str(start+1, m_position-1);
-                    } else {
-                      return text;
-                    }
-                  }(),
-                  start.line, start.col));
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+                const_var(fun_name)));
+            } break;
+            case fnv1a_32("_"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+                Boxed_Value(std::make_shared<dispatch::Placeholder_Object>())));
+            } break;
+            default: {
+                std::string val = std::move(text);
+              if (*start == '`') {
+                // 'escaped' literal, like an operator name
+                val = Position::str(start+1, m_position-1);
+              }
+              m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>(val, start.line, start.col));
+            } break;
           }
-
 
           return true;
         } else {
@@ -1336,23 +1350,6 @@ namespace chaiscript
         }
 
         return retval;
-      }
-
-      /// Reads a symbol group from input if it matches the parameter, without skipping initial whitespace
-      bool Symbol_(const char *t_s, std::size_t len) {
-        if (m_position.remaining() >= len) {
-          auto tmp = m_position;
-          for (size_t i = 0; m_position.has_more() && i < len; ++i) {
-            if (*tmp != t_s[i]) {
-              return false;
-            }
-            ++tmp;
-          }
-          m_position = tmp;
-          return true;
-        }
-
-        return false;
       }
 
       bool is_operator(const std::string &t_s) const {
@@ -2528,6 +2525,10 @@ namespace chaiscript
 
         return m_match_stack.front();
       }
+    private:
+      static constexpr std::uint32_t fnv1a_32(const char *s, std::uint32_t h = 0x811c9dc5) {
+        return (*s == 0) ? h : fnv1a_32(s+1, ((h ^ (*s)) * 0x01000193));
+      }
     };
     template<typename Tracer, typename Optimizer>
     constexpr const char ChaiScript_Parser<Tracer, Optimizer>::m_multiline_comment_begin[];
@@ -2542,6 +2543,7 @@ namespace chaiscript
   }
 }
 
+#undef Symbol_
 
 #if defined(CHAISCRIPT_MSVC) && defined(CHAISCRIPT_PUSHED_MIN_MAX)
 #undef CHAISCRIPT_PUSHED_MIN_MAX
