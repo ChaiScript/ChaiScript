@@ -1336,7 +1336,7 @@ namespace chaiscript
 
         if (m_position.remaining() >= len) {
           auto tmp = m_position;
-          for (size_t i = 0; m_position.has_more() && i < len; ++i) {
+          for (size_t i = 0; i < len; ++i) {
             if (*tmp != t_s[i]) {
               return false;
             }
