@@ -65,7 +65,7 @@
 /// int main()
 /// {
 ///   chaiscript::ChaiScript chai;
-///   chai.add(&function, "function");
+///   chai.add(chaiscript::fun(&function), "function");
 ///
 ///   double d = chai.eval<double>("function(3, 4.75);");
 /// } 
