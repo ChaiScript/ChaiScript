@@ -438,15 +438,20 @@ namespace chaiscript
       }
 
 
-       /// Reads a symbol group from input if it matches the parameter, without skipping initial whitespace
-      #define Symbol_(t_s, len) \
-      ( \
-        m_position.remaining() >= len \
-        ? std::memcmp(t_s, &(*m_position), len) == 0 \
-          ? ((m_position += len),true) \
-          :false \
-        :false \
-      )
+      /// Reads a symbol group from input if it matches the parameter, without skipping initial whitespace
+      inline bool Symbol_(const char *t_s, const size_t len)
+      {
+        if (m_position.remaining() >= len) {
+          const char *file_pos = &(*m_position);
+          for (size_t pos = 0; pos < len; ++pos)
+          {
+            if (t_s[pos] != file_pos[pos]) { return false; }
+          }
+          m_position += len;
+          return true;
+        }
+        return false;
+      }
 
       /// Skips any multi-line or single-line comment
       bool SkipComment() {
@@ -2539,8 +2544,6 @@ namespace chaiscript
     constexpr const char ChaiScript_Parser<Tracer, Optimizer>::m_cr_lf[];
   }
 }
-
-#undef Symbol_
 
 #if defined(CHAISCRIPT_MSVC) && defined(CHAISCRIPT_PUSHED_MIN_MAX)
 #undef CHAISCRIPT_PUSHED_MIN_MAX
