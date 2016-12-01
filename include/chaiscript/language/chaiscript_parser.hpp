@@ -226,18 +226,45 @@ namespace chaiscript
         return operators;
       }
 
-      static constexpr const char m_multiline_comment_begin[] = "/*";
-      static constexpr const char m_multiline_comment_end[] = "*/";
-      static constexpr const char m_singleline_comment[] = "//";
-      static constexpr const char m_annotation[] = "#";
-      static constexpr const char m_cr_lf[] = "\r\n";
-      enum {
-           m_multiline_comment_begin_len = sizeof(m_multiline_comment_begin)-1
-          ,m_multiline_comment_end_len   = sizeof(m_multiline_comment_end)-1
-          ,m_singleline_comment_len      = sizeof(m_singleline_comment)-1
-          ,m_annotation_len              = sizeof(m_annotation)-1
-          ,m_cr_lf_len                   = sizeof(m_cr_lf)-1
-      };
+      static const std::pair<const char *, size_t> &multiline_comment_end()
+      {
+        static const char str[] = "*/";
+        static const size_t len = sizeof(str) - 1;
+        static const std::pair<const char *, size_t> p(str, len);
+        return p;
+      }
+
+      static const std::pair<const char *, size_t> &multiline_comment_begin()
+      {
+        static const char str[] = "/*";
+        static const size_t len = sizeof(str) - 1;
+        static const std::pair<const char *, size_t> p(str, len);
+        return p;
+      }
+
+      static const std::pair<const char *, size_t> &singleline_comment()
+      {
+        static const char str[] = "//";
+        static const size_t len = sizeof(str) - 1;
+        static const std::pair<const char *, size_t> p(str, len);
+        return p;
+      }
+
+      static const std::pair<const char *, size_t> &annotation()
+      {
+        static const char str[] = "#";
+        static const size_t len = sizeof(str) - 1;
+        static const std::pair<const char *, size_t> p(str, len);
+        return p;
+      }
+
+      static const std::pair<const char *, size_t> &cr_lf()
+      {
+        static const char str[] = "\r\n";
+        static const size_t len = sizeof(str) - 1;
+        static const std::pair<const char *, size_t> p(str, len);
+        return p;
+      }
 
       const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &m_alphabet = create_alphabet();
       const std::vector<std::vector<std::string>> &m_operator_matches = create_operator_matches();
@@ -453,20 +480,25 @@ namespace chaiscript
         return false;
       }
 
+      inline bool Symbol_(const std::pair<const char *, size_t> &sym)
+      {
+        return Symbol_(sym.first, sym.second);
+      }
+
       /// Skips any multi-line or single-line comment
       bool SkipComment() {
-        if (Symbol_(m_multiline_comment_begin, m_multiline_comment_begin_len)) {
+        if (Symbol_(multiline_comment_begin())) {
           while (m_position.has_more()) {
-            if (Symbol_(m_multiline_comment_end, m_multiline_comment_end_len)) {
+            if (Symbol_(multiline_comment_end())) {
               break;
             } else if (!Eol_()) {
               ++m_position;
             }
           }
           return true;
-        } else if (Symbol_(m_singleline_comment, m_singleline_comment_len)) {
+        } else if (Symbol_(singleline_comment())) {
           while (m_position.has_more()) {
-            if (Symbol_(m_cr_lf, m_cr_lf_len)) {
+            if (Symbol_(cr_lf())) {
               m_position -= 2;
               break;
             } else if (Char_('\n')) {
@@ -477,9 +509,9 @@ namespace chaiscript
             }
           }
           return true;
-        } else if (Symbol_(m_annotation, m_annotation_len)) {
+        } else if (Symbol_(annotation())) {
           while (m_position.has_more()) {
-            if (Symbol_(m_cr_lf, m_cr_lf_len)) {
+            if (Symbol_(cr_lf())) {
               m_position -= 2;
               break;
             } else if (Char_('\n')) {
@@ -1391,7 +1423,7 @@ namespace chaiscript
       bool Eol_(const bool t_eos = false) {
         bool retval = false;
 
-        if (m_position.has_more() && (Symbol_(m_cr_lf, m_cr_lf_len) || Char_('\n'))) {
+        if (m_position.has_more() && (Symbol_(cr_lf()) || Char_('\n'))) {
           retval = true;
           //++m_position.line;
           m_position.col = 1;
@@ -2532,16 +2564,6 @@ namespace chaiscript
         return m_match_stack.front();
       }
     };
-    template<typename Tracer, typename Optimizer>
-    constexpr const char ChaiScript_Parser<Tracer, Optimizer>::m_multiline_comment_begin[];
-    template<typename Tracer, typename Optimizer>
-    constexpr const char ChaiScript_Parser<Tracer, Optimizer>::m_multiline_comment_end[];
-    template<typename Tracer, typename Optimizer>
-    constexpr const char ChaiScript_Parser<Tracer, Optimizer>::m_singleline_comment[];
-    template<typename Tracer, typename Optimizer>
-    constexpr const char ChaiScript_Parser<Tracer, Optimizer>::m_annotation[];
-    template<typename Tracer, typename Optimizer>
-    constexpr const char ChaiScript_Parser<Tracer, Optimizer>::m_cr_lf[];
   }
 }
 
