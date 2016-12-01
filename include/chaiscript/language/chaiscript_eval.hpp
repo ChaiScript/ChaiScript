@@ -96,6 +96,11 @@ namespace chaiscript
       {
       }
 
+      static bool get_scoped_bool_condition(const AST_Node_Impl<T> &node, const chaiscript::detail::Dispatch_State &t_ss) {
+        chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+        return get_bool_condition(node.eval(t_ss), t_ss);
+      }
+
 
       std::vector<AST_NodePtr> get_children() const final {
         return {children.begin(), children.end()};
@@ -746,7 +751,7 @@ namespace chaiscript
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
           try {
-            while (this->get_bool_condition(this->children[0]->eval(t_ss), t_ss)) {
+            while (this->get_scoped_bool_condition(*this->children[0], t_ss)) {
               try {
                 this->children[1]->eval(t_ss);
               } catch (detail::Continue_Loop &) {
@@ -889,7 +894,7 @@ namespace chaiscript
           try {
             for (
                 this->children[0]->eval(t_ss);
-                this->get_bool_condition(this->children[1]->eval(t_ss), t_ss);
+                this->get_scoped_bool_condition(*this->children[1], t_ss);
                 this->children[2]->eval(t_ss)
                 ) {
               try {
