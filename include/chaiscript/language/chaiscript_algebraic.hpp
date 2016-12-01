@@ -7,6 +7,8 @@
 #ifndef CHAISCRIPT_ALGEBRAIC_HPP_
 #define CHAISCRIPT_ALGEBRAIC_HPP_
 
+#include "../utility/fnv1a.hpp"
+
 #include <string>
 
 namespace chaiscript
@@ -51,76 +53,39 @@ namespace chaiscript
 
     static Opers to_operator(const std::string &t_str, bool t_is_unary = false)
     {
-      if (t_str == "==")
-      {
-        return Opers::equals;
-      } else if (t_str == "<") {
-        return Opers::less_than;
-      } else if (t_str == ">") {
-        return Opers::greater_than;
-      } else if (t_str == "<=") {
-        return Opers::less_than_equal; 
-      } else if (t_str == ">=") {
-        return Opers::greater_than_equal;
-      } else if (t_str == "!=") {
-        return Opers::not_equal;
-      } else if (t_str == "=") {
-        return Opers::assign;
-      } else if (t_str == "++") {
-        return Opers::pre_increment;
-      } else if (t_str == "--") {
-        return Opers::pre_decrement;
-      } else if (t_str == "*=") {
-        return Opers::assign_product;
-      } else if (t_str == "+=") {
-        return Opers::assign_sum;
-      } else if (t_str == "-=") {
-        return Opers::assign_difference;
-      } else if (t_str == "&=") {
-        return Opers::assign_bitwise_and;
-      } else if (t_str == "|=") {
-        return Opers::assign_bitwise_or;
-      } else if (t_str == "<<=") {
-        return Opers::assign_shift_left;
-      } else if (t_str == ">>=") {
-        return Opers::assign_shift_right;
-      } else if (t_str == "%=") {
-        return Opers::assign_remainder;
-      } else if (t_str == "^=") {
-        return Opers::assign_bitwise_xor;
-      } else if (t_str == "<<") {
-        return Opers::shift_left;
-      } else if (t_str == ">>") {
-        return Opers::shift_right;
-      } else if (t_str == "%") {
-        return Opers::remainder;
-      } else if (t_str == "&") { 
-        return Opers::bitwise_and;
-      } else if (t_str == "|") {
-        return Opers::bitwise_or;
-      } else if (t_str == "^") {
-        return Opers::bitwise_xor;
-      } else if (t_str == "~") {
-        return Opers::bitwise_complement;
-      } else if (t_str == "+") {
-        if (t_is_unary) {
-          return Opers::unary_plus;
-        } else {
-          return Opers::sum;
-        }
-      } else if (t_str == "-") {
-        if (t_is_unary) {
-          return Opers::unary_minus;
-        } else {
-          return Opers::difference;
-        }
-      } else if (t_str == "/") {
-        return Opers::quotient;
-      } else if (t_str == "*") {
-        return Opers::product;
-      } else {
-        return Opers::invalid;
-      } 
+      const auto op_hash = utility::fnv1a_32(t_str.c_str());
+      switch (op_hash) {
+        case utility::fnv1a_32("=="): { return Opers::equals; }
+        case utility::fnv1a_32("<"): { return Opers::less_than; }
+        case utility::fnv1a_32(">"): { return Opers::greater_than; }
+        case utility::fnv1a_32("<="): { return Opers::less_than_equal; }
+        case utility::fnv1a_32(">="): { return Opers::greater_than_equal; }
+        case utility::fnv1a_32("!="): { return Opers::not_equal; }
+        case utility::fnv1a_32("="): { return Opers::assign; }
+        case utility::fnv1a_32("++"): { return Opers::pre_increment; }
+        case utility::fnv1a_32("--"): { return Opers::pre_decrement; }
+        case utility::fnv1a_32("*="): { return Opers::assign_product; }
+        case utility::fnv1a_32("+="): { return Opers::assign_sum; }
+        case utility::fnv1a_32("-="): { return Opers::assign_difference; }
+        case utility::fnv1a_32("&="): { return Opers::assign_bitwise_and; }
+        case utility::fnv1a_32("|="): { return Opers::assign_bitwise_or; }
+        case utility::fnv1a_32("<<="): { return Opers::assign_shift_left; }
+        case utility::fnv1a_32(">>="): { return Opers::assign_shift_right; }
+        case utility::fnv1a_32("%="): { return Opers::assign_remainder; }
+        case utility::fnv1a_32("^="): { return Opers::assign_bitwise_xor; }
+        case utility::fnv1a_32("<<"): { return Opers::shift_left; }
+        case utility::fnv1a_32(">>"): { return Opers::shift_right; }
+        case utility::fnv1a_32("%"): { return Opers::remainder; }
+        case utility::fnv1a_32("&"): { return Opers::bitwise_and; }
+        case utility::fnv1a_32("|"): { return Opers::bitwise_or; }
+        case utility::fnv1a_32("^"): { return Opers::bitwise_xor; }
+        case utility::fnv1a_32("~"): { return Opers::bitwise_complement; }
+        case utility::fnv1a_32("+"): { return t_is_unary ? Opers::unary_plus : Opers::sum; }
+        case utility::fnv1a_32("-"): { return t_is_unary ? Opers::unary_minus : Opers::difference; }
+        case utility::fnv1a_32("/"): { return Opers::quotient; }
+        case utility::fnv1a_32("*"): { return Opers::product; }
+        default: { return Opers::invalid; }
+      }
     }
 
   };
