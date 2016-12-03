@@ -222,7 +222,7 @@ Conversion to `std::shared_ptr<T> &` is supported for function calls, but if you
 ```cpp
 // ok this is supported, you can register it with chaiscript engine
 void nullify_shared_ptr(std::shared_ptr<int> &t) {
-  t == nullptr
+  t = nullptr
 }
 ```
 
