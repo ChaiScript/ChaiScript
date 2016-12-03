@@ -2274,7 +2274,7 @@ namespace chaiscript
 
         for (const auto &oper : prefix_opers)
         {
-          const bool is_char = oper.size();
+          const bool is_char = oper.size() == 1;
           if ((is_char && Char(oper.c_str()[0])) || (!is_char && Symbol(oper)))
           {
             if (!Operator(m_operators.size()-1)) {
