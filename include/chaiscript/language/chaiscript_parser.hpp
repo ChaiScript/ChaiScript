@@ -24,6 +24,7 @@
 #include "chaiscript_optimizer.hpp"
 #include "chaiscript_tracer.hpp"
 #include "../utility/fnv1a.hpp"
+#include "../utility/static_string.hpp"
 
 #if defined(CHAISCRIPT_UTF16_UTF32)
 #include <locale>
@@ -187,8 +188,8 @@ namespace chaiscript
       }
 
 
-      static const std::vector<std::vector<std::string>> &create_operator_matches() {
-        static const std::vector<std::vector<std::string>> operator_matches {
+      static const std::vector<std::vector<utility::Static_String>> &create_operator_matches() {
+        static const std::vector<std::vector<utility::Static_String>> operator_matches {
           {"?"},
           {"||"},
           {"&&"},
@@ -226,48 +227,38 @@ namespace chaiscript
         return operators;
       }
 
-      static const std::pair<const char *, size_t> &multiline_comment_end()
+      static const utility::Static_String &multiline_comment_end()
       {
-        static const char str[] = "*/";
-        static const size_t len = sizeof(str) - 1;
-        static const std::pair<const char *, size_t> p(str, len);
-        return p;
+        static const utility::Static_String s("*/");
+        return s;
       }
 
-      static const std::pair<const char *, size_t> &multiline_comment_begin()
+      static const utility::Static_String &multiline_comment_begin()
       {
-        static const char str[] = "/*";
-        static const size_t len = sizeof(str) - 1;
-        static const std::pair<const char *, size_t> p(str, len);
-        return p;
+        static const utility::Static_String s("/*");
+        return s;
       }
 
-      static const std::pair<const char *, size_t> &singleline_comment()
+      static const utility::Static_String &singleline_comment()
       {
-        static const char str[] = "//";
-        static const size_t len = sizeof(str) - 1;
-        static const std::pair<const char *, size_t> p(str, len);
-        return p;
+        static const utility::Static_String s("//");
+        return s;
       }
 
-      static const std::pair<const char *, size_t> &annotation()
+      static const utility::Static_String &annotation()
       {
-        static const char str[] = "#";
-        static const size_t len = sizeof(str) - 1;
-        static const std::pair<const char *, size_t> p(str, len);
-        return p;
+        static const utility::Static_String s("#");
+        return s;
       }
 
-      static const std::pair<const char *, size_t> &cr_lf()
+      static const utility::Static_String &cr_lf()
       {
-        static const char str[] = "\r\n";
-        static const size_t len = sizeof(str) - 1;
-        static const std::pair<const char *, size_t> p(str, len);
-        return p;
+        static const utility::Static_String s("\r\n");
+        return s;
       }
 
       const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &m_alphabet = create_alphabet();
-      const std::vector<std::vector<std::string>> &m_operator_matches = create_operator_matches();
+      const std::vector<std::vector<utility::Static_String>> &m_operator_matches = create_operator_matches();
       const std::array<Operator_Precidence, 12> &m_operators = create_operators();
 
       std::shared_ptr<std::string> m_filename;
@@ -466,23 +457,19 @@ namespace chaiscript
 
 
       /// Reads a symbol group from input if it matches the parameter, without skipping initial whitespace
-      inline bool Symbol_(const char *t_s, const size_t len)
+      inline auto Symbol_(const utility::Static_String &sym)
       {
+        const auto len = sym.size();
         if (m_position.remaining() >= len) {
           const char *file_pos = &(*m_position);
           for (size_t pos = 0; pos < len; ++pos)
           {
-            if (t_s[pos] != file_pos[pos]) { return false; }
+            if (sym.c_str()[pos] != file_pos[pos]) { return false; }
           }
           m_position += len;
           return true;
         }
         return false;
-      }
-
-      inline bool Symbol_(const std::pair<const char *, size_t> &sym)
-      {
-        return Symbol_(sym.first, sym.second);
       }
 
       /// Skips any multi-line or single-line comment
@@ -1358,13 +1345,12 @@ namespace chaiscript
       }
 
       /// Reads a string from input if it matches the parameter, without skipping initial whitespace
-      bool Keyword_(const char *t_s) {
-        const auto len = strlen(t_s);
-
+      bool Keyword_(const utility::Static_String &t_s) {
+        const auto len = t_s.size();
         if (m_position.remaining() >= len) {
           auto tmp = m_position;
           for (size_t i = 0; tmp.has_more() && i < len; ++i) {
-            if (*tmp != t_s[i]) {
+            if (*tmp != t_s.c_str()[i]) {
               return false;
             }
             ++tmp;
@@ -1377,7 +1363,7 @@ namespace chaiscript
       }
 
       /// Reads (and potentially captures) a string from input if it matches the parameter
-      bool Keyword(const char *t_s) {
+      bool Keyword(const utility::Static_String &t_s) {
         SkipWS();
         const auto start = m_position;
         bool retval = Keyword_(t_s);
@@ -1392,19 +1378,19 @@ namespace chaiscript
 
       bool is_operator(const std::string &t_s) const {
         return std::any_of(m_operator_matches.begin(), m_operator_matches.end(),
-            [t_s](const std::vector<std::string> &opers) {
+            [t_s](const std::vector<utility::Static_String> &opers) {
               return std::any_of(opers.begin(), opers.end(), 
-                [t_s](const std::string &s) {
-                  return s == t_s;
+                [t_s](const utility::Static_String &s) {
+                  return t_s == s.c_str();
                 });
             });
       }
 
       /// Reads (and potentially captures) a symbol group from input if it matches the parameter
-      bool Symbol(const char *t_s, const bool t_disallow_prevention=false) {
+      bool Symbol(const utility::Static_String &t_s, const bool t_disallow_prevention=false) {
         SkipWS();
         const auto start = m_position;
-        bool retval = Symbol_(t_s, std::strlen(t_s));
+        bool retval = Symbol_(t_s);
 
         // ignore substring matches
         if (retval && m_position.has_more() && (t_disallow_prevention == false) && char_in_alphabet(*m_position,detail::symbol_alphabet)) {
@@ -2277,18 +2263,25 @@ namespace chaiscript
       /// Reads a unary prefixed expression from input
       bool Prefix() {
         const auto prev_stack_top = m_match_stack.size();
-        constexpr const std::array<const char *, 6> prefix_opers{{"++", "--", "-", "+", "!", "~"}};
+        using SS = utility::Static_String;
+        constexpr const std::array<utility::Static_String, 6> prefix_opers{
+            SS{"++"}, 
+            SS{"--"}, 
+            SS{"-"}, 
+            SS{"+"}, 
+            SS{"!"}, 
+            SS{"~"}};
 
         for (const auto &oper : prefix_opers)
         {
-          bool is_char = strlen(oper) == 1;
-          if ((is_char && Char(oper[0])) || (!is_char && Symbol(oper)))
+          const bool is_char = oper.size();
+          if ((is_char && Char(oper.c_str()[0])) || (!is_char && Symbol(oper)))
           {
             if (!Operator(m_operators.size()-1)) {
-              throw exception::eval_error("Incomplete prefix '" + std::string(oper) + "' expression", File_Position(m_position.line, m_position.col), *m_filename);
+              throw exception::eval_error("Incomplete prefix '" + std::string(oper.c_str()) + "' expression", File_Position(m_position.line, m_position.col), *m_filename);
             }
 
-            build_match<eval::Prefix_AST_Node<Tracer>>(prev_stack_top, oper);
+            build_match<eval::Prefix_AST_Node<Tracer>>(prev_stack_top, oper.c_str());
             return true;
           }
         }
@@ -2303,8 +2296,8 @@ namespace chaiscript
 
       bool Operator_Helper(const size_t t_precedence, std::string &oper) {
         for (auto & elem : m_operator_matches[t_precedence]) {
-          if (Symbol(elem.c_str())) {
-            oper = elem;
+          if (Symbol(elem)) {
+            oper = elem.c_str();
             return true;
           }
         }
@@ -2432,8 +2425,10 @@ namespace chaiscript
       bool Equation() {
         const auto prev_stack_top = m_match_stack.size();
 
+        using SS = utility::Static_String;
+
         if (Operator()) {
-          for (const auto sym : {"=", ":=", "+=", "-=", "*=", "/=", "%=", "<<=", ">>=", "&=", "^=", "|="}) 
+          for (const auto sym : {SS{"="}, SS{":="}, SS{"+="}, SS{"-="}, SS{"*="}, SS{"/="}, SS{"%="}, SS{"<<="}, SS{">>="}, SS{"&="}, SS{"^="}, SS{"|="}}) 
           {
             if (Symbol(sym, true)) {
               SkipWS(true);
@@ -2441,7 +2436,7 @@ namespace chaiscript
                 throw exception::eval_error("Incomplete equation", File_Position(m_position.line, m_position.col), *m_filename);
               }
 
-              build_match<eval::Equation_AST_Node<Tracer>>(prev_stack_top, sym);
+              build_match<eval::Equation_AST_Node<Tracer>>(prev_stack_top, sym.c_str());
               return true;
             }
           }
