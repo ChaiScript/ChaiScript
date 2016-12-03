@@ -92,6 +92,7 @@ chai.add(chaiscript::user_type<MyClass>(), "MyClass");
 User defined type conversions are possible, defined in either script or in C++.
 
 
+
 ### ChaiScript Defined Conversions
 
 Function objects (including lambdas) can be used to add type conversions
@@ -115,6 +116,21 @@ Calling a user defined type conversion that takes a lambda
 chai.add(chaiscript::type_conversion<TestBaseType, Type2>([](const TestBaseType &t_bt) { /* return converted thing */ }));
 ```
 
+### Class Hierarchies
+
+If you want objects to be convertable between base and derived classes, you must tell ChaiScritp about the relationship.
+
+```
+chai.add(chaiscript::base_class<Base, Derived>());
+```
+
+If you have multiple classes in your inheritance graph, you will probably want to tell ChaiScript about all relationships.
+
+```
+chai.add(chaiscript::base_class<Base, Derived>());
+chai.add(chaiscript::base_class<Derived, MoreDerived>());
+chai.add(chaiscript::base_class<Base, MoreDerived>());
+```
 
 ### Helpers
 
