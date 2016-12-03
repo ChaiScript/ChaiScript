@@ -20,11 +20,11 @@ namespace chaiscript
         {
         }
 
-      constexpr size_t size() {
+      constexpr size_t size() const {
         return m_size;
       }
 
-      constexpr const char *c_str() {
+      constexpr const char *c_str() const {
         return data;
       }
 
