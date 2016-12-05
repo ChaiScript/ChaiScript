@@ -28,13 +28,15 @@ Current Version: 6.0.0
 * Execution tracing capability; also accessed via ChaiScript_Basic interface
 * range-based for loops `for( id : container ) { }`
 * If-init expressions (ala C++17)
-
+* Support for passing r-value references to functions
+* Support for containing unique_ptr
 
 #### Improvements
 
 * Compile time improvements
 * Compile size improvements
 * Significant runtime improvements (see "Modular optimization system")
+* Significant parser improvements, both with parse-time and parser initialization time (Thanks @niXman)
 
 #### Improvements Still Need To Be Made
 
