@@ -30,6 +30,7 @@ Current Version: 6.0.0
 * If-init expressions (ala C++17)
 * Support for passing r-value references to functions
 * Support for containing unique_ptr
+* Add helpers for exposing enum classes to ChaiScript
 
 #### Improvements
 
