@@ -119,6 +119,8 @@ namespace chaiscript
                 );
           }
 
+
+
         template<typename T>
           static auto get(T *t, bool t_return_value)
           {
@@ -141,6 +143,19 @@ namespace chaiscript
                   chaiscript::detail::Any(std::move(obj)),
                   true,
                   p,
+                  t_return_value
+                );
+          }
+
+        template<typename T>
+          static auto get(std::unique_ptr<T> &&obj, bool t_return_value)
+          {
+            auto ptr = obj.get();
+            return std::make_shared<Data>(
+                  detail::Get_Type_Info<T>::get(), 
+                  chaiscript::detail::Any(std::make_shared<std::unique_ptr<T>>(std::move(obj))), 
+                  false,
+                  ptr,
                   t_return_value
                 );
           }

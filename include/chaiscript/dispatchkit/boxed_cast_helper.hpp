@@ -135,6 +135,39 @@ namespace chaiscript
         }
       };
 
+    /// Cast_Helper_Inner for casting to a && type
+    template<typename Result>
+      struct Cast_Helper_Inner<Result &&>
+      {
+        static Result&& cast(const Boxed_Value &ob, const Type_Conversions_State *)
+        {
+          return std::move(*static_cast<Result *>(verify_type(ob, typeid(Result), ob.get_ptr())));
+        }
+      };
+
+    /// Cast_Helper_Inner for casting to a std::unique_ptr<> && type
+    /// \todo Fix the fact that this has to be in a shared_ptr for now
+    template<typename Result>
+      struct Cast_Helper_Inner<std::unique_ptr<Result> &&>
+      {
+        static std::unique_ptr<Result> &&cast(const Boxed_Value &ob, const Type_Conversions_State *)
+        {
+          return std::move(*(ob.get().cast<std::shared_ptr<std::unique_ptr<Result>>>()));
+        }
+      };
+
+    /// Cast_Helper_Inner for casting to a std::unique_ptr<> & type
+    /// \todo Fix the fact that this has to be in a shared_ptr for now
+    template<typename Result>
+      struct Cast_Helper_Inner<std::unique_ptr<Result> &>
+      {
+        static std::unique_ptr<Result> &cast(const Boxed_Value &ob, const Type_Conversions_State *)
+        {
+          return *(ob.get().cast<std::shared_ptr<std::unique_ptr<Result>>>());
+        }
+      };
+
+
     /// Cast_Helper_Inner for casting to a std::shared_ptr<> type
     template<typename Result>
       struct Cast_Helper_Inner<std::shared_ptr<Result> >

@@ -1083,6 +1083,47 @@ TEST_CASE("Test stdlib options")
     test_has_external_scripts(chai);
     test_no_load_modules(chai);
   }
+}
+
+
+void uservalueref(int &&)
+{
+}
+
+void usemoveonlytype(std::unique_ptr<int> &&)
+{
+}
+
+
+TEST_CASE("Pass r-value reference to func")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+
+  chai.add(chaiscript::fun(&uservalueref), "uservalueref");
+  chai.add(chaiscript::fun(&usemoveonlytype), "usemoveonlytype");
+
+  chai.add(chaiscript::var(std::make_unique<int>(1)), "iptr");
+  chai.eval("usemoveonlytype(iptr)");
+}
+
+TEST_CASE("Use unique_ptr")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+
+  chai.add(chaiscript::fun([](int &i){ ++i; }), "inci");
+  chai.add(chaiscript::fun([](int i){ ++i; }), "copyi");
+  chai.add(chaiscript::fun([](int *i){ ++(*i); }), "derefi");
+  chai.add(chaiscript::var(std::make_unique<int>(1)), "iptr");
+
+
+  CHECK(chai.eval<int>("iptr") == 1);
+  chai.eval("inci(iptr)");
+  CHECK(chai.eval<int>("iptr") == 2);
+  chai.eval("copyi(iptr)");
+  CHECK(chai.eval<int>("iptr") == 2);
+  chai.eval("derefi(iptr)");
+  CHECK(chai.eval<int>("iptr") == 3);
+
 
 
 }
