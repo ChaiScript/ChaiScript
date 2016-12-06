@@ -53,6 +53,11 @@ namespace chaiscript
 
     static Opers to_operator(const std::string &t_str, bool t_is_unary = false)
     {
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4307)
+#endif
+
       const auto op_hash = utility::fnv1a_32(t_str.c_str());
       switch (op_hash) {
         case utility::fnv1a_32("=="): { return Opers::equals; }
@@ -86,6 +91,10 @@ namespace chaiscript
         case utility::fnv1a_32("*"): { return Opers::product; }
         default: { return Opers::invalid; }
       }
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(pop)
+#endif
+
     }
 
   };

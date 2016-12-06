@@ -884,6 +884,11 @@ namespace chaiscript
             validate_object_name(text);
           }
 
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4307)
+#endif
+
           switch (text_hash) {
             case utility::fnv1a_32("true"): {
               m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col, const_var(true)));
@@ -947,6 +952,11 @@ namespace chaiscript
               m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>(val, start.line, start.col));
             } break;
           }
+
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(pop)
+#endif
+
 
           return true;
         } else {
