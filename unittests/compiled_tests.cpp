@@ -1129,3 +1129,60 @@ TEST_CASE("Use unique_ptr")
 }
 
 
+class A
+{
+  public:
+    A() = default;
+    A(const A&) = default;
+    A(A &&) = default;
+    A &operator=(const A&) = default;
+    A &operator=(A&&) = default;
+    virtual ~A() = default;
+};
+
+class B : public A
+{
+  public:
+    B() = default;
+};
+
+TEST_CASE("Test typed chaiscript functions to perform conversions")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+
+  //-------------------------------------------------------------------------
+
+  chai.add(chaiscript::user_type<A>(), "A");
+
+  chai.add(chaiscript::user_type<B>(), "B");
+  chai.add(chaiscript::base_class<A, B>());
+
+  chai.add(chaiscript::fun([](const B &)
+        {
+        }), "CppFunctWithBArg");
+
+  chai.add(chaiscript::fun([]() -> std::shared_ptr<A> 
+        {
+        return (std::shared_ptr<A>(new B()));
+        }), "Create");
+
+  chai.eval(R"(
+            var inst = Create() // A*
+
+            // it prints "A"
+            inst.type_name().print() 
+
+            // Ok it is casted using conversion
+            CppFunctWithBArg(inst)
+
+            // Define a function with B as argument
+            def ChaiFuncWithBArg(B inst)
+            {
+                    print("ok")
+            }
+
+            // don't work
+            ChaiFuncWithBArg(inst)
+            )");
+}
+

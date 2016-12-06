@@ -31,6 +31,7 @@ Current Version: 6.0.0
 * Support for passing r-value references to functions
 * Support for containing unique_ptr
 * Add helpers for exposing enum classes to ChaiScript
+* Allow typed ChaiScript defined functions to perform conversions on call #303
 
 #### Improvements
 
