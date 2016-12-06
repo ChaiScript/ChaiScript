@@ -1186,3 +1186,16 @@ TEST_CASE("Test typed chaiscript functions to perform conversions")
             )");
 }
 
+struct Reference_MyClass
+{
+  Reference_MyClass(double& t_x) : x(t_x) {}
+  double& x;
+};
+
+TEST_CASE("Test reference member being registered")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+  chai.add(chaiscript::fun(&Reference_MyClass::x) , "x");
+}
+
+
