@@ -917,11 +917,9 @@ namespace chaiscript
         }
     }
 
-    /**
-     * Take a vector of functions and a vector of parameters. Attempt to execute
-     * each function against the set of parameters, in order, until a matching
-     * function is found or throw dispatch_error if no matching function is found
-     */
+    /// Take a vector of functions and a vector of parameters. Attempt to execute
+    /// each function against the set of parameters, in order, until a matching
+    /// function is found or throw dispatch_error if no matching function is found
     template<typename Funcs>
       Boxed_Value dispatch(const Funcs &funcs,
           const std::vector<Boxed_Value> &plist, const Type_Conversions_State &t_conversions)
