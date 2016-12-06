@@ -397,28 +397,39 @@ namespace chaiscript
       template<typename To>
         Boxed_Value boxed_type_conversion(Conversion_Saves &t_saves, const Boxed_Value &from) const
         {
-          try {
-            Boxed_Value ret = get_conversion(user_type<To>(), from.get_type_info())->convert(from);
-            if (t_saves.enabled) { t_saves.saves.push_back(ret); }
-            return ret;
-          } catch (const std::out_of_range &) {
-            throw exception::bad_boxed_dynamic_cast(from.get_type_info(), typeid(To), "No known conversion");
-          } catch (const std::bad_cast &) {
-            throw exception::bad_boxed_dynamic_cast(from.get_type_info(), typeid(To), "Unable to perform dynamic_cast operation");
-          }
+          return boxed_type_conversion(user_type<To>(), t_saves, from);
         }
 
       template<typename From>
         Boxed_Value boxed_type_down_conversion(Conversion_Saves &t_saves, const Boxed_Value &to) const
         {
+          return boxed_type_down_conversion(user_type<From>(), t_saves, to);
+        }
+
+
+        Boxed_Value boxed_type_conversion(const Type_Info &to, Conversion_Saves &t_saves, const Boxed_Value &from) const
+        {
           try {
-            Boxed_Value ret = get_conversion(to.get_type_info(), user_type<From>())->convert_down(to);
+            Boxed_Value ret = get_conversion(to, from.get_type_info())->convert(from);
             if (t_saves.enabled) { t_saves.saves.push_back(ret); }
             return ret;
           } catch (const std::out_of_range &) {
-            throw exception::bad_boxed_dynamic_cast(to.get_type_info(), typeid(From), "No known conversion");
+            throw exception::bad_boxed_dynamic_cast(from.get_type_info(), *to.bare_type_info(), "No known conversion");
           } catch (const std::bad_cast &) {
-            throw exception::bad_boxed_dynamic_cast(to.get_type_info(), typeid(From), "Unable to perform dynamic_cast operation");
+            throw exception::bad_boxed_dynamic_cast(from.get_type_info(), *to.bare_type_info(), "Unable to perform dynamic_cast operation");
+          }
+        }
+
+        Boxed_Value boxed_type_down_conversion(const Type_Info &from, Conversion_Saves &t_saves, const Boxed_Value &to) const
+        {
+          try {
+            Boxed_Value ret = get_conversion(to.get_type_info(), from)->convert_down(to);
+            if (t_saves.enabled) { t_saves.saves.push_back(ret); }
+            return ret;
+          } catch (const std::out_of_range &) {
+            throw exception::bad_boxed_dynamic_cast(to.get_type_info(), *from.bare_type_info(), "No known conversion");
+          } catch (const std::bad_cast &) {
+            throw exception::bad_boxed_dynamic_cast(to.get_type_info(), *from.bare_type_info(), "Unable to perform dynamic_cast operation");
           }
         }
 

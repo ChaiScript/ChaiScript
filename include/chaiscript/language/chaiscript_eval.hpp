@@ -1226,7 +1226,7 @@ namespace chaiscript
 
               if (dispatch::Param_Types(
                     std::vector<std::pair<std::string, Type_Info>>{Arg_List_AST_Node<T>::get_arg_type(catch_block->children[0], t_ss)}
-                    ).match(std::vector<Boxed_Value>{t_except}, t_ss.conversions()))
+                    ).match(std::vector<Boxed_Value>{t_except}, t_ss.conversions()).first)
               {
                 t_ss.add_object(name, t_except);
 

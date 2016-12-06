@@ -72,10 +72,51 @@ namespace chaiscript
           return m_types == t_rhs.m_types;
         }
 
-        bool match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const
+        std::vector<Boxed_Value> convert(std::vector<Boxed_Value> vals, const Type_Conversions_State &t_conversions) const
         {
-          if (!m_has_types) { return true; }
-          if (vals.size() != m_types.size()) { return false; }
+          for (size_t i = 0; i < vals.size(); ++i)
+          {
+            const auto &name = m_types[i].first;
+            if (!name.empty()) {
+              const auto &bv = vals[i];
+
+              if (!bv.get_type_info().bare_equal(m_doti))
+              {
+                const auto &ti = m_types[i].second;
+                if (!ti.is_undef())
+                {
+                  if (!bv.get_type_info().bare_equal(ti)) {
+                    if (t_conversions->converts(ti, bv.get_type_info())) {
+                      try {
+                        // We will not catch any bad_boxed_dynamic_cast that is thrown, let the user get it
+                        // either way, we are not responsible if it doesn't work
+                        vals[i] = t_conversions->boxed_type_conversion(m_types[i].second, t_conversions.saves(), vals[i]);
+                      } catch (...) {
+                        try {
+                          // try going the other way
+                          vals[i] = t_conversions->boxed_type_down_conversion(m_types[i].second, t_conversions.saves(), vals[i]);
+                        } catch (const chaiscript::detail::exception::bad_any_cast &) {
+                          throw exception::bad_boxed_cast(bv.get_type_info(), *m_types[i].second.bare_type_info());
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          return vals;
+        }
+
+        // first result: is a match
+        // second result: needs conversions
+        std::pair<bool, bool> match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const
+        {
+          bool needs_conversion = false;
+
+          if (!m_has_types) { return std::make_pair(true, needs_conversion); }
+          if (vals.size() != m_types.size()) { return std::make_pair(false, needs_conversion); }
 
           for (size_t i = 0; i < vals.size(); ++i)
           {
@@ -87,25 +128,31 @@ namespace chaiscript
               {
                 try {
                   const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bv, &t_conversions);
-                  return name == "Dynamic_Object" || d.get_type_name() == name;
+                  if (!(name == "Dynamic_Object" || d.get_type_name() == name)) {
+                    return std::make_pair(false, false);
+                  }
                 } catch (const std::bad_cast &) {
-                  return false;
+                  return std::make_pair(false, false);
                 } 
               } else {
                 const auto &ti = m_types[i].second;
                 if (!ti.is_undef())
                 {
                   if (!bv.get_type_info().bare_equal(ti)) {
-                    return false;
+                    if (!t_conversions->converts(ti, bv.get_type_info())) {
+                      return std::make_pair(false, false);
+                    } else {
+                      needs_conversion = true;
+                    }
                   }
                 } else {
-                  return false;
+                  return std::make_pair(false, false);
                 }
               }
             }
           }
 
-          return true;
+          return std::make_pair(true, needs_conversion);
         }
 
         const std::vector<std::pair<std::string, Type_Info>> &types() const
@@ -320,8 +367,7 @@ namespace chaiscript
 
         bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
         {
-          return (m_arity < 0 || (vals.size() == size_t(m_arity) && m_param_types.match(vals, t_conversions)))
-            && test_guard(vals, t_conversions);
+          return call_match_internal(vals, t_conversions).first;
         }
 
 
@@ -353,6 +399,26 @@ namespace chaiscript
           }
         }
 
+        // first result: is a match
+        // second result: needs conversions
+        std::pair<bool, bool> call_match_internal(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const
+        {
+          const auto comparison_result = [&](){
+            if (m_arity < 0) {
+              return std::make_pair(true, false);
+            } else if (vals.size() == size_t(m_arity)) {
+              return m_param_types.match(vals, t_conversions);
+            } else {
+              return std::make_pair(false, false);
+            }
+          }();
+
+          return std::make_pair(
+              comparison_result.first && test_guard(vals, t_conversions), 
+              comparison_result.second
+              );
+        }
+
       private:
         static std::vector<Type_Info> build_param_type_list(const Param_Types &t_types)
         {
@@ -371,7 +437,10 @@ namespace chaiscript
           return types;
         }
 
+      protected:
         Param_Types m_param_types;
+
+      private:
         Proxy_Function m_guard;
         AST_NodePtr m_parsenode;
     };
@@ -402,9 +471,14 @@ namespace chaiscript
       protected:
         Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
-          if (call_match(params, t_conversions) && test_guard(params, t_conversions))
+          const auto match_results = call_match_internal(params, t_conversions);
+          if (match_results.first)
           {
-            return m_f(params);
+            if (match_results.second) {
+              return m_f(m_param_types.convert(params, t_conversions));
+            } else {
+              return m_f(params);
+            }
           } else {
             throw exception::guard_error();
           }
