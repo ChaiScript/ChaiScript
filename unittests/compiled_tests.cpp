@@ -1195,7 +1195,14 @@ struct Reference_MyClass
 TEST_CASE("Test reference member being registered")
 {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
-  chai.add(chaiscript::fun(&Reference_MyClass::x) , "x");
+  // Note, C++ will not allow us to do this:
+  // chai.add(chaiscript::fun(&Reference_MyClass::x) , "x");
+  chai.add(chaiscript::fun([](Reference_MyClass &r) -> decltype(auto) { return (r.x); }), "x");
+  chai.add(chaiscript::fun([](const Reference_MyClass &r) -> decltype(auto) { return (r.x); }), "x");
+  double d;
+  chai.add(chaiscript::var(Reference_MyClass(d)), "ref");
+  chai.eval("ref.x = 2.3");
+  CHECK(d == 2.3);
 }
 
 
