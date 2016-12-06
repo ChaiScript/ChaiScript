@@ -79,7 +79,7 @@ namespace chaiscript
     {
       try {
         const auto p = m_parser->parse(t_input, t_filename);
-        return p->eval(m_engine);
+        return p->eval(chaiscript::detail::Dispatch_State(m_engine));
       }
       catch (chaiscript::eval::detail::Return_Value &rv) {
         return rv.retval;
@@ -255,7 +255,7 @@ namespace chaiscript
       memset( &rInfo, 0, sizeof(rInfo) ); 
       cast_union u;
       u.in_ptr = &ChaiScript_Basic::use;
-      if ( dladdr(static_cast<void*>(u.out_ptr), &rInfo) && rInfo.dli_fname ) { 
+      if ( (dladdr(static_cast<void*>(u.out_ptr), &rInfo) != 0) && (rInfo.dli_fname != nullptr) ) { 
         std::string dllpath(rInfo.dli_fname);
         const size_t lastslash = dllpath.rfind('/');
         if (lastslash != std::string::npos)
@@ -284,7 +284,7 @@ namespace chaiscript
     ///
     /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
     /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
-    ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
+    explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
                      std::vector<std::string> t_module_paths = {},
                      std::vector<std::string> t_use_paths = {},
                      const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options())
@@ -307,11 +307,15 @@ namespace chaiscript
       }
     }
 
+    parser::ChaiScript_Parser_Base &get_parser()
+    {
+      return *m_parser;
+    }
 
     const Boxed_Value eval(const AST_NodePtr &t_ast)
     {
       try {
-        return t_ast->eval(m_engine);
+        return t_ast->eval(chaiscript::detail::Dispatch_State(m_engine));
       } catch (const exception::eval_error &t_ee) {
         throw Boxed_Value(t_ee);
       }

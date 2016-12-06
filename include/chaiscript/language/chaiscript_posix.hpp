@@ -15,10 +15,10 @@ namespace chaiscript
     {
       struct DLModule
       {
-        DLModule(const std::string &t_filename)
+        explicit DLModule(const std::string &t_filename)
           : m_data(dlopen(t_filename.c_str(), RTLD_NOW))
         {
-          if (!m_data)
+          if (m_data == nullptr)
           {
             throw chaiscript::exception::load_module_error(dlerror());
           }

@@ -62,7 +62,7 @@ namespace chaiscript
     Array_Call, Dot_Access,
     Lambda, Block, Scopeless_Block, Def, While, If, For, Ranged_For, Inline_Array, Inline_Map, Return, File, Prefix, Break, Continue, Map_Pair, Value_Range,
     Inline_Range, Try, Catch, Finally, Method, Attr_Decl,  
-    Logical_And, Logical_Or, Reference, Switch, Case, Default, Ternary_Cond, Noop, Class, Binary, Arg, Global_Decl, Constant, Compiled
+    Logical_And, Logical_Or, Reference, Switch, Case, Default, Noop, Class, Binary, Arg, Global_Decl, Constant, Compiled
   };
 
   enum class Operator_Precidence { Ternary_Cond, Logical_Or, 
@@ -72,7 +72,7 @@ namespace chaiscript
   namespace
   {
     /// Helper lookup to get the name of each node type
-    const char *ast_node_type_to_string(AST_Node_Type ast_node_type) {
+    inline const char *ast_node_type_to_string(AST_Node_Type ast_node_type) {
       static const char * const ast_node_types[] = { "Id", "Fun_Call", "Unused_Return_Fun_Call", "Arg_List", "Equation", "Var_Decl",
                                     "Array_Call", "Dot_Access", 
                                     "Lambda", "Block", "Scopeless_Block", "Def", "While", "If", "For", "Ranged_For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
@@ -130,7 +130,7 @@ namespace chaiscript
     /// \brief Thrown if an error occurs while attempting to load a binary module
     struct load_module_error : std::runtime_error
     {
-      load_module_error(const std::string &t_reason) noexcept
+      explicit load_module_error(const std::string &t_reason) noexcept
         : std::runtime_error(t_reason)
       {
       }
@@ -141,7 +141,7 @@ namespace chaiscript
       }
 
       load_module_error(const load_module_error &) = default;
-      virtual ~load_module_error() noexcept = default;
+      ~load_module_error() noexcept override = default;
 
       static std::string format_error(const std::string &t_name, const std::vector<load_module_error> &t_errors)
       {
@@ -188,7 +188,7 @@ namespace chaiscript
         reason(t_why), start_position(t_where), filename(t_fname)
       {}
 
-      eval_error(const std::string &t_why) noexcept
+      explicit eval_error(const std::string &t_why) noexcept
         : std::runtime_error("Error: \"" + t_why + "\" "),
         reason(t_why) 
       {}
@@ -200,7 +200,7 @@ namespace chaiscript
         std::ostringstream ss;
 
         ss << what();
-        if (call_stack.size() > 0) {
+        if (!call_stack.empty()) {
           ss << "during evaluation at (" << fname(call_stack[0]) << " " << startpos(call_stack[0]) << ")\n";
           ss << '\n' << detail << '\n';
           ss << "  " << fname(call_stack[0]) << " (" << startpos(call_stack[0]) << ") '" << pretty(call_stack[0]) << "'";
@@ -217,7 +217,7 @@ namespace chaiscript
         return ss.str();
       }
 
-      virtual ~eval_error() noexcept = default;
+      ~eval_error() noexcept override = default;
 
     private:
 
@@ -476,12 +476,12 @@ namespace chaiscript
 
     /// Errors generated when loading a file
     struct file_not_found_error : std::runtime_error {
-      file_not_found_error(const std::string &t_filename) noexcept
+      explicit file_not_found_error(const std::string &t_filename) noexcept
         : std::runtime_error("File Not Found: " + t_filename)
       { }
 
       file_not_found_error(const file_not_found_error &) = default;
-      virtual ~file_not_found_error() noexcept {}
+      ~file_not_found_error() noexcept override = default;
     };
 
   }
@@ -597,19 +597,19 @@ namespace chaiscript
       struct Return_Value {
         Boxed_Value retval;
 
-        Return_Value(Boxed_Value t_return_value) : retval(std::move(t_return_value)) { }
+        explicit Return_Value(Boxed_Value t_return_value) : retval(std::move(t_return_value)) { }
       };
 
 
       /// Special type indicating a call to 'break'
       struct Break_Loop {
-        Break_Loop() { }
+        Break_Loop() = default;
       };
 
 
       /// Special type indicating a call to 'continue'
       struct Continue_Loop {
-        Continue_Loop() { }
+        Continue_Loop() = default;
       };
 
 
@@ -621,7 +621,7 @@ namespace chaiscript
         Scope_Push_Pop(const Scope_Push_Pop &) = delete;
         Scope_Push_Pop& operator=(const Scope_Push_Pop &) = delete;
 
-        Scope_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
+        explicit Scope_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
           : m_ds(t_ds)
         {
           m_ds->new_scope(m_ds.stack_holder());
@@ -645,7 +645,7 @@ namespace chaiscript
         Function_Push_Pop(const Function_Push_Pop &) = delete;
         Function_Push_Pop& operator=(const Function_Push_Pop &) = delete;
 
-        Function_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
+        explicit Function_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
           : m_ds(t_ds)
         {
           m_ds->new_function_call(m_ds.stack_holder(), m_ds.conversion_saves());
@@ -663,7 +663,7 @@ namespace chaiscript
 
         void save_params(std::initializer_list<Boxed_Value> t_params)
         {
-          m_ds->save_function_params(std::move(t_params));
+          m_ds->save_function_params(t_params);
         }
 
 
@@ -679,7 +679,7 @@ namespace chaiscript
         Stack_Push_Pop(const Stack_Push_Pop &) = delete;
         Stack_Push_Pop& operator=(const Stack_Push_Pop &) = delete;
 
-        Stack_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
+        explicit Stack_Push_Pop(const chaiscript::detail::Dispatch_State &t_ds)
           : m_ds(t_ds)
         {
           m_ds->new_stack(m_ds.stack_holder());

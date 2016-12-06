@@ -25,7 +25,7 @@ namespace chaiscript
   namespace dispatch
   {
     struct option_explicit_set : std::runtime_error {
-      option_explicit_set(const std::string &t_param_name)
+      explicit option_explicit_set(const std::string &t_param_name)
         : std::runtime_error("option explicit set and parameter '" + t_param_name + "' does not exist")
       {
 
@@ -33,13 +33,13 @@ namespace chaiscript
 
       option_explicit_set(const option_explicit_set &) = default;
 
-      virtual ~option_explicit_set() noexcept = default;
+      ~option_explicit_set() noexcept override = default;
     };
 
     class Dynamic_Object
     {
       public:
-        Dynamic_Object(std::string t_type_name)
+        explicit Dynamic_Object(std::string t_type_name)
           : m_type_name(std::move(t_type_name)), m_option_explicit(false)
         {
         }

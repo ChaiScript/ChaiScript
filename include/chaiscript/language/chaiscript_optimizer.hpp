@@ -17,7 +17,7 @@ namespace chaiscript {
       struct Optimizer : T...
     {
       Optimizer() = default;
-      Optimizer(T ... t)
+      explicit Optimizer(T ... t)
         : T(std::move(t))...
       {
       }
@@ -165,7 +165,7 @@ namespace chaiscript {
         auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
           if ((node->identifier == AST_Node_Type::Block
               || node->identifier == AST_Node_Type::Scopeless_Block)
-              && node->children.size() > 0)
+              && !node->children.empty())
           {
             for (size_t i = 0; i < node->children.size()-1; ++i) {
               auto child = node->children[i];
@@ -196,7 +196,7 @@ namespace chaiscript {
     struct If {
       template<typename T>
       auto optimize(const eval::AST_Node_Impl_Ptr<T> &node) {
-        if ((node->identifier == AST_Node_Type::If || node->identifier == AST_Node_Type::Ternary_Cond)
+        if ((node->identifier == AST_Node_Type::If)
              && node->children.size() >= 2
              && node->children[0]->identifier == AST_Node_Type::Constant)
         {

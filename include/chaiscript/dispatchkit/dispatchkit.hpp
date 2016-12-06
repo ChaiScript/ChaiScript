@@ -67,7 +67,7 @@ namespace chaiscript
 
         reserved_word_error(const reserved_word_error &) = default;
 
-        virtual ~reserved_word_error() noexcept = default;
+        ~reserved_word_error() noexcept override = default;
 
         std::string word() const
         {
@@ -89,7 +89,7 @@ namespace chaiscript
 
         illegal_name_error(const illegal_name_error &) = default;
 
-        virtual ~illegal_name_error() noexcept = default;
+        ~illegal_name_error() noexcept override = default;
 
         std::string name() const
         {
@@ -112,7 +112,7 @@ namespace chaiscript
 
         name_conflict_error(const name_conflict_error &) = default;
 
-        virtual ~name_conflict_error() noexcept = default;
+        ~name_conflict_error() noexcept override = default;
 
         std::string name() const
         {
@@ -135,7 +135,7 @@ namespace chaiscript
         }
 
         global_non_const(const global_non_const &) = default;
-        virtual ~global_non_const() noexcept = default;
+        ~global_non_const() noexcept override = default;
     };
   }
 
@@ -147,7 +147,7 @@ namespace chaiscript
     public:
       Module &add(Type_Info ti, std::string name)
       {
-        m_typeinfos.emplace_back(std::move(ti), std::move(name));
+        m_typeinfos.emplace_back(ti, std::move(name));
         return *this;
       }
 
@@ -266,7 +266,7 @@ namespace chaiscript
     class Dispatch_Function final : public dispatch::Proxy_Function_Base
     {
       public:
-        Dispatch_Function(std::vector<Proxy_Function> t_funcs)
+        explicit Dispatch_Function(std::vector<Proxy_Function> t_funcs)
           : Proxy_Function_Base(build_type_infos(t_funcs), calculate_arity(t_funcs)),
             m_funcs(std::move(t_funcs))
         {
@@ -356,7 +356,7 @@ namespace chaiscript
               ++begin;
             }
 
-            assert(type_infos.size() > 0 && " type_info vector size is < 0, this is only possible if something else is broken");
+            assert(!type_infos.empty() && " type_info vector size is < 0, this is only possible if something else is broken");
 
             if (size_mismatch)
             {
@@ -447,7 +447,7 @@ namespace chaiscript
           Type_Name_Map m_types;
         };
 
-        Dispatch_Engine(chaiscript::parser::ChaiScript_Parser_Base &parser)
+        explicit Dispatch_Engine(chaiscript::parser::ChaiScript_Parser_Base &parser)
           : m_stack_holder(this),
             m_parser(parser)
         {
@@ -681,7 +681,7 @@ namespace chaiscript
             }
 
             t_loc = static_cast<uint_fast32_t>(Loc::located);
-          } else if (loc & static_cast<uint_fast32_t>(Loc::is_local)) {
+          } else if ((loc & static_cast<uint_fast32_t>(Loc::is_local)) != 0u) {
             auto &stack = get_stack_data(t_holder);
 
             return stack[stack.size() - 1 - ((loc & static_cast<uint_fast32_t>(Loc::stack_mask)) >> 16)][loc & static_cast<uint_fast32_t>(Loc::loc_mask)].second;
@@ -698,9 +698,9 @@ namespace chaiscript
 
           // no? is it a function object?
           auto obj = get_function_object_int(name, loc);
-          if (obj.first != loc) t_loc = uint_fast32_t(obj.first);
-          return obj.second;
+          if (obj.first != loc) { t_loc = uint_fast32_t(obj.first); }
 
+          return obj.second;
 
         }
 
@@ -763,7 +763,10 @@ namespace chaiscript
         {
           uint_fast32_t method_missing_loc = m_method_missing_loc;
           auto method_missing_funs = get_function("method_missing", method_missing_loc);
-          if (method_missing_funs.first != method_missing_loc) m_method_missing_loc = uint_fast32_t(method_missing_funs.first);
+          if (method_missing_funs.first != method_missing_loc) { 
+            m_method_missing_loc = uint_fast32_t(method_missing_funs.first); 
+          }
+
           return std::move(method_missing_funs.second);
         }
 
@@ -954,7 +957,7 @@ namespace chaiscript
         {
           uint_fast32_t loc = t_loc;
           const auto funs = get_function(t_name, loc);
-          if (funs.first != loc) t_loc = uint_fast32_t(funs.first);
+          if (funs.first != loc) { t_loc = uint_fast32_t(funs.first); }
 
           const auto do_attribute_call = 
             [this](int l_num_params, const std::vector<Boxed_Value> &l_params, const std::vector<Proxy_Function> &l_funs, const Type_Conversions_State &l_conversions)->Boxed_Value
@@ -1074,7 +1077,8 @@ namespace chaiscript
         {
           uint_fast32_t loc = t_loc;
           const auto funs = get_function(t_name, loc);
-          if (funs.first != loc) t_loc = uint_fast32_t(funs.first);
+          if (funs.first != loc) { t_loc = uint_fast32_t(funs.first);
+}
           return dispatch::dispatch(*funs.second, params, t_conversions);
         }
 
@@ -1206,7 +1210,7 @@ namespace chaiscript
 
         static void save_function_params(Stack_Holder &t_s, std::initializer_list<Boxed_Value> t_params)
         {
-          t_s.call_params.back().insert(t_s.call_params.back().begin(), std::move(t_params));
+          t_s.call_params.back().insert(t_s.call_params.back().begin(), t_params);
         }
 
         static void save_function_params(Stack_Holder &t_s, std::vector<Boxed_Value> &&t_params)
@@ -1224,7 +1228,7 @@ namespace chaiscript
 
         void save_function_params(std::initializer_list<Boxed_Value> t_params)
         {
-          save_function_params(*m_stack_holder, std::move(t_params));
+          save_function_params(*m_stack_holder, t_params);
         }
 
         void save_function_params(std::vector<Boxed_Value> &&t_params)
@@ -1588,7 +1592,7 @@ namespace chaiscript
     class Dispatch_State
     {
       public:
-        Dispatch_State(Dispatch_Engine &t_engine)
+        explicit Dispatch_State(Dispatch_Engine &t_engine)
           : m_engine(t_engine),
             m_stack_holder(t_engine.get_stack_holder()),
             m_conversions(t_engine.conversions(), t_engine.conversions().conversion_saves())

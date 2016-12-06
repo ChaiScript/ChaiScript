@@ -84,12 +84,14 @@ arena<N, alignment>::deallocate(char* p, std::size_t n) noexcept
     assert(pointer_in_buffer(ptr_) && "short_alloc has outlived arena");
     if (pointer_in_buffer(p))
     {
-        n = align_up(n);
-        if (p + n == ptr_)
-            ptr_ = p;
+      n = align_up(n);
+      if (p + n == ptr_) {
+        ptr_ = p;
+      }
     }
-    else
-        ::operator delete(p);
+    else {
+      ::operator delete(p);
+    }
 }
 
 template <class T, std::size_t N, std::size_t Align = alignof(std::max_align_t)>
@@ -108,13 +110,13 @@ public:
     short_alloc(const short_alloc&) = default;
     short_alloc& operator=(const short_alloc&) = delete;
 
-    short_alloc(arena_type& a) noexcept : a_(a)
+    explicit short_alloc(arena_type& a) noexcept : a_(a)
     {
         static_assert(size % alignment == 0,
                       "size N needs to be a multiple of alignment Align");
     }
     template <class U>
-        short_alloc(const short_alloc<U, N, alignment>& a) noexcept
+        explicit short_alloc(const short_alloc<U, N, alignment>& a) noexcept
             : a_(a.a_) {}
 
     template <class _Up> struct rebind {using other = short_alloc<_Up, N, alignment>;};

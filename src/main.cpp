@@ -25,7 +25,7 @@
 char *mystrdup (const char *s) {
   size_t len = strlen(s); // Space for length plus nul
   char *d = static_cast<char*>(malloc (len+1));
-  if (d == nullptr) return nullptr;          // No memory
+  if (d == nullptr) { return nullptr; }         // No memory
 #ifdef CHAISCRIPT_MSVC
   strcpy_s(d, len+1, s);                        // Copy the characters
 #else
@@ -44,7 +44,7 @@ char* readline(const char* p)
 }
 
 
-void add_history(const char*){}
+void add_history(const char* /*unused*/){}
 void using_history(){}
 #endif
 
@@ -116,7 +116,7 @@ std::vector<std::string> default_search_paths()
   {
     Dl_info rInfo;
     memset( &rInfo, 0, sizeof(rInfo) ); 
-    if ( !dladdr(cast_module_symbol(&default_search_paths), &rInfo)  || !rInfo.dli_fname ) { 
+    if ( dladdr(cast_module_symbol(&default_search_paths), &rInfo) == 0 || rInfo.dli_fname == nullptr ) { 
       return paths;
     }
 
@@ -184,7 +184,7 @@ std::string get_next_command() {
   std::string retval("quit");
   if ( ! std::cin.eof() ) {
     char *input_raw = readline("eval> ");
-    if ( input_raw ) {
+    if ( input_raw != nullptr ) {
       add_history(input_raw);
 
       std::string val(input_raw);
@@ -240,7 +240,7 @@ void interactive(chaiscript::ChaiScript_Basic& chai)
     }
     catch (const chaiscript::exception::eval_error &ee) {
       std::cout << ee.what();
-      if (ee.call_stack.size() > 0) {
+      if ( !ee.call_stack.empty() ) {
         std::cout << "during evaluation at (" << ee.call_stack[0]->start().line << ", " << ee.call_stack[0]->start().column << ")";
       }
       std::cout << '\n';
@@ -277,7 +277,7 @@ int main(int argc, char *argv[])
 
   std::vector<std::string> usepaths;
   usepaths.push_back("");
-  if (usepath)
+  if (usepath != nullptr)
   {
     usepaths.push_back(usepath);
   }
@@ -286,7 +286,7 @@ int main(int argc, char *argv[])
   std::vector<std::string> searchpaths = default_search_paths();
   modulepaths.insert(modulepaths.end(), searchpaths.begin(), searchpaths.end());
   modulepaths.push_back("");
-  if (modulepath)
+  if (modulepath != nullptr)
   {
     modulepaths.push_back(modulepath);
   }
@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
       ++i;
     }
 
-    std::string arg( i ? argv[i] : "--interactive" );
+    std::string arg( i != 0 ? argv[i] : "--interactive" );
 
     enum { eInteractive
          , eCommand
@@ -319,9 +319,9 @@ int main(int argc, char *argv[])
       if ( (i+1) >= argc ) {
         std::cout << "insufficient input following " << arg << '\n';
         return EXIT_FAILURE;
-      } else {
+      } 
         arg = argv[++i];
-      }
+      
     } else if ( arg == "-" || arg == "--stdin" ) {
       arg = "" ;
       std::string line;

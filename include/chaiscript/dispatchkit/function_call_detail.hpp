@@ -33,7 +33,7 @@ namespace chaiscript
           static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
               const std::vector<Boxed_Value> &params, const Type_Conversions_State *t_conversions)
           {
-            if (t_conversions) {
+            if (t_conversions != nullptr) {
               return boxed_cast<Ret>(dispatch::dispatch(t_funcs, params, *t_conversions), t_conversions);
             } else {
               Type_Conversions conv;
@@ -52,7 +52,7 @@ namespace chaiscript
           static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
               const std::vector<Boxed_Value> &params, const Type_Conversions_State *t_conversions)
           {
-            if (t_conversions) {
+            if (t_conversions != nullptr) {
               return Boxed_Number(dispatch::dispatch(t_funcs, params, *t_conversions)).get_as<Ret>();
             } else {
               Type_Conversions conv;
@@ -72,7 +72,7 @@ namespace chaiscript
           static void call(const std::vector<Const_Proxy_Function> &t_funcs, 
               const std::vector<Boxed_Value> &params, const Type_Conversions_State *t_conversions)
           {
-            if (t_conversions) {
+            if (t_conversions != nullptr) {
               dispatch::dispatch(t_funcs, params, *t_conversions);
             } else {
               Type_Conversions conv;

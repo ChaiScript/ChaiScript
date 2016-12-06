@@ -31,12 +31,12 @@ namespace chaiscript
       public:
         bad_boxed_cast(Type_Info t_from, const std::type_info &t_to,
             std::string t_what) noexcept
-          : from(std::move(t_from)), to(&t_to), m_what(std::move(t_what))
+          : from(t_from), to(&t_to), m_what(std::move(t_what))
         {
         }
 
         bad_boxed_cast(Type_Info t_from, const std::type_info &t_to)
-          : from(std::move(t_from)), to(&t_to), m_what("Cannot perform boxed_cast: " + t_from.name() + " to: " + t_to.name())
+          : from(t_from), to(&t_to), m_what("Cannot perform boxed_cast: " + t_from.name() + " to: " + t_to.name())
         {
         }
 
@@ -46,10 +46,10 @@ namespace chaiscript
         }
 
         bad_boxed_cast(const bad_boxed_cast &) = default;
-        virtual ~bad_boxed_cast() noexcept = default;
+        ~bad_boxed_cast() noexcept override = default;
 
         /// \brief Description of what error occurred
-        virtual const char * what() const noexcept override
+        const char * what() const noexcept override
         {
           return m_what.c_str();
         }

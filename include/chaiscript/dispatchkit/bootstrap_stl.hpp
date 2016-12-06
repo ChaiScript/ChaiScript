@@ -37,7 +37,7 @@ namespace chaiscript
       /// Bidir_Range, based on the D concept of ranges.
       /// \todo Update the Range code to base its capabilities on
       ///       the user_typetraits of the iterator passed in
-      template<typename Container>
+      template<typename Container, typename IterType>
         struct Bidir_Range
         {
           typedef Container container_type;
@@ -85,71 +85,13 @@ namespace chaiscript
             {
               throw std::range_error("Range empty");
             }
-            typename Container::iterator pos = m_end;
-            --pos;
-            return (*(pos));
-          }
-
-          typename Container::iterator m_begin;
-          typename Container::iterator m_end;
-        };
-
-      template<typename Container>
-        struct Const_Bidir_Range
-        {
-          typedef const Container container_type;
-          typedef typename std::iterator_traits<typename Container::const_iterator>::reference const_reference_type;
-
-          Const_Bidir_Range(const Container &c)
-            : m_begin(c.begin()), m_end(c.end())
-          {
-          }
-
-          bool empty() const
-          {
-            return m_begin == m_end;
-          }
-
-          void pop_front()
-          {
-            if (empty())
-            {
-              throw std::range_error("Range empty");
-            }
-            ++m_begin;
-          }
-
-          void pop_back()
-          {
-            if (empty())
-            {
-              throw std::range_error("Range empty");
-            }
-            --m_end;
-          }
-
-          decltype(auto) front() const
-          {
-            if (empty())
-            {
-              throw std::range_error("Range empty");
-            }
-            return (*m_begin);
-          }
-
-          decltype(auto) back() const
-          {
-            if (empty())
-            {
-              throw std::range_error("Range empty");
-            }
             auto pos = m_end;
             --pos;
             return (*(pos));
           }
 
-          typename Container::const_iterator m_begin;
-          typename Container::const_iterator m_end;
+          IterType m_begin;
+          IterType m_end;
         };
 
       namespace detail {
@@ -229,8 +171,8 @@ namespace chaiscript
       template<typename ContainerType>
         void input_range_type(const std::string &type, Module& m)
         {
-          detail::input_range_type_impl<Bidir_Range<ContainerType> >(type,m);
-          detail::input_range_type_impl<Const_Bidir_Range<ContainerType> >("Const_" + type, m);
+          detail::input_range_type_impl<Bidir_Range<ContainerType, typename ContainerType::iterator> >(type,m);
+          detail::input_range_type_impl<Bidir_Range<const ContainerType, typename ContainerType::const_iterator> >("Const_" + type,m);
         }
       template<typename ContainerType>
         ModulePtr input_range_type(const std::string &type)

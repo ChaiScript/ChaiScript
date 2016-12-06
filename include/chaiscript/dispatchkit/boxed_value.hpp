@@ -54,7 +54,7 @@ namespace chaiscript
 
           if (rhs.m_attrs)
           {
-            m_attrs = std::unique_ptr<std::map<std::string, std::shared_ptr<Data>>>(new std::map<std::string, std::shared_ptr<Data>>(*rhs.m_attrs));
+            m_attrs = std::make_unique<std::map<std::string, std::shared_ptr<Data>>>(*rhs.m_attrs);
           }
 
           return *this;
@@ -119,6 +119,8 @@ namespace chaiscript
                 );
           }
 
+
+
         template<typename T>
           static auto get(T *t, bool t_return_value)
           {
@@ -141,6 +143,19 @@ namespace chaiscript
                   chaiscript::detail::Any(std::move(obj)),
                   true,
                   p,
+                  t_return_value
+                );
+          }
+
+        template<typename T>
+          static auto get(std::unique_ptr<T> &&obj, bool t_return_value)
+          {
+            auto ptr = obj.get();
+            return std::make_shared<Data>(
+                  detail::Get_Type_Info<T>::get(), 
+                  chaiscript::detail::Any(std::make_shared<std::unique_ptr<T>>(std::move(obj))), 
+                  false,
+                  ptr,
                   t_return_value
                 );
           }
@@ -302,7 +317,7 @@ namespace chaiscript
       {
         if (!m_data->m_attrs)
         {
-          m_data->m_attrs = std::unique_ptr<std::map<std::string, std::shared_ptr<Data>>>(new std::map<std::string, std::shared_ptr<Data>>());
+          m_data->m_attrs = std::make_unique<std::map<std::string, std::shared_ptr<Data>>>();
         }
 
         auto &attr = (*m_data->m_attrs)[t_name];
@@ -319,7 +334,7 @@ namespace chaiscript
       {
         if (t_obj.m_data->m_attrs)
         {
-          m_data->m_attrs = std::unique_ptr<std::map<std::string, std::shared_ptr<Data>>>(new std::map<std::string, std::shared_ptr<Data>>(*t_obj.m_data->m_attrs));
+          m_data->m_attrs = std::make_unique<std::map<std::string, std::shared_ptr<Data>>>(*t_obj.m_data->m_attrs);
         }
         return *this;
       }
@@ -342,8 +357,8 @@ namespace chaiscript
       // necessary to avoid hitting the templated && constructor of Boxed_Value
       struct Internal_Construction{};
 
-      Boxed_Value(const std::shared_ptr<Data> &t_data, Internal_Construction)
-        : m_data(t_data) {
+      Boxed_Value(std::shared_ptr<Data> t_data, Internal_Construction)
+        : m_data(std::move(t_data)) {
       }
 
       std::shared_ptr<Data> m_data = Object_Data::get();

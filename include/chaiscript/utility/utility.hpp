@@ -89,6 +89,29 @@ namespace chaiscript
           t_module.add_global_const(chaiscript::const_var(Enum(constant.first)), constant.second);
         }
       }
+
+    template<typename EnumClass, typename ModuleType>
+      typename std::enable_if<std::is_enum<EnumClass>::value, void>::type
+      add_class(ModuleType &t_module,
+        const std::string &t_class_name,
+        const std::vector<std::pair<EnumClass, std::string>> &t_constants
+        )
+      {
+        t_module.add(chaiscript::user_type<EnumClass>(), t_class_name);
+
+        t_module.add(chaiscript::constructor<EnumClass()>(), t_class_name);
+        t_module.add(chaiscript::constructor<EnumClass(const EnumClass &)>(), t_class_name);
+
+        using namespace chaiscript::bootstrap::operators;
+        equal<EnumClass>(t_module);
+        not_equal<EnumClass>(t_module);
+        assign<EnumClass>(t_module);
+
+        for (const auto &constant : t_constants)
+        {
+          t_module.add_global_const(chaiscript::const_var(EnumClass(constant.first)), constant.second);
+        }
+      }
   }
 }
 

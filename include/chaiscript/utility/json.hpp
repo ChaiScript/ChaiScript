@@ -386,12 +386,12 @@ class JSON
           return "null";
         case Class::Object: {
                               std::string pad = "";
-                              for( long i = 0; i < depth; ++i, pad += tab );
+                              for( long i = 0; i < depth; ++i, pad += tab ) { }
 
                               std::string s = "{\n";
                               bool skip = true;
                               for( auto &p : *internal.Map ) {
-                                if( !skip ) s += ",\n";
+                                if( !skip ) { s += ",\n"; }
                                 s += ( pad + "\"" + p.first + "\" : " + p.second.dump( depth + 1, tab ) );
                                 skip = false;
                               }
@@ -402,7 +402,7 @@ class JSON
                              std::string s = "[";
                              bool skip = true;
                              for( auto &p : *internal.List ) {
-                               if( !skip ) s += ", ";
+                               if( !skip ) { s += ", "; }
                                s += p.dump( depth + 1, tab );
                                skip = false;
                              }
@@ -426,8 +426,8 @@ class JSON
   private:
     static std::string json_escape( const std::string &str ) {
       std::string output;
-      for( size_t i = 0; i < str.length(); ++i )
-        switch( str[i] ) {
+      for(char i : str) {
+        switch( i ) {
           case '\"': output += "\\\""; break;
           case '\\': output += "\\\\"; break;
           case '\b': output += "\\b";  break;
@@ -435,8 +435,9 @@ class JSON
           case '\n': output += "\\n";  break;
           case '\r': output += "\\r";  break;
           case '\t': output += "\\t";  break;
-          default  : output += str[i]; break;
+          default  : output += i; break;
         }
+}
       return output;
     }
 
@@ -462,7 +463,7 @@ struct JSONParser {
   }
 
   static void consume_ws( const std::string &str, size_t &offset ) {
-    while( isspace( str[offset] ) && offset <= str.size() ) ++offset;
+    while( isspace( str[offset] ) && offset <= str.size() ) { ++offset; }
   }
 
   static JSON parse_object( const std::string &str, size_t &offset ) {
@@ -544,9 +545,9 @@ struct JSONParser {
                        val += "\\u" ;
                        for( size_t i = 1; i <= 4; ++i ) {
                          c = str[offset+i];
-                         if( (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') )
+                         if( (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') ) {
                            val += c;
-                         else {
+                         } else {
                            throw std::runtime_error(std::string("JSON ERROR: String: Expected hex character in unicode escape, found '") + c + "'");
                          }
                        }
@@ -554,9 +555,9 @@ struct JSONParser {
                      } break;
           default  : val += '\\'; break;
         }
-      }
-      else
+      } else {
         val += c;
+      }
     }
     ++offset;
     return JSON(val);
@@ -569,30 +570,35 @@ struct JSONParser {
     long exp = 0;
     for (; offset < str.size() ;) {
       c = str[offset++];
-      if( (c == '-') || (c >= '0' && c <= '9') )
+      if( (c == '-') || (c >= '0' && c <= '9') ) {
         val += c;
-      else if( c == '.' ) {
+      } else if( c == '.' ) {
         val += c; 
         isDouble = true;
-      }
-      else
+      } else {
         break;
+      }
     }
     if( offset < str.size() && (c == 'E' || c == 'e' )) {
       c = str[ offset++ ];
-      if( c == '-' ) { exp_str += '-';}
-      else if( c == '+' ) { }
-      else --offset;
+      if( c == '-' ) { 
+        exp_str += '-';
+      } else if( c == '+' ) {
+        // do nothing
+      } else { 
+        --offset; 
+      }
 
       for (; offset < str.size() ;) {
         c = str[ offset++ ];
-        if( c >= '0' && c <= '9' )
+        if( c >= '0' && c <= '9' ) {
           exp_str += c;
-        else if( !isspace( c ) && c != ',' && c != ']' && c != '}' ) {
+        } else if( !isspace( c ) && c != ',' && c != ']' && c != '}' ) {
           throw std::runtime_error(std::string("JSON ERROR: Number: Expected a number for exponent, found '") + c + "'");
         }
-        else
+        else {
           break;
+}
       }
       exp = chaiscript::parse_num<long>( exp_str );
     }
@@ -643,8 +649,9 @@ struct JSONParser {
       case 't' :
       case 'f' : return parse_bool( str, offset );
       case 'n' : return parse_null( str, offset );
-      default  : if( ( value <= '9' && value >= '0' ) || value == '-' )
+      default  : if( ( value <= '9' && value >= '0' ) || value == '-' ) {
                    return parse_number( str, offset );
+                 }
     }
     throw std::runtime_error(std::string("JSON ERROR: Parse: Unexpected starting character '") + value + "'");
   }
