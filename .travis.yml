@@ -12,11 +12,11 @@ addons:
 matrix:
   include:
     - os: linux
-      sudo: required
+      sudo: false
       env: GCC_VER="4.9"
       compiler: gcc
     - os: linux
-      sudo: required
+      sudo: false
       env: 
         - GCC_VER="5"
         - CPPCHECK=1
@@ -34,7 +34,7 @@ env:
     - secure: "LfolGjP8tWm3yAwthfu3yp8Zn40aueFae580UUR34gusG87cyglq2tQDtxdy+63gWEeNfArbv9n5rZv+bDW3ggHyPjuCKKc1PlZAy07lfXUXf1uz+SFhNvNoYTn3mQG3VZ08o116p4Le2p8yqu4bylJ8wckEq7PrTwvSGVQWTWM="
 
 before_install:
-  - export CXX="g++-$GCC_VER" CC="gcc-$GCC_VER" GCOV="gcov-$GCC_VER"
+  - if [ "${GCC_VER}" != "" ]; then export CXX="g++-$GCC_VER" CC="gcc-$GCC_VER" GCOV="gcov-$GCC_VER" ; fi
   - pip install --user cpp-coveralls
 
 script: 
