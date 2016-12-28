@@ -48,8 +48,8 @@ script:
   - ctest
   - if [ ${COVERAGE} = 1 ]; then bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/master/codecov) -x $GCOV -a "-s `pwd`" ; fi
 
-after_script:
-  - if [ ${CPPCHECK} = 1 ]; then contrib/codeanalysis/runcppcheck.sh ; fi
+#after_script:
+#  - if [ ${CPPCHECK} = 1 ]; then contrib/codeanalysis/runcppcheck.sh ; fi
 
 
 notifications:
