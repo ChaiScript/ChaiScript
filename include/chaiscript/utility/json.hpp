@@ -600,7 +600,7 @@ struct JSONParser {
           break;
 }
       }
-      exp = chaiscript::parse_num<long>( exp_str );
+      exp = std::stol( exp_str );
     }
     else if( offset < str.size() && (!isspace( c ) && c != ',' && c != ']' && c != '}' )) {
       throw std::runtime_error(std::string("JSON ERROR: Number: unexpected character '") + c + "'");
@@ -611,9 +611,9 @@ struct JSONParser {
       return JSON(chaiscript::parse_num<double>( val ) * std::pow( 10, exp ));
     } else {
       if( !exp_str.empty() ) {
-        return JSON(static_cast<double>(chaiscript::parse_num<long>( val )) * std::pow( 10, exp ));
+        return JSON(static_cast<double>(std::stol( val )) * std::pow( 10, exp ));
       } else {
-        return JSON(chaiscript::parse_num<long>( val ));
+        return JSON(std::stol( val ));
       }
     }
   }
