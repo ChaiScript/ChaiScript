@@ -1,0 +1,8 @@
+def numFunc(x)
+{
+  return x + 10;
+}
+
+
+assert_true(-5.numFunc() == 5);
+
