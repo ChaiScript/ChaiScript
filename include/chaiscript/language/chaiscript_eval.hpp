@@ -49,7 +49,7 @@ namespace chaiscript
     {
       /// Helper function that will set up the scope around a function call, including handling the named function parameters
       template<typename T>
-      static Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_Node_Impl_Ptr<T> &t_node, const std::vector<std::string> &t_param_names, const std::vector<Boxed_Value> &t_vals, const std::map<std::string, Boxed_Value> *t_locals=nullptr) {
+      static Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_Node_Impl_Ptr<T> &t_node, const std::vector<std::string> &t_param_names, const std::vector<Boxed_Value> &t_vals, const std::map<std::string, Boxed_Value> *t_locals=nullptr, bool has_this_capture = false) {
         chaiscript::detail::Dispatch_State state(t_ss);
 
         const Boxed_Value *thisobj = [&]() -> const Boxed_Value *{
@@ -64,7 +64,7 @@ namespace chaiscript
         }();
 
         chaiscript::eval::detail::Stack_Push_Pop tpp(state);
-        if (thisobj) { state.add_object("this", *thisobj); }
+        if (thisobj && !has_this_capture) { state.add_object("this", *thisobj); }
 
         if (t_locals) {
           for (const auto &local : *t_locals) {
@@ -618,7 +618,9 @@ namespace chaiscript
     struct Lambda_AST_Node final : AST_Node_Impl<T> {
         Lambda_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(t_ast_node_text, AST_Node_Type::Lambda, std::move(t_loc), std::move(t_children)),
-          m_param_names(Arg_List_AST_Node<T>::get_arg_names(this->children[1])) { }
+          m_param_names(Arg_List_AST_Node<T>::get_arg_names(this->children[1])),
+          m_this_capture(has_this_capture(this->children[0]->children))
+        { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
 
@@ -638,17 +640,26 @@ namespace chaiscript
 
           return Boxed_Value(
               dispatch::make_dynamic_proxy_function(
-                  [engine, lambda_node, param_names = this->m_param_names, captures](const std::vector<Boxed_Value> &t_params)
+                  [engine, lambda_node, param_names = this->m_param_names, captures, this_capture = this->m_this_capture](const std::vector<Boxed_Value> &t_params)
                   {
-                    return detail::eval_function(engine, lambda_node, param_names, t_params, &captures);
+                    return detail::eval_function(engine, lambda_node, param_names, t_params, &captures, this_capture);
                   },
                   static_cast<int>(numparams), lambda_node, param_types
                 )
               );
         }
 
+        static bool has_this_capture(const std::vector<AST_Node_Impl_Ptr<T>> &children) {
+          return std::any_of(begin(children), end(children),
+                [](const auto &child){
+                  return child->children[0]->text == "this";
+                }
+              );
+        }
+
       private:
         const std::vector<std::string> m_param_names;
+        const bool m_this_capture = false;
 
     };
 
