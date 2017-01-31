@@ -781,57 +781,53 @@ namespace chaiscript
       }
 
       /// Reads a number from the input, detecting if it's an integer or floating point
-      bool Num(const bool t_capture = false) {
+      bool Num() {
         SkipWS();
 
-        if (!t_capture) {
-          return Hex_() || Float_();
-        } else {
-          const auto start = m_position;
-          if (m_position.has_more() && char_in_alphabet(*m_position, detail::float_alphabet) ) {
-            try {
-              if (Hex_()) {
-                auto match = Position::str(start, m_position);
-                auto bv = buildInt(16, match, true);
-                m_match_stack.emplace_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
-                return true;
-              }
-
-              if (Binary_()) {
-                auto match = Position::str(start, m_position);
-                auto bv = buildInt(2, match, true);
-                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
-                return true;
-              }
-              if (Float_()) {
-                auto match = Position::str(start, m_position);
-                auto bv = buildFloat(match);
-                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
-                return true;
-              }
-              else {
-                IntSuffix_();
-                auto match = Position::str(start, m_position);
-                if (!match.empty() && (match[0] == '0')) {
-                  auto bv = buildInt(8, match, false);
-                  m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
-                }
-                else if (!match.empty()) {
-                  auto bv = buildInt(10, match, false);
-                  m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
-                } else {
-                  return false;
-                }
-                return true;
-              }
-            } catch (const std::invalid_argument &) {
-              // error parsing number passed in to buildFloat/buildInt
-              return false;
+        const auto start = m_position;
+        if (m_position.has_more() && char_in_alphabet(*m_position, detail::float_alphabet) ) {
+          try {
+            if (Hex_()) {
+              auto match = Position::str(start, m_position);
+              auto bv = buildInt(16, match, true);
+              m_match_stack.emplace_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              return true;
             }
-          }
-          else {
+
+            if (Binary_()) {
+              auto match = Position::str(start, m_position);
+              auto bv = buildInt(2, match, true);
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              return true;
+            }
+            if (Float_()) {
+              auto match = Position::str(start, m_position);
+              auto bv = buildFloat(match);
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              return true;
+            }
+            else {
+              IntSuffix_();
+              auto match = Position::str(start, m_position);
+              if (!match.empty() && (match[0] == '0')) {
+                auto bv = buildInt(8, match, false);
+                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              }
+              else if (!match.empty()) {
+                auto bv = buildInt(10, match, false);
+                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              } else {
+                return false;
+              }
+              return true;
+            }
+          } catch (const std::invalid_argument &) {
+            // error parsing number passed in to buildFloat/buildInt
             return false;
           }
+        }
+        else {
+          return false;
         }
       }
 
@@ -1188,92 +1184,88 @@ namespace chaiscript
 
 
       /// Reads (and potentially captures) a quoted string from input.  Translates escaped sequences.
-      bool Quoted_String(const bool t_capture = false) {
+      bool Quoted_String() {
         SkipWS();
 
-        if (!t_capture) {
-          return Quoted_String_();
-        } else {
-          const auto start = m_position;
+        const auto start = m_position;
 
-          if (Quoted_String_()) {
-            std::string match;
-            const auto prev_stack_top = m_match_stack.size();
+        if (Quoted_String_()) {
+          std::string match;
+          const auto prev_stack_top = m_match_stack.size();
 
-            bool is_interpolated = [&]()->bool {
-              Char_Parser<std::string> cparser(match, true);
+          bool is_interpolated = [&]()->bool {
+            Char_Parser<std::string> cparser(match, true);
 
 
-              auto s = start + 1, end = m_position - 1;
+            auto s = start + 1, end = m_position - 1;
 
-              while (s != end) {
-                if (cparser.saw_interpolation_marker) {
-                  if (*s == '{') {
-                    //We've found an interpolation point
+            while (s != end) {
+              if (cparser.saw_interpolation_marker) {
+                if (*s == '{') {
+                  //We've found an interpolation point
 
-                    m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(match)));
+                  m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(match)));
 
-                    if (cparser.is_interpolated) {
-                      //If we've seen previous interpolation, add on instead of making a new one
-                      build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, "+");
-                    }
-
-                    //We've finished with the part of the string up to this point, so clear it
-                    match.clear();
-
-                    std::string eval_match;
-
-                    ++s;
-                    while ((s != end) && (*s != '}')) {
-                      eval_match.push_back(*s);
-                      ++s;
-                    }
-
-                    if (*s == '}') {
-                      cparser.is_interpolated = true;
-                      ++s;
-
-                      const auto tostr_stack_top = m_match_stack.size();
-
-                      m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>("to_string", start.line, start.col));
-
-                      const auto ev_stack_top = m_match_stack.size();
-
-                      try {
-                        m_match_stack.push_back(parse_instr_eval(eval_match));
-                      } catch (const exception::eval_error &e) {
-                        throw exception::eval_error(e.what(), File_Position(start.line, start.col), *m_filename);
-                      }
-
-                      build_match<eval::Arg_List_AST_Node<Tracer>>(ev_stack_top);
-                      build_match<eval::Fun_Call_AST_Node<Tracer>>(tostr_stack_top);
-                      build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, "+");
-                    } else {
-                      throw exception::eval_error("Unclosed in-string eval", File_Position(start.line, start.col), *m_filename);
-                    }
-                  } else {
-                    match.push_back('$');
+                  if (cparser.is_interpolated) {
+                    //If we've seen previous interpolation, add on instead of making a new one
+                    build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, "+");
                   }
-                  cparser.saw_interpolation_marker = false;
-                } else {
-                  cparser.parse(*s, start.line, start.col, *m_filename);
+
+                  //We've finished with the part of the string up to this point, so clear it
+                  match.clear();
+
+                  std::string eval_match;
+
                   ++s;
+                  while ((s != end) && (*s != '}')) {
+                    eval_match.push_back(*s);
+                    ++s;
+                  }
+
+                  if (*s == '}') {
+                    cparser.is_interpolated = true;
+                    ++s;
+
+                    const auto tostr_stack_top = m_match_stack.size();
+
+                    m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>("to_string", start.line, start.col));
+
+                    const auto ev_stack_top = m_match_stack.size();
+
+                    try {
+                      m_match_stack.push_back(parse_instr_eval(eval_match));
+                    } catch (const exception::eval_error &e) {
+                      throw exception::eval_error(e.what(), File_Position(start.line, start.col), *m_filename);
+                    }
+
+                    build_match<eval::Arg_List_AST_Node<Tracer>>(ev_stack_top);
+                    build_match<eval::Fun_Call_AST_Node<Tracer>>(tostr_stack_top);
+                    build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, "+");
+                  } else {
+                    throw exception::eval_error("Unclosed in-string eval", File_Position(start.line, start.col), *m_filename);
+                  }
+                } else {
+                  match.push_back('$');
                 }
+                cparser.saw_interpolation_marker = false;
+              } else {
+                cparser.parse(*s, start.line, start.col, *m_filename);
+                ++s;
               }
-
-              return cparser.is_interpolated;
-            }();
-
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(match)));
-
-            if (is_interpolated) {
-              build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, "+");
             }
 
-            return true;
-          } else {
-            return false;
+            return cparser.is_interpolated;
+          }();
+
+          m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(match)));
+
+          if (is_interpolated) {
+            build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, "+");
           }
+
+          return true;
+        } else {
+          return false;
         }
       }
 
@@ -1306,35 +1298,31 @@ namespace chaiscript
       }
 
       /// Reads (and potentially captures) a char group from input.  Translates escaped sequences.
-      bool Single_Quoted_String(const bool t_capture = false) {
+      bool Single_Quoted_String() {
         SkipWS();
 
-        if (!t_capture) {
-          return Single_Quoted_String_();
-        } else {
-          const auto start = m_position;
-          if (Single_Quoted_String_()) {
-            std::string match;
+        const auto start = m_position;
+        if (Single_Quoted_String_()) {
+          std::string match;
 
-            {
-              // scope for cparser destructor
-              Char_Parser<std::string> cparser(match, false);
+          {
+            // scope for cparser destructor
+            Char_Parser<std::string> cparser(match, false);
 
-              for (auto s = start + 1, end = m_position - 1; s != end; ++s) {
-                cparser.parse(*s, start.line, start.col, *m_filename);
-              }
+            for (auto s = start + 1, end = m_position - 1; s != end; ++s) {
+              cparser.parse(*s, start.line, start.col, *m_filename);
             }
-
-            if (match.size() != 1) {
-              throw exception::eval_error("Single-quoted strings must be 1 character long", File_Position(m_position.line, m_position.col), *m_filename);
-            }
-
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(char(match.at(0)))));
-            return true;
           }
-          else {
-            return false;
+
+          if (match.size() != 1) {
+            throw exception::eval_error("Single-quoted strings must be 1 character long", File_Position(m_position.line, m_position.col), *m_filename);
           }
+
+          m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(char(match.at(0)))));
+          return true;
+        }
+        else {
+          return false;
         }
       }
 
@@ -2088,7 +2076,7 @@ namespace chaiscript
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
-        if (Lambda() || Num(true) || Quoted_String(true) || Single_Quoted_String(true) ||
+        if (Lambda() || Num() || Quoted_String() || Single_Quoted_String() ||
             Paren_Expression() || Inline_Container() || Id(false))
         {
           retval = true;
