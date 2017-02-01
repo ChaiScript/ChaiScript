@@ -722,10 +722,7 @@ namespace chaiscript
           }
         }
 
-
-        const bool neg = t_val[0] == '-';
-        const auto pref = neg?std::string(t_val.begin()+1,t_val.end()):t_val;
-        const auto val = prefixed?std::string(pref.begin() + 2, pref.end()):pref;
+        const auto val = prefixed?std::string(t_val.begin()+2,t_val.end()):t_val;
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -742,17 +739,17 @@ namespace chaiscript
 
 
           if (!unsigned_ && !long_ && u >= std::numeric_limits<int>::min() && u <= std::numeric_limits<int>::max()) {
-            return const_var(static_cast<int>(u) * (neg?-1:1));
+            return const_var(static_cast<int>(u));
           } else if ((unsigned_ || base != 10) && !long_ && u >= std::numeric_limits<unsigned int>::min() && u <= std::numeric_limits<unsigned int>::max()) {
-            return const_var(static_cast<unsigned int>(u) * (neg?-1:1));
+            return const_var(static_cast<unsigned int>(u));
           } else if (!unsigned_ && !longlong_ && u >= std::numeric_limits<long>::min() && u <= std::numeric_limits<long>::max()) {
-            return const_var(static_cast<long>(u) * (neg?-1:1));
+            return const_var(static_cast<long>(u));
           } else if ((unsigned_ || base != 10) && !longlong_ && u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
-            return const_var(static_cast<unsigned long>(u) * (neg?-1:1));
+            return const_var(static_cast<unsigned long>(u));
           } else if (!unsigned_ && u >= std::numeric_limits<long long>::min() && u <= std::numeric_limits<long long>::max()) {
-            return const_var(static_cast<long long>(u) * (neg?-1:1));
+            return const_var(static_cast<long long>(u));
           } else {
-            return const_var(static_cast<unsigned long long>(u) * (neg?-1:1));
+            return const_var(static_cast<unsigned long long>(u));
           }
 
         } catch (const std::out_of_range &) {
@@ -761,13 +758,13 @@ namespace chaiscript
             auto u = std::stoull(val,nullptr,base);
 
             if (u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
-              return const_var(static_cast<unsigned long>(u) * (neg?-1:1));
+              return const_var(static_cast<unsigned long>(u));
             } else {
-              return const_var(static_cast<unsigned long long>(u) * (neg?-1:1));
+              return const_var(static_cast<unsigned long long>(u));
             }
           } catch (const std::out_of_range &) {
             // it's just simply too big
-            return const_var(neg?std::numeric_limits<long long>::min():std::numeric_limits<long long>::max());
+            return const_var(std::numeric_limits<long long>::max());
           }
         }
 
@@ -788,7 +785,6 @@ namespace chaiscript
         SkipWS();
 
         const auto start = m_position;
-        const bool neg = Char_('-');
         if (m_position.has_more() && char_in_alphabet(*m_position, detail::float_alphabet) ) {
           try {
             if (Hex_()) {
@@ -813,7 +809,7 @@ namespace chaiscript
             else {
               IntSuffix_();
               auto match = Position::str(start, m_position);
-              if (!match.empty() && (match[neg?1:0] == '0')) {
+              if (!match.empty() && (match[0] == '0')) {
                 auto bv = buildInt(8, match, false);
                 m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
               }
@@ -831,7 +827,6 @@ namespace chaiscript
           }
         }
         else {
-          if (neg) { --m_position; }
           return false;
         }
       }

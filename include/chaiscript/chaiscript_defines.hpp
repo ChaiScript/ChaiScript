@@ -145,6 +145,21 @@ namespace chaiscript {
 
 
   template<typename T>
+    auto parse_num(const char *t_str) -> typename std::enable_if<std::is_integral<T>::value, T>::type
+    {
+      T t = 0;
+      for (char c = *t_str; (c = *t_str) != 0; ++t_str) {
+        if (c < '0' || c > '9') {
+          return t;
+        }
+        t *= 10;
+        t += c - '0';
+      }
+      return t;
+    }
+
+
+  template<typename T>
     auto parse_num(const char *t_str) -> typename std::enable_if<!std::is_integral<T>::value, T>::type
     {
       T t = 0;
@@ -160,16 +175,6 @@ namespace chaiscript {
           return baseval * std::pow(T(10), val*T(negexp?-1:1));
         }
       };
-
-      const bool neg = [&](){
-        if (t_str[0] == '-') {
-          ++t_str;
-          return true;
-        } else {
-          return false;
-        }
-      }();
-
 
       for(; *t_str != '\0'; ++t_str) {
         char c = *t_str;
@@ -195,7 +200,7 @@ namespace chaiscript {
         }
       }
 
-      return final_value(t, base, exponent, neg_exponent) * (neg?-1:1);
+      return final_value(t, base, exponent, neg_exponent);
     }
 
   template<typename T>
