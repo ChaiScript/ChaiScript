@@ -108,9 +108,9 @@ int main(int /*argc*/, char * /*argv*/[]) {
   // A shortcut to using eval is just to use the chai operator()
   chai("log(\"Test Module\", \"Test Message\");");
 
-  //Finally, it is possible to register any std::function as a system function, in this 
+  //Finally, it is possible to register a lambda as a system function, in this 
   //way, we can, for instance add a bound member function to the system
-  chai.add(fun(&System::do_callbacks, std::ref(system), std::string("Bound Test")), "do_callbacks");
+  chai.add(fun([&system](){ return system.do_callbacks("Bound Test"); }), "do_callbacks");
 
   //Call bound version of do_callbacks
   chai("do_callbacks()");
