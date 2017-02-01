@@ -757,7 +757,7 @@ namespace chaiscript
           try {
             auto u = std::stoull(val,nullptr,base);
 
-            if (u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
+            if (!longlong_ && u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
               return const_var(static_cast<unsigned long>(u));
             } else {
               return const_var(static_cast<unsigned long long>(u));

@@ -4,13 +4,25 @@
 
 
 #define TEST_LITERAL(v) test_literal(v, #v)
+#define TEST_LITERAL_SIGNED(v) test_literal(v, #v, true)
 
 template<typename T>
-bool test_literal(T val, const std::string &str)
+bool test_literal(T val, const std::string &str, bool use_boxed_number = false)
 {
   std::cout << '(' << str << ") Comparing : C++ '" << val;
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
-  T val2 = chai.eval<T>(str);
+
+  // Note, after applying the `-` it's possible that chaiscript has internally converted
+  // between two equivalently sized types (ie, unsigned long and unsigned long long on a 64bit system)
+  // so we're going to allow some leeway with the signed tests
+  T val2 = [&](){
+    if (!use_boxed_number) {
+      return chai.eval<T>(str);
+    } else {
+      return chai.eval<chaiscript::Boxed_Number>(str).get_as<T>();
+    }
+  }();
+
   std::cout << "' chai '" << val2 << "'\n";
   return val == val2;
 }
@@ -222,20 +234,20 @@ int main()
       && TEST_LITERAL(16777215ull)
       && TEST_LITERAL(4294967295ull)
 
-      && TEST_LITERAL(-255ull)
-      && TEST_LITERAL(-65535ull)
-      && TEST_LITERAL(-16777215ull)
-      && TEST_LITERAL(-4294967295ull)
+      && TEST_LITERAL_SIGNED(-255ull)
+      && TEST_LITERAL_SIGNED(-65535ull)
+      && TEST_LITERAL_SIGNED(-16777215ull)
+      && TEST_LITERAL_SIGNED(-4294967295ull)
 
       && TEST_LITERAL(255ll)
       && TEST_LITERAL(65535ll)
       && TEST_LITERAL(16777215ll)
       && TEST_LITERAL(4294967295ll)
 
-      && TEST_LITERAL(-255ll)
-      && TEST_LITERAL(-65535ll)
-      && TEST_LITERAL(-16777215ll)
-      && TEST_LITERAL(-4294967295ll)
+      && TEST_LITERAL_SIGNED(-255ll)
+      && TEST_LITERAL_SIGNED(-65535ll)
+      && TEST_LITERAL_SIGNED(-16777215ll)
+      && TEST_LITERAL_SIGNED(-4294967295ll)
 
 
       )
