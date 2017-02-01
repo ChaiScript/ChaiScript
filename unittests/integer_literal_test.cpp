@@ -175,6 +175,7 @@ int main()
       && TEST_LITERAL(-177777777777777777)
       && TEST_LITERAL(-1777777777777777777)
 
+      // Test 8/16/24/32 bit boundaries for various types
 
       && TEST_LITERAL(255)
       && TEST_LITERAL(65535)
@@ -185,6 +186,58 @@ int main()
       && TEST_LITERAL(-65535)
       && TEST_LITERAL(-16777215)
       && TEST_LITERAL(-4294967295)
+
+      && TEST_LITERAL(255u)
+      && TEST_LITERAL(65535u)
+      && TEST_LITERAL(16777215u)
+      && TEST_LITERAL(4294967295u)
+
+      && TEST_LITERAL(-255u)
+      && TEST_LITERAL(-65535u)
+      && TEST_LITERAL(-16777215u)
+      && TEST_LITERAL(-4294967295u)
+
+      && TEST_LITERAL(255l)
+      && TEST_LITERAL(65535l)
+      && TEST_LITERAL(16777215l)
+      && TEST_LITERAL(4294967295l)
+
+      && TEST_LITERAL(-255l)
+      && TEST_LITERAL(-65535l)
+      && TEST_LITERAL(-16777215l)
+      && TEST_LITERAL(-4294967295l)
+
+      && TEST_LITERAL(255ul)
+      && TEST_LITERAL(65535ul)
+      && TEST_LITERAL(16777215ul)
+      && TEST_LITERAL(4294967295ul)
+
+      && TEST_LITERAL(-255ul)
+      && TEST_LITERAL(-65535ul)
+      && TEST_LITERAL(-16777215ul)
+      && TEST_LITERAL(-4294967295ul)
+
+      && TEST_LITERAL(255ull)
+      && TEST_LITERAL(65535ull)
+      && TEST_LITERAL(16777215ull)
+      && TEST_LITERAL(4294967295ull)
+
+      && TEST_LITERAL(-255ull)
+      && TEST_LITERAL(-65535ull)
+      && TEST_LITERAL(-16777215ull)
+      && TEST_LITERAL(-4294967295ull)
+
+      && TEST_LITERAL(255ll)
+      && TEST_LITERAL(65535ll)
+      && TEST_LITERAL(16777215ll)
+      && TEST_LITERAL(4294967295ll)
+
+      && TEST_LITERAL(-255ll)
+      && TEST_LITERAL(-65535ll)
+      && TEST_LITERAL(-16777215ll)
+      && TEST_LITERAL(-4294967295ll)
+
+
       )
   {
     return EXIT_SUCCESS;
