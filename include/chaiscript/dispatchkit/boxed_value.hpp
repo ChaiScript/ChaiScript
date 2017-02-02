@@ -251,9 +251,9 @@ namespace chaiscript
           ~Sentinel()
           {
             // save new pointer data
-            const auto ptr = m_ptr.get().get();
-            m_data.get().m_data_ptr = ptr;
-            m_data.get().m_const_data_ptr = ptr;
+            const auto ptr_ = m_ptr.get().get();
+            m_data.get().m_data_ptr = ptr_;
+            m_data.get().m_const_data_ptr = ptr_;
           }
 
           Sentinel& operator=(Sentinel&&s) = default;

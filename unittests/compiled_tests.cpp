@@ -1202,7 +1202,7 @@ TEST_CASE("Test reference member being registered")
   double d;
   chai.add(chaiscript::var(Reference_MyClass(d)), "ref");
   chai.eval("ref.x = 2.3");
-  CHECK(d == 2.3);
+  CHECK(d == Approx(2.3));
 }
 
 
