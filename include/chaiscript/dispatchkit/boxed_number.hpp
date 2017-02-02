@@ -585,6 +585,59 @@ namespace chaiscript
 
       }
 
+      template<typename Source, typename Target> 
+      static void check_type()
+      {
+        if (sizeof(Source) != sizeof(Target)
+            || std::is_signed<Source>() != std::is_signed<Target>()
+            || std::is_floating_point<Source>() != std::is_floating_point<Target>())
+        {
+          throw chaiscript::detail::exception::bad_any_cast();
+        }
+      }
+
+      template<typename Target> Target get_as_checked() const
+      {
+        switch (get_common_type(bv)) {
+          case Common_Types::t_int32:
+            check_type<int32_t, Target>();
+            return get_as_aux<Target, int32_t>(bv);
+          case Common_Types::t_uint8:
+            check_type<uint8_t, Target>();
+            return get_as_aux<Target, uint8_t>(bv);
+          case Common_Types::t_int8:
+            check_type<int8_t, Target>();
+            return get_as_aux<Target, int8_t>(bv);
+          case Common_Types::t_uint16:
+            check_type<uint16_t, Target>();
+            return get_as_aux<Target, uint16_t>(bv);
+          case Common_Types::t_int16:
+            check_type<int16_t, Target>();
+            return get_as_aux<Target, int16_t>(bv);
+          case Common_Types::t_uint32:
+            check_type<uint32_t, Target>();
+            return get_as_aux<Target, uint32_t>(bv);
+          case Common_Types::t_uint64:
+            check_type<uint64_t, Target>();
+            return get_as_aux<Target, uint64_t>(bv);
+          case Common_Types::t_int64:
+            check_type<int64_t, Target>();
+            return get_as_aux<Target, int64_t>(bv);
+          case Common_Types::t_double:
+            check_type<double, Target>();
+            return get_as_aux<Target, double>(bv);
+          case Common_Types::t_float:
+            check_type<float, Target>();
+            return get_as_aux<Target, float>(bv);
+          case Common_Types::t_long_double:
+            check_type<long double, Target>();
+            return get_as_aux<Target, long double>(bv);
+        }
+
+        throw chaiscript::detail::exception::bad_any_cast();
+      }
+
+
       template<typename Target> Target get_as() const
       {
         switch (get_common_type(bv)) {
