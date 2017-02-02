@@ -1123,10 +1123,31 @@ TEST_CASE("Use unique_ptr")
   CHECK(chai.eval<int>("iptr") == 2);
   chai.eval("derefi(iptr)");
   CHECK(chai.eval<int>("iptr") == 3);
-
-
-
 }
+
+
+class Unique_Ptr_Test_Class
+{
+  public:
+    Unique_Ptr_Test_Class() = default;
+    Unique_Ptr_Test_Class(const Unique_Ptr_Test_Class&) = default;
+    Unique_Ptr_Test_Class(Unique_Ptr_Test_Class &&) = default;
+    Unique_Ptr_Test_Class &operator=(const Unique_Ptr_Test_Class&) = default;
+    Unique_Ptr_Test_Class &operator=(Unique_Ptr_Test_Class&&) = default;
+    virtual ~Unique_Ptr_Test_Class() = default;
+
+    int getI() const {return 5;}
+};
+
+TEST_CASE("Call methods through unique_ptr")
+{
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+
+    chai.add(chaiscript::var(std::make_unique<Unique_Ptr_Test_Class>()), "uptr");
+    chai.add(chaiscript::fun(&Unique_Ptr_Test_Class::getI), "getI");
+    CHECK(chai.eval<int>("uptr.getI()") == 5);
+}
+
 
 
 class A
