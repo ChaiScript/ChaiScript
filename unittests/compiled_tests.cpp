@@ -1113,6 +1113,9 @@ TEST_CASE("Use unique_ptr")
   chai.add(chaiscript::fun([](int &i){ ++i; }), "inci");
   chai.add(chaiscript::fun([](int i){ ++i; }), "copyi");
   chai.add(chaiscript::fun([](int *i){ ++(*i); }), "derefi");
+  chai.add(chaiscript::fun([](const std::unique_ptr<int> &i){ ++(*i); }), "constrefuniqptri");
+  chai.add(chaiscript::fun([](std::unique_ptr<int> &i){ ++(*i); }), "refuniqptri");
+  chai.add(chaiscript::fun([](std::unique_ptr<int> &&i){ ++(*i); }), "rvaluniqptri");
   chai.add(chaiscript::var(std::make_unique<int>(1)), "iptr");
 
 
@@ -1123,6 +1126,12 @@ TEST_CASE("Use unique_ptr")
   CHECK(chai.eval<int>("iptr") == 2);
   chai.eval("derefi(iptr)");
   CHECK(chai.eval<int>("iptr") == 3);
+  chai.eval("constrefuniqptri(iptr)");
+  CHECK(chai.eval<int>("iptr") == 4);
+  chai.eval("refuniqptri(iptr)");
+  CHECK(chai.eval<int>("iptr") == 5);
+  chai.eval("rvaluniqptri(iptr)");
+  CHECK(chai.eval<int>("iptr") == 6);
 }
 
 

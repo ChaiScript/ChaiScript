@@ -35,11 +35,11 @@ namespace chaiscript
       {
         Data(const Type_Info &ti,
             chaiscript::detail::Any to,
-            bool tr,
+            bool is_ref,
             const void *t_void_ptr,
             bool t_return_value)
           : m_type_info(ti), m_obj(std::move(to)), m_data_ptr(ti.is_const()?nullptr:const_cast<void *>(t_void_ptr)), m_const_data_ptr(t_void_ptr),
-            m_is_ref(tr), m_return_value(t_return_value)
+            m_is_ref(is_ref), m_return_value(t_return_value)
         {
         }
 
@@ -154,7 +154,7 @@ namespace chaiscript
             return std::make_shared<Data>(
                   detail::Get_Type_Info<T>::get(), 
                   chaiscript::detail::Any(std::make_shared<std::unique_ptr<T>>(std::move(obj))), 
-                  false,
+                  true,
                   ptr,
                   t_return_value
                 );
