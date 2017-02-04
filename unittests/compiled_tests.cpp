@@ -1147,14 +1147,40 @@ std::unique_ptr<Unique_Ptr_Test_Class> make_Unique_Ptr_Test_Class()
 
 TEST_CASE("Call methods through unique_ptr")
 {
-    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
 
-    chai.add(chaiscript::var(std::make_unique<Unique_Ptr_Test_Class>()), "uptr");
-    chai.add(chaiscript::fun(make_Unique_Ptr_Test_Class), "make_Unique_Ptr_Test_Class");
-    chai.add(chaiscript::fun(&Unique_Ptr_Test_Class::getI), "getI");
-    CHECK(chai.eval<int>("uptr.getI()") == 5);
-    CHECK(chai.eval<int>("var uptr2 = make_Unique_Ptr_Test_Class(); uptr2.getI()") == 5);
+  chai.add(chaiscript::var(std::make_unique<Unique_Ptr_Test_Class>()), "uptr");
+  chai.add(chaiscript::fun(make_Unique_Ptr_Test_Class), "make_Unique_Ptr_Test_Class");
+  chai.add(chaiscript::fun(&Unique_Ptr_Test_Class::getI), "getI");
+  CHECK(chai.eval<int>("uptr.getI()") == 5);
+  CHECK(chai.eval<int>("var uptr2 = make_Unique_Ptr_Test_Class(); uptr2.getI()") == 5);
+}
 
+
+class Unique_Ptr_Test_Base_Class
+{
+  public:
+    int getI() const {return 5;}
+};
+
+class Unique_Ptr_Test_Derived_Class : public Unique_Ptr_Test_Base_Class
+{};
+
+std::unique_ptr<Unique_Ptr_Test_Derived_Class> make_Unique_Ptr_Test_Derived_Class()
+{
+  return std::make_unique<Unique_Ptr_Test_Derived_Class>();
+}
+
+TEST_CASE("Call methods on base class through unique_ptr<derived>")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+
+  chai.add(chaiscript::var(std::make_unique<Unique_Ptr_Test_Derived_Class>()), "uptr");
+  chai.add(chaiscript::fun(make_Unique_Ptr_Test_Derived_Class), "make_Unique_Ptr_Test_Derived_Class");
+  chai.add(chaiscript::fun(&Unique_Ptr_Test_Base_Class::getI), "getI");
+  chai.add(chaiscript::base_class<Unique_Ptr_Test_Base_Class, Unique_Ptr_Test_Derived_Class>());
+  CHECK(chai.eval<int>("uptr.getI()") == 5);
+  CHECK(chai.eval<int>("var uptr2 = make_Unique_Ptr_Test_Derived_Class(); uptr2.getI()") == 5);
 }
 
 
