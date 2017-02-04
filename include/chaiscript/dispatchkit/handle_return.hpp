@@ -27,9 +27,7 @@ namespace chaiscript
 
     namespace detail
     {
-      /**
-       * Used internally for handling a return value from a Proxy_Function call
-       */
+      /// Used internally for handling a return value from a Proxy_Function call
       template<typename Ret>
         struct Handle_Return
         {
@@ -154,6 +152,18 @@ namespace chaiscript
         struct Handle_Return<const std::shared_ptr<Ret> &> : Handle_Return<std::shared_ptr<Ret> &>
         {
         };
+
+
+      template<typename Ret>
+        struct Handle_Return<std::unique_ptr<Ret>> : Handle_Return<std::unique_ptr<Ret> &>
+        {
+          static Boxed_Value handle(std::unique_ptr<Ret> &&r)
+          {
+            return Boxed_Value(std::move(r), true);
+          }
+        };
+
+
 
       template<typename Ret>
         struct Handle_Return<const Ret &>
