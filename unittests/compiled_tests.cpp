@@ -1192,6 +1192,38 @@ TEST_CASE("Call methods on base class through unique_ptr<derived>")
   CHECK(chai.eval<int>("var uptr2 = make_Unique_Ptr_Test_Derived_Class(); uptr2.getI()") == 5);
 }
 
+int move_Unique_Ptr(std::unique_ptr<Unique_Ptr_Test_Class>&& uptr)
+{
+  std::unique_ptr<Unique_Ptr_Test_Class> uptr2 = std::move(uptr);
+  return uptr2->getI();
+}
+
+TEST_CASE("Pass unique_ptr<T> as a rvalue reference to a function")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+
+  chai.add(chaiscript::var(std::make_unique<Unique_Ptr_Test_Class>()), "uptr");
+  chai.add(chaiscript::fun(move_Unique_Ptr), "move");
+
+  CHECK(chai.eval<int>("move(uptr)") == 5);
+}
+
+int move_Unique_Ptr_Base(std::unique_ptr<Unique_Ptr_Test_Base_Class>&& uptr)
+{
+  std::unique_ptr<Unique_Ptr_Test_Base_Class> uptr2 = std::move(uptr);
+  return uptr2->getI();
+}
+
+TEST_CASE("Pass unique_ptr<D> as a rvalue reference to a function expecting unique_ptr<B>&&")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+
+  chai.add(chaiscript::var(std::make_unique<Unique_Ptr_Test_Derived_Class>()), "uptr");
+  chai.add(chaiscript::fun(move_Unique_Ptr_Base), "move");
+
+  CHECK(chai.eval<int>("move(uptr)") == 5);
+}
+
 
 class A
 {
