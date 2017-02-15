@@ -29,6 +29,7 @@ matrix:
       compiler: gcc
     - os: osx
       compiler: clang
+      osx_image: xcode8
 
   
 env:

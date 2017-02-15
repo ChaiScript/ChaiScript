@@ -48,10 +48,6 @@ static_assert(_MSC_FULL_VER >= 190024210, "Visual C++ 2015 Update 3 or later req
 #endif
 #endif
 
-#if defined(CHAISCRIPT_MSVC) ||  (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8) || (defined(__llvm__) && !defined(CHAISCRIPT_LIBCPP))
-/// \todo Make this support other compilers when possible
-#define CHAISCRIPT_HAS_THREAD_LOCAL
-#endif
 
 #if defined(__llvm__)
 #define CHAISCRIPT_CLANG
