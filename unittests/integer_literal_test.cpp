@@ -192,12 +192,18 @@ int main()
       && TEST_LITERAL(255)
       && TEST_LITERAL(65535)
       && TEST_LITERAL(16777215)
-      && TEST_LITERAL(4294967295)
+#ifndef CHAISCRIPT_MSVC
+        // bug in cl.exe causes this to be incorrectly parsed as an unsigned
+        && TEST_LITERAL(4294967295)
+#endif
 
       && TEST_LITERAL_SIGNED(-255)
       && TEST_LITERAL_SIGNED(-65535)
       && TEST_LITERAL_SIGNED(-16777215)
-      && TEST_LITERAL_SIGNED(-4294967295)
+#ifndef CHAISCRIPT_MSVC
+        // bug in cl.exe causes this to be incorrectly parsed as an unsigned
+        && TEST_LITERAL_SIGNED(-4294967295)
+#endif
 
       && TEST_LITERAL(255u)
       && TEST_LITERAL(65535u)
@@ -212,12 +218,18 @@ int main()
       && TEST_LITERAL(255l)
       && TEST_LITERAL(65535l)
       && TEST_LITERAL(16777215l)
-      && TEST_LITERAL(4294967295l)
+#ifndef CHAISCRIPT_MSVC
+        // bug in cl.exe causes this to be incorrectly parsed as an unsigned
+        && TEST_LITERAL(4294967295l)
+#endif
 
       && TEST_LITERAL_SIGNED(-255l)
       && TEST_LITERAL_SIGNED(-65535l)
       && TEST_LITERAL_SIGNED(-16777215l)
-      && TEST_LITERAL_SIGNED(-4294967295l)
+#ifndef CHAISCRIPT_MSVC
+        // bug in cl.exe causes this to be incorrectly parsed as an unsigned
+        && TEST_LITERAL_SIGNED(-4294967295l)
+#endif
 
       && TEST_LITERAL(255ul)
       && TEST_LITERAL(65535ul)
