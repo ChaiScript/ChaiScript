@@ -4,6 +4,10 @@
 // Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
+
 #ifndef CHAISCRIPT_ENGINE_HPP_
 #define CHAISCRIPT_ENGINE_HPP_
 
@@ -145,9 +149,6 @@ namespace chaiscript
               })
           , "call_exists");
 
-//      m_engine.add(fun<Boxed_Value (const dispatch::Proxy_Function_Base *, const std::vector<Boxed_Value> &)>(std::bind(&chaiscript::dispatch::Proxy_Function_Base::operator(), std::placeholders::_1, std::placeholders::_2, std::ref(m_engine.conversions()))), "call");
-//
-//
 
       m_engine.add(fun(
             [=](const dispatch::Proxy_Function_Base &t_fun, const std::vector<Boxed_Value> &t_params) -> Boxed_Value {

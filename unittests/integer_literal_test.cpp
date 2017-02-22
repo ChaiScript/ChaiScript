@@ -3,6 +3,13 @@
 #include "../static_libs/chaiscript_stdlib.hpp"
 
 
+#ifdef CHAISCRIPT_MSVC
+// ignore errors about negative unsigned integer literals
+#pragma warning(push)
+#pragma warning(disable : 4146)
+#endif
+
+
 #define TEST_LITERAL(v) test_literal(v, #v)
 #define TEST_LITERAL_SIGNED(v) test_literal(v, #v, true)
 
@@ -192,12 +199,18 @@ int main()
       && TEST_LITERAL(255)
       && TEST_LITERAL(65535)
       && TEST_LITERAL(16777215)
-      && TEST_LITERAL(4294967295)
+#ifndef CHAISCRIPT_MSVC
+        // bug in cl.exe causes this to be incorrectly parsed as an unsigned
+        && TEST_LITERAL(4294967295)
+#endif
 
       && TEST_LITERAL_SIGNED(-255)
       && TEST_LITERAL_SIGNED(-65535)
       && TEST_LITERAL_SIGNED(-16777215)
-      && TEST_LITERAL_SIGNED(-4294967295)
+#ifndef CHAISCRIPT_MSVC
+        // bug in cl.exe causes this to be incorrectly parsed as an unsigned
+        && TEST_LITERAL_SIGNED(-4294967295)
+#endif
 
       && TEST_LITERAL(255u)
       && TEST_LITERAL(65535u)
@@ -212,12 +225,18 @@ int main()
       && TEST_LITERAL(255l)
       && TEST_LITERAL(65535l)
       && TEST_LITERAL(16777215l)
-      && TEST_LITERAL(4294967295l)
+#ifndef CHAISCRIPT_MSVC
+        // bug in cl.exe causes this to be incorrectly parsed as an unsigned
+        && TEST_LITERAL(4294967295l)
+#endif
 
       && TEST_LITERAL_SIGNED(-255l)
       && TEST_LITERAL_SIGNED(-65535l)
       && TEST_LITERAL_SIGNED(-16777215l)
-      && TEST_LITERAL_SIGNED(-4294967295l)
+#ifndef CHAISCRIPT_MSVC
+        // bug in cl.exe causes this to be incorrectly parsed as an unsigned
+        && TEST_LITERAL_SIGNED(-4294967295l)
+#endif
 
       && TEST_LITERAL(255ul)
       && TEST_LITERAL(65535ul)
@@ -257,8 +276,9 @@ int main()
     return EXIT_FAILURE;
   }
 
-
-
-
-
 }
+
+
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(pop)
+#endif

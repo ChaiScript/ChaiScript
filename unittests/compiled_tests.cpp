@@ -198,7 +198,7 @@ TEST_CASE("Throw int or double")
     chai.eval("throw(1.0)", chaiscript::exception_specification<int, double>());
     REQUIRE(false);
   } catch (const double e) {
-    CHECK(e == 1.0);
+    CHECK(e == Approx(1.0));
   }
 }
 

@@ -4,6 +4,10 @@
 // Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
+
 #ifndef CHAISCRIPT_HANDLE_RETURN_HPP_
 #define CHAISCRIPT_HANDLE_RETURN_HPP_
 
