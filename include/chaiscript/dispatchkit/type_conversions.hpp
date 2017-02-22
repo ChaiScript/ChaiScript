@@ -367,6 +367,7 @@ namespace chaiscript
         chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
         /// \todo error if a conversion already exists
         m_conversions.insert(conversion);
+        std::cout << "Adding Conversion: TO: " << conversion->to().bare_type_info()->name() << " FROM: " << conversion->from().bare_type_info()->name() << std::endl;
         m_convertableTypes.insert({conversion->to().bare_type_info(), conversion->from().bare_type_info()});
         m_num_types = m_convertableTypes.size();
       }
@@ -410,12 +411,17 @@ namespace chaiscript
         Boxed_Value boxed_type_conversion(const Type_Info &to, Conversion_Saves &t_saves, const Boxed_Value &from) const
         {
           try {
-            Boxed_Value ret = get_conversion(to, from.get_type_info())->convert(from);
+            std::cout << "boxed_type_conversion" << std::endl;
+            auto conversion = get_conversion(to, from.get_type_info());
+            std::cout << "Conversion found!" << std::endl;
+            Boxed_Value ret = conversion->convert(from);
+            std::cout << "Conversion succeeded!" << std::endl;
             if (t_saves.enabled) { t_saves.saves.push_back(ret); }
             return ret;
           } catch (const std::out_of_range &) {
             throw exception::bad_boxed_dynamic_cast(from.get_type_info(), *to.bare_type_info(), "No known conversion");
           } catch (const std::bad_cast &) {
+            std::cout << "Bad Cast!?" << std::endl;
             throw exception::bad_boxed_dynamic_cast(from.get_type_info(), *to.bare_type_info(), "Unable to perform dynamic_cast operation");
           }
         }
@@ -423,6 +429,7 @@ namespace chaiscript
         Boxed_Value boxed_type_down_conversion(const Type_Info &from, Conversion_Saves &t_saves, const Boxed_Value &to) const
         {
           try {
+            std::cout << "boxed_type_down_conversion" << std::endl;
             Boxed_Value ret = get_conversion(to.get_type_info(), from)->convert_down(to);
             if (t_saves.enabled) { t_saves.saves.push_back(ret); }
             return ret;
@@ -455,10 +462,12 @@ namespace chaiscript
       {
         chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
+        std::cout << "Getting conversion TO: " << to.name() << " FROM: " << from.name() << std::endl;
         const auto itr = find(to, from);
 
         if (itr != m_conversions.end())
         {
+          std::cout << "Found" << std::endl;
           return *itr;
         } else {
           throw std::out_of_range("No such conversion exists from " + from.bare_name() + " to " + to.bare_name());
@@ -476,7 +485,7 @@ namespace chaiscript
         return std::find_if(m_conversions.begin(), m_conversions.end(),
               [&to, &from](const std::shared_ptr<detail::Type_Conversion_Base> &conversion) -> bool
               {
-                return  (conversion->to().bare_equal(to) && conversion->from().bare_equal(from))
+                return  (conversion->to().type_info == to.type_info conversion->to().bare_equal(to) && conversion->from().bare_equal(from))
                      || (conversion->bidir() && conversion->from().bare_equal(to) && conversion->to().bare_equal(from));
               }
         );
@@ -485,6 +494,7 @@ namespace chaiscript
       std::set<std::shared_ptr<detail::Type_Conversion_Base> >::const_iterator find(
           const Type_Info &to, const Type_Info &from) const
       {
+        std::cout << "Finding: TO: " << to.bare_type_info()->name() << " FROM: " << from.bare_type_info()->name() << std::endl;
         return std::find_if(m_conversions.begin(), m_conversions.end(),
               [&to, &from](const std::shared_ptr<detail::Type_Conversion_Base> &conversion)
               {
@@ -586,6 +596,24 @@ namespace chaiscript
         const Callable &t_func)
     {
       return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Type_Conversion_Impl<Callable>>(t_from, t_to, t_func);
+    }
+
+  template<typename From, typename To>
+    Type_Conversion unique_ptr_conversion()
+    {
+      static_assert(std::is_convertible<From, To>::value, "Types are not automatically convertible");
+      auto func = [](const Boxed_Value &t_bv) -> Boxed_Value {
+        std::cout << " unique_ptr_conversion " << std::endl;
+            // not even attempting to call boxed_cast so that we don't get caught in some call recursion
+            auto bv = chaiscript::Boxed_Value(std::unique_ptr<To>(detail::Cast_Helper<std::unique_ptr<From> &&>::cast(t_bv, nullptr)));
+            t_bv.reset_pointers();
+
+            return bv;
+          };
+
+      return chaiscript::make_shared<detail::Type_Conversion_Base, 
+                                     detail::Type_Conversion_Impl<decltype(func)>>(user_type<std::unique_ptr<From>>(), 
+                                                                                   user_type<std::unique_ptr<To>>(), func);
     }
 
   template<typename From, typename To, typename Callable>

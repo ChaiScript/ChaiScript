@@ -87,6 +87,12 @@ namespace chaiscript
         return(detail::Cast_Helper<Type>::cast((*t_conversions)->boxed_type_conversion<Type>(t_conversions->saves(), bv), t_conversions));
       } catch (...) {
         try {
+          throw;
+        } catch (const std::exception &e) {
+          std::cout << "EXCEPTION: " << e.what() << std::endl;
+        }
+
+        try {
           // try going the other way
           return(detail::Cast_Helper<Type>::cast((*t_conversions)->boxed_type_down_conversion<Type>(t_conversions->saves(), bv), t_conversions));
         } catch (const chaiscript::detail::exception::bad_any_cast &) {

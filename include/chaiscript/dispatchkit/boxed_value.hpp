@@ -238,6 +238,11 @@ namespace chaiscript
         return m_data->m_type_info.bare_equal(ti);
       }
 
+      void reset_pointers() const
+      {
+        m_data->m_data_ptr = nullptr;
+        m_data->m_const_data_ptr = nullptr;
+      }
 
       template<typename T>
       auto pointer_sentinel(std::shared_ptr<T> &ptr) const

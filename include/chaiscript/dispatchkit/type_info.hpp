@@ -143,11 +143,11 @@ namespace chaiscript
         }
       };
 
+
+    // shared_ptr
     template<typename T>
       struct Get_Type_Info<std::shared_ptr<T> >
       {
-//        typedef T type;
-
         static constexpr Type_Info get()
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
@@ -176,6 +176,45 @@ namespace chaiscript
         }
       };
 
+    // unique_ptr
+    template<typename T>
+      struct Get_Type_Info<std::unique_ptr<T> >
+      {
+        static constexpr Type_Info get()
+        {
+          return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
+              std::is_void<T>::value,
+              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<typename std::remove_reference<T>::type>::type, bool>::value,
+              &typeid(std::unique_ptr<T> ), 
+              &typeid(typename Bare_Type<T>::type));
+        }
+      };
+
+    template<typename T>
+      struct Get_Type_Info<std::unique_ptr<T> &> : Get_Type_Info<std::unique_ptr<T>>
+      {
+      };
+
+    template<typename T>
+      struct Get_Type_Info<std::unique_ptr<T> &&> : Get_Type_Info<std::unique_ptr<T>>
+      {
+      };
+
+
+    template<typename T>
+      struct Get_Type_Info<const std::unique_ptr<T> &>
+      {
+        static constexpr Type_Info get()
+        {
+          return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
+              std::is_void<T>::value,
+              std::is_arithmetic<T>::value && !std::is_same<typename std::remove_const<typename std::remove_reference<T>::type>::type, bool>::value,
+              &typeid(const std::unique_ptr<T> &), 
+              &typeid(typename Bare_Type<T>::type));
+        }
+      };
+
+    // reference_wrapper
     template<typename T>
       struct Get_Type_Info<std::reference_wrapper<T> >
       {

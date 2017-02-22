@@ -1154,6 +1154,8 @@ std::unique_ptr<Unique_Ptr_Test_Class> make_Unique_Ptr_Test_Class()
   return std::make_unique<Unique_Ptr_Test_Class>();
 }
 
+
+
 TEST_CASE("Call methods through unique_ptr")
 {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
@@ -1180,6 +1182,10 @@ std::unique_ptr<Unique_Ptr_Test_Derived_Class> make_Unique_Ptr_Test_Derived_Clas
   return std::make_unique<Unique_Ptr_Test_Derived_Class>();
 }
 
+void call_unique_ptr_with_conversion_to_base(std::unique_ptr<Unique_Ptr_Test_Base_Class> &&)
+{
+}
+
 TEST_CASE("Call methods on base class through unique_ptr<derived>")
 {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
@@ -1190,6 +1196,16 @@ TEST_CASE("Call methods on base class through unique_ptr<derived>")
   chai.add(chaiscript::base_class<Unique_Ptr_Test_Base_Class, Unique_Ptr_Test_Derived_Class>());
   CHECK(chai.eval<int>("uptr.getI()") == 5);
   CHECK(chai.eval<int>("var uptr2 = make_Unique_Ptr_Test_Derived_Class(); uptr2.getI()") == 5);
+
+  chai.add(chaiscript::unique_ptr_conversion<Unique_Ptr_Test_Derived_Class, Unique_Ptr_Test_Base_Class>());
+
+  chai.add(chaiscript::fun(call_unique_ptr_with_conversion_to_base), "call_unique_ptr_with_conversion_to_base");
+  CHECK(!chai.eval<bool>("uptr2.is_var_null"));
+
+  std::cout << "Attempting conversion" << std::endl;
+  CHECK_NOTHROW(chai.eval("call_unique_ptr_with_conversion_to_base(uptr2)"));
+  INFO("Conversion succeeded");
+  CHECK(chai.eval<bool>("uptr2.is_var_null"));
 }
 
 
