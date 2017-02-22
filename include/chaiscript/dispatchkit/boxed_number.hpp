@@ -588,12 +588,19 @@ namespace chaiscript
       template<typename Source, typename Target> 
       static void check_type()
       {
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4127)
+#endif
         if (sizeof(Source) != sizeof(Target)
             || std::is_signed<Source>() != std::is_signed<Target>()
             || std::is_floating_point<Source>() != std::is_floating_point<Target>())
         {
           throw chaiscript::detail::exception::bad_any_cast();
         }
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(pop)
+#endif
       }
 
       template<typename Target> Target get_as_checked() const

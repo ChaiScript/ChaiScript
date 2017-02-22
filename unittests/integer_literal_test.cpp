@@ -3,6 +3,12 @@
 #include "../static_libs/chaiscript_stdlib.hpp"
 
 
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4146)
+#endif
+
+
 #define TEST_LITERAL(v) test_literal(v, #v)
 #define TEST_LITERAL_SIGNED(v) test_literal(v, #v, true)
 
@@ -269,8 +275,9 @@ int main()
     return EXIT_FAILURE;
   }
 
-
-
-
-
 }
+
+
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(pop)
+#endif
