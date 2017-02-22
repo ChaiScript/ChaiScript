@@ -4,6 +4,7 @@
 
 
 #ifdef CHAISCRIPT_MSVC
+// ignore errors about negative unsigned integer literals
 #pragma warning(push)
 #pragma warning(disable : 4146)
 #endif
