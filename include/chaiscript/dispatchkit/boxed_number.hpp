@@ -4,6 +4,9 @@
 // Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 #ifndef CHAISCRIPT_BOXED_NUMERIC_HPP_
 #define CHAISCRIPT_BOXED_NUMERIC_HPP_
 
@@ -589,8 +592,9 @@ namespace chaiscript
       static void check_type()
       {
 #ifdef CHAISCRIPT_MSVC
+// MSVC complains about this being redundant / tautologica l
 #pragma warning(push)
-#pragma warning(disable : 4127)
+#pragma warning(disable : 4127 6287)
 #endif
         if (sizeof(Source) != sizeof(Target)
             || std::is_signed<Source>() != std::is_signed<Target>()

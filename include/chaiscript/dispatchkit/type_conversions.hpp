@@ -4,6 +4,10 @@
 // Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
+
 #ifndef CHAISCRIPT_DYNAMIC_CAST_CONVERSION_HPP_
 #define CHAISCRIPT_DYNAMIC_CAST_CONVERSION_HPP_
 
@@ -340,15 +344,11 @@ namespace chaiscript
       {
       }
 
-      Type_Conversions(const Type_Conversions &t_other)
-        : m_mutex(),
-          m_conversions(t_other.get_conversions()),
-          m_convertableTypes(t_other.m_convertableTypes),
-          m_num_types(m_conversions.size()),
-          m_thread_cache(this),
-          m_conversion_saves(this)
-      {
-      }
+      Type_Conversions(const Type_Conversions &t_other) = delete;
+      Type_Conversions(Type_Conversions &&) = default;
+
+      Type_Conversions &operator=(const Type_Conversions &) = delete;
+      Type_Conversions &operator=(Type_Conversions &&) = default;
 
       const std::set<const std::type_info *, Less_Than> &thread_cache() const
       {
