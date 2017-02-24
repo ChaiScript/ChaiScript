@@ -105,26 +105,3 @@ The shortest complete example possible follows:
     }
 
 
-
-Or, if you want to compile the std lib into your code, which reduces
-runtime requirements.
-
-    /// main.cpp
-
-    #include <chaiscript/chaiscript.hpp>
-    #include <chaiscript/chaiscript_stdlib.hpp>
-
-    double function(int i, double j)
-    {
-      return i * j;
-    }
-
-    int main()
-    {
-      chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
-      chai.add(chaiscript::fun(&function), "function");
-
-      double d = chai.eval<double>("function(3, 4.75);");
-    }
-
-
