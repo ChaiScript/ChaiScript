@@ -556,6 +556,10 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
     /// \throw chaiscript::exception::load_module_error In the event that no matching module can be found.
     std::string load_module(const std::string &t_module_name)
     {
+#ifdef CHAISCRIPT_NO_DYNLOAD
+      (void)t_module_name; // -Wunused-parameter
+      throw chaiscript::exception::load_module_error("Loadable module support was disabled (CHAISCRIPT_NO_DYNLOAD)");
+#else
       std::vector<exception::load_module_error> errors;
       std::string version_stripped_name = t_module_name;
       size_t version_pos = version_stripped_name.find("-" + Build_Info::version());
@@ -589,6 +593,7 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
       }
 
       throw chaiscript::exception::load_module_error(t_module_name, errors);
+#endif
     }
 
     /// \brief Load a binary module from a dynamic library. Works on platforms that support
