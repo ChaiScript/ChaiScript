@@ -36,12 +36,13 @@
 #include <unistd.h>
 #endif
 
-#if defined(_POSIX_VERSION) && !defined(__CYGWIN__) 
+#if !defined(CHAISCRIPT_NO_DYNLOAD) && defined(_POSIX_VERSION) && !defined(__CYGWIN__)
 #include <dlfcn.h>
 #endif
 
-
-#ifdef CHAISCRIPT_WINDOWS
+#if defined(CHAISCRIPT_NO_DYNLOAD)
+#include "chaiscript_unknown.hpp"
+#elif defined(CHAISCRIPT_WINDOWS)
 #include "chaiscript_windows.hpp"
 #elif _POSIX_VERSION
 #include "chaiscript_posix.hpp"
