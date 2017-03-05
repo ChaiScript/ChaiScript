@@ -243,7 +243,7 @@ namespace chaiscript
         m_parser(std::move(parser)),
         m_engine(*m_parser)
     {
-#if defined(_POSIX_VERSION) && !defined(__CYGWIN__) 
+#if !defined(CHAISCRIPT_NO_DYNLOAD) && defined(_POSIX_VERSION) && !defined(__CYGWIN__)
       // If on Unix, add the path of the current executable to the module search path
       // as windows would do
 
