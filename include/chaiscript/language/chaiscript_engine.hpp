@@ -279,6 +279,7 @@ namespace chaiscript
       build_eval_system(t_lib, t_opts);
     }
 
+#ifndef CHAISCRIPT_NO_DYNLOAD
     /// \brief Constructor for ChaiScript.
     /// 
     /// This version of the ChaiScript constructor attempts to find the stdlib module to load
@@ -308,6 +309,12 @@ namespace chaiscript
         throw;
       }
     }
+#else // CHAISCRIPT_NO_DYNLOAD
+explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
+                          std::vector<std::string> t_module_paths = {},
+                          std::vector<std::string> t_use_paths = {},
+                          const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options()) = delete;
+#endif
 
     parser::ChaiScript_Parser_Base &get_parser()
     {
