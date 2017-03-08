@@ -14,6 +14,7 @@ ELSE()
 project(chaiscript)
 
 option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" TRUE)
+option(DYNLOAD_ENABLED "Dynamic Loading Support Enabled" TRUE)
 
 
 option(BUILD_MODULES "Build Extra Modules (stl)" TRUE)
@@ -221,9 +222,15 @@ if(NOT MULTITHREAD_SUPPORT_ENABLED)
   add_definitions(-DCHAISCRIPT_NO_THREADS)
 endif()
 
+if(NOT DYNLOAD_ENABLED)
+  add_definitions(-DCHAISCRIPT_NO_DYNLOAD)
+endif()
+
 if(CMAKE_HOST_UNIX)
-  if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD" AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Haiku")
-    list(APPEND LIBS "dl")
+  if(DYNLOAD_ENABLED)
+    if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD" AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Haiku")
+      list(APPEND LIBS "dl")
+    endif()
   endif()
 
   if(MULTITHREAD_SUPPORT_ENABLED)
