@@ -569,13 +569,15 @@ struct JSONParser {
     bool isDouble = false;
     bool isNegative = false;
     long exp = 0;
+    if( offset < str.size() && str[offset] == '-' ) {
+      isNegative = true;
+      ++offset;
+    }
     for (; offset < str.size() ;) {
       c = str[offset++];
-      if( c == '-' ) {
-        isNegative = true;
-      } else if( c >= '0' && c <= '9' ) {
+      if( c >= '0' && c <= '9' ) {
         val += c;
-      } else if( c == '.' ) {
+      } else if( c == '.' && !isDouble ) {
         val += c; 
         isDouble = true;
       } else {

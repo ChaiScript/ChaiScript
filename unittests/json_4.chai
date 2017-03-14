@@ -1,2 +1,22 @@
 assert_equal(from_json("1.234"), 1.234)
 assert_equal(from_json("-1.234"), -1.234)
+
+auto caught = false;
+try {
+  from_json("-1-5.3");
+}
+catch(e) {
+  assert_equal("JSON ERROR: Number: unexpected character '-'", e.what());
+  caught = true;
+}
+assert_equal(caught, true);
+
+caught = false;
+try {
+  from_json("-15.3.2");
+}
+catch(e) {
+  assert_equal("JSON ERROR: Number: unexpected character '.'", e.what());
+  caught = true;
+}
+assert_equal(caught, true);
