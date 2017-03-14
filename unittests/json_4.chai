@@ -1,1 +1,2 @@
 assert_equal(from_json("1.234"), 1.234)
+assert_equal(from_json("-1.234"), -1.234)
