@@ -145,14 +145,18 @@ namespace chaiscript {
     auto parse_num(const char *t_str) -> typename std::enable_if<std::is_integral<T>::value, T>::type
     {
       T t = 0;
+      bool is_negative = false;
       for (char c = *t_str; (c = *t_str) != 0; ++t_str) {
-        if (c < '0' || c > '9') {
-          return t;
+        if (c == '-') {
+          is_negative = true;
+        } else if (c < '0' || c > '9') {
+          return is_negative ? -t : t;
+        } else {
+          t *= 10;
+          t += c - '0';
         }
-        t *= 10;
-        t += c - '0';
       }
-      return t;
+      return is_negative ? -t : t;
     }
 
 
@@ -164,12 +168,13 @@ namespace chaiscript {
       T decimal_place = 0;
       bool exponent = false;
       bool neg_exponent = false;
+      bool is_negative = false;
 
-      const auto final_value = [](const T val, const T baseval, const bool hasexp, const bool negexp) -> T {
+      const auto final_value = [](const T val, const bool neg, const T baseval, const bool hasexp, const bool negexp) -> T {
         if (!hasexp) {
-          return val;
+          return neg ? -val : val;
         } else {
-          return baseval * std::pow(T(10), val*T(negexp?-1:1));
+          return (T(neg?-1:1)) * baseval * std::pow(T(10), val*T(negexp?-1:1));
         }
       };
 
@@ -182,12 +187,16 @@ namespace chaiscript {
           decimal_place = 0;
           base = t;
           t = 0;
-        } else if (c == '-' && exponent) {
-          neg_exponent = true;
+        } else if (c == '-') {
+          if (exponent) {
+            neg_exponent = true;
+          } else {
+            is_negative = true;
+          }
         } else if (c == '+' && exponent) {
           neg_exponent = false;
         } else if (c < '0' || c > '9') {
-          return final_value(t, base, exponent, neg_exponent);
+          return final_value(t, is_negative, base, exponent, neg_exponent);
         } else if (decimal_place < T(10)) {
           t *= T(10);
           t += T(c - '0');
@@ -197,7 +206,7 @@ namespace chaiscript {
         }
       }
 
-      return final_value(t, base, exponent, neg_exponent);
+      return final_value(t, is_negative, base, exponent, neg_exponent);
     }
 
   template<typename T>
