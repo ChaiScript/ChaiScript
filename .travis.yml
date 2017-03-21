@@ -25,12 +25,19 @@ matrix:
       compiler: gcc
     - os: linux
       sudo: false
-      env: GCC_VER="5"
+      env: GCC_VER="4.9" CMAKE_OPTIONS="-D DYNLOAD_ENABLED:BOOL=FALSE -D MULTITHREAD_SUPPORT_ENABLED:BOOL=FALSE -D USE_STD_MAKE_SHARED:BOOL=TRUE" BUILD_ONLY=1
+      compiler: gcc
+    - os: linux
+      sudo: false
+      env: GCC_VER="5" CPPCHECK=1 COVERAGE=1 CMAKE_OPTIONS="-D RUN_FUZZY_TESTS:BOOL=TRUE"
       compiler: gcc
     - os: osx
       compiler: clang
       osx_image: xcode8
-
+    - os: osx
+      compiler: clang
+      osx_image: xcode8
+      env: CMAKE_OPTIONS="-D DYNLOAD_ENABLED:BOOL=FALSE -D MULTITHREAD_SUPPORT_ENABLED:BOOL=FALSE -D USE_STD_MAKE_SHARED:BOOL=TRUE" BUILD_ONLY=1
   
 env:
   global:
@@ -40,14 +47,13 @@ env:
 
 before_install:
   - if [ "${GCC_VER}" != "" ]; then export CXX="g++-$GCC_VER" CC="gcc-$GCC_VER" GCOV="gcov-$GCC_VER" ; fi
-  - if [ "${GCC_VER}" == "5" ]; then export CPPCHECK=1 COVERAGE=1 FUZZY_CMD="-D RUN_FUZZY_TESTS:BOOL=TRUE" ; fi
   - pip install --user cpp-coveralls
 
 script: 
-  - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug $FUZZY_CMD . 
+  - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug $CMAKE_OPTIONS . 
   - cmake --build . -- -j2
-  - ctest
-  - if [ ${COVERAGE} = 1 ]; then bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/master/codecov) -x $GCOV -a "-s `pwd`" ; fi
+  - if [ "${BUILD_ONLY}" != "1" ]; then ctest; fi
+  - if [ "${COVERAGE}" = "1" ]; then bash <(curl -s https://raw.githubusercontent.com/codecov/codecov-bash/master/codecov) -x $GCOV -a "-s `pwd`" ; fi
 
 #after_script:
 #  - if [ ${CPPCHECK} = 1 ]; then contrib/codeanalysis/runcppcheck.sh ; fi

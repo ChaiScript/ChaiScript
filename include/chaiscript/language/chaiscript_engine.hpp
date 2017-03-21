@@ -36,12 +36,13 @@
 #include <unistd.h>
 #endif
 
-#if defined(_POSIX_VERSION) && !defined(__CYGWIN__) 
+#if !defined(CHAISCRIPT_NO_DYNLOAD) && defined(_POSIX_VERSION) && !defined(__CYGWIN__)
 #include <dlfcn.h>
 #endif
 
-
-#ifdef CHAISCRIPT_WINDOWS
+#if defined(CHAISCRIPT_NO_DYNLOAD)
+#include "chaiscript_unknown.hpp"
+#elif defined(CHAISCRIPT_WINDOWS)
 #include "chaiscript_windows.hpp"
 #elif _POSIX_VERSION
 #include "chaiscript_posix.hpp"
@@ -242,7 +243,7 @@ namespace chaiscript
         m_parser(std::move(parser)),
         m_engine(*m_parser)
     {
-#if defined(_POSIX_VERSION) && !defined(__CYGWIN__) 
+#if !defined(CHAISCRIPT_NO_DYNLOAD) && defined(_POSIX_VERSION) && !defined(__CYGWIN__)
       // If on Unix, add the path of the current executable to the module search path
       // as windows would do
 
@@ -278,6 +279,7 @@ namespace chaiscript
       build_eval_system(t_lib, t_opts);
     }
 
+#ifndef CHAISCRIPT_NO_DYNLOAD
     /// \brief Constructor for ChaiScript.
     /// 
     /// This version of the ChaiScript constructor attempts to find the stdlib module to load
@@ -307,6 +309,12 @@ namespace chaiscript
         throw;
       }
     }
+#else // CHAISCRIPT_NO_DYNLOAD
+explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
+                          std::vector<std::string> t_module_paths = {},
+                          std::vector<std::string> t_use_paths = {},
+                          const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options()) = delete;
+#endif
 
     parser::ChaiScript_Parser_Base &get_parser()
     {
@@ -548,6 +556,10 @@ namespace chaiscript
     /// \throw chaiscript::exception::load_module_error In the event that no matching module can be found.
     std::string load_module(const std::string &t_module_name)
     {
+#ifdef CHAISCRIPT_NO_DYNLOAD
+      (void)t_module_name; // -Wunused-parameter
+      throw chaiscript::exception::load_module_error("Loadable module support was disabled (CHAISCRIPT_NO_DYNLOAD)");
+#else
       std::vector<exception::load_module_error> errors;
       std::string version_stripped_name = t_module_name;
       size_t version_pos = version_stripped_name.find("-" + Build_Info::version());
@@ -581,6 +593,7 @@ namespace chaiscript
       }
 
       throw chaiscript::exception::load_module_error(t_module_name, errors);
+#endif
     }
 
     /// \brief Load a binary module from a dynamic library. Works on platforms that support

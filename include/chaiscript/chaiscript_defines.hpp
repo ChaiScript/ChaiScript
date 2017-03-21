@@ -216,7 +216,11 @@ namespace chaiscript {
 
   static inline std::vector<Options> default_options()
   {
+#ifdef CHAISCRIPT_NO_DYNLOAD
+    return {Options::No_Load_Modules, Options::External_Scripts};
+#else
     return {Options::Load_Modules, Options::External_Scripts};
+#endif
   }
 }
 #endif
