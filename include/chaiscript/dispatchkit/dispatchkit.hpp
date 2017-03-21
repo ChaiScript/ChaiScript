@@ -452,7 +452,7 @@ namespace chaiscript
         };
 
         explicit Dispatch_Engine(chaiscript::parser::ChaiScript_Parser_Base &parser)
-          : m_stack_holder(this),
+          : m_stack_holder(),
             m_parser(parser)
         {
         }
