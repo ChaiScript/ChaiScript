@@ -567,12 +567,17 @@ struct JSONParser {
     std::string val, exp_str;
     char c = '\0';
     bool isDouble = false;
+    bool isNegative = false;
     long exp = 0;
+    if( offset < str.size() && str[offset] == '-' ) {
+      isNegative = true;
+      ++offset;
+    }
     for (; offset < str.size() ;) {
       c = str[offset++];
-      if( (c == '-') || (c >= '0' && c <= '9') ) {
+      if( c >= '0' && c <= '9' ) {
         val += c;
-      } else if( c == '.' ) {
+      } else if( c == '.' && !isDouble ) {
         val += c; 
         isDouble = true;
       } else {
@@ -608,12 +613,12 @@ struct JSONParser {
     --offset;
 
     if( isDouble ) {
-      return JSON(chaiscript::parse_num<double>( val ) * std::pow( 10, exp ));
+      return JSON((isNegative?-1:1) * chaiscript::parse_num<double>( val ) * std::pow( 10, exp ));
     } else {
       if( !exp_str.empty() ) {
-        return JSON(static_cast<double>(chaiscript::parse_num<long>( val )) * std::pow( 10, exp ));
+        return JSON((isNegative?-1:1) * static_cast<double>(chaiscript::parse_num<long>( val )) * std::pow( 10, exp ));
       } else {
-        return JSON(chaiscript::parse_num<long>( val ));
+        return JSON((isNegative?-1:1) * chaiscript::parse_num<long>( val ));
       }
     }
   }
