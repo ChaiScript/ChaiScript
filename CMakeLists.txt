@@ -427,7 +427,7 @@ if(BUILD_TESTING)
     target_link_libraries(compiled_tests ${LIBS} ${CHAISCRIPT_LIBS})
     ADD_CATCH_TESTS(compiled_tests)
 
-    add_executable(static_chaiscript unittests/static_chaiscript.cpp)
+    add_executable(static_chaiscript_test unittests/static_chaiscript.cpp)
     target_link_libraries(static_chaiscript_test ${LIBS})
     add_test(NAME Static_ChaiScript_Test COMMAND static_chaiscript_test)
 

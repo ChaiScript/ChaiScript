@@ -2551,7 +2551,7 @@ namespace chaiscript
 
         if (Statements(true)) {
           if (m_position.has_more()) {
-            throw exception::eval_error("Unparsed input", File_Position(m_position.line, m_position.col), t_fname);
+            throw exception::eval_error("Unparsed input", File_Position(m_position.line, m_position.col), *m_filename);
           } else {
             build_match<eval::File_AST_Node<Tracer>>(0);
           }
