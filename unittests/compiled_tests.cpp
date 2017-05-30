@@ -12,6 +12,8 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #pragma GCC diagnostic ignored "-Wparentheses"
+// This one is necessary for the const return non-reference test
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #endif
 
 
@@ -1268,5 +1270,22 @@ TEST_CASE("Test reference member being registered")
   chai.eval("ref.x = 2.3");
   CHECK(d == Approx(2.3));
 }
+
+
+const int add_3(const int &i)
+{
+  return i + 3;
+}
+
+TEST_CASE("Test returning by const non-reference")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+  // Note, C++ will not allow us to do this:
+  // chai.add(chaiscript::fun(&Reference_MyClass::x) , "x");
+  chai.add(chaiscript::fun(&add_3), "add_3");
+  auto v = chai.eval<int>("add_3(12)");
+  CHECK(v == 15);
+}
+
 
 
