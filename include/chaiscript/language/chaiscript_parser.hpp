@@ -2172,7 +2172,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete variable declaration", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
-        } else if (Keyword("GLOBAL") || Keyword("global")) {
+        } else if (Keyword("global")) {
           retval = true;
 
           if (!(Reference() || Id(true))) {
