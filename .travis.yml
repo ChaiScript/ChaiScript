@@ -9,7 +9,6 @@ addons:
       - g++-4.9
       - g++-5
       - g++-6
-      - g++-7
   coverity_scan:
     project:
       name: "ChaiScript/ChaiScript"
