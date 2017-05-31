@@ -75,19 +75,17 @@ namespace chaiscript
 
             ~Thread_Storage()
             {
-              if (!destroyed) {
-                t().erase(this);
-              }
+              t().erase(this);
             }
 
             inline const T *operator->() const
             {
-              return &(t()[const_cast<Thread_Storage *>(this)]);
+              return &(t()[this]);
             }
 
             inline const T &operator*() const
             {
-              return t()[const_cast<Thread_Storage *>(this)];
+              return t()[this];
             }
 
             inline T *operator->()
@@ -100,30 +98,15 @@ namespace chaiscript
               return t()[this];
             }
 
+
+            void *m_key;
+
           private:
-            struct Map_Holder {
-              std::unordered_map<Thread_Storage<T> *, T> map;
-
-              Map_Holder() = default;
-              Map_Holder(const Map_Holder &) = delete;
-              Map_Holder(Map_Holder &&) = delete;
-              Map_Holder& operator=(Map_Holder &&) = delete;
-              Map_Holder& operator=(const Map_Holder &&) = delete;
-              ~Map_Holder() {
-                // here is the theory:
-                //   * If the Map_Holder is destroyed before the Thread_Storage, a flag will get set
-                //   * If destroyed after the Thread_Storage, the * will have been removed from `map` and nothing will happen
-                for(auto &elem : map) { elem.first->destroyed = true; }
-              }
-            };
-
-            static std::unordered_map<Thread_Storage<T> *, T> &t()
+            static std::unordered_map<const void*, T> &t()
             {
-              thread_local Map_Holder my_map;
-              return my_map.map;
+              thread_local std::unordered_map<const void *, T> my_t;
+              return my_t;
             }
-
-            bool destroyed{false};
         };
 
 #else // threading disabled
