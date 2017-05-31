@@ -144,7 +144,7 @@ namespace chaiscript
         class Thread_Storage
         {
           public:
-            explicit Thread_Storage(void *)
+            explicit Thread_Storage()
             {
             }
 
