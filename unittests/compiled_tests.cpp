@@ -1288,4 +1288,32 @@ TEST_CASE("Test returning by const non-reference")
 }
 
 
+struct MyException : std::runtime_error
+{
+  using std::runtime_error::runtime_error;
+  int value = 5;
+};
+
+void throws_a_thing()
+{
+  throw MyException("Hello World");
+}
+
+TEST_CASE("Test throwing and catching custom exception")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+  chai.add(chaiscript::user_type<MyException>(), "MyException");
+  chai.add(chaiscript::base_class<std::runtime_error, MyException>()); // be sure to register base class relationship
+  chai.add(chaiscript::fun(&throws_a_thing), "throws_a_thing");
+  chai.add(chaiscript::fun(&MyException::value), "value");
+
+  const auto s = chai.eval<std::string>("fun(){ try { throws_a_thing(); } catch (MyException ex) { return ex.what(); } }()");
+  CHECK(s == "Hello World");
+
+  // this has an explicit clone to prevent returning a pointer to the `value` from inside of MyException
+  const auto i = chai.eval<int>("fun(){ try { throws_a_thing(); } catch (MyException ex) { var v = clone(ex.value); print(v); return v; } }()");
+  CHECK(i == 5);
+}
+
+
 
