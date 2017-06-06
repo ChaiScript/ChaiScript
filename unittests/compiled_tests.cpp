@@ -1316,4 +1316,10 @@ TEST_CASE("Test throwing and catching custom exception")
 }
 
 
+TEST_CASE("Test ability to get 'use' function from default construction")
+{
+  chaiscript::ChaiScript chai;
+  const auto use_function = chai.eval<std::function<chaiscript::Boxed_Value (const std::string &)>>("use");
+}
+
 
