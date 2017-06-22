@@ -332,9 +332,9 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
 
     AST_NodePtr parse(const std::string &t_input, const bool t_debug_print = false)
     {
-      const auto ast = m_parser->parse(t_input, "PARSE");
+      auto ast = m_parser->parse(t_input, "PARSE");
       if (t_debug_print) {
-        m_parser->debug_print(ast);
+        m_parser->debug_print(*ast);
       }
       return ast;
     }

@@ -247,7 +247,7 @@ void interactive(chaiscript::ChaiScript_Basic& chai)
     catch (const chaiscript::exception::eval_error &ee) {
       std::cout << ee.what();
       if ( !ee.call_stack.empty() ) {
-        std::cout << "during evaluation at (" << ee.call_stack[0]->start().line << ", " << ee.call_stack[0]->start().column << ")";
+        std::cout << "during evaluation at (" << ee.call_stack[0].start().line << ", " << ee.call_stack[0].start().column << ")";
       }
       std::cout << '\n';
     }
