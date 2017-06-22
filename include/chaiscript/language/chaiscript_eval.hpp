@@ -718,7 +718,7 @@ namespace chaiscript
         Def_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Def, std::move(t_loc), 
               std::vector<AST_Node_Impl_Ptr<T>>(std::make_move_iterator(t_children.begin()), 
-                                                std::make_move_iterator(std::prev(t_children.end(), has_guard(t_children)?2:1)))
+                                                std::make_move_iterator(std::prev(t_children.end(), has_guard(t_children, 1)?2:1)))
               ),
               m_body_node(get_body_node(std::move(t_children))),
               m_guard_node(get_guard_node(std::move(t_children), t_children.size()-this->children.size()==2))
@@ -739,15 +739,15 @@ namespace chaiscript
           return std::move(vec.back());
         }
 
-        static bool has_guard(const std::vector<AST_Node_Impl_Ptr<T>> &t_children)
+        static bool has_guard(const std::vector<AST_Node_Impl_Ptr<T>> &t_children, const std::size_t offset)
         {
-          if ((t_children.size() > 2) && (t_children[1]->identifier == AST_Node_Type::Arg_List)) {
-            if (t_children.size() > 3) {
+          if ((t_children.size() > 2 + offset) && (t_children[1+offset]->identifier == AST_Node_Type::Arg_List)) {
+            if (t_children.size() > 3 + offset) {
               return true;
             }
           }
           else {
-            if (t_children.size() > 2) {
+            if (t_children.size() > 2 + offset) {
               return true;
             }
           }
@@ -1379,7 +1379,7 @@ namespace chaiscript
         Method_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Method, std::move(t_loc),
               std::vector<AST_Node_Impl_Ptr<T>>(std::make_move_iterator(t_children.begin()), 
-                                                std::make_move_iterator(std::prev(t_children.end(), Def_AST_Node<T>::has_guard(t_children)?2:1)))
+                                                std::make_move_iterator(std::prev(t_children.end(), Def_AST_Node<T>::has_guard(t_children, 1)?2:1)))
               ),
             m_body_node(Def_AST_Node<T>::get_body_node(std::move(t_children))),
             m_guard_node(Def_AST_Node<T>::get_guard_node(std::move(t_children), t_children.size()-this->children.size()==2))
