@@ -186,7 +186,7 @@ namespace chaiscript
       }
 
       m_engine.add(fun([this](const std::string &t_str){ return internal_eval(t_str); }), "eval");
-      m_engine.add(fun([this](const AST_NodePtr &t_ast){ return eval(t_ast); }), "eval");
+      m_engine.add(fun([this](const AST_Node &t_ast){ return eval(t_ast); }), "eval");
 
       m_engine.add(fun([this](const std::string &t_str, const bool t_dump){ return parse(t_str, t_dump); }), "parse");
       m_engine.add(fun([this](const std::string &t_str){ return parse(t_str); }), "parse");
@@ -321,10 +321,10 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
       return *m_parser;
     }
 
-    const Boxed_Value eval(const AST_NodePtr &t_ast)
+    const Boxed_Value eval(const AST_Node &t_ast)
     {
       try {
-        return t_ast->eval(chaiscript::detail::Dispatch_State(m_engine));
+        return t_ast.eval(chaiscript::detail::Dispatch_State(m_engine));
       } catch (const exception::eval_error &t_ee) {
         throw Boxed_Value(t_ee);
       }
