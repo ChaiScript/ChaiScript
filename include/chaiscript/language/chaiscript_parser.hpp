@@ -1908,9 +1908,17 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'for' block", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
+          const auto num_children = m_match_stack.size() - prev_stack_top;
+
           if (classic_for) {
+            if (num_children != 4) {
+              throw exception::eval_error("Incomplete 'for' expression", File_Position(m_position.line, m_position.col), *m_filename);
+            }
             build_match<eval::For_AST_Node<Tracer>>(prev_stack_top);
           } else {
+            if (num_children != 3) {
+              throw exception::eval_error("Incomplete ranged-for expression", File_Position(m_position.line, m_position.col), *m_filename);
+            }
             build_match<eval::Ranged_For_AST_Node<Tracer>>(prev_stack_top);
           }
         }
