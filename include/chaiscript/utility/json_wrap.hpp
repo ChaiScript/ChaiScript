@@ -65,7 +65,7 @@ namespace chaiscript
       {
         try {
           return from_json( json::JSON::Load(t_json) );
-        } catch (...) {
+        } catch (const std::out_of_range& ) {
           throw std::runtime_error("Unparsed JSON input");
         }
       }
