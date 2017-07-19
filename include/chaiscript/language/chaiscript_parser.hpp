@@ -1051,23 +1051,30 @@ namespace chaiscript
         Char_Parser &operator=(const Char_Parser &) = delete;
 
         ~Char_Parser(){
-          if (is_octal) {
-            process_octal();
-          }
+          try {
+            if (is_octal) {
+              process_octal();
+            }
 
-          if (is_hex) {
-            process_hex();
-          }
+            if (is_hex) {
+              process_hex();
+            }
 
-          if (is_unicode) {
-            process_unicode();
+            if (is_unicode) {
+              process_unicode();
+            }
+          } catch (const std::invalid_argument &) {
+            // escape sequence was invalid somehow, we'll pick this
+            // up in the next part of parsing
           }
         }
 
         void process_hex()
         {
-          auto val = stoll(hex_matches, nullptr, 16);
-          match.push_back(char_type(val));
+          if (!hex_matches.empty()) {
+            auto val = stoll(hex_matches, nullptr, 16);
+            match.push_back(char_type(val));
+          }
           hex_matches.clear();
           is_escaped = false;
           is_hex = false;
@@ -1076,8 +1083,10 @@ namespace chaiscript
 
         void process_octal()
         {
-          auto val = stoll(octal_matches, nullptr, 8);
-          match.push_back(char_type(val));
+          if (!octal_matches.empty()) {
+            auto val = stoll(octal_matches, nullptr, 8);
+            match.push_back(char_type(val));
+          }
           octal_matches.clear();
           is_escaped = false;
           is_octal = false;
@@ -1086,9 +1095,11 @@ namespace chaiscript
 
         void process_unicode()
         {
-          auto val = stoll(hex_matches, nullptr, 16);
-          hex_matches.clear();
-          match += detail::Char_Parser_Helper<string_type>::str_from_ll(val);
+          if (!hex_matches.empty()) {
+            auto val = stoll(hex_matches, nullptr, 16);
+            hex_matches.clear();
+            match += detail::Char_Parser_Helper<string_type>::str_from_ll(val);
+          }
           is_escaped = false;
           is_unicode = false;
         }
@@ -1254,6 +1265,7 @@ namespace chaiscript
                 cparser.saw_interpolation_marker = false;
               } else {
                 cparser.parse(*s, start.line, start.col, *m_filename);
+
                 ++s;
               }
             }
