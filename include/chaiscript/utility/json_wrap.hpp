@@ -63,7 +63,11 @@ namespace chaiscript
 
       static Boxed_Value from_json(const std::string &t_json)
       {
-        return from_json( json::JSON::Load(t_json) );
+        try {
+          return from_json( json::JSON::Load(t_json) );
+        } catch (...) {
+          throw std::runtime_error("Unparsed JSON input");
+        }
       }
 
       static std::string to_json(const Boxed_Value &t_bv)
