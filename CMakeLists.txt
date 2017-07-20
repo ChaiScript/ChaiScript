@@ -314,32 +314,17 @@ if (RUN_FUZZY_TESTS)
   file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/unittests")
 
   execute_process(
-    COMMAND ${CMAKE_COMMAND} -E tar xjf ${CMAKE_CURRENT_SOURCE_DIR}/unittests/fuzzy_tests-2016-06-29.tar.bz2
+    COMMAND ${CMAKE_COMMAND} -E tar xjf ${CMAKE_CURRENT_SOURCE_DIR}/unittests/fuzzy_tests-2017-07-20.tar.bz2
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/unittests
     )
 
 
-  file(GLOB FUZZY_CRASH_TESTS RELATIVE ${CMAKE_BINARY_DIR}/unittests/ ${CMAKE_BINARY_DIR}/unittests/fuzzy_tests/crashes/id*)
-  list(SORT FUZZY_CRASH_TESTS)
+  file(GLOB FUZZY_TESTS RELATIVE ${CMAKE_BINARY_DIR}/unittests/ ${CMAKE_BINARY_DIR}/unittests/MINIMIZED/*)
+  list(SORT FUZZY_TESTS)
 
-  file(GLOB FUZZY_EXCEPTION_TESTS RELATIVE ${CMAKE_BINARY_DIR}/unittests/ ${CMAKE_BINARY_DIR}/unittests/fuzzy_tests/exceptions/id*)
-  list(SORT FUZZY_EXCEPTION_TESTS)
-
-
-  foreach(filename ${FUZZY_CRASH_TESTS})
+  foreach(filename ${FUZZY_TESTS})
     message(STATUS "Adding test ${filename}")
-    add_test(${filename} chai "-e" ${CMAKE_BINARY_DIR}/unittests/fuzzy_tests/crashes/unit_test.inc ${CMAKE_BINARY_DIR}/unittests/${filename})
-  endforeach()
-
-  set_property(TEST ${FUZZY_CRASH_TESTS}
-    PROPERTY ENVIRONMENT
-    "CHAI_USE_PATH=${CMAKE_BINARY_DIR}/unittests/"
-    "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
-    )
-
-  foreach(filename ${FUZZY_EXCEPTION_TESTS})
-    message(STATUS "Adding test ${filename}")
-    add_test(${filename} chai "--exception" ${CMAKE_BINARY_DIR}/unittests/fuzzy_tests/exceptions/unit_test.inc ${CMAKE_BINARY_DIR}/unittests/${filename})
+    add_test(fuzz.${filename} chai "-e" "--exception" "--any-exception" ${CMAKE_CURRENT_SOURCE_DIR}/unittests/fuzz_unit_test.inc ${CMAKE_BINARY_DIR}/unittests/${filename})
   endforeach()
 
   set_property(TEST ${FUZZY_EXCEPTION_TESTS}
