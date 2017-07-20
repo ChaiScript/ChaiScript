@@ -262,6 +262,7 @@ namespace chaiscript
           bool t_dot_notation,
           const chaiscript::detail::Dispatch_Engine &t_ss)
       {
+        assert(t_func);
         int arity = t_func->get_arity();
         std::vector<Type_Info> types = t_func->get_param_types();
 
@@ -310,14 +311,14 @@ namespace chaiscript
         std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynfun 
           = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_func);
 
-        if (dynfun)
+        if (dynfun && dynfun->has_parse_tree())
         {
           Proxy_Function f = dynfun->get_guard();
 
           if (f)
           {
             auto dynfunguard = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(f);
-            if (dynfunguard)
+            if (dynfunguard && dynfunguard->has_parse_tree())
             {
               retval += " : " + format_guard(dynfunguard->get_parse_tree());
             }
@@ -350,6 +351,7 @@ namespace chaiscript
         std::stringstream ss;
         if (t_functions.size() == 1)
         {
+          assert(t_functions[0]);
           ss << "  Expected: " << format_types(t_functions[0], t_dot_notation, t_ss) << '\n';
         } else {
           ss << "  " << t_functions.size() << " overloads available:\n";

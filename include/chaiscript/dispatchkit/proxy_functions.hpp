@@ -354,6 +354,7 @@ namespace chaiscript
             m_param_types(std::move(t_param_types)),
             m_guard(std::move(t_guard)), m_parsenode(std::move(t_parsenode))
         {
+          // assert(t_parsenode);
         }
 
 
@@ -379,9 +380,17 @@ namespace chaiscript
           return m_guard;
         }
 
+        bool has_parse_tree() const {
+          return static_cast<bool>(m_parsenode);
+        }
+
         const AST_Node &get_parse_tree() const
         {
-          return *m_parsenode;
+          if (m_parsenode) {
+            return *m_parsenode;
+          } else {
+            throw std::runtime_error("Dynamic_Proxy_Function does not have parse_tree");
+          }
         }
 
 

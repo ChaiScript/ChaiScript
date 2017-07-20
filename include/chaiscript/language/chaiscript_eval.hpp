@@ -288,7 +288,9 @@ namespace chaiscript
     template<typename T>
     struct Fun_Call_AST_Node : AST_Node_Impl<T> {
         Fun_Call_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
-          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Fun_Call, std::move(t_loc), std::move(t_children)) { }
+          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Fun_Call, std::move(t_loc), std::move(t_children)) { 
+            assert(!this->children.empty());
+          }
 
         template<bool Save_Params>
         Boxed_Value do_eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const
