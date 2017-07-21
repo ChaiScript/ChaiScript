@@ -93,6 +93,16 @@ namespace chaiscript {
 #endif
   }
 
+  template<typename B, typename D, typename ...Arg>
+  inline std::unique_ptr<B> make_unique(Arg && ... arg)
+  {
+#ifdef CHAISCRIPT_USE_STD_MAKE_SHARED
+    return std::make_unique<D>(std::forward<Arg>(arg)...);
+#else
+    return std::unique_ptr<B>(static_cast<B*>(new D(std::forward<Arg>(arg)...)));
+#endif
+  }
+
   struct Build_Info {
     static int version_major()
     {
