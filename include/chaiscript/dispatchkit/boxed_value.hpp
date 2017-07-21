@@ -221,23 +221,23 @@ namespace chaiscript
         return *this;
       }
 
-      const Type_Info &get_type_info() const noexcept
+      const Type_Info &get_type_info() const
       {
         return m_data->m_type_info;
       }
 
       /// return true if the object is uninitialized
-      bool is_undef() const noexcept
+      bool is_undef() const
       {
         return m_data->m_type_info.is_undef();
       }
 
-      bool is_const() const noexcept
+      bool is_const() const
       {
         return m_data->m_type_info.is_const();
       }
 
-      bool is_type(const Type_Info &ti) const noexcept
+      bool is_type(const Type_Info &ti) const
       {
         return m_data->m_type_info.bare_equal(ti);
       }
@@ -278,42 +278,42 @@ namespace chaiscript
         return Sentinel(ptr, *(m_data.get()));
       }
 
-      bool is_null() const noexcept
+      bool is_null() const
       {
         return (m_data->m_data_ptr == nullptr && m_data->m_const_data_ptr == nullptr);
       }
 
-      const chaiscript::detail::Any & get() const noexcept
+      const chaiscript::detail::Any & get() const
       {
         return m_data->m_obj;
       }
 
-      bool is_ref() const noexcept
+      bool is_ref() const
       {
         return m_data->m_is_ref;
       }
 
-      bool is_return_value() const noexcept
+      bool is_return_value() const
       {
         return m_data->m_return_value;
       }
 
-      void reset_return_value() const noexcept
+      void reset_return_value() const
       {
         m_data->m_return_value = false;
       }
 
-      bool is_pointer() const noexcept
+      bool is_pointer() const
       {
         return !is_ref();
       }
 
-      void *get_ptr() const noexcept
+      void *get_ptr() const
       {
         return m_data->m_data_ptr;
       }
 
-      const void *get_const_ptr() const noexcept
+      const void *get_const_ptr() const
       {
         return m_data->m_const_data_ptr;
       }
@@ -353,7 +353,7 @@ namespace chaiscript
 
 
       /// \returns true if the two Boxed_Values share the same internal type
-      static bool type_match(const Boxed_Value &l, const Boxed_Value &r) noexcept
+      static bool type_match(const Boxed_Value &l, const Boxed_Value &r)
       {
         return l.get_type_info() == r.get_type_info();
       }

@@ -46,49 +46,49 @@ namespace chaiscript
 
       Type_Info() = default;
 
-      bool operator<(const Type_Info &ti) const noexcept
+      bool operator<(const Type_Info &ti) const
       {
         return m_type_info < ti.m_type_info;
       }
 
-      bool operator!=(const Type_Info &ti) const noexcept
+      bool operator!=(const Type_Info &ti) const
       {
         return !(operator==(ti));
       }
 
-      bool operator!=(const std::type_info &ti) const noexcept
+      bool operator!=(const std::type_info &ti) const
       {
         return !(operator==(ti));
       }
 
-      bool operator==(const Type_Info &ti) const noexcept
+      bool operator==(const Type_Info &ti) const
       {
         return ti.m_type_info == m_type_info
            || *ti.m_type_info == *m_type_info;
       }
 
-      bool operator==(const std::type_info &ti) const noexcept
+      bool operator==(const std::type_info &ti) const
       {
         return !is_undef() && (*m_type_info) == ti;
       }
 
-      bool bare_equal(const Type_Info &ti) const noexcept
+      bool bare_equal(const Type_Info &ti) const
       {
         return ti.m_bare_type_info == m_bare_type_info
            || *ti.m_bare_type_info == *m_bare_type_info;
       }
 
-      bool bare_equal_type_info(const std::type_info &ti) const noexcept
+      bool bare_equal_type_info(const std::type_info &ti) const
       {
         return !is_undef() && (*m_bare_type_info) == ti;
       }
 
-      bool is_const() const noexcept { return (m_flags & (1 << is_const_flag)) != 0; }
-      bool is_reference() const noexcept { return (m_flags & (1 << is_reference_flag)) != 0; }
-      bool is_void() const noexcept { return (m_flags & (1 << is_void_flag)) != 0; }
-      bool is_arithmetic() const noexcept { return (m_flags & (1 << is_arithmetic_flag)) != 0; }
-      bool is_undef() const noexcept { return (m_flags & (1 << is_undef_flag)) != 0; }
-      bool is_pointer() const noexcept { return (m_flags & (1 << is_pointer_flag)) != 0; }
+      bool is_const() const { return (m_flags & (1 << is_const_flag)) != 0; }
+      bool is_reference() const { return (m_flags & (1 << is_reference_flag)) != 0; }
+      bool is_void() const { return (m_flags & (1 << is_void_flag)) != 0; }
+      bool is_arithmetic() const { return (m_flags & (1 << is_arithmetic_flag)) != 0; }
+      bool is_undef() const { return (m_flags & (1 << is_undef_flag)) != 0; }
+      bool is_pointer() const { return (m_flags & (1 << is_pointer_flag)) != 0; }
 
       std::string name() const
       {
