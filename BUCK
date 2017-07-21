@@ -1,7 +1,5 @@
-include_defs('//BUCKAROO_DEPS')
-
 prebuilt_cxx_library(
-  name = 'chaiscript', 
+  name = 'chaiscript',
   header_only = True,
   header_namespace = 'chaiscript',
   exported_headers = subdir_glob([
@@ -10,5 +8,4 @@ prebuilt_cxx_library(
   visibility = [
     'PUBLIC',
   ],
-  deps = BUCKAROO_DEPS,
 )
