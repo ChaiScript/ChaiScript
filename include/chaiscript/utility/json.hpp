@@ -463,7 +463,7 @@ struct JSONParser {
   }
 
   static void consume_ws( const std::string &str, size_t &offset ) {
-    while( isspace( str[offset] ) && offset <= str.size() ) { ++offset; }
+    while( isspace( str.at(offset) ) && offset <= str.size() ) { ++offset; }
   }
 
   static JSON parse_object( const std::string &str, size_t &offset ) {
@@ -471,29 +471,29 @@ struct JSONParser {
 
     ++offset;
     consume_ws( str, offset );
-    if( str[offset] == '}' ) {
+    if( str.at(offset) == '}' ) {
       ++offset; return Object;
     }
 
     for (;offset<str.size();) {
       JSON Key = parse_next( str, offset );
       consume_ws( str, offset );
-      if( str[offset] != ':' ) {
-        throw std::runtime_error(std::string("JSON ERROR: Object: Expected colon, found '") + str[offset] + "'\n");
+      if( str.at(offset) != ':' ) {
+        throw std::runtime_error(std::string("JSON ERROR: Object: Expected colon, found '") + str.at(offset) + "'\n");
       }
       consume_ws( str, ++offset );
       JSON Value = parse_next( str, offset );
       Object[Key.to_string()] = Value;
 
       consume_ws( str, offset );
-      if( str[offset] == ',' ) {
+      if( str.at(offset) == ',' ) {
         ++offset; continue;
       }
-      else if( str[offset] == '}' ) {
+      else if( str.at(offset) == '}' ) {
         ++offset; break;
       }
       else {
-        throw std::runtime_error(std::string("JSON ERROR: Object: Expected comma, found '") + str[offset] + "'\n");
+        throw std::runtime_error(std::string("JSON ERROR: Object: Expected comma, found '") + str.at(offset) + "'\n");
       }
     }
 
@@ -506,7 +506,7 @@ struct JSONParser {
 
     ++offset;
     consume_ws( str, offset );
-    if( str[offset] == ']' ) {
+    if( str.at(offset) == ']' ) {
       ++offset; return Array;
     }
 
@@ -514,14 +514,14 @@ struct JSONParser {
       Array[index++] = parse_next( str, offset );
       consume_ws( str, offset );
 
-      if( str[offset] == ',' ) {
+      if( str.at(offset) == ',' ) {
         ++offset; continue;
       }
-      else if( str[offset] == ']' ) {
+      else if( str.at(offset) == ']' ) {
         ++offset; break;
       }
       else {
-        throw std::runtime_error(std::string("JSON ERROR: Array: Expected ',' or ']', found '") + str[offset] + "'\n");
+        throw std::runtime_error(std::string("JSON ERROR: Array: Expected ',' or ']', found '") + str.at(offset) + "'\n");
       }
     }
 
@@ -530,9 +530,9 @@ struct JSONParser {
 
   static JSON parse_string( const std::string &str, size_t &offset ) {
     std::string val;
-    for( char c = str[++offset]; c != '\"' ; c = str[++offset] ) {
+    for( char c = str.at(++offset); c != '\"' ; c = str.at(++offset) ) {
       if( c == '\\' ) {
-        switch( str[ ++offset ] ) {
+        switch( str.at(++offset) ) {
           case '\"': val += '\"'; break;
           case '\\': val += '\\'; break;
           case '/' : val += '/' ; break;
@@ -544,7 +544,7 @@ struct JSONParser {
           case 'u' : {
                        val += "\\u" ;
                        for( size_t i = 1; i <= 4; ++i ) {
-                         c = str[offset+i];
+                         c = str.at(offset+i);
                          if( (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') ) {
                            val += c;
                          } else {
@@ -567,12 +567,17 @@ struct JSONParser {
     std::string val, exp_str;
     char c = '\0';
     bool isDouble = false;
+    bool isNegative = false;
     long exp = 0;
+    if( offset < str.size() && str.at(offset) == '-' ) {
+      isNegative = true;
+      ++offset;
+    }
     for (; offset < str.size() ;) {
-      c = str[offset++];
-      if( (c == '-') || (c >= '0' && c <= '9') ) {
+      c = str.at(offset++);
+      if( c >= '0' && c <= '9' ) {
         val += c;
-      } else if( c == '.' ) {
+      } else if( c == '.' && !isDouble ) {
         val += c; 
         isDouble = true;
       } else {
@@ -580,7 +585,7 @@ struct JSONParser {
       }
     }
     if( offset < str.size() && (c == 'E' || c == 'e' )) {
-      c = str[ offset++ ];
+      c = str.at(offset++);
       if( c == '-' ) { 
         exp_str += '-';
       } else if( c == '+' ) {
@@ -590,7 +595,7 @@ struct JSONParser {
       }
 
       for (; offset < str.size() ;) {
-        c = str[ offset++ ];
+        c = str.at(offset++);
         if( c >= '0' && c <= '9' ) {
           exp_str += c;
         } else if( !isspace( c ) && c != ',' && c != ']' && c != '}' ) {
@@ -608,12 +613,12 @@ struct JSONParser {
     --offset;
 
     if( isDouble ) {
-      return JSON(chaiscript::parse_num<double>( val ) * std::pow( 10, exp ));
+      return JSON((isNegative?-1:1) * chaiscript::parse_num<double>( val ) * std::pow( 10, exp ));
     } else {
       if( !exp_str.empty() ) {
-        return JSON(static_cast<double>(chaiscript::parse_num<long>( val )) * std::pow( 10, exp ));
+        return JSON((isNegative?-1:1) * static_cast<double>(chaiscript::parse_num<long>( val )) * std::pow( 10, exp ));
       } else {
-        return JSON(chaiscript::parse_num<long>( val ));
+        return JSON((isNegative?-1:1) * chaiscript::parse_num<long>( val ));
       }
     }
   }
@@ -641,7 +646,7 @@ struct JSONParser {
   static JSON parse_next( const std::string &str, size_t &offset ) {
     char value;
     consume_ws( str, offset );
-    value = str[offset];
+    value = str.at(offset);
     switch( value ) {
       case '[' : return parse_array( str, offset );
       case '{' : return parse_object( str, offset );

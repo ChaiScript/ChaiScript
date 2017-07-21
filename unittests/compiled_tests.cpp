@@ -12,6 +12,8 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #pragma GCC diagnostic ignored "-Wparentheses"
+// This one is necessary for the const return non-reference test
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #endif
 
 
@@ -1267,6 +1269,57 @@ TEST_CASE("Test reference member being registered")
   chai.add(chaiscript::var(Reference_MyClass(d)), "ref");
   chai.eval("ref.x = 2.3");
   CHECK(d == Approx(2.3));
+}
+
+
+const int add_3(const int &i)
+{
+  return i + 3;
+}
+
+TEST_CASE("Test returning by const non-reference")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+  // Note, C++ will not allow us to do this:
+  // chai.add(chaiscript::fun(&Reference_MyClass::x) , "x");
+  chai.add(chaiscript::fun(&add_3), "add_3");
+  auto v = chai.eval<int>("add_3(12)");
+  CHECK(v == 15);
+}
+
+
+struct MyException : std::runtime_error
+{
+  using std::runtime_error::runtime_error;
+  int value = 5;
+};
+
+void throws_a_thing()
+{
+  throw MyException("Hello World");
+}
+
+TEST_CASE("Test throwing and catching custom exception")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+  chai.add(chaiscript::user_type<MyException>(), "MyException");
+  chai.add(chaiscript::base_class<std::runtime_error, MyException>()); // be sure to register base class relationship
+  chai.add(chaiscript::fun(&throws_a_thing), "throws_a_thing");
+  chai.add(chaiscript::fun(&MyException::value), "value");
+
+  const auto s = chai.eval<std::string>("fun(){ try { throws_a_thing(); } catch (MyException ex) { return ex.what(); } }()");
+  CHECK(s == "Hello World");
+
+  // this has an explicit clone to prevent returning a pointer to the `value` from inside of MyException
+  const auto i = chai.eval<int>("fun(){ try { throws_a_thing(); } catch (MyException ex) { var v = clone(ex.value); print(v); return v; } }()");
+  CHECK(i == 5);
+}
+
+
+TEST_CASE("Test ability to get 'use' function from default construction")
+{
+  chaiscript::ChaiScript chai;
+  const auto use_function = chai.eval<std::function<chaiscript::Boxed_Value (const std::string &)>>("use");
 }
 
 

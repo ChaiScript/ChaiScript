@@ -181,9 +181,9 @@ namespace chaiscript
       template<typename Ret>
         struct Handle_Return<const Ret>
         {
-          static Boxed_Value handle(const Ret &r)
+          static Boxed_Value handle(Ret r)
           {
-            return Boxed_Value(std::cref(r));
+            return Boxed_Value(std::move(r));
           }
         };
 
