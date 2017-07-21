@@ -94,7 +94,7 @@ namespace chaiscript
       {
       }
 
-      static constexpr Common_Types get_common_type(size_t t_size, bool t_signed)
+      static Common_Types get_common_type(size_t t_size, bool t_signed)
       {
         return   (t_size == 1 && t_signed)?(Common_Types::t_int8)
                 :(t_size == 1)?(Common_Types::t_uint8)

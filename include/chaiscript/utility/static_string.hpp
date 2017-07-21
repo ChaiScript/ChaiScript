@@ -15,16 +15,16 @@ namespace chaiscript
     struct Static_String
     {
       template<size_t N>
-        constexpr Static_String(const char (&str)[N])
+        Static_String(const char (&str)[N])
         : m_size(N-1), data(&str[0])
         {
         }
 
-      constexpr size_t size() const {
+      size_t size() const {
         return m_size;
       }
 
-      constexpr const char *c_str() const {
+      const char *c_str() const {
         return data;
       }
 

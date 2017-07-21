@@ -2286,7 +2286,7 @@ namespace chaiscript
       bool Prefix() {
         const auto prev_stack_top = m_match_stack.size();
         using SS = utility::Static_String;
-        constexpr const std::array<utility::Static_String, 6> prefix_opers{{
+        const std::array<utility::Static_String, 6> prefix_opers{{
             SS{"++"}, 
             SS{"--"}, 
             SS{"-"}, 
