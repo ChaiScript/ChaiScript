@@ -271,7 +271,7 @@ namespace chaiscript
 
       struct Position
       {
-        Position() noexcept = default;
+        Position() = default;
 
         Position(std::string::const_iterator t_pos, std::string::const_iterator t_end) noexcept
           : line(1), col(1), m_pos(t_pos), m_end(t_end), m_last_col(1)
