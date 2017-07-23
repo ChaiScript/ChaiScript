@@ -221,30 +221,30 @@ namespace chaiscript
         return *this;
       }
 
-      const Type_Info &get_type_info() const
+      const Type_Info &get_type_info() const noexcept
       {
         return m_data->m_type_info;
       }
 
       /// return true if the object is uninitialized
-      bool is_undef() const
+      bool is_undef() const noexcept
       {
         return m_data->m_type_info.is_undef();
       }
 
-      bool is_const() const
+      bool is_const() const noexcept
       {
         return m_data->m_type_info.is_const();
       }
 
-      bool is_type(const Type_Info &ti) const
+      bool is_type(const Type_Info &ti) const noexcept
       {
         return m_data->m_type_info.bare_equal(ti);
       }
 
 
       template<typename T>
-      auto pointer_sentinel(std::shared_ptr<T> &ptr) const
+      auto pointer_sentinel(std::shared_ptr<T> &ptr) const noexcept
       {
         struct Sentinel {
           Sentinel(std::shared_ptr<T> &t_ptr, Data &data)
@@ -263,7 +263,7 @@ namespace chaiscript
           Sentinel& operator=(Sentinel&&s) = default;
           Sentinel(Sentinel &&s) = default;
 
-          operator std::shared_ptr<T>&() const
+          operator std::shared_ptr<T>&() const noexcept
           {
             return m_ptr.get();
           }
@@ -278,42 +278,42 @@ namespace chaiscript
         return Sentinel(ptr, *(m_data.get()));
       }
 
-      bool is_null() const
+      bool is_null() const noexcept
       {
         return (m_data->m_data_ptr == nullptr && m_data->m_const_data_ptr == nullptr);
       }
 
-      const chaiscript::detail::Any & get() const
+      const chaiscript::detail::Any & get() const noexcept
       {
         return m_data->m_obj;
       }
 
-      bool is_ref() const
+      bool is_ref() const noexcept
       {
         return m_data->m_is_ref;
       }
 
-      bool is_return_value() const
+      bool is_return_value() const noexcept
       {
         return m_data->m_return_value;
       }
 
-      void reset_return_value() const
+      void reset_return_value() const noexcept
       {
         m_data->m_return_value = false;
       }
 
-      bool is_pointer() const
+      bool is_pointer() const noexcept
       {
         return !is_ref();
       }
 
-      void *get_ptr() const
+      void *get_ptr() const noexcept 
       {
         return m_data->m_data_ptr;
       }
 
-      const void *get_const_ptr() const
+      const void *get_const_ptr() const noexcept
       {
         return m_data->m_const_data_ptr;
       }
@@ -353,7 +353,7 @@ namespace chaiscript
 
 
       /// \returns true if the two Boxed_Values share the same internal type
-      static bool type_match(const Boxed_Value &l, const Boxed_Value &r)
+      static bool type_match(const Boxed_Value &l, const Boxed_Value &r) noexcept
       {
         return l.get_type_info() == r.get_type_info();
       }

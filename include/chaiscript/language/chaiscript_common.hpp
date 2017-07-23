@@ -76,7 +76,7 @@ namespace chaiscript
   namespace
   {
     /// Helper lookup to get the name of each node type
-    inline const char *ast_node_type_to_string(AST_Node_Type ast_node_type) {
+    inline const char *ast_node_type_to_string(AST_Node_Type ast_node_type) noexcept {
       static const char * const ast_node_types[] = { "Id", "Fun_Call", "Unused_Return_Fun_Call", "Arg_List", "Equation", "Var_Decl",
                                     "Array_Call", "Dot_Access", 
                                     "Lambda", "Block", "Scopeless_Block", "Def", "While", "If", "For", "Ranged_For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
@@ -89,13 +89,13 @@ namespace chaiscript
 
   /// \brief Convenience type for file positions
   struct File_Position {
-    int line;
-    int column;
+    int line = 0;
+    int column = 0;
 
-    File_Position(int t_file_line, int t_file_column)
+    File_Position(int t_file_line, int t_file_column) noexcept
       : line(t_file_line), column(t_file_column) { }
 
-    File_Position() : line(0), column(0) { }
+    File_Position() noexcept = default;
   };
 
   struct Parse_Location {
@@ -228,7 +228,7 @@ namespace chaiscript
     private:
 
       template<typename T>
-        static AST_Node_Type id(const T& t)
+        static AST_Node_Type id(const T& t) noexcept
         {
           return t.identifier;
         }
@@ -240,7 +240,7 @@ namespace chaiscript
         }
 
       template<typename T>
-        static const std::string &fname(const T& t)
+        static const std::string &fname(const T& t) noexcept
         {
           return t.filename();
         }
@@ -497,15 +497,15 @@ namespace chaiscript
       const std::string text;
       Parse_Location location;
 
-      const std::string &filename() const {
+      const std::string &filename() const noexcept {
         return *location.filename;
       }
 
-      const File_Position &start() const {
+      const File_Position &start() const noexcept {
         return location.start;
       }
 
-      const File_Position &end() const {
+      const File_Position &end() const noexcept {
         return location.end;
       }
 
@@ -550,7 +550,7 @@ namespace chaiscript
       }
 
 
-      virtual ~AST_Node() = default;
+      virtual ~AST_Node() noexcept = default;
       AST_Node(AST_Node &&) = default;
       AST_Node &operator=(AST_Node &&) = default;
       AST_Node(const AST_Node &) = delete;
@@ -573,15 +573,15 @@ namespace chaiscript
     const std::string text;
     Parse_Location location;
 
-    const std::string &filename() const {
+    const std::string &filename() const noexcept {
       return *location.filename;
     }
 
-    const File_Position &start() const {
+    const File_Position &start() const noexcept {
       return location.start;
     }
 
-    const File_Position &end() const {
+    const File_Position &end() const noexcept {
       return location.end;
     }
 
@@ -629,7 +629,7 @@ namespace chaiscript
         ChaiScript_Parser_Base &operator=(const ChaiScript_Parser_Base &&) = delete;
 
         template<typename T>
-        T &get_tracer()
+        T &get_tracer() noexcept
         {
           // to do type check this somehow?
           return *static_cast<T*>(get_tracer_ptr());

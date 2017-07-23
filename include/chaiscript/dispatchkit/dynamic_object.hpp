@@ -50,12 +50,12 @@ namespace chaiscript
 
         Dynamic_Object() = default;
 
-        bool is_explicit() const
+        bool is_explicit() const noexcept
         {
           return m_option_explicit;
         }
 
-        void set_explicit(const bool t_explicit)
+        void set_explicit(const bool t_explicit) noexcept
         {
           m_option_explicit = t_explicit;
         }

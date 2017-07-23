@@ -49,7 +49,7 @@ namespace chaiscript
             }
           }
 
-          static T cast_symbol(void *p)
+          static T cast_symbol(void *p) noexcept
           {
             union cast_union
             {

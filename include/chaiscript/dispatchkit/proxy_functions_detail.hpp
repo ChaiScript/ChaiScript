@@ -78,7 +78,7 @@ namespace chaiscript
        */
       template<typename Ret, typename ... Params>
         bool compare_types_cast(Ret (*)(Params...),
-             const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions)
+             const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) noexcept
         {
           try {
             std::vector<Boxed_Value>::size_type i = 0;

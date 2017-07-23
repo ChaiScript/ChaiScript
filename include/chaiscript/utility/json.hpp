@@ -50,32 +50,32 @@ class JSON
 
     struct QuickFlatMap
     {
-      auto find(const std::string &s) {
+      auto find(const std::string &s) noexcept {
         return std::find_if(std::begin(data), std::end(data), [&s](const auto &d) { return d.first == s; });
       }
 
-      auto find(const std::string &s) const {
+      auto find(const std::string &s) const noexcept {
         return std::find_if(std::begin(data), std::end(data), [&s](const auto &d) { return d.first == s; });
       }
 
-      auto size() const {
+      auto size() const noexcept {
         return data.size();
       }
 
-      auto begin() const {
+      auto begin() const noexcept {
         return data.begin();
       }
 
-      auto end() const {
+      auto end() const noexcept {
         return data.end();
       }
 
 
-      auto begin() {
+      auto begin() noexcept {
         return data.begin();
       }
 
-      auto end() {
+      auto end() noexcept {
         return data.end();
       }
 
@@ -108,7 +108,7 @@ class JSON
         }
       }
 
-      size_t count(const std::string &s) const {
+      size_t count(const std::string &s) const noexcept {
         return (find(s) != data.end())?1:0;
       }
 
@@ -224,8 +224,8 @@ class JSON
         JSONConstWrapper( const Container *val ) : object( val ) {}
         JSONConstWrapper( std::nullptr_t ) {}
 
-        typename Container::const_iterator begin() const { return object ? object->begin() : typename Container::const_iterator(); }
-        typename Container::const_iterator end() const { return object ? object->end() : typename Container::const_iterator(); }
+        typename Container::const_iterator begin() const noexcept { return object ? object->begin() : typename Container::const_iterator(); }
+        typename Container::const_iterator end() const noexcept { return object ? object->end() : typename Container::const_iterator(); }
       };
 
     JSON() = default;
@@ -245,13 +245,13 @@ class JSON
     }
 
     template <typename T>
-      explicit JSON( T b, typename enable_if<is_same<T,bool>::value>::type* = nullptr ) : internal( static_cast<bool>(b) ) {}
+      explicit JSON( T b, typename enable_if<is_same<T,bool>::value>::type* = nullptr ) noexcept : internal( static_cast<bool>(b) ) {}
 
     template <typename T>
-      explicit JSON( T i, typename enable_if<is_integral<T>::value && !is_same<T,bool>::value>::type* = nullptr ) : internal( static_cast<long>(i) ) {}
+      explicit JSON( T i, typename enable_if<is_integral<T>::value && !is_same<T,bool>::value>::type* = nullptr ) noexcept : internal( static_cast<long>(i) ) {}
 
     template <typename T>
-      explicit JSON( T f, typename enable_if<is_floating_point<T>::value>::type* = nullptr ) : internal( static_cast<double>(f) ) {}
+      explicit JSON( T f, typename enable_if<is_floating_point<T>::value>::type* = nullptr ) noexcept : internal( static_cast<double>(f) ) {}
 
     template <typename T>
       explicit JSON( T s, typename enable_if<is_convertible<T,std::string>::value>::type* = nullptr ) : internal( static_cast<std::string>(s) ) {}
@@ -292,7 +292,7 @@ class JSON
     }
 
 
-    long length() const {
+    long length() const noexcept {
       if( internal.Type == Class::Array ) {
         return static_cast<long>(internal.List->size());
       } else {
@@ -308,7 +308,7 @@ class JSON
       return false;
     }
 
-    int size() const {
+    int size() const noexcept {
       if( internal.Type == Class::Object ) {
         return static_cast<int>(internal.Map->size());
       } else if( internal.Type == Class::Array ) {
@@ -329,20 +329,20 @@ class JSON
       return ok ? *internal.String : std::string("");
     }
 
-    double to_float() const { bool b; return to_float( b ); }
-    double to_float( bool &ok ) const {
+    double to_float() const noexcept { bool b; return to_float( b ); }
+    double to_float( bool &ok ) const noexcept {
       ok = (internal.Type == Class::Floating);
       return ok ? internal.Float : 0.0;
     }
 
-    long to_int() const { bool b; return to_int( b ); }
-    long to_int( bool &ok ) const {
+    long to_int() const noexcept { bool b; return to_int( b ); }
+    long to_int( bool &ok ) const noexcept {
       ok = (internal.Type == Class::Integral);
       return ok ? internal.Int : 0;
     }
 
-    bool to_bool() const { bool b; return to_bool( b ); }
-    bool to_bool( bool &ok ) const {
+    bool to_bool() const noexcept { bool b; return to_bool( b ); }
+    bool to_bool( bool &ok ) const noexcept {
       ok = (internal.Type == Class::Boolean);
       return ok ? internal.Bool : false;
     }
@@ -447,7 +447,7 @@ class JSON
 
 
 struct JSONParser {
-  static bool isspace(const char c)
+  static bool isspace(const char c) noexcept
   {
 #ifdef CHAISCRIPT_MSVC
     // MSVC warns on these line in some circumstances

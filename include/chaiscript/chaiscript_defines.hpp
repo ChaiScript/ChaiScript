@@ -104,17 +104,17 @@ namespace chaiscript {
   }
 
   struct Build_Info {
-    static int version_major()
+    static int version_major() noexcept
     {
       return chaiscript::version_major;
     }
 
-    static int version_minor()
+    static int version_minor() noexcept
     {
       return chaiscript::version_minor;
     }
 
-    static int version_patch()
+    static int version_patch() noexcept
     {
       return chaiscript::version_patch;
     }
@@ -144,7 +144,7 @@ namespace chaiscript {
       return chaiscript::compiler_name;
     }
 
-    static bool debug_build()
+    static bool debug_build() noexcept
     {
       return chaiscript::debug_build;
     }
@@ -152,7 +152,7 @@ namespace chaiscript {
 
 
   template<typename T>
-    auto parse_num(const char *t_str) -> typename std::enable_if<std::is_integral<T>::value, T>::type
+    auto parse_num(const char *t_str) noexcept -> typename std::enable_if<std::is_integral<T>::value, T>::type
     {
       T t = 0;
       for (char c = *t_str; (c = *t_str) != 0; ++t_str) {
@@ -167,7 +167,7 @@ namespace chaiscript {
 
 
   template<typename T>
-    auto parse_num(const char *t_str) -> typename std::enable_if<!std::is_integral<T>::value, T>::type
+    auto parse_num(const char *t_str) noexcept -> typename std::enable_if<!std::is_integral<T>::value, T>::type
     {
       T t = 0;
       T base = 0;
@@ -211,7 +211,7 @@ namespace chaiscript {
     }
 
   template<typename T>
-    T parse_num(const std::string &t_str)
+    T parse_num(const std::string &t_str) noexcept
     {
       return parse_num<T>(t_str.c_str());
     }

@@ -90,11 +90,11 @@ namespace chaiscript
       }
 
       template<typename T>
-      static inline void check_divide_by_zero(T, typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr)
+      static inline void check_divide_by_zero(T, typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr) noexcept
       {
       }
 
-      static Common_Types get_common_type(size_t t_size, bool t_signed)
+      static Common_Types get_common_type(size_t t_size, bool t_signed) noexcept
       {
         return   (t_size == 1 && t_signed)?(Common_Types::t_int8)
                 :(t_size == 1)?(Common_Types::t_uint8)

@@ -87,16 +87,16 @@ namespace chaiscript
         virtual Boxed_Value convert(const Boxed_Value &from) const = 0;
         virtual Boxed_Value convert_down(const Boxed_Value &to) const = 0;
 
-        const Type_Info &to() const
+        const Type_Info &to() const noexcept
         {
           return m_to;
         }
-        const Type_Info &from() const
+        const Type_Info &from() const noexcept
         {
           return m_from;
         }
 
-        virtual bool bidir() const
+        virtual bool bidir() const noexcept
         {
           return true;
         }
@@ -272,7 +272,7 @@ namespace chaiscript
               "Unable to cast down inheritance hierarchy with non-polymorphic types");
         }
 
-        bool bidir() const override
+        bool bidir() const noexcept override
         {
           return false;
         }
@@ -306,7 +306,7 @@ namespace chaiscript
           return m_func(t_from);
         }
 
-        bool bidir() const override
+        bool bidir() const noexcept override
         {
           return false;
         }
@@ -328,7 +328,7 @@ namespace chaiscript
 
       struct Less_Than
       {
-        bool operator()(const std::type_info *t_lhs, const std::type_info *t_rhs) const
+        bool operator()(const std::type_info *t_lhs, const std::type_info *t_rhs) const noexcept
         {
           return *t_lhs != *t_rhs && t_lhs->before(*t_rhs);
         }

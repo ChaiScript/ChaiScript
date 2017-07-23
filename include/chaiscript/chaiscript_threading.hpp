@@ -114,25 +114,25 @@ namespace chaiscript
       class unique_lock 
       {
         public:
-          explicit unique_lock(T &) {}
-          void lock() {}
-          void unlock() {}
+          explicit unique_lock(T &) noexcept {}
+          void lock() noexcept {}
+          void unlock() noexcept {}
       };
 
       template<typename T>
       class shared_lock 
       {
         public:
-          explicit shared_lock(T &) {}
-          void lock() {}
-          void unlock() {}
+          explicit shared_lock(T &) noexcept {}
+          void lock() noexcept {}
+          void unlock() noexcept {}
       };
 
       template<typename T>
       class lock_guard 
       {
         public:
-          explicit lock_guard(T &) {}
+          explicit lock_guard(T &) noexcept {}
       };
 
       class shared_mutex { };
@@ -144,16 +144,16 @@ namespace chaiscript
         class Thread_Storage
         {
           public:
-            explicit Thread_Storage()
+            explicit Thread_Storage() noexcept
             {
             }
 
-            inline T *operator->() const
+            inline T *operator->() const noexcept
             {
               return &obj;
             }
 
-            inline T &operator*() const
+            inline T &operator*() const noexcept
             {
               return obj;
             }

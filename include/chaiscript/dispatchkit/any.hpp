@@ -43,16 +43,16 @@ namespace chaiscript {
       private:
         struct Data
         {
-          explicit Data(const std::type_info &t_type) 
+          explicit Data(const std::type_info &t_type) noexcept
             : m_type(t_type)
           {
           }
 
           Data &operator=(const Data &) = delete;
 
-          virtual ~Data() = default;
+          virtual ~Data() noexcept = default;
 
-          virtual void *data() = 0;
+          virtual void *data() noexcept = 0;
 
           const std::type_info &type() const
           {
@@ -72,7 +72,7 @@ namespace chaiscript {
             {
             }
 
-            void *data() override
+            void *data() noexcept override 
             {
               return &m_data;
             }
@@ -141,12 +141,12 @@ namespace chaiscript {
         }
 
         // queries
-        bool empty() const
+        bool empty() const noexcept
         {
           return !bool(m_data);
         }
 
-        const std::type_info & type() const
+        const std::type_info & type() const noexcept
         {
           if (m_data) {
             return m_data->type();

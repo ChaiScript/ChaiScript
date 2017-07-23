@@ -14,7 +14,7 @@ namespace chaiscript {
     struct Noop_Tracer_Detail
     {
       template<typename T>
-        void trace(const chaiscript::detail::Dispatch_State &, const AST_Node_Impl<T> *)
+        void trace(const chaiscript::detail::Dispatch_State &, const AST_Node_Impl<T> *) noexcept
         {
         }
     };

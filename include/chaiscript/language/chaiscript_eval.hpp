@@ -667,7 +667,7 @@ namespace chaiscript
               );
         }
 
-        static bool has_this_capture(const std::vector<AST_Node_Impl_Ptr<T>> &children) {
+        static bool has_this_capture(const std::vector<AST_Node_Impl_Ptr<T>> &children) noexcept {
           return std::any_of(std::begin(children), std::end(children),
                 [](const auto &child){
                   return child->children[0]->text == "this";

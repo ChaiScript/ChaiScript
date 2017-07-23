@@ -124,7 +124,7 @@ namespace chaiscript
     }
 
     /// Returns the current evaluation m_engine
-    chaiscript::detail::Dispatch_Engine &get_eval_engine() {
+    chaiscript::detail::Dispatch_Engine &get_eval_engine() noexcept {
       return m_engine;
     }
 
@@ -316,7 +316,7 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
                           const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options()) = delete;
 #endif
 
-    parser::ChaiScript_Parser_Base &get_parser()
+    parser::ChaiScript_Parser_Base &get_parser() noexcept
     {
       return *m_parser;
     }

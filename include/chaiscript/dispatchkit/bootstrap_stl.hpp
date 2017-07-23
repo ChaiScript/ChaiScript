@@ -51,7 +51,7 @@ namespace chaiscript
           {
           }
 
-          bool empty() const
+          bool empty() const noexcept
           {
             return m_begin == m_end;
           }

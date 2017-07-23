@@ -19,13 +19,13 @@ namespace chaiscript
   {
 
     template<typename T>
-      T* get_pointer(T *t)
+      T* get_pointer(T *t) noexcept
       {
         return t;
       }
 
     template<typename T>
-      T* get_pointer(const std::reference_wrapper<T> &t)
+      T* get_pointer(const std::reference_wrapper<T> &t) noexcept
       {
         return &t.get();
       }
