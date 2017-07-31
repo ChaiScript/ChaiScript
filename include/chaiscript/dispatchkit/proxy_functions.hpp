@@ -369,7 +369,7 @@ namespace chaiscript
                 && this->m_param_types == prhs->m_param_types);
         }
 
-        bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const noexcept override
+        bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
         {
           return call_match_internal(vals, t_conversions).first;
         }
@@ -413,7 +413,7 @@ namespace chaiscript
 
         // first result: is a match
         // second result: needs conversions
-        std::pair<bool, bool> call_match_internal(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const noexcept
+        std::pair<bool, bool> call_match_internal(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const
         {
           const auto comparison_result = [&](){
             if (m_arity < 0) {

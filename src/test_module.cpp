@@ -78,7 +78,7 @@ int to_int(TestEnum t)
 class TestDerivedType : public TestBaseType
 {
   public:
-    virtual ~TestDerivedType() {}
+    ~TestDerivedType() override {}
     TestDerivedType(const TestDerivedType &) = default;
     TestDerivedType() = default;
     virtual int func() override { return 1; }
