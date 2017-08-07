@@ -26,7 +26,7 @@ namespace chaiscript
         const auto extent = std::extent<T>::value;
         m.add(user_type<T>(), type);
         m.add(fun(
-              [](T& t, size_t index)->ReturnType &{
+              [extent](T& t, size_t index)->ReturnType &{
                 if (extent > 0 && index >= extent) {
                   throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
                 } else {
@@ -37,7 +37,7 @@ namespace chaiscript
             );
 
         m.add(fun(
-              [](const T &t, size_t index)->const ReturnType &{
+              [extent](const T &t, size_t index)->const ReturnType &{
                 if (extent > 0 && index >= extent) {
                   throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
                 } else {
@@ -48,7 +48,7 @@ namespace chaiscript
             );
 
         m.add(fun(
-              [](const T &) {
+              [extent](const T &) {
                 return extent;
               }), "size");
       }
