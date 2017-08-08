@@ -374,6 +374,10 @@ namespace chaiscript
           return call_match_internal(vals, t_conversions).first;
         }
 
+        bool has_guard() const noexcept
+        {
+          return bool(m_guard);
+        }
 
         Proxy_Function get_guard() const
         {

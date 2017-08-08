@@ -21,20 +21,11 @@ namespace chaiscript {
       class bad_any_cast : public std::bad_cast
       {
         public:
-          bad_any_cast() = default;
-
-          bad_any_cast(const bad_any_cast &) = default;
-
-          ~bad_any_cast() noexcept override = default;
-
           /// \brief Description of what error occurred
           const char * what() const noexcept override
           {
-            return m_what.c_str();
+            return "bad any cast";
           }
-
-        private:
-          std::string m_what = "bad any cast";
       };
     }
   
@@ -54,7 +45,7 @@ namespace chaiscript {
 
           virtual void *data() noexcept = 0;
 
-          const std::type_info &type() const
+          const std::type_info &type() const noexcept
           {
             return m_type;
           }
@@ -91,7 +82,7 @@ namespace chaiscript {
 
       public:
         // construct/copy/destruct
-        Any() = default;
+        Any() noexcept = default;
         Any(Any &&) = default;
         Any &operator=(Any &&t_any) = default;
 

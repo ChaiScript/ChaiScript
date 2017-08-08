@@ -15,6 +15,7 @@
 #include <typeinfo>
 
 #include "../chaiscript_defines.hpp"
+#include "../utility/static_string.hpp"
 #include "type_info.hpp"
 
 namespace chaiscript {
@@ -34,22 +35,22 @@ namespace chaiscript
     {
       public:
         bad_boxed_cast(Type_Info t_from, const std::type_info &t_to,
-            std::string t_what) noexcept
+             utility::Static_String t_what) noexcept
           : from(t_from), to(&t_to), m_what(std::move(t_what))
         {
         }
 
-        bad_boxed_cast(Type_Info t_from, const std::type_info &t_to)
-          : from(t_from), to(&t_to), m_what("Cannot perform boxed_cast: " + t_from.name() + " to: " + t_to.name())
+        bad_boxed_cast(Type_Info t_from, const std::type_info &t_to) noexcept
+          : from(t_from), to(&t_to), m_what("Cannot perform boxed_cast")
         {
         }
 
-        explicit bad_boxed_cast(std::string t_what) noexcept
+        explicit bad_boxed_cast(utility::Static_String t_what) noexcept
           : m_what(std::move(t_what))
         {
         }
 
-        bad_boxed_cast(const bad_boxed_cast &) = default;
+        bad_boxed_cast(const bad_boxed_cast &) noexcept = default;
         ~bad_boxed_cast() noexcept override = default;
 
         /// \brief Description of what error occurred
@@ -62,7 +63,7 @@ namespace chaiscript
         const std::type_info *to = nullptr; ///< std::type_info of the desired (but failed) result type
 
       private:
-        std::string m_what;
+        utility::Static_String m_what;
     };
   }
 }

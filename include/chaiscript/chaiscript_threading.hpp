@@ -78,22 +78,22 @@ namespace chaiscript
               t().erase(this);
             }
 
-            inline const T *operator->() const
+            inline const T *operator->() const noexcept
             {
               return &(t()[this]);
             }
 
-            inline const T &operator*() const
+            inline const T &operator*() const noexcept
             {
               return t()[this];
             }
 
-            inline T *operator->()
+            inline T *operator->() noexcept
             {
               return &(t()[this]);
             }
 
-            inline T &operator*()
+            inline T &operator*() noexcept
             {
               return t()[this];
             }

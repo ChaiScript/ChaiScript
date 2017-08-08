@@ -20,6 +20,7 @@
 #include <typeinfo>
 
 #include "../chaiscript_threading.hpp"
+#include "../utility/static_string.hpp"
 #include "bad_boxed_cast.hpp"
 #include "boxed_cast_helper.hpp"
 #include "boxed_value.hpp"
@@ -33,7 +34,7 @@ namespace chaiscript
     {
       public:
         bad_boxed_dynamic_cast(const Type_Info &t_from, const std::type_info &t_to,
-            const std::string &t_what) noexcept
+            const utility::Static_String &t_what) noexcept
           : bad_boxed_cast(t_from, t_to, t_what)
         {
         }
@@ -43,7 +44,7 @@ namespace chaiscript
         {
         }
 
-        explicit bad_boxed_dynamic_cast(const std::string &w) noexcept
+        explicit bad_boxed_dynamic_cast(const utility::Static_String &w) noexcept
           : bad_boxed_cast(w)
         {
         }
@@ -57,7 +58,7 @@ namespace chaiscript
     {
       public:
         bad_boxed_type_cast(const Type_Info &t_from, const std::type_info &t_to,
-            const std::string &t_what) noexcept
+            const utility::Static_String &t_what) noexcept
           : bad_boxed_cast(t_from, t_to, t_what)
         {
         }
@@ -67,7 +68,7 @@ namespace chaiscript
         {
         }
 
-        explicit bad_boxed_type_cast(const std::string &w) noexcept
+        explicit bad_boxed_type_cast(const utility::Static_String &w) noexcept
           : bad_boxed_cast(w)
         {
         }

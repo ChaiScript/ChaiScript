@@ -199,12 +199,12 @@ namespace chaiscript
         }
       }
 
-      static void print(const std::string &s)
+      static void print(const std::string &s) noexcept
       {
         fwrite(s.c_str(), 1, s.size(), stdout);
       }
 
-      static void println(const std::string &s)
+      static void println(const std::string &s) noexcept
       {
         puts(s.c_str());
       }
@@ -268,10 +268,10 @@ namespace chaiscript
       }
 
 
-      static bool has_guard(const Const_Proxy_Function &t_pf)
+      static bool has_guard(const Const_Proxy_Function &t_pf) noexcept
       {
         auto pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
-        return pf && pf->get_guard();
+        return pf && pf->has_guard();
       }
 
       static Const_Proxy_Function get_guard(const Const_Proxy_Function &t_pf)
@@ -302,7 +302,7 @@ namespace chaiscript
         }
 
 
-      static bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
+      static bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf) noexcept
       {
         const auto pf = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
         return bool(pf);
