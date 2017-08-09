@@ -129,7 +129,7 @@ namespace chaiscript
           }
 
           template<typename P>
-          static Boxed_Value box(Boxed_Value bv)
+          static Boxed_Value box(Boxed_Value bv) noexcept
           {
             return bv;
           }

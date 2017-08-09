@@ -196,7 +196,7 @@ namespace chaiscript
           apply_globals(m_globals.begin(), m_globals.end(), t_engine);
         }
 
-      bool has_function(const Proxy_Function &new_f, const std::string &name)
+      bool has_function(const Proxy_Function &new_f, const std::string &name) noexcept
       {
         return std::any_of(m_funcs.begin(), m_funcs.end(), 
             [&](const std::pair<Proxy_Function, std::string> &existing_f) {
@@ -276,7 +276,7 @@ namespace chaiscript
         {
         }
 
-        bool operator==(const dispatch::Proxy_Function_Base &rhs) const override
+        bool operator==(const dispatch::Proxy_Function_Base &rhs) const noexcept override
         {
           try {
             const auto &dispatch_fun = dynamic_cast<const Dispatch_Function &>(rhs);
@@ -820,7 +820,7 @@ namespace chaiscript
 
 
         /// Return true if a function exists
-        bool function_exists(const std::string &name) const noexcept
+        bool function_exists(const std::string &name) const
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 

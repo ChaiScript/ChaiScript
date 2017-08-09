@@ -199,7 +199,7 @@ namespace chaiscript
       template<>
         struct Handle_Return<Boxed_Value>
         {
-          static Boxed_Value handle(const Boxed_Value &r)
+          static Boxed_Value handle(const Boxed_Value &r) noexcept
           {
             return r;
           }
@@ -226,7 +226,7 @@ namespace chaiscript
       template<>
         struct Handle_Return<Boxed_Number>
         {
-          static Boxed_Value handle(const Boxed_Number &r)
+          static Boxed_Value handle(const Boxed_Number &r) noexcept
           {
             return r.bv;
           }

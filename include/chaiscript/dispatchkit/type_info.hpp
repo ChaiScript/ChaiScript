@@ -90,7 +90,7 @@ namespace chaiscript
       bool is_undef() const noexcept { return (m_flags & (1 << is_undef_flag)) != 0; }
       bool is_pointer() const noexcept { return (m_flags & (1 << is_pointer_flag)) != 0; }
 
-      std::string name() const
+      const char * name() const noexcept
       {
         if (!is_undef())
         {
@@ -100,7 +100,7 @@ namespace chaiscript
         }
       }
 
-      std::string bare_name() const
+      const char * bare_name() const noexcept
       {
         if (!is_undef())
         {

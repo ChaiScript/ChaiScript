@@ -208,14 +208,14 @@ namespace chaiscript
       Boxed_Value(const Boxed_Value&) = default;
       Boxed_Value& operator=(const Boxed_Value&) = default;
 
-      void swap(Boxed_Value &rhs)
+      void swap(Boxed_Value &rhs) noexcept
       {
         std::swap(m_data, rhs.m_data);
       }
 
       /// Copy the values stored in rhs.m_data to m_data.
       /// m_data pointers are not shared in this case
-      Boxed_Value assign(const Boxed_Value &rhs)
+      Boxed_Value assign(const Boxed_Value &rhs) noexcept
       {
         (*m_data) = (*rhs.m_data);
         return *this;

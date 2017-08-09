@@ -60,7 +60,7 @@ namespace chaiscript
           m_option_explicit = t_explicit;
         }
 
-        std::string get_type_name() const
+        const std::string &get_type_name() const noexcept
         {
           return m_type_name;
         }

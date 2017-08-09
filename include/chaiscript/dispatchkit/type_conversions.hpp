@@ -460,7 +460,7 @@ namespace chaiscript
         {
           return *itr;
         } else {
-          throw std::out_of_range("No such conversion exists from " + from.bare_name() + " to " + to.bare_name());
+          throw std::out_of_range(std::string("No such conversion exists from ") + from.bare_name() + " to " + to.bare_name());
         }
       }
 

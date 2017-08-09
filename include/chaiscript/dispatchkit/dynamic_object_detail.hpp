@@ -109,7 +109,7 @@ namespace chaiscript
             } 
           }
 
-          bool compare_first_type(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const override
+          bool compare_first_type(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const noexcept override
           {
             return dynamic_object_typename_match(bv, m_type_name, m_ti, t_conversions);
           }

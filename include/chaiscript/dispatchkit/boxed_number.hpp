@@ -179,6 +179,7 @@ namespace chaiscript
             return t != u;
           default:
             assert(false);
+            return false;
         }
       }
 
@@ -254,20 +255,9 @@ namespace chaiscript
         }
       }
 
-      template<typename T>
-      static auto const_unary_int_go(Operators::Opers t_oper, const T &t) noexcept
-      {
-        switch (t_oper)
-        {
-          case Operators::Opers::bitwise_complement:
-            return ~t;
-          default:
-            assert(false);
-        }
-      }
 
       template<typename T>
-      static auto const_binary_int_go(Operators::Opers t_oper, const T &t, const T &u) 
+      static auto const_binary_int_go(Operators::Opers t_oper, T t, T u) 
         noexcept(noexcept(check_divide_by_zero(u)))
       {
         switch (t_oper)
@@ -287,11 +277,12 @@ namespace chaiscript
             return t ^ u;
           default:
             assert(false);
+            return static_cast<decltype(t ^ u)>(t);
         }
       }
 
       template<typename T>
-      static auto const_unary_go(Operators::Opers t_oper, const T &t) noexcept
+      static auto const_unary_go(Operators::Opers t_oper, T t) noexcept
       {
         switch (t_oper)
         {
@@ -301,11 +292,12 @@ namespace chaiscript
             return +t;
           default:
             assert(false);
+            return static_cast<decltype(+t)>(t);
         }
       }
 
       template<typename T>
-      static auto const_binary_go(Operators::Opers t_oper, const T &t, const T &u) 
+      static auto const_binary_go(Operators::Opers t_oper, T t, T u) 
         noexcept(noexcept(check_divide_by_zero(u)))
       {
         switch (t_oper)
@@ -321,6 +313,7 @@ namespace chaiscript
             return t - u;
           default:
             assert(false);
+            return static_cast<decltype(t + u)>(t);
         }
       }
 
@@ -442,8 +435,7 @@ namespace chaiscript
             }
           case Operators::Opers::bitwise_complement:
             {
-              const auto val = const_unary_int_go(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()));
-              return const_var(val);
+              return const_var(~(*static_cast<const LHS *>(t_lhs.get_const_ptr())));
             }
           case Operators::Opers::unary_minus:
           case Operators::Opers::unary_plus:
