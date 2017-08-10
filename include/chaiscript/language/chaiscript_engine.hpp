@@ -623,12 +623,12 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
     /// \brief Evaluates a string. Equivalent to ChaiScript::eval.
     ///
     /// \param[in] t_script Script to execute
-    /// \param[in] t_handler Optional Exception_Handler used for automatic unboxing of script thrown exceptions
+    /// \param[in] t_handler Optional detail::Exception_Handler used for automatic unboxing of script thrown exceptions
     ///
     /// \return result of the script execution
     /// 
     /// \throw chaiscript::exception::eval_error In the case that evaluation fails.
-    Boxed_Value operator()(const std::string &t_script, const Exception_Handler &t_handler = Exception_Handler())
+    Boxed_Value operator()(const std::string &t_script, const detail::Exception_Handler &t_handler = detail::Exception_Handler())
     {
       return eval(t_script, t_handler);
     }
@@ -637,7 +637,7 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
     ///
     /// \tparam T Type to extract from the result value of the script execution
     /// \param[in] t_input Script to execute
-    /// \param[in] t_handler Optional Exception_Handler used for automatic unboxing of script thrown exceptions
+    /// \param[in] t_handler Optional detail::Exception_Handler used for automatic unboxing of script thrown exceptions
     /// \param[in] t_filename Optional filename to report to the user for where the error occured. Useful
     ///                       in special cases where you are loading a file internally instead of using eval_file
     ///
@@ -647,7 +647,7 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
     /// \throw chaiscript::exception::bad_boxed_cast In the case that evaluation succeeds but the result value cannot be converted
     ///        to the requested type.
     template<typename T>
-    T eval(const std::string &t_input, const Exception_Handler &t_handler = Exception_Handler(), const std::string &t_filename="__EVAL__")
+    T eval(const std::string &t_input, const detail::Exception_Handler &t_handler = detail::Exception_Handler(), const std::string &t_filename="__EVAL__")
     {
       return m_engine.boxed_cast<T>(eval(t_input, t_handler, t_filename));
     }
@@ -663,44 +663,42 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
     /// \brief Evaluates a string.
     ///
     /// \param[in] t_input Script to execute
-    /// \param[in] t_handler Optional Exception_Handler used for automatic unboxing of script thrown exceptions
+    /// \param[in] t_handler Optional detail::Exception_Handler used for automatic unboxing of script thrown exceptions
     /// \param[in] t_filename Optional filename to report to the user for where the error occurred. Useful
     ///                       in special cases where you are loading a file internally instead of using eval_file
     ///
     /// \return result of the script execution
     /// 
     /// \throw exception::eval_error In the case that evaluation fails.
-    Boxed_Value eval(const std::string &t_input, const Exception_Handler &t_handler = Exception_Handler(), const std::string &t_filename="__EVAL__")
+    Boxed_Value eval(const std::string &t_input, const detail::Exception_Handler &t_handler = detail::Exception_Handler(), const std::string &t_filename="__EVAL__")
     {
       try {
         return do_eval(t_input, t_filename);
       } catch (Boxed_Value &bv) {
-        if (t_handler) {
-          t_handler->handle(bv, m_engine);
-        }
+        t_handler(bv, m_engine);
         throw;
       }
     }
 
     /// \brief Loads the file specified by filename, evaluates it, and returns the result.
     /// \param[in] t_filename File to load and parse.
-    /// \param[in] t_handler Optional Exception_Handler used for automatic unboxing of script thrown exceptions
+    /// \param[in] t_handler Optional detail::Exception_Handler used for automatic unboxing of script thrown exceptions
     /// \return result of the script execution
     /// \throw chaiscript::exception::eval_error In the case that evaluation fails.
-    Boxed_Value eval_file(const std::string &t_filename, const Exception_Handler &t_handler = Exception_Handler()) {
+    Boxed_Value eval_file(const std::string &t_filename, const detail::Exception_Handler &t_handler = detail::Exception_Handler()) {
       return eval(load_file(t_filename), t_handler, t_filename);
     }
 
     /// \brief Loads the file specified by filename, evaluates it, and returns the type safe result.
     /// \tparam T Type to extract from the result value of the script execution
     /// \param[in] t_filename File to load and parse.
-    /// \param[in] t_handler Optional Exception_Handler used for automatic unboxing of script thrown exceptions
+    /// \param[in] t_handler Optional detail::Exception_Handler used for automatic unboxing of script thrown exceptions
     /// \return result of the script execution
     /// \throw chaiscript::exception::eval_error In the case that evaluation fails.
     /// \throw chaiscript::exception::bad_boxed_cast In the case that evaluation succeeds but the result value cannot be converted
     ///        to the requested type.
     template<typename T>
-    T eval_file(const std::string &t_filename, const Exception_Handler &t_handler = Exception_Handler()) {
+    T eval_file(const std::string &t_filename, const detail::Exception_Handler &t_handler = detail::Exception_Handler()) {
       return m_engine.boxed_cast<T>(eval_file(t_filename, t_handler));
     }
   };
