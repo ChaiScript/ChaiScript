@@ -237,6 +237,8 @@ namespace chaiscript
           m_0, m_1, m_2, m_3, m_4, m_5, m_6, m_7, m_8, m_9, m_10, m_11
         }};
 
+        Operator_Matches() {}
+
         auto begin() const noexcept
         {
           return all_data.begin();
