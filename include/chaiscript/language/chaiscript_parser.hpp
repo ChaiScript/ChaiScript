@@ -1434,11 +1434,11 @@ namespace chaiscript
         return retval;
       }
 
-      bool is_operator(const std::string &t_s) const {
+      bool is_operator(const std::string &t_s) const noexcept {
         return std::any_of(m_operator_matches.begin(), m_operator_matches.end(),
-            [t_s](const auto &opers) {
+            [&t_s](const auto &opers) {
               return std::any_of(opers.begin(), opers.end(), 
-                [t_s](const utility::Static_String &s) {
+                [&t_s](const utility::Static_String &s) {
                   return t_s == s.c_str();
                 });
             });
