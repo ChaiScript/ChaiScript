@@ -300,7 +300,7 @@ class JSON
       }
     }
 
-    bool has_key( const std::string &key ) const {
+    bool has_key( const std::string &key ) const noexcept {
       if( internal.Type == Class::Object ) {
         return internal.Map->count(key) != 0;
       }
@@ -318,10 +318,10 @@ class JSON
       }
     }
 
-    Class JSONType() const { return internal.Type; }
+    Class JSONType() const noexcept { return internal.Type; }
 
     /// Functions for getting primitives from the JSON object.
-    bool is_null() const { return internal.Type == Class::Null; }
+    bool is_null() const noexcept { return internal.Type == Class::Null; }
 
     std::string to_string() const { bool b; return to_string( b ); }
     std::string to_string( bool &ok ) const {
