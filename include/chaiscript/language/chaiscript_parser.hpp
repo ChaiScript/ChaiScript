@@ -192,23 +192,67 @@ namespace chaiscript
       }
 
 
-      static const std::vector<std::vector<utility::Static_String>> &create_operator_matches() {
-        static const std::vector<std::vector<utility::Static_String>> operator_matches {
-          {"?"},
-          {"||"},
-          {"&&"},
-          {"|"},
-          {"^"},
-          {"&"},
-          {"==", "!="},
-          {"<", "<=", ">", ">="},
-          {"<<", ">>"},
-          //We share precedence here but then separate them later
-          {"+", "-"},
-          {"*", "/", "%"},
-          {"++", "--", "-", "+", "!", "~"}
+      struct Operator_Matches
+      {
+        struct Array_View
+        {
+          template<std::size_t Len>
+            Array_View(const std::array<utility::Static_String, Len> &data) noexcept
+            : m_begin(&(*std::begin(data))),
+            m_end(&(*std::end(data)))
+            {
+            }
+
+          auto begin() const noexcept
+          {
+            return m_begin;
+          }
+
+          auto end() const noexcept
+          {
+            return m_end;
+          }
+
+          const utility::Static_String *m_begin;
+          const utility::Static_String *m_end;
         };
 
+        const std::array<utility::Static_String, 1> m_0  {{"?"}};
+        const std::array<utility::Static_String, 1> m_1  {{"||"}};
+        const std::array<utility::Static_String, 1> m_2  {{"&&"}};
+        const std::array<utility::Static_String, 1> m_3  {{"|"}};
+        const std::array<utility::Static_String, 1> m_4  {{"^"}};
+        const std::array<utility::Static_String, 1> m_5  {{"&"}};
+        const std::array<utility::Static_String, 2> m_6  {{"==", "!="}};
+        const std::array<utility::Static_String, 4> m_7  {{"<", "<=", ">", ">="}};
+        const std::array<utility::Static_String, 2> m_8  {{"<<", ">>"}};
+          //We share precedence here but then separate them later
+        const std::array<utility::Static_String, 2> m_9  {{"+", "-"}};
+        const std::array<utility::Static_String, 3> m_10 {{"*", "/", "%"}};
+        const std::array<utility::Static_String, 6> m_11 {{"++", "--", "-", "+", "!", "~"}};
+
+        const std::array<Array_View, 12> all_data {{
+          m_0, m_1, m_2, m_3, m_4, m_5, m_6, m_7, m_8, m_9, m_10, m_11
+        }};
+
+        auto begin() const noexcept
+        {
+          return all_data.begin();
+        }
+
+        auto end() const noexcept
+        {
+          return all_data.end();
+        }
+
+        decltype(auto) operator[](const std::size_t pos) const noexcept {
+          return (all_data[pos]);
+        }
+
+      };
+
+      static const auto &create_operator_matches() noexcept {
+        const static Operator_Matches operator_matches;
         return operator_matches;
       }
 
@@ -262,7 +306,7 @@ namespace chaiscript
       }
 
       const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &m_alphabet = create_alphabet();
-      const std::vector<std::vector<utility::Static_String>> &m_operator_matches = create_operator_matches();
+      const Operator_Matches &m_operator_matches = create_operator_matches();
       const std::array<Operator_Precidence, 12> &m_operators = create_operators();
 
       std::shared_ptr<std::string> m_filename;
@@ -1392,7 +1436,7 @@ namespace chaiscript
 
       bool is_operator(const std::string &t_s) const {
         return std::any_of(m_operator_matches.begin(), m_operator_matches.end(),
-            [t_s](const std::vector<utility::Static_String> &opers) {
+            [t_s](const auto &opers) {
               return std::any_of(opers.begin(), opers.end(), 
                 [t_s](const utility::Static_String &s) {
                   return t_s == s.c_str();
