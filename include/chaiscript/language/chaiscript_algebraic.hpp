@@ -36,7 +36,7 @@ namespace chaiscript
       invalid
     };
 
-    static const char *to_string(Opers t_oper) {
+    static const char *to_string(Opers t_oper) noexcept {
       static const char *opers[] = { 
         "",
         "==", "<", ">", "<=", ">=", "!=",

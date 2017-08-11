@@ -102,7 +102,9 @@ namespace chaiscript
             void *m_key;
 
           private:
-            static std::unordered_map<const void*, T> &t()
+            /// todo: is it valid to make this noexcept? The allocation could fail, but if it
+            /// does there is no possible way to recover
+            static std::unordered_map<const void*, T> &t() noexcept
             {
               thread_local std::unordered_map<const void *, T> my_t;
               return my_t;

@@ -741,7 +741,7 @@ namespace chaiscript
           return std::move(vec.back());
         }
 
-        static bool has_guard(const std::vector<AST_Node_Impl_Ptr<T>> &t_children, const std::size_t offset)
+        static bool has_guard(const std::vector<AST_Node_Impl_Ptr<T>> &t_children, const std::size_t offset) noexcept
         {
           if ((t_children.size() > 2 + offset) && (t_children[1+offset]->identifier == AST_Node_Type::Arg_List)) {
             if (t_children.size() > 3 + offset) {

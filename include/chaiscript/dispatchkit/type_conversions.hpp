@@ -371,18 +371,18 @@ namespace chaiscript
       }
 
       template<typename T>
-        bool convertable_type() const
+        bool convertable_type() const noexcept
         {
           return thread_cache().count(user_type<T>().bare_type_info()) != 0;
         }
 
       template<typename To, typename From>
-        bool converts() const
+        bool converts() const noexcept
         {
           return converts(user_type<To>(), user_type<From>());
         }
 
-      bool converts(const Type_Info &to, const Type_Info &from) const
+      bool converts(const Type_Info &to, const Type_Info &from) const noexcept
       {
         const auto &types = thread_cache();
         if (types.count(to.bare_type_info()) != 0 && types.count(from.bare_type_info()) != 0)
@@ -464,7 +464,7 @@ namespace chaiscript
         }
       }
 
-      Conversion_Saves &conversion_saves() const {
+      Conversion_Saves &conversion_saves() const noexcept {
         return *m_conversion_saves;
       }
 
@@ -519,15 +519,15 @@ namespace chaiscript
       {
       }
 
-      const Type_Conversions *operator->() const {
+      const Type_Conversions *operator->() const noexcept {
         return &m_conversions.get();
       }
 
-      const Type_Conversions *get() const {
+      const Type_Conversions *get() const noexcept {
         return &m_conversions.get();
       }
 
-      Type_Conversions::Conversion_Saves &saves() const {
+      Type_Conversions::Conversion_Saves &saves() const noexcept {
         return m_saves;
       }
 

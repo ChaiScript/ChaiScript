@@ -31,16 +31,18 @@ struct AST_Node;
 namespace chaiscript
 {
   struct Name_Validator {
-    static bool is_reserved_word(const std::string &name)
+    static bool is_reserved_word(const std::string &name) noexcept
     {
-      static const std::set<std::string> m_reserved_words 
+      static const char *m_reserved_words[]
         = {"def", "fun", "while", "for", "if", "else", "&&", "||", ",", "auto", 
           "return", "break", "true", "false", "class", "attr", "var", "global", "GLOBAL", "_",
           "__LINE__", "__FILE__", "__FUNC__", "__CLASS__"};
-      return m_reserved_words.count(name) > 0;
+
+      return std::any_of(std::begin(m_reserved_words), std::end(m_reserved_words),
+          [&name](const char *str){ return str == name; });
     }
 
-    static bool valid_object_name(const std::string &name)
+    static bool valid_object_name(const std::string &name) noexcept
     {
       return name.find("::") == std::string::npos && !is_reserved_word(name);
     }
@@ -136,7 +138,7 @@ namespace chaiscript
     /// \brief Thrown if an error occurs while attempting to load a binary module
     struct load_module_error : std::runtime_error
     {
-      explicit load_module_error(const std::string &t_reason) noexcept
+      explicit load_module_error(const std::string &t_reason)
         : std::runtime_error(t_reason)
       {
       }
@@ -479,7 +481,7 @@ namespace chaiscript
 
     /// Errors generated when loading a file
     struct file_not_found_error : std::runtime_error {
-      explicit file_not_found_error(const std::string &t_filename) noexcept
+      explicit file_not_found_error(const std::string &t_filename)
         : std::runtime_error("File Not Found: " + t_filename)
       { }
 

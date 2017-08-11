@@ -212,7 +212,7 @@ namespace chaiscript
         /// \returns the types of all parameters. 
         const std::vector<Type_Info> &get_param_types() const noexcept { return m_types; }
 
-        virtual bool operator==(const Proxy_Function_Base &) const = 0;
+        virtual bool operator==(const Proxy_Function_Base &) const noexcept = 0;
         virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const = 0;
 
         virtual bool is_attribute_function() const noexcept { return false; }
@@ -268,8 +268,9 @@ namespace chaiscript
           }
         }
 
-        virtual bool compare_first_type(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const
+        virtual bool compare_first_type(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const noexcept
         {
+          /// TODO is m_types guaranteed to be at least 2??
           return compare_type_to_param(m_types[1], bv, t_conversions);
         }
 
@@ -379,7 +380,7 @@ namespace chaiscript
           return bool(m_guard);
         }
 
-        Proxy_Function get_guard() const
+        Proxy_Function get_guard() const noexcept
         {
           return m_guard;
         }
