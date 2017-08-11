@@ -217,19 +217,21 @@ namespace chaiscript
           const utility::Static_String *m_end;
         };
 
-        const std::array<utility::Static_String, 1> m_0  {{"?"}};
-        const std::array<utility::Static_String, 1> m_1  {{"||"}};
-        const std::array<utility::Static_String, 1> m_2  {{"&&"}};
-        const std::array<utility::Static_String, 1> m_3  {{"|"}};
-        const std::array<utility::Static_String, 1> m_4  {{"^"}};
-        const std::array<utility::Static_String, 1> m_5  {{"&"}};
-        const std::array<utility::Static_String, 2> m_6  {{"==", "!="}};
-        const std::array<utility::Static_String, 4> m_7  {{"<", "<=", ">", ">="}};
-        const std::array<utility::Static_String, 2> m_8  {{"<<", ">>"}};
+        using SS = utility::Static_String;
+
+        const std::array<utility::Static_String, 1> m_0  {{SS("?")}};
+        const std::array<utility::Static_String, 1> m_1  {{SS("||")}};
+        const std::array<utility::Static_String, 1> m_2  {{SS("&&")}};
+        const std::array<utility::Static_String, 1> m_3  {{SS("|")}};
+        const std::array<utility::Static_String, 1> m_4  {{SS("^")}};
+        const std::array<utility::Static_String, 1> m_5  {{SS("&")}};
+        const std::array<utility::Static_String, 2> m_6  {{SS("=="), SS("!=")}};
+        const std::array<utility::Static_String, 4> m_7  {{SS("<"), SS("<="), SS(">"), SS(">=")}};
+        const std::array<utility::Static_String, 2> m_8  {{SS("<<"), SS(">>")}};
           //We share precedence here but then separate them later
-        const std::array<utility::Static_String, 2> m_9  {{"+", "-"}};
-        const std::array<utility::Static_String, 3> m_10 {{"*", "/", "%"}};
-        const std::array<utility::Static_String, 6> m_11 {{"++", "--", "-", "+", "!", "~"}};
+        const std::array<utility::Static_String, 2> m_9  {{SS("+"), SS("-")}};
+        const std::array<utility::Static_String, 3> m_10 {{SS("*"), SS("/"), SS("%")}};
+        const std::array<utility::Static_String, 6> m_11 {{SS("++"), SS("--"), SS("-"), SS("+"), SS("!"), SS("~")}};
 
         const std::array<Array_View, 12> all_data {{
           m_0, m_1, m_2, m_3, m_4, m_5, m_6, m_7, m_8, m_9, m_10, m_11
