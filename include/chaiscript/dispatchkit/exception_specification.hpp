@@ -25,36 +25,26 @@ class bad_boxed_cast;
 
 namespace chaiscript
 {
-
   namespace detail
   {
-    struct Exception_Handler
+    struct Exception_Handler_Base
     {
-      virtual void operator()(const Boxed_Value &, const detail::Dispatch_Engine &) const
-      {
-      }
+      virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) = 0;
 
-      Exception_Handler() = default;
-      Exception_Handler(Exception_Handler &&) = default;
-      Exception_Handler &operator=(Exception_Handler &&) = default;
-      virtual ~Exception_Handler() noexcept = default;
+      virtual ~Exception_Handler_Base() = default;
 
       protected:
-        Exception_Handler(const Exception_Handler &) = default;
-        Exception_Handler &operator=(const Exception_Handler &) = default;
-
-    };
-
-     template<typename ... T>
-      struct Exception_Handler_Impl final : Exception_Handler
-      {
-        template<typename ExceptionType>
+        template<typename T>
         static void throw_type(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
         {
-          try { throw t_engine.boxed_cast<ExceptionType>(bv); } catch (const chaiscript::exception::bad_boxed_cast &) {}
+          try { T t = t_engine.boxed_cast<T>(bv); throw t; } catch (const chaiscript::exception::bad_boxed_cast &) {}
         }
+    };
 
-        void operator()(const Boxed_Value &bv, const Dispatch_Engine &t_engine) const final
+    template<typename ... T>
+      struct Exception_Handler_Impl : Exception_Handler_Base
+      {
+        void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) override
         {
           (void)std::initializer_list<int>{(throw_type<T>(bv, t_engine), 0)...};
         }
@@ -111,13 +101,14 @@ namespace chaiscript
   ///
   /// \sa chaiscript::exception_specification for creation of chaiscript::Exception_Handler objects
   /// \sa \ref exceptions
+  typedef std::shared_ptr<detail::Exception_Handler_Base> Exception_Handler;
 
   /// \brief creates a chaiscript::Exception_Handler which handles one type of exception unboxing
   /// \sa \ref exceptions
   template<typename ... T>
-  auto exception_specification() noexcept
+  Exception_Handler exception_specification()
   {
-    return detail::Exception_Handler_Impl<T...>();
+    return std::make_shared<detail::Exception_Handler_Impl<T...>>();
   }
 }
 
