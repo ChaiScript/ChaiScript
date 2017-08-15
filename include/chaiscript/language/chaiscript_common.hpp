@@ -23,6 +23,7 @@
 #include "../dispatchkit/dispatchkit.hpp"
 #include "../dispatchkit/proxy_functions.hpp"
 #include "../dispatchkit/type_info.hpp"
+#include <unordered_set>
 
 namespace chaiscript {
 struct AST_Node;
@@ -33,13 +34,15 @@ namespace chaiscript
   struct Name_Validator {
     static bool is_reserved_word(const std::string &name) noexcept
     {
-      static const char *m_reserved_words[]
-        = {"def", "fun", "while", "for", "if", "else", "&&", "||", ",", "auto", 
-          "return", "break", "true", "false", "class", "attr", "var", "global", "GLOBAL", "_",
-          "__LINE__", "__FILE__", "__FUNC__", "__CLASS__"};
+      static const std::unordered_set<std::string> words {
+        "def", "fun", "while", "for", "if", "else", 
+          "&&", "||", ",", "auto", "return", "break", 
+          "true", "false", "class", "attr", "var", "global", 
+          "GLOBAL", "_",
+          "__LINE__", "__FILE__", "__FUNC__", "__CLASS__"
+      };
 
-      return std::any_of(std::begin(m_reserved_words), std::end(m_reserved_words),
-          [&name](const char *str){ return str == name; });
+      return words.count(name) == 1;
     }
 
     static bool valid_object_name(const std::string &name) noexcept
