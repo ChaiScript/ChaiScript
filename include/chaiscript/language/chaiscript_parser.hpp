@@ -197,18 +197,18 @@ namespace chaiscript
         struct Array_View
         {
           template<std::size_t Len>
-            Array_View(const std::array<utility::Static_String, Len> &data) noexcept
-            : m_begin(&(*std::begin(data))),
-            m_end(&(*std::end(data)))
+            constexpr Array_View(const std::array<utility::Static_String, Len> &data) noexcept
+            : m_begin(&data.front()),
+              m_end(m_begin + Len)
             {
             }
 
-          auto begin() const noexcept
+          constexpr auto begin() const noexcept
           {
             return m_begin;
           }
 
-          auto end() const noexcept
+          constexpr auto end() const noexcept
           {
             return m_end;
           }
@@ -237,19 +237,19 @@ namespace chaiscript
           m_0, m_1, m_2, m_3, m_4, m_5, m_6, m_7, m_8, m_9, m_10, m_11
         }};
 
-        Operator_Matches() {}
+        constexpr Operator_Matches() noexcept {}
 
-        auto begin() const noexcept
+        constexpr auto begin() const noexcept
         {
           return all_data.begin();
         }
 
-        auto end() const noexcept
+        constexpr auto end() const noexcept
         {
           return all_data.end();
         }
 
-        decltype(auto) operator[](const std::size_t pos) const noexcept {
+        constexpr decltype(auto) operator[](const std::size_t pos) const noexcept {
           return (all_data[pos]);
         }
 
@@ -319,9 +319,9 @@ namespace chaiscript
 
       struct Position
       {
-        Position() = default;
+        constexpr Position() = default;
 
-        Position(std::string::const_iterator t_pos, std::string::const_iterator t_end) noexcept
+        constexpr Position(std::string::const_iterator t_pos, std::string::const_iterator t_end) noexcept
           : line(1), col(1), m_pos(t_pos), m_end(t_end), m_last_col(1)
         {
         }
@@ -344,7 +344,7 @@ namespace chaiscript
           return *this;
         }
 
-        Position &operator--() noexcept {
+        constexpr Position &operator--() noexcept {
           --m_pos;
           if (*m_pos == '\n') {
             --line;
@@ -355,12 +355,12 @@ namespace chaiscript
           return *this;
         }
 
-        Position &operator+=(size_t t_distance) noexcept {
+        constexpr Position &operator+=(size_t t_distance) noexcept {
           *this = (*this) + t_distance;
           return *this;
         }
 
-        Position operator+(size_t t_distance) const noexcept {
+        constexpr Position operator+(size_t t_distance) const noexcept {
           Position ret(*this);
           for (size_t i = 0; i < t_distance; ++i) {
             ++ret;
@@ -368,12 +368,12 @@ namespace chaiscript
           return ret;
         }
 
-        Position &operator-=(size_t t_distance) noexcept {
+        constexpr Position &operator-=(size_t t_distance) noexcept {
           *this = (*this) - t_distance;
           return *this;
         }
 
-        Position operator-(size_t t_distance) const noexcept {
+        constexpr Position operator-(size_t t_distance) const noexcept {
           Position ret(*this);
           for (size_t i = 0; i < t_distance; ++i) {
             --ret;
@@ -381,15 +381,15 @@ namespace chaiscript
           return ret;
         }
 
-        bool operator==(const Position &t_rhs) const noexcept {
+        constexpr bool operator==(const Position &t_rhs) const noexcept {
           return m_pos == t_rhs.m_pos;
         }
 
-        bool operator!=(const Position &t_rhs) const noexcept {
+        constexpr bool operator!=(const Position &t_rhs) const noexcept {
           return m_pos != t_rhs.m_pos;
         }
 
-        bool has_more() const noexcept {
+        constexpr bool has_more() const noexcept {
           return m_pos != m_end;
         }
 
@@ -397,10 +397,9 @@ namespace chaiscript
           return static_cast<size_t>(std::distance(m_pos, m_end));
         }
 
-        const char& operator*() const noexcept {
+        constexpr const char& operator*() const noexcept {
           if (m_pos == m_end) {
-            static const char ktmp ='\0';
-            return ktmp;
+            return ""[0];
           } else {
             return *m_pos;
           }
@@ -427,7 +426,7 @@ namespace chaiscript
         }
       }
 
-      public:
+    public:
       explicit ChaiScript_Parser(Tracer tracer = Tracer(), Optimizer optimizer=Optimizer())
         : m_tracer(std::move(tracer)),
           m_optimizer(std::move(optimizer))
@@ -451,7 +450,7 @@ namespace chaiscript
       ChaiScript_Parser &operator=(ChaiScript_Parser &&) = delete;
 
       /// test a char in an m_alphabet
-      bool char_in_alphabet(char c, detail::Alphabet a) const noexcept { return m_alphabet[a][static_cast<uint8_t>(c)]; }
+      constexpr bool char_in_alphabet(char c, detail::Alphabet a) const noexcept { return m_alphabet[a][static_cast<uint8_t>(c)]; }
 
       /// Prints the parsed ast_nodes as a tree
       void debug_print(const AST_Node &t, std::string prepend = "") const override {

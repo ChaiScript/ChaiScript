@@ -81,8 +81,8 @@ namespace chaiscript
   namespace
   {
     /// Helper lookup to get the name of each node type
-    inline const char *ast_node_type_to_string(AST_Node_Type ast_node_type) noexcept {
-      static const char * const ast_node_types[] = { "Id", "Fun_Call", "Unused_Return_Fun_Call", "Arg_List", "Equation", "Var_Decl",
+    constexpr const char *ast_node_type_to_string(AST_Node_Type ast_node_type) noexcept {
+      constexpr const char * const ast_node_types[] = { "Id", "Fun_Call", "Unused_Return_Fun_Call", "Arg_List", "Equation", "Var_Decl",
                                     "Array_Call", "Dot_Access", 
                                     "Lambda", "Block", "Scopeless_Block", "Def", "While", "If", "For", "Ranged_For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
                                     "Inline_Range", "Try", "Catch", "Finally", "Method", "Attr_Decl",
@@ -97,10 +97,10 @@ namespace chaiscript
     int line = 0;
     int column = 0;
 
-    File_Position(int t_file_line, int t_file_column) noexcept
+    constexpr File_Position(int t_file_line, int t_file_column) noexcept
       : line(t_file_line), column(t_file_column) { }
 
-    File_Position() noexcept = default;
+    constexpr File_Position() noexcept = default;
   };
 
   struct Parse_Location {

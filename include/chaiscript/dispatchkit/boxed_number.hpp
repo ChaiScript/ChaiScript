@@ -80,7 +80,7 @@ namespace chaiscript
       };
 
       template<typename T>
-      static inline void check_divide_by_zero(T t, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr)
+      constexpr static inline void check_divide_by_zero(T t, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr)
       {
 #ifndef CHAISCRIPT_NO_PROTECT_DIVIDEBYZERO
         if (t == 0) {
@@ -90,11 +90,11 @@ namespace chaiscript
       }
 
       template<typename T>
-      static inline void check_divide_by_zero(T, typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr) noexcept
+      constexpr static inline void check_divide_by_zero(T, typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr) noexcept
       {
       }
 
-      static Common_Types get_common_type(size_t t_size, bool t_signed) noexcept
+      constexpr static Common_Types get_common_type(size_t t_size, bool t_signed) noexcept
       {
         return   (t_size == 1 && t_signed)?(Common_Types::t_int8)
                 :(t_size == 1)?(Common_Types::t_uint8)
@@ -161,7 +161,7 @@ namespace chaiscript
       }
 
       template<typename T>
-      static bool boolean_go(Operators::Opers t_oper, const T &t, const T &u) noexcept
+      constexpr static bool boolean_go(Operators::Opers t_oper, const T &t, const T &u) noexcept
       {
         switch (t_oper)
         {
@@ -184,7 +184,7 @@ namespace chaiscript
       }
 
       template<typename T>
-      static void unary_go(Operators::Opers t_oper, T &t) noexcept
+      constexpr static void unary_go(Operators::Opers t_oper, T &t) noexcept
       {
         switch (t_oper)
         {
@@ -200,7 +200,7 @@ namespace chaiscript
       }
 
       template<typename T, typename U>
-      static void binary_go(Operators::Opers t_oper, T &t, const U &u)
+      constexpr static void binary_go(Operators::Opers t_oper, T &t, const U &u)
         noexcept(noexcept(check_divide_by_zero(u)))
       {
         switch (t_oper)
@@ -227,7 +227,7 @@ namespace chaiscript
       }
 
       template<typename T, typename U>
-      static void binary_int_go(Operators::Opers t_oper, T &t, const U &u) noexcept
+      constexpr static void binary_int_go(Operators::Opers t_oper, T &t, const U &u) noexcept
       {
         switch (t_oper)
         {
@@ -257,7 +257,7 @@ namespace chaiscript
 
 
       template<typename T>
-      static auto const_binary_int_go(Operators::Opers t_oper, T t, T u) 
+      constexpr static auto const_binary_int_go(Operators::Opers t_oper, T t, T u) 
         noexcept(noexcept(check_divide_by_zero(u)))
       {
         switch (t_oper)
@@ -282,7 +282,7 @@ namespace chaiscript
       }
 
       template<typename T>
-      static auto const_unary_go(Operators::Opers t_oper, T t) noexcept
+      constexpr static auto const_unary_go(Operators::Opers t_oper, T t) noexcept
       {
         switch (t_oper)
         {
@@ -297,7 +297,7 @@ namespace chaiscript
       }
 
       template<typename T>
-      static auto const_binary_go(Operators::Opers t_oper, T t, T u) 
+      constexpr static auto const_binary_go(Operators::Opers t_oper, T t, T u) 
         noexcept(noexcept(check_divide_by_zero(u)))
       {
         switch (t_oper)

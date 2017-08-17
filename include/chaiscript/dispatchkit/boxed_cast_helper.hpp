@@ -27,7 +27,7 @@ namespace chaiscript
     // Cast_Helper_Inner helper classes
 
     template<typename T>
-      T* throw_if_null(T *t)
+      constexpr T* throw_if_null(T *t)
       {
         if (t) { return t; }
         throw std::runtime_error("Attempted to dereference null Boxed_Value");

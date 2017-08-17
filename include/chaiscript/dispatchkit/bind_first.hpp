@@ -19,7 +19,7 @@ namespace chaiscript
   {
 
     template<typename T>
-      T* get_pointer(T *t) noexcept
+      constexpr T* get_pointer(T *t) noexcept
       {
         return t;
       }

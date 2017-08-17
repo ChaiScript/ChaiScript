@@ -75,13 +75,13 @@ static_assert(_MSC_FULL_VER >= 190024210, "Visual C++ 2015 Update 3 or later req
 #include <cmath>
 
 namespace chaiscript {
-  static const int version_major = 6;
-  static const int version_minor = 0;
-  static const int version_patch = 0;
+  constexpr static const int version_major = 6;
+  constexpr static const int version_minor = 0;
+  constexpr static const int version_patch = 0;
 
-  static const char *compiler_version = CHAISCRIPT_COMPILER_VERSION;
-  static const char *compiler_name = CHAISCRIPT_COMPILER_NAME;
-  static const bool debug_build = CHAISCRIPT_DEBUG;
+  constexpr static const char *compiler_version = CHAISCRIPT_COMPILER_VERSION;
+  constexpr static const char *compiler_name = CHAISCRIPT_COMPILER_NAME;
+  constexpr static const bool debug_build = CHAISCRIPT_DEBUG;
 
   template<typename B, typename D, typename ...Arg>
   inline std::shared_ptr<B> make_shared(Arg && ... arg)
@@ -104,17 +104,17 @@ namespace chaiscript {
   }
 
   struct Build_Info {
-    static int version_major() noexcept
+    constexpr static int version_major() noexcept
     {
       return chaiscript::version_major;
     }
 
-    static int version_minor() noexcept
+    constexpr static int version_minor() noexcept
     {
       return chaiscript::version_minor;
     }
 
-    static int version_patch() noexcept
+    constexpr static int version_patch() noexcept
     {
       return chaiscript::version_patch;
     }
@@ -144,7 +144,7 @@ namespace chaiscript {
       return chaiscript::compiler_name;
     }
 
-    static bool debug_build() noexcept
+    constexpr static bool debug_build() noexcept
     {
       return chaiscript::debug_build;
     }
@@ -152,7 +152,7 @@ namespace chaiscript {
 
 
   template<typename T>
-    auto parse_num(const char *t_str) noexcept -> typename std::enable_if<std::is_integral<T>::value, T>::type
+    constexpr auto parse_num(const char *t_str) noexcept -> typename std::enable_if<std::is_integral<T>::value, T>::type
     {
       T t = 0;
       for (char c = *t_str; (c = *t_str) != 0; ++t_str) {

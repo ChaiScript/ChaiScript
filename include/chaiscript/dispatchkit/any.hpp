@@ -34,7 +34,7 @@ namespace chaiscript {
       private:
         struct Data
         {
-          explicit Data(const std::type_info &t_type) noexcept
+          constexpr explicit Data(const std::type_info &t_type) noexcept
             : m_type(t_type)
           {
           }

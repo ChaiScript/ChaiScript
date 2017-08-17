@@ -46,17 +46,17 @@ namespace chaiscript
         {
           typedef Container container_type;
 
-          Bidir_Range(Container &c)
+          constexpr Bidir_Range(Container &c)
             : m_begin(c.begin()), m_end(c.end())
           {
           }
 
-          bool empty() const noexcept
+          constexpr bool empty() const noexcept
           {
             return m_begin == m_end;
           }
 
-          void pop_front()
+          constexpr void pop_front()
           {
             if (empty())
             {
@@ -65,7 +65,7 @@ namespace chaiscript
             ++m_begin;
           }
 
-          void pop_back()
+          constexpr void pop_back()
           {
             if (empty())
             {
@@ -74,7 +74,7 @@ namespace chaiscript
             --m_end;
           }
 
-          decltype(auto) front() const
+          constexpr decltype(auto) front() const
           {
             if (empty())
             {
@@ -83,7 +83,7 @@ namespace chaiscript
             return (*m_begin);
           }
 
-          decltype(auto) back() const
+          constexpr decltype(auto) back() const
           {
             if (empty())
             {
