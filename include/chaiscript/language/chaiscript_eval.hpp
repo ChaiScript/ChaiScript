@@ -159,7 +159,7 @@ namespace chaiscript
     struct Fold_Right_Binary_Operator_AST_Node : AST_Node_Impl<T> {
         Fold_Right_Binary_Operator_AST_Node(const std::string &t_oper, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children, Boxed_Value t_rhs) :
           AST_Node_Impl<T>(t_oper, AST_Node_Type::Binary, std::move(t_loc), std::move(t_children)),
-          m_oper(Operators::to_operator(t_oper)),
+          m_oper(Operators::to_operator(t_oper.c_str())),
           m_rhs(std::move(t_rhs))
         { }
 
@@ -204,7 +204,7 @@ namespace chaiscript
     struct Binary_Operator_AST_Node : AST_Node_Impl<T> {
         Binary_Operator_AST_Node(const std::string &t_oper, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(t_oper, AST_Node_Type::Binary, std::move(t_loc), std::move(t_children)),
-          m_oper(Operators::to_operator(t_oper))
+          m_oper(Operators::to_operator(t_oper.c_str()))
         { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
@@ -420,7 +420,7 @@ namespace chaiscript
     struct Equation_AST_Node final : AST_Node_Impl<T> {
         Equation_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Equation, std::move(t_loc), std::move(t_children)), 
-          m_oper(Operators::to_operator(this->text))
+          m_oper(Operators::to_operator(this->text.c_str()))
         { assert(this->children.size() == 2); }
 
 
@@ -1162,7 +1162,7 @@ namespace chaiscript
     struct Prefix_AST_Node final : AST_Node_Impl<T> {
         Prefix_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Prefix, std::move(t_loc), std::move(t_children)),
-          m_oper(Operators::to_operator(this->text, true))
+          m_oper(Operators::to_operator(this->text.c_str(), true))
         { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override{
