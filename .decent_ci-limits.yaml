@@ -1,0 +1,32 @@
+# configurable limits for your repository build history
+
+# this file is loaded from the trusted branch for your repository, which
+# can be configured on the command line to ci.rb
+# or defaults to the "default branch" configured by github
+
+# Note that there is a failsafe limit that comes in
+# if any individual folder is approaching 1000 files
+# to take care of limits imposed by github
+
+# Note that these values represent the defaults
+
+# After this number is hit the subsequent limits come into play
+history_total_file_limit: 1250
+
+# List of branches that are to be treated as "long running branches"
+# which attempt to maintain a longer history
+history_long_running_branch_names:
+  - develop
+  - master
+
+# The maximum number of history files to leave (per configuration)
+# in a particular feature branch folder when the
+# "history_total_file_limit" number is reached
+history_feature_branch_file_limit: 10
+
+# The maximum number of history files to leave (per configuration)
+# in a particular long running branch folder when the
+# "history_total_file_limit" number is reached
+history_long_running_branch_file_limit: 20
+
+ 
