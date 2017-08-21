@@ -11,7 +11,7 @@
 # Note that these values represent the defaults
 
 # After this number is hit the subsequent limits come into play
-history_total_file_limit: 1250
+history_total_file_limit: 1240
 
 # List of branches that are to be treated as "long running branches"
 # which attempt to maintain a longer history
