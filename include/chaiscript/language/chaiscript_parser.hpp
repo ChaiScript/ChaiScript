@@ -241,12 +241,12 @@ namespace chaiscript
 
         constexpr auto begin() const noexcept
         {
-          return all_data.begin();
+          return &all_data[0];
         }
 
         constexpr auto end() const noexcept
         {
-          return all_data.end();
+          return begin() + all_data.size();
         }
 
         constexpr decltype(auto) operator[](const std::size_t pos) const noexcept {
@@ -321,20 +321,25 @@ namespace chaiscript
       {
         constexpr Position() = default;
 
-        constexpr Position(std::string::const_iterator t_pos, std::string::const_iterator t_end) noexcept
+        constexpr Position(const char * t_pos, const char * t_end) noexcept
           : line(1), col(1), m_pos(t_pos), m_end(t_end), m_last_col(1)
         {
         }
 
         static std::string str(const Position &t_begin, const Position &t_end) noexcept {
-          return std::string(t_begin.m_pos, t_end.m_pos);
+          if (t_begin.m_pos != nullptr && t_end.m_pos != nullptr) {
+            return std::string(t_begin.m_pos, t_end.m_pos);
+          } else {
+            return {};
+          }
         }
 
-        Position &operator++() noexcept {
+        constexpr Position &operator++() noexcept {
           if (m_pos != m_end) {
             if (*m_pos == '\n') {
               ++line;
-              m_last_col = std::exchange(col, 1);
+              m_last_col = col;
+              col = 1;
             } else {
               ++col;
             }
@@ -393,8 +398,8 @@ namespace chaiscript
           return m_pos != m_end;
         }
 
-        size_t remaining() const noexcept {
-          return static_cast<size_t>(std::distance(m_pos, m_end));
+        constexpr size_t remaining() const noexcept {
+          return static_cast<size_t>(m_end - m_pos);
         }
 
         constexpr const char& operator*() const noexcept {
@@ -409,8 +414,8 @@ namespace chaiscript
         int col = -1;
 
         private:
-          std::string::const_iterator m_pos;
-          std::string::const_iterator m_end;
+          const char *m_pos = nullptr;
+          const char *m_end = nullptr;
           int m_last_col = -1;
       };
 
@@ -2605,7 +2610,9 @@ namespace chaiscript
 
       /// Parses the given input string, tagging parsed ast_nodes with the given m_filename.
       AST_NodePtr parse_internal(const std::string &t_input, std::string t_fname) {
-        m_position = Position(t_input.begin(), t_input.end());
+        const auto begin = t_input.empty() ? nullptr : &t_input.front();
+        const auto end = begin == nullptr ? nullptr : begin + t_input.size();
+        m_position = Position(begin, end);
         m_filename = std::make_shared<std::string>(std::move(t_fname));
 
         if ((t_input.size() > 1) && (t_input[0] == '#') && (t_input[1] == '!')) {
