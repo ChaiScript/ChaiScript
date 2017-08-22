@@ -82,7 +82,7 @@ namespace chaiscript {
 
       public:
         // construct/copy/destruct
-        Any() noexcept = default;
+        constexpr Any() noexcept = default;
         Any(Any &&) = default;
         Any &operator=(Any &&t_any) = default;
 
