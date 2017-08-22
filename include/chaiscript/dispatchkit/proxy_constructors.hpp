@@ -26,7 +26,7 @@ namespace chaiscript
           auto call = dispatch::detail::Constructor<Class, Params...>();
 
           return Proxy_Function(
-            chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<std::shared_ptr<Class> (Params...), decltype(call)>>(call));
+            chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Class (Params...), decltype(call)>>(call));
         }
     }
   }

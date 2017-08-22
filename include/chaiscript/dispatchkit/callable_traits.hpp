@@ -17,8 +17,8 @@ namespace chaiscript {
       struct Constructor
       {
         template<typename ... Inner>
-        std::shared_ptr<Class> operator()(Inner&& ... inner) const {
-          return std::make_shared<Class>(std::forward<Inner>(inner)...);
+        constexpr Class operator()(Inner&& ... inner) const {
+          return Class(std::forward<Inner>(inner)...);
         }
       };
 
