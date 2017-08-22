@@ -54,8 +54,8 @@ if(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
   option(ENABLE_MEMORY_SANITIZER "Enable memory sanitizer testing in gcc/clang" FALSE)
   if(ENABLE_MEMORY_SANITIZER)
-    add_definitions(-fsanitize=memory -g)
-    set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=memory")
+    add_definitions(-fsanitize=memory -fsanitize-memory-track-origins -g)
+    set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=memory -fsanitize-memory-track-origins ")
   endif()
 
   option(ENABLE_UNDEFINED_SANITIZER "Enable undefined behavior sanitizer testing in gcc/clang" FALSE)
