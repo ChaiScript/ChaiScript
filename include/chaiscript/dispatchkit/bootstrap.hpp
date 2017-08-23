@@ -23,10 +23,11 @@ namespace chaiscript
       void array(const std::string &type, Module& m)
       {
         typedef typename std::remove_extent<T>::type ReturnType;
-        constexpr const auto extent = std::extent<T>::value;
+
         m.add(user_type<T>(), type);
         m.add(fun(
-              [extent](T& t, size_t index)->ReturnType &{
+              [](T& t, size_t index)->ReturnType &{
+                constexpr const auto extent = std::extent<T>::value;
                 if (extent > 0 && index >= extent) {
                   throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
                 } else {
@@ -37,7 +38,8 @@ namespace chaiscript
             );
 
         m.add(fun(
-              [extent](const T &t, size_t index)->const ReturnType &{
+              [](const T &t, size_t index)->const ReturnType &{
+                constexpr const auto extent = std::extent<T>::value;
                 if (extent > 0 && index >= extent) {
                   throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
                 } else {
@@ -48,8 +50,8 @@ namespace chaiscript
             );
 
         m.add(fun(
-              [extent](const T &) {
-                return extent;
+              [](const T &) {
+                return std::extent<T>::value;
               }), "size");
       }
 
