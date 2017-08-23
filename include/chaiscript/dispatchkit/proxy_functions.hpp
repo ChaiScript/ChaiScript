@@ -52,14 +52,12 @@ namespace chaiscript
     {
       public:
         Param_Types()
-          : m_has_types(false),
-            m_doti(user_type<Dynamic_Object>())
+          : m_has_types(false)
         {}
 
         explicit Param_Types(std::vector<std::pair<std::string, Type_Info>> t_types)
           : m_types(std::move(t_types)),
-            m_has_types(false),
-            m_doti(user_type<Dynamic_Object>())
+            m_has_types(false)
         {
           update_has_types();
         }
@@ -77,13 +75,14 @@ namespace chaiscript
 
         std::vector<Boxed_Value> convert(std::vector<Boxed_Value> vals, const Type_Conversions_State &t_conversions) const
         {
+          constexpr auto dynamic_object_type_info = user_type<Dynamic_Object>();
           for (size_t i = 0; i < vals.size(); ++i)
           {
             const auto &name = m_types[i].first;
             if (!name.empty()) {
               const auto &bv = vals[i];
 
-              if (!bv.get_type_info().bare_equal(m_doti))
+              if (!bv.get_type_info().bare_equal(dynamic_object_type_info))
               {
                 const auto &ti = m_types[i].second;
                 if (!ti.is_undef())
@@ -116,6 +115,7 @@ namespace chaiscript
         // second result: needs conversions
         std::pair<bool, bool> match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const noexcept
         {
+          constexpr auto dynamic_object_type_info = user_type<Dynamic_Object>();
           bool needs_conversion = false;
 
           if (!m_has_types) { return std::make_pair(true, needs_conversion); }
@@ -127,7 +127,7 @@ namespace chaiscript
             if (!name.empty()) {
               const auto &bv = vals[i];
 
-              if (bv.get_type_info().bare_equal(m_doti))
+              if (bv.get_type_info().bare_equal(dynamic_object_type_info))
               {
                 try {
                   const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bv, &t_conversions);
@@ -180,7 +180,6 @@ namespace chaiscript
 
         std::vector<std::pair<std::string, Type_Info>> m_types;
         bool m_has_types;
-        Type_Info m_doti;
 
     };
 
@@ -251,12 +250,16 @@ namespace chaiscript
 
         static bool compare_type_to_param(const Type_Info &ti, const Boxed_Value &bv, const Type_Conversions_State &t_conversions) noexcept
         {
+          constexpr auto boxed_value_ti = user_type<Boxed_Value>();
+          constexpr auto boxed_number_ti = user_type<Boxed_Number>();
+          constexpr auto function_ti = user_type<std::shared_ptr<const Proxy_Function_Base>>();
+
           if (ti.is_undef() 
-              || ti.bare_equal(user_type<Boxed_Value>())
+              || ti.bare_equal(boxed_value_ti)
               || (!bv.get_type_info().is_undef()
-                && ( (ti.bare_equal(user_type<Boxed_Number>()) && bv.get_type_info().is_arithmetic())
+                && ( (ti.bare_equal(boxed_number_ti) && bv.get_type_info().is_arithmetic())
                   || ti.bare_equal(bv.get_type_info())
-                  || bv.get_type_info().bare_equal(user_type<std::shared_ptr<const Proxy_Function_Base> >())
+                  || bv.get_type_info().bare_equal(function_ti)
                   || t_conversions->converts(ti, bv.get_type_info()) 
                   )
                 )
@@ -754,8 +757,8 @@ namespace chaiscript
           {
             return false;
           }
-
-          return vals[0].get_type_info().bare_equal(user_type<Class>());
+          constexpr auto class_type_info = user_type<Class>();
+          return vals[0].get_type_info().bare_equal(class_type_info);
         }
 
       protected:
@@ -804,6 +807,7 @@ namespace chaiscript
           return {user_type<T>(), user_type<Class>()};
         }
 
+        std::vector<Type_Info> m_param_types{user_type<T>(), user_type<Class>()};
         T Class::* m_attr;
     };
   }

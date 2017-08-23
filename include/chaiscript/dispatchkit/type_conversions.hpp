@@ -123,6 +123,7 @@ namespace chaiscript
         public: 
           static Boxed_Value cast(const Boxed_Value &t_from)
           {
+
             if (t_from.get_type_info().bare_equal(chaiscript::user_type<From>()))
             {
               if (t_from.is_pointer())
@@ -373,7 +374,8 @@ namespace chaiscript
       template<typename T>
         bool convertable_type() const noexcept
         {
-          return thread_cache().count(user_type<T>().bare_type_info()) != 0;
+          constexpr auto type = user_type<T>().bare_type_info();
+          return thread_cache().count(type) != 0;
         }
 
       template<typename To, typename From>
