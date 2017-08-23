@@ -23,7 +23,7 @@ namespace chaiscript
       void array(const std::string &type, Module& m)
       {
         typedef typename std::remove_extent<T>::type ReturnType;
-        const auto extent = std::extent<T>::value;
+        constexpr const auto extent = std::extent<T>::value;
         m.add(user_type<T>(), type);
         m.add(fun(
               [extent](T& t, size_t index)->ReturnType &{

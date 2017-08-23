@@ -124,145 +124,147 @@ namespace chaiscript
         return &m_tracer;
       }
 
-      static std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> build_alphabet() noexcept
+      template<typename Array2D, typename First, typename Second>
+      constexpr static void set_alphabet(Array2D &array, const First first, const Second second) noexcept
       {
-        std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> alphabet;
-
-        for (auto &alpha : alphabet) {
-          alpha.fill(false);
-        }
-
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('?')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('+')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('-')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('*')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('/')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('|')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('&')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('^')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('=')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('.')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('<')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('>')]=true;
-
-        for ( size_t c = 'a' ; c <= 'z' ; ++c ) { alphabet[detail::keyword_alphabet][c]=true; }
-        for ( size_t c = 'A' ; c <= 'Z' ; ++c ) { alphabet[detail::keyword_alphabet][c]=true; }
-        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::keyword_alphabet][c]=true; }
-        alphabet[detail::keyword_alphabet][static_cast<size_t>('_')]=true;
-
-        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::int_alphabet][c]=true; }
-        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::float_alphabet][c]=true; }
-        alphabet[detail::float_alphabet][static_cast<size_t>('.')]=true;
-
-        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::hex_alphabet][c]=true; }
-        for ( size_t c = 'a' ; c <= 'f' ; ++c ) { alphabet[detail::hex_alphabet][c]=true; }
-        for ( size_t c = 'A' ; c <= 'F' ; ++c ) { alphabet[detail::hex_alphabet][c]=true; }
-
-        alphabet[detail::x_alphabet][static_cast<size_t>('x')]=true;
-        alphabet[detail::x_alphabet][static_cast<size_t>('X')]=true;
-
-        for ( size_t c = '0' ; c <= '1' ; ++c ) { alphabet[detail::bin_alphabet][c]=true; }
-        alphabet[detail::b_alphabet][static_cast<size_t>('b')]=true;
-        alphabet[detail::b_alphabet][static_cast<size_t>('B')]=true;
-
-        for ( size_t c = 'a' ; c <= 'z' ; ++c ) { alphabet[detail::id_alphabet][c]=true; }
-        for ( size_t c = 'A' ; c <= 'Z' ; ++c ) { alphabet[detail::id_alphabet][c]=true; }
-        alphabet[detail::id_alphabet][static_cast<size_t>('_')] = true;
-
-        alphabet[detail::white_alphabet][static_cast<size_t>(' ')]=true;
-        alphabet[detail::white_alphabet][static_cast<size_t>('\t')]=true;
-
-        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('l')] = true;
-        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('L')] = true;
-        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('u')] = true;
-        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('U')] = true;
-
-        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('l')] = true;
-        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('L')] = true;
-        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('f')] = true;
-        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('F')] = true;
-
-        return alphabet;
+        auto *first_ptr = &std::get<0>(array) + static_cast<std::size_t>(first);
+        auto *second_ptr = &std::get<0>(*first_ptr) + static_cast<std::size_t>(second);
+        *second_ptr = true;
       }
 
-      static const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &create_alphabet() noexcept
+      constexpr static std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> build_alphabet() noexcept
       {
-        static const auto alpha = build_alphabet();
-        return alpha;
+        std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> alphabet{};
+
+        set_alphabet(alphabet, detail::symbol_alphabet, '?');
+
+        set_alphabet(alphabet, detail::symbol_alphabet, '?');
+        set_alphabet(alphabet, detail::symbol_alphabet, '+');
+        set_alphabet(alphabet, detail::symbol_alphabet, '-');
+        set_alphabet(alphabet, detail::symbol_alphabet, '*');
+        set_alphabet(alphabet, detail::symbol_alphabet, '/');
+        set_alphabet(alphabet, detail::symbol_alphabet, '|');
+        set_alphabet(alphabet, detail::symbol_alphabet, '&');
+        set_alphabet(alphabet, detail::symbol_alphabet, '^');
+        set_alphabet(alphabet, detail::symbol_alphabet, '=');
+        set_alphabet(alphabet, detail::symbol_alphabet, '.');
+        set_alphabet(alphabet, detail::symbol_alphabet, '<');
+        set_alphabet(alphabet, detail::symbol_alphabet, '>');
+
+        for ( size_t c = 'a' ; c <= 'z' ; ++c ) { set_alphabet(alphabet, detail::keyword_alphabet, c); }
+        for ( size_t c = 'A' ; c <= 'Z' ; ++c ) { set_alphabet(alphabet, detail::keyword_alphabet, c); }
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { set_alphabet(alphabet, detail::keyword_alphabet, c); }
+        set_alphabet(alphabet, detail::keyword_alphabet, '_');
+
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { set_alphabet(alphabet, detail::int_alphabet, c); }
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { set_alphabet(alphabet, detail::float_alphabet, c); }
+        set_alphabet(alphabet, detail::float_alphabet, '.');
+
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { set_alphabet(alphabet, detail::hex_alphabet, c); }
+        for ( size_t c = 'a' ; c <= 'f' ; ++c ) { set_alphabet(alphabet, detail::hex_alphabet, c); }
+        for ( size_t c = 'A' ; c <= 'F' ; ++c ) { set_alphabet(alphabet, detail::hex_alphabet, c); }
+
+        set_alphabet(alphabet, detail::x_alphabet, 'x');
+        set_alphabet(alphabet, detail::x_alphabet, 'X');
+
+        for ( size_t c = '0' ; c <= '1' ; ++c ) { set_alphabet(alphabet, detail::bin_alphabet, c); }
+        set_alphabet(alphabet, detail::b_alphabet, 'b');
+        set_alphabet(alphabet, detail::b_alphabet, 'B');
+
+        for ( size_t c = 'a' ; c <= 'z' ; ++c ) { set_alphabet(alphabet, detail::id_alphabet, c); }
+        for ( size_t c = 'A' ; c <= 'Z' ; ++c ) { set_alphabet(alphabet, detail::id_alphabet, c); }
+        set_alphabet(alphabet, detail::id_alphabet, '_');
+
+        set_alphabet(alphabet, detail::white_alphabet, ' ');
+        set_alphabet(alphabet, detail::white_alphabet, '\t');
+
+        set_alphabet(alphabet, detail::int_suffix_alphabet, 'l');
+        set_alphabet(alphabet, detail::int_suffix_alphabet, 'L');
+        set_alphabet(alphabet, detail::int_suffix_alphabet, 'u');
+        set_alphabet(alphabet, detail::int_suffix_alphabet, 'U');
+
+        set_alphabet(alphabet, detail::float_suffix_alphabet, 'l');
+        set_alphabet(alphabet, detail::float_suffix_alphabet, 'L');
+        set_alphabet(alphabet, detail::float_suffix_alphabet, 'f');
+        set_alphabet(alphabet, detail::float_suffix_alphabet, 'F');
+
+        return alphabet;
       }
 
 
       struct Operator_Matches
       {
-        struct Array_View
-        {
-          template<std::size_t Len>
-            constexpr Array_View(const std::array<utility::Static_String, Len> &data) noexcept
-            : m_begin(&data.front()),
-              m_end(m_begin + Len)
-            {
-            }
-
-          constexpr auto begin() const noexcept
-          {
-            return m_begin;
-          }
-
-          constexpr auto end() const noexcept
-          {
-            return m_end;
-          }
-
-          const utility::Static_String *m_begin;
-          const utility::Static_String *m_end;
-        };
-
         using SS = utility::Static_String;
 
-        const std::array<utility::Static_String, 1> m_0  {{SS("?")}};
-        const std::array<utility::Static_String, 1> m_1  {{SS("||")}};
-        const std::array<utility::Static_String, 1> m_2  {{SS("&&")}};
-        const std::array<utility::Static_String, 1> m_3  {{SS("|")}};
-        const std::array<utility::Static_String, 1> m_4  {{SS("^")}};
-        const std::array<utility::Static_String, 1> m_5  {{SS("&")}};
-        const std::array<utility::Static_String, 2> m_6  {{SS("=="), SS("!=")}};
-        const std::array<utility::Static_String, 4> m_7  {{SS("<"), SS("<="), SS(">"), SS(">=")}};
-        const std::array<utility::Static_String, 2> m_8  {{SS("<<"), SS(">>")}};
+        std::array<utility::Static_String, 1> m_0  {{SS("?")}};
+        std::array<utility::Static_String, 1> m_1  {{SS("||")}};
+        std::array<utility::Static_String, 1> m_2  {{SS("&&")}};
+        std::array<utility::Static_String, 1> m_3  {{SS("|")}};
+        std::array<utility::Static_String, 1> m_4  {{SS("^")}};
+        std::array<utility::Static_String, 1> m_5  {{SS("&")}};
+        std::array<utility::Static_String, 2> m_6  {{SS("=="), SS("!=")}};
+        std::array<utility::Static_String, 4> m_7  {{SS("<"), SS("<="), SS(">"), SS(">=")}};
+        std::array<utility::Static_String, 2> m_8  {{SS("<<"), SS(">>")}};
           //We share precedence here but then separate them later
-        const std::array<utility::Static_String, 2> m_9  {{SS("+"), SS("-")}};
-        const std::array<utility::Static_String, 3> m_10 {{SS("*"), SS("/"), SS("%")}};
-        const std::array<utility::Static_String, 6> m_11 {{SS("++"), SS("--"), SS("-"), SS("+"), SS("!"), SS("~")}};
+        std::array<utility::Static_String, 2> m_9  {{SS("+"), SS("-")}};
+        std::array<utility::Static_String, 3> m_10 {{SS("*"), SS("/"), SS("%")}};
+        std::array<utility::Static_String, 6> m_11 {{SS("++"), SS("--"), SS("-"), SS("+"), SS("!"), SS("~")}};
 
-        const std::array<Array_View, 12> all_data {{
-          m_0, m_1, m_2, m_3, m_4, m_5, m_6, m_7, m_8, m_9, m_10, m_11
-        }};
-
-        constexpr Operator_Matches() noexcept {}
-
-        constexpr auto begin() const noexcept
-        {
-          return &all_data[0];
+        bool is_match(const std::string &t_str) const noexcept {
+          constexpr std::array<std::size_t, 12> groups{{0,1,2,3,4,5,6,7,8,9,10,11}};
+          return std::any_of(groups.begin(), groups.end(), [&t_str, this](const std::size_t group){ return is_match(group, t_str); });
         }
 
-        constexpr auto end() const noexcept
+        template<typename Predicate>
+        bool any_of(const std::size_t t_group, Predicate &&predicate) const
         {
-          return begin() + all_data.size();
+          auto match = [&predicate](const auto &array) {
+            return std::any_of(array.begin(), array.end(), predicate);
+          };
+
+          switch (t_group) {
+            case 0: return match(m_0);
+            case 1: return match(m_1);
+            case 2: return match(m_2);
+            case 3: return match(m_3);
+            case 4: return match(m_4);
+            case 5: return match(m_5);
+            case 6: return match(m_6);
+            case 7: return match(m_7);
+            case 8: return match(m_8);
+            case 9: return match(m_9);
+            case 10: return match(m_10);
+            case 11: return match(m_11);
+            default: return false;
+          }
         }
 
-        constexpr decltype(auto) operator[](const std::size_t pos) const noexcept {
-          return (all_data[pos]);
+        bool is_match(const std::size_t t_group, const std::string &t_str) const noexcept {
+          auto match = [&t_str](const auto &array) {
+            return std::any_of(array.begin(), array.end(), [&t_str](const auto &v){ return v.c_str() == t_str; });
+          };
+
+          switch (t_group) {
+            case 0: return match(m_0);
+            case 1: return match(m_1);
+            case 2: return match(m_2);
+            case 3: return match(m_3);
+            case 4: return match(m_4);
+            case 5: return match(m_5);
+            case 6: return match(m_6);
+            case 7: return match(m_7);
+            case 8: return match(m_8);
+            case 9: return match(m_9);
+            case 10: return match(m_10);
+            case 11: return match(m_11);
+            default: return false;
+          }
         }
 
       };
 
-      static const auto &create_operator_matches() noexcept {
-        const static Operator_Matches operator_matches;
-        return operator_matches;
-      }
-
-
-      static const std::array<Operator_Precidence, 12> &create_operators() noexcept {
-        static const std::array<Operator_Precidence, 12> operators = { {
+      constexpr static std::array<Operator_Precidence, 12> create_operators() noexcept {
+        std::array<Operator_Precidence, 12> operators = { {
           Operator_Precidence::Ternary_Cond,
           Operator_Precidence::Logical_Or,
           Operator_Precidence::Logical_And,
@@ -279,39 +281,36 @@ namespace chaiscript
         return operators;
       }
 
-      static const utility::Static_String &multiline_comment_end() noexcept
+      constexpr static utility::Static_String multiline_comment_end() noexcept
       {
-        static const utility::Static_String s("*/");
+        constexpr utility::Static_String s("*/");
         return s;
       }
 
-      static const utility::Static_String &multiline_comment_begin() noexcept
+      constexpr static utility::Static_String multiline_comment_begin() noexcept
       {
-        static const utility::Static_String s("/*");
+        constexpr utility::Static_String s("/*");
         return s;
       }
 
-      static const utility::Static_String &singleline_comment() noexcept
+      constexpr static utility::Static_String singleline_comment() noexcept
       {
-        static const utility::Static_String s("//");
+        constexpr utility::Static_String s("//");
         return s;
       }
 
-      static const utility::Static_String &annotation() noexcept
+      constexpr static utility::Static_String annotation() noexcept
       {
-        static const utility::Static_String s("#");
+        constexpr utility::Static_String s("#");
         return s;
       }
 
-      static const utility::Static_String &cr_lf() noexcept
+      constexpr static utility::Static_String cr_lf() noexcept
       {
-        static const utility::Static_String s("\r\n");
+        constexpr utility::Static_String s("\r\n");
         return s;
       }
 
-      const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &m_alphabet = create_alphabet();
-      const Operator_Matches &m_operator_matches = create_operator_matches();
-      const std::array<Operator_Precidence, 12> &m_operators = create_operators();
 
       std::shared_ptr<std::string> m_filename;
       std::vector<eval::AST_Node_Impl_Ptr<Tracer>> m_match_stack;
@@ -455,7 +454,10 @@ namespace chaiscript
       ChaiScript_Parser &operator=(ChaiScript_Parser &&) = delete;
 
       /// test a char in an m_alphabet
-      constexpr bool char_in_alphabet(char c, detail::Alphabet a) const noexcept { return m_alphabet[a][static_cast<uint8_t>(c)]; }
+      constexpr bool char_in_alphabet(char c, detail::Alphabet a) const noexcept { 
+        constexpr auto alphabet = build_alphabet();
+        return alphabet[a][static_cast<uint8_t>(c)]; 
+      }
 
       /// Prints the parsed ast_nodes as a tree
       void debug_print(const AST_Node &t, std::string prepend = "") const override {
@@ -1443,13 +1445,8 @@ namespace chaiscript
       }
 
       bool is_operator(const std::string &t_s) const noexcept {
-        return std::any_of(m_operator_matches.begin(), m_operator_matches.end(),
-            [&t_s](const auto &opers) {
-              return std::any_of(opers.begin(), opers.end(), 
-                [&t_s](const utility::Static_String &s) {
-                  return t_s == s.c_str();
-                });
-            });
+        constexpr Operator_Matches operator_matches;
+        return operator_matches.is_match(t_s);
       }
 
       /// Reads (and potentially captures) a symbol group from input if it matches the parameter
@@ -2347,12 +2344,14 @@ namespace chaiscript
             SS{"~"}
         }};
 
+        constexpr auto operators = create_operators();
+
         for (const auto &oper : prefix_opers)
         {
           const bool is_char = oper.size() == 1;
           if ((is_char && Char(oper.c_str()[0])) || (!is_char && Symbol(oper)))
           {
-            if (!Operator(m_operators.size()-1)) {
+            if (!Operator(operators.size()-1)) {
               throw exception::eval_error("Incomplete prefix '" + std::string(oper.c_str()) + "' expression", File_Position(m_position.line, m_position.col), *m_filename);
             }
 
@@ -2370,20 +2369,26 @@ namespace chaiscript
       }
 
       bool Operator_Helper(const size_t t_precedence, std::string &oper) {
-        for (auto & elem : m_operator_matches[t_precedence]) {
-          if (Symbol(elem)) {
-            oper = elem.c_str();
-            return true;
-          }
-        }
-        return false;
+        constexpr Operator_Matches operator_matches;
+        return operator_matches.any_of(t_precedence,
+            [&oper, this](const auto &elem){ 
+              if (Symbol(elem)) {
+                oper = elem.c_str();
+                return true;
+              } else {
+                return false;
+              }
+            }
+          );
       }
 
       bool Operator(const size_t t_precedence = 0) {
         bool retval = false;
         const auto prev_stack_top = m_match_stack.size();
 
-        if (m_operators[t_precedence] != Operator_Precidence::Prefix) {
+        constexpr auto operators = create_operators();
+
+        if (operators[t_precedence] != Operator_Precidence::Prefix) {
           if (Operator(t_precedence+1)) {
             retval = true;
             std::string oper;
@@ -2394,7 +2399,7 @@ namespace chaiscript
                     File_Position(m_position.line, m_position.col), *m_filename);
               }
 
-              switch (m_operators[t_precedence]) {
+              switch (operators[t_precedence]) {
                 case(Operator_Precidence::Ternary_Cond) :
                   if (Symbol(":")) {
                     if (!Operator(t_precedence+1)) {
