@@ -194,6 +194,7 @@ namespace chaiscript
             case Operators::Opers::shift_right:
               return const_var(c_lhs >> c_rhs);
             case Operators::Opers::remainder:
+              check_divide_by_zero(c_rhs);
               return const_var(c_lhs % c_rhs);
             case Operators::Opers::bitwise_and:
               return const_var(c_lhs & c_rhs);
@@ -216,6 +217,7 @@ namespace chaiscript
               *t_lhs += c_rhs;
               return t_bv;
             case Operators::Opers::assign_quotient:
+              check_divide_by_zero(c_rhs);
               *t_lhs /= c_rhs;
               return t_bv;
             case Operators::Opers::assign_difference:
@@ -226,6 +228,7 @@ namespace chaiscript
           if constexpr (!std::is_floating_point<T>::value) {
             switch (t_oper) {
               case Operators::Opers::assign_bitwise_and:
+                check_divide_by_zero(c_rhs);
                 *t_lhs &= c_rhs;
                 return t_bv;
               case Operators::Opers::assign_bitwise_or:
