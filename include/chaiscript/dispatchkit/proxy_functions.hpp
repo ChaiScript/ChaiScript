@@ -777,29 +777,24 @@ namespace chaiscript
 
       private:
         template<typename Type>
-        auto do_call_impl(Class *o) const -> std::enable_if_t<std::is_pointer<Type>::value, Boxed_Value>
+        auto do_call_impl(Class *o) const
         {
-          return detail::Handle_Return<Type>::handle(o->*m_attr);
+          if constexpr(std::is_pointer<Type>::value) {
+            return detail::Handle_Return<Type>::handle(o->*m_attr);
+          } else {
+            return detail::Handle_Return<typename std::add_lvalue_reference<Type>::type>::handle(o->*m_attr);
+          }
         }
 
         template<typename Type>
-        auto do_call_impl(const Class *o) const -> std::enable_if_t<std::is_pointer<Type>::value, Boxed_Value>
+        auto do_call_impl(const Class *o) const
         {
-          return detail::Handle_Return<const Type>::handle(o->*m_attr);
+          if constexpr(std::is_pointer<Type>::value) {
+            return detail::Handle_Return<const Type>::handle(o->*m_attr);
+          } else {
+            return detail::Handle_Return<typename std::add_lvalue_reference<typename std::add_const<Type>::type>::type>::handle(o->*m_attr);
+          }
         }
-
-        template<typename Type>
-        auto do_call_impl(Class *o) const -> std::enable_if_t<!std::is_pointer<Type>::value, Boxed_Value>
-        {
-          return detail::Handle_Return<typename std::add_lvalue_reference<Type>::type>::handle(o->*m_attr);
-        }
-
-        template<typename Type>
-        auto do_call_impl(const Class *o) const -> std::enable_if_t<!std::is_pointer<Type>::value, Boxed_Value>
-        {
-          return detail::Handle_Return<typename std::add_lvalue_reference<typename std::add_const<Type>::type>::type>::handle(o->*m_attr);
-        }
-
 
 
         static std::vector<Type_Info> param_types()

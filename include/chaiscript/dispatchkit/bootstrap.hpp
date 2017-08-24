@@ -112,29 +112,18 @@ namespace chaiscript
     /// uses ostream operator >> to perform the conversion
     template<typename Input>
     auto parse_string(const std::string &i)
-      -> typename std::enable_if<
-             !std::is_same<Input, wchar_t>::value
-             && !std::is_same<Input, char16_t>::value
-             && !std::is_same<Input, char32_t>::value,
-      Input>::type
     {
-      std::stringstream ss(i);
-      Input t;
-      ss >> t;
-      return t;
+      if constexpr (!std::is_same<Input, wchar_t>::value
+          && !std::is_same<Input, char16_t>::value
+          && !std::is_same<Input, char32_t>::value) {
+        std::stringstream ss(i);
+        Input t;
+        ss >> t;
+        return t;
+      } else {
+        throw std::runtime_error("Parsing of wide characters is not yet supported");
+      }
     }
-
-    template<typename Input>
-    auto parse_string(const std::string &) 
-      -> typename std::enable_if<
-             std::is_same<Input, wchar_t>::value
-             || std::is_same<Input, char16_t>::value
-             || std::is_same<Input, char32_t>::value,
-      Input>::type
-    {
-      throw std::runtime_error("Parsing of wide characters is not yet supported");
-    }
-
 
     /// Add all common functions for a POD type. All operators, and
     /// common conversions
