@@ -80,18 +80,15 @@ namespace chaiscript
       };
 
       template<typename T>
-      constexpr static inline void check_divide_by_zero(T t, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr)
+      constexpr static inline void check_divide_by_zero(T t)
       {
 #ifndef CHAISCRIPT_NO_PROTECT_DIVIDEBYZERO
-        if (t == 0) {
-          throw chaiscript::exception::arithmetic_error("divide by zero");
+        if constexpr (!std::is_floating_point<T>::value) {
+          if (t == 0) {
+            throw chaiscript::exception::arithmetic_error("divide by zero");
+          }
         }
 #endif
-      }
-
-      template<typename T>
-      constexpr static inline void check_divide_by_zero(T, typename std::enable_if<std::is_floating_point<T>::value>::type* = nullptr) noexcept
-      {
       }
 
       constexpr static Common_Types get_common_type(size_t t_size, bool t_signed) noexcept
@@ -160,318 +157,157 @@ namespace chaiscript
         }
       }
 
-      template<typename T>
-      constexpr static bool boolean_go(Operators::Opers t_oper, const T &t, const T &u) noexcept
+  
+
+      template<typename LHS, typename T>
+      static auto go(Operators::Opers t_oper, const Boxed_Value &t_bv, LHS *t_lhs, const T &c_lhs, const T &c_rhs)
       {
-        switch (t_oper)
-        {
+        switch (t_oper) {
           case Operators::Opers::equals:
-            return t == u;
+            return const_var(c_lhs == c_rhs);
           case Operators::Opers::less_than:
-            return t < u;
+            return const_var(c_lhs < c_rhs);
           case Operators::Opers::greater_than:
-            return t > u;
+            return const_var(c_lhs > c_rhs);
           case Operators::Opers::less_than_equal:
-            return t <= u;
+            return const_var(c_lhs <= c_rhs);
           case Operators::Opers::greater_than_equal:
-            return t >= u;
+            return const_var(c_lhs >= c_rhs);
           case Operators::Opers::not_equal:
-            return t != u;
-          default:
-            assert(false);
-            return false;
-        }
-      }
-
-      template<typename T>
-      constexpr static void unary_go(Operators::Opers t_oper, T &t) noexcept
-      {
-        switch (t_oper)
-        {
-          case Operators::Opers::pre_increment:
-            ++t;
-            break;
-          case Operators::Opers::pre_decrement:
-            --t;
-            break;
-          default:
-            assert(false);
-        }
-      }
-
-      template<typename T, typename U>
-      constexpr static void binary_go(Operators::Opers t_oper, T &t, const U &u)
-        noexcept(noexcept(check_divide_by_zero(u)))
-      {
-        switch (t_oper)
-        {
-          case Operators::Opers::assign:
-            t = u;
-            break;
-          case Operators::Opers::assign_product:
-            t *= u;
-            break;
-          case Operators::Opers::assign_sum:
-            t += u;
-            break;
-          case Operators::Opers::assign_quotient:
-            check_divide_by_zero(u);
-            t /= u;
-            break;
-          case Operators::Opers::assign_difference:
-            t -= u;
-            break;
-          default:
-            assert(false);
-        }
-      }
-
-      template<typename T, typename U>
-      constexpr static void binary_int_go(Operators::Opers t_oper, T &t, const U &u) noexcept
-      {
-        switch (t_oper)
-        {
-          case Operators::Opers::assign_bitwise_and:
-            t &= u;
-            break;
-          case Operators::Opers::assign_bitwise_or:
-            t |= u;
-            break;
-          case Operators::Opers::assign_shift_left:
-            t <<= u;
-            break;
-          case Operators::Opers::assign_shift_right:
-            t >>= u;
-            break;
-          case Operators::Opers::assign_remainder:
-            check_divide_by_zero(u);
-            t %= u;
-            break;
-          case Operators::Opers::assign_bitwise_xor:
-            t ^= u;
-            break;
-          default:
-            assert(false);
-        }
-      }
-
-
-      template<typename T>
-      constexpr static auto const_binary_int_go(Operators::Opers t_oper, T t, T u) 
-        noexcept(noexcept(check_divide_by_zero(u)))
-      {
-        switch (t_oper)
-        {
-          case Operators::Opers::shift_left:
-            return t << u;
-          case Operators::Opers::shift_right:
-            return t >> u;
-          case Operators::Opers::remainder:
-            check_divide_by_zero(u);
-            return t % u;
-          case Operators::Opers::bitwise_and:
-            return t & u;
-          case Operators::Opers::bitwise_or:
-            return t | u;
-          case Operators::Opers::bitwise_xor:
-            return t ^ u;
-          default:
-            assert(false);
-            return static_cast<decltype(t ^ u)>(t);
-        }
-      }
-
-      template<typename T>
-      constexpr static auto const_unary_go(Operators::Opers t_oper, T t) noexcept
-      {
-        switch (t_oper)
-        {
-          case Operators::Opers::unary_minus:
-            return -t;
-          case Operators::Opers::unary_plus:
-            return +t;
-          default:
-            assert(false);
-            return static_cast<decltype(+t)>(t);
-        }
-      }
-
-      template<typename T>
-      constexpr static auto const_binary_go(Operators::Opers t_oper, T t, T u) 
-        noexcept(noexcept(check_divide_by_zero(u)))
-      {
-        switch (t_oper)
-        {
+            return const_var(c_lhs != c_rhs);
           case Operators::Opers::sum:
-            return t + u;
+            return const_var(c_lhs + c_rhs);
           case Operators::Opers::quotient:
-            check_divide_by_zero(u);
-            return t / u;
+            check_divide_by_zero(c_rhs);
+            return const_var(c_lhs / c_rhs);
           case Operators::Opers::product:
-            return t * u;
+            return const_var(c_lhs * c_rhs);
           case Operators::Opers::difference:
-            return t - u;
-          default:
-            assert(false);
-            return static_cast<decltype(t + u)>(t);
+            return const_var(c_lhs - c_rhs);
         }
+
+
+        if constexpr (!std::is_floating_point<T>::value) {
+          switch (t_oper) {
+            case Operators::Opers::shift_left:
+              return const_var(c_lhs << c_rhs);
+            case Operators::Opers::shift_right:
+              return const_var(c_lhs >> c_rhs);
+            case Operators::Opers::remainder:
+              return const_var(c_lhs % c_rhs);
+            case Operators::Opers::bitwise_and:
+              return const_var(c_lhs & c_rhs);
+            case Operators::Opers::bitwise_or:
+              return const_var(c_lhs | c_rhs);
+            case Operators::Opers::bitwise_xor:
+              return const_var(c_lhs ^ c_rhs);
+          }
+        }
+
+        if (t_lhs) {
+          switch (t_oper) {
+            case Operators::Opers::assign:
+              *t_lhs = c_rhs;
+              return t_bv;
+            case Operators::Opers::assign_product:
+              *t_lhs *= c_rhs;
+              return t_bv;
+            case Operators::Opers::assign_sum:
+              *t_lhs += c_rhs;
+              return t_bv;
+            case Operators::Opers::assign_quotient:
+              *t_lhs /= c_rhs;
+              return t_bv;
+            case Operators::Opers::assign_difference:
+              *t_lhs -= c_rhs;
+              return t_bv;
+          }
+
+          if constexpr (!std::is_floating_point<T>::value) {
+            switch (t_oper) {
+              case Operators::Opers::assign_bitwise_and:
+                *t_lhs &= c_rhs;
+                return t_bv;
+              case Operators::Opers::assign_bitwise_or:
+                *t_lhs |= c_rhs;
+                return t_bv;
+              case Operators::Opers::assign_shift_left:
+                *t_lhs <<= c_rhs;
+                return t_bv;
+              case Operators::Opers::assign_shift_right:
+                *t_lhs >>= c_rhs;
+                return t_bv;
+              case Operators::Opers::assign_remainder:
+                *t_lhs %= c_rhs;
+                return t_bv;
+              case Operators::Opers::assign_bitwise_xor:
+                *t_lhs ^= c_rhs;
+                return t_bv;
+            }
+          }
+        }
+
+        throw chaiscript::detail::exception::bad_any_cast();
       }
 
       template<typename LHS, typename RHS>
       static auto go(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
-          -> typename std::enable_if<!std::is_floating_point<LHS>::value && !std::is_floating_point<RHS>::value, Boxed_Value>::type
       {
-        typedef typename std::common_type<LHS, RHS>::type common_type;
+        using common_type = typename std::common_type<LHS, RHS>::type;
 
-        switch (t_oper) {
-          case Operators::Opers::equals:
-          case Operators::Opers::less_than:
-          case Operators::Opers::greater_than:
-          case Operators::Opers::less_than_equal:
-          case Operators::Opers::greater_than_equal:
-          case Operators::Opers::not_equal:
-            return const_var(boolean_go(t_oper, get_as_aux<common_type, LHS>(t_lhs), get_as_aux<common_type, RHS>(t_rhs)));
-          case Operators::Opers::assign:
-          case Operators::Opers::assign_product:
-          case Operators::Opers::assign_sum:
-          case Operators::Opers::assign_quotient:
-          case Operators::Opers::assign_difference:
-            if (!t_lhs.is_const() && !t_lhs.is_return_value()) { 
-              binary_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux<common_type, RHS>(t_rhs));
-              return t_lhs;
-            } else {
-              throw chaiscript::detail::exception::bad_any_cast();
-            }
-          case Operators::Opers::assign_bitwise_and:
-          case Operators::Opers::assign_bitwise_or:
-          case Operators::Opers::assign_shift_left:
-          case Operators::Opers::assign_shift_right:
-          case Operators::Opers::assign_remainder:
-          case Operators::Opers::assign_bitwise_xor:
-            if (!t_lhs.is_const() && !t_lhs.is_return_value()) { 
-              binary_int_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux<common_type, RHS>(t_rhs));
-              return t_lhs;
-            } else {
-              throw chaiscript::detail::exception::bad_any_cast();
-            }
-          case Operators::Opers::shift_left:
-          case Operators::Opers::shift_right:
-          case Operators::Opers::remainder:
-          case Operators::Opers::bitwise_and:
-          case Operators::Opers::bitwise_or:
-          case Operators::Opers::bitwise_xor:
-            {
-              const auto result 
-                = const_binary_int_go(t_oper, get_as_aux<common_type, LHS>(t_lhs), get_as_aux<common_type, RHS>(t_rhs));
-              return const_var(result);
-            }
-          case Operators::Opers::sum:
-          case Operators::Opers::quotient:
-          case Operators::Opers::product:
-          case Operators::Opers::difference:
-            {
-              const auto result 
-                = const_binary_go(t_oper, get_as_aux<common_type, LHS>(t_lhs), get_as_aux<common_type, RHS>(t_rhs));
-              return const_var(result);
-            }
-          default:
-            throw chaiscript::detail::exception::bad_any_cast();
-        }
-      }
+        auto *lhs = [&]() -> LHS *{
+          if (!t_lhs.is_const() && !t_lhs.is_return_value()) {
+            return static_cast<LHS *>(t_lhs.get_ptr());
+          } else {
+            return nullptr;
+          }
+        }();
 
-      template<typename LHS, typename RHS>
-      static auto go(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs) 
-          -> typename std::enable_if<std::is_floating_point<LHS>::value || std::is_floating_point<RHS>::value, Boxed_Value>::type
-      {
-        typedef typename std::common_type<LHS, RHS>::type common_type;
-
-        switch (t_oper) {
-          case Operators::Opers::equals:
-          case Operators::Opers::less_than:
-          case Operators::Opers::greater_than:
-          case Operators::Opers::less_than_equal:
-          case Operators::Opers::greater_than_equal:
-          case Operators::Opers::not_equal:
-            return const_var(boolean_go(t_oper, get_as_aux<common_type, LHS>(t_lhs), get_as_aux<common_type, RHS>(t_rhs)));
-          case Operators::Opers::assign:
-          case Operators::Opers::assign_product:
-          case Operators::Opers::assign_sum:
-          case Operators::Opers::assign_quotient:
-          case Operators::Opers::assign_difference:
-            if (!t_lhs.is_const() && !t_lhs.is_return_value()) { 
-              binary_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()), get_as_aux<common_type, RHS>(t_rhs));
-              return t_lhs;
-            } else {
-              throw chaiscript::detail::exception::bad_any_cast();
-            }
-          case Operators::Opers::sum:
-          case Operators::Opers::quotient:
-          case Operators::Opers::product:
-          case Operators::Opers::difference:
-            {
-              const auto result 
-                = const_binary_go(t_oper, get_as_aux<common_type, LHS>(t_lhs), get_as_aux<common_type, RHS>(t_rhs));
-              return const_var(result);
-            }
-          default:
-            throw chaiscript::detail::exception::bad_any_cast();
-        }
-
+        return go(t_oper, t_lhs, lhs, get_as_aux<common_type, LHS>(t_lhs), get_as_aux<common_type, RHS>(t_rhs));
       }
 
       // Unary 
       template<typename LHS>
       static auto go(Operators::Opers t_oper, const Boxed_Value &t_lhs)
-          -> typename std::enable_if<!std::is_floating_point<LHS>::value, Boxed_Value>::type
       {
-        switch (t_oper) {
-          case Operators::Opers::pre_increment:
-          case Operators::Opers::pre_decrement:
-            if (!t_lhs.is_const() && !t_lhs.is_return_value()) {
-              unary_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()));
+        auto *lhs = [&]() -> LHS *{
+          if (!t_lhs.is_const() && !t_lhs.is_return_value()) {
+            return static_cast<LHS *>(t_lhs.get_ptr());
+          } else {
+            return nullptr;
+          }
+        }();
+
+        const LHS &c_lhs = (*static_cast<const LHS *>(t_lhs.get_const_ptr()));
+
+        if (lhs) {
+          switch (t_oper) {
+            case Operators::Opers::pre_increment:
+              ++(*lhs);
               return t_lhs;
-            } else {
-              throw chaiscript::detail::exception::bad_any_cast();
-            }
-          case Operators::Opers::bitwise_complement:
-            {
-              return const_var(~(*static_cast<const LHS *>(t_lhs.get_const_ptr())));
-            }
-          case Operators::Opers::unary_minus:
-          case Operators::Opers::unary_plus:
-            {
-              const auto val = const_unary_go(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()));
-              return const_var(val);
-            }
-          default:
-            throw chaiscript::detail::exception::bad_any_cast();
+            case Operators::Opers::pre_decrement:
+              --(*lhs);
+              return t_lhs;
+          }
         }
 
+        switch (t_oper) {
+          case Operators::Opers::unary_minus:
+            return const_var(-c_lhs);
+          case Operators::Opers::unary_plus:
+            return const_var(+c_lhs);
+        }
+
+        if constexpr (!std::is_floating_point<LHS>::value) {
+          switch (t_oper) {
+            case Operators::Opers::bitwise_complement:
+              return const_var(~c_lhs);
+          }
+        }
+
+        throw chaiscript::detail::exception::bad_any_cast();
       }
 
-      template<typename LHS>
-      static auto go(Operators::Opers t_oper, const Boxed_Value &t_lhs) 
-          -> typename std::enable_if<std::is_floating_point<LHS>::value, Boxed_Value>::type
-      {
-        switch (t_oper) {
-          case Operators::Opers::pre_increment:
-          case Operators::Opers::pre_decrement:
-            if (!t_lhs.is_const() && !t_lhs.is_return_value()) {
-              unary_go(t_oper, *static_cast<LHS *>(t_lhs.get_ptr()));
-              return t_lhs;
-            } else {
-              throw chaiscript::detail::exception::bad_any_cast();
-            }
-          case Operators::Opers::unary_minus:
-          case Operators::Opers::unary_plus:
-            {
-              const auto val = const_unary_go(t_oper, *static_cast<const LHS *>(t_lhs.get_const_ptr()));
-              return const_var(val);
-            }
-          default:
-            throw chaiscript::detail::exception::bad_any_cast();
-        }
-      }
 
       template<typename LHS>
         inline static Boxed_Value oper_rhs(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
