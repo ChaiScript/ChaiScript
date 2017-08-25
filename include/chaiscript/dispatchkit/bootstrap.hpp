@@ -111,7 +111,7 @@ namespace chaiscript
     /// Internal function for converting from a string to a value
     /// uses ostream operator >> to perform the conversion
     template<typename Input>
-    auto parse_string(const std::string &i)
+    Input parse_string(const std::string &i)
     {
       if constexpr (!std::is_same<Input, wchar_t>::value
           && !std::is_same<Input, char16_t>::value

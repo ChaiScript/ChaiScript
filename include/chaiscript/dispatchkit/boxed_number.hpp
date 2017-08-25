@@ -59,6 +59,7 @@ namespace chaiscript
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #pragma GCC diagnostic ignored "-Wfloat-conversion"
+#pragma GCC diagnostic ignored "-Wswitch"
 #endif
 
   /// \brief Represents any numeric type, generically. Used internally for generic operations between POD values
@@ -80,7 +81,7 @@ namespace chaiscript
       };
 
       template<typename T>
-      constexpr static inline void check_divide_by_zero(T t)
+      constexpr static inline void check_divide_by_zero([[maybe_unused]] T t)
       {
 #ifndef CHAISCRIPT_NO_PROTECT_DIVIDEBYZERO
         if constexpr (!std::is_floating_point<T>::value) {
