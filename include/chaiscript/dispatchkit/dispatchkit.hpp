@@ -19,6 +19,7 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <typeinfo>
 #include <utility>
 #include <vector>
@@ -180,9 +181,9 @@ namespace chaiscript
 
 
       //Add a bit of ChaiScript to eval during module implementation
-      Module &eval(const std::string &str)
+      Module &eval(std::string str)
       {
-        m_evals.push_back(str);
+        m_evals.push_back(std::move(str));
         return *this;
       }
 
@@ -196,7 +197,7 @@ namespace chaiscript
           apply_globals(m_globals.begin(), m_globals.end(), t_engine);
         }
 
-      bool has_function(const Proxy_Function &new_f, const std::string &name) noexcept
+      bool has_function(const Proxy_Function &new_f, const std::string_view &name) noexcept
       {
         return std::any_of(m_funcs.begin(), m_funcs.end(), 
             [&](const std::pair<Proxy_Function, std::string> &existing_f) {
@@ -438,7 +439,7 @@ namespace chaiscript
     {
 
       public:
-        typedef std::map<std::string, chaiscript::Type_Info> Type_Name_Map;
+        typedef std::map<std::string, chaiscript::Type_Info, std::less<>> Type_Name_Map;
         typedef std::vector<std::pair<std::string, Boxed_Value>> Scope;
         typedef Stack_Holder::StackData StackData;
 
@@ -447,7 +448,7 @@ namespace chaiscript
           std::vector<std::pair<std::string, std::shared_ptr<std::vector<Proxy_Function>>>> m_functions;
           std::vector<std::pair<std::string, Proxy_Function>> m_function_objects;
           std::vector<std::pair<std::string, Boxed_Value>> m_boxed_functions;
-          std::map<std::string, Boxed_Value> m_global_objects;
+          std::map<std::string, Boxed_Value, std::less<>> m_global_objects;
           Type_Name_Map m_types;
         };
 
@@ -654,7 +655,7 @@ namespace chaiscript
         /// Searches the current stack for an object of the given name
         /// includes a special overload for the _ place holder object to
         /// ensure that it is always in scope.
-        Boxed_Value get_object(const std::string &name, std::atomic_uint_fast32_t &t_loc, Stack_Holder &t_holder) const
+        Boxed_Value get_object(const std::string_view &name, std::atomic_uint_fast32_t &t_loc, Stack_Holder &t_holder) const
         {
           enum class Loc : uint_fast32_t {
             located    = 0x80000000,
@@ -719,7 +720,7 @@ namespace chaiscript
         }
 
         /// Returns the type info for a named type
-        Type_Info get_type(const std::string &name, bool t_throw = true) const
+        Type_Info get_type(const std::string_view &name, bool t_throw = true) const
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
@@ -776,7 +777,7 @@ namespace chaiscript
 
 
         /// Return a function by name
-        std::pair<size_t, std::shared_ptr<std::vector< Proxy_Function>>> get_function(const std::string &t_name, const size_t t_hint) const
+        std::pair<size_t, std::shared_ptr<std::vector< Proxy_Function>>> get_function(const std::string_view &t_name, const size_t t_hint) const
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
@@ -804,7 +805,7 @@ namespace chaiscript
         /// \returns a function object (Boxed_Value wrapper) if it exists
         /// \throws std::range_error if it does not
         /// \warn does not obtain a mutex lock. \sa get_function_object for public version
-        std::pair<size_t, Boxed_Value> get_function_object_int(const std::string &t_name, const size_t t_hint) const
+        std::pair<size_t, Boxed_Value> get_function_object_int(const std::string_view &t_name, const size_t t_hint) const
         {
           const auto &funs = get_boxed_functions_int();
 
@@ -814,13 +815,13 @@ namespace chaiscript
           {
             return std::make_pair(std::distance(funs.begin(), itr), itr->second);
           } else {
-            throw std::range_error("Object not found: " + t_name);
+            throw std::range_error("Object not found: " + std::string(t_name));
           }
         }
 
 
         /// Return true if a function exists
-        bool function_exists(const std::string &name) const
+        bool function_exists(const std::string_view &name) const
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
@@ -1076,7 +1077,7 @@ namespace chaiscript
 
 
 
-        Boxed_Value call_function(const std::string &t_name, std::atomic_uint_fast32_t &t_loc, const std::vector<Boxed_Value> &params,
+        Boxed_Value call_function(const std::string_view &t_name, std::atomic_uint_fast32_t &t_loc, const std::vector<Boxed_Value> &params,
             const Type_Conversions_State &t_conversions) const
         {
           uint_fast32_t loc = t_loc;
@@ -1166,7 +1167,7 @@ namespace chaiscript
         }
 
         /// return true if the Boxed_Value matches the registered type by name
-        bool is_type(const Boxed_Value &r, const std::string &user_typename) const noexcept
+        bool is_type(const Boxed_Value &r, const std::string_view &user_typename) const noexcept
         {
           try {
             if (get_type(user_typename).bare_equal(r.get_type_info()))
@@ -1445,7 +1446,7 @@ namespace chaiscript
           {
             return std::find_if(t_c.begin(), t_c.end(), 
                 [&t_key](const typename Container::value_type &o) {
-                  return o.first == t_key;
+                  return std::equal(o.first.begin(), o.first.end(), t_key.begin(), t_key.end());
                 });
           }
 
@@ -1555,7 +1556,7 @@ namespace chaiscript
           return m_engine.get().add_object(t_name, std::move(obj), m_stack_holder.get());
         }
 
-        Boxed_Value get_object(const std::string &t_name, std::atomic_uint_fast32_t &t_loc) const {
+        Boxed_Value get_object(const std::string_view &t_name, std::atomic_uint_fast32_t &t_loc) const {
           return m_engine.get().get_object(t_name, t_loc, m_stack_holder.get());
         }
 
