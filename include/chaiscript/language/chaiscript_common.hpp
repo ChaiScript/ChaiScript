@@ -36,32 +36,32 @@ namespace chaiscript
     static bool is_reserved_word(const T &s) noexcept
     {
       const static std::unordered_set<std::uint32_t> words{
-        utility::fnv1a_32("def"),
-        utility::fnv1a_32("fun"), 
-        utility::fnv1a_32("while"),
-        utility::fnv1a_32("for"),
-        utility::fnv1a_32("if"),
-        utility::fnv1a_32("else"),
-        utility::fnv1a_32("&&"),
-        utility::fnv1a_32("||"),
-        utility::fnv1a_32(","),
-        utility::fnv1a_32("auto"),
-        utility::fnv1a_32("return"),
-        utility::fnv1a_32("break"),
-        utility::fnv1a_32("true"),
-        utility::fnv1a_32("false"),
-        utility::fnv1a_32("class"),
-        utility::fnv1a_32("attr"),
-        utility::fnv1a_32("var"),
-        utility::fnv1a_32("global"),
-        utility::fnv1a_32("GLOBAL"),
-        utility::fnv1a_32("_"),
-        utility::fnv1a_32("__LINE__"),
-        utility::fnv1a_32("__FILE__"),
-        utility::fnv1a_32("__FUNC__"),
-        utility::fnv1a_32("__CLASS__")};
+        utility::hash("def"),
+        utility::hash("fun"), 
+        utility::hash("while"),
+        utility::hash("for"),
+        utility::hash("if"),
+        utility::hash("else"),
+        utility::hash("&&"),
+        utility::hash("||"),
+        utility::hash(","),
+        utility::hash("auto"),
+        utility::hash("return"),
+        utility::hash("break"),
+        utility::hash("true"),
+        utility::hash("false"),
+        utility::hash("class"),
+        utility::hash("attr"),
+        utility::hash("var"),
+        utility::hash("global"),
+        utility::hash("GLOBAL"),
+        utility::hash("_"),
+        utility::hash("__LINE__"),
+        utility::hash("__FILE__"),
+        utility::hash("__FUNC__"),
+        utility::hash("__CLASS__")};
 
-      return words.count(utility::fnv1a_32(s)) == 1;
+      return words.count(utility::hash(s)) == 1;
     }
 
     template<typename T>

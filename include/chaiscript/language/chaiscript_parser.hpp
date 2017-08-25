@@ -27,7 +27,7 @@
 #include "chaiscript_common.hpp"
 #include "chaiscript_optimizer.hpp"
 #include "chaiscript_tracer.hpp"
-#include "../utility/fnv1a.hpp"
+#include "../utility/hash.hpp"
 #include "../utility/static_string.hpp"
 
 #if defined(CHAISCRIPT_UTF16_UTF32)
@@ -934,7 +934,7 @@ namespace chaiscript
         if (Id_()) {
 
           auto text = Position::str(start, m_position);
-          const auto text_hash = utility::fnv1a_32(text);
+          const auto text_hash = utility::hash(text);
 
           if (validate) {
             validate_object_name(text);
@@ -946,29 +946,29 @@ namespace chaiscript
 #endif
 
           switch (text_hash) {
-            case utility::fnv1a_32("true"): {
+            case utility::hash("true"): {
               m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, const_var(true)));
             } break;
-            case utility::fnv1a_32("false"): {
+            case utility::hash("false"): {
               m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, const_var(false)));
             } break;
-            case utility::fnv1a_32("Infinity"): {
+            case utility::hash("Infinity"): {
               m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
                 const_var(std::numeric_limits<double>::infinity())));
             } break;
-            case utility::fnv1a_32("NaN"): {
+            case utility::hash("NaN"): {
               m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
                 const_var(std::numeric_limits<double>::quiet_NaN())));
             } break;
-            case utility::fnv1a_32("__LINE__"): {
+            case utility::hash("__LINE__"): {
               m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
                 const_var(start.line)));
             } break;
-            case utility::fnv1a_32("__FILE__"): {
+            case utility::hash("__FILE__"): {
               m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
                 const_var(m_filename)));
             } break;
-            case utility::fnv1a_32("__FUNC__"): {
+            case utility::hash("__FUNC__"): {
               std::string fun_name = "NOT_IN_FUNCTION";
               for (size_t idx = m_match_stack.size() - 1; idx > 0; --idx)
               {
@@ -981,7 +981,7 @@ namespace chaiscript
               m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
                 const_var(fun_name)));
             } break;
-            case utility::fnv1a_32("__CLASS__"): {
+            case utility::hash("__CLASS__"): {
               std::string fun_name = "NOT_IN_CLASS";
               for (size_t idx = m_match_stack.size() - 1; idx > 1; --idx)
               {
@@ -995,7 +995,7 @@ namespace chaiscript
               m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
                 const_var(fun_name)));
             } break;
-            case utility::fnv1a_32("_"): {
+            case utility::hash("_"): {
               m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
                 Boxed_Value(std::make_shared<dispatch::Placeholder_Object>())));
             } break;
