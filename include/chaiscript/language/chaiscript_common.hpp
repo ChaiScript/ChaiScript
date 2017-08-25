@@ -45,6 +45,19 @@ namespace chaiscript
       return words.count(name) == 1;
     }
 
+    static bool is_reserved_word(const std::string_view &name) noexcept
+    {
+      static const std::unordered_set<std::string_view> words {
+        "def", "fun", "while", "for", "if", "else", 
+          "&&", "||", ",", "auto", "return", "break", 
+          "true", "false", "class", "attr", "var", "global", 
+          "GLOBAL", "_",
+          "__LINE__", "__FILE__", "__FUNC__", "__CLASS__"
+      };
+
+      return words.count(name) == 1;
+    }
+
     static bool valid_object_name(const std::string &name) noexcept
     {
       return name.find("::") == std::string::npos && !is_reserved_word(name);
@@ -58,6 +71,22 @@ namespace chaiscript
 
       if (name.find("::") != std::string::npos) {
         throw exception::illegal_name_error(name);
+      }
+    }
+
+    static bool valid_object_name(const std::string_view &name) noexcept
+    {
+      return name.find("::") == std::string::npos && !is_reserved_word(name);
+    }
+
+    static void validate_object_name(const std::string_view &name)
+    {
+      if (is_reserved_word(name)) {
+        throw exception::reserved_word_error(std::string(name));
+      }
+
+      if (name.find("::") != std::string::npos) {
+        throw exception::illegal_name_error(std::string(name));
       }
     }
   };

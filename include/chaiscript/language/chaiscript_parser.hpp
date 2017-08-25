@@ -210,7 +210,7 @@ namespace chaiscript
         std::array<utility::Static_String, 3> m_10 {{SS("*"), SS("/"), SS("%")}};
         std::array<utility::Static_String, 6> m_11 {{SS("++"), SS("--"), SS("-"), SS("+"), SS("!"), SS("~")}};
 
-        bool is_match(const std::string &t_str) const noexcept {
+        bool is_match(const std::string_view &t_str) const noexcept {
           constexpr std::array<std::size_t, 12> groups{{0,1,2,3,4,5,6,7,8,9,10,11}};
           return std::any_of(groups.begin(), groups.end(), [&t_str, this](const std::size_t group){ return is_match(group, t_str); });
         }
@@ -239,9 +239,9 @@ namespace chaiscript
           }
         }
 
-        bool is_match(const std::size_t t_group, const std::string &t_str) const noexcept {
+        constexpr bool is_match(const std::size_t t_group, const std::string_view &t_str) const noexcept {
           auto match = [&t_str](const auto &array) {
-            return std::any_of(array.begin(), array.end(), [&t_str](const auto &v){ return v.c_str() == t_str; });
+            return std::any_of(array.begin(), array.end(), [&t_str](const auto &v){ return v == t_str; });
           };
 
           switch (t_group) {
@@ -325,9 +325,9 @@ namespace chaiscript
         {
         }
 
-        static std::string str(const Position &t_begin, const Position &t_end) noexcept {
+        static std::string_view str(const Position &t_begin, const Position &t_end) noexcept {
           if (t_begin.m_pos != nullptr && t_end.m_pos != nullptr) {
-            return std::string(t_begin.m_pos, t_end.m_pos);
+            return std::string_view(t_begin.m_pos, std::distance(t_begin.m_pos, t_end.m_pos));
           } else {
             return {};
           }
@@ -423,10 +423,10 @@ namespace chaiscript
       Tracer m_tracer;
       Optimizer m_optimizer;
 
-      void validate_object_name(const std::string &name) const
+      void validate_object_name(const std::string_view &name) const
       {
         if (!Name_Validator::valid_object_name(name)) {
-          throw exception::eval_error("Invalid Object Name: " + name, File_Position(m_position.line, m_position.col), *m_filename);
+          throw exception::eval_error("Invalid Object Name: " + std::string(name), File_Position(m_position.line, m_position.col), *m_filename);
         }
       }
 
@@ -720,7 +720,7 @@ namespace chaiscript
       }
 
       /// Parses a floating point value and returns a Boxed_Value representation of it
-      static Boxed_Value buildFloat(const std::string &t_val)
+      static Boxed_Value buildFloat(const std::string_view &t_val)
       {
         bool float_ = false;
         bool long_ = false;
@@ -753,7 +753,7 @@ namespace chaiscript
 
 
 
-      static Boxed_Value buildInt(const int base, const std::string &t_val, const bool prefixed)
+      static Boxed_Value buildInt(const int base, std::string_view t_val, const bool prefixed)
       {
         bool unsigned_ = false;
         bool long_ = false;
@@ -780,7 +780,7 @@ namespace chaiscript
           }
         }
 
-        const auto val = prefixed?std::string(t_val.begin()+2,t_val.end()):t_val;
+        if (prefixed) { t_val.remove_prefix(2); };
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -793,7 +793,8 @@ namespace chaiscript
 #endif
 
         try {
-          auto u = std::stoll(val,nullptr,base);
+          /// TODO fix this to use from_chars
+          auto u = std::stoll(std::string(t_val),nullptr,base);
 
 
           if (!unsigned_ && !long_ && u >= std::numeric_limits<int>::min() && u <= std::numeric_limits<int>::max()) {
@@ -813,7 +814,8 @@ namespace chaiscript
         } catch (const std::out_of_range &) {
           // too big to be signed
           try {
-            auto u = std::stoull(val,nullptr,base);
+            /// TODO fix this to use from_chars
+            auto u = std::stoull(std::string(t_val),nullptr,base);
 
             if (!longlong_ && u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
               return const_var(static_cast<unsigned long>(u));
@@ -833,9 +835,9 @@ namespace chaiscript
       }
 
       template<typename T, typename ... Param>
-      std::unique_ptr<eval::AST_Node_Impl<Tracer>> make_node(std::string t_match, const int t_prev_line, const int t_prev_col, Param && ...param)
+      std::unique_ptr<eval::AST_Node_Impl<Tracer>> make_node(std::string_view t_match, const int t_prev_line, const int t_prev_col, Param && ...param)
       {
-        return chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, T>(std::move(t_match), Parse_Location(m_filename, t_prev_line, t_prev_col, m_position.line, m_position.col), std::forward<Param>(param)...);
+        return chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, T>(std::string(t_match), Parse_Location(m_filename, t_prev_line, t_prev_col, m_position.line, m_position.col), std::forward<Param>(param)...);
       }
 
       /// Reads a number from the input, detecting if it's an integer or floating point
@@ -848,20 +850,20 @@ namespace chaiscript
             if (Hex_()) {
               auto match = Position::str(start, m_position);
               auto bv = buildInt(16, match, true);
-              m_match_stack.emplace_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              m_match_stack.emplace_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, std::move(bv)));
               return true;
             }
 
             if (Binary_()) {
               auto match = Position::str(start, m_position);
               auto bv = buildInt(2, match, true);
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, std::move(bv)));
               return true;
             }
             if (Float_()) {
               auto match = Position::str(start, m_position);
               auto bv = buildFloat(match);
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, std::move(bv)));
               return true;
             }
             else {
@@ -869,11 +871,11 @@ namespace chaiscript
               auto match = Position::str(start, m_position);
               if (!match.empty() && (match[0] == '0')) {
                 auto bv = buildInt(8, match, false);
-                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, std::move(bv)));
               }
               else if (!match.empty()) {
                 auto bv = buildInt(10, match, false);
-                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, std::move(bv)));
               } else {
                 return false;
               }
@@ -932,7 +934,7 @@ namespace chaiscript
         if (Id_()) {
 
           auto text = Position::str(start, m_position);
-          const auto text_hash = utility::fnv1a_32(text.c_str());
+          const auto text_hash = utility::fnv1a_32(text);
 
           if (validate) {
             validate_object_name(text);
@@ -945,25 +947,25 @@ namespace chaiscript
 
           switch (text_hash) {
             case utility::fnv1a_32("true"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col, const_var(true)));
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, const_var(true)));
             } break;
             case utility::fnv1a_32("false"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col, const_var(false)));
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, const_var(false)));
             } break;
             case utility::fnv1a_32("Infinity"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
                 const_var(std::numeric_limits<double>::infinity())));
             } break;
             case utility::fnv1a_32("NaN"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
                 const_var(std::numeric_limits<double>::quiet_NaN())));
             } break;
             case utility::fnv1a_32("__LINE__"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
                 const_var(start.line)));
             } break;
             case utility::fnv1a_32("__FILE__"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
                 const_var(m_filename)));
             } break;
             case utility::fnv1a_32("__FUNC__"): {
@@ -976,7 +978,7 @@ namespace chaiscript
                 }
               }
 
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
                 const_var(fun_name)));
             } break;
             case utility::fnv1a_32("__CLASS__"): {
@@ -998,10 +1000,11 @@ namespace chaiscript
                 Boxed_Value(std::make_shared<dispatch::Placeholder_Object>())));
             } break;
             default: {
-                std::string val = std::move(text);
+              auto val = text;
               if (*start == '`') {
                 // 'escaped' literal, like an operator name
                 val = Position::str(start+1, m_position-1);
+                // val.remove_prefix(1); val.remove_suffix(1);
               }
               m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>(val, start.line, start.col));
             } break;
@@ -1444,7 +1447,7 @@ namespace chaiscript
         return retval;
       }
 
-      bool is_operator(const std::string &t_s) const noexcept {
+      bool is_operator(const std::string_view &t_s) const noexcept {
         constexpr Operator_Matches operator_matches;
         return operator_matches.is_match(t_s);
       }

@@ -18,9 +18,8 @@ namespace chaiscript
 
   namespace utility
   {
-
-
-    static constexpr std::uint32_t fnv1a_32(const char *s, std::uint32_t h = 0x811c9dc5) noexcept {
+    template<typename Itr>
+    static constexpr std::uint32_t fnv1a_32(Itr begin, Itr end) noexcept {
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-conversion"
@@ -30,7 +29,14 @@ namespace chaiscript
 #pragma warning(push)
 #pragma warning(disable : 4307)
 #endif
-      return (*s == 0) ? h : fnv1a_32(s+1, ((h ^ (*s)) * 0x01000193));
+      std::uint32_t h = 0x811c9dc5;
+
+      while (begin != end) {
+        h = (h ^ (*begin)) * 0x01000193;
+        ++begin;
+      }
+      return h;
+
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)
 #endif
@@ -42,8 +48,16 @@ namespace chaiscript
     }
 
 
-  }
+    template<size_t N>
+      static constexpr std::uint32_t fnv1a_32(const char (&str)[N]) noexcept {
+        return fnv1a_32(std::begin(str), std::end(str)-1);
+      }
 
+    static constexpr std::uint32_t fnv1a_32(const std::string_view &sv) noexcept {
+      return fnv1a_32(sv.begin(), sv.end());
+    }
+
+  }
 
 }
 

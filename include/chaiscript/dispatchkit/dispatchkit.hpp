@@ -437,16 +437,6 @@ namespace chaiscript
     /// of the object stack, functions and registered types.
     class Dispatch_Engine
     {
-      struct str_less {
-        bool operator()(const std::string &t_lhs, const std::string &t_rhs) const noexcept {
-          return t_lhs < t_rhs;
-        }
-        template<typename LHS, typename RHS>
-        bool operator()(const LHS &t_lhs, const RHS &t_rhs) const noexcept {
-          return std::lexicographical_compare(t_lhs.begin(), t_lhs.end(), t_rhs.begin(), t_rhs.end());
-        }
-        struct is_transparent{};
-      };
 
       public:
         typedef std::map<std::string, chaiscript::Type_Info, str_less> Type_Name_Map;
