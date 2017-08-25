@@ -32,54 +32,46 @@ struct AST_Node;
 namespace chaiscript
 {
   struct Name_Validator {
-    static bool is_reserved_word(const std::string &name) noexcept
+    template<typename T>
+    static bool is_reserved_word(const T &s) noexcept
     {
-      static const std::unordered_set<std::string> words {
-        "def", "fun", "while", "for", "if", "else", 
-          "&&", "||", ",", "auto", "return", "break", 
-          "true", "false", "class", "attr", "var", "global", 
-          "GLOBAL", "_",
-          "__LINE__", "__FILE__", "__FUNC__", "__CLASS__"
-      };
+      const static std::unordered_set<std::uint32_t> words{
+        utility::fnv1a_32("def"),
+        utility::fnv1a_32("fun"), 
+        utility::fnv1a_32("while"),
+        utility::fnv1a_32("for"),
+        utility::fnv1a_32("if"),
+        utility::fnv1a_32("else"),
+        utility::fnv1a_32("&&"),
+        utility::fnv1a_32("||"),
+        utility::fnv1a_32(","),
+        utility::fnv1a_32("auto"),
+        utility::fnv1a_32("return"),
+        utility::fnv1a_32("break"),
+        utility::fnv1a_32("true"),
+        utility::fnv1a_32("false"),
+        utility::fnv1a_32("class"),
+        utility::fnv1a_32("attr"),
+        utility::fnv1a_32("var"),
+        utility::fnv1a_32("global"),
+        utility::fnv1a_32("GLOBAL"),
+        utility::fnv1a_32("_"),
+        utility::fnv1a_32("__LINE__"),
+        utility::fnv1a_32("__FILE__"),
+        utility::fnv1a_32("__FUNC__"),
+        utility::fnv1a_32("__CLASS__")};
 
-      return words.count(name) == 1;
+      return words.count(utility::fnv1a_32(s)) == 1;
     }
 
-    static bool is_reserved_word(const std::string_view &name) noexcept
-    {
-      static const std::unordered_set<std::string_view> words {
-        "def", "fun", "while", "for", "if", "else", 
-          "&&", "||", ",", "auto", "return", "break", 
-          "true", "false", "class", "attr", "var", "global", 
-          "GLOBAL", "_",
-          "__LINE__", "__FILE__", "__FUNC__", "__CLASS__"
-      };
-
-      return words.count(name) == 1;
-    }
-
-    static bool valid_object_name(const std::string &name) noexcept
-    {
-      return name.find("::") == std::string::npos && !is_reserved_word(name);
-    }
-
-    static void validate_object_name(const std::string &name)
-    {
-      if (is_reserved_word(name)) {
-        throw exception::reserved_word_error(name);
-      }
-
-      if (name.find("::") != std::string::npos) {
-        throw exception::illegal_name_error(name);
-      }
-    }
-
-    static bool valid_object_name(const std::string_view &name) noexcept
+    template<typename T>
+    static bool valid_object_name(const T &name) noexcept
     {
       return name.find("::") == std::string::npos && !is_reserved_word(name);
     }
 
-    static void validate_object_name(const std::string_view &name)
+    template<typename T>
+    static void validate_object_name(const T &name)
     {
       if (is_reserved_word(name)) {
         throw exception::reserved_word_error(std::string(name));

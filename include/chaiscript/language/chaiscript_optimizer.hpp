@@ -241,7 +241,7 @@ namespace chaiscript {
         {
           try {
             const auto &oper = node->text;
-            const auto parsed = Operators::to_operator(oper.c_str());
+            const auto parsed = Operators::to_operator(oper);
             if (parsed != Operators::Opers::invalid) {
               const auto rhs = dynamic_cast<eval::Constant_AST_Node<T> *>(node->children[1].get())->m_value;
               if (rhs.get_type_info().is_arithmetic()) {
@@ -268,7 +268,7 @@ namespace chaiscript {
         {
           try {
             const auto &oper = node->text;
-            const auto parsed = Operators::to_operator(oper.c_str(), true);
+            const auto parsed = Operators::to_operator(oper, true);
             const auto lhs = dynamic_cast<const eval::Constant_AST_Node<T> *>(node->children[0].get())->m_value;
             const auto match = oper + node->children[0]->text;
 
@@ -308,7 +308,7 @@ namespace chaiscript {
         {
           try {
             const auto &oper = node->text;
-            const auto parsed = Operators::to_operator(oper.c_str());
+            const auto parsed = Operators::to_operator(oper);
             if (parsed != Operators::Opers::invalid) {
               const auto lhs = dynamic_cast<const eval::Constant_AST_Node<T> &>(*node->children[0]).m_value;
               const auto rhs = dynamic_cast<const eval::Constant_AST_Node<T> &>(*node->children[1]).m_value;

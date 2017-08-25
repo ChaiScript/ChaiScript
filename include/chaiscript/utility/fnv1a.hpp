@@ -57,6 +57,10 @@ namespace chaiscript
       return fnv1a_32(sv.begin(), sv.end());
     }
 
+    static std::uint32_t fnv1a_32(const std::string &s) noexcept {
+      return fnv1a_32(s.begin(), s.end());
+    }
+
   }
 
 }
