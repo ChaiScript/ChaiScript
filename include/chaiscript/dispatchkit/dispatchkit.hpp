@@ -437,9 +437,19 @@ namespace chaiscript
     /// of the object stack, functions and registered types.
     class Dispatch_Engine
     {
+      struct str_less {
+        bool operator()(const std::string &t_lhs, const std::string &t_rhs) const noexcept {
+          return t_lhs < t_rhs;
+        }
+        template<typename LHS, typename RHS>
+        bool operator()(const LHS &t_lhs, const RHS &t_rhs) const noexcept {
+          return std::lexicographical_compare(t_lhs.begin(), t_lhs.end(), t_rhs.begin(), t_rhs.end());
+        }
+        struct is_transparent{};
+      };
 
       public:
-        typedef std::map<std::string, chaiscript::Type_Info, std::less<>> Type_Name_Map;
+        typedef std::map<std::string, chaiscript::Type_Info, str_less> Type_Name_Map;
         typedef std::vector<std::pair<std::string, Boxed_Value>> Scope;
         typedef Stack_Holder::StackData StackData;
 
@@ -448,7 +458,7 @@ namespace chaiscript
           std::vector<std::pair<std::string, std::shared_ptr<std::vector<Proxy_Function>>>> m_functions;
           std::vector<std::pair<std::string, Proxy_Function>> m_function_objects;
           std::vector<std::pair<std::string, Boxed_Value>> m_boxed_functions;
-          std::map<std::string, Boxed_Value, std::less<>> m_global_objects;
+          std::map<std::string, Boxed_Value, str_less> m_global_objects;
           Type_Name_Map m_types;
         };
 
