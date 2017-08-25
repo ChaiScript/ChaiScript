@@ -516,8 +516,7 @@ namespace chaiscript
             throw chaiscript::exception::name_conflict_error(t_name);
           }
 
-          stack_elem.emplace_back(t_name, std::move(obj));
-          return stack_elem.back().second;
+          return stack_elem.emplace_back(t_name, std::move(obj)).second;
         }
 
 
