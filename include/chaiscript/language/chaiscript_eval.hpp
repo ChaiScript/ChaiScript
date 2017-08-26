@@ -57,8 +57,9 @@ namespace chaiscript
         chaiscript::detail::Dispatch_State state(t_ss);
 
         const Boxed_Value *thisobj = [&]() -> const Boxed_Value *{
-          auto &stack = t_ss.get_stack_data(state.stack_holder()).back();
-          if (!stack.empty() && stack.back().first == "__this") {
+          if (auto &stack = t_ss.get_stack_data(state.stack_holder()).back();
+              !stack.empty() && stack.back().first == "__this") 
+          {
             return &stack.back().second;
           } else if (!t_vals.empty()) {
             return &t_vals[0];
@@ -71,8 +72,8 @@ namespace chaiscript
         if (thisobj && !has_this_capture) { state.add_object("this", *thisobj); }
 
         if (t_locals) {
-          for (const auto &local : *t_locals) {
-            state.add_object(local.first, local.second);
+          for (const auto &[name, value] : *t_locals) {
+            state.add_object(name, value);
           }
         }
 
@@ -109,7 +110,7 @@ namespace chaiscript
       std::vector<std::reference_wrapper<AST_Node>> get_children() const final {
         std::vector<std::reference_wrapper<AST_Node>> retval;
         retval.reserve(children.size());
-        for (auto &&child : children) {
+        for (auto &child : children) {
           retval.emplace_back(*child);
         }
 
@@ -868,9 +869,9 @@ namespace chaiscript
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override{
           const auto get_function = [&t_ss](const std::string &t_name, auto &t_hint){
             uint_fast32_t hint = t_hint;
-            auto funs = t_ss->get_function(t_name, hint);
-            if (funs.first != hint) { t_hint = uint_fast32_t(funs.first); }
-            return std::move(funs.second);
+            auto [funs_loc, funs] = t_ss->get_function(t_name, hint);
+            if (funs_loc != hint) { t_hint = uint_fast32_t(funs_loc); }
+            return std::move(funs);
           };
 
           const auto call_function = [&t_ss](const auto &t_funcs, const Boxed_Value &t_param) {
@@ -1056,8 +1057,8 @@ namespace chaiscript
             if (!this->children.empty()) {
               vec.reserve(this->children[0]->children.size());
               for (const auto &child : this->children[0]->children) {
-                auto obj = child->eval(t_ss);
-                if (!obj.is_return_value()) {
+                if (auto obj = child->eval(t_ss);
+                    !obj.is_return_value()) {
                   vec.push_back(t_ss->call_function("clone", m_loc, {obj}, t_ss.conversions()));
                 } else {
                   vec.push_back(std::move(obj));

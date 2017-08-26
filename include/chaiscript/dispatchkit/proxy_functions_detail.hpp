@@ -82,10 +82,7 @@ namespace chaiscript
         {
           try {
             std::vector<Boxed_Value>::size_type i = 0;
-            (void)i;
-            (void)params; (void)t_conversions;
-            // this is ok because the order of evaluation of initializer lists is well defined
-            (void)std::initializer_list<int>{(boxed_cast<Params>(params[i++], &t_conversions), 0)...};
+            ( boxed_cast<Params>(params[i++], &t_conversions), ... );
             return true;
           } catch (const exception::bad_boxed_cast &) {
             return false;
@@ -111,23 +108,12 @@ namespace chaiscript
         Boxed_Value call_func(const chaiscript::dispatch::detail::Function_Signature<Ret (Params...)> &sig, const Callable &f,
             const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions)
         {
-          return Handle_Return<Ret>::handle(call_func(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions));
-        }
-
-      template<typename Callable, typename ... Params>
-        Boxed_Value call_func(const chaiscript::dispatch::detail::Function_Signature<void (Params...)> &sig, const Callable &f,
-            const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions)
-        {
-          call_func(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions);
-#ifdef CHAISCRIPT_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4702)
-#endif
-          // MSVC is reporting that this is unreachable code - and it's wrong.
-          return Handle_Return<void>::handle();
-#ifdef CHAISCRIPT_MSVC
-#pragma warning(pop)
-#endif
+          if constexpr (std::is_same_v<Ret, void>) {
+            call_func(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions);
+            return Handle_Return<void>::handle();
+          } else {
+            return Handle_Return<Ret>::handle(call_func(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions));
+          }
         }
 
     }
