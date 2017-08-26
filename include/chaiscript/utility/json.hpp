@@ -3,7 +3,6 @@
 //
 
 
-#pragma once
 
 #ifndef SIMPLEJSON_HPP
 #define SIMPLEJSON_HPP
@@ -19,7 +18,9 @@
 #include <initializer_list>
 #include <ostream>
 #include <iostream>
+#include <variant>
 #include "../chaiscript_defines.hpp"
+#include "quick_flat_map.hpp"
 
 namespace json {
 
@@ -37,7 +38,7 @@ class JSON
 {
   public:
     enum class Class {
-      Null,
+      Null = 0,
       Object,
       Array,
       String,
@@ -48,155 +49,98 @@ class JSON
 
   private:
 
-    struct QuickFlatMap
+
+    using Data = std::variant<nullptr_t, chaiscript::utility::QuickFlatMap<std::string, JSON>, std::vector<JSON>, std::string, double, int, bool>;
+
+    struct Internal
     {
-      auto find(const std::string &s) noexcept {
-        return std::find_if(std::begin(data), std::end(data), [&s](const auto &d) { return d.first == s; });
+      Internal(nullptr_t) : d(nullptr) { }
+      Internal() : d(nullptr) { }
+      Internal(Class c) : d(make_type(c)) { }
+      template<typename T> Internal(T t) : d(std::move(t)) { }
+
+      static Data make_type(Class c) {
+        switch (c) {
+          case Class::Null:     return nullptr;
+          case Class::Object:   return chaiscript::utility::QuickFlatMap<std::string, JSON>{};
+          case Class::Array:    return std::vector<JSON>{};
+          case Class::String:   return std::string{};
+          case Class::Floating: return double{};
+          case Class::Integral: return int{};
+          case Class::Boolean:  return bool{};
+        }
+        throw std::runtime_error("unknown type");
       }
 
-      auto find(const std::string &s) const noexcept {
-        return std::find_if(std::begin(data), std::end(data), [&s](const auto &d) { return d.first == s; });
-      }
-
-      auto size() const noexcept {
-        return data.size();
-      }
-
-      auto begin() const noexcept {
-        return data.begin();
-      }
-
-      auto end() const noexcept {
-        return data.end();
-      }
-
-
-      auto begin() noexcept {
-        return data.begin();
-      }
-
-      auto end() noexcept {
-        return data.end();
-      }
-
-
-      JSON &operator[](const std::string &s) {
-        const auto itr = find(s);
-        if (itr != data.end()) {
-          return itr->second;
-        } else {
-          data.emplace_back(s, JSON());
-          return data.back().second;
+      void set_type(Class c) {
+        if (type() != c) {
+          d = make_type(c);
         }
       }
 
-      JSON &at(const std::string &s) {
-        const auto itr = find(s);
-        if (itr != data.end()) {
-          return itr->second;
+      Class type() const noexcept {
+        return Class(d.index());
+      }
+
+
+      template<auto ClassValue, typename Visitor, typename Or>
+      decltype(auto) visit_or(Visitor &&visitor, Or &&other) const
+      {
+        if (type() == Class(ClassValue)) {
+          return visitor(std::get<static_cast<std::size_t>(ClassValue)>(d));
         } else {
-          throw std::out_of_range("Unknown key: " + s);
+          return other();
         }
       }
 
-      const JSON &at(const std::string &s) const {
-        const auto itr = find(s);
-        if (itr != data.end()) {
-          return itr->second;
-        } else {
-          throw std::out_of_range("Unknown key: " + s);
-        }
+      template<auto ClassValue>
+      auto &get_set_type() {
+        set_type(ClassValue);
+        return std::get<static_cast<std::size_t>(ClassValue)>(d);
       }
 
-      size_t count(const std::string &s) const noexcept {
-        return (find(s) != data.end())?1:0;
+      auto &Map() {
+        return get_set_type<Class::Object>();
+      }
+      auto &Vector() {
+        return get_set_type<Class::Array>();
+      }
+      auto &String() {
+        return get_set_type<Class::String>();
+      }
+      auto &Int() {
+        return get_set_type<Class::Integral>();
+      }
+      auto &Float() {
+        return get_set_type<Class::Floating>();
+      }
+      auto &Bool() {
+        return get_set_type<Class::Boolean>();
       }
 
-      std::vector<std::pair<std::string, JSON>> data;
+      auto Map() const noexcept {
+        return std::get_if<static_cast<std::size_t>(Class::Object)>(&d);
+      }
+      auto Vector() const noexcept {
+        return std::get_if<static_cast<std::size_t>(Class::Array)>(&d);
+      }
+      auto String() const noexcept {
+        return std::get_if<static_cast<std::size_t>(Class::String)>(&d);
+      }
+      auto Int() const noexcept {
+        return std::get_if<static_cast<std::size_t>(Class::Integral)>(&d);
+      }
+      auto Float() const noexcept {
+        return std::get_if<static_cast<std::size_t>(Class::Floating)>(&d);
+      }
+      auto Bool() const noexcept {
+        return std::get_if<static_cast<std::size_t>(Class::Boolean)>(&d);
+      }
 
-      using iterator = decltype(data)::iterator;
-      using const_iterator = decltype(data)::const_iterator;
 
-
+      Data d;
     };
 
-    struct Internal {
-      template<typename T>
-        auto clone(const std::unique_ptr<T> &ptr) {
-          if (ptr != nullptr) {
-            return std::make_unique<T>(*ptr);
-          } else {
-            return std::unique_ptr<T>(nullptr);
-          }
-        }
-
-      Internal( double d ) : Float( d ), Type(Class::Floating) {}
-      Internal( long   l ) : Int( l ), Type(Class::Integral) {}
-      Internal( bool   b ) : Bool( b ), Type(Class::Boolean) {}
-      Internal( std::string s ) : String(std::make_unique<std::string>(std::move(s))), Type(Class::String) {}
-      Internal()           : Type(Class::Null) {}
-
-      Internal(Class t_type) {
-        set_type(t_type);
-      }
-
-      Internal(const Internal &other)
-        : List(clone(other.List)),
-        Map(clone(other.Map)),
-        String(clone(other.String)),
-        Float(other.Float),
-        Int(other.Int),
-        Bool(other.Bool),
-        Type(other.Type)
-      {
-      }
-
-      Internal &operator=(const Internal &other)
-      {
-        List = clone(other.List);
-        Map = clone(other.Map);
-        String = clone(other.String);
-        Float = other.Float;
-        Int = other.Int;
-        Bool = other.Bool;
-        Type = other.Type;
-        return *this;
-      }
-
-      void set_type( Class type ) {
-        if( type == Type ) {
-          return;
-        }
-
-        Map.reset();
-        List.reset();
-        String.reset();
-
-        switch( type ) {
-          case Class::Object:    Map    = std::make_unique<QuickFlatMap>(); break;
-          case Class::Array:     List   = std::make_unique<std::vector<JSON>>();      break;
-          case Class::String:    String = std::make_unique<std::string>();           break;
-          case Class::Floating:  Float  = 0.0;                    break;
-          case Class::Integral:  Int    = 0;                      break;
-          case Class::Boolean:   Bool   = false;                  break;
-          case Class::Null:      break;
-        }
-
-        Type = type;
-      }
-
-      Internal(Internal &&) = default;
-      Internal &operator=(Internal &&) = default;
-
-      std::unique_ptr<std::vector<JSON>>      List;
-      std::unique_ptr<QuickFlatMap> Map;
-      std::unique_ptr<std::string>           String;
-      double              Float = 0;
-      long                Int = 0;
-      bool                Bool = false;
-
-      Class Type = Class::Null;
-    };
 
     Internal internal;
 
@@ -248,7 +192,7 @@ class JSON
       explicit JSON( T b, typename enable_if<is_same<T,bool>::value>::type* = nullptr ) noexcept : internal( static_cast<bool>(b) ) {}
 
     template <typename T>
-      explicit JSON( T i, typename enable_if<is_integral<T>::value && !is_same<T,bool>::value>::type* = nullptr ) noexcept : internal( static_cast<long>(i) ) {}
+      explicit JSON( T i, typename enable_if<is_integral<T>::value && !is_same<T,bool>::value>::type* = nullptr ) noexcept : internal( static_cast<int>(i) ) {}
 
     template <typename T>
       explicit JSON( T f, typename enable_if<is_floating_point<T>::value>::type* = nullptr ) noexcept : internal( static_cast<double>(f) ) {}
@@ -261,17 +205,16 @@ class JSON
     static JSON Load( const std::string & );
 
     JSON& operator[]( const std::string &key ) {
-      internal.set_type( Class::Object ); 
-      return internal.Map->operator[]( key );
+      return internal.Map().operator[]( key );
     }
 
     JSON& operator[]( const size_t index ) {
-      internal.set_type( Class::Array );
-      if( index >= internal.List->size() ) {
-        internal.List->resize( index + 1 );
+      auto &vec = internal.Vector();
+      if( index >= vec.size() ) {
+        vec.resize( index + 1 );
       }
 
-      return internal.List->operator[]( index );
+      return vec.operator[]( index );
     }
 
 
@@ -280,7 +223,10 @@ class JSON
     }
 
     const JSON &at( const std::string &key ) const {
-      return internal.Map->at( key );
+      return internal.visit_or<Class::Object>(
+          [&](const auto &m)->const JSON &{ return m.at(key); },
+          []()->const JSON &{ throw std::range_error("Not an object, no keys"); }
+        );
     }
 
     JSON &at( size_t index ) {
@@ -288,100 +234,84 @@ class JSON
     }
 
     const JSON &at( size_t index ) const {
-      return internal.List->at( index );
+      return internal.visit_or<Class::Array>(
+          [&](const auto &m)->const JSON&{ return m.at(index); },
+          []()->const JSON &{ throw std::range_error("Not an array, no indexes"); }
+        );
     }
 
-
-    long length() const noexcept {
-      if( internal.Type == Class::Array ) {
-        return static_cast<long>(internal.List->size());
-      } else {
-        return -1;
-      }
+    auto length() const noexcept {
+      return internal.visit_or<Class::Array>(
+          [&](const auto &m){ return static_cast<int>(m.size()); },
+          [](){ return -1; }
+        );
     }
 
     bool has_key( const std::string &key ) const noexcept {
-      if( internal.Type == Class::Object ) {
-        return internal.Map->count(key) != 0;
-      }
-
-      return false;
+      return internal.visit_or<Class::Object>(
+          [&](const auto &m){ return m.count(key) != 0; },
+          [](){ return false; }
+        );
     }
 
     int size() const noexcept {
-      if( internal.Type == Class::Object ) {
-        return static_cast<int>(internal.Map->size());
-      } else if( internal.Type == Class::Array ) {
-        return static_cast<int>(internal.List->size());
+      if (auto m = internal.Map(); m != nullptr) {
+        return static_cast<int>(m->size());
+      } if (auto v = internal.Vector(); v != nullptr) {
+        return static_cast<int>(v->size());
       } else {
         return -1;
       }
     }
 
-    Class JSONType() const noexcept { return internal.Type; }
+    Class JSONType() const noexcept { return internal.type(); }
 
     /// Functions for getting primitives from the JSON object.
-    bool is_null() const noexcept { return internal.Type == Class::Null; }
+    bool is_null() const noexcept { return internal.type() == Class::Null; }
 
-    std::string to_string() const { bool b; return to_string( b ); }
-    std::string to_string( bool &ok ) const {
-      ok = (internal.Type == Class::String);
-      return ok ? *internal.String : std::string("");
+    std::string to_string() const noexcept { 
+      return internal.visit_or<Class::String>(
+          [](const auto &o){ return o; },
+          [](){ return std::string{}; }
+        );
+    }
+    double to_float() const noexcept { 
+      return internal.visit_or<Class::Floating>(
+          [](const auto &o){ return o; },
+          [](){ return double{}; }
+        );
+    }
+    int to_int() const noexcept { 
+      return internal.visit_or<Class::Integral>(
+          [](const auto &o){ return o; },
+          [](){ return int{}; }
+        );
+    }
+    bool to_bool() const noexcept { 
+      return internal.visit_or<Class::Boolean>(
+          [](const auto &o){ return o; },
+          [](){ return false; }
+        );
     }
 
-    double to_float() const noexcept { bool b; return to_float( b ); }
-    double to_float( bool &ok ) const noexcept {
-      ok = (internal.Type == Class::Floating);
-      return ok ? internal.Float : 0.0;
-    }
-
-    long to_int() const noexcept { bool b; return to_int( b ); }
-    long to_int( bool &ok ) const noexcept {
-      ok = (internal.Type == Class::Integral);
-      return ok ? internal.Int : 0;
-    }
-
-    bool to_bool() const noexcept { bool b; return to_bool( b ); }
-    bool to_bool( bool &ok ) const noexcept {
-      ok = (internal.Type == Class::Boolean);
-      return ok ? internal.Bool : false;
-    }
-
-    JSONWrapper<QuickFlatMap> object_range() {
-      if( internal.Type == Class::Object ) {
-        return JSONWrapper<QuickFlatMap>( internal.Map.get() );
-      } else {
-        return JSONWrapper<QuickFlatMap>( nullptr );
-      }
+    JSONWrapper<chaiscript::utility::QuickFlatMap<std::string, JSON>> object_range() {
+      return std::get_if<static_cast<std::size_t>(Class::Object)>(&internal.d);
     }
 
     JSONWrapper<std::vector<JSON>> array_range() {
-      if( internal.Type == Class::Array ) {
-        return JSONWrapper<std::vector<JSON>>( internal.List.get() );
-      } else {
-        return JSONWrapper<std::vector<JSON>>( nullptr );
-      }
+      return std::get_if<static_cast<std::size_t>(Class::Array)>(&internal.d);
     }
 
-    JSONConstWrapper<QuickFlatMap> object_range() const {
-      if( internal.Type == Class::Object ) {
-        return JSONConstWrapper<QuickFlatMap>( internal.Map.get() );
-      } else {
-        return JSONConstWrapper<QuickFlatMap>( nullptr );
-      }
+    JSONConstWrapper<chaiscript::utility::QuickFlatMap<std::string, JSON>> object_range() const {
+      return std::get_if<static_cast<std::size_t>(Class::Object)>(&internal.d);
     }
-
 
     JSONConstWrapper<std::vector<JSON>> array_range() const { 
-      if( internal.Type == Class::Array ) {
-        return JSONConstWrapper<std::vector<JSON>>( internal.List.get() );
-      } else {
-        return JSONConstWrapper<std::vector<JSON>>( nullptr );
-      }
+      return std::get_if<static_cast<std::size_t>(Class::Array)>(&internal.d);
     }
 
     std::string dump( long depth = 1, std::string tab = "  ") const {
-      switch( internal.Type ) {
+      switch( internal.type() ) {
         case Class::Null:
           return "null";
         case Class::Object: {
@@ -390,7 +320,7 @@ class JSON
 
                               std::string s = "{\n";
                               bool skip = true;
-                              for( auto &p : *internal.Map ) {
+                              for( auto &p : *internal.Map() ) {
                                 if( !skip ) { s += ",\n"; }
                                 s += ( pad + "\"" + p.first + "\" : " + p.second.dump( depth + 1, tab ) );
                                 skip = false;
@@ -401,7 +331,7 @@ class JSON
         case Class::Array: {
                              std::string s = "[";
                              bool skip = true;
-                             for( auto &p : *internal.List ) {
+                             for( auto &p : *internal.Vector() ) {
                                if( !skip ) { s += ", "; }
                                s += p.dump( depth + 1, tab );
                                skip = false;
@@ -410,13 +340,13 @@ class JSON
                              return s;
                            }
         case Class::String:
-                           return "\"" + json_escape( *internal.String ) + "\"";
+                           return "\"" + json_escape( *internal.String() ) + "\"";
         case Class::Floating:
-                           return std::to_string( internal.Float );
+                           return std::to_string( *internal.Float() );
         case Class::Integral:
-                           return std::to_string( internal.Int );
+                           return std::to_string( *internal.Int() );
         case Class::Boolean:
-                           return internal.Bool ? "true" : "false";
+                           return *internal.Bool() ? "true" : "false";
       }
 
       throw std::runtime_error("Unhandled JSON type");
