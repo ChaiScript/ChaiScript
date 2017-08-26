@@ -21,7 +21,6 @@
 #include "boxed_value.hpp"
 #include "handle_return.hpp"
 #include "type_info.hpp"
-#include "callable_traits.hpp"
 
 namespace chaiscript {
 class Type_Conversions_State;
@@ -91,7 +90,7 @@ namespace chaiscript
 
 
       template<typename Callable, typename Ret, typename ... Params, size_t ... I>
-        Ret call_func(const chaiscript::dispatch::detail::Function_Signature<Ret (Params...)> &, 
+        Ret call_func(Ret (*)(Params...), 
                       std::index_sequence<I...>, const Callable &f,
                       const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions)
         {
@@ -105,7 +104,7 @@ namespace chaiscript
       /// if any unboxing fails the execution of the function fails and
       /// the bad_boxed_cast is passed up to the caller.
       template<typename Callable, typename Ret, typename ... Params>
-        Boxed_Value call_func(const chaiscript::dispatch::detail::Function_Signature<Ret (Params...)> &sig, const Callable &f,
+        Boxed_Value call_func(Ret (*sig)(Params...), const Callable &f,
             const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions)
         {
           if constexpr (std::is_same_v<Ret, void>) {

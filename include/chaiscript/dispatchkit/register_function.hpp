@@ -15,9 +15,54 @@
 
 #include "bind_first.hpp"
 #include "proxy_functions.hpp"
+#include "function_signature.hpp"
 
 namespace chaiscript
 {
+  namespace dispatch::detail
+  {
+    template<typename Obj, typename Param1, typename ... Rest>
+      Param1 get_first_param(Function_Params<Param1, Rest...>, Obj &&obj)
+      {
+        return static_cast<Param1>(std::forward<Obj>(obj));
+      }
+
+    template<typename Func, bool Is_Noexcept, bool Is_Member, bool Is_MemberObject, bool Is_Object, typename Ret, typename ... Param>
+      auto make_callable_impl(Func &&func, Function_Signature<Ret, Function_Params<Param...>, Is_Noexcept, Is_Member, Is_MemberObject, Is_Object>)
+      {
+        if constexpr (Is_MemberObject) {
+          // we now that the Param pack will have only one element, so we are safe expanding it here
+          return Proxy_Function(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Attribute_Access<Ret, std::decay_t<Param>...>>(std::forward<Func>(func)));
+        } else if constexpr (Is_Member) {
+          auto call = [func = std::forward<Func>(func)](auto && obj, auto && ... param) noexcept(Is_Noexcept) -> decltype(auto) {
+            return (( get_first_param(Function_Params<Param...>{}, obj).*func )(std::forward<decltype(param)>(param)...));
+          };
+          return Proxy_Function(
+              chaiscript::make_shared<dispatch::Proxy_Function_Base, 
+              dispatch::Proxy_Function_Callable_Impl<Ret (Param...), decltype(call)>>(std::move(call))
+              );
+        } else {
+          return Proxy_Function(
+              chaiscript::make_shared<dispatch::Proxy_Function_Base, 
+              dispatch::Proxy_Function_Callable_Impl<Ret (Param...), std::decay_t<Func>>>(std::forward<Func>(func))
+              );
+        }
+      }
+
+    // this version peels off the function object itself from the function signature, when used
+    // on a callable object
+    template<typename Func, typename Ret, typename Object, typename ... Param, bool Is_Noexcept>
+      auto make_callable(Func &&func, Function_Signature<Ret, Function_Params<Object, Param...>, Is_Noexcept, false, false, true>)
+      {
+        return make_callable_impl(std::forward<Func>(func), Function_Signature<Ret, Function_Params<Param...>, Is_Noexcept, false, false, true>{});
+      } 
+
+    template<typename Func, typename Ret, typename ... Param, bool Is_Noexcept, bool Is_Member, bool Is_MemberObject>
+      auto make_callable(Func &&func, Function_Signature<Ret, Function_Params<Param...>, Is_Noexcept, Is_Member, Is_MemberObject, false> fs)
+      {
+        return make_callable_impl(std::forward<Func>(func), fs);
+      }
+  }
 
   /// \brief Creates a new Proxy_Function object from a free function, member function or data member
   /// \param[in] t Function / member to expose
@@ -40,83 +85,10 @@ namespace chaiscript
   /// 
   /// \sa \ref adding_functions
   template<typename T>
-    Proxy_Function fun(const T &t)
+    Proxy_Function fun(T &&t)
     {
-      typedef typename dispatch::detail::Callable_Traits<T>::Signature Signature;
-
-      return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Signature, T>>(t));
+      return dispatch::detail::make_callable(std::forward<T>(t), dispatch::detail::Function_Signature{t});
     }
-
-
-  template<typename Ret, typename ... Param>
-    Proxy_Function fun(Ret (*func)(Param...))
-    {
-      auto fun_call = dispatch::detail::Fun_Caller<Ret, Param...>(func);
-
-      return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (Param...), decltype(fun_call)>>(fun_call));
-
-    }
-
-  template<typename Ret, typename Class, typename ... Param>
-    Proxy_Function fun(Ret (Class::*t_func)(Param...) const)
-    {
-      auto call = dispatch::detail::Const_Caller<Ret, Class, Param...>(t_func);
-
-      return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (const Class &, Param...), decltype(call)>>(call));
-    }
-
-  template<typename Ret, typename Class, typename ... Param>
-    Proxy_Function fun(Ret (Class::*t_func)(Param...))
-    {
-      auto call = dispatch::detail::Caller<Ret, Class, Param...>(t_func);
-
-      return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (Class &, Param...), decltype(call)>>(call));
-
-    }
-
-  template<typename T, typename Class /*, typename = typename std::enable_if<std::is_member_object_pointer<T>::value>::type*/>
-    Proxy_Function fun(T Class::* m /*, typename std::enable_if<std::is_member_object_pointer<T>::value>::type* = 0*/ )
-    {
-      return Proxy_Function(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Attribute_Access<T, Class>>(m));
-    }
-
-// only compile this bit if noexcept is part of the type system
-//
-#if __cpp_noexcept_function_type >= 201510
-  template<typename Ret, typename ... Param>
-    Proxy_Function fun(Ret (*func)(Param...) noexcept)
-    {
-      auto fun_call = dispatch::detail::Fun_Caller<Ret, Param...>(func);
-
-      return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (Param...), decltype(fun_call)>>(fun_call));
-
-    }
-
-  template<typename Ret, typename Class, typename ... Param>
-    Proxy_Function fun(Ret (Class::*t_func)(Param...) const noexcept)
-    {
-      auto call = dispatch::detail::Const_Caller<Ret, Class, Param...>(t_func);
-
-      return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (const Class &, Param...), decltype(call)>>(call));
-    }
-
-  template<typename Ret, typename Class, typename ... Param>
-    Proxy_Function fun(Ret (Class::*t_func)(Param...) noexcept)
-    {
-      auto call = dispatch::detail::Caller<Ret, Class, Param...>(t_func);
-
-      return Proxy_Function(
-          chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Ret (Class &, Param...), decltype(call)>>(call));
-
-    }
-#endif
-
 
 
   
@@ -143,6 +115,7 @@ namespace chaiscript
     {
       return fun(detail::bind_first(std::forward<T>(t), q));
     }
+
 
 
 }

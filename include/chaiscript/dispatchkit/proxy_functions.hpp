@@ -664,7 +664,7 @@ namespace chaiscript
       protected:
         Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
-          return detail::call_func(detail::Function_Signature<Func>(), m_f, params, t_conversions);
+          return detail::call_func(static_cast<Func *>(nullptr), m_f, params, t_conversions);
         }
 
       private:
@@ -716,7 +716,7 @@ namespace chaiscript
       protected:
         Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
-          return detail::call_func(detail::Function_Signature<Func>(), m_f.get(), params, t_conversions);
+          return detail::call_func(static_cast<Func *>(nullptr), m_f.get(), params, t_conversions);
         }
 
 
