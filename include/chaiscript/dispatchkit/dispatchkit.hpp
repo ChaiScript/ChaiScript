@@ -1049,7 +1049,7 @@ namespace chaiscript
             if (!functions.empty()) {
               try {
                 if (is_no_param) {
-                  std::vector<Boxed_Value> tmp_params(params);
+                  auto tmp_params(params);
                   tmp_params.insert(tmp_params.begin() + 1, var(t_name));
                   return do_attribute_call(2, tmp_params, functions, t_conversions);
                 } else {
@@ -1080,10 +1080,9 @@ namespace chaiscript
             const Type_Conversions_State &t_conversions) const
         {
           uint_fast32_t loc = t_loc;
-          const auto funs = get_function(t_name, loc);
-          if (funs.first != loc) { t_loc = uint_fast32_t(funs.first);
-}
-          return dispatch::dispatch(*funs.second, params, t_conversions);
+          const auto [func_loc, func] = get_function(t_name, loc);
+          if (func_loc != loc) { t_loc = uint_fast32_t(func_loc); }
+          return dispatch::dispatch(*func, params, t_conversions);
         }
 
 
@@ -1102,12 +1101,12 @@ namespace chaiscript
         /// Dump function to stdout
         void dump_function(const std::pair<const std::string, Proxy_Function > &f) const
         {
-          std::vector<Type_Info> params = f.second->get_param_types();
+          const auto params = f.second->get_param_types();
 
           dump_type(params.front());
           std::cout << " " << f.first << "(";
 
-          for (std::vector<Type_Info>::const_iterator itr = params.begin() + 1;
+          for (auto itr = params.begin() + 1;
               itr != params.end();
               )
           {
@@ -1132,7 +1131,7 @@ namespace chaiscript
             throw chaiscript::exception::arity_error(static_cast<int>(params.size()), 1);
           }
 
-          const Const_Proxy_Function &f = this->boxed_cast<Const_Proxy_Function>(params[0]);
+          const auto &f = this->boxed_cast<Const_Proxy_Function>(params[0]);
           const Type_Conversions_State convs(m_conversions, m_conversions.conversion_saves());
 
           return const_var(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end()), convs));
@@ -1142,25 +1141,17 @@ namespace chaiscript
         void dump_system() const
         {
           std::cout << "Registered Types: \n";
-          std::vector<std::pair<std::string, Type_Info> > types = get_types();
-          for (std::vector<std::pair<std::string, Type_Info> >::const_iterator itr = types.begin();
-              itr != types.end();
-              ++itr)
+          for (const auto &[type_name, type] : get_types() )
           {
-            std::cout << itr->first << ": ";
-            std::cout << itr->second.bare_name();
-            std::cout << '\n';
+            std::cout << type_name << ": " << type.bare_name() << '\n';
           }
 
           std::cout << '\n';  
-          std::vector<std::pair<std::string, Proxy_Function > > funcs = get_functions();
 
           std::cout << "Functions: \n";
-          for (std::vector<std::pair<std::string, Proxy_Function > >::const_iterator itr = funcs.begin();
-              itr != funcs.end();
-              ++itr)
+          for (const auto &func : get_functions())
           {
-            dump_function(*itr);
+            dump_function(func);
           }
           std::cout << '\n';
         }

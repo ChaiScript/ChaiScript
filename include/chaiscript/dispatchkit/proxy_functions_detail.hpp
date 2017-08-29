@@ -92,9 +92,9 @@ namespace chaiscript
       template<typename Callable, typename Ret, typename ... Params, size_t ... I>
         Ret call_func(Ret (*)(Params...), 
                       std::index_sequence<I...>, const Callable &f,
-                      const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions)
+                      [[maybe_unused]] const std::vector<Boxed_Value> &params, 
+                      [[maybe_unused]] const Type_Conversions_State &t_conversions)
         {
-          (void)params; (void)t_conversions;
           return f(boxed_cast<Params>(params[I], &t_conversions)...);
         }
 

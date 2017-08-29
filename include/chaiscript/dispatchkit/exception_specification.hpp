@@ -46,7 +46,7 @@ namespace chaiscript
       {
         void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) override
         {
-          (void)std::initializer_list<int>{(throw_type<T>(bv, t_engine), 0)...};
+          (throw_type<T>(bv, t_engine), ...);
         }
       };
   }

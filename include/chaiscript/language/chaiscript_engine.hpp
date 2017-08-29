@@ -557,7 +557,6 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
     std::string load_module(const std::string &t_module_name)
     {
 #ifdef CHAISCRIPT_NO_DYNLOAD
-      (void)t_module_name; // -Wunused-parameter
       throw chaiscript::exception::load_module_error("Loadable module support was disabled (CHAISCRIPT_NO_DYNLOAD)");
 #else
       std::vector<exception::load_module_error> errors;

@@ -86,21 +86,15 @@ namespace chaiscript {
         Any(Any &&) = default;
         Any &operator=(Any &&t_any) = default;
 
-        Any(const Any &t_any) 
-        { 
-          if (!t_any.empty())
-          {
-            m_data = t_any.m_data->clone(); 
-          } else {
-            m_data.reset();
-          }
+        Any(const Any &t_any)
+          : m_data(t_any.empty() ? nullptr : t_any.m_data->clone())
+        {
         }
 
-
         template<typename ValueType,
-          typename = typename std::enable_if<!std::is_same<Any, typename std::decay<ValueType>::type>::value>::type>
+          typename = std::enable_if_t<!std::is_same_v<Any, std::decay_t<ValueType>>>>
         explicit Any(ValueType &&t_value)
-          : m_data(std::unique_ptr<Data>(new Data_Impl<typename std::decay<ValueType>::type>(std::forward<ValueType>(t_value))))
+          : m_data(std::unique_ptr<Data>(new Data_Impl<std::decay_t<ValueType>>(std::forward<ValueType>(t_value))))
         {
         }
 

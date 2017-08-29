@@ -29,7 +29,7 @@ namespace chaiscript {
       }
 
       void do_trace(const chaiscript::detail::Dispatch_State &ds, const AST_Node_Impl<Tracer<T...>> *node) {
-        (void)std::initializer_list<int>{ (static_cast<T&>(*this).trace(ds, node), 0)... };
+        (static_cast<T&>(*this).trace(ds, node), ... );
       }
 
       static void trace(const chaiscript::detail::Dispatch_State &ds, const AST_Node_Impl<Tracer<T...>> *node) {
