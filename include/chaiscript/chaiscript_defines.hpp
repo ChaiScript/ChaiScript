@@ -215,7 +215,7 @@ namespace chaiscript {
       return t_lhs < t_rhs;
     }
     template<typename LHS, typename RHS>
-      bool operator()(const LHS &t_lhs, const RHS &t_rhs) const noexcept {
+      constexpr bool operator()(const LHS &t_lhs, const RHS &t_rhs) const noexcept {
         return std::lexicographical_compare(t_lhs.begin(), t_lhs.end(), t_rhs.begin(), t_rhs.end());
       }
     struct is_transparent{};
