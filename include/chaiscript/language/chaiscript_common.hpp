@@ -674,19 +674,18 @@ namespace chaiscript
       struct Return_Value {
         Boxed_Value retval;
 
-        explicit Return_Value(Boxed_Value t_return_value) : retval(std::move(t_return_value)) { }
+
+        explicit Return_Value(Boxed_Value &&t_return_value) : retval(std::move(t_return_value)) { }
       };
 
 
       /// Special type indicating a call to 'break'
       struct Break_Loop {
-        Break_Loop() = default;
       };
 
 
       /// Special type indicating a call to 'continue'
       struct Continue_Loop {
-        Continue_Loop() = default;
       };
 
 

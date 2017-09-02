@@ -70,7 +70,7 @@ namespace chaiscript {
 
             std::unique_ptr<Data> clone() const override
             {
-              return std::unique_ptr<Data>(new Data_Impl<T>(m_data));
+              return std::make_unique<Data_Impl<T>>(m_data);
             }
 
             Data_Impl &operator=(const Data_Impl&) = delete;
@@ -94,7 +94,7 @@ namespace chaiscript {
         template<typename ValueType,
           typename = std::enable_if_t<!std::is_same_v<Any, std::decay_t<ValueType>>>>
         explicit Any(ValueType &&t_value)
-          : m_data(std::unique_ptr<Data>(new Data_Impl<std::decay_t<ValueType>>(std::forward<ValueType>(t_value))))
+          : m_data(std::make_unique<Data_Impl<std::decay_t<ValueType>>>(std::forward<ValueType>(t_value)))
         {
         }
 

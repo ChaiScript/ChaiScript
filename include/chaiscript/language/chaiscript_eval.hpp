@@ -34,11 +34,9 @@
 #include "chaiscript_algebraic.hpp"
 #include "chaiscript_common.hpp"
 
-namespace chaiscript {
-namespace exception {
+namespace chaiscript::exception {
 class bad_boxed_cast;
-}  // namespace exception
-}  // namespace chaiscript
+}  // namespace chaiscript::exception
 
 namespace chaiscript
 {
