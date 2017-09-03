@@ -109,49 +109,49 @@ namespace chaiscript
       {
         const Type_Info &inp_ = t_bv.get_type_info();
 
-        if (inp_ == typeid(int)) {
+        if (inp_ == user_type<int>()) {
           return get_common_type(sizeof(int), true);
-        } else if (inp_ == typeid(double)) {
+        } else if (inp_ == user_type<double>()) {
           return Common_Types::t_double;
-        } else if (inp_ == typeid(long double)) {
+        } else if (inp_ == user_type<long double>()) {
           return Common_Types::t_long_double;
-        } else if (inp_ == typeid(float)) {
+        } else if (inp_ == user_type<float>()) {
           return Common_Types::t_float;
-        } else if (inp_ == typeid(char)) {
+        } else if (inp_ == user_type<char>()) {
           return get_common_type(sizeof(char), std::is_signed<char>::value);
-        } else if (inp_ == typeid(unsigned char)) {
+        } else if (inp_ == user_type<unsigned char>()) {
           return get_common_type(sizeof(unsigned char), false);
-        } else if (inp_ == typeid(unsigned int)) {
+        } else if (inp_ == user_type<unsigned int>()) {
           return get_common_type(sizeof(unsigned int), false);
-        } else if (inp_ == typeid(long)) {
+        } else if (inp_ == user_type<long>()) {
           return get_common_type(sizeof(long), true);
-        } else if (inp_ == typeid(long long)) {
+        } else if (inp_ == user_type<long long>()) {
           return get_common_type(sizeof(long long), true);
-        } else if (inp_ == typeid(unsigned long)) {
+        } else if (inp_ == user_type<unsigned long>()) {
           return get_common_type(sizeof(unsigned long), false);
-        } else if (inp_ == typeid(unsigned long long)) {
+        } else if (inp_ == user_type<unsigned long long>()) {
           return get_common_type(sizeof(unsigned long long), false);
-        } else if (inp_ == typeid(std::int8_t)) {
+        } else if (inp_ == user_type<std::int8_t>()) {
           return Common_Types::t_int8;
-        } else if (inp_ == typeid(std::int16_t)) {
+        } else if (inp_ == user_type<std::int16_t>()) {
           return Common_Types::t_int16;
-        } else if (inp_ == typeid(std::int32_t)) {
+        } else if (inp_ == user_type<std::int32_t>()) {
           return Common_Types::t_int32;
-        } else if (inp_ == typeid(std::int64_t)) {
+        } else if (inp_ == user_type<std::int64_t>()) {
           return Common_Types::t_int64;
-        } else if (inp_ == typeid(std::uint8_t)) {
+        } else if (inp_ == user_type<std::uint8_t>()) {
           return Common_Types::t_uint8;
-        } else if (inp_ == typeid(std::uint16_t)) {
+        } else if (inp_ == user_type<std::uint16_t>()) {
           return Common_Types::t_uint16;
-        } else if (inp_ == typeid(std::uint32_t)) {
+        } else if (inp_ == user_type<std::uint32_t>()) {
           return Common_Types::t_uint32;
-        } else if (inp_ == typeid(std::uint64_t)) {
+        } else if (inp_ == user_type<std::uint64_t>()) {
           return Common_Types::t_uint64;
-        } else if (inp_ == typeid(wchar_t)) {
+        } else if (inp_ == user_type<wchar_t>()) {
           return get_common_type(sizeof(wchar_t), std::is_signed<wchar_t>::value);
-        } else if (inp_ == typeid(char16_t)) {
+        } else if (inp_ == user_type<char16_t>()) {
           return get_common_type(sizeof(char16_t), std::is_signed<char16_t>::value);
-        } else if (inp_ == typeid(char32_t)) {
+        } else if (inp_ == user_type<char32_t>()) {
           return get_common_type(sizeof(char32_t), std::is_signed<char32_t>::value);
         } else  {
           throw chaiscript::detail::exception::bad_any_cast();
@@ -160,8 +160,8 @@ namespace chaiscript
 
   
 
-      template<typename LHS, typename T>
-      static auto go(Operators::Opers t_oper, const Boxed_Value &t_bv, LHS *t_lhs, const T &c_lhs, const T &c_rhs)
+      template<typename LHS, typename RHS>
+      static auto go(Operators::Opers t_oper, const Boxed_Value &t_bv, LHS *t_lhs, const LHS &c_lhs, const RHS &c_rhs)
       {
         switch (t_oper) {
           case Operators::Opers::equals:
@@ -188,7 +188,7 @@ namespace chaiscript
         }
 
 
-        if constexpr (!std::is_floating_point<T>::value) {
+        if constexpr (!std::is_floating_point<LHS>::value && !std::is_floating_point<RHS>::value) {
           switch (t_oper) {
             case Operators::Opers::shift_left:
               return const_var(c_lhs << c_rhs);
@@ -226,7 +226,7 @@ namespace chaiscript
               return t_bv;
           }
 
-          if constexpr (!std::is_floating_point<T>::value) {
+          if constexpr (!std::is_floating_point<LHS>::value && !std::is_floating_point<RHS>::value) {
             switch (t_oper) {
               case Operators::Opers::assign_bitwise_and:
                 check_divide_by_zero(c_rhs);
@@ -254,155 +254,89 @@ namespace chaiscript
         throw chaiscript::detail::exception::bad_any_cast();
       }
 
-      template<typename LHS, typename RHS>
-      static auto go(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
-      {
-        using common_type = typename std::common_type<LHS, RHS>::type;
-
-        auto *lhs = [&]() -> LHS *{
-          if (!t_lhs.is_const() && !t_lhs.is_return_value()) {
-            return static_cast<LHS *>(t_lhs.get_ptr());
-          } else {
-            return nullptr;
-          }
-        }();
-
-        return go(t_oper, t_lhs, lhs, get_as_aux<common_type, LHS>(t_lhs), get_as_aux<common_type, RHS>(t_rhs));
-      }
-
-      // Unary 
-      template<typename LHS>
-      static auto go(Operators::Opers t_oper, const Boxed_Value &t_lhs)
-      {
-        auto *lhs = [&]() -> LHS *{
-          if (!t_lhs.is_const() && !t_lhs.is_return_value()) {
-            return static_cast<LHS *>(t_lhs.get_ptr());
-          } else {
-            return nullptr;
-          }
-        }();
-
-        const LHS &c_lhs = (*static_cast<const LHS *>(t_lhs.get_const_ptr()));
-
-        if (lhs) {
-          switch (t_oper) {
-            case Operators::Opers::pre_increment:
-              ++(*lhs);
-              return t_lhs;
-            case Operators::Opers::pre_decrement:
-              --(*lhs);
-              return t_lhs;
-          }
-        }
-
-        switch (t_oper) {
-          case Operators::Opers::unary_minus:
-            return const_var(-c_lhs);
-          case Operators::Opers::unary_plus:
-            return const_var(+c_lhs);
-        }
-
-        if constexpr (!std::is_floating_point<LHS>::value) {
-          switch (t_oper) {
-            case Operators::Opers::bitwise_complement:
-              return const_var(~c_lhs);
-          }
-        }
-
-        throw chaiscript::detail::exception::bad_any_cast();
-      }
-
-
-      template<typename LHS>
-        inline static Boxed_Value oper_rhs(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
+      template<typename Callable>
+        inline static auto visit(const Boxed_Value &bv, Callable &&callable)
         {
-          switch (get_common_type(t_rhs)) {
+          switch (get_common_type(bv)) {
             case Common_Types::t_int32:
-              return go<LHS, int32_t>(t_oper, t_lhs, t_rhs);
+              return callable(*static_cast<const std::int32_t *>(bv.get_const_ptr()));
             case Common_Types::t_uint8:
-              return go<LHS, uint8_t>(t_oper, t_lhs, t_rhs);
+              return callable(*static_cast<const std::uint8_t *>(bv.get_const_ptr()));
             case Common_Types::t_int8:
-              return go<LHS, int8_t>(t_oper, t_lhs, t_rhs);
+              return callable(*static_cast<const std::int8_t *>(bv.get_const_ptr()));
             case Common_Types::t_uint16:
-              return go<LHS, uint16_t>(t_oper, t_lhs, t_rhs);
+              return callable(*static_cast<const std::uint16_t *>(bv.get_const_ptr()));
             case Common_Types::t_int16:
-              return go<LHS, int16_t>(t_oper, t_lhs, t_rhs);
+              return callable(*static_cast<const std::int16_t *>(bv.get_const_ptr()));
             case Common_Types::t_uint32:
-              return go<LHS, uint32_t>(t_oper, t_lhs, t_rhs);
+              return callable(*static_cast<const std::uint32_t *>(bv.get_const_ptr()));
             case Common_Types::t_uint64:
-              return go<LHS, uint64_t>(t_oper, t_lhs, t_rhs);
+              return callable(*static_cast<const std::uint64_t *>(bv.get_const_ptr()));
             case Common_Types::t_int64:
-              return go<LHS, int64_t>(t_oper, t_lhs, t_rhs);
+              return callable(*static_cast<const std::int64_t *>(bv.get_const_ptr()));
             case Common_Types::t_double:
-              return go<LHS, double>(t_oper, t_lhs, t_rhs);
+              return callable(*static_cast<const double *>(bv.get_const_ptr()));
             case Common_Types::t_float:
-              return go<LHS, float>(t_oper, t_lhs, t_rhs);
+              return callable(*static_cast<const float *>(bv.get_const_ptr()));
             case Common_Types::t_long_double:
-              return go<LHS, long double>(t_oper, t_lhs, t_rhs);
-          }
+              return callable(*static_cast<const long double *>(bv.get_const_ptr()));
+            default:
+              throw chaiscript::detail::exception::bad_any_cast();
 
-          throw chaiscript::detail::exception::bad_any_cast();
+          }
         }
 
         inline static Boxed_Value oper(Operators::Opers t_oper, const Boxed_Value &t_lhs)
         {
-          switch (get_common_type(t_lhs)) {
-            case Common_Types::t_int32:
-              return go<int32_t>(t_oper, t_lhs);
-            case Common_Types::t_uint8:
-              return go<uint8_t>(t_oper, t_lhs);
-            case Common_Types::t_int8:
-              return go<int8_t>(t_oper, t_lhs);
-            case Common_Types::t_uint16:
-              return go<uint16_t>(t_oper, t_lhs);
-            case Common_Types::t_int16:
-              return go<int16_t>(t_oper, t_lhs);
-            case Common_Types::t_uint32:
-              return go<uint32_t>(t_oper, t_lhs);
-            case Common_Types::t_uint64:
-              return go<uint64_t>(t_oper, t_lhs);
-            case Common_Types::t_int64:
-              return go<int64_t>(t_oper, t_lhs);
-            case Common_Types::t_double:
-              return go<double>(t_oper, t_lhs);
-            case Common_Types::t_float:
-              return go<float>(t_oper, t_lhs);
-            case Common_Types::t_long_double:
-              return go<long double>(t_oper, t_lhs);
-          }
+          auto unary_operator = [t_oper, &t_lhs](const auto &c_lhs){
+            auto *lhs = static_cast<std::decay_t<decltype(c_lhs)> *>(t_lhs.get_ptr());
 
-          throw chaiscript::detail::exception::bad_any_cast();
+            if (lhs) {
+              switch (t_oper) {
+                case Operators::Opers::pre_increment:
+                  ++(*lhs);
+                  return t_lhs;
+                case Operators::Opers::pre_decrement:
+                  --(*lhs);
+                  return t_lhs;
+              }
+            }
+
+            switch (t_oper) {
+              case Operators::Opers::unary_minus:
+                return const_var(-c_lhs);
+              case Operators::Opers::unary_plus:
+                return const_var(+c_lhs);
+            }
+
+            if constexpr (!std::is_floating_point_v<std::decay_t<decltype(c_lhs)>>) {
+              switch (t_oper) {
+                case Operators::Opers::bitwise_complement:
+                  return const_var(~c_lhs);
+              }
+            }
+
+            throw chaiscript::detail::exception::bad_any_cast();
+          };
+
+          return visit(t_lhs, unary_operator);
         }
 
 
         inline static Boxed_Value oper(Operators::Opers t_oper, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs)
         {
-          switch (get_common_type(t_lhs)) {
-            case Common_Types::t_int32:
-              return oper_rhs<int32_t>(t_oper, t_lhs, t_rhs);
-            case Common_Types::t_uint8:
-              return oper_rhs<uint8_t>(t_oper, t_lhs, t_rhs);
-            case Common_Types::t_int8:
-              return oper_rhs<int8_t>(t_oper, t_lhs, t_rhs);
-            case Common_Types::t_uint16:
-              return oper_rhs<uint16_t>(t_oper, t_lhs, t_rhs);
-            case Common_Types::t_int16:
-              return oper_rhs<int16_t>(t_oper, t_lhs, t_rhs);
-            case Common_Types::t_uint32:
-              return oper_rhs<uint32_t>(t_oper, t_lhs, t_rhs);
-            case Common_Types::t_uint64:
-              return oper_rhs<uint64_t>(t_oper, t_lhs, t_rhs);
-            case Common_Types::t_int64:
-              return oper_rhs<int64_t>(t_oper, t_lhs, t_rhs);
-            case Common_Types::t_double:
-              return oper_rhs<double>(t_oper, t_lhs, t_rhs);
-            case Common_Types::t_float:
-              return oper_rhs<float>(t_oper, t_lhs, t_rhs);
-            case Common_Types::t_long_double:
-              return oper_rhs<long double>(t_oper, t_lhs, t_rhs);
-          }
 
-          throw chaiscript::detail::exception::bad_any_cast();
+          auto lhs_visit = [t_oper, &t_lhs, &t_rhs](const auto &c_lhs){
+            auto *lhs = static_cast<std::decay_t<decltype(c_lhs)> *>(t_lhs.get_ptr());
+
+            auto rhs_visit = [t_oper, &t_lhs, lhs, &c_lhs](const auto &c_rhs) {
+              return go(t_oper, t_lhs, lhs, c_lhs, c_rhs);
+            };
+
+            return visit(t_rhs, rhs_visit);
+          };
+
+          return visit(t_lhs, lhs_visit);
         }
 
         template<typename Target, typename Source>
@@ -445,11 +379,11 @@ namespace chaiscript
       {
         const Type_Info &inp_ = t_bv.get_type_info();
 
-        if (inp_ == typeid(double)) {
+        if (inp_ == user_type<double>()) {
           return true;
-        } else if (inp_ == typeid(long double)) {
+        } else if (inp_ == user_type<long double>()) {
           return true;
-        } else if (inp_ == typeid(float)) {
+        } else if (inp_ == user_type<float>()) {
           return true;
         } else {
           return false;
@@ -458,49 +392,49 @@ namespace chaiscript
 
       Boxed_Number get_as(const Type_Info &inp_) const
       {
-        if (inp_.bare_equal_type_info(typeid(int))) {
+        if (inp_.bare_equal(user_type<int>())) {
           return Boxed_Number(get_as<int>());
-        } else if (inp_.bare_equal_type_info(typeid(double))) {
+        } else if (inp_.bare_equal(user_type<double>())) {
           return Boxed_Number(get_as<double>());
-        } else if (inp_.bare_equal_type_info(typeid(float))) {
+        } else if (inp_.bare_equal(user_type<float>())) {
           return Boxed_Number(get_as<float>());
-        } else if (inp_.bare_equal_type_info(typeid(long double))) {
+        } else if (inp_.bare_equal(user_type<long double>())) {
           return Boxed_Number(get_as<long double>());
-        } else if (inp_.bare_equal_type_info(typeid(char))) {
+        } else if (inp_.bare_equal(user_type<char>())) {
           return Boxed_Number(get_as<char>());
-        } else if (inp_.bare_equal_type_info(typeid(unsigned char))) {
+        } else if (inp_.bare_equal(user_type<unsigned char>())) {
           return Boxed_Number(get_as<unsigned char>());
-        } else if (inp_.bare_equal_type_info(typeid(wchar_t))) {
+        } else if (inp_.bare_equal(user_type<wchar_t>())) {
           return Boxed_Number(get_as<wchar_t>());
-        } else if (inp_.bare_equal_type_info(typeid(char16_t))) {
+        } else if (inp_.bare_equal(user_type<char16_t>())) {
           return Boxed_Number(get_as<char16_t>());
-        } else if (inp_.bare_equal_type_info(typeid(char32_t))) {
+        } else if (inp_.bare_equal(user_type<char32_t>())) {
           return Boxed_Number(get_as<char32_t>());
-        } else if (inp_.bare_equal_type_info(typeid(unsigned int))) {
+        } else if (inp_.bare_equal(user_type<unsigned int>())) {
           return Boxed_Number(get_as<unsigned int>());
-        } else if (inp_.bare_equal_type_info(typeid(long))) {
+        } else if (inp_.bare_equal(user_type<long>())) {
           return Boxed_Number(get_as<long>());
-        } else if (inp_.bare_equal_type_info(typeid(long long))) {
+        } else if (inp_.bare_equal(user_type<long long>())) {
           return Boxed_Number(get_as<long long>());
-        } else if (inp_.bare_equal_type_info(typeid(unsigned long))) {
+        } else if (inp_.bare_equal(user_type<unsigned long>())) {
           return Boxed_Number(get_as<unsigned long>());
-        } else if (inp_.bare_equal_type_info(typeid(unsigned long long))) {
+        } else if (inp_.bare_equal(user_type<unsigned long long>())) {
           return Boxed_Number(get_as<unsigned long long>());
-        } else if (inp_.bare_equal_type_info(typeid(int8_t))) {
+        } else if (inp_.bare_equal(user_type<int8_t>())) {
           return Boxed_Number(get_as<int8_t>());
-        } else if (inp_.bare_equal_type_info(typeid(int16_t))) {
+        } else if (inp_.bare_equal(user_type<int16_t>())) {
           return Boxed_Number(get_as<int16_t>());
-        } else if (inp_.bare_equal_type_info(typeid(int32_t))) {
+        } else if (inp_.bare_equal(user_type<int32_t>())) {
           return Boxed_Number(get_as<int32_t>());
-        } else if (inp_.bare_equal_type_info(typeid(int64_t))) {
+        } else if (inp_.bare_equal(user_type<int64_t>())) {
           return Boxed_Number(get_as<int64_t>());
-        } else if (inp_.bare_equal_type_info(typeid(uint8_t))) {
+        } else if (inp_.bare_equal(user_type<uint8_t>())) {
           return Boxed_Number(get_as<uint8_t>());
-        } else if (inp_.bare_equal_type_info(typeid(uint16_t))) {
+        } else if (inp_.bare_equal(user_type<uint16_t>())) {
           return Boxed_Number(get_as<uint16_t>());
-        } else if (inp_.bare_equal_type_info(typeid(uint32_t))) {
+        } else if (inp_.bare_equal(user_type<uint32_t>())) {
           return Boxed_Number(get_as<uint32_t>());
-        } else if (inp_.bare_equal_type_info(typeid(uint64_t))) {
+        } else if (inp_.bare_equal(user_type<uint64_t>())) {
           return Boxed_Number(get_as<uint64_t>());
         } else {
           throw chaiscript::detail::exception::bad_any_cast();
@@ -632,7 +566,7 @@ namespace chaiscript
       static void validate_boxed_number(const Boxed_Value &v)
       {
         const Type_Info &inp_ = v.get_type_info();
-        if (inp_ == typeid(bool))
+        if (inp_ == user_type<bool>())
         {
           throw chaiscript::detail::exception::bad_any_cast();
         }
