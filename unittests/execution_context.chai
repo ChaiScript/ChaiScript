@@ -1,0 +1,42 @@
+
+
+assert_equal(__LINE__, 3)
+
+def f() {
+  [__LINE__, __CLASS__, __FUNC__]
+}
+
+var res = f()
+
+assert_equal(res[0], 6)
+assert_equal(res[1], "NOT_IN_CLASS")
+assert_equal(res[2], "f")
+
+assert_equal(__CLASS__, "NOT_IN_CLASS")
+assert_equal(__FUNC__, "NOT_IN_FUNCTION")
+
+class C
+{
+  def C() {}
+  def member() { [__LINE__, __CLASS__, __FUNC__]; }
+}
+
+var c = C();
+
+var res2 = c.member();
+
+assert_equal(res2[0], 21)
+assert_equal(res2[1], "C")
+assert_equal(res2[2], "member")
+
+def C::member2() { [__LINE__, __CLASS__, __FUNC__]; }
+
+var res3 = c.member2();
+
+assert_equal(res3[0], 32)
+assert_equal(res3[1], "C")
+assert_equal(res3[2], "member2")
+
+assert_true(__FILE__.find("execution_context.chai") != -1)
+
+

@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_CALLABLE_TRAITS_HPP_
@@ -25,7 +25,7 @@ namespace chaiscript {
       template<typename Ret, typename Class, typename ... Param>
       struct Const_Caller
       {
-        Const_Caller(Ret (Class::*t_func)(Param...) const) : m_func(t_func) {}
+        explicit Const_Caller(Ret (Class::*t_func)(Param...) const) : m_func(t_func) {}
 
         template<typename ... Inner>
         Ret operator()(const Class &o, Inner&& ... inner) const {
@@ -38,7 +38,7 @@ namespace chaiscript {
       template<typename Ret, typename ... Param>
       struct Fun_Caller
       {
-        Fun_Caller(Ret( * t_func)(Param...) ) : m_func(t_func) {}
+        explicit Fun_Caller(Ret( * t_func)(Param...) ) : m_func(t_func) {}
 
         template<typename ... Inner>
         Ret operator()(Inner&& ... inner) const {
@@ -51,7 +51,7 @@ namespace chaiscript {
       template<typename Ret, typename Class, typename ... Param>
       struct Caller
       {
-        Caller(Ret (Class::*t_func)(Param...)) : m_func(t_func) {}
+        explicit Caller(Ret (Class::*t_func)(Param...)) : m_func(t_func) {}
 
         template<typename ... Inner>
         Ret operator()(Class &o, Inner&& ... inner) const {

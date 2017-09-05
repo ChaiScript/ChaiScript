@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 #ifndef CHAISCRIPT_BOXED_CAST_HELPER_HPP_
 #define CHAISCRIPT_BOXED_CAST_HELPER_HPP_
@@ -25,7 +29,7 @@ namespace chaiscript
     template<typename T>
       T* throw_if_null(T *t)
       {
-        if (t) return t;
+        if (t) { return t; }
         throw std::runtime_error("Attempted to dereference null Boxed_Value");
       }
 
@@ -134,6 +138,50 @@ namespace chaiscript
           return *static_cast<Result *>(verify_type(ob, typeid(Result), ob.get_ptr()));
         }
       };
+
+    /// Cast_Helper_Inner for casting to a && type
+    template<typename Result>
+      struct Cast_Helper_Inner<Result &&>
+      {
+        static Result&& cast(const Boxed_Value &ob, const Type_Conversions_State *)
+        {
+          return std::move(*static_cast<Result *>(verify_type(ob, typeid(Result), ob.get_ptr())));
+        }
+      };
+
+    /// Cast_Helper_Inner for casting to a std::unique_ptr<> && type
+    /// \todo Fix the fact that this has to be in a shared_ptr for now
+    template<typename Result>
+      struct Cast_Helper_Inner<std::unique_ptr<Result> &&>
+      {
+        static std::unique_ptr<Result> &&cast(const Boxed_Value &ob, const Type_Conversions_State *)
+        {
+          return std::move(*(ob.get().cast<std::shared_ptr<std::unique_ptr<Result>>>()));
+        }
+      };
+
+    /// Cast_Helper_Inner for casting to a std::unique_ptr<> & type
+    /// \todo Fix the fact that this has to be in a shared_ptr for now
+    template<typename Result>
+      struct Cast_Helper_Inner<std::unique_ptr<Result> &>
+      {
+        static std::unique_ptr<Result> &cast(const Boxed_Value &ob, const Type_Conversions_State *)
+        {
+          return *(ob.get().cast<std::shared_ptr<std::unique_ptr<Result>>>());
+        }
+      };
+
+    /// Cast_Helper_Inner for casting to a std::unique_ptr<> & type
+    /// \todo Fix the fact that this has to be in a shared_ptr for now
+    template<typename Result>
+      struct Cast_Helper_Inner<const std::unique_ptr<Result> &>
+      {
+        static std::unique_ptr<Result> &cast(const Boxed_Value &ob, const Type_Conversions_State *)
+        {
+          return *(ob.get().cast<std::shared_ptr<std::unique_ptr<Result>>>());
+        }
+      };
+
 
     /// Cast_Helper_Inner for casting to a std::shared_ptr<> type
     template<typename Result>

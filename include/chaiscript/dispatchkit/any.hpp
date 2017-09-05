@@ -72,7 +72,7 @@ namespace chaiscript {
             {
             }
 
-            virtual void *data() override
+            void *data() override
             {
               return &m_data;
             }

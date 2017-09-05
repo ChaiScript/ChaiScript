@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 #ifndef CHAISCRIPT_FUNCTION_CALL_DETAIL_HPP_
 #define CHAISCRIPT_FUNCTION_CALL_DETAIL_HPP_
@@ -33,7 +37,7 @@ namespace chaiscript
           static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
               const std::vector<Boxed_Value> &params, const Type_Conversions_State *t_conversions)
           {
-            if (t_conversions) {
+            if (t_conversions != nullptr) {
               return boxed_cast<Ret>(dispatch::dispatch(t_funcs, params, *t_conversions), t_conversions);
             } else {
               Type_Conversions conv;
@@ -52,7 +56,7 @@ namespace chaiscript
           static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
               const std::vector<Boxed_Value> &params, const Type_Conversions_State *t_conversions)
           {
-            if (t_conversions) {
+            if (t_conversions != nullptr) {
               return Boxed_Number(dispatch::dispatch(t_funcs, params, *t_conversions)).get_as<Ret>();
             } else {
               Type_Conversions conv;
@@ -72,7 +76,7 @@ namespace chaiscript
           static void call(const std::vector<Const_Proxy_Function> &t_funcs, 
               const std::vector<Boxed_Value> &params, const Type_Conversions_State *t_conversions)
           {
-            if (t_conversions) {
+            if (t_conversions != nullptr) {
               dispatch::dispatch(t_funcs, params, *t_conversions);
             } else {
               Type_Conversions conv;

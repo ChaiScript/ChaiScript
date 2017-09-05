@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 #ifndef CHAISCRIPT_PARSER_HPP_
 #define CHAISCRIPT_PARSER_HPP_
@@ -23,6 +27,8 @@
 #include "chaiscript_common.hpp"
 #include "chaiscript_optimizer.hpp"
 #include "chaiscript_tracer.hpp"
+#include "../utility/fnv1a.hpp"
+#include "../utility/static_string.hpp"
 
 #if defined(CHAISCRIPT_UTF16_UTF32)
 #include <locale>
@@ -186,8 +192,8 @@ namespace chaiscript
       }
 
 
-      static const std::vector<std::vector<std::string>> &create_operator_matches() {
-        static const std::vector<std::vector<std::string>> operator_matches {
+      static const std::vector<std::vector<utility::Static_String>> &create_operator_matches() {
+        static const std::vector<std::vector<utility::Static_String>> operator_matches {
           {"?"},
           {"||"},
           {"&&"},
@@ -225,13 +231,38 @@ namespace chaiscript
         return operators;
       }
 
-      static constexpr const char * const m_multiline_comment_begin = "/*";
-      static constexpr const char * const m_multiline_comment_end = "*/";
-      static constexpr const char * const m_singleline_comment = "//";
-      static constexpr const char * const m_annotation = "#";
+      static const utility::Static_String &multiline_comment_end()
+      {
+        static const utility::Static_String s("*/");
+        return s;
+      }
+
+      static const utility::Static_String &multiline_comment_begin()
+      {
+        static const utility::Static_String s("/*");
+        return s;
+      }
+
+      static const utility::Static_String &singleline_comment()
+      {
+        static const utility::Static_String s("//");
+        return s;
+      }
+
+      static const utility::Static_String &annotation()
+      {
+        static const utility::Static_String s("#");
+        return s;
+      }
+
+      static const utility::Static_String &cr_lf()
+      {
+        static const utility::Static_String s("\r\n");
+        return s;
+      }
 
       const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &m_alphabet = create_alphabet();
-      const std::vector<std::vector<std::string>> &m_operator_matches = create_operator_matches();
+      const std::vector<std::vector<utility::Static_String>> &m_operator_matches = create_operator_matches();
       const std::array<Operator_Precidence, 12> &m_operators = create_operators();
 
       std::shared_ptr<std::string> m_filename;
@@ -243,7 +274,7 @@ namespace chaiscript
         Position() = default;
 
         Position(std::string::const_iterator t_pos, std::string::const_iterator t_end)
-          : line(1), col(1), m_pos(std::move(t_pos)), m_end(std::move(t_end)), m_last_col(1)
+          : line(1), col(1), m_pos(t_pos), m_end(t_end), m_last_col(1)
         {
         }
 
@@ -318,9 +349,10 @@ namespace chaiscript
           return static_cast<size_t>(std::distance(m_pos, m_end));
         }
 
-        char operator*() const {
+        const char& operator*() const {
           if (m_pos == m_end) {
-            return '\0';
+            static const char ktmp ='\0';
+            return ktmp;
           } else {
             return *m_pos;
           }
@@ -355,7 +387,17 @@ namespace chaiscript
         m_match_stack.reserve(2);
       }
 
-      ChaiScript_Parser(const ChaiScript_Parser &) = default;
+      Tracer &get_tracer() 
+      {
+        return m_tracer;
+      }
+
+      Optimizer &get_optimizer()
+      {
+        return m_optimizer;
+      }
+
+      ChaiScript_Parser(const ChaiScript_Parser &) = delete;
       ChaiScript_Parser &operator=(const ChaiScript_Parser &) = delete;
       ChaiScript_Parser(ChaiScript_Parser &&) = default;
       ChaiScript_Parser &operator=(ChaiScript_Parser &&) = delete;
@@ -364,10 +406,10 @@ namespace chaiscript
       bool char_in_alphabet(char c, detail::Alphabet a) const { return m_alphabet[a][static_cast<uint8_t>(c)]; }
 
       /// Prints the parsed ast_nodes as a tree
-      void debug_print(AST_NodePtr t, std::string prepend = "") const override {
-        std::cout << prepend << "(" << ast_node_type_to_string(t->identifier) << ") " << t->text << " : " << t->start().line << ", " << t->start().column << '\n';
-        for (const auto &node : t->get_children()) {
-          debug_print(node, prepend + "  ");
+      void debug_print(const AST_Node &t, std::string prepend = "") const override {
+        std::cout << prepend << "(" << ast_node_type_to_string(t.identifier) << ") " << t.text << " : " << t.start().line << ", " << t.start().column << '\n';
+        for (const auto &node : t.get_children()) {
+          debug_print(node.get(), prepend + "  ");
         }
       }
 
@@ -410,7 +452,7 @@ namespace chaiscript
         /// \todo fix the fact that a successful match that captured no ast_nodes doesn't have any real start position
         m_match_stack.push_back(
             m_optimizer.optimize(
-              chaiscript::make_shared<chaiscript::eval::AST_Node_Impl<Tracer>, NodeType>(
+              chaiscript::make_unique<chaiscript::eval::AST_Node_Impl<Tracer>, NodeType>(
                 std::move(t_text),
                 std::move(filepos),
                 std::move(new_children)))
@@ -418,20 +460,36 @@ namespace chaiscript
       }
 
 
+      /// Reads a symbol group from input if it matches the parameter, without skipping initial whitespace
+      inline auto Symbol_(const utility::Static_String &sym)
+      {
+        const auto len = sym.size();
+        if (m_position.remaining() >= len) {
+          const char *file_pos = &(*m_position);
+          for (size_t pos = 0; pos < len; ++pos)
+          {
+            if (sym.c_str()[pos] != file_pos[pos]) { return false; }
+          }
+          m_position += len;
+          return true;
+        }
+        return false;
+      }
+
       /// Skips any multi-line or single-line comment
       bool SkipComment() {
-        if (Symbol_(m_multiline_comment_begin)) {
+        if (Symbol_(multiline_comment_begin())) {
           while (m_position.has_more()) {
-            if (Symbol_(m_multiline_comment_end)) {
+            if (Symbol_(multiline_comment_end())) {
               break;
             } else if (!Eol_()) {
               ++m_position;
             }
           }
           return true;
-        } else if (Symbol_(m_singleline_comment)) {
+        } else if (Symbol_(singleline_comment())) {
           while (m_position.has_more()) {
-            if (Symbol_("\r\n")) {
+            if (Symbol_(cr_lf())) {
               m_position -= 2;
               break;
             } else if (Char_('\n')) {
@@ -442,9 +500,9 @@ namespace chaiscript
             }
           }
           return true;
-        } else if (Symbol_(m_annotation)) {
+        } else if (Symbol_(annotation())) {
           while (m_position.has_more()) {
-            if (Symbol_("\r\n")) {
+            if (Symbol_(cr_lf())) {
               m_position -= 2;
               break;
             } else if (Char_('\n')) {
@@ -703,7 +761,7 @@ namespace chaiscript
           try {
             auto u = std::stoull(val,nullptr,base);
 
-            if (u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
+            if (!longlong_ && u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
               return const_var(static_cast<unsigned long>(u));
             } else {
               return const_var(static_cast<unsigned long long>(u));
@@ -721,63 +779,59 @@ namespace chaiscript
       }
 
       template<typename T, typename ... Param>
-      std::shared_ptr<eval::AST_Node_Impl<Tracer>> make_node(std::string t_match, const int t_prev_line, const int t_prev_col, Param && ...param)
+      std::unique_ptr<eval::AST_Node_Impl<Tracer>> make_node(std::string t_match, const int t_prev_line, const int t_prev_col, Param && ...param)
       {
-        return chaiscript::make_shared<eval::AST_Node_Impl<Tracer>, T>(std::move(t_match), Parse_Location(m_filename, t_prev_line, t_prev_col, m_position.line, m_position.col), std::forward<Param>(param)...);
+        return chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, T>(std::move(t_match), Parse_Location(m_filename, t_prev_line, t_prev_col, m_position.line, m_position.col), std::forward<Param>(param)...);
       }
 
       /// Reads a number from the input, detecting if it's an integer or floating point
-      bool Num(const bool t_capture = false) {
+      bool Num() {
         SkipWS();
 
-        if (!t_capture) {
-          return Hex_() || Float_();
-        } else {
-          const auto start = m_position;
-          if (m_position.has_more() && char_in_alphabet(*m_position, detail::float_alphabet) ) {
-            try {
-              if (Hex_()) {
-                auto match = Position::str(start, m_position);
-                auto bv = buildInt(16, match, true);
-                m_match_stack.emplace_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
-                return true;
-              }
-
-              if (Binary_()) {
-                auto match = Position::str(start, m_position);
-                auto bv = buildInt(2, match, true);
-                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
-                return true;
-              }
-              if (Float_()) {
-                auto match = Position::str(start, m_position);
-                auto bv = buildFloat(match);
-                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
-                return true;
-              }
-              else {
-                IntSuffix_();
-                auto match = Position::str(start, m_position);
-                if (!match.empty() && (match[0] == '0')) {
-                  auto bv = buildInt(8, match, false);
-                  m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
-                }
-                else if (!match.empty()) {
-                  auto bv = buildInt(10, match, false);
-                  m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
-                } else {
-                  return false;
-                }
-                return true;
-              }
-            } catch (const std::invalid_argument &) {
-              // error parsing number passed in to buildFloat/buildInt
-              return false;
+        const auto start = m_position;
+        if (m_position.has_more() && char_in_alphabet(*m_position, detail::float_alphabet) ) {
+          try {
+            if (Hex_()) {
+              auto match = Position::str(start, m_position);
+              auto bv = buildInt(16, match, true);
+              m_match_stack.emplace_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              return true;
             }
-          }
-          else {
+
+            if (Binary_()) {
+              auto match = Position::str(start, m_position);
+              auto bv = buildInt(2, match, true);
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              return true;
+            }
+            if (Float_()) {
+              auto match = Position::str(start, m_position);
+              auto bv = buildFloat(match);
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              return true;
+            }
+            else {
+              IntSuffix_();
+              auto match = Position::str(start, m_position);
+              if (!match.empty() && (match[0] == '0')) {
+                auto bv = buildInt(8, match, false);
+                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              }
+              else if (!match.empty()) {
+                auto bv = buildInt(10, match, false);
+                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              } else {
+                return false;
+              }
+              return true;
+            }
+          } catch (const std::invalid_argument &) {
+            // error parsing number passed in to buildFloat/buildInt
             return false;
           }
+        }
+        else {
+          return false;
         }
       }
 
@@ -823,37 +877,85 @@ namespace chaiscript
         const auto start = m_position;
         if (Id_()) {
 
-          const auto text = Position::str(start, m_position);
+          auto text = Position::str(start, m_position);
+          const auto text_hash = utility::fnv1a_32(text.c_str());
 
           if (validate) {
             validate_object_name(text);
           }
 
-          if (text == "true") {
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, const_var(true)));
-          } else if (text == "false") {
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, const_var(false)));
-          } else if (text == "Infinity") {
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
-                  const_var(std::numeric_limits<double>::infinity())));
-          } else if (text == "NaN") {
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
-                  const_var(std::numeric_limits<double>::quiet_NaN())));
-          } else if (text == "_") {
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, 
-                  Boxed_Value(std::make_shared<dispatch::Placeholder_Object>())));
-          } else {
-            m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>(
-                  [&]()->std::string{
-                    if (*start == '`') {
-                      // 'escaped' literal, like an operator name
-                      return Position::str(start+1, m_position-1);
-                    } else {
-                      return text;
-                    }
-                  }(),
-                  start.line, start.col));
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4307)
+#endif
+
+          switch (text_hash) {
+            case utility::fnv1a_32("true"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col, const_var(true)));
+            } break;
+            case utility::fnv1a_32("false"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col, const_var(false)));
+            } break;
+            case utility::fnv1a_32("Infinity"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+                const_var(std::numeric_limits<double>::infinity())));
+            } break;
+            case utility::fnv1a_32("NaN"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+                const_var(std::numeric_limits<double>::quiet_NaN())));
+            } break;
+            case utility::fnv1a_32("__LINE__"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+                const_var(start.line)));
+            } break;
+            case utility::fnv1a_32("__FILE__"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+                const_var(m_filename)));
+            } break;
+            case utility::fnv1a_32("__FUNC__"): {
+              std::string fun_name = "NOT_IN_FUNCTION";
+              for (size_t idx = m_match_stack.size() - 1; idx > 0; --idx)
+              {
+                if (m_match_stack[idx-1]->identifier == AST_Node_Type::Id
+                    && m_match_stack[idx-0]->identifier == AST_Node_Type::Arg_List) {
+                  fun_name = m_match_stack[idx-1]->text;
+                }
+              }
+
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+                const_var(fun_name)));
+            } break;
+            case utility::fnv1a_32("__CLASS__"): {
+              std::string fun_name = "NOT_IN_CLASS";
+              for (size_t idx = m_match_stack.size() - 1; idx > 1; --idx)
+              {
+                if (m_match_stack[idx-2]->identifier == AST_Node_Type::Id
+                    && m_match_stack[idx-1]->identifier == AST_Node_Type::Id
+                    && m_match_stack[idx-0]->identifier == AST_Node_Type::Arg_List) {
+                  fun_name = m_match_stack[idx-2]->text;
+                }
+              }
+
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+                const_var(fun_name)));
+            } break;
+            case utility::fnv1a_32("_"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+                Boxed_Value(std::make_shared<dispatch::Placeholder_Object>())));
+            } break;
+            default: {
+                std::string val = std::move(text);
+              if (*start == '`') {
+                // 'escaped' literal, like an operator name
+                val = Position::str(start+1, m_position-1);
+              }
+              m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>(val, start.line, start.col));
+            } break;
           }
+
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(pop)
+#endif
 
 
           return true;
@@ -949,23 +1051,30 @@ namespace chaiscript
         Char_Parser &operator=(const Char_Parser &) = delete;
 
         ~Char_Parser(){
-          if (is_octal) {
-            process_octal();
-          }
+          try {
+            if (is_octal) {
+              process_octal();
+            }
 
-          if (is_hex) {
-            process_hex();
-          }
+            if (is_hex) {
+              process_hex();
+            }
 
-          if (is_unicode) {
-            process_unicode();
+            if (is_unicode) {
+              process_unicode();
+            }
+          } catch (const std::invalid_argument &) {
+            // escape sequence was invalid somehow, we'll pick this
+            // up in the next part of parsing
           }
         }
 
         void process_hex()
         {
-          auto val = stoll(hex_matches, 0, 16);
-          match.push_back(char_type(val));
+          if (!hex_matches.empty()) {
+            auto val = stoll(hex_matches, nullptr, 16);
+            match.push_back(char_type(val));
+          }
           hex_matches.clear();
           is_escaped = false;
           is_hex = false;
@@ -974,8 +1083,10 @@ namespace chaiscript
 
         void process_octal()
         {
-          auto val = stoll(octal_matches, 0, 8);
-          match.push_back(char_type(val));
+          if (!octal_matches.empty()) {
+            auto val = stoll(octal_matches, nullptr, 8);
+            match.push_back(char_type(val));
+          }
           octal_matches.clear();
           is_escaped = false;
           is_octal = false;
@@ -984,9 +1095,11 @@ namespace chaiscript
 
         void process_unicode()
         {
-          auto val = stoll(hex_matches, 0, 16);
-          hex_matches.clear();
-          match += detail::Char_Parser_Helper<string_type>::str_from_ll(val);
+          if (!hex_matches.empty()) {
+            auto val = stoll(hex_matches, nullptr, 16);
+            hex_matches.clear();
+            match += detail::Char_Parser_Helper<string_type>::str_from_ll(val);
+          }
           is_escaped = false;
           is_unicode = false;
         }
@@ -1086,92 +1199,89 @@ namespace chaiscript
 
 
       /// Reads (and potentially captures) a quoted string from input.  Translates escaped sequences.
-      bool Quoted_String(const bool t_capture = false) {
+      bool Quoted_String() {
         SkipWS();
 
-        if (!t_capture) {
-          return Quoted_String_();
-        } else {
-          const auto start = m_position;
+        const auto start = m_position;
 
-          if (Quoted_String_()) {
-            std::string match;
-            const auto prev_stack_top = m_match_stack.size();
+        if (Quoted_String_()) {
+          std::string match;
+          const auto prev_stack_top = m_match_stack.size();
 
-            bool is_interpolated = [&]()->bool {
-              Char_Parser<std::string> cparser(match, true);
+          bool is_interpolated = [&]()->bool {
+            Char_Parser<std::string> cparser(match, true);
 
 
-              auto s = start + 1, end = m_position - 1;
+            auto s = start + 1, end = m_position - 1;
 
-              while (s != end) {
-                if (cparser.saw_interpolation_marker) {
-                  if (*s == '{') {
-                    //We've found an interpolation point
+            while (s != end) {
+              if (cparser.saw_interpolation_marker) {
+                if (*s == '{') {
+                  //We've found an interpolation point
 
-                    m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(match)));
+                  m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(match)));
 
-                    if (cparser.is_interpolated) {
-                      //If we've seen previous interpolation, add on instead of making a new one
-                      build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, "+");
-                    }
-
-                    //We've finished with the part of the string up to this point, so clear it
-                    match.clear();
-
-                    std::string eval_match;
-
-                    ++s;
-                    while ((s != end) && (*s != '}')) {
-                      eval_match.push_back(*s);
-                      ++s;
-                    }
-
-                    if (*s == '}') {
-                      cparser.is_interpolated = true;
-                      ++s;
-
-                      const auto tostr_stack_top = m_match_stack.size();
-
-                      m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>("to_string", start.line, start.col));
-
-                      const auto ev_stack_top = m_match_stack.size();
-
-                      try {
-                        m_match_stack.push_back(parse_instr_eval(eval_match));
-                      } catch (const exception::eval_error &e) {
-                        throw exception::eval_error(e.what(), File_Position(start.line, start.col), *m_filename);
-                      }
-
-                      build_match<eval::Arg_List_AST_Node<Tracer>>(ev_stack_top);
-                      build_match<eval::Fun_Call_AST_Node<Tracer>>(tostr_stack_top);
-                      build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, "+");
-                    } else {
-                      throw exception::eval_error("Unclosed in-string eval", File_Position(start.line, start.col), *m_filename);
-                    }
-                  } else {
-                    match.push_back('$');
+                  if (cparser.is_interpolated) {
+                    //If we've seen previous interpolation, add on instead of making a new one
+                    build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, "+");
                   }
-                  cparser.saw_interpolation_marker = false;
-                } else {
-                  cparser.parse(*s, start.line, start.col, *m_filename);
+
+                  //We've finished with the part of the string up to this point, so clear it
+                  match.clear();
+
+                  std::string eval_match;
+
                   ++s;
+                  while ((s != end) && (*s != '}')) {
+                    eval_match.push_back(*s);
+                    ++s;
+                  }
+
+                  if (*s == '}') {
+                    cparser.is_interpolated = true;
+                    ++s;
+
+                    const auto tostr_stack_top = m_match_stack.size();
+
+                    m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>("to_string", start.line, start.col));
+
+                    const auto ev_stack_top = m_match_stack.size();
+
+                    try {
+                      m_match_stack.push_back(parse_instr_eval(eval_match));
+                    } catch (const exception::eval_error &e) {
+                      throw exception::eval_error(e.what(), File_Position(start.line, start.col), *m_filename);
+                    }
+
+                    build_match<eval::Arg_List_AST_Node<Tracer>>(ev_stack_top);
+                    build_match<eval::Fun_Call_AST_Node<Tracer>>(tostr_stack_top);
+                    build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, "+");
+                  } else {
+                    throw exception::eval_error("Unclosed in-string eval", File_Position(start.line, start.col), *m_filename);
+                  }
+                } else {
+                  match.push_back('$');
                 }
+                cparser.saw_interpolation_marker = false;
+              } else {
+                cparser.parse(*s, start.line, start.col, *m_filename);
+
+                ++s;
               }
-
-              return cparser.is_interpolated;
-            }();
-
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(match)));
-
-            if (is_interpolated) {
-              build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, "+");
             }
 
-            return true;
-          } else {
-            return false;
+            return cparser.is_interpolated;
+          }();
+
+          m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(match)));
+
+          if (is_interpolated) {
+            build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, "+");
           }
+
+          return true;
+        } else {
+          return false;
         }
       }
 
@@ -1204,35 +1314,31 @@ namespace chaiscript
       }
 
       /// Reads (and potentially captures) a char group from input.  Translates escaped sequences.
-      bool Single_Quoted_String(const bool t_capture = false) {
+      bool Single_Quoted_String() {
         SkipWS();
 
-        if (!t_capture) {
-          return Single_Quoted_String_();
-        } else {
-          const auto start = m_position;
-          if (Single_Quoted_String_()) {
-            std::string match;
+        const auto start = m_position;
+        if (Single_Quoted_String_()) {
+          std::string match;
 
-            {
-              // scope for cparser destructor
-              Char_Parser<std::string> cparser(match, false);
+          {
+            // scope for cparser destructor
+            Char_Parser<std::string> cparser(match, false);
 
-              for (auto s = start + 1, end = m_position - 1; s != end; ++s) {
-                cparser.parse(*s, start.line, start.col, *m_filename);
-              }
+            for (auto s = start + 1, end = m_position - 1; s != end; ++s) {
+              cparser.parse(*s, start.line, start.col, *m_filename);
             }
-
-            if (match.size() != 1) {
-              throw exception::eval_error("Single-quoted strings must be 1 character long", File_Position(m_position.line, m_position.col), *m_filename);
-            }
-
-            m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(char(match.at(0)))));
-            return true;
           }
-          else {
-            return false;
+
+          if (match.size() != 1) {
+            throw exception::eval_error("Single-quoted strings must be 1 character long", File_Position(m_position.line, m_position.col), *m_filename);
           }
+
+          m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(char(match.at(0)))));
+          return true;
+        }
+        else {
+          return false;
         }
       }
 
@@ -1253,13 +1359,12 @@ namespace chaiscript
       }
 
       /// Reads a string from input if it matches the parameter, without skipping initial whitespace
-      bool Keyword_(const char *t_s) {
-        const auto len = strlen(t_s);
-
+      bool Keyword_(const utility::Static_String &t_s) {
+        const auto len = t_s.size();
         if (m_position.remaining() >= len) {
           auto tmp = m_position;
           for (size_t i = 0; tmp.has_more() && i < len; ++i) {
-            if (*tmp != t_s[i]) {
+            if (*tmp != t_s.c_str()[i]) {
               return false;
             }
             ++tmp;
@@ -1272,7 +1377,7 @@ namespace chaiscript
       }
 
       /// Reads (and potentially captures) a string from input if it matches the parameter
-      bool Keyword(const char *t_s) {
+      bool Keyword(const utility::Static_String &t_s) {
         SkipWS();
         const auto start = m_position;
         bool retval = Keyword_(t_s);
@@ -1285,37 +1390,18 @@ namespace chaiscript
         return retval;
       }
 
-      /// Reads a symbol group from input if it matches the parameter, without skipping initial whitespace
-      bool Symbol_(const char *t_s) {
-        const auto len = strlen(t_s);
-
-        if (m_position.remaining() >= len) {
-          auto tmp = m_position;
-          for (size_t i = 0; m_position.has_more() && i < len; ++i) {
-            if (*tmp != t_s[i]) {
-              return false;
-            }
-            ++tmp;
-          }
-          m_position = tmp;
-          return true;
-        }
-
-        return false;
-      }
-
       bool is_operator(const std::string &t_s) const {
         return std::any_of(m_operator_matches.begin(), m_operator_matches.end(),
-            [t_s](const std::vector<std::string> &opers) {
+            [t_s](const std::vector<utility::Static_String> &opers) {
               return std::any_of(opers.begin(), opers.end(), 
-                [t_s](const std::string &s) {
-                  return s == t_s;
+                [t_s](const utility::Static_String &s) {
+                  return t_s == s.c_str();
                 });
             });
       }
 
       /// Reads (and potentially captures) a symbol group from input if it matches the parameter
-      bool Symbol(const char *t_s, const bool t_disallow_prevention=false) {
+      bool Symbol(const utility::Static_String &t_s, const bool t_disallow_prevention=false) {
         SkipWS();
         const auto start = m_position;
         bool retval = Symbol_(t_s);
@@ -1337,7 +1423,7 @@ namespace chaiscript
       bool Eol_(const bool t_eos = false) {
         bool retval = false;
 
-        if (m_position.has_more() && (Symbol_("\r\n") || Char_('\n'))) {
+        if (m_position.has_more() && (Symbol_(cr_lf()) || Char_('\n'))) {
           retval = true;
           //++m_position.line;
           m_position.col = 1;
@@ -1517,13 +1603,17 @@ namespace chaiscript
       }
 
       /// Reads a function definition from input
-      bool Def(const bool t_class_context = false) {
+      bool Def(const bool t_class_context = false, const std::string &t_class_name = "") {
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
 
         if (Keyword("def")) {
           retval = true;
+
+          if (t_class_context) {
+            m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>(t_class_name, m_position.line, m_position.col));
+          }
 
           if (!Id(true)) {
             throw exception::eval_error("Missing function name in definition", File_Position(m_position.line, m_position.col), *m_filename);
@@ -1681,7 +1771,7 @@ namespace chaiscript
 
           if ((is_if_init && num_children == 3)
               || (!is_if_init && num_children == 2)) {
-            m_match_stack.push_back(chaiscript::make_shared<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
+            m_match_stack.push_back(chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
           }
 
           if (!is_if_init) {
@@ -1696,22 +1786,27 @@ namespace chaiscript
       }
 
       /// Reads a class block from input
-      bool Class() {
+      bool Class(const bool t_class_allowed) {
         bool retval = false;
 
         size_t prev_stack_top = m_match_stack.size();
 
         if (Keyword("class")) {
+          if (!t_class_allowed) {
+            throw exception::eval_error("Class definitions only allowed at top scope", File_Position(m_position.line, m_position.col), *m_filename);
+          }
+
           retval = true;
 
           if (!Id(true)) {
             throw exception::eval_error("Missing class name in definition", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
+          const auto class_name = m_match_stack.back()->text;
 
           while (Eol()) {}
 
-          if (!Class_Block()) {
+          if (!Class_Block(class_name)) {
             throw exception::eval_error("Incomplete 'class' block", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
@@ -1766,7 +1861,7 @@ namespace chaiscript
           {
             return false;
           } else {
-            m_match_stack.push_back(chaiscript::make_shared<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
+            m_match_stack.push_back(chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
           }
         }
 
@@ -1776,13 +1871,13 @@ namespace chaiscript
           {
             return false;
           } else {
-            m_match_stack.push_back(chaiscript::make_shared<eval::AST_Node_Impl<Tracer>, eval::Constant_AST_Node<Tracer>>(Boxed_Value(true)));
+            m_match_stack.push_back(chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, eval::Constant_AST_Node<Tracer>>(Boxed_Value(true)));
           }
         }
 
         if (!Equation())
         {
-          m_match_stack.push_back(chaiscript::make_shared<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
+          m_match_stack.push_back(chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
         }
 
         return true; 
@@ -1813,9 +1908,17 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'for' block", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
+          const auto num_children = m_match_stack.size() - prev_stack_top;
+
           if (classic_for) {
+            if (num_children != 4) {
+              throw exception::eval_error("Incomplete 'for' expression", File_Position(m_position.line, m_position.col), *m_filename);
+            }
             build_match<eval::For_AST_Node<Tracer>>(prev_stack_top);
           } else {
+            if (num_children != 3) {
+              throw exception::eval_error("Incomplete ranged-for expression", File_Position(m_position.line, m_position.col), *m_filename);
+            }
             build_match<eval::Ranged_For_AST_Node<Tracer>>(prev_stack_top);
           }
         }
@@ -1908,7 +2011,7 @@ namespace chaiscript
 
 
       /// Reads a curly-brace C-style class block from input
-      bool Class_Block() {
+      bool Class_Block(const std::string &t_class_name) {
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
@@ -1916,13 +2019,13 @@ namespace chaiscript
         if (Char('{')) {
           retval = true;
 
-          Class_Statements();
+          Class_Statements(t_class_name);
           if (!Char('}')) {
             throw exception::eval_error("Incomplete class block", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
           if (m_match_stack.size() == prev_stack_top) {
-            m_match_stack.push_back(chaiscript::make_shared<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
+            m_match_stack.push_back(chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
           }
 
           build_match<eval::Block_AST_Node<Tracer>>(prev_stack_top);
@@ -1946,7 +2049,7 @@ namespace chaiscript
           }
 
           if (m_match_stack.size() == prev_stack_top) {
-            m_match_stack.push_back(chaiscript::make_shared<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
+            m_match_stack.push_back(chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
           }
 
           build_match<eval::Block_AST_Node<Tracer>>(prev_stack_top);
@@ -1997,7 +2100,7 @@ namespace chaiscript
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
-        if (Lambda() || Num(true) || Quoted_String(true) || Single_Quoted_String(true) ||
+        if (Lambda() || Num() || Quoted_String() || Single_Quoted_String() ||
             Paren_Expression() || Inline_Container() || Id(false))
         {
           retval = true;
@@ -2018,17 +2121,21 @@ namespace chaiscript
               /// \todo Work around for method calls until we have a better solution
               if (!m_match_stack.back()->children.empty()) {
                 if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Dot_Access) {
-                  if (m_match_stack.empty()) throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
-                  if (m_match_stack.back()->children.empty()) throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
-                  auto dot_access = m_match_stack.back()->children[0];
-                  auto func_call = m_match_stack.back();
+                  if (m_match_stack.empty()) { throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
+}
+                  if (m_match_stack.back()->children.empty()) { throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
+}
+                  auto dot_access = std::move(m_match_stack.back()->children[0]);
+                  auto func_call = std::move(m_match_stack.back());
                   m_match_stack.pop_back();
                   func_call->children.erase(func_call->children.begin());
-                  if (dot_access->children.empty()) throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
-                  func_call->children.insert(func_call->children.begin(), dot_access->children.back());
+                  if (dot_access->children.empty()) { throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
+}
+                  func_call->children.insert(func_call->children.begin(), std::move(dot_access->children.back()));
                   dot_access->children.pop_back();
                   dot_access->children.push_back(std::move(func_call));
-                  if (dot_access->children.size() != 2) throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
+                  if (dot_access->children.size() != 2) { throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
+}
                   m_match_stack.push_back(std::move(dot_access));
                 }
               }
@@ -2059,13 +2166,15 @@ namespace chaiscript
       }
 
       /// Reads a variable declaration from input
-      bool Var_Decl(const bool t_class_context = false) {
+      bool Var_Decl(const bool t_class_context = false, const std::string &t_class_name = "") {
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
 
         if (t_class_context && (Keyword("attr") || Keyword("auto") || Keyword("var"))) {
           retval = true;
+
+          m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>(t_class_name, m_position.line, m_position.col));
 
           if (!Id(true)) {
             throw exception::eval_error("Incomplete attribute declaration", File_Position(m_position.line, m_position.col), *m_filename);
@@ -2083,7 +2192,7 @@ namespace chaiscript
             throw exception::eval_error("Incomplete variable declaration", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
-        } else if (Keyword("GLOBAL") || Keyword("global")) {
+        } else if (Keyword("global")) {
           retval = true;
 
           if (!(Reference() || Id(true))) {
@@ -2136,7 +2245,7 @@ namespace chaiscript
           if (!Char(']')) {
             throw exception::eval_error("Missing closing square bracket ']' in container initializer", File_Position(m_position.line, m_position.col), *m_filename);
           }
-          if ((prev_stack_top != m_match_stack.size()) && (m_match_stack.back()->children.size() > 0)) {
+          if ((prev_stack_top != m_match_stack.size()) && (!m_match_stack.back()->children.empty())) {
             if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Value_Range) {
               build_match<eval::Inline_Range_AST_Node<Tracer>>(prev_stack_top);
             }
@@ -2176,18 +2285,26 @@ namespace chaiscript
       /// Reads a unary prefixed expression from input
       bool Prefix() {
         const auto prev_stack_top = m_match_stack.size();
-        constexpr const std::array<const char *, 6> prefix_opers{"++", "--", "-", "+", "!", "~"};
+        using SS = utility::Static_String;
+        constexpr const std::array<utility::Static_String, 6> prefix_opers{{
+            SS{"++"}, 
+            SS{"--"}, 
+            SS{"-"}, 
+            SS{"+"}, 
+            SS{"!"}, 
+            SS{"~"}
+        }};
 
         for (const auto &oper : prefix_opers)
         {
-          bool is_char = strlen(oper) == 1;
-          if ((is_char && Char(oper[0])) || (!is_char && Symbol(oper)))
+          const bool is_char = oper.size() == 1;
+          if ((is_char && Char(oper.c_str()[0])) || (!is_char && Symbol(oper)))
           {
             if (!Operator(m_operators.size()-1)) {
-              throw exception::eval_error("Incomplete prefix '" + std::string(oper) + "' expression", File_Position(m_position.line, m_position.col), *m_filename);
+              throw exception::eval_error("Incomplete prefix '" + std::string(oper.c_str()) + "' expression", File_Position(m_position.line, m_position.col), *m_filename);
             }
 
-            build_match<eval::Prefix_AST_Node<Tracer>>(prev_stack_top, oper);
+            build_match<eval::Prefix_AST_Node<Tracer>>(prev_stack_top, oper.c_str());
             return true;
           }
         }
@@ -2202,8 +2319,8 @@ namespace chaiscript
 
       bool Operator_Helper(const size_t t_precedence, std::string &oper) {
         for (auto & elem : m_operator_matches[t_precedence]) {
-          if (Symbol(elem.c_str())) {
-            oper = elem;
+          if (Symbol(elem)) {
+            oper = elem.c_str();
             return true;
           }
         }
@@ -2232,7 +2349,7 @@ namespace chaiscript
                       throw exception::eval_error("Incomplete '" + oper + "' expression",
                           File_Position(m_position.line, m_position.col), *m_filename);
                     }
-                    build_match<eval::Ternary_Cond_AST_Node<Tracer>>(prev_stack_top);
+                    build_match<eval::If_AST_Node<Tracer>>(prev_stack_top);
                   }
                   else {
                     throw exception::eval_error("Incomplete '" + oper + "' expression",
@@ -2331,8 +2448,10 @@ namespace chaiscript
       bool Equation() {
         const auto prev_stack_top = m_match_stack.size();
 
+        using SS = utility::Static_String;
+
         if (Operator()) {
-          for (const auto sym : {"=", ":=", "+=", "-=", "*=", "/=", "%=", "<<=", ">>=", "&=", "^=", "|="}) 
+          for (const auto &sym : {SS{"="}, SS{":="}, SS{"+="}, SS{"-="}, SS{"*="}, SS{"/="}, SS{"%="}, SS{"<<="}, SS{">>="}, SS{"&="}, SS{"^="}, SS{"|="}}) 
           {
             if (Symbol(sym, true)) {
               SkipWS(true);
@@ -2340,7 +2459,7 @@ namespace chaiscript
                 throw exception::eval_error("Incomplete equation", File_Position(m_position.line, m_position.col), *m_filename);
               }
 
-              build_match<eval::Equation_AST_Node<Tracer>>(prev_stack_top, sym);
+              build_match<eval::Equation_AST_Node<Tracer>>(prev_stack_top, sym.c_str());
               return true;
             }
           }
@@ -2351,7 +2470,7 @@ namespace chaiscript
       }
 
       /// Parses statements allowed inside of a class block
-      bool Class_Statements() {
+      bool Class_Statements(const std::string &t_class_name) {
         bool retval = false;
 
         bool has_more = true;
@@ -2359,7 +2478,7 @@ namespace chaiscript
 
         while (has_more) {
           const auto start = m_position;
-          if (Def(true) || Var_Decl(true)) {
+          if (Def(true, t_class_name) || Var_Decl(true, t_class_name)) {
             if (!saw_eol) {
               throw exception::eval_error("Two function definitions missing line separator", File_Position(start.line, start.col), *m_filename);
             }
@@ -2379,7 +2498,7 @@ namespace chaiscript
       }
 
       /// Top level parser, starts parsing of all known parses
-      bool Statements() {
+      bool Statements(const bool t_class_allowed = false) {
         bool retval = false;
 
         bool has_more = true;
@@ -2387,7 +2506,7 @@ namespace chaiscript
 
         while (has_more) {
           const auto start = m_position;
-          if (Def() || Try() || If() || While() || Class() || For() || Switch()) {
+          if (Def() || Try() || If() || While() || Class(t_class_allowed) || For() || Switch()) {
             if (!saw_eol) {
               throw exception::eval_error("Two function definitions missing line separator", File_Position(start.line, start.col), *m_filename);
             }
@@ -2418,24 +2537,23 @@ namespace chaiscript
 
       AST_NodePtr parse(const std::string &t_input, const std::string &t_fname) override
       {
-        ChaiScript_Parser<Tracer, Optimizer> parser(*this);
-        parser.m_match_stack.clear();
+        ChaiScript_Parser<Tracer, Optimizer> parser(m_tracer, m_optimizer);
         return parser.parse_internal(t_input, t_fname);
       }
 
       eval::AST_Node_Impl_Ptr<Tracer> parse_instr_eval(const std::string &t_input)
       {
-        const auto last_position    = m_position;
-        const auto last_filename    = m_filename;
-        const auto last_match_stack = std::exchange(m_match_stack, decltype(m_match_stack){});
+        auto last_position    = m_position;
+        auto last_filename    = m_filename;
+        auto last_match_stack = std::exchange(m_match_stack, decltype(m_match_stack){});
 
-        const auto retval = parse_internal(t_input, "instr eval");
+        auto retval = parse_internal(t_input, "instr eval");
 
         m_position = std::move(last_position);
         m_filename = std::move(last_filename);
         m_match_stack = std::move(last_match_stack);
 
-        return std::dynamic_pointer_cast<eval::AST_Node_Impl<Tracer>>(retval);
+        return eval::AST_Node_Impl_Ptr<Tracer>(dynamic_cast<eval::AST_Node_Impl<Tracer>*>(retval.release()));
       }
 
       /// Parses the given input string, tagging parsed ast_nodes with the given m_filename.
@@ -2447,25 +2565,25 @@ namespace chaiscript
           while (m_position.has_more() && (!Eol())) {
             ++m_position;
           }
-          /// \todo respect // -*- coding: utf-8 -*- on line 1 or 2 see: http://evanjones.ca/python-utf8.html)
         }
 
-        if (Statements()) {
+        if (Statements(true)) {
           if (m_position.has_more()) {
-            throw exception::eval_error("Unparsed input", File_Position(m_position.line, m_position.col), t_fname);
+            throw exception::eval_error("Unparsed input", File_Position(m_position.line, m_position.col), *m_filename);
           } else {
             build_match<eval::File_AST_Node<Tracer>>(0);
           }
         } else {
-          m_match_stack.push_back(chaiscript::make_shared<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
+          m_match_stack.push_back(chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
         }
 
-        return m_match_stack.front();
+        AST_NodePtr retval(std::move(m_match_stack.front()));
+        m_match_stack.clear();
+        return retval;
       }
     };
   }
 }
-
 
 #if defined(CHAISCRIPT_MSVC) && defined(CHAISCRIPT_PUSHED_MIN_MAX)
 #undef CHAISCRIPT_PUSHED_MIN_MAX

@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 #ifndef CHAISCRIPT_DYNAMIC_OBJECT_HPP_
 #define CHAISCRIPT_DYNAMIC_OBJECT_HPP_
@@ -25,7 +29,7 @@ namespace chaiscript
   namespace dispatch
   {
     struct option_explicit_set : std::runtime_error {
-      option_explicit_set(const std::string &t_param_name)
+      explicit option_explicit_set(const std::string &t_param_name)
         : std::runtime_error("option explicit set and parameter '" + t_param_name + "' does not exist")
       {
 
@@ -33,13 +37,13 @@ namespace chaiscript
 
       option_explicit_set(const option_explicit_set &) = default;
 
-      virtual ~option_explicit_set() noexcept = default;
+      ~option_explicit_set() noexcept override = default;
     };
 
     class Dynamic_Object
     {
       public:
-        Dynamic_Object(std::string t_type_name)
+        explicit Dynamic_Object(std::string t_type_name)
           : m_type_name(std::move(t_type_name)), m_option_explicit(false)
         {
         }

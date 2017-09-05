@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 #ifndef CHAISCRIPT_THREADING_HPP_
 #define CHAISCRIPT_THREADING_HPP_
@@ -57,117 +61,53 @@ namespace chaiscript
 
       using std::recursive_mutex;
 
-#ifdef CHAISCRIPT_HAS_THREAD_LOCAL
       /// Typesafe thread specific storage. If threading is enabled, this class uses a mutex protected map. If
       /// threading is not enabled, the class always returns the same data, regardless of which thread it is called from.
       template<typename T>
         class Thread_Storage
         {
           public:
-
-            explicit Thread_Storage(void *t_key)
-              : m_key(t_key)
-            {
-            }
+            Thread_Storage() = default;
+            Thread_Storage(const Thread_Storage &) = delete;
+            Thread_Storage(Thread_Storage &&) = delete;
+            Thread_Storage &operator=(const Thread_Storage &) = delete;
+            Thread_Storage &operator=(Thread_Storage &&) = delete;
 
             ~Thread_Storage()
             {
-              t().erase(m_key);
+              t().erase(this);
             }
 
             inline const T *operator->() const
             {
-              return &(t()[m_key]);
+              return &(t()[this]);
             }
 
             inline const T &operator*() const
             {
-              return t()[m_key];
+              return t()[this];
             }
 
             inline T *operator->()
             {
-              return &(t()[m_key]);
+              return &(t()[this]);
             }
 
             inline T &operator*()
             {
-              return t()[m_key];
+              return t()[this];
             }
 
 
             void *m_key;
 
           private:
-            static std::unordered_map<void*, T> &t()
+            static std::unordered_map<const void*, T> &t()
             {
-              thread_local static std::unordered_map<void *, T> my_t;
+              thread_local std::unordered_map<const void *, T> my_t;
               return my_t;
             }
         };
-
-#else
-
-#pragma message ("Threading without thread_local support is not well supported.")
-
-
-      /// Typesafe thread specific storage. If threading is enabled, this class uses a mutex protected map. If
-      /// threading is not enabled, the class always returns the same data, regardless of which thread it is called from.
-      /// 
-      /// This version is used if the compiler does not support thread_local
-      template<typename T>
-        class Thread_Storage
-        {
-          public:
-
-            explicit Thread_Storage(void *)
-            {
-            }
-
-            inline const T *operator->() const
-            {
-              return get_tls().get();
-            }
-
-            inline const T &operator*() const
-            {
-              return *get_tls();
-            }
-
-            inline T *operator->()
-            {
-              return get_tls().get();
-            }
-
-            inline T &operator*()
-            {
-              return *get_tls();
-            }
-
-
-          private:
-            /// \todo this leaks thread instances. It needs to be culled from time to time
-            std::shared_ptr<T> get_tls() const
-            {
-              unique_lock<mutex> lock(m_mutex);
-
-              const auto id = std::this_thread::get_id();
-              auto itr = m_instances.find(id);
-
-              if (itr != m_instances.end()) { return itr->second; }
-
-              std::shared_ptr<T> new_instance(std::make_shared<T>());
-
-              m_instances.insert(std::make_pair(id, new_instance));
-
-              return new_instance;
-            }
-
-
-            mutable mutex m_mutex;
-            mutable std::unordered_map<std::thread::id, std::shared_ptr<T> > m_instances;
-        };
-#endif // threading enabled but no tls
 
 #else // threading disabled
       template<typename T>
@@ -204,7 +144,7 @@ namespace chaiscript
         class Thread_Storage
         {
           public:
-            explicit Thread_Storage(void *)
+            explicit Thread_Storage()
             {
             }
 

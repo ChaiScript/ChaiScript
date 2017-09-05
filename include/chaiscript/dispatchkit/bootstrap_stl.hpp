@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 /// \file
 /// This file contains utility functions for registration of STL container
@@ -37,7 +41,7 @@ namespace chaiscript
       /// Bidir_Range, based on the D concept of ranges.
       /// \todo Update the Range code to base its capabilities on
       ///       the user_typetraits of the iterator passed in
-      template<typename Container>
+      template<typename Container, typename IterType>
         struct Bidir_Range
         {
           typedef Container container_type;
@@ -85,71 +89,13 @@ namespace chaiscript
             {
               throw std::range_error("Range empty");
             }
-            typename Container::iterator pos = m_end;
-            --pos;
-            return (*(pos));
-          }
-
-          typename Container::iterator m_begin;
-          typename Container::iterator m_end;
-        };
-
-      template<typename Container>
-        struct Const_Bidir_Range
-        {
-          typedef const Container container_type;
-          typedef typename std::iterator_traits<typename Container::const_iterator>::reference const_reference_type;
-
-          Const_Bidir_Range(const Container &c)
-            : m_begin(c.begin()), m_end(c.end())
-          {
-          }
-
-          bool empty() const
-          {
-            return m_begin == m_end;
-          }
-
-          void pop_front()
-          {
-            if (empty())
-            {
-              throw std::range_error("Range empty");
-            }
-            ++m_begin;
-          }
-
-          void pop_back()
-          {
-            if (empty())
-            {
-              throw std::range_error("Range empty");
-            }
-            --m_end;
-          }
-
-          decltype(auto) front() const
-          {
-            if (empty())
-            {
-              throw std::range_error("Range empty");
-            }
-            return (*m_begin);
-          }
-
-          decltype(auto) back() const
-          {
-            if (empty())
-            {
-              throw std::range_error("Range empty");
-            }
             auto pos = m_end;
             --pos;
             return (*(pos));
           }
 
-          typename Container::const_iterator m_begin;
-          typename Container::const_iterator m_end;
+          IterType m_begin;
+          IterType m_end;
         };
 
       namespace detail {
@@ -229,8 +175,8 @@ namespace chaiscript
       template<typename ContainerType>
         void input_range_type(const std::string &type, Module& m)
         {
-          detail::input_range_type_impl<Bidir_Range<ContainerType> >(type,m);
-          detail::input_range_type_impl<Const_Bidir_Range<ContainerType> >("Const_" + type, m);
+          detail::input_range_type_impl<Bidir_Range<ContainerType, typename ContainerType::iterator> >(type,m);
+          detail::input_range_type_impl<Bidir_Range<const ContainerType, typename ContainerType::const_iterator> >("Const_" + type,m);
         }
       template<typename ContainerType>
         ModulePtr input_range_type(const std::string &type)
@@ -389,9 +335,24 @@ namespace chaiscript
       template<typename ContainerType>
         void back_insertion_sequence_type(const std::string &type, Module& m)
         {
-          typedef typename ContainerType::reference (ContainerType::*backptr)();
-
-          m.add(fun(static_cast<backptr>(&ContainerType::back)), "back");
+          m.add(fun([](ContainerType &container)->decltype(auto){ 
+                      if (container.empty()) {
+                        throw std::range_error("Container empty");
+                      } else {
+                        return (container.back());
+                      }
+                    }
+                  )
+                , "back");
+          m.add(fun([](const ContainerType &container)->decltype(auto){ 
+                      if (container.empty()) {
+                        throw std::range_error("Container empty");
+                      } else {
+                        return (container.back());
+                      }
+                    }
+                  )
+                , "back");
 
 
           typedef void (ContainerType::*push_back)(const typename ContainerType::value_type &);
@@ -434,13 +395,29 @@ namespace chaiscript
       template<typename ContainerType>
         void front_insertion_sequence_type(const std::string &type, Module& m)
         {
-          typedef typename ContainerType::reference (ContainerType::*front_ptr)();
-          typedef typename ContainerType::const_reference (ContainerType::*const_front_ptr)() const;
           typedef void (ContainerType::*push_ptr)(typename ContainerType::const_reference);
           typedef void (ContainerType::*pop_ptr)();
 
-          m.add(fun(static_cast<front_ptr>(&ContainerType::front)), "front");
-          m.add(fun(static_cast<const_front_ptr>(&ContainerType::front)), "front");
+          m.add(fun([](ContainerType &container)->decltype(auto){ 
+                      if (container.empty()) {
+                        throw std::range_error("Container empty");
+                      } else {
+                        return (container.front());
+                      }
+                    }
+                  )
+                , "front");
+
+          m.add(fun([](const ContainerType &container)->decltype(auto){ 
+                      if (container.empty()) {
+                        throw std::range_error("Container empty");
+                      } else {
+                        return (container.front());
+                      }
+                    }
+                  )
+                , "front");
+
 
           m.add(fun(static_cast<push_ptr>(&ContainerType::push_front)),
               [&]()->std::string{
@@ -631,11 +608,27 @@ namespace chaiscript
         {
           m.add(user_type<VectorType>(), type);
 
-          typedef typename VectorType::reference (VectorType::*frontptr)();
-          typedef typename VectorType::const_reference (VectorType::*constfrontptr)() const;
+          m.add(fun([](VectorType &container)->decltype(auto){ 
+                      if (container.empty()) {
+                        throw std::range_error("Container empty");
+                      } else {
+                        return (container.front());
+                      }
+                    }
+                  )
+                , "front");
 
-          m.add(fun(static_cast<frontptr>(&VectorType::front)), "front");
-          m.add(fun(static_cast<constfrontptr>(&VectorType::front)), "front");
+          m.add(fun([](const VectorType &container)->decltype(auto){ 
+                      if (container.empty()) {
+                        throw std::range_error("Container empty");
+                      } else {
+                        return (container.front());
+                      }
+                    }
+                  )
+                , "front");
+
+
 
 
           back_insertion_sequence_type<VectorType>(type, m);

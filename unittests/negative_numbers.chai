@@ -1,0 +1,12 @@
+def numFunc(x)
+{
+  return x + 10;
+}
+
+
+// Note that unary prefix `-` has lower precedence than `.`
+// this is why these values are correct, even if counterintuitive
+
+assert_true(-5.numFunc() == -15);
+assert_true((-5).numFunc() == 5);
+

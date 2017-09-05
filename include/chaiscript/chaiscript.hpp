@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 #ifndef CHAISCRIPT_HPP_
 #define CHAISCRIPT_HPP_
@@ -65,7 +69,7 @@
 /// int main()
 /// {
 ///   chaiscript::ChaiScript chai;
-///   chai.add(&function, "function");
+///   chai.add(chaiscript::fun(&function), "function");
 ///
 ///   double d = chai.eval<double>("function(3, 4.75);");
 /// } 
@@ -827,11 +831,12 @@ namespace chaiscript
   {
     public:
       ChaiScript(std::vector<std::string> t_modulepaths = {},
-          std::vector<std::string> t_usepaths = {})
+          std::vector<std::string> t_usepaths = {},
+          const std::vector<Options> &t_opts = chaiscript::default_options())
         : ChaiScript_Basic(
             chaiscript::Std_Lib::library(),
             std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer_Default>>(),
-            t_modulepaths, t_usepaths)
+            t_modulepaths, t_usepaths, t_opts)
         {
         }
   };

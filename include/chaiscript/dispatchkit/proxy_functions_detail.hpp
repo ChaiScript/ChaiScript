@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 #ifndef CHAISCRIPT_PROXY_FUNCTIONS_DETAIL_HPP_
 #define CHAISCRIPT_PROXY_FUNCTIONS_DETAIL_HPP_
@@ -44,7 +48,7 @@ namespace chaiscript
 
       arity_error(const arity_error &) = default;
 
-      virtual ~arity_error() noexcept {}
+      ~arity_error() noexcept override = default;
 
       int got;
       int expected;
@@ -115,7 +119,15 @@ namespace chaiscript
             const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions)
         {
           call_func(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions);
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4702)
+#endif
+          // MSVC is reporting that this is unreachable code - and it's wrong.
           return Handle_Return<void>::handle();
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(pop)
+#endif
         }
 
     }

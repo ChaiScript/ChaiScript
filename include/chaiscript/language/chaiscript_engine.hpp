@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 #ifndef CHAISCRIPT_ENGINE_HPP_
 #define CHAISCRIPT_ENGINE_HPP_
@@ -32,12 +36,13 @@
 #include <unistd.h>
 #endif
 
-#if defined(_POSIX_VERSION) && !defined(__CYGWIN__) 
+#if !defined(CHAISCRIPT_NO_DYNLOAD) && defined(_POSIX_VERSION) && !defined(__CYGWIN__)
 #include <dlfcn.h>
 #endif
 
-
-#ifdef CHAISCRIPT_WINDOWS
+#if defined(CHAISCRIPT_NO_DYNLOAD)
+#include "chaiscript_unknown.hpp"
+#elif defined(CHAISCRIPT_WINDOWS)
 #include "chaiscript_windows.hpp"
 #elif _POSIX_VERSION
 #include "chaiscript_posix.hpp"
@@ -94,7 +99,7 @@ namespace chaiscript
     {
       try {
         const auto p = m_parser->parse(t_input, t_filename);
-        return p->eval(m_engine);
+        return p->eval(chaiscript::detail::Dispatch_State(m_engine));
       }
       catch (chaiscript::eval::detail::Return_Value &rv) {
         return rv.retval;
@@ -139,7 +144,7 @@ namespace chaiscript
     }
 
     /// Builds all the requirements for ChaiScript, including its evaluator and a run of its prelude.
-    void build_eval_system(const ModulePtr &t_lib) {
+    void build_eval_system(const ModulePtr &t_lib, const std::vector<Options> &t_opts) {
       if (t_lib)
       {
         add(t_lib);
@@ -160,9 +165,6 @@ namespace chaiscript
               })
           , "call_exists");
 
-//      m_engine.add(fun<Boxed_Value (const dispatch::Proxy_Function_Base *, const std::vector<Boxed_Value> &)>(std::bind(&chaiscript::dispatch::Proxy_Function_Base::operator(), std::placeholders::_1, std::placeholders::_2, std::ref(m_engine.conversions()))), "call");
-//
-//
 
       m_engine.add(fun(
             [=](const dispatch::Proxy_Function_Base &t_fun, const std::vector<Boxed_Value> &t_params) -> Boxed_Value {
@@ -184,13 +186,22 @@ namespace chaiscript
 
 
 
-      m_engine.add(fun([this](const std::string &t_module, const std::string &t_file){ return load_module(t_module, t_file); }), "load_module");
-      m_engine.add(fun([this](const std::string &t_module){ return load_module(t_module); }), "load_module");
+      if (std::find(t_opts.begin(), t_opts.end(), Options::No_Load_Modules) == t_opts.end()
+          && std::find(t_opts.begin(), t_opts.end(), Options::Load_Modules) != t_opts.end()) 
+      {
+        m_engine.add(fun([this](const std::string &t_module, const std::string &t_file){ return load_module(t_module, t_file); }), "load_module");
+        m_engine.add(fun([this](const std::string &t_module){ return load_module(t_module); }), "load_module");
+      }
 
-      m_engine.add(fun([this](const std::string &t_file){ return use(t_file); }), "use");
-      m_engine.add(fun([this](const std::string &t_file){ return internal_eval_file(t_file); }), "eval_file");
+      if (std::find(t_opts.begin(), t_opts.end(), Options::No_External_Scripts) == t_opts.end()
+          && std::find(t_opts.begin(), t_opts.end(), Options::External_Scripts) != t_opts.end())
+      {
+        m_engine.add(fun([this](const std::string &t_file){ return use(t_file); }), "use");
+        m_engine.add(fun([this](const std::string &t_file){ return internal_eval_file(t_file); }), "eval_file");
+      }
+
       m_engine.add(fun([this](const std::string &t_str){ return internal_eval(t_str); }), "eval");
-      m_engine.add(fun([this](const AST_NodePtr &t_ast){ return eval(t_ast); }), "eval");
+      m_engine.add(fun([this](const AST_Node &t_ast){ return eval(t_ast); }), "eval");
 
       m_engine.add(fun([this](const std::string &t_str, const bool t_dump){ return parse(t_str, t_dump); }), "parse");
       m_engine.add(fun([this](const std::string &t_str){ return parse(t_str); }), "parse");
@@ -228,59 +239,29 @@ namespace chaiscript
       }
     }
 
+    std::vector<std::string> ensure_minimum_path_vec(std::vector<std::string> paths)
+    {
+      if (paths.empty()) { return {""}; }
+      else { return paths; }
+    }
+
   public:
+
     /// \brief Constructor for ChaiScript
     /// \param[in] t_lib Standard library to apply to this ChaiScript instance
     /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
     /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
     ChaiScript_Basic(const ModulePtr &t_lib,
                      std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
-                     std::vector<std::string> t_modulepaths = {},
-                     std::vector<std::string> t_usepaths = {})
-      : m_module_paths(std::move(t_modulepaths)),
-        m_use_paths(std::move(t_usepaths)),
+                     std::vector<std::string> t_module_paths = {},
+                     std::vector<std::string> t_use_paths = {},
+                     const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options())
+      : m_module_paths(ensure_minimum_path_vec(std::move(t_module_paths))),
+        m_use_paths(ensure_minimum_path_vec(std::move(t_use_paths))),
         m_parser(std::move(parser)),
         m_engine(*m_parser)
     {
-      if (m_module_paths.empty())
-      {
-        m_module_paths.push_back("");
-      }
-
-      if (m_use_paths.empty())
-      {
-        m_use_paths.push_back("");
-      }
-
-      build_eval_system(t_lib);
-    }
-
-    /// \brief Constructor for ChaiScript.
-    /// 
-    /// This version of the ChaiScript constructor attempts to find the stdlib module to load
-    /// at runtime generates an error if it cannot be found.
-    ///
-    /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
-    /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
-    ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
-                     std::vector<std::string> t_modulepaths = {},
-                     std::vector<std::string> t_usepaths = {})
-      : m_module_paths(std::move(t_modulepaths)), 
-        m_use_paths(std::move(t_usepaths)),
-        m_parser(std::move(parser)),
-        m_engine(*m_parser)
-    {
-      if (m_module_paths.empty())
-      {
-        m_module_paths.push_back("");
-      }
-
-      if (m_use_paths.empty())
-      {
-        m_use_paths.push_back("");
-      }
-
-#if defined(_POSIX_VERSION) && !defined(__CYGWIN__) 
+#if !defined(CHAISCRIPT_NO_DYNLOAD) && defined(_POSIX_VERSION) && !defined(__CYGWIN__)
       // If on Unix, add the path of the current executable to the module search path
       // as windows would do
 
@@ -294,7 +275,7 @@ namespace chaiscript
       memset( &rInfo, 0, sizeof(rInfo) ); 
       cast_union u;
       u.in_ptr = &ChaiScript_Basic::use;
-      if ( dladdr(static_cast<void*>(u.out_ptr), &rInfo) && rInfo.dli_fname ) { 
+      if ( (dladdr(static_cast<void*>(u.out_ptr), &rInfo) != 0) && (rInfo.dli_fname != nullptr) ) { 
         std::string dllpath(rInfo.dli_fname);
         const size_t lastslash = dllpath.rfind('/');
         if (lastslash != std::string::npos)
@@ -313,8 +294,23 @@ namespace chaiscript
         m_module_paths.insert(m_module_paths.begin(), dllpath+"/");
       }
 #endif
+      build_eval_system(t_lib, t_opts);
+    }
 
-
+#ifndef CHAISCRIPT_NO_DYNLOAD
+    /// \brief Constructor for ChaiScript.
+    /// 
+    /// This version of the ChaiScript constructor attempts to find the stdlib module to load
+    /// at runtime generates an error if it cannot be found.
+    ///
+    /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
+    /// \param[in] t_usepaths Vector of paths to search when attempting to "use" an included ChaiScript file
+    explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
+                     std::vector<std::string> t_module_paths = {},
+                     std::vector<std::string> t_use_paths = {},
+                     const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options())
+      : ChaiScript_Basic({}, std::move(parser), t_module_paths, t_use_paths, t_opts)
+    {
       try {
         // attempt to load the stdlib
         load_module("chaiscript_stdlib-" + Build_Info::version());
@@ -330,15 +326,23 @@ namespace chaiscript
                   << t_err.what();
         throw;
       }
+    }
+#else // CHAISCRIPT_NO_DYNLOAD
+explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
+                          std::vector<std::string> t_module_paths = {},
+                          std::vector<std::string> t_use_paths = {},
+                          const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options()) = delete;
+#endif
 
-      build_eval_system(ModulePtr());
+    parser::ChaiScript_Parser_Base &get_parser()
+    {
+      return *m_parser;
     }
 
-
-    const Boxed_Value eval(const AST_NodePtr &t_ast)
+    const Boxed_Value eval(const AST_Node &t_ast)
     {
       try {
-        return t_ast->eval(m_engine);
+        return t_ast.eval(chaiscript::detail::Dispatch_State(m_engine));
       } catch (const exception::eval_error &t_ee) {
         throw Boxed_Value(t_ee);
       }
@@ -346,9 +350,9 @@ namespace chaiscript
 
     AST_NodePtr parse(const std::string &t_input, const bool t_debug_print = false)
     {
-      const auto ast = m_parser->parse(t_input, "PARSE");
+      auto ast = m_parser->parse(t_input, "PARSE");
       if (t_debug_print) {
-        m_parser->debug_print(ast);
+        m_parser->debug_print(*ast);
       }
       return ast;
     }
@@ -570,6 +574,10 @@ namespace chaiscript
     /// \throw chaiscript::exception::load_module_error In the event that no matching module can be found.
     std::string load_module(const std::string &t_module_name)
     {
+#ifdef CHAISCRIPT_NO_DYNLOAD
+      (void)t_module_name; // -Wunused-parameter
+      throw chaiscript::exception::load_module_error("Loadable module support was disabled (CHAISCRIPT_NO_DYNLOAD)");
+#else
       std::vector<exception::load_module_error> errors;
       std::string version_stripped_name = t_module_name;
       size_t version_pos = version_stripped_name.find("-" + Build_Info::version());
@@ -603,6 +611,7 @@ namespace chaiscript
       }
 
       throw chaiscript::exception::load_module_error(t_module_name, errors);
+#endif
     }
 
     /// \brief Load a binary module from a dynamic library. Works on platforms that support

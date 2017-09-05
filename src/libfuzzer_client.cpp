@@ -16,7 +16,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include <chaiscript/chaiscript_basic.hpp>
+#include <chaiscript/chaiscript.hpp>
 #include "../static_libs/chaiscript_parser.hpp"
 #include "../static_libs/chaiscript_stdlib.hpp"
 
@@ -265,141 +265,78 @@ double now()
   return duration_cast<duration<double>>(now.time_since_epoch()).count();
 }
 
-int main(int argc, char *argv[])
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
+  chaiscript::ChaiScript chai;
+
+  chai.eval( R"chaiscript(
+def assert_equal(x, y)
 {
-
-  // Disable deprecation warning for getenv call.
-#ifdef CHAISCRIPT_MSVC
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#endif
-
-  const char *usepath = getenv("CHAI_USE_PATH");
-  const char *modulepath = getenv("CHAI_MODULE_PATH");
-
-#ifdef CHAISCRIPT_MSVC
-#pragma warning(pop)
-#endif
-
-  std::vector<std::string> usepaths;
-  usepaths.push_back("");
-  if (usepath != nullptr)
+  if (x == y)
   {
-    usepaths.push_back(usepath);
+    // Passes
+  } else {
+    // Fails
+    print("assert_equal failure: got '" + to_string(y) + "' expected '" + to_string(x) + "'");
+//    exit(-1);
   }
-
-  std::vector<std::string> modulepaths;
-  std::vector<std::string> searchpaths = default_search_paths();
-  modulepaths.insert(modulepaths.end(), searchpaths.begin(), searchpaths.end());
-  modulepaths.push_back("");
-  if (modulepath != nullptr)
-  {
-    modulepaths.push_back(modulepath);
-  }
-
-  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser(),modulepaths,usepaths);
-
-  chai.add(chaiscript::fun(&myexit), "exit");
-  chai.add(chaiscript::fun(&myexit), "quit");
-  chai.add(chaiscript::fun(&help), "help");
-  chai.add(chaiscript::fun(&throws_exception), "throws_exception");
-  chai.add(chaiscript::fun(&get_eval_error), "get_eval_error");
-  chai.add(chaiscript::fun(&now), "now");
-
-  bool eval_error_ok = false;
-  bool boxed_exception_ok = false;
-  bool any_exception_ok = false;
-
-  for (int i = 0; i < argc; ++i) {
-    if ( i == 0 && argc > 1 ) {
-      ++i;
-    }
-
-    std::string arg( i != 0 ? argv[i] : "--interactive" );
-
-    enum { eInteractive
-         , eCommand
-         , eFile
-    } mode = eCommand ;
-
-    if  ( arg == "-c" || arg == "--command" ) {
-      if ( (i+1) >= argc ) {
-        std::cout << "insufficient input following " << arg << '\n';
-        return EXIT_FAILURE;
-      } 
-        arg = argv[++i];
-      
-    } else if ( arg == "-" || arg == "--stdin" ) {
-      arg = "" ;
-      std::string line;
-      while ( std::getline(std::cin, line) ) {
-        arg += line + '\n' ;
-      }
-    } else if ( arg == "-v" || arg == "--version" ) {
-      arg = "print(version())" ;
-    } else if ( arg == "-h" || arg == "--help" ) {
-      arg = "help(-1)";
-    } else if ( arg == "-e" || arg == "--evalerrorok" ) {
-      eval_error_ok = true;
-      continue;
-    } else if ( arg == "--exception" ) {
-      boxed_exception_ok = true;
-      continue;
-    } else if ( arg == "--any-exception" ) {
-      any_exception_ok = true;
-      continue;
-    } else if ( arg == "-i" || arg == "--interactive" ) {
-      mode = eInteractive ;
-    } else if ( arg.find('-') == 0 ) {
-      std::cout << "unrecognised argument " << arg << '\n';
-      return EXIT_FAILURE;
-    } else {
-      mode = eFile;
-    }
-
-    try {
-      switch ( mode ) {
-        case eInteractive:
-          interactive(chai);
-          break;
-        case eCommand:
-          chai.eval(arg);
-          break;
-        case eFile:
-          chai.eval_file(arg);
-      }
-    }
-    catch (const chaiscript::exception::eval_error &ee) {
-      std::cout << ee.pretty_print();
-      std::cout << '\n';
-
-      if (!eval_error_ok) {
-        return EXIT_FAILURE;
-      }
-    }
-    catch (const chaiscript::Boxed_Value &e) {
-      std::cout << "Unhandled exception thrown of type " << e.get_type_info().name() << '\n';
-
-      if (!boxed_exception_ok) {
-        return EXIT_FAILURE;
-      }
-    }
-    catch (const chaiscript::exception::load_module_error &e) {
-      std::cout << "Unhandled module load error\n" << e.what() << '\n';
-    }
-    catch (std::exception &e) {
-      std::cout << "Unhandled standard exception: " << e.what() << '\n';
-      if (!any_exception_ok) {
-        throw;
-      }
-    }
-    catch (...) {
-      std::cout << "Unhandled unknown exception" << '\n';
-      if (!any_exception_ok) {
-        throw;
-      }
-    }
-  }
-
-  return EXIT_SUCCESS;
 }
+
+def assert_false(f)
+{
+  if (f)
+  {
+    print("assert_false failure");
+//    exit(-1);
+  }
+}
+
+def assert_true(f)
+{
+  if (!f)
+  {
+    print("assert_true failure");
+//    exit(-1);
+  }
+}
+
+def assert_not_equal(x, y)
+{
+  if (!(x == y))
+  {
+    // Passes
+  } else {
+    // Fails
+    print("assert_not_equal failure: got " + to_string(y) + " which was not expected.");
+//    exit(-1);
+  }
+}
+
+def assert_throws(desc, x)
+{
+  if (throws_exception(x))
+  {
+    // Passes
+  } else {
+    // Fails
+    print("assert_throws failure, function did not throw exception: " + to_string(desc));
+//    exit(-1);
+  }
+})chaiscript");
+
+  try {
+    chai.eval(std::string(reinterpret_cast<const char *>(data), size));
+  } catch (const chaiscript::exception::eval_error &ee) {
+    std::cout << ee.pretty_print();
+    std::cout << '\n';
+  } catch (const chaiscript::Boxed_Value &e) {
+    std::cout << "Unhandled exception thrown of type " << e.get_type_info().name() << '\n';
+  } catch (const chaiscript::exception::load_module_error &e) {
+    std::cout << "Unhandled module load error\n" << e.what() << '\n';
+  } catch (const std::exception &e) {
+    std::cout << "unhandled unknown exception: " << e.what() << '\n';
+  }
+
+  return 0;
+}
+
+

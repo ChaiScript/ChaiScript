@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 #ifndef CHAISCRIPT_BOXED_VALUE_HPP_
 #define CHAISCRIPT_BOXED_VALUE_HPP_
@@ -35,11 +39,11 @@ namespace chaiscript
       {
         Data(const Type_Info &ti,
             chaiscript::detail::Any to,
-            bool tr,
+            bool is_ref,
             const void *t_void_ptr,
             bool t_return_value)
           : m_type_info(ti), m_obj(std::move(to)), m_data_ptr(ti.is_const()?nullptr:const_cast<void *>(t_void_ptr)), m_const_data_ptr(t_void_ptr),
-            m_is_ref(tr), m_return_value(t_return_value)
+            m_is_ref(is_ref), m_return_value(t_return_value)
         {
         }
 
@@ -54,7 +58,7 @@ namespace chaiscript
 
           if (rhs.m_attrs)
           {
-            m_attrs = std::unique_ptr<std::map<std::string, std::shared_ptr<Data>>>(new std::map<std::string, std::shared_ptr<Data>>(*rhs.m_attrs));
+            m_attrs = std::make_unique<std::map<std::string, std::shared_ptr<Data>>>(*rhs.m_attrs);
           }
 
           return *this;
@@ -119,6 +123,8 @@ namespace chaiscript
                 );
           }
 
+
+
         template<typename T>
           static auto get(T *t, bool t_return_value)
           {
@@ -141,6 +147,19 @@ namespace chaiscript
                   chaiscript::detail::Any(std::move(obj)),
                   true,
                   p,
+                  t_return_value
+                );
+          }
+
+        template<typename T>
+          static auto get(std::unique_ptr<T> &&obj, bool t_return_value)
+          {
+            auto ptr = obj.get();
+            return std::make_shared<Data>(
+                  detail::Get_Type_Info<T>::get(), 
+                  chaiscript::detail::Any(std::make_shared<std::unique_ptr<T>>(std::move(obj))), 
+                  true,
+                  ptr,
                   t_return_value
                 );
           }
@@ -236,8 +255,9 @@ namespace chaiscript
           ~Sentinel()
           {
             // save new pointer data
-            m_data.get().m_data_ptr = m_ptr.get().get();
-            m_data.get().m_const_data_ptr = m_ptr.get().get();
+            const auto ptr_ = m_ptr.get().get();
+            m_data.get().m_data_ptr = ptr_;
+            m_data.get().m_const_data_ptr = ptr_;
           }
 
           Sentinel& operator=(Sentinel&&s) = default;
@@ -302,7 +322,7 @@ namespace chaiscript
       {
         if (!m_data->m_attrs)
         {
-          m_data->m_attrs = std::unique_ptr<std::map<std::string, std::shared_ptr<Data>>>(new std::map<std::string, std::shared_ptr<Data>>());
+          m_data->m_attrs = std::make_unique<std::map<std::string, std::shared_ptr<Data>>>();
         }
 
         auto &attr = (*m_data->m_attrs)[t_name];
@@ -319,7 +339,7 @@ namespace chaiscript
       {
         if (t_obj.m_data->m_attrs)
         {
-          m_data->m_attrs = std::unique_ptr<std::map<std::string, std::shared_ptr<Data>>>(new std::map<std::string, std::shared_ptr<Data>>(*t_obj.m_data->m_attrs));
+          m_data->m_attrs = std::make_unique<std::map<std::string, std::shared_ptr<Data>>>(*t_obj.m_data->m_attrs);
         }
         return *this;
       }
@@ -342,8 +362,8 @@ namespace chaiscript
       // necessary to avoid hitting the templated && constructor of Boxed_Value
       struct Internal_Construction{};
 
-      Boxed_Value(const std::shared_ptr<Data> &t_data, Internal_Construction)
-        : m_data(t_data) {
+      Boxed_Value(std::shared_ptr<Data> t_data, Internal_Construction)
+        : m_data(std::move(t_data)) {
       }
 
       std::shared_ptr<Data> m_data = Object_Data::get();

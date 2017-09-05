@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 #ifndef CHAISCRIPT_EVAL_HPP_
 #define CHAISCRIPT_EVAL_HPP_
@@ -43,13 +47,13 @@ namespace chaiscript
   {
     template<typename T> struct AST_Node_Impl;
 
-    template<typename T> using AST_Node_Impl_Ptr = typename std::shared_ptr<AST_Node_Impl<T>>;
+    template<typename T> using AST_Node_Impl_Ptr = typename std::unique_ptr<AST_Node_Impl<T>>;
 
     namespace detail
     {
       /// Helper function that will set up the scope around a function call, including handling the named function parameters
       template<typename T>
-      static Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_Node_Impl_Ptr<T> &t_node, const std::vector<std::string> &t_param_names, const std::vector<Boxed_Value> &t_vals, const std::map<std::string, Boxed_Value> *t_locals=nullptr) {
+      static Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_Node_Impl<T> &t_node, const std::vector<std::string> &t_param_names, const std::vector<Boxed_Value> &t_vals, const std::map<std::string, Boxed_Value> *t_locals=nullptr, bool has_this_capture = false) {
         chaiscript::detail::Dispatch_State state(t_ss);
 
         const Boxed_Value *thisobj = [&]() -> const Boxed_Value *{
@@ -64,7 +68,7 @@ namespace chaiscript
         }();
 
         chaiscript::eval::detail::Stack_Push_Pop tpp(state);
-        if (thisobj) state.add_object("this", *thisobj);
+        if (thisobj && !has_this_capture) { state.add_object("this", *thisobj); }
 
         if (t_locals) {
           for (const auto &local : *t_locals) {
@@ -79,7 +83,7 @@ namespace chaiscript
         }
 
         try {
-          return t_node->eval(state);
+          return t_node.eval(state);
         } catch (detail::Return_Value &rv) {
           return std::move(rv.retval);
         } 
@@ -91,14 +95,25 @@ namespace chaiscript
     {
       AST_Node_Impl(std::string t_ast_node_text, AST_Node_Type t_id, Parse_Location t_loc, 
                std::vector<AST_Node_Impl_Ptr<T>> t_children = std::vector<AST_Node_Impl_Ptr<T>>())
-        : AST_Node(std::move(t_ast_node_text), std::move(t_id), std::move(t_loc)),
+        : AST_Node(std::move(t_ast_node_text), t_id, std::move(t_loc)),
           children(std::move(t_children))
       {
       }
 
+      static bool get_scoped_bool_condition(const AST_Node_Impl<T> &node, const chaiscript::detail::Dispatch_State &t_ss) {
+        chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+        return get_bool_condition(node.eval(t_ss), t_ss);
+      }
 
-      std::vector<AST_NodePtr> get_children() const final {
-        return {children.begin(), children.end()};
+
+      std::vector<std::reference_wrapper<AST_Node>> get_children() const final {
+        std::vector<std::reference_wrapper<AST_Node>> retval;
+        retval.reserve(children.size());
+        for (auto &&child : children) {
+          retval.emplace_back(*child);
+        }
+
+        return retval;
       }
 
       Boxed_Value eval(const chaiscript::detail::Dispatch_State &t_e) const final
@@ -107,7 +122,7 @@ namespace chaiscript
           T::trace(t_e, this);
           return eval_internal(t_e);
         } catch (exception::eval_error &ee) {
-          ee.call_stack.push_back(shared_from_this());
+          ee.call_stack.push_back(*this);
           throw;
         }
       }
@@ -238,7 +253,7 @@ namespace chaiscript
       {
       }
 
-      Constant_AST_Node(Boxed_Value t_value)
+      explicit Constant_AST_Node(Boxed_Value t_value)
         : AST_Node_Impl<T>("", AST_Node_Type::Constant, Parse_Location()),
           m_value(std::move(t_value))
       {
@@ -270,60 +285,15 @@ namespace chaiscript
         mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
-
     template<typename T>
-    struct Unused_Return_Fun_Call_AST_Node final : AST_Node_Impl<T> {
-        Unused_Return_Fun_Call_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
-          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Unused_Return_Fun_Call, std::move(t_loc), std::move(t_children)) { }
-
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
-        {
-          chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-
-          std::vector<Boxed_Value> params;
-
-          params.reserve(this->children[1]->children.size());
-          for (const auto &child : this->children[1]->children) {
-            params.push_back(child->eval(t_ss));
-          }
-
-          Boxed_Value fn(this->children[0]->eval(t_ss));
-
-          try {
-            return (*t_ss->boxed_cast<const dispatch::Proxy_Function_Base *>(fn))(params, t_ss.conversions());
-          }
-          catch(const exception::dispatch_error &e){
-            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, e.functions, false, *t_ss);
-          }
-          catch(const exception::bad_boxed_cast &){
-            try {
-              Const_Proxy_Function f = t_ss->boxed_cast<const Const_Proxy_Function &>(fn);
-              // handle the case where there is only 1 function to try to call and dispatch fails on it
-              throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, {f}, false, *t_ss);
-            } catch (const exception::bad_boxed_cast &) {
-              throw exception::eval_error("'" + this->children[0]->pretty_print() + "' does not evaluate to a function.");
-            }
-          }
-          catch(const exception::arity_error &e){
-            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
-          }
-          catch(const exception::guard_error &e){
-            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
-          }
-          catch(detail::Return_Value &rv) {
-            return rv.retval;
-          }
-        }
-    };
-
-
-
-    template<typename T>
-    struct Fun_Call_AST_Node final : AST_Node_Impl<T> {
+    struct Fun_Call_AST_Node : AST_Node_Impl<T> {
         Fun_Call_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
-          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Fun_Call, std::move(t_loc), std::move(t_children)) { }
+          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Fun_Call, std::move(t_loc), std::move(t_children)) { 
+            assert(!this->children.empty());
+          }
 
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
+        template<bool Save_Params>
+        Boxed_Value do_eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const
         {
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
@@ -334,7 +304,9 @@ namespace chaiscript
             params.push_back(child->eval(t_ss));
           }
 
-          fpp.save_params(params);
+          if (Save_Params) {
+            fpp.save_params(params);
+          }
 
           Boxed_Value fn(this->children[0]->eval(t_ss));
 
@@ -364,8 +336,26 @@ namespace chaiscript
           }
         }
 
+        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
+        {
+          return do_eval_internal<true>(t_ss);
+        }
 
     };
+
+
+    template<typename T>
+    struct Unused_Return_Fun_Call_AST_Node final : Fun_Call_AST_Node<T> {
+        Unused_Return_Fun_Call_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
+          Fun_Call_AST_Node<T>(std::move(t_ast_node_text), std::move(t_loc), std::move(t_children)) { }
+
+        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
+        {
+          return this->template do_eval_internal<false>(t_ss);
+        }
+    };
+
+
 
 
 
@@ -382,44 +372,44 @@ namespace chaiscript
           AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Arg_List, std::move(t_loc), std::move(t_children)) { }
 
 
-        static std::string get_arg_name(const AST_Node_Impl_Ptr<T> &t_node) {
-          if (t_node->children.empty())
+        static std::string get_arg_name(const AST_Node_Impl<T> &t_node) {
+          if (t_node.children.empty())
           {
-            return t_node->text;
-          } else if (t_node->children.size() == 1) {
-            return t_node->children[0]->text;
+            return t_node.text;
+          } else if (t_node.children.size() == 1) {
+            return t_node.children[0]->text;
           } else {
-            return t_node->children[1]->text;
+            return t_node.children[1]->text;
           }
         }
 
-        static std::vector<std::string> get_arg_names(const AST_Node_Impl_Ptr<T> &t_node) {
+        static std::vector<std::string> get_arg_names(const AST_Node_Impl<T> &t_node) {
           std::vector<std::string> retval;
 
-          for (const auto &node : t_node->children)
+          for (const auto &node : t_node.children)
           {
-            retval.push_back(get_arg_name(node));
+            retval.push_back(get_arg_name(*node));
           }
 
           return retval;
         }
 
-        static std::pair<std::string, Type_Info> get_arg_type(const AST_Node_Impl_Ptr<T> &t_node, const chaiscript::detail::Dispatch_State &t_ss) 
+        static std::pair<std::string, Type_Info> get_arg_type(const AST_Node_Impl<T> &t_node, const chaiscript::detail::Dispatch_State &t_ss) 
         {
-          if (t_node->children.size() < 2)
+          if (t_node.children.size() < 2)
           {
             return {};
           } else {
-            return {t_node->children[0]->text, t_ss->get_type(t_node->children[0]->text, false)};
+            return {t_node.children[0]->text, t_ss->get_type(t_node.children[0]->text, false)};
           }
         }
 
-        static dispatch::Param_Types get_arg_types(const AST_Node_Impl_Ptr<T> &t_node, const chaiscript::detail::Dispatch_State &t_ss) {
+        static dispatch::Param_Types get_arg_types(const AST_Node_Impl<T> &t_node, const chaiscript::detail::Dispatch_State &t_ss) {
           std::vector<std::pair<std::string, Type_Info>> retval;
 
-          for (const auto &child : t_node->children)
+          for (const auto &child : t_node.children)
           {
-            retval.push_back(get_arg_type(child, t_ss));
+            retval.push_back(get_arg_type(*child, t_ss));
           }
 
           return dispatch::Param_Types(std::move(retval));
@@ -455,13 +445,13 @@ namespace chaiscript
             try {
 
               if (lhs.is_undef()) {
-                if ((!this->children.empty()
+                if (!this->children.empty()
                      && ((this->children[0]->identifier == AST_Node_Type::Reference)
                          || (!this->children[0]->children.empty()
                               && this->children[0]->children[0]->identifier == AST_Node_Type::Reference)
                        )
-                    )
                    )
+                  
                 {
                   /// \todo This does not handle the case of an unassigned reference variable
                   ///       being assigned outside of its declaration
@@ -639,8 +629,16 @@ namespace chaiscript
     template<typename T>
     struct Lambda_AST_Node final : AST_Node_Impl<T> {
         Lambda_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
-          AST_Node_Impl<T>(t_ast_node_text, AST_Node_Type::Lambda, std::move(t_loc), std::move(t_children)),
-          m_param_names(Arg_List_AST_Node<T>::get_arg_names(this->children[1])) { }
+          AST_Node_Impl<T>(t_ast_node_text, 
+              AST_Node_Type::Lambda, 
+              std::move(t_loc), 
+              std::vector<AST_Node_Impl_Ptr<T>>(std::make_move_iterator(t_children.begin()), 
+                                                std::make_move_iterator(std::prev(t_children.end())))
+              ),
+          m_param_names(Arg_List_AST_Node<T>::get_arg_names(*this->children[1])),
+          m_this_capture(has_this_capture(this->children[0]->children)),
+          m_lambda_node(std::move(t_children.back()))
+        { }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
 
@@ -653,25 +651,34 @@ namespace chaiscript
           }();
 
           const auto numparams = this->children[1]->children.size();
-          const auto param_types = Arg_List_AST_Node<T>::get_arg_types(this->children[1], t_ss);
+          const auto param_types = Arg_List_AST_Node<T>::get_arg_types(*this->children[1], t_ss);
 
-          const auto &lambda_node = this->children.back();
           std::reference_wrapper<chaiscript::detail::Dispatch_Engine> engine(*t_ss);
 
           return Boxed_Value(
               dispatch::make_dynamic_proxy_function(
-                  [engine, lambda_node, param_names = this->m_param_names, captures](const std::vector<Boxed_Value> &t_params)
+                  [engine, lambda_node = this->m_lambda_node, param_names = this->m_param_names, captures, 
+                   this_capture = this->m_this_capture] (const std::vector<Boxed_Value> &t_params)
                   {
-                    return detail::eval_function(engine, lambda_node, param_names, t_params, &captures);
+                    return detail::eval_function(engine, *lambda_node, param_names, t_params, &captures, this_capture);
                   },
-                  static_cast<int>(numparams), lambda_node, param_types
+                  static_cast<int>(numparams), m_lambda_node, param_types
                 )
+              );
+        }
+
+        static bool has_this_capture(const std::vector<AST_Node_Impl_Ptr<T>> &children) {
+          return std::any_of(std::begin(children), std::end(children),
+                [](const auto &child){
+                  return child->children[0]->text == "this";
+                }
               );
         }
 
       private:
         const std::vector<std::string> m_param_names;
-
+        const bool m_this_capture = false;
+        const std::shared_ptr<AST_Node_Impl<T>> m_lambda_node;
     };
 
     template<typename T>
@@ -706,55 +713,81 @@ namespace chaiscript
 
     template<typename T>
     struct Def_AST_Node final : AST_Node_Impl<T> {
+
+        std::shared_ptr<AST_Node_Impl<T>> m_body_node;
+        std::shared_ptr<AST_Node_Impl<T>> m_guard_node;
+
         Def_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
-          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Def, std::move(t_loc), std::move(t_children)) { }
+          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Def, std::move(t_loc), 
+              std::vector<AST_Node_Impl_Ptr<T>>(std::make_move_iterator(t_children.begin()), 
+                                                std::make_move_iterator(std::prev(t_children.end(), has_guard(t_children, 1)?2:1)))
+              ),
+              m_body_node(get_body_node(std::move(t_children))),
+              m_guard_node(get_guard_node(std::move(t_children), t_children.size()-this->children.size()==2))
+
+        { }
+
+        static std::shared_ptr<AST_Node_Impl<T>> get_guard_node(std::vector<AST_Node_Impl_Ptr<T>> &&vec, bool has_guard)
+        {
+          if (has_guard) {
+            return std::move(*std::prev(vec.end(), 2));
+          } else {
+            return {};
+          }
+        }
+
+        static std::shared_ptr<AST_Node_Impl<T>> get_body_node(std::vector<AST_Node_Impl_Ptr<T>> &&vec)
+        {
+          return std::move(vec.back());
+        }
+
+        static bool has_guard(const std::vector<AST_Node_Impl_Ptr<T>> &t_children, const std::size_t offset)
+        {
+          if ((t_children.size() > 2 + offset) && (t_children[1+offset]->identifier == AST_Node_Type::Arg_List)) {
+            if (t_children.size() > 3 + offset) {
+              return true;
+            }
+          }
+          else {
+            if (t_children.size() > 2 + offset) {
+              return true;
+            }
+          }
+          return false;
+        }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override{
           std::vector<std::string> t_param_names;
           size_t numparams = 0;
-          AST_Node_Impl_Ptr<T> guardnode;
 
           dispatch::Param_Types param_types;
 
-          if ((this->children.size() > 2) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
+          if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
             numparams = this->children[1]->children.size();
-            t_param_names = Arg_List_AST_Node<T>::get_arg_names(this->children[1]);
-            param_types = Arg_List_AST_Node<T>::get_arg_types(this->children[1], t_ss);
-
-            if (this->children.size() > 3) {
-              guardnode = this->children[2];
-            }
-          }
-          else {
-            //no parameters
-            numparams = 0;
-
-            if (this->children.size() > 2) {
-              guardnode = this->children[1];
-            }
+            t_param_names = Arg_List_AST_Node<T>::get_arg_names(*this->children[1]);
+            param_types = Arg_List_AST_Node<T>::get_arg_types(*this->children[1], t_ss);
           }
 
           std::reference_wrapper<chaiscript::detail::Dispatch_Engine> engine(*t_ss);
           std::shared_ptr<dispatch::Proxy_Function_Base> guard;
-          if (guardnode) {
+          if (m_guard_node) {
             guard = dispatch::make_dynamic_proxy_function(
-                [engine, guardnode, t_param_names](const std::vector<Boxed_Value> &t_params)
+                [engine, guardnode = m_guard_node, t_param_names](const std::vector<Boxed_Value> &t_params)
                 {
-                  return detail::eval_function(engine, guardnode, t_param_names, t_params);
+                  return detail::eval_function(engine, *guardnode, t_param_names, t_params);
                 },
-                static_cast<int>(numparams), guardnode);
+                static_cast<int>(numparams), m_guard_node);
           }
 
           try {
             const std::string & l_function_name = this->children[0]->text;
-            const auto & func_node = this->children.back();
             t_ss->add(
                 dispatch::make_dynamic_proxy_function(
-                  [engine, guardnode, func_node, t_param_names](const std::vector<Boxed_Value> &t_params)
+                  [engine, func_node = m_body_node, t_param_names](const std::vector<Boxed_Value> &t_params)
                   {
-                    return detail::eval_function(engine, func_node, t_param_names, t_params);
+                    return detail::eval_function(engine, *func_node, t_param_names, t_params);
                   },
-                  static_cast<int>(numparams), this->children.back(),
+                  static_cast<int>(numparams), m_body_node,
                   param_types, guard), l_function_name);
           } catch (const exception::name_conflict_error &e) {
             throw exception::eval_error("Function redefined '" + e.name() + "'");
@@ -773,7 +806,7 @@ namespace chaiscript
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
           try {
-            while (this->get_bool_condition(this->children[0]->eval(t_ss))) {
+            while (this->get_scoped_bool_condition(*this->children[0], t_ss)) {
               try {
                 this->children[1]->eval(t_ss);
               } catch (detail::Continue_Loop &) {
@@ -808,22 +841,6 @@ namespace chaiscript
         }
     };
 
-    template<typename T>
-    struct Ternary_Cond_AST_Node final : AST_Node_Impl<T> {
-        Ternary_Cond_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
-          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Ternary_Cond, std::move(t_loc), std::move(t_children)) 
-          { assert(this->children.size() == 3); }
-
-        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
-          if (this->get_bool_condition(this->children[0]->eval(t_ss))) {
-            return this->children[1]->eval(t_ss);
-          } else {
-            return this->children[2]->eval(t_ss);
-          }
-        }
-
-    };
-
 
     template<typename T>
     struct If_AST_Node final : AST_Node_Impl<T> {
@@ -834,7 +851,7 @@ namespace chaiscript
         }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
-          if (this->get_bool_condition(this->children[0]->eval(t_ss))) {
+          if (this->get_bool_condition(this->children[0]->eval(t_ss), t_ss)) {
             return this->children[1]->eval(t_ss);
           } else {
             return this->children[2]->eval(t_ss);
@@ -852,7 +869,7 @@ namespace chaiscript
           const auto get_function = [&t_ss](const std::string &t_name, auto &t_hint){
             uint_fast32_t hint = t_hint;
             auto funs = t_ss->get_function(t_name, hint);
-            if (funs.first != hint) t_hint = uint_fast32_t(funs.first);
+            if (funs.first != hint) { t_hint = uint_fast32_t(funs.first); }
             return std::move(funs.second);
           };
 
@@ -932,7 +949,7 @@ namespace chaiscript
           try {
             for (
                 this->children[0]->eval(t_ss);
-                this->get_bool_condition(this->children[1]->eval(t_ss));
+                this->get_scoped_bool_condition(*this->children[1], t_ss);
                 this->children[2]->eval(t_ss)
                 ) {
               try {
@@ -1253,32 +1270,32 @@ namespace chaiscript
           }
           for (size_t i = 1; i < end_point; ++i) {
             chaiscript::eval::detail::Scope_Push_Pop catch_scope(t_ss);
-            AST_Node_Impl_Ptr<T> catch_block = this->children[i];
+            auto &catch_block = *this->children[i];
 
-            if (catch_block->children.size() == 1) {
+            if (catch_block.children.size() == 1) {
               //No variable capture, no guards
-              retval = catch_block->children[0]->eval(t_ss);
+              retval = catch_block.children[0]->eval(t_ss);
               break;
-            } else if (catch_block->children.size() == 2 || catch_block->children.size() == 3) {
-              const auto name = Arg_List_AST_Node<T>::get_arg_name(catch_block->children[0]);
+            } else if (catch_block.children.size() == 2 || catch_block.children.size() == 3) {
+              const auto name = Arg_List_AST_Node<T>::get_arg_name(*catch_block.children[0]);
 
               if (dispatch::Param_Types(
-                    std::vector<std::pair<std::string, Type_Info>>{Arg_List_AST_Node<T>::get_arg_type(catch_block->children[0], t_ss)}
-                    ).match(std::vector<Boxed_Value>{t_except}, t_ss.conversions()))
+                    std::vector<std::pair<std::string, Type_Info>>{Arg_List_AST_Node<T>::get_arg_type(*catch_block.children[0], t_ss)}
+                    ).match(std::vector<Boxed_Value>{t_except}, t_ss.conversions()).first)
               {
                 t_ss.add_object(name, t_except);
 
-                if (catch_block->children.size() == 2) {
+                if (catch_block.children.size() == 2) {
                   //Variable capture, no guards
-                  retval = catch_block->children[1]->eval(t_ss);
+                  retval = catch_block.children[1]->eval(t_ss);
                   break;
                 }
-                else if (catch_block->children.size() == 3) {
+                else if (catch_block.children.size() == 3) {
                   //Variable capture, guards
 
                   bool guard = false;
                   try {
-                    guard = boxed_cast<bool>(catch_block->children[1]->eval(t_ss));
+                    guard = boxed_cast<bool>(catch_block.children[1]->eval(t_ss));
                   } catch (const exception::bad_boxed_cast &) {
                     if (this->children.back()->identifier == AST_Node_Type::Finally) {
                       this->children.back()->children[0]->eval(t_ss);
@@ -1286,7 +1303,7 @@ namespace chaiscript
                     throw exception::eval_error("Guard condition not boolean");
                   }
                   if (guard) {
-                    retval = catch_block->children[2]->eval(t_ss);
+                    retval = catch_block.children[2]->eval(t_ss);
                     break;
                   }
                 }
@@ -1312,11 +1329,8 @@ namespace chaiscript
           try {
             retval = this->children[0]->eval(t_ss);
           }
-          catch (exception::eval_error &) {
-            if (this->children.back()->identifier == AST_Node_Type::Finally) {
-              this->children.back()->children[0]->eval(t_ss);
-            }
-            throw;
+          catch (const exception::eval_error &e) {
+            retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
           }
           catch (const std::runtime_error &e) {
             retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
@@ -1361,55 +1375,50 @@ namespace chaiscript
 
     template<typename T>
     struct Method_AST_Node final : AST_Node_Impl<T> {
+        std::shared_ptr<AST_Node_Impl<T>> m_body_node;
+        std::shared_ptr<AST_Node_Impl<T>> m_guard_node;
+
         Method_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
-          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Method, std::move(t_loc), std::move(t_children)) { }
+          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Method, std::move(t_loc),
+              std::vector<AST_Node_Impl_Ptr<T>>(std::make_move_iterator(t_children.begin()), 
+                                                std::make_move_iterator(std::prev(t_children.end(), Def_AST_Node<T>::has_guard(t_children, 1)?2:1)))
+              ),
+            m_body_node(Def_AST_Node<T>::get_body_node(std::move(t_children))),
+            m_guard_node(Def_AST_Node<T>::get_guard_node(std::move(t_children), t_children.size()-this->children.size()==2))
+          {
+          }
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override{
 
           AST_Node_Impl_Ptr<T> guardnode;
 
-          const auto d = t_ss->get_parent_locals();
-          const auto itr = d.find("_current_class_name");
-          const auto class_offset = (itr != d.end())?-1:0;
-          const std::string & class_name = (itr != d.end())?std::string(boxed_cast<std::string>(itr->second)):this->children[0]->text;
+          const std::string & class_name = this->children[0]->text;
 
           //The first param of a method is always the implied this ptr.
           std::vector<std::string> t_param_names{"this"};
           dispatch::Param_Types param_types;
 
-          if ((this->children.size() > static_cast<size_t>(3 + class_offset)) 
-               && (this->children[static_cast<size_t>(2 + class_offset)]->identifier == AST_Node_Type::Arg_List)) {
-            auto args = Arg_List_AST_Node<T>::get_arg_names(this->children[static_cast<size_t>(2 + class_offset)]);
+          if ((this->children.size() > 2) 
+               && (this->children[2]->identifier == AST_Node_Type::Arg_List)) {
+            auto args = Arg_List_AST_Node<T>::get_arg_names(*this->children[2]);
             t_param_names.insert(t_param_names.end(), args.begin(), args.end());
-            param_types = Arg_List_AST_Node<T>::get_arg_types(this->children[static_cast<size_t>(2 + class_offset)], t_ss);
-
-            if (this->children.size() > static_cast<size_t>(4 + class_offset)) {
-              guardnode = this->children[static_cast<size_t>(3 + class_offset)];
-            }
-          }
-          else {
-            //no parameters
-
-            if (this->children.size() > static_cast<size_t>(3 + class_offset)) {
-              guardnode = this->children[static_cast<size_t>(2 + class_offset)];
-            }
+            param_types = Arg_List_AST_Node<T>::get_arg_types(*this->children[2], t_ss);
           }
 
           const size_t numparams = t_param_names.size();
 
           std::shared_ptr<dispatch::Proxy_Function_Base> guard;
           std::reference_wrapper<chaiscript::detail::Dispatch_Engine> engine(*t_ss);
-          if (guardnode) {
+          if (m_guard_node) {
             guard = dispatch::make_dynamic_proxy_function(
-                [engine, t_param_names, guardnode](const std::vector<Boxed_Value> &t_params) {
-                  return chaiscript::eval::detail::eval_function(engine, guardnode, t_param_names, t_params);
+                [engine, t_param_names, guardnode = m_guard_node](const std::vector<Boxed_Value> &t_params) {
+                  return chaiscript::eval::detail::eval_function(engine, *guardnode, t_param_names, t_params);
                 }, 
-                static_cast<int>(numparams), guardnode);
+                static_cast<int>(numparams), m_guard_node);
           }
 
           try {
-            const std::string & function_name = this->children[static_cast<size_t>(1 + class_offset)]->text;
-            auto node = this->children.back();
+            const std::string & function_name = this->children[1]->text;
 
             if (function_name == class_name) {
               param_types.push_front(class_name, Type_Info());
@@ -1417,10 +1426,10 @@ namespace chaiscript
               t_ss->add(
                   std::make_shared<dispatch::detail::Dynamic_Object_Constructor>(class_name,
                     dispatch::make_dynamic_proxy_function(
-                        [engine, t_param_names, node](const std::vector<Boxed_Value> &t_params) {
-                          return chaiscript::eval::detail::eval_function(engine, node, t_param_names, t_params);
+                        [engine, t_param_names, node = m_body_node](const std::vector<Boxed_Value> &t_params) {
+                          return chaiscript::eval::detail::eval_function(engine, *node, t_param_names, t_params);
                         },
-                        static_cast<int>(numparams), node, param_types, guard
+                        static_cast<int>(numparams), m_body_node, param_types, guard
                       )
                     ),
                   function_name);
@@ -1431,15 +1440,17 @@ namespace chaiscript
               auto type = t_ss->get_type(class_name, false);
               param_types.push_front(class_name, type);
 
-              t_ss->add(std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name,
+              t_ss->add(
+                  std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name,
                     dispatch::make_dynamic_proxy_function(
-                      [engine, t_param_names, node](const std::vector<Boxed_Value> &t_params) {
-                        return chaiscript::eval::detail::eval_function(engine, node, t_param_names, t_params);
+                      [engine, t_param_names, node = m_body_node](const std::vector<Boxed_Value> &t_params) {
+                        return chaiscript::eval::detail::eval_function(engine, *node, t_param_names, t_params);
                       },
-                      static_cast<int>(numparams), node, param_types, guard), type), 
+                      static_cast<int>(numparams), m_body_node, param_types, guard), type), 
                   function_name);
             }
           } catch (const exception::name_conflict_error &e) {
+            std::cout << "Method!!" << std::endl;
             throw exception::eval_error("Method redefined '" + e.name() + "'");
           }
           return void_var();
@@ -1454,13 +1465,10 @@ namespace chaiscript
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override 
         {
-          const auto &d = t_ss->get_parent_locals();
-          const auto itr = d.find("_current_class_name");
-          const auto class_offset = (itr != d.end())?-1:0;
-          std::string class_name = (itr != d.end())?std::string(boxed_cast<std::string>(itr->second)):this->children[0]->text;
+          std::string class_name = this->children[0]->text;
 
           try {
-            std::string attr_name = this->children[static_cast<size_t>(1 + class_offset)]->text;
+            std::string attr_name = this->children[1]->text;
 
             t_ss->add(
                 std::make_shared<dispatch::detail::Dynamic_Object_Function>(
@@ -1470,7 +1478,7 @@ namespace chaiscript
                          }),
                      true
 
-                ), this->children[static_cast<size_t>(1 + class_offset)]->text);
+                ), this->children[1]->text);
           } catch (const exception::name_conflict_error &e) {
             throw exception::eval_error("Attribute redefined '" + e.name() + "'");
           }
@@ -1488,8 +1496,8 @@ namespace chaiscript
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
         {
-          return const_var(this->get_bool_condition(this->children[0]->eval(t_ss))
-              && this->get_bool_condition(this->children[1]->eval(t_ss)));
+          return const_var(this->get_bool_condition(this->children[0]->eval(t_ss), t_ss)
+              && this->get_bool_condition(this->children[1]->eval(t_ss), t_ss));
         }
 
     };
@@ -1502,8 +1510,8 @@ namespace chaiscript
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override
         {
-          return const_var(this->get_bool_condition(this->children[0]->eval(t_ss))
-              || this->get_bool_condition(this->children[1]->eval(t_ss)));
+          return const_var(this->get_bool_condition(this->children[0]->eval(t_ss), t_ss)
+              || this->get_bool_condition(this->children[1]->eval(t_ss), t_ss));
         }
     };
   }

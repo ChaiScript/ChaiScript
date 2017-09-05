@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 #ifndef CHAISCRIPT_DYNAMIC_CAST_CONVERSION_HPP_
 #define CHAISCRIPT_DYNAMIC_CAST_CONVERSION_HPP_
@@ -39,14 +43,14 @@ namespace chaiscript
         {
         }
 
-        bad_boxed_dynamic_cast(const std::string &w) noexcept
+        explicit bad_boxed_dynamic_cast(const std::string &w) noexcept
           : bad_boxed_cast(w)
         {
         }
 
         bad_boxed_dynamic_cast(const bad_boxed_dynamic_cast &) = default;
 
-        virtual ~bad_boxed_dynamic_cast() noexcept = default;
+        ~bad_boxed_dynamic_cast() noexcept override = default;
     };
 
     class bad_boxed_type_cast : public bad_boxed_cast
@@ -63,14 +67,14 @@ namespace chaiscript
         {
         }
 
-        bad_boxed_type_cast(const std::string &w) noexcept
+        explicit bad_boxed_type_cast(const std::string &w) noexcept
           : bad_boxed_cast(w)
         {
         }
 
         bad_boxed_type_cast(const bad_boxed_type_cast &) = default;
 
-        virtual ~bad_boxed_type_cast() noexcept = default;
+        ~bad_boxed_type_cast() noexcept override = default;
     };
   }
 
@@ -100,8 +104,8 @@ namespace chaiscript
         virtual ~Type_Conversion_Base() = default;
 
       protected:
-        Type_Conversion_Base(const Type_Info &t_to, const Type_Info &t_from)
-          : m_to(t_to), m_from(t_from)
+        Type_Conversion_Base(Type_Info t_to, Type_Info t_from)
+          : m_to(std::move(t_to)), m_from(std::move(t_from))
         {
         }
 
@@ -286,7 +290,7 @@ namespace chaiscript
     {
       public:
         Type_Conversion_Impl(Type_Info t_from, Type_Info t_to, Callable t_func)
-          : Type_Conversion_Base(std::move(t_to), std::move(t_from)),
+          : Type_Conversion_Base(t_to, t_from),
             m_func(std::move(t_func))
         {
         }
@@ -302,7 +306,7 @@ namespace chaiscript
           return m_func(t_from);
         }
 
-        virtual bool bidir() const override
+        bool bidir() const override
         {
           return false;
         }
@@ -334,21 +338,15 @@ namespace chaiscript
         : m_mutex(),
           m_conversions(),
           m_convertableTypes(),
-          m_num_types(0),
-          m_thread_cache(this),
-          m_conversion_saves(this)
+          m_num_types(0)
       {
       }
 
-      Type_Conversions(const Type_Conversions &t_other)
-        : m_mutex(),
-          m_conversions(t_other.get_conversions()),
-          m_convertableTypes(t_other.m_convertableTypes),
-          m_num_types(m_conversions.size()),
-          m_thread_cache(this),
-          m_conversion_saves(this)
-      {
-      }
+      Type_Conversions(const Type_Conversions &t_other) = delete;
+      Type_Conversions(Type_Conversions &&) = default;
+
+      Type_Conversions &operator=(const Type_Conversions &) = delete;
+      Type_Conversions &operator=(Type_Conversions &&) = default;
 
       const std::set<const std::type_info *, Less_Than> &thread_cache() const
       {
@@ -397,28 +395,39 @@ namespace chaiscript
       template<typename To>
         Boxed_Value boxed_type_conversion(Conversion_Saves &t_saves, const Boxed_Value &from) const
         {
-          try {
-            Boxed_Value ret = get_conversion(user_type<To>(), from.get_type_info())->convert(from);
-            if (t_saves.enabled) t_saves.saves.push_back(ret);
-            return ret;
-          } catch (const std::out_of_range &) {
-            throw exception::bad_boxed_dynamic_cast(from.get_type_info(), typeid(To), "No known conversion");
-          } catch (const std::bad_cast &) {
-            throw exception::bad_boxed_dynamic_cast(from.get_type_info(), typeid(To), "Unable to perform dynamic_cast operation");
-          }
+          return boxed_type_conversion(user_type<To>(), t_saves, from);
         }
 
       template<typename From>
         Boxed_Value boxed_type_down_conversion(Conversion_Saves &t_saves, const Boxed_Value &to) const
         {
+          return boxed_type_down_conversion(user_type<From>(), t_saves, to);
+        }
+
+
+        Boxed_Value boxed_type_conversion(const Type_Info &to, Conversion_Saves &t_saves, const Boxed_Value &from) const
+        {
           try {
-            Boxed_Value ret = get_conversion(to.get_type_info(), user_type<From>())->convert_down(to);
-            if (t_saves.enabled) t_saves.saves.push_back(ret);
+            Boxed_Value ret = get_conversion(to, from.get_type_info())->convert(from);
+            if (t_saves.enabled) { t_saves.saves.push_back(ret); }
             return ret;
           } catch (const std::out_of_range &) {
-            throw exception::bad_boxed_dynamic_cast(to.get_type_info(), typeid(From), "No known conversion");
+            throw exception::bad_boxed_dynamic_cast(from.get_type_info(), *to.bare_type_info(), "No known conversion");
           } catch (const std::bad_cast &) {
-            throw exception::bad_boxed_dynamic_cast(to.get_type_info(), typeid(From), "Unable to perform dynamic_cast operation");
+            throw exception::bad_boxed_dynamic_cast(from.get_type_info(), *to.bare_type_info(), "Unable to perform dynamic_cast operation");
+          }
+        }
+
+        Boxed_Value boxed_type_down_conversion(const Type_Info &from, Conversion_Saves &t_saves, const Boxed_Value &to) const
+        {
+          try {
+            Boxed_Value ret = get_conversion(to.get_type_info(), from)->convert_down(to);
+            if (t_saves.enabled) { t_saves.saves.push_back(ret); }
+            return ret;
+          } catch (const std::out_of_range &) {
+            throw exception::bad_boxed_dynamic_cast(to.get_type_info(), *from.bare_type_info(), "No known conversion");
+          } catch (const std::bad_cast &) {
+            throw exception::bad_boxed_dynamic_cast(to.get_type_info(), *from.bare_type_info(), "Unable to perform dynamic_cast operation");
           }
         }
 

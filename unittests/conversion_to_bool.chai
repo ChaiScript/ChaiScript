@@ -1,0 +1,23 @@
+
+// all we care is that this executes, really
+
+add_type_conversion(type("int"), type("bool"), fun(int i) { return i != 0; });
+
+if (0) {
+  assert_true(false);
+}
+
+if (!0) {
+  assert_true(true);
+} else {
+  assert_true(false);
+}
+
+while (0) {
+  assert_true(false);
+}
+
+for (; 0; ) {
+  assert_true(false);
+}
+

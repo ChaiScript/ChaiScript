@@ -15,6 +15,9 @@ chaiscript::ChaiScript chai; // loads stdlib from loadable module on file system
 chaiscript::ChaiScript chai(chaiscript::Std_Lib::library()); // compiles in stdlib
 ```
 
+Note that ChaiScript cannot be used as a global / static object unless it is being compiled with `CHAISCRIPT_NO_THREADS`.
+
+
 # Adding Things To The Engine
 
 ## Adding a Function / Method / Member
@@ -91,6 +94,49 @@ chai.add(chaiscript::user_type<MyClass>(), "MyClass");
 
 User defined type conversions are possible, defined in either script or in C++.
 
+
+
+### ChaiScript Defined Conversions
+
+Function objects (including lambdas) can be used to add type conversions
+from inside of ChaiScript:
+
+```
+add_type_conversion(type("string"), type("Type_Info"), fun(s) { return type(s); });
+```
+
+### C++ Defined Conversions
+
+Invoking a C++ type conversion possible with `static_cast`
+
+```
+chai.add(chaiscript::type_conversion<T, bool>());
+```
+
+Calling a user defined type conversion that takes a lambda
+
+```
+chai.add(chaiscript::type_conversion<TestBaseType, Type2>([](const TestBaseType &t_bt) { /* return converted thing */ }));
+```
+
+### Class Hierarchies
+
+If you want objects to be convertable between base and derived classes, you must tell ChaiScritp about the relationship.
+
+```
+chai.add(chaiscript::base_class<Base, Derived>());
+```
+
+If you have multiple classes in your inheritance graph, you will probably want to tell ChaiScript about all relationships.
+
+```
+chai.add(chaiscript::base_class<Base, Derived>());
+chai.add(chaiscript::base_class<Derived, MoreDerived>());
+chai.add(chaiscript::base_class<Base, MoreDerived>());
+```
+
+### Helpers
+
 A helper function exists for strongly typed and ChaiScript `Vector` function conversion definition:
 
 ```
@@ -102,6 +148,7 @@ A helper function also exists for strongly typed and ChaiScript `Map` function c
 ```
 chai.add(chaiscript::map_conversion<std::map<std::string, int>>());
 ```
+
 
 
 This allows you to pass a ChaiScript function to a function requiring `std::vector<int>`
@@ -211,7 +258,7 @@ Conversion to `std::shared_ptr<T> &` is supported for function calls, but if you
 ```cpp
 // ok this is supported, you can register it with chaiscript engine
 void nullify_shared_ptr(std::shared_ptr<int> &t) {
-  t == nullptr
+  t = nullptr
 }
 ```
 
@@ -316,6 +363,15 @@ while (some_condition()) { /* do something */ }
 ```
 // ranged for
 for (x : [1,2,3]) { print(i); }
+```
+
+Each of the loop styles can be broken using the `break` statement. For example:
+
+```
+while (some_condition()) {
+  /* do something */
+  if (another_condition()) { break; }
+}
 ```
 
 ## Conditionals
@@ -502,8 +558,32 @@ the contained function.
 
 If both a 2 parameter and a 3 parameter signature match, the 3 parameter function always wins.
 
+## Context
+
+ * `__LINE__` Current file line number
+ * `__FILE__` Full path of current file
+ * `__CLASS__` Name of current class
+ * `__FUNC__` Mame of current function
+
 
 # Built In Functions
+
+## Disabling Built-Ins
+
+When constructing a ChaiScript object, a vector of parameters can be passed in to disable or enable various built-in methods.
+
+Current options:
+
+```
+enum class Options
+{
+  Load_Modules,
+  No_Load_Modules,
+  External_Scripts,
+  No_External_Scripts
+};
+```
+
 
 ## Evaluation
 
@@ -516,4 +596,7 @@ use("filename") // evals file exactly once and returns value of last statement
 
 Both `use` and `eval_file` search the 'usepaths' passed to the ChaiScript constructor
 
+## JSON
 
+ * `from_json` converts a JSON string into its strongly typed (map, vector, int, double, string) representations
+ * `to_json` converts a ChaiScript object (either a `Object` or one of map, vector, int, double, string) tree into its JSON string representation
