@@ -168,35 +168,19 @@ chai.set_global(chaiscript::var(somevar), "somevar"); // global non-const, overw
 
 ## Adding Namespaces
 
+Namespaces will not be populated until `import` is called.  
+This saves memory and computing costs if a namespace is not imported into every ChaiScript instance.
 ```
-chaiscript::Namespace math;
-math["pi"] = chaiscript::const_var(3.14159);
-math["sin"] = chaiscript::var(chaiscript::fun([](const double x) { return sin(x); }));
-chai.register_namespace(math, "math");
-```
-
-Import namespace via C++ (_not generally recommended_)
-```
-chai.import("math");
+chai.register_namespace([](chaiscript::Namespace& math) {
+    math["pi"] = chaiscript::const_var(3.14159);
+    math["sin"] = chaiscript::var(chaiscript::fun([](const double x) { return sin(x); })); },
+    "math");
 ```
 
-Import namespace via ChaiScript (_recommended_)
+Import namespace in ChaiScript
 ```
 import("math")
 print(math.pi) // prints 3.14159
-```
-
-#### Delayed Namespace Generation
-
-Passing a lambda function that returns a namespace will delay the namespace generation until `import` is called.  
-This saves memory and computing costs if a namespace is not imported into every ChaiScript instance.
-```
-chai.register_namespace([]() {
-    chaiscript::Namespace math;
-    math["pi"] = chaiscript::const_var(3.14159);
-    math["sin"] = chaiscript::var(chaiscript::fun([](const double x) { return sin(x); }));
-    return math; },
-    "math");
 ```
 
 # Using STL
