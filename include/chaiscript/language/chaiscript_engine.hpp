@@ -55,8 +55,8 @@
 
 namespace chaiscript
 {
-   /// Namespace typedef to provide cleaner and more explicit syntax to users.
-   typedef dispatch::Dynamic_Object Namespace;
+   /// Namespace alias to provide cleaner and more explicit syntax to users.
+   using Namespace = dispatch::Dynamic_Object;
 
   namespace detail
   {
@@ -81,18 +81,7 @@ namespace chaiscript
 
     chaiscript::detail::Dispatch_Engine m_engine;
 
-    std::map<std::string, dispatch::Dynamic_Object> m_namespaces;
-    std::map<std::string, std::function<void()>> m_namespace_generators;
-
-    /// Helper function to add a namespace to the engine.
-    void add_namespace(const std::string& t_namespace_name)
-    {
-       if (m_namespaces.count(t_namespace_name)) {
-          if (!m_engine.get_scripting_objects().count(t_namespace_name)) { // Add namespace if it hasn't already been added.
-             m_engine.add_global(var(m_namespaces[t_namespace_name]), t_namespace_name);
-          }
-       }
-    }
+    std::map<std::string, std::function<Namespace&()>> m_namespace_generators;
 
     /// Evaluates the given string in by parsing it and running the results through the evaluator
     Boxed_Value do_eval(const std::string &t_input, const std::string &t_filename = "__EVAL__", bool /* t_internal*/  = false) 
@@ -211,7 +200,7 @@ namespace chaiscript
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global(t_bv, t_name); }), "add_global");
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ set_global(t_bv, t_name); }), "set_global");
 
-      m_engine.add(fun([this](const std::string& t_namespace_name) { register_namespace(t_namespace_name); import(t_namespace_name); }), "namespace");
+      m_engine.add(fun([this](const std::string& t_namespace_name) { register_namespace([](Namespace& space) {}, t_namespace_name); import(t_namespace_name); }), "namespace");
       m_engine.add(fun([this](const std::string& t_namespace_name) { import(t_namespace_name); }), "import");
     }
 
@@ -729,62 +718,14 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
     {
        chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
 
-       if (m_namespaces.count(t_namespace_name)) {
-          add_namespace(t_namespace_name);
+       if (m_engine.get_scripting_objects().count(t_namespace_name)) {
+          throw std::runtime_error("Namespace: " + t_namespace_name + " was already defined");
        }
        else if (m_namespace_generators.count(t_namespace_name)) {
-          m_namespace_generators[t_namespace_name]();
-          add_namespace(t_namespace_name);
+          m_engine.add_global(var(std::ref(m_namespace_generators[t_namespace_name]())), t_namespace_name);
        }
        else {
           throw std::runtime_error("No registered namespace: " + t_namespace_name);
-       }
-    }
-
-    /// \brief Registers a new namespace with ChaiScript engine.
-    /// \param[in] t_namespace_name Name of the namespace to register.
-    /// \throw std::runtime_error In the case that the namespace name was already registered.
-    void register_namespace(const std::string& t_namespace_name)
-    {
-       chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
-
-       if (!m_namespaces.count(t_namespace_name)) {
-          m_namespaces.emplace(std::make_pair(t_namespace_name, dispatch::Dynamic_Object()));
-       }
-       else {
-          throw std::runtime_error("Namespace: " + t_namespace_name + " was already registered.");
-       }
-    }
-
-    /// \brief Registers a new namespace with ChaiScript engine.
-    /// \param[in] t_namespace_object Namespace object to register.
-    /// \param[in] t_namespace_name Name of the Namespace object being registered.
-    /// \throw std::runtime_error In the case that the namespace name was already registered.
-    void register_namespace(const dispatch::Dynamic_Object& t_namespace_object, const std::string& t_namespace_name)
-    {
-       chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
-
-       if (!m_namespaces.count(t_namespace_name)) {
-          m_namespaces.emplace(std::make_pair(t_namespace_name, t_namespace_object));
-       }
-       else {
-          throw std::runtime_error("Namespace: " + t_namespace_name + " was already registered.");
-       }
-    }
-
-    /// \brief Registers a new namespace with ChaiScript engine. Permits move semantics.
-    /// \param[in] t_namespace_object Namespace object to register.
-    /// \param[in] t_namespace_name Name of the Namespace object being registered.
-    /// \throw std::runtime_error In the case that the namespace name was already registered.
-    void register_namespace(dispatch::Dynamic_Object&& t_namespace_object, const std::string& t_namespace_name)
-    {
-       chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
-
-       if (!m_namespaces.count(t_namespace_name)) {
-          m_namespaces.emplace(std::make_pair(t_namespace_name, t_namespace_object));
-       }
-       else {
-          throw std::runtime_error("Namespace: " + t_namespace_name + " was already registered.");
        }
     }
 
@@ -792,13 +733,13 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
     /// \param[in] t_namespace_generator Namespace generator function.
     /// \param[in] t_namespace_name Name of the Namespace function being registered.
     /// \throw std::runtime_error In the case that the namespace name was already registered.
-    void register_namespace(const std::function<dispatch::Dynamic_Object()>& t_namespace_generator, const std::string& t_namespace_name)
+    void register_namespace(const std::function<void(Namespace&)>& t_namespace_generator, const std::string& t_namespace_name)
     {
        chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
 
-       if (!m_namespaces.count(t_namespace_name)) {
-          std::function<void()> namespace_generator = [=]() { register_namespace(t_namespace_generator(), t_namespace_name); };
-          m_namespace_generators.emplace(std::make_pair(t_namespace_name, namespace_generator));
+       if (!m_namespace_generators.count(t_namespace_name)) {
+          // contain the namespace object memory within the m_namespace_generators map
+          m_namespace_generators.emplace(std::make_pair(t_namespace_name, [=, space = Namespace()]() mutable -> Namespace& { t_namespace_generator(space); return space; }));
        }
        else {
           throw std::runtime_error("Namespace: " + t_namespace_name + " was already registered.");
