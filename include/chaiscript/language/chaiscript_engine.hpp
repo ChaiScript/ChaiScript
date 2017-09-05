@@ -718,7 +718,7 @@ namespace chaiscript
     /// \throw std::runtime_error In the case that the namespace name was never registered.
     void import(const std::string& t_namespace_name)
     {
-       chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
+       chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
 
        if (m_namespaces.count(t_namespace_name)) {
           add_namespace(t_namespace_name);
@@ -737,6 +737,8 @@ namespace chaiscript
     /// \throw std::runtime_error In the case that the namespace name was already registered.
     void register_namespace(const std::string& t_namespace_name)
     {
+       chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
+
        if (!m_namespaces.count(t_namespace_name)) {
           m_namespaces.emplace(std::make_pair(t_namespace_name, dispatch::Dynamic_Object()));
        }
@@ -751,6 +753,8 @@ namespace chaiscript
     /// \throw std::runtime_error In the case that the namespace name was already registered.
     void register_namespace(const dispatch::Dynamic_Object& t_namespace_object, const std::string& t_namespace_name)
     {
+       chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
+
        if (!m_namespaces.count(t_namespace_name)) {
           m_namespaces.emplace(std::make_pair(t_namespace_name, t_namespace_object));
        }
@@ -765,8 +769,13 @@ namespace chaiscript
     /// \throw std::runtime_error In the case that the namespace name was already registered.
     void register_namespace(dispatch::Dynamic_Object&& t_namespace_object, const std::string& t_namespace_name)
     {
+       chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
+
        if (!m_namespaces.count(t_namespace_name)) {
           m_namespaces.emplace(std::make_pair(t_namespace_name, t_namespace_object));
+       }
+       else {
+          throw std::runtime_error("Namespace: " + t_namespace_name + " was already registered.");
        }
     }
 
@@ -776,6 +785,8 @@ namespace chaiscript
     /// \throw std::runtime_error In the case that the namespace name was already registered.
     void register_namespace(const std::function<dispatch::Dynamic_Object()>& t_namespace_generator, const std::string& t_namespace_name)
     {
+       chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
+
        if (!m_namespaces.count(t_namespace_name)) {
           std::function<void()> namespace_generator = [=]() { register_namespace(t_namespace_generator(), t_namespace_name); };
           m_namespace_generators.emplace(std::make_pair(t_namespace_name, namespace_generator));
