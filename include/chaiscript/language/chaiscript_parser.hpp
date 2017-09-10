@@ -281,35 +281,11 @@ namespace chaiscript
         return operators;
       }
 
-      constexpr static utility::Static_String multiline_comment_end() noexcept
-      {
-        constexpr utility::Static_String s("*/");
-        return s;
-      }
-
-      constexpr static utility::Static_String multiline_comment_begin() noexcept
-      {
-        constexpr utility::Static_String s("/*");
-        return s;
-      }
-
-      constexpr static utility::Static_String singleline_comment() noexcept
-      {
-        constexpr utility::Static_String s("//");
-        return s;
-      }
-
-      constexpr static utility::Static_String annotation() noexcept
-      {
-        constexpr utility::Static_String s("#");
-        return s;
-      }
-
-      constexpr static utility::Static_String cr_lf() noexcept
-      {
-        constexpr utility::Static_String s("\r\n");
-        return s;
-      }
+      constexpr static utility::Static_String m_multiline_comment_end{"*/"};
+      constexpr static utility::Static_String m_multiline_comment_begin{"/*"};
+      constexpr static utility::Static_String m_singleline_comment{"//"};
+      constexpr static utility::Static_String m_annotation{"#"};
+      constexpr static utility::Static_String m_cr_lf{"\r\n"};
 
 
       std::shared_ptr<std::string> m_filename;
@@ -532,18 +508,18 @@ namespace chaiscript
 
       /// Skips any multi-line or single-line comment
       bool SkipComment() {
-        if (Symbol_(multiline_comment_begin())) {
+        if (Symbol_(m_multiline_comment_begin)) {
           while (m_position.has_more()) {
-            if (Symbol_(multiline_comment_end())) {
+            if (Symbol_(m_multiline_comment_end)) {
               break;
             } else if (!Eol_()) {
               ++m_position;
             }
           }
           return true;
-        } else if (Symbol_(singleline_comment())) {
+        } else if (Symbol_(m_singleline_comment)) {
           while (m_position.has_more()) {
-            if (Symbol_(cr_lf())) {
+            if (Symbol_(m_cr_lf)) {
               m_position -= 2;
               break;
             } else if (Char_('\n')) {
@@ -554,9 +530,9 @@ namespace chaiscript
             }
           }
           return true;
-        } else if (Symbol_(annotation())) {
+        } else if (Symbol_(m_annotation)) {
           while (m_position.has_more()) {
-            if (Symbol_(cr_lf())) {
+            if (Symbol_(m_cr_lf)) {
               m_position -= 2;
               break;
             } else if (Char_('\n')) {
@@ -1472,7 +1448,7 @@ namespace chaiscript
       bool Eol_(const bool t_eos = false) {
         bool retval = false;
 
-        if (m_position.has_more() && (Symbol_(cr_lf()) || Char_('\n'))) {
+        if (m_position.has_more() && (Symbol_(m_cr_lf) || Char_('\n'))) {
           retval = true;
           //++m_position.line;
           m_position.col = 1;
