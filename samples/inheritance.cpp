@@ -122,7 +122,7 @@ int main()
   assert(myderived.getValue() == "1234");
 
 
-  chai.eval("myderived.setValue(\"new\")"); // set the value via chaiscript
+  chai.eval(R"(myderived.setValue("new"))"); // set the value via chaiscript
   assert(myderived.getValue() == "new");
 
   // call the other derived method via chaiscript and return the value to c++ land:
