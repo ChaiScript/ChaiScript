@@ -1142,7 +1142,6 @@ namespace chaiscript
         void dump_system() const
         {
           std::cout << "Registered Types: \n";
-          std::vector<std::pair<std::string, Type_Info> > types = get_types();
           for (auto const &type: get_types())
           {
             std::cout << type.first << ": " << type.second.bare_name() << '\n';
