@@ -28,6 +28,18 @@ namespace chaiscript
         return data;
       }
 
+      constexpr const char *begin() const noexcept {
+        return data;
+      }
+
+      constexpr const char *end() const noexcept {
+        return data + m_size;
+      }
+
+      bool operator==(const std::string &t_str) const noexcept {
+        return std::equal(begin(), end(), std::cbegin(t_str), std::cend(t_str));
+      }
+
       const size_t m_size;
       const char *data = nullptr;
     };

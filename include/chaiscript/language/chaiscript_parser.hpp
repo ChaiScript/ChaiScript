@@ -241,7 +241,7 @@ namespace chaiscript
 
         bool is_match(const std::size_t t_group, const std::string &t_str) const noexcept {
           auto match = [&t_str](const auto &array) {
-            return std::any_of(array.begin(), array.end(), [&t_str](const auto &v){ return v.c_str() == t_str; });
+            return std::any_of(array.begin(), array.end(), [&t_str](const auto &v){ return v == t_str; });
           };
 
           switch (t_group) {
