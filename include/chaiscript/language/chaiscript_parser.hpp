@@ -281,36 +281,12 @@ namespace chaiscript
         return operators;
       }
 
-      constexpr static utility::Static_String multiline_comment_end() noexcept
-      {
-        constexpr utility::Static_String s("*/");
-        return s;
-      }
-
-      constexpr static utility::Static_String multiline_comment_begin() noexcept
-      {
-        constexpr utility::Static_String s("/*");
-        return s;
-      }
-
-      constexpr static utility::Static_String singleline_comment() noexcept
-      {
-        constexpr utility::Static_String s("//");
-        return s;
-      }
-
-      constexpr static utility::Static_String annotation() noexcept
-      {
-        constexpr utility::Static_String s("#");
-        return s;
-      }
-
-      constexpr static utility::Static_String cr_lf() noexcept
-      {
-        constexpr utility::Static_String s("\r\n");
-        return s;
-      }
-
+      constexpr static utility::Static_String m_multiline_comment_end{"*/"};
+      constexpr static utility::Static_String m_multiline_comment_begin{"/*"};
+      constexpr static utility::Static_String m_singleline_comment{"//"};
+      constexpr static utility::Static_String m_annotation{"#"};
+      constexpr static utility::Static_String m_cr_lf{"\r\n"};
+      constexpr static auto m_operators = create_operators();
 
       std::shared_ptr<std::string> m_filename;
       std::vector<eval::AST_Node_Impl_Ptr<Tracer>> m_match_stack;
@@ -453,10 +429,12 @@ namespace chaiscript
       ChaiScript_Parser(ChaiScript_Parser &&) = default;
       ChaiScript_Parser &operator=(ChaiScript_Parser &&) = delete;
 
+      constexpr static auto m_alphabet = build_alphabet();
+      constexpr static Operator_Matches m_operator_matches{};
+
       /// test a char in an m_alphabet
       constexpr bool char_in_alphabet(char c, detail::Alphabet a) const noexcept { 
-        constexpr auto alphabet = build_alphabet();
-        return alphabet[a][static_cast<uint8_t>(c)]; 
+        return m_alphabet[a][static_cast<uint8_t>(c)]; 
       }
 
       /// Prints the parsed ast_nodes as a tree
@@ -532,18 +510,18 @@ namespace chaiscript
 
       /// Skips any multi-line or single-line comment
       bool SkipComment() {
-        if (Symbol_(multiline_comment_begin())) {
+        if (Symbol_(m_multiline_comment_begin)) {
           while (m_position.has_more()) {
-            if (Symbol_(multiline_comment_end())) {
+            if (Symbol_(m_multiline_comment_end)) {
               break;
             } else if (!Eol_()) {
               ++m_position;
             }
           }
           return true;
-        } else if (Symbol_(singleline_comment())) {
+        } else if (Symbol_(m_singleline_comment)) {
           while (m_position.has_more()) {
-            if (Symbol_(cr_lf())) {
+            if (Symbol_(m_cr_lf)) {
               m_position -= 2;
               break;
             } else if (Char_('\n')) {
@@ -554,9 +532,9 @@ namespace chaiscript
             }
           }
           return true;
-        } else if (Symbol_(annotation())) {
+        } else if (Symbol_(m_annotation)) {
           while (m_position.has_more()) {
-            if (Symbol_(cr_lf())) {
+            if (Symbol_(m_cr_lf)) {
               m_position -= 2;
               break;
             } else if (Char_('\n')) {
@@ -1448,8 +1426,7 @@ namespace chaiscript
       }
 
       bool is_operator(const std::string_view &t_s) const noexcept {
-        constexpr Operator_Matches operator_matches;
-        return operator_matches.is_match(t_s);
+        return m_operator_matches.is_match(t_s);
       }
 
       /// Reads (and potentially captures) a symbol group from input if it matches the parameter
@@ -1475,7 +1452,7 @@ namespace chaiscript
       bool Eol_(const bool t_eos = false) {
         bool retval = false;
 
-        if (m_position.has_more() && (Symbol_(cr_lf()) || Char_('\n'))) {
+        if (m_position.has_more() && (Symbol_(m_cr_lf) || Char_('\n'))) {
           retval = true;
           //++m_position.line;
           m_position.col = 1;
@@ -2347,14 +2324,12 @@ namespace chaiscript
             SS{"~"}
         }};
 
-        constexpr auto operators = create_operators();
-
         for (const auto &oper : prefix_opers)
         {
           const bool is_char = oper.size() == 1;
           if ((is_char && Char(oper.c_str()[0])) || (!is_char && Symbol(oper)))
           {
-            if (!Operator(operators.size()-1)) {
+            if (!Operator(m_operators.size()-1)) {
               throw exception::eval_error("Incomplete prefix '" + std::string(oper.c_str()) + "' expression", File_Position(m_position.line, m_position.col), *m_filename);
             }
 
@@ -2372,8 +2347,7 @@ namespace chaiscript
       }
 
       bool Operator_Helper(const size_t t_precedence, std::string &oper) {
-        constexpr Operator_Matches operator_matches;
-        return operator_matches.any_of(t_precedence,
+        return m_operator_matches.any_of(t_precedence,
             [&oper, this](const auto &elem){ 
               if (Symbol(elem)) {
                 oper = elem.c_str();
@@ -2389,9 +2363,7 @@ namespace chaiscript
         bool retval = false;
         const auto prev_stack_top = m_match_stack.size();
 
-        constexpr auto operators = create_operators();
-
-        if (operators[t_precedence] != Operator_Precidence::Prefix) {
+        if (m_operators[t_precedence] != Operator_Precidence::Prefix) {
           if (Operator(t_precedence+1)) {
             retval = true;
             std::string oper;
@@ -2402,7 +2374,7 @@ namespace chaiscript
                     File_Position(m_position.line, m_position.col), *m_filename);
               }
 
-              switch (operators[t_precedence]) {
+              switch (m_operators[t_precedence]) {
                 case(Operator_Precidence::Ternary_Cond) :
                   if (Symbol(":")) {
                     if (!Operator(t_precedence+1)) {
