@@ -538,7 +538,7 @@ namespace chaiscript
       std::reference_wrapper<Type_Conversions::Conversion_Saves> m_saves;
   };
 
-  typedef std::shared_ptr<chaiscript::detail::Type_Conversion_Base> Type_Conversion;
+  using Type_Conversion = std::shared_ptr<chaiscript::detail::Type_Conversion_Base>;
 
   /// \brief Used to register a to / parent class relationship with ChaiScript. Necessary if you
   ///        want automatic conversions up your inheritance hierarchy.

@@ -76,7 +76,7 @@ namespace chaiscript
         // common for all implementations
         static std::string u8str_from_ll(long long val)
         {
-          typedef std::string::value_type char_type;
+          using char_type = std::string::value_type;
 
           char_type c[2];
           c[1] = char_type(val);
@@ -92,7 +92,7 @@ namespace chaiscript
 
         static string_type str_from_ll(long long val)
         {
-          typedef typename string_type::value_type target_char_type;
+          using target_char_type = typename string_type::value_type;
 #if defined (CHAISCRIPT_UTF16_UTF32)
           // prepare converter
           std::wstring_convert<std::codecvt_utf8<target_char_type>, target_char_type> converter;
@@ -1065,7 +1065,7 @@ namespace chaiscript
       struct Char_Parser
       {
         string_type &match;
-        typedef typename string_type::value_type char_type;
+        using char_type = typename string_type::value_type;
         bool is_escaped = false;
         bool is_interpolated = false;
         bool saw_interpolation_marker = false;
