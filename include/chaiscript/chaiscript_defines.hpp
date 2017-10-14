@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_DEFINES_HPP_
@@ -9,7 +9,8 @@
 
 #ifdef _MSC_VER
 #define CHAISCRIPT_STRINGIZE(x) "" #x
-#define CHAISCRIPT_COMPILER_VERSION CHAISCRIPT_STRINGIZE(_MSC_FULL_VER)
+#define CHAISCRIPT_STRINGIZE_EXPANDED(x) CHAISCRIPT_STRINGIZE(x)
+#define CHAISCRIPT_COMPILER_VERSION CHAISCRIPT_STRINGIZE_EXPANDED(_MSC_FULL_VER)
 #define CHAISCRIPT_MSVC _MSC_VER
 #define CHAISCRIPT_HAS_DECLSPEC
 
@@ -47,10 +48,6 @@ static_assert(_MSC_FULL_VER >= 190024210, "Visual C++ 2015 Update 3 or later req
 #endif
 #endif
 
-#if defined(CHAISCRIPT_MSVC) ||  (defined(__GNUC__) && __GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8) || (defined(__llvm__) && !defined(CHAISCRIPT_LIBCPP))
-/// \todo Make this support other compilers when possible
-#define CHAISCRIPT_HAS_THREAD_LOCAL
-#endif
 
 #if defined(__llvm__)
 #define CHAISCRIPT_CLANG
@@ -93,6 +90,16 @@ namespace chaiscript {
     return std::make_shared<D>(std::forward<Arg>(arg)...);
 #else
     return std::shared_ptr<B>(static_cast<B*>(new D(std::forward<Arg>(arg)...)));
+#endif
+  }
+
+  template<typename B, typename D, typename ...Arg>
+  inline std::unique_ptr<B> make_unique(Arg && ... arg)
+  {
+#ifdef CHAISCRIPT_USE_STD_MAKE_SHARED
+    return std::make_unique<D>(std::forward<Arg>(arg)...);
+#else
+    return std::unique_ptr<B>(static_cast<B*>(new D(std::forward<Arg>(arg)...)));
 #endif
   }
 
@@ -219,7 +226,11 @@ namespace chaiscript {
 
   static inline std::vector<Options> default_options()
   {
+#ifdef CHAISCRIPT_NO_DYNLOAD
+    return {Options::No_Load_Modules, Options::External_Scripts};
+#else
     return {Options::Load_Modules, Options::External_Scripts};
+#endif
   }
 }
 #endif

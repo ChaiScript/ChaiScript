@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 #ifndef CHAISCRIPT_COMMON_HPP_
 #define CHAISCRIPT_COMMON_HPP_
@@ -77,7 +81,7 @@ namespace chaiscript
                                     "Array_Call", "Dot_Access", 
                                     "Lambda", "Block", "Scopeless_Block", "Def", "While", "If", "For", "Ranged_For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
                                     "Inline_Range", "Try", "Catch", "Finally", "Method", "Attr_Decl",
-                                    "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Ternary Condition", "Noop", "Class", "Binary", "Arg", "Global_Decl", "Constant", "Compiled"};
+                                    "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Noop", "Class", "Binary", "Arg", "Global_Decl", "Constant", "Compiled"};
 
       return ast_node_types[static_cast<int>(ast_node_type)];
     }
@@ -120,8 +124,10 @@ namespace chaiscript
 
 
   /// \brief Typedef for pointers to AST_Node objects. Used in building of the AST_Node tree
-  typedef std::shared_ptr<AST_Node> AST_NodePtr;
-  typedef std::shared_ptr<const AST_Node> AST_NodePtr_Const;
+  typedef std::unique_ptr<AST_Node> AST_NodePtr;
+  typedef std::unique_ptr<const AST_Node> AST_NodePtr_Const;
+
+  struct AST_Node_Trace;
 
 
   /// \brief Classes which may be thrown during error cases when ChaiScript is executing.
@@ -164,7 +170,7 @@ namespace chaiscript
       File_Position start_position;
       std::string filename;
       std::string detail;
-      std::vector<AST_NodePtr_Const> call_stack;
+      std::vector<AST_Node_Trace> call_stack;
 
       eval_error(const std::string &t_why, const File_Position &t_where, const std::string &t_fname,
           const std::vector<Boxed_Value> &t_parameters, const std::vector<chaiscript::Const_Proxy_Function> &t_functions,
@@ -224,26 +230,26 @@ namespace chaiscript
       template<typename T>
         static AST_Node_Type id(const T& t)
         {
-          return t->identifier;
+          return t.identifier;
         }
 
       template<typename T>
         static std::string pretty(const T& t)
         {
-          return t->pretty_print();
+          return t.pretty_print();
         }
 
       template<typename T>
         static const std::string &fname(const T& t)
         {
-          return t->filename();
+          return t.filename();
         }
 
       template<typename T>
         static std::string startpos(const T& t)
         {
           std::ostringstream oss;
-          oss << t->start().line << ", " << t->start().column;
+          oss << t.start().line << ", " << t.start().column;
           return oss.str();
         }
 
@@ -256,6 +262,7 @@ namespace chaiscript
           bool t_dot_notation,
           const chaiscript::detail::Dispatch_Engine &t_ss)
       {
+        assert(t_func);
         int arity = t_func->get_arity();
         std::vector<Type_Info> types = t_func->get_param_types();
 
@@ -304,20 +311,20 @@ namespace chaiscript
         std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynfun 
           = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_func);
 
-        if (dynfun)
+        if (dynfun && dynfun->has_parse_tree())
         {
           Proxy_Function f = dynfun->get_guard();
 
           if (f)
           {
             auto dynfunguard = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(f);
-            if (dynfunguard)
+            if (dynfunguard && dynfunguard->has_parse_tree())
             {
               retval += " : " + format_guard(dynfunguard->get_parse_tree());
             }
           }
 
-          retval += "\n          Defined at " + format_location(dynfun->get_parse_tree());        
+          retval += "\n          Defined at " + format_location(dynfun->get_parse_tree());
         }
 
         return retval;
@@ -326,20 +333,15 @@ namespace chaiscript
       template<typename T>
         static std::string format_guard(const T &t)
         {
-          return t->pretty_print();
+          return t.pretty_print();
         }
 
       template<typename T>
         static std::string format_location(const T &t)
         {
-          if (t) {
-            std::ostringstream oss;
-            oss << "(" << t->filename() << " " << t->start().line << ", " << t->start().column << ")"; 
-            return oss.str();
-          } else {
-            return "(internal)";
-          }
-
+          std::ostringstream oss;
+          oss << "(" << t.filename() << " " << t.start().line << ", " << t.start().column << ")"; 
+          return oss.str();
         }
 
       static std::string format_detail(const std::vector<chaiscript::Const_Proxy_Function> &t_functions,
@@ -349,6 +351,7 @@ namespace chaiscript
         std::stringstream ss;
         if (t_functions.size() == 1)
         {
+          assert(t_functions[0]);
           ss << "  Expected: " << format_types(t_functions[0], t_dot_notation, t_ss) << '\n';
         } else {
           ss << "  " << t_functions.size() << " overloads available:\n";
@@ -488,7 +491,7 @@ namespace chaiscript
 
  
   /// \brief Struct that doubles as both a parser ast_node and an AST node.
-  struct AST_Node : std::enable_shared_from_this<AST_Node> {
+  struct AST_Node {
     public:
       const AST_Node_Type identifier;
       const std::string text;
@@ -512,14 +515,14 @@ namespace chaiscript
 
         oss << text;
 
-        for (auto & elem : this->get_children()) {
-          oss << elem->pretty_print() << ' ';
+        for (auto & elem : get_children()) {
+          oss << elem.get().pretty_print() << ' ';
         }
 
         return oss.str();
       }
 
-      virtual std::vector<AST_NodePtr> get_children() const = 0;
+      virtual std::vector<std::reference_wrapper<AST_Node>> get_children() const = 0;
       virtual Boxed_Value eval(const chaiscript::detail::Dispatch_State &t_e) const = 0;
 
 
@@ -530,8 +533,8 @@ namespace chaiscript
         oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") "
             << this->text << " : " << this->location.start.line << ", " << this->location.start.column << '\n';
 
-        for (auto & elem : this->get_children()) {
-          oss << elem->to_string(t_prepend + "  ");
+        for (auto & elem : get_children()) {
+          oss << elem.get().to_string(t_prepend + "  ");
         }
         return oss.str();
       }
@@ -564,12 +567,60 @@ namespace chaiscript
 
   };
 
+  struct AST_Node_Trace
+  {
+    const AST_Node_Type identifier;
+    const std::string text;
+    Parse_Location location;
+
+    const std::string &filename() const {
+      return *location.filename;
+    }
+
+    const File_Position &start() const {
+      return location.start;
+    }
+
+    const File_Position &end() const {
+      return location.end;
+    }
+
+    std::string pretty_print() const
+    {
+      std::ostringstream oss;
+
+      oss << text;
+
+      for (const auto & elem : children) {
+        oss << elem.pretty_print() << ' ';
+      }
+
+      return oss.str();
+    }
+
+    std::vector<AST_Node_Trace> get_children(const AST_Node &node)
+    {
+      const auto node_children = node.get_children();
+      return std::vector<AST_Node_Trace>(node_children.begin(), node_children.end());
+    }
+
+    AST_Node_Trace(const AST_Node &node)
+      : identifier(node.identifier), text(node.text),
+      location(node.location), children(get_children(node))
+    {
+    }
+
+
+    std::vector<AST_Node_Trace> children;
+
+  };
+
   namespace parser {
     class ChaiScript_Parser_Base
     {
       public:
         virtual AST_NodePtr parse(const std::string &t_input, const std::string &t_fname) = 0;
-        virtual void debug_print(AST_NodePtr t, std::string prepend = "") const = 0;
+        virtual void debug_print(const AST_Node &t, std::string prepend = "") const = 0;
         virtual void *get_tracer_ptr() = 0;
         virtual ~ChaiScript_Parser_Base() = default;
         ChaiScript_Parser_Base() = default;

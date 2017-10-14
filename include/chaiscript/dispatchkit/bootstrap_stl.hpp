@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 /// \file
 /// This file contains utility functions for registration of STL container
@@ -331,9 +335,24 @@ namespace chaiscript
       template<typename ContainerType>
         void back_insertion_sequence_type(const std::string &type, Module& m)
         {
-          typedef typename ContainerType::reference (ContainerType::*backptr)();
-
-          m.add(fun(static_cast<backptr>(&ContainerType::back)), "back");
+          m.add(fun([](ContainerType &container)->decltype(auto){ 
+                      if (container.empty()) {
+                        throw std::range_error("Container empty");
+                      } else {
+                        return (container.back());
+                      }
+                    }
+                  )
+                , "back");
+          m.add(fun([](const ContainerType &container)->decltype(auto){ 
+                      if (container.empty()) {
+                        throw std::range_error("Container empty");
+                      } else {
+                        return (container.back());
+                      }
+                    }
+                  )
+                , "back");
 
 
           typedef void (ContainerType::*push_back)(const typename ContainerType::value_type &);
@@ -376,13 +395,29 @@ namespace chaiscript
       template<typename ContainerType>
         void front_insertion_sequence_type(const std::string &type, Module& m)
         {
-          typedef typename ContainerType::reference (ContainerType::*front_ptr)();
-          typedef typename ContainerType::const_reference (ContainerType::*const_front_ptr)() const;
           typedef void (ContainerType::*push_ptr)(typename ContainerType::const_reference);
           typedef void (ContainerType::*pop_ptr)();
 
-          m.add(fun(static_cast<front_ptr>(&ContainerType::front)), "front");
-          m.add(fun(static_cast<const_front_ptr>(&ContainerType::front)), "front");
+          m.add(fun([](ContainerType &container)->decltype(auto){ 
+                      if (container.empty()) {
+                        throw std::range_error("Container empty");
+                      } else {
+                        return (container.front());
+                      }
+                    }
+                  )
+                , "front");
+
+          m.add(fun([](const ContainerType &container)->decltype(auto){ 
+                      if (container.empty()) {
+                        throw std::range_error("Container empty");
+                      } else {
+                        return (container.front());
+                      }
+                    }
+                  )
+                , "front");
+
 
           m.add(fun(static_cast<push_ptr>(&ContainerType::push_front)),
               [&]()->std::string{
@@ -573,11 +608,27 @@ namespace chaiscript
         {
           m.add(user_type<VectorType>(), type);
 
-          typedef typename VectorType::reference (VectorType::*frontptr)();
-          typedef typename VectorType::const_reference (VectorType::*constfrontptr)() const;
+          m.add(fun([](VectorType &container)->decltype(auto){ 
+                      if (container.empty()) {
+                        throw std::range_error("Container empty");
+                      } else {
+                        return (container.front());
+                      }
+                    }
+                  )
+                , "front");
 
-          m.add(fun(static_cast<frontptr>(&VectorType::front)), "front");
-          m.add(fun(static_cast<constfrontptr>(&VectorType::front)), "front");
+          m.add(fun([](const VectorType &container)->decltype(auto){ 
+                      if (container.empty()) {
+                        throw std::range_error("Container empty");
+                      } else {
+                        return (container.front());
+                      }
+                    }
+                  )
+                , "front");
+
+
 
 
           back_insertion_sequence_type<VectorType>(type, m);

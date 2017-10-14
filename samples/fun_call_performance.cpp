@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 #include <iostream>
 #include <list>
@@ -64,6 +68,7 @@ std::vector<std::string> default_search_paths()
 {
   std::vector<std::string> paths;
 
+#ifndef CHAISCRIPT_NO_DYNLOAD
 #ifdef CHAISCRIPT_WINDOWS  // force no unicode
   CHAR path[4096];
   int size = GetModuleFileNameA(0, path, sizeof(path) - 1);
@@ -133,6 +138,7 @@ std::vector<std::string> default_search_paths()
     paths.push_back(exepath.substr(0, secondtolastslash) + "/lib/chaiscript/");
   }
 #endif
+#endif // ifndef CHAISCRIPT_NO_DYNLOAD
 
   return paths;
 }
@@ -246,7 +252,7 @@ void interactive(chaiscript::ChaiScript& chai)
     catch (const chaiscript::exception::eval_error &ee) {
       std::cout << ee.what();
       if (ee.call_stack.size() > 0) {
-        std::cout << "during evaluation at (" << ee.call_stack[0]->start().line << ", " << ee.call_stack[0]->start().column << ")";
+        std::cout << "during evaluation at (" << ee.call_stack[0].start().line << ", " << ee.call_stack[0].start().column << ")";
       }
       std::cout << std::endl;
     }

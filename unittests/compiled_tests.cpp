@@ -12,6 +12,8 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #pragma GCC diagnostic ignored "-Wparentheses"
+// This one is necessary for the const return non-reference test
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #endif
 
 
@@ -198,7 +200,7 @@ TEST_CASE("Throw int or double")
     chai.eval("throw(1.0)", chaiscript::exception_specification<int, double>());
     REQUIRE(false);
   } catch (const double e) {
-    CHECK(e == 1.0);
+    CHECK(e == Approx(1.0));
   }
 }
 
@@ -1115,6 +1117,9 @@ TEST_CASE("Use unique_ptr")
   chai.add(chaiscript::fun([](int &i){ ++i; }), "inci");
   chai.add(chaiscript::fun([](int i){ ++i; }), "copyi");
   chai.add(chaiscript::fun([](int *i){ ++(*i); }), "derefi");
+  chai.add(chaiscript::fun([](const std::unique_ptr<int> &i){ ++(*i); }), "constrefuniqptri");
+  chai.add(chaiscript::fun([](std::unique_ptr<int> &i){ ++(*i); }), "refuniqptri");
+  chai.add(chaiscript::fun([](std::unique_ptr<int> &&i){ ++(*i); }), "rvaluniqptri");
   chai.add(chaiscript::var(std::make_unique<int>(1)), "iptr");
 
 
@@ -1125,9 +1130,198 @@ TEST_CASE("Use unique_ptr")
   CHECK(chai.eval<int>("iptr") == 2);
   chai.eval("derefi(iptr)");
   CHECK(chai.eval<int>("iptr") == 3);
+  chai.eval("constrefuniqptri(iptr)");
+  CHECK(chai.eval<int>("iptr") == 4);
+  chai.eval("refuniqptri(iptr)");
+  CHECK(chai.eval<int>("iptr") == 5);
+  chai.eval("rvaluniqptri(iptr)");
+  CHECK(chai.eval<int>("iptr") == 6);
+}
 
 
+class Unique_Ptr_Test_Class
+{
+  public:
+    Unique_Ptr_Test_Class() = default;
+    Unique_Ptr_Test_Class(const Unique_Ptr_Test_Class&) = default;
+    Unique_Ptr_Test_Class(Unique_Ptr_Test_Class &&) = default;
+    Unique_Ptr_Test_Class &operator=(const Unique_Ptr_Test_Class&) = default;
+    Unique_Ptr_Test_Class &operator=(Unique_Ptr_Test_Class&&) = default;
+    virtual ~Unique_Ptr_Test_Class() = default;
 
+    int getI() const {return 5;}
+};
+
+
+std::unique_ptr<Unique_Ptr_Test_Class> make_Unique_Ptr_Test_Class()
+{
+  return std::make_unique<Unique_Ptr_Test_Class>();
+}
+
+TEST_CASE("Call methods through unique_ptr")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+
+  chai.add(chaiscript::var(std::make_unique<Unique_Ptr_Test_Class>()), "uptr");
+  chai.add(chaiscript::fun(make_Unique_Ptr_Test_Class), "make_Unique_Ptr_Test_Class");
+  chai.add(chaiscript::fun(&Unique_Ptr_Test_Class::getI), "getI");
+  CHECK(chai.eval<int>("uptr.getI()") == 5);
+  CHECK(chai.eval<int>("var uptr2 = make_Unique_Ptr_Test_Class(); uptr2.getI()") == 5);
+}
+
+
+class Unique_Ptr_Test_Base_Class
+{
+  public:
+    int getI() const {return 5;}
+};
+
+class Unique_Ptr_Test_Derived_Class : public Unique_Ptr_Test_Base_Class
+{};
+
+std::unique_ptr<Unique_Ptr_Test_Derived_Class> make_Unique_Ptr_Test_Derived_Class()
+{
+  return std::make_unique<Unique_Ptr_Test_Derived_Class>();
+}
+
+TEST_CASE("Call methods on base class through unique_ptr<derived>")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+
+  chai.add(chaiscript::var(std::make_unique<Unique_Ptr_Test_Derived_Class>()), "uptr");
+  chai.add(chaiscript::fun(make_Unique_Ptr_Test_Derived_Class), "make_Unique_Ptr_Test_Derived_Class");
+  chai.add(chaiscript::fun(&Unique_Ptr_Test_Base_Class::getI), "getI");
+  chai.add(chaiscript::base_class<Unique_Ptr_Test_Base_Class, Unique_Ptr_Test_Derived_Class>());
+  CHECK(chai.eval<int>("uptr.getI()") == 5);
+  CHECK(chai.eval<int>("var uptr2 = make_Unique_Ptr_Test_Derived_Class(); uptr2.getI()") == 5);
+}
+
+
+class A
+{
+  public:
+    A() = default;
+    A(const A&) = default;
+    A(A &&) = default;
+    A &operator=(const A&) = default;
+    A &operator=(A&&) = default;
+    virtual ~A() = default;
+};
+
+class B : public A
+{
+  public:
+    B() = default;
+};
+
+TEST_CASE("Test typed chaiscript functions to perform conversions")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+
+  //-------------------------------------------------------------------------
+
+  chai.add(chaiscript::user_type<A>(), "A");
+
+  chai.add(chaiscript::user_type<B>(), "B");
+  chai.add(chaiscript::base_class<A, B>());
+
+  chai.add(chaiscript::fun([](const B &)
+        {
+        }), "CppFunctWithBArg");
+
+  chai.add(chaiscript::fun([]() -> std::shared_ptr<A> 
+        {
+        return (std::shared_ptr<A>(new B()));
+        }), "Create");
+
+  chai.eval(R"(
+            var inst = Create() // A*
+
+            // it prints "A"
+            inst.type_name().print() 
+
+            // Ok it is casted using conversion
+            CppFunctWithBArg(inst)
+
+            // Define a function with B as argument
+            def ChaiFuncWithBArg(B inst)
+            {
+                    print("ok")
+            }
+
+            // don't work
+            ChaiFuncWithBArg(inst)
+            )");
+}
+
+struct Reference_MyClass
+{
+  Reference_MyClass(double& t_x) : x(t_x) {}
+  double& x;
+};
+
+TEST_CASE("Test reference member being registered")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+  // Note, C++ will not allow us to do this:
+  // chai.add(chaiscript::fun(&Reference_MyClass::x) , "x");
+  chai.add(chaiscript::fun([](Reference_MyClass &r) -> decltype(auto) { return (r.x); }), "x");
+  chai.add(chaiscript::fun([](const Reference_MyClass &r) -> decltype(auto) { return (r.x); }), "x");
+  double d;
+  chai.add(chaiscript::var(Reference_MyClass(d)), "ref");
+  chai.eval("ref.x = 2.3");
+  CHECK(d == Approx(2.3));
+}
+
+
+const int add_3(const int &i)
+{
+  return i + 3;
+}
+
+TEST_CASE("Test returning by const non-reference")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+  // Note, C++ will not allow us to do this:
+  // chai.add(chaiscript::fun(&Reference_MyClass::x) , "x");
+  chai.add(chaiscript::fun(&add_3), "add_3");
+  auto v = chai.eval<int>("add_3(12)");
+  CHECK(v == 15);
+}
+
+
+struct MyException : std::runtime_error
+{
+  using std::runtime_error::runtime_error;
+  int value = 5;
+};
+
+void throws_a_thing()
+{
+  throw MyException("Hello World");
+}
+
+TEST_CASE("Test throwing and catching custom exception")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+  chai.add(chaiscript::user_type<MyException>(), "MyException");
+  chai.add(chaiscript::base_class<std::runtime_error, MyException>()); // be sure to register base class relationship
+  chai.add(chaiscript::fun(&throws_a_thing), "throws_a_thing");
+  chai.add(chaiscript::fun(&MyException::value), "value");
+
+  const auto s = chai.eval<std::string>("fun(){ try { throws_a_thing(); } catch (MyException ex) { return ex.what(); } }()");
+  CHECK(s == "Hello World");
+
+  // this has an explicit clone to prevent returning a pointer to the `value` from inside of MyException
+  const auto i = chai.eval<int>("fun(){ try { throws_a_thing(); } catch (MyException ex) { var v = clone(ex.value); print(v); return v; } }()");
+  CHECK(i == 5);
+}
+
+
+TEST_CASE("Test ability to get 'use' function from default construction")
+{
+  chaiscript::ChaiScript chai;
+  const auto use_function = chai.eval<std::function<chaiscript::Boxed_Value (const std::string &)>>("use");
 }
 
 

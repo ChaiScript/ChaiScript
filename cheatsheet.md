@@ -15,6 +15,9 @@ chaiscript::ChaiScript chai; // loads stdlib from loadable module on file system
 chaiscript::ChaiScript chai(chaiscript::Std_Lib::library()); // compiles in stdlib
 ```
 
+Note that ChaiScript cannot be used as a global / static object unless it is being compiled with `CHAISCRIPT_NO_THREADS`.
+
+
 # Adding Things To The Engine
 
 ## Adding a Function / Method / Member

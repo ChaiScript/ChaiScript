@@ -1,8 +1,12 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2016, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
+
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 
 #ifndef CHAISCRIPT_DISPATCHKIT_HPP_
 #define CHAISCRIPT_DISPATCHKIT_HPP_
@@ -448,7 +452,7 @@ namespace chaiscript
         };
 
         explicit Dispatch_Engine(chaiscript::parser::ChaiScript_Parser_Base &parser)
-          : m_stack_holder(this),
+          : m_stack_holder(),
             m_parser(parser)
         {
         }

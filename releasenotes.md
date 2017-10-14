@@ -26,11 +26,12 @@ Current Version: 6.0.0
 
 * Modular optimization system; this can be accessed via the ChaiScript_Basic interface
 * Execution tracing capability; also accessed via ChaiScript_Basic interface
-* range-based for loops `for( id : container ) { }`
+* range-based for loops `for( id : container ) { }` (much better performance than other loop types)
 * If-init expressions (ala C++17)
 * Support for passing r-value references to functions
 * Support for containing unique_ptr
 * Add helpers for exposing enum classes to ChaiScript
+* Allow typed ChaiScript defined functions to perform conversions on call #303
 
 #### Improvements
 
@@ -38,6 +39,7 @@ Current Version: 6.0.0
 * Compile size improvements
 * Significant runtime improvements (see "Modular optimization system")
 * Significant parser improvements, both with parse-time and parser initialization time (Thanks @niXman)
+* Fix type conversion to bool in conditionals
 
 #### Improvements Still Need To Be Made
 

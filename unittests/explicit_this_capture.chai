@@ -1,0 +1,26 @@
+class Test
+{
+  def Test()
+  {}
+
+  def a(Function f)
+  {
+    f("test");
+//    f();
+  }
+
+  def b()
+  {
+    var l = fun [this](x) { this.thing();  }
+    this.a(l)
+  }
+
+  def thing()
+  {
+    print("hello world");
+  }
+}
+var t = Test()
+t.b()
+
+
