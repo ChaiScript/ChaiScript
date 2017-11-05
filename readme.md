@@ -25,7 +25,7 @@ Release under the BSD license, see "license.txt" for details.
 Introduction
 ============
 
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/ChaiScript/ChaiScript?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/ChaiScript/ChaiScript?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ChaiScript is one of the only embedded scripting language designed from the 
 ground up to directly target C++ and take advantage of modern C++ development 
