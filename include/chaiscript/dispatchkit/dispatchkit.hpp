@@ -199,13 +199,13 @@ namespace chaiscript
 
       bool has_function(const Proxy_Function &new_f, const std::string_view &name) noexcept
       {
-        return std::any_of(m_funcs.begin(), m_funcs.end(), 
+        return std::any_of(m_funcs.begin(), m_funcs.end(),
             [&](const std::pair<Proxy_Function, std::string> &existing_f) {
               return existing_f.second == name && *(existing_f.first) == *(new_f);
             }
           );
       }
-      
+
 
     private:
       std::vector<std::pair<Type_Info, std::string>> m_typeinfos;
@@ -215,14 +215,14 @@ namespace chaiscript
       std::vector<Type_Conversion> m_conversions;
 
       template<typename T, typename InItr>
-        static void apply(InItr begin, const InItr end, T &t) 
+        static void apply(InItr begin, const InItr end, T &t)
         {
-          for_each(begin, end, 
+          for_each(begin, end,
               [&t](const auto &obj) {
                 try {
                   t.add(obj.first, obj.second);
                 } catch (const chaiscript::exception::name_conflict_error &) {
-                  /// \todo Should we throw an error if there's a name conflict 
+                  /// \todo Should we throw an error if there's a name conflict
                   ///       while applying a module?
                 }
               }
@@ -266,7 +266,7 @@ namespace chaiscript
   namespace detail
   {
     /// A Proxy_Function implementation that is able to take
-    /// a vector of Proxy_Functions and perform a dispatch on them. It is 
+    /// a vector of Proxy_Functions and perform a dispatch on them. It is
     /// used specifically in the case of dealing with Function object variables
     class Dispatch_Function final : public dispatch::Proxy_Function_Base
     {
@@ -386,7 +386,7 @@ namespace chaiscript
 
       template <class T>
         using SmallVector = std::vector<T>;
-      
+
 
       typedef SmallVector<std::pair<std::string, Boxed_Value>> Scope;
       typedef SmallVector<Scope> StackData;

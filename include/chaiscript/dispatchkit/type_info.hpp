@@ -34,7 +34,7 @@ namespace chaiscript
   {
     public:
       constexpr Type_Info(const bool t_is_const, const bool t_is_reference, const bool t_is_pointer, const bool t_is_void, 
-          const bool t_is_arithmetic, const std::type_info *t_ti, const std::type_info *t_bare_ti)
+          const bool t_is_arithmetic, const std::type_info *t_ti, const std::type_info *t_bare_ti) noexcept
         : m_type_info(t_ti), m_bare_type_info(t_bare_ti),
           m_flags((static_cast<unsigned int>(t_is_const) << is_const_flag)
                 + (static_cast<unsigned int>(t_is_reference) << is_reference_flag)
@@ -44,7 +44,7 @@ namespace chaiscript
       {
       }
 
-      constexpr Type_Info() = default;
+      constexpr Type_Info() noexcept = default;
 
       constexpr bool operator<(const Type_Info &ti) const noexcept
       {
