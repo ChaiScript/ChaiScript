@@ -39,7 +39,7 @@ namespace chaiscript
       /// A Proxy_Function implementation designed for calling a function
       /// that is automatically guarded based on the first param based on the
       /// param's type name
-      class Dynamic_Object_Function final : public Proxy_Function_Base
+      class Dynamic_Object_Function : public Proxy_Function_Base, public Dynamic_Function_Interface
       {
         public:
           Dynamic_Object_Function(
@@ -70,6 +70,17 @@ namespace chaiscript
 
           Dynamic_Object_Function &operator=(const Dynamic_Object_Function) = delete;
           Dynamic_Object_Function(Dynamic_Object_Function &) = delete;
+
+          Param_Types get_dynamic_param_types() const noexcept override {
+            auto dynamic(std::dynamic_pointer_cast<dispatch::Dynamic_Function_Interface>(m_func));
+
+            if (dynamic) {
+              return dynamic->get_dynamic_param_types();
+            } else {
+              return Param_Types(get_param_types());
+            }
+          }
+
 
           bool operator==(const Proxy_Function_Base &f) const noexcept override
           {
@@ -173,7 +184,7 @@ namespace chaiscript
        * that is automatically guarded based on the first param based on the
        * param's type name
        */
-      class Dynamic_Object_Constructor final : public Proxy_Function_Base
+      class Dynamic_Object_Constructor final : public Proxy_Function_Base, public Dynamic_Function_Interface
       {
         public:
           Dynamic_Object_Constructor(
@@ -182,6 +193,7 @@ namespace chaiscript
             : Proxy_Function_Base(build_type_list(t_func->get_param_types()), t_func->get_arity() - 1),
               m_type_name(std::move(t_type_name)), m_func(t_func)
           {
+            assert( t_func );
             assert( (t_func->get_arity() > 0 || t_func->get_arity() < 0)
                 && "Programming error, Dynamic_Object_Function must have at least one parameter (this)");
           }
@@ -198,6 +210,17 @@ namespace chaiscript
 
             return std::vector<Type_Info>(begin, end);
           }
+
+          Param_Types get_dynamic_param_types() const noexcept override {
+            auto dynamic(std::dynamic_pointer_cast<dispatch::Dynamic_Function_Interface>(m_func));
+
+            if (dynamic) {
+              return dynamic->get_dynamic_param_types();
+            } else {
+              return Param_Types(get_param_types());
+            }
+          }
+
 
           bool operator==(const Proxy_Function_Base &f) const noexcept override
           {

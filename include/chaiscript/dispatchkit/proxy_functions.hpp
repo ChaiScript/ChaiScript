@@ -55,11 +55,29 @@ namespace chaiscript
           : m_has_types(false)
         {}
 
+        explicit Param_Types(const std::vector<Type_Info> &t_types)
+          : m_types(build_param_types(t_types)),
+            m_has_types(false)
+        {
+        }
+
         explicit Param_Types(std::vector<std::pair<std::string, Type_Info>> t_types)
           : m_types(std::move(t_types)),
             m_has_types(false)
         {
           update_has_types();
+        }
+
+        static std::vector<std::pair<std::string, Type_Info>> build_param_types(const std::vector<Type_Info> &t_types)
+        {
+          std::vector<std::pair<std::string, Type_Info>> retval;
+          std::transform(t_types.begin(), t_types.end(), std::back_inserter(retval),
+              [](const Type_Info &ti){
+                return std::make_pair(std::string(), ti);
+              }
+            );
+
+          return retval;
         }
 
         void push_front(std::string t_name, Type_Info t_ti)
@@ -342,11 +360,18 @@ namespace chaiscript
 
   namespace dispatch
   {
+    class Dynamic_Function_Interface
+    {
+      public:
+        virtual ~Dynamic_Function_Interface() {}
+        virtual Param_Types get_dynamic_param_types() const = 0;
+    };
+
     /**
      * A Proxy_Function implementation that is not type safe, the called function
      * is expecting a vector<Boxed_Value> that it works with how it chooses.
      */
-    class Dynamic_Proxy_Function : public Proxy_Function_Base
+    class Dynamic_Proxy_Function : public Proxy_Function_Base, public Dynamic_Function_Interface
     {
       public:
         Dynamic_Proxy_Function(
@@ -401,6 +426,9 @@ namespace chaiscript
           }
         }
 
+        Param_Types get_dynamic_param_types() const override {
+          return m_param_types;
+        }
 
       protected:
         bool test_guard(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const
@@ -943,6 +971,9 @@ namespace chaiscript
         std::vector<std::pair<size_t, const Proxy_Function_Base *>> ordered_funcs;
         ordered_funcs.reserve(funcs.size());
 
+        const constexpr auto boxed_type = user_type<Boxed_Value>();
+        const constexpr auto dynamic_type = user_type<Dynamic_Object>();
+
         for (const auto &func : funcs)
         {
           const auto arity = func->get_arity();
@@ -954,7 +985,10 @@ namespace chaiscript
             size_t numdiffs = 0;
             for (size_t i = 0; i < plist.size(); ++i)
             {
-              if (!func->get_param_types()[i+1].bare_equal(plist[i].get_type_info()))
+              const auto &p_type = plist[i].get_type_info();
+              const auto &f_type = func->get_param_types()[i+1];
+
+              if (!(f_type.bare_equal(boxed_type) && p_type.bare_equal(dynamic_type)) && !f_type.bare_equal(p_type))
               {
                 ++numdiffs;
               }
