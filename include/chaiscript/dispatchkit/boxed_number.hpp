@@ -327,7 +327,7 @@ namespace chaiscript
         {
 
           auto lhs_visit = [t_oper, &t_lhs, &t_rhs](const auto &c_lhs){
-            auto *lhs = static_cast<std::decay_t<decltype(c_lhs)> *>(t_lhs.get_ptr());
+            auto *lhs = t_lhs.is_return_value()?nullptr:static_cast<std::decay_t<decltype(c_lhs)> *>(t_lhs.get_ptr());
 
             auto rhs_visit = [t_oper, &t_lhs, lhs, &c_lhs](const auto &c_rhs) {
               return go(t_oper, t_lhs, lhs, c_lhs, c_rhs);
