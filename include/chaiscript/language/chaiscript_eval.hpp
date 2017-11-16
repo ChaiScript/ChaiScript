@@ -51,7 +51,7 @@ namespace chaiscript
     {
       /// Helper function that will set up the scope around a function call, including handling the named function parameters
       template<typename T>
-      static Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_Node_Impl<T> &t_node, const std::vector<std::string> &t_param_names, const std::vector<Boxed_Value> &t_vals, const std::map<std::string, Boxed_Value> *t_locals=nullptr, bool has_this_capture = false) {
+      static Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_Node_Impl<T> &t_node, const std::vector<std::string> &t_param_names, const Function_Params &t_vals, const std::map<std::string, Boxed_Value> *t_locals=nullptr, bool has_this_capture = false) {
         chaiscript::detail::Dispatch_State state(t_ss);
 
         const Boxed_Value *thisobj = [&]() -> const Boxed_Value *{
@@ -183,8 +183,9 @@ namespace chaiscript
               }
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-              fpp.save_params({t_lhs, m_rhs});
-              return t_ss->call_function(t_oper_string, m_loc, {t_lhs, m_rhs}, t_ss.conversions());
+              std::array params{t_lhs, m_rhs};
+              fpp.save_params(Function_Params{params});
+              return t_ss->call_function(t_oper_string, m_loc, Function_Params{params}, t_ss.conversions());
             }
           }
           catch(const exception::dispatch_error &e){
@@ -229,8 +230,9 @@ namespace chaiscript
               }
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-              fpp.save_params({t_lhs, t_rhs});
-              return t_ss->call_function(t_oper_string, m_loc, {t_lhs, t_rhs}, t_ss.conversions());
+              std::array params{t_lhs, t_rhs};
+              fpp.save_params(Function_Params(params));
+              return t_ss->call_function(t_oper_string, m_loc, Function_Params(params), t_ss.conversions());
             }
           }
           catch(const exception::dispatch_error &e){
@@ -304,13 +306,13 @@ namespace chaiscript
           }
 
           if (Save_Params) {
-            fpp.save_params(params);
+            fpp.save_params(Function_Params{params});
           }
 
           Boxed_Value fn(this->children[0]->eval(t_ss));
 
           try {
-            return (*t_ss->boxed_cast<const dispatch::Proxy_Function_Base *>(fn))(params, t_ss.conversions());
+            return (*t_ss->boxed_cast<const dispatch::Proxy_Function_Base *>(fn))(Function_Params{params}, t_ss.conversions());
           }
           catch(const exception::dispatch_error &e){
             throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, e.functions, false, *t_ss);
@@ -319,7 +321,7 @@ namespace chaiscript
             try {
               Const_Proxy_Function f = t_ss->boxed_cast<const Const_Proxy_Function &>(fn);
               // handle the case where there is only 1 function to try to call and dispatch fails on it
-              throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, {f}, false, *t_ss);
+              throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, make_vector(f), false, *t_ss);
             } catch (const exception::bad_boxed_cast &) {
               throw exception::eval_error("'" + this->children[0]->pretty_print() + "' does not evaluate to a function.");
             }
@@ -425,25 +427,25 @@ namespace chaiscript
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-          Boxed_Value rhs = this->children[1]->eval(t_ss); 
-          Boxed_Value lhs = this->children[0]->eval(t_ss);
 
-          if (m_oper != Operators::Opers::invalid && lhs.get_type_info().is_arithmetic() &&
-              rhs.get_type_info().is_arithmetic())
+          std::array params{this->children[0]->eval(t_ss), this->children[1]->eval(t_ss)}; 
+
+          if (m_oper != Operators::Opers::invalid && params[0].get_type_info().is_arithmetic() &&
+              params[0].get_type_info().is_arithmetic())
           {
             try {
-              return Boxed_Number::do_oper(m_oper, lhs, rhs);
+              return Boxed_Number::do_oper(m_oper, params[0], params[1]);
             } catch (const std::exception &) {
               throw exception::eval_error("Error with unsupported arithmetic assignment operation");
             }
           } else if (m_oper == Operators::Opers::assign) {
-            if (lhs.is_return_value()) {
+            if (params[0].is_return_value()) {
               throw exception::eval_error("Error, cannot assign to temporary value.");
             }
 
             try {
 
-              if (lhs.is_undef()) {
+              if (params[0].is_undef()) {
                 if (!this->children.empty()
                      && ((this->children[0]->identifier == AST_Node_Type::Reference)
                          || (!this->children[0]->children.empty()
@@ -454,20 +456,20 @@ namespace chaiscript
                 {
                   /// \todo This does not handle the case of an unassigned reference variable
                   ///       being assigned outside of its declaration
-                  lhs.assign(rhs);
-                  lhs.reset_return_value();
-                  return rhs;
+                  params[0].assign(params[1]);
+                  params[0].reset_return_value();
+                  return params[1];
                 } else {
-                  if (!rhs.is_return_value())
+                  if (!params[1].is_return_value())
                   {
-                    rhs = t_ss->call_function("clone", m_clone_loc, {rhs}, t_ss.conversions());
+                    params[1] = t_ss->call_function("clone", m_clone_loc, Function_Params{&params[0], std::end(params)}, t_ss.conversions());
                   }
-                  rhs.reset_return_value();
+                  params[1].reset_return_value();
                 }
               }
 
               try {
-                return t_ss->call_function(this->text, m_loc, {std::move(lhs), rhs}, t_ss.conversions());
+                return t_ss->call_function(this->text, m_loc, Function_Params{params}, t_ss.conversions());
               }
               catch(const exception::dispatch_error &e){
                 throw exception::eval_error("Unable to find appropriate'" + this->text + "' operator.", e.parameters, e.functions, false, *t_ss);
@@ -478,22 +480,22 @@ namespace chaiscript
             }
           }
           else if (this->text == ":=") {
-            if (lhs.is_undef() || Boxed_Value::type_match(lhs, rhs)) {
-              lhs.assign(rhs);
-              lhs.reset_return_value();
+            if (params[0].is_undef() || Boxed_Value::type_match(params[0], params[1])) {
+              params[0].assign(params[1]);
+              params[0].reset_return_value();
             } else {
               throw exception::eval_error("Mismatched types in equation");
             }
           }
           else {
             try {
-              return t_ss->call_function(this->text, m_loc, {std::move(lhs), rhs}, t_ss.conversions());
+              return t_ss->call_function(this->text, m_loc, Function_Params{params}, t_ss.conversions());
             } catch(const exception::dispatch_error &e){
               throw exception::eval_error("Unable to find appropriate'" + this->text + "' operator.", e.parameters, e.functions, false, *t_ss);
             }
           }
 
-          return rhs;
+          return params[1];
         }
 
       private:
@@ -550,11 +552,11 @@ namespace chaiscript
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
-          const std::vector<Boxed_Value> params{this->children[0]->eval(t_ss), this->children[1]->eval(t_ss)};
+          std::array params{this->children[0]->eval(t_ss), this->children[1]->eval(t_ss)};
 
           try {
-            fpp.save_params(params);
-            return t_ss->call_function("[]", m_loc, params, t_ss.conversions());
+            fpp.save_params(Function_Params{params});
+            return t_ss->call_function("[]", m_loc, Function_Params{params}, t_ss.conversions());
           }
           catch(const exception::dispatch_error &e){
             throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, false, *t_ss );
@@ -579,7 +581,7 @@ namespace chaiscript
 
 
           Boxed_Value retval = this->children[0]->eval(t_ss);
-          std::vector<Boxed_Value> params{retval};
+          auto params = make_vector(retval);
 
           bool has_function_params = false;
           if (this->children[1]->children.size() > 1) {
@@ -589,10 +591,10 @@ namespace chaiscript
             }
           }
 
-          fpp.save_params(params);
+          fpp.save_params(Function_Params{params});
 
           try {
-            retval = t_ss->call_member(m_fun_name, m_loc, std::move(params), has_function_params, t_ss.conversions());
+            retval = t_ss->call_member(m_fun_name, m_loc, Function_Params{params}, has_function_params, t_ss.conversions());
           }
           catch(const exception::dispatch_error &e){
             if (e.functions.empty())
@@ -608,7 +610,8 @@ namespace chaiscript
 
           if (this->children[1]->identifier == AST_Node_Type::Array_Call) {
             try {
-              retval = t_ss->call_function("[]", m_array_loc, {retval, this->children[1]->children[1]->eval(t_ss)}, t_ss.conversions());
+              std::array p{retval, this->children[1]->children[1]->eval(t_ss)};
+              retval = t_ss->call_function("[]", m_array_loc, Function_Params{p}, t_ss.conversions());
             }
             catch(const exception::dispatch_error &e){
               throw exception::eval_error("Can not find appropriate array lookup operator '[]'.", e.parameters, e.functions, true, *t_ss);
@@ -657,7 +660,7 @@ namespace chaiscript
           return Boxed_Value(
               dispatch::make_dynamic_proxy_function(
                   [engine, lambda_node = this->m_lambda_node, param_names = this->m_param_names, captures, 
-                   this_capture = this->m_this_capture] (const std::vector<Boxed_Value> &t_params)
+                   this_capture = this->m_this_capture] (const Function_Params &t_params)
                   {
                     return detail::eval_function(engine, *lambda_node, param_names, t_params, &captures, this_capture);
                   },
@@ -771,7 +774,7 @@ namespace chaiscript
           std::shared_ptr<dispatch::Proxy_Function_Base> guard;
           if (m_guard_node) {
             guard = dispatch::make_dynamic_proxy_function(
-                [engine, guardnode = m_guard_node, t_param_names](const std::vector<Boxed_Value> &t_params)
+                [engine, guardnode = m_guard_node, t_param_names](const Function_Params &t_params)
                 {
                   return detail::eval_function(engine, *guardnode, t_param_names, t_params);
                 },
@@ -782,7 +785,7 @@ namespace chaiscript
             const std::string & l_function_name = this->children[0]->text;
             t_ss->add(
                 dispatch::make_dynamic_proxy_function(
-                  [engine, func_node = m_body_node, t_param_names](const std::vector<Boxed_Value> &t_params)
+                  [engine, func_node = m_body_node, t_param_names](const Function_Params &t_params)
                   {
                     return detail::eval_function(engine, *func_node, t_param_names, t_params);
                   },
@@ -873,7 +876,7 @@ namespace chaiscript
           };
 
           const auto call_function = [&t_ss](const auto &t_funcs, const Boxed_Value &t_param) {
-            return dispatch::dispatch(*t_funcs, {t_param}, t_ss.conversions());
+            return dispatch::dispatch(*t_funcs, Function_Params{t_param}, t_ss.conversions());
           };
 
 
@@ -988,7 +991,8 @@ namespace chaiscript
               if (this->children[currentCase]->identifier == AST_Node_Type::Case) {
                 //This is a little odd, but because want to see both the switch and the case simultaneously, I do a downcast here.
                 try {
-                  if (hasMatched || boxed_cast<bool>(t_ss->call_function("==", m_loc, {match_value, this->children[currentCase]->children[0]->eval(t_ss)}, t_ss.conversions()))) {
+                  std::array p{match_value, this->children[currentCase]->children[0]->eval(t_ss)};
+                  if (hasMatched || boxed_cast<bool>(t_ss->call_function("==", m_loc, Function_Params{p}, t_ss.conversions()))) {
                     this->children[currentCase]->eval(t_ss);
                     hasMatched = true;
                   }
@@ -1057,7 +1061,7 @@ namespace chaiscript
               for (const auto &child : this->children[0]->children) {
                 if (auto obj = child->eval(t_ss);
                     !obj.is_return_value()) {
-                  vec.push_back(t_ss->call_function("clone", m_loc, {obj}, t_ss.conversions()));
+                  vec.push_back(t_ss->call_function("clone", m_loc, Function_Params{obj}, t_ss.conversions()));
                 } else {
                   vec.push_back(std::move(obj));
                 }
@@ -1087,7 +1091,7 @@ namespace chaiscript
             for (const auto &child : this->children[0]->children) {
               auto obj = child->children[1]->eval(t_ss);
               if (!obj.is_return_value()) {
-                obj = t_ss->call_function("clone", m_loc, {obj}, t_ss.conversions());
+                obj = t_ss->call_function("clone", m_loc, Function_Params{obj}, t_ss.conversions());
               }
 
               retval[t_ss->boxed_cast<std::string>(child->children[0]->eval(t_ss))] = std::move(obj);
@@ -1174,8 +1178,8 @@ namespace chaiscript
               return Boxed_Number::do_oper(m_oper, bv);
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-              fpp.save_params({bv});
-              return t_ss->call_function(this->text, m_loc, {std::move(bv)}, t_ss.conversions());
+              fpp.save_params(Function_Params{bv});
+              return t_ss->call_function(this->text, m_loc, Function_Params{bv}, t_ss.conversions());
             }
           } catch (const exception::dispatch_error &e) {
             throw exception::eval_error("Error with prefix operator evaluation: '" + this->text + "'", e.parameters, e.functions, false, *t_ss);
@@ -1240,9 +1244,12 @@ namespace chaiscript
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override{
           try {
-            auto oper1 = this->children[0]->children[0]->children[0]->eval(t_ss);
-            auto oper2 = this->children[0]->children[0]->children[1]->eval(t_ss);
-            return t_ss->call_function("generate_range", m_loc, {oper1, oper2}, t_ss.conversions());
+            std::array params{
+              this->children[0]->children[0]->children[0]->eval(t_ss),
+              this->children[0]->children[0]->children[1]->eval(t_ss)
+            };
+
+            return t_ss->call_function("generate_range", m_loc, Function_Params{params}, t_ss.conversions());
           }
           catch (const exception::dispatch_error &e) {
             throw exception::eval_error("Unable to generate range vector, while calling 'generate_range'", e.parameters, e.functions, false, *t_ss);
@@ -1280,7 +1287,7 @@ namespace chaiscript
 
               if (dispatch::Param_Types(
                     std::vector<std::pair<std::string, Type_Info>>{Arg_List_AST_Node<T>::get_arg_type(*catch_block.children[0], t_ss)}
-                    ).match(std::vector<Boxed_Value>{t_except}, t_ss.conversions()).first)
+                    ).match(Function_Params{t_except}, t_ss.conversions()).first)
               {
                 t_ss.add_object(name, t_except);
 
@@ -1410,7 +1417,7 @@ namespace chaiscript
           std::reference_wrapper<chaiscript::detail::Dispatch_Engine> engine(*t_ss);
           if (m_guard_node) {
             guard = dispatch::make_dynamic_proxy_function(
-                [engine, t_param_names, guardnode = m_guard_node](const std::vector<Boxed_Value> &t_params) {
+                [engine, t_param_names, guardnode = m_guard_node](const Function_Params &t_params) {
                   return chaiscript::eval::detail::eval_function(engine, *guardnode, t_param_names, t_params);
                 }, 
                 static_cast<int>(numparams), m_guard_node);
@@ -1425,7 +1432,7 @@ namespace chaiscript
               t_ss->add(
                   std::make_shared<dispatch::detail::Dynamic_Object_Constructor>(class_name,
                     dispatch::make_dynamic_proxy_function(
-                        [engine, t_param_names, node = m_body_node](const std::vector<Boxed_Value> &t_params) {
+                        [engine, t_param_names, node = m_body_node](const Function_Params &t_params) {
                           return chaiscript::eval::detail::eval_function(engine, *node, t_param_names, t_params);
                         },
                         static_cast<int>(numparams), m_body_node, param_types, guard
@@ -1442,7 +1449,7 @@ namespace chaiscript
               t_ss->add(
                   std::make_shared<dispatch::detail::Dynamic_Object_Function>(class_name,
                     dispatch::make_dynamic_proxy_function(
-                      [engine, t_param_names, node = m_body_node](const std::vector<Boxed_Value> &t_params) {
+                      [engine, t_param_names, node = m_body_node](const Function_Params &t_params) {
                         return chaiscript::eval::detail::eval_function(engine, *node, t_param_names, t_params);
                       },
                       static_cast<int>(numparams), m_body_node, param_types, guard), type), 

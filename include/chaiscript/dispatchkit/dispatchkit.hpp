@@ -313,14 +313,14 @@ namespace chaiscript
           return arity;
         }
 
-        bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const noexcept override
+        bool call_match(const Function_Params &vals, const Type_Conversions_State &t_conversions) const noexcept override
         {
           return std::any_of(std::begin(m_funcs), std::end(m_funcs),
                              [&vals, &t_conversions](const Proxy_Function &f){ return f->call_match(vals, t_conversions); });
         }
 
       protected:
-        Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+        Boxed_Value do_call(const Function_Params &params, const Type_Conversions_State &t_conversions) const override
         {
           return dispatch::dispatch(m_funcs, params, t_conversions);
         }
@@ -935,7 +935,7 @@ namespace chaiscript
           return m_conversions;
         }
 
-        static bool is_attribute_call(const std::vector<Proxy_Function> &t_funs, const std::vector<Boxed_Value> &t_params,
+        static bool is_attribute_call(const std::vector<Proxy_Function> &t_funs, const Function_Params &t_params,
             bool t_has_params, const Type_Conversions_State &t_conversions) noexcept
         {
           if (!t_has_params || t_params.empty()) {
@@ -956,7 +956,7 @@ namespace chaiscript
 #pragma warning(push)
 #pragma warning(disable : 4715)
 #endif
-        Boxed_Value call_member(const std::string &t_name, std::atomic_uint_fast32_t &t_loc, const std::vector<Boxed_Value> &params, bool t_has_params,
+        Boxed_Value call_member(const std::string &t_name, std::atomic_uint_fast32_t &t_loc, const Function_Params &params, bool t_has_params,
                                 const Type_Conversions_State &t_conversions)
         {
           uint_fast32_t loc = t_loc;
@@ -964,9 +964,9 @@ namespace chaiscript
           if (funs.first != loc) { t_loc = uint_fast32_t(funs.first); }
 
           const auto do_attribute_call = 
-            [this](int l_num_params, const std::vector<Boxed_Value> &l_params, const std::vector<Proxy_Function> &l_funs, const Type_Conversions_State &l_conversions)->Boxed_Value
+            [this](int l_num_params, Function_Params l_params, const std::vector<Proxy_Function> &l_funs, const Type_Conversions_State &l_conversions)->Boxed_Value
             {
-              std::vector<Boxed_Value> attr_params{l_params.begin(), l_params.begin() + l_num_params};
+              Function_Params attr_params(l_params.begin(), l_params.begin() + l_num_params);
               Boxed_Value bv = dispatch::dispatch(l_funs, attr_params, l_conversions);
               if (l_num_params < int(l_params.size()) || bv.get_type_info().bare_equal(user_type<dispatch::Proxy_Function_Base>())) {
                 struct This_Foist {
@@ -1049,14 +1049,15 @@ namespace chaiscript
             if (!functions.empty()) {
               try {
                 if (is_no_param) {
-                  auto tmp_params(params);
+                  auto tmp_params = params.to_vector();
                   tmp_params.insert(tmp_params.begin() + 1, var(t_name));
-                  return do_attribute_call(2, tmp_params, functions, t_conversions);
+                  return do_attribute_call(2, Function_Params(tmp_params), functions, t_conversions);
                 } else {
-                  return dispatch::dispatch(functions, {params[0], var(t_name), var(std::vector<Boxed_Value>(params.begin()+1, params.end()))}, t_conversions);
+                  std::array<Boxed_Value, 3> p{params[0], var(t_name), var(std::vector<Boxed_Value>(params.begin()+1, params.end()))};
+                  return dispatch::dispatch(functions, Function_Params{p}, t_conversions);
                 }
               } catch (const dispatch::option_explicit_set &e) {
-                throw chaiscript::exception::dispatch_error(params, std::vector<Const_Proxy_Function>(funs.second->begin(), funs.second->end()), 
+                throw chaiscript::exception::dispatch_error(params, std::vector<Const_Proxy_Function>(funs.second->begin(), funs.second->end()),
                     e.what());
               }
             }
@@ -1076,7 +1077,7 @@ namespace chaiscript
 
 
 
-        Boxed_Value call_function(const std::string_view &t_name, std::atomic_uint_fast32_t &t_loc, const std::vector<Boxed_Value> &params,
+        Boxed_Value call_function(const std::string_view &t_name, std::atomic_uint_fast32_t &t_loc, Function_Params params,
             const Type_Conversions_State &t_conversions) const
         {
           uint_fast32_t loc = t_loc;
@@ -1132,7 +1133,7 @@ namespace chaiscript
 
         /// Returns true if a call can be made that consists of the first parameter
         /// (the function) with the remaining parameters as its arguments.
-        Boxed_Value call_exists(const std::vector<Boxed_Value> &params) const
+        Boxed_Value call_exists(const Function_Params &params) const
         {
           if (params.empty())
           {
@@ -1142,7 +1143,7 @@ namespace chaiscript
           const auto &f = this->boxed_cast<Const_Proxy_Function>(params[0]);
           const Type_Conversions_State convs(m_conversions, m_conversions.conversion_saves());
 
-          return const_var(f->call_match(std::vector<Boxed_Value>(params.begin() + 1, params.end()), convs));
+          return const_var(f->call_match(Function_Params(params.begin() + 1, params.end()), convs));
         }
 
         /// Dump all system info to stdout
@@ -1203,11 +1204,6 @@ namespace chaiscript
           m_state = t_state;
         }
 
-        static void save_function_params(Stack_Holder &t_s, std::initializer_list<Boxed_Value> t_params)
-        {
-          t_s.call_params.back().insert(t_s.call_params.back().begin(), t_params);
-        }
-
         static void save_function_params(Stack_Holder &t_s, std::vector<Boxed_Value> &&t_params)
         {
           for (auto &&param : t_params)
@@ -1216,14 +1212,9 @@ namespace chaiscript
           }
         }
 
-        static void save_function_params(Stack_Holder &t_s, const std::vector<Boxed_Value> &t_params)
+        static void save_function_params(Stack_Holder &t_s, const Function_Params &t_params)
         {
           t_s.call_params.back().insert(t_s.call_params.back().begin(), t_params.begin(), t_params.end());
-        }
-
-        void save_function_params(std::initializer_list<Boxed_Value> t_params)
-        {
-          save_function_params(*m_stack_holder, t_params);
         }
 
         void save_function_params(std::vector<Boxed_Value> &&t_params)
@@ -1231,7 +1222,7 @@ namespace chaiscript
           save_function_params(*m_stack_holder, std::move(t_params));
         }
 
-        void save_function_params(const std::vector<Boxed_Value> &t_params)
+        void save_function_params(const Function_Params &t_params)
         {
           save_function_params(*m_stack_holder, t_params);
         }

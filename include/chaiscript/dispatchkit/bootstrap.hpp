@@ -241,7 +241,7 @@ namespace chaiscript
 
       /// Create a bound function object. The first param is the function to bind
       /// the remaining parameters are the args to bind into the result
-      static Boxed_Value bind_function(const std::vector<Boxed_Value> &params)
+      static Boxed_Value bind_function(const Function_Params &params)
       {
         if (params.empty()) {
           throw exception::arity_error(0, 1);

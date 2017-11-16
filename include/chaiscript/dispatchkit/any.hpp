@@ -83,8 +83,8 @@ namespace chaiscript {
       public:
         // construct/copy/destruct
         constexpr Any() noexcept = default;
-        Any(Any &&) = default;
-        Any &operator=(Any &&t_any) = default;
+        Any(Any &&) noexcept = default;
+        Any &operator=(Any &&t_any) noexcept = default;
 
         Any(const Any &t_any)
           : m_data(t_any.empty() ? nullptr : t_any.m_data->clone())
@@ -93,7 +93,7 @@ namespace chaiscript {
 
         template<typename ValueType,
           typename = std::enable_if_t<!std::is_same_v<Any, std::decay_t<ValueType>>>>
-        explicit Any(ValueType &&t_value)
+        explicit Any(ValueType &&t_value) noexcept(is_nothrow_forward_constructible_v<decltype(t_value), std::decay_t<ValueType>>)
           : m_data(std::make_unique<Data_Impl<std::decay_t<ValueType>>>(std::forward<ValueType>(t_value)))
         {
         }
@@ -128,7 +128,7 @@ namespace chaiscript {
         // queries
         bool empty() const noexcept
         {
-          return !bool(m_data);
+          return !static_cast<bool>(m_data);
         }
 
         const std::type_info & type() const noexcept

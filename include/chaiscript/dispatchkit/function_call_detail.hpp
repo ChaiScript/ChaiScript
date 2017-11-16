@@ -35,7 +35,7 @@ namespace chaiscript
         struct Function_Caller_Ret
         {
           static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
-              const std::vector<Boxed_Value> &params, const Type_Conversions_State *t_conversions)
+              const Function_Params &params, const Type_Conversions_State *t_conversions)
           {
             if (t_conversions != nullptr) {
               return boxed_cast<Ret>(dispatch::dispatch(t_funcs, params, *t_conversions), t_conversions);
@@ -54,7 +54,7 @@ namespace chaiscript
         struct Function_Caller_Ret<Ret, true>
         {
           static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
-              const std::vector<Boxed_Value> &params, const Type_Conversions_State *t_conversions)
+              const Function_Params &params, const Type_Conversions_State *t_conversions)
           {
             if (t_conversions != nullptr) {
               return Boxed_Number(dispatch::dispatch(t_funcs, params, *t_conversions)).get_as<Ret>();
@@ -74,7 +74,7 @@ namespace chaiscript
         struct Function_Caller_Ret<void, false>
         {
           static void call(const std::vector<Const_Proxy_Function> &t_funcs, 
-              const std::vector<Boxed_Value> &params, const Type_Conversions_State *t_conversions)
+              const Function_Params &params, const Type_Conversions_State *t_conversions)
           {
             if (t_conversions != nullptr) {
               dispatch::dispatch(t_funcs, params, *t_conversions);
@@ -101,16 +101,14 @@ namespace chaiscript
           template<typename ... P>
           Ret operator()(P&&  ...  param)
           {
+            std::array<Boxed_Value, sizeof...(P)> params{box<P>(std::forward<P>(param))...};
+
             if (m_conversions) {
               Type_Conversions_State state(*m_conversions, m_conversions->conversion_saves());
-              return Function_Caller_Ret<Ret, std::is_arithmetic<Ret>::value && !std::is_same<Ret, bool>::value>::call(m_funcs, { 
-                  box<P>(std::forward<P>(param))...
-                  }, &state
+              return Function_Caller_Ret<Ret, std::is_arithmetic<Ret>::value && !std::is_same<Ret, bool>::value>::call(m_funcs, Function_Params{params}, &state
                   );
             } else {
-              return Function_Caller_Ret<Ret, std::is_arithmetic<Ret>::value && !std::is_same<Ret, bool>::value>::call(m_funcs, { 
-                  box<P>(std::forward<P>(param))...
-                  }, nullptr
+              return Function_Caller_Ret<Ret, std::is_arithmetic<Ret>::value && !std::is_same<Ret, bool>::value>::call(m_funcs, Function_Params{params}, nullptr
                   );
             }
 
