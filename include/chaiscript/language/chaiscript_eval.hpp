@@ -462,7 +462,7 @@ namespace chaiscript
                 } else {
                   if (!params[1].is_return_value())
                   {
-                    params[1] = t_ss->call_function("clone", m_clone_loc, Function_Params{&params[0], std::end(params)}, t_ss.conversions());
+                    params[1] = t_ss->call_function("clone", m_clone_loc, Function_Params{&params[1], std::end(params)}, t_ss.conversions());
                   }
                   params[1].reset_return_value();
                 }
