@@ -920,6 +920,7 @@ namespace chaiscript
                 try {
                   this->children[2]->eval(t_ss);
                 } catch (detail::Continue_Loop &) {
+                  // continue statement hit
                 }
                 call_function(pop_front_funcs, range_obj);
               }
@@ -1456,7 +1457,6 @@ namespace chaiscript
                   function_name);
             }
           } catch (const exception::name_conflict_error &e) {
-            std::cout << "Method!!" << std::endl;
             throw exception::eval_error("Method redefined '" + e.name() + "'");
           }
           return void_var();

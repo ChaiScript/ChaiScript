@@ -36,14 +36,14 @@ namespace chaiscript
         struct Handle_Return
         {
           template<typename T,
-                   typename = typename std::enable_if<std::is_pod<typename std::decay<T>::type>::value>::type>
+                   typename = std::enable_if_t<std::is_pod_v<std::decay_t<T>>>>
           static Boxed_Value handle(T r)
           {
             return Boxed_Value(std::move(r), true);
           }
 
           template<typename T,
-                   typename = typename std::enable_if<!std::is_pod<typename std::decay<T>::type>::value>::type>
+                   typename = std::enable_if_t<!std::is_pod_v<std::decay_t<T>>>>
           static Boxed_Value handle(T &&r)
           {
             return Boxed_Value(std::make_shared<T>(std::forward<T>(r)), true);
