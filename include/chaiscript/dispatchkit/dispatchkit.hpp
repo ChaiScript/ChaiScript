@@ -1053,7 +1053,7 @@ namespace chaiscript
                   tmp_params.insert(tmp_params.begin() + 1, var(t_name));
                   return do_attribute_call(2, Function_Params(tmp_params), functions, t_conversions);
                 } else {
-                  std::array<Boxed_Value, 3> p{params[0], var(t_name), var(std::vector<Boxed_Value>(params.begin()+1, params.end()))};
+                  std::array p{params[0], var(t_name), var(std::vector<Boxed_Value>(params.begin()+1, params.end()))};
                   return dispatch::dispatch(functions, Function_Params{p}, t_conversions);
                 }
               } catch (const dispatch::option_explicit_set &e) {
@@ -1077,7 +1077,7 @@ namespace chaiscript
 
 
 
-        Boxed_Value call_function(const std::string_view &t_name, std::atomic_uint_fast32_t &t_loc, Function_Params params,
+        Boxed_Value call_function(const std::string_view &t_name, std::atomic_uint_fast32_t &t_loc, const Function_Params &params,
             const Type_Conversions_State &t_conversions) const
         {
           uint_fast32_t loc = t_loc;

@@ -428,10 +428,20 @@ namespace chaiscript
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
-          std::array params{this->children[0]->eval(t_ss), this->children[1]->eval(t_ss)}; 
+          auto params = [&](){
+            // The RHS *must* be evaluated before the LHS
+            // consider `var range = range(x)`
+            // if we declare the variable in scope first, then the name lookup fails
+            // for the RHS
+            auto rhs = this->children[1]->eval(t_ss);
+            auto lhs = this->children[0]->eval(t_ss);
+            std::array p{std::move(lhs), std::move(rhs)};
+            return p;
+          }();
+
 
           if (m_oper != Operators::Opers::invalid && params[0].get_type_info().is_arithmetic() &&
-              params[0].get_type_info().is_arithmetic())
+              params[1].get_type_info().is_arithmetic())
           {
             try {
               return Boxed_Number::do_oper(m_oper, params[0], params[1]);
@@ -452,7 +462,7 @@ namespace chaiscript
                               && this->children[0]->children[0]->identifier == AST_Node_Type::Reference)
                        )
                    )
-                  
+
                 {
                   /// \todo This does not handle the case of an unassigned reference variable
                   ///       being assigned outside of its declaration
