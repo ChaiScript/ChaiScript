@@ -194,7 +194,7 @@ namespace chaiscript
     public:
       /// Basic Boxed_Value constructor
         template<typename T,
-          typename = typename std::enable_if<!std::is_same<Boxed_Value, typename std::decay<T>::type>::value>::type>
+          typename = std::enable_if_t<!std::is_same_v<Boxed_Value, std::decay_t<T>>>>
         explicit Boxed_Value(T &&t, bool t_return_value = false)
           : m_data(Object_Data::get(std::forward<T>(t), t_return_value))
         {

@@ -151,7 +151,7 @@ namespace chaiscript
 
     /// Specific version of shared_ptr_clone just for Proxy_Functions
     template<typename Type>
-    std::shared_ptr<typename std::remove_const<Type>::type> shared_ptr_unconst_clone(const std::shared_ptr<typename std::add_const<Type>::type> &p)
+    std::shared_ptr<std::remove_const_t<Type>> shared_ptr_unconst_clone(const std::shared_ptr<std::add_const_t<Type>> &p)
     {
       return std::const_pointer_cast<typename std::remove_const<Type>::type>(p);
     }
@@ -483,7 +483,7 @@ namespace chaiscript
 
         opers_arithmetic_pod(m);
 
-        
+
         m.add(fun(&Build_Info::version_major), "version_major");
         m.add(fun(&Build_Info::version_minor), "version_minor");
         m.add(fun(&Build_Info::version_patch), "version_patch");
