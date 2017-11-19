@@ -1280,7 +1280,7 @@ namespace chaiscript
             auto &catch_block = *this->children[i];
 
             if (catch_block.children.size() == 1) {
-              //No variable capture, no guards
+              //No variable capture
               retval = catch_block.children[0]->eval(t_ss);
               break;
             } else if (catch_block.children.size() == 2 || catch_block.children.size() == 3) {
@@ -1293,26 +1293,9 @@ namespace chaiscript
                 t_ss.add_object(name, t_except);
 
                 if (catch_block.children.size() == 2) {
-                  //Variable capture, no guards
+                  //Variable capture
                   retval = catch_block.children[1]->eval(t_ss);
                   break;
-                }
-                else if (catch_block.children.size() == 3) {
-                  //Variable capture, guards
-
-                  bool guard = false;
-                  try {
-                    guard = boxed_cast<bool>(catch_block.children[1]->eval(t_ss));
-                  } catch (const exception::bad_boxed_cast &) {
-                    if (this->children.back()->identifier == AST_Node_Type::Finally) {
-                      this->children.back()->children[0]->eval(t_ss);
-                    }
-                    throw exception::eval_error("Guard condition not boolean");
-                  }
-                  if (guard) {
-                    retval = catch_block.children[2]->eval(t_ss);
-                    break;
-                  }
                 }
               }
             }

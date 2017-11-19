@@ -1715,11 +1715,6 @@ namespace chaiscript
                 if (!(Arg() && Char(')'))) {
                   throw exception::eval_error("Incomplete 'catch' expression", File_Position(m_position.line, m_position.col), *m_filename);
                 }
-                if (Char(':')) {
-                  if (!Operator()) {
-                    throw exception::eval_error("Missing guard expression for catch", File_Position(m_position.line, m_position.col), *m_filename);
-                  }
-                }
               }
 
               while (Eol()) {}
