@@ -145,20 +145,20 @@ std::vector<std::string> default_search_paths()
 
 void help(int n) {
   if (n >= 0) {
-    std::cout << "ChaiScript evaluator.  To evaluate an expression, type it and press <enter>." << std::endl;
-    std::cout << "Additionally, you can inspect the runtime system using:" << std::endl;
-    std::cout << "  dump_system() - outputs all functions registered to the system" << std::endl;
-    std::cout << "  dump_object(x) - dumps information about the given symbol" << std::endl;
+    std::cout << "ChaiScript evaluator.  To evaluate an expression, type it and press <enter>.\n";
+    std::cout << "Additionally, you can inspect the runtime system using:\n";
+    std::cout << "  dump_system() - outputs all functions registered to the system\n";
+    std::cout << "  dump_object(x) - dumps information about the given symbol\n";
   }
   else {
-    std::cout << "usage : chai [option]+" << std::endl;
-    std::cout << "option:" << std::endl;
-    std::cout << "   -h | --help" << std::endl;
-    std::cout << "   -i | --interactive" << std::endl;
-    std::cout << "   -c | --command cmd" << std::endl;
-    std::cout << "   -v | --version" << std::endl;
-    std::cout << "   -    --stdin" << std::endl;
-    std::cout << "   filepath" << std::endl;
+    std::cout << "usage : chai [option]+\n";
+    std::cout << "option:\n";
+    std::cout << "   -h | --help\n";
+    std::cout << "   -i | --interactive\n";
+    std::cout << "   -c | --command cmd\n";
+    std::cout << "   -v | --version\n";
+    std::cout << "   -    --stdin\n";
+    std::cout << "   filepath\n";
   }
 }
 
@@ -244,7 +244,7 @@ void interactive(chaiscript::ChaiScript& chai)
       //Then, we try to print the result of the evaluation to the user
       if (!val.get_type_info().bare_equal(chaiscript::user_type<void>())) {
         try {
-          std::cout << chai.eval<std::function<std::string(const chaiscript::Boxed_Value &bv)> >("to_string")(val) << std::endl;
+          std::cout << chai.eval<std::function<std::string(const chaiscript::Boxed_Value &bv)> >("to_string")(val) << '\n';
         }
         catch (...) {} //If we can't, do nothing
       }
@@ -254,7 +254,7 @@ void interactive(chaiscript::ChaiScript& chai)
       if (ee.call_stack.size() > 0) {
         std::cout << "during evaluation at (" << ee.call_stack[0].start().line << ", " << ee.call_stack[0].start().column << ")";
       }
-      std::cout << std::endl;
+      std::cout << '\n';
     }
     catch (const std::exception &e) {
       std::cout << e.what();
