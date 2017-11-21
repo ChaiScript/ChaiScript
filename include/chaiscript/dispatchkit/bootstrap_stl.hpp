@@ -735,7 +735,7 @@ namespace chaiscript
           m.add(user_type<FutureType>(), type);
 
           m.add(fun([](const FutureType &t) { return t.valid(); }), "valid");
-          m.add(fun(&FutureType::get), "get");
+          m.add(fun([](FutureType &t) { return t.get(); }), "get");
           m.add(fun(&FutureType::wait), "wait");
         }
       template<typename FutureType>
