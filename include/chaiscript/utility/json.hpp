@@ -568,6 +568,7 @@ struct JSONParser {
     char c = '\0';
     bool isDouble = false;
     bool isNegative = false;
+    bool isExpNegative = false;
     long exp = 0;
     if( offset < str.size() && str.at(offset) == '-' ) {
       isNegative = true;
@@ -587,7 +588,7 @@ struct JSONParser {
     if( offset < str.size() && (c == 'E' || c == 'e' )) {
       c = str.at(offset++);
       if( c == '-' ) { 
-        exp_str += '-';
+        isExpNegative = true;
       } else if( c == '+' ) {
         // do nothing
       } else { 
@@ -603,9 +604,9 @@ struct JSONParser {
         }
         else {
           break;
-}
+        }
       }
-      exp = chaiscript::parse_num<long>( exp_str );
+      exp = chaiscript::parse_num<long>( exp_str ) * (isExpNegative?-1:1);
     }
     else if( offset < str.size() && (!isspace( c ) && c != ',' && c != ']' && c != '}' )) {
       throw std::runtime_error(std::string("JSON ERROR: Number: unexpected character '") + c + "'");
