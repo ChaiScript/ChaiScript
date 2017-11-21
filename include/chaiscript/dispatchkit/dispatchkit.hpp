@@ -1104,29 +1104,21 @@ namespace chaiscript
         {
           const auto params = f.second->get_param_types();
 
-          std::vector<std::pair<std::string, Type_Info>> typed_params;
-
-          auto func(std::dynamic_pointer_cast<const dispatch::Dynamic_Function_Interface>(f.second));
-          if (func) {
-            typed_params = func->get_dynamic_param_types().types();
-          }
-
           dump_type(params.front());
           std::cout << " " << f.first << "(";
 
-          for (size_t i = 1; i < params.size(); ++i)
+          for (auto itr = params.begin() + 1;
+              itr != params.end();
+              )
           {
-            if (!typed_params.empty() && !typed_params[i-1].first.empty()) {
-              std::cout << typed_params[i-1].first;
-            } else {
-              dump_type(params[i]);
-            }
+            dump_type(*itr);
+            ++itr;
 
-            if (i != params.size() - 1) {
+            if (itr != params.end())
+            {
               std::cout << ", ";
             }
           }
-
 
           std::cout << ") \n";
         }
@@ -1321,157 +1313,88 @@ namespace chaiscript
           return m_state.m_functions;
         }
 
-
-        static std::vector<Type_Info> param_types(const Proxy_Function &t_f)
+        static bool function_less_than(const Proxy_Function &lhs, const Proxy_Function &rhs) noexcept
         {
-          assert(t_f);
-          return t_f->get_param_types();
-        }
 
-        static std::vector<std::pair<std::string, Type_Info>> param_types(const std::shared_ptr<const dispatch::Dynamic_Function_Interface> &t_f)
-        {
-          assert(t_f);
-          const auto types = t_f->get_dynamic_param_types().types();
-          std::vector<std::pair<std::string, Type_Info>> ret(1);
-          ret.insert(ret.end(), types.begin(), types.end());
-          return ret;
-        }
+          auto dynamic_lhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(lhs));
+          auto dynamic_rhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(rhs));
 
-        static Type_Info type_info(const std::pair<std::string, Type_Info> &t_ti)
-        {
-          return t_ti.second;
-        }
-
-        static Type_Info type_info(const Type_Info &t_ti)
-        {
-          return t_ti;
-        }
-
-        static std::string dynamic_type_name(const std::pair<std::string, Type_Info> &t_ti)
-        {
-          return t_ti.first.empty()?t_ti.second.name():t_ti.first;
-        }
-
-        static std::string dynamic_type_name(const Type_Info &ti)
-        {
-          return ti.name();
-        }
-
-
-        template<typename LHS, typename RHS>
-          static bool params_less_than(const LHS &t_lhs, const RHS &t_rhs)
+          if (dynamic_lhs && dynamic_rhs)
           {
-            assert(t_lhs);
-            assert(t_rhs);
-            const auto lhsparamtypes = param_types(t_lhs);
-            const auto rhsparamtypes = param_types(t_rhs);
-
-            const auto lhssize = lhsparamtypes.size();
-            const auto rhssize = rhsparamtypes.size();
-
-            constexpr auto boxed_type = user_type<Boxed_Value>();
-            constexpr auto boxed_pod_type = user_type<Boxed_Number>();
-            constexpr auto dynamic_type = user_type<dispatch::Dynamic_Object>();
-
-            for (size_t i = 1; i < lhssize && i < rhssize; ++i)
+            if (dynamic_lhs->get_guard())
             {
-              const Type_Info lt = type_info(lhsparamtypes[i]);
-              const Type_Info rt = type_info(rhsparamtypes[i]);
-              const std::string ln = dynamic_type_name(lhsparamtypes[i]);
-              const std::string rn = dynamic_type_name(rhsparamtypes[i]);
-
-              if ( (lt.bare_equal(dynamic_type) || lt.is_undef())
-                  && (rt.bare_equal(dynamic_type) || rt.is_undef()))
-              {
-
-                if (!ln.empty() && rn.empty()) {
-                  return true;
-                } else if (ln.empty() && !rn.empty()) { 
-                  return false;
-                } else if (!ln.empty() && !rn.empty()) {
-                  if (ln < rn) {
-                    return true;
-                  } else if (rn < ln) {
-                    return false;
-                  }
-
-                  // the remaining cases are handled by the is_const rules below
-                }
-              }
-
-              if (lt.bare_equal(rt) && lt.is_const() == rt.is_const())
-              {
-                continue; // The first two types are essentially the same, next iteration
-              }
-
-              
-              // const is after non-const for the same type
-              if (lt.bare_equal(rt) && lt.is_const() && !rt.is_const())
-              {
-                return false;
-              }
-
-              if (lt.bare_equal(rt) && !lt.is_const())
-              {
-                return true;
-              }
-
-              // boxed_values are sorted last
-              if (lt.bare_equal(boxed_type))
-              {
-                return false;
-              }
-
-              if (rt.bare_equal(boxed_type))
-              {
-                return true;
-              }
-
-              if (lt.bare_equal(boxed_pod_type))
-              {
-                return false;
-              }
-
-              if (rt.bare_equal(boxed_pod_type))
-              {
-                return true;
-              }
-
-              // otherwise, we want to sort by typeid
-              return lt < rt;
+              return dynamic_rhs->get_guard() ? false : true;
+            } else {
+              return false;
             }
+          }
 
-            // if everything else checks out, sort on guard
-            //
-            auto dynamic_lhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_lhs));
-            auto dynamic_rhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_rhs));
-
-            if (dynamic_lhs && dynamic_rhs) {
-              if (dynamic_lhs->get_guard() && !dynamic_rhs->get_guard()) {
-                return true;
-              } else if (dynamic_rhs->get_guard()) {
-                return false;
-              }
-            }
-
+          if (dynamic_lhs && !dynamic_rhs)
+          {
             return false;
           }
 
-        static bool function_less_than(const Proxy_Function &lhs, const Proxy_Function &rhs) noexcept
-        {
-          auto dynamic_lhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Function_Interface>(lhs));
-          auto dynamic_rhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Function_Interface>(rhs));
-       
-          if (dynamic_lhs && dynamic_rhs)
+          if (!dynamic_lhs && dynamic_rhs)
           {
-            return params_less_than(dynamic_lhs, dynamic_rhs);
-          } else if (dynamic_lhs) {
-            return params_less_than(dynamic_lhs, rhs);
-          } else if (dynamic_rhs) {
-            return params_less_than(lhs, dynamic_rhs);
-          } else {
-            return params_less_than(lhs, rhs);
+            return true;
           }
+
+          const auto &lhsparamtypes = lhs->get_param_types();
+          const auto &rhsparamtypes = rhs->get_param_types();
+
+          const auto lhssize = lhsparamtypes.size();
+          const auto rhssize = rhsparamtypes.size();
+
+          constexpr const auto boxed_type = user_type<Boxed_Value>();
+          constexpr const auto boxed_pod_type = user_type<Boxed_Number>();
+
+          for (size_t i = 1; i < lhssize && i < rhssize; ++i)
+          {
+            const Type_Info &lt = lhsparamtypes[i];
+            const Type_Info &rt = rhsparamtypes[i];
+
+            if (lt.bare_equal(rt) && lt.is_const() == rt.is_const())
+            {
+              continue; // The first two types are essentially the same, next iteration
+            }
+
+            // const is after non-const for the same type
+            if (lt.bare_equal(rt) && lt.is_const() && !rt.is_const())
+            {
+              return false;
+            }
+
+            if (lt.bare_equal(rt) && !lt.is_const())
+            {
+              return true;
+            }
+
+            // boxed_values are sorted last
+            if (lt.bare_equal(boxed_type))
+            {
+              return false;
+            }
+
+            if (rt.bare_equal(boxed_type))
+            {
+              return true;
+            }
+
+            if (lt.bare_equal(boxed_pod_type))
+            {
+              return false;
+            }
+
+            if (rt.bare_equal(boxed_pod_type))
+            {
+              return true;
+            }
+
+            // otherwise, we want to sort by typeid
+            return lt < rt;
+          }
+
+          return false;
         }
 
 

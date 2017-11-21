@@ -321,8 +321,7 @@ TEST_CASE("Function ordering")
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   chai.eval("def test_fun(x) { return 3; }");
   chai.eval("def test_fun(x) : x == \"hi\" { return 4; }");
-  chai.eval("def test_fun(double d) { return 5; }");
-
+//  chai.eval("def test_fun(x) { return 5; }");
   chai.add(chaiscript::fun(&function_ordering_test_one), "test_fun");
   chai.add(chaiscript::fun(&function_ordering_test_two), "test_fun");
 
@@ -330,7 +329,6 @@ TEST_CASE("Function ordering")
   CHECK(chai.eval<int>("auto i = 1; test_fun(i)") == 2);
   CHECK(chai.eval<int>("test_fun(\"bob\")") == 3);
   CHECK(chai.eval<int>("test_fun(\"hi\")") == 4);
-  CHECK(chai.eval<int>("test_fun(5.0)") == 5);
 }
 
 
