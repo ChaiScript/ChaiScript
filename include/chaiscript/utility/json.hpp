@@ -50,7 +50,7 @@ class JSON
   private:
 
 
-    using Data = std::variant<nullptr_t, chaiscript::utility::QuickFlatMap<std::string, JSON>, std::vector<JSON>, std::string, double, int, bool>;
+    using Data = std::variant<nullptr_t, chaiscript::utility::QuickFlatMap<std::string, JSON>, std::vector<JSON>, std::string, double, int64_t, bool>;
 
     struct Internal
     {
@@ -66,7 +66,7 @@ class JSON
           case Class::Array:    return std::vector<JSON>{};
           case Class::String:   return std::string{};
           case Class::Floating: return double{};
-          case Class::Integral: return int{};
+          case Class::Integral: return int64_t{};
           case Class::Boolean:  return bool{};
         }
         throw std::runtime_error("unknown type");
@@ -137,7 +137,6 @@ class JSON
         return std::get_if<static_cast<std::size_t>(Class::Boolean)>(&d);
       }
 
-
       Data d;
     };
 
@@ -192,7 +191,7 @@ class JSON
       explicit JSON( T b, typename enable_if<is_same<T,bool>::value>::type* = nullptr ) noexcept : internal( static_cast<bool>(b) ) {}
 
     template <typename T>
-      explicit JSON( T i, typename enable_if<is_integral<T>::value && !is_same<T,bool>::value>::type* = nullptr ) noexcept : internal( static_cast<int>(i) ) {}
+      explicit JSON( T i, typename enable_if<is_integral<T>::value && !is_same<T,bool>::value>::type* = nullptr ) noexcept : internal( static_cast<int64_t>(i) ) {}
 
     template <typename T>
       explicit JSON( T f, typename enable_if<is_floating_point<T>::value>::type* = nullptr ) noexcept : internal( static_cast<double>(f) ) {}
@@ -281,10 +280,10 @@ class JSON
           [](){ return double{}; }
         );
     }
-    int to_int() const noexcept { 
+    int64_t to_int() const noexcept { 
       return internal.visit_or<Class::Integral>(
           [](const auto &o){ return o; },
-          [](){ return int{}; }
+          [](){ return int64_t{}; }
         );
     }
     bool to_bool() const noexcept { 
@@ -498,7 +497,8 @@ struct JSONParser {
     char c = '\0';
     bool isDouble = false;
     bool isNegative = false;
-    long exp = 0;
+    int64_t exp = 0;
+    bool isExpNegative = false;
     if( offset < str.size() && str.at(offset) == '-' ) {
       isNegative = true;
       ++offset;
@@ -517,7 +517,7 @@ struct JSONParser {
     if( offset < str.size() && (c == 'E' || c == 'e' )) {
       c = str.at(offset++);
       if( c == '-' ) { 
-        exp_str += '-';
+        isExpNegative = true;
       } else if( c == '+' ) {
         // do nothing
       } else { 
@@ -533,9 +533,9 @@ struct JSONParser {
         }
         else {
           break;
-}
+        }
       }
-      exp = chaiscript::parse_num<long>( exp_str );
+      exp = chaiscript::parse_num<int64_t>( exp_str ) * (isExpNegative?-1:1);
     }
     else if( offset < str.size() && (!isspace( c ) && c != ',' && c != ']' && c != '}' )) {
       throw std::runtime_error(std::string("JSON ERROR: Number: unexpected character '") + c + "'");
@@ -546,9 +546,9 @@ struct JSONParser {
       return JSON((isNegative?-1:1) * chaiscript::parse_num<double>( val ) * std::pow( 10, exp ));
     } else {
       if( !exp_str.empty() ) {
-        return JSON((isNegative?-1:1) * static_cast<double>(chaiscript::parse_num<long>( val )) * std::pow( 10, exp ));
+        return JSON((isNegative?-1:1) * static_cast<double>(chaiscript::parse_num<int64_t>( val )) * std::pow( 10, exp ));
       } else {
-        return JSON((isNegative?-1:1) * chaiscript::parse_num<long>( val ));
+        return JSON((isNegative?-1:1) * chaiscript::parse_num<int64_t>( val ));
       }
     }
   }

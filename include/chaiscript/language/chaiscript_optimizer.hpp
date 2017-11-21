@@ -97,7 +97,7 @@ namespace chaiscript {
     template<typename T>
     bool contains_var_decl_in_scope(const eval::AST_Node_Impl<T> &node) noexcept
     {
-      if (node.identifier == AST_Node_Type::Var_Decl) {
+      if (node.identifier == AST_Node_Type::Var_Decl || node.identifier == AST_Node_Type::Assign_Decl) {
         return true;
       }
 
@@ -207,6 +207,27 @@ namespace chaiscript {
           return node;
         }
     };
+
+    struct Assign_Decl {
+      template<typename T>
+      auto optimize(eval::AST_Node_Impl_Ptr<T> node) {
+        if ((node->identifier == AST_Node_Type::Equation)
+             && node->text == "="
+             && node->children.size() == 2
+             && node->children[0]->identifier == AST_Node_Type::Var_Decl
+           )
+        {
+          std::vector<eval::AST_Node_Impl_Ptr<T>> new_children;
+          new_children.push_back(std::move(node->children[0]->children[0]));
+          new_children.push_back(std::move(node->children[1]));
+          return chaiscript::make_unique<eval::AST_Node_Impl<T>, eval::Assign_Decl_AST_Node<T>>(node->text, 
+              node->location, std::move(new_children) );
+        }
+
+        return node;
+      }
+    };
+
 
     struct If {
       template<typename T>
@@ -440,7 +461,7 @@ namespace chaiscript {
     };
 
     typedef Optimizer<optimizer::Partial_Fold, optimizer::Unused_Return, optimizer::Constant_Fold, 
-      optimizer::If, optimizer::Return, optimizer::Dead_Code, optimizer::Block, optimizer::For_Loop> Optimizer_Default; 
+      optimizer::If, optimizer::Return, optimizer::Dead_Code, optimizer::Block, optimizer::For_Loop, optimizer::Assign_Decl> Optimizer_Default; 
 
   }
 }

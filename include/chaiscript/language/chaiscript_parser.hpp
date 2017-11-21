@@ -1030,7 +1030,7 @@ namespace chaiscript
           int in_interpolation = 0;
           bool in_quote = false;
 
-          while (m_position.has_more() && ((*m_position != '\"') || ((*m_position == '\"') && (in_interpolation > 0)) ||  ((*m_position == '\"') && (prev_char == '\\')))) {
+          while (m_position.has_more() && ((*m_position != '\"') || (in_interpolation > 0) || (prev_char == '\\'))) {
 
             if (!Eol_()) {
               if (prev_char == '$' && *m_position == '{') {
@@ -1328,7 +1328,7 @@ namespace chaiscript
           char prev_char = *m_position;
           ++m_position;
 
-          while (m_position.has_more() && ((*m_position != '\'') || ((*m_position == '\'') && (prev_char == '\\')))) {
+          while (m_position.has_more() && ((*m_position != '\'') || (prev_char == '\\'))) {
             if (!Eol_()) {
               if (prev_char == '\\') {
                 prev_char = 0;

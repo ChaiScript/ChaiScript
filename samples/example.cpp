@@ -51,11 +51,9 @@ struct System
   void do_callbacks(const std::string &inp)
   {
     log("Running Callbacks: " + inp);
-    for (std::map<std::string, std::function<std::string (const std::string &)> >::iterator itr = m_callbacks.begin();
-         itr != m_callbacks.end();
-         ++itr)
+    for (auto & m_callback : m_callbacks)
     {
-      log("Callback: " + itr->first, itr->second(inp));
+      log("Callback: " + m_callback.first, m_callback.second(inp));
     }
   }
 };
@@ -88,25 +86,25 @@ int main(int /*argc*/, char * /*argv*/[]) {
   // The function "{ 'Callback1' + x }" is created in chaiscript and passed into our C++ application
   // in the "add_callback" function of struct System the chaiscript function is converted into a 
   // std::function, so it can be handled and called easily and type-safely
-  chai.eval("system.add_callback(\"#1\", fun(x) { \"Callback1 \" + x });");
+  chai.eval(R"(system.add_callback("#1", fun(x) { "Callback1 " + x });)");
   
   // Because we are sharing the "system" object with the chaiscript engine we have equal
   // access to it both from within chaiscript and from C++ code
   system.do_callbacks("TestString");
-  chai.eval("system.do_callbacks(\"TestString\");");
+  chai.eval(R"(system.do_callbacks("TestString");)");
 
   // The log function is overloaded, therefore we have to give the C++ compiler a hint as to which
   // version we want to register. One way to do this is to create a typedef of the function pointer
   // then cast your function to that typedef.
-  typedef void (*PlainLog)(const std::string &);
-  typedef void (*ModuleLog)(const std::string &, const std::string &);
+  using PlainLog = void (*)(const std::string &);
+  using ModuleLog = void (*)(const std::string &, const std::string &);
   chai.add(fun(PlainLog(&log)), "log");
   chai.add(fun(ModuleLog(&log)), "log");
 
-  chai.eval("log(\"Test Message\")");
+  chai.eval(R"(log("Test Message"))");
 
   // A shortcut to using eval is just to use the chai operator()
-  chai("log(\"Test Module\", \"Test Message\");");
+  chai(R"(log("Test Module", "Test Message");)");
 
   //Finally, it is possible to register a lambda as a system function, in this 
   //way, we can, for instance add a bound member function to the system
@@ -115,7 +113,9 @@ int main(int /*argc*/, char * /*argv*/[]) {
   //Call bound version of do_callbacks
   chai("do_callbacks()");
 
-  std::function<void ()> caller = chai.eval<std::function<void ()> >("fun() { system.do_callbacks(\"From Functor\"); }");
+  std::function<void ()> caller = chai.eval<std::function<void ()> >(
+    R"(fun() { system.do_callbacks("From Functor"); })"
+  );
   caller();
 
 
@@ -134,7 +134,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   std::cout << "scripti: " << scripti << '\n';
   scripti *= 2;
   std::cout << "scripti (updated): " << scripti << '\n';
-  chai("print(\"Scripti from chai: \" + to_string(scripti))");
+  chai(R"(print("Scripti from chai: " + to_string(scripti)))");
 
   //To do: Add examples of handling Boxed_Values directly when needed
 
@@ -146,7 +146,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   log("Functor test output", ss.str());
 
   chai.add(var(std::shared_ptr<int>()), "nullvar");
-  chai("print(\"This should be true.\"); print(nullvar.is_var_null())");
+  chai(R"(print("This should be true."); print(nullvar.is_var_null()))");
 
   // test the global const action
   chai.add_global_const(const_var(1), "constvar");
@@ -160,7 +160,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
 
 
   // Test ability to register a function that excepts a shared_ptr version of a type
-  chai("take_shared_ptr(\"Hello World as a shared_ptr\");");
+  chai(R"(take_shared_ptr("Hello World as a shared_ptr");)");
 
   chai.add(fun(&bound_log, std::string("Msg")), "BoundFun");
 

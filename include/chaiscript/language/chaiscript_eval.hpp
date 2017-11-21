@@ -87,6 +87,24 @@ namespace chaiscript
           return std::move(rv.retval);
         } 
       }
+
+      inline Boxed_Value clone_if_necessary(Boxed_Value incoming, std::atomic_uint_fast32_t &t_loc, const chaiscript::detail::Dispatch_State &t_ss)
+      {
+        if (!incoming.is_return_value())
+        {
+          if (incoming.get_type_info().is_arithmetic()) {
+            return Boxed_Number::clone(incoming);
+          } else if (incoming.get_type_info().bare_equal_type_info(typeid(bool))) {
+            return Boxed_Value(*static_cast<const bool*>(incoming.get_const_ptr()));
+          } else {
+            std::array params{std::move(incoming)};
+            return t_ss->call_function("clone", t_loc, Function_Params{params}, t_ss.conversions());
+          }
+        } else {
+          incoming.reset_return_value();
+          return incoming;
+        }
+      }
     }
 
     template<typename T>
@@ -470,11 +488,7 @@ namespace chaiscript
                   params[0].reset_return_value();
                   return params[1];
                 } else {
-                  if (!params[1].is_return_value())
-                  {
-                    params[1] = t_ss->call_function("clone", m_clone_loc, Function_Params{&params[1], std::end(params)}, t_ss.conversions());
-                  }
-                  params[1].reset_return_value();
+                  params[1] = detail::clone_if_necessary(std::move(params[1]), m_clone_loc, t_ss);
                 }
               }
 
@@ -551,6 +565,27 @@ namespace chaiscript
             throw exception::eval_error("Variable redefined '" + e.name() + "'");
           }
         }
+    };
+
+    template<typename T>
+    struct Assign_Decl_AST_Node final : AST_Node_Impl<T> {
+        Assign_Decl_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
+          AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Assign_Decl, std::move(t_loc), std::move(t_children)) { }
+
+        Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
+          const std::string &idname = this->children[0]->text;
+
+          try {
+            Boxed_Value bv(detail::clone_if_necessary(this->children[1]->eval(t_ss), m_loc, t_ss));
+            bv.reset_return_value();
+            t_ss.add_object(idname, bv);
+            return bv;
+          } catch (const exception::name_conflict_error &e) {
+            throw exception::eval_error("Variable redefined '" + e.name() + "'");
+          }
+        }
+      private:
+        mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
 
@@ -1070,12 +1105,7 @@ namespace chaiscript
             if (!this->children.empty()) {
               vec.reserve(this->children[0]->children.size());
               for (const auto &child : this->children[0]->children) {
-                if (auto obj = child->eval(t_ss);
-                    !obj.is_return_value()) {
-                  vec.push_back(t_ss->call_function("clone", m_loc, Function_Params{obj}, t_ss.conversions()));
-                } else {
-                  vec.push_back(std::move(obj));
-                }
+                vec.push_back(detail::clone_if_necessary(child->eval(t_ss), m_loc, t_ss));
               }
             }
             return const_var(std::move(vec));
@@ -1100,12 +1130,8 @@ namespace chaiscript
             std::map<std::string, Boxed_Value> retval;
 
             for (const auto &child : this->children[0]->children) {
-              auto obj = child->children[1]->eval(t_ss);
-              if (!obj.is_return_value()) {
-                obj = t_ss->call_function("clone", m_loc, Function_Params{obj}, t_ss.conversions());
-              }
-
-              retval[t_ss->boxed_cast<std::string>(child->children[0]->eval(t_ss))] = std::move(obj);
+              retval.insert(std::make_pair(t_ss->boxed_cast<std::string>(child->children[0]->eval(t_ss)), 
+                            detail::clone_if_necessary(child->children[1]->eval(t_ss), m_loc, t_ss)));
             }
 
             return const_var(std::move(retval));
