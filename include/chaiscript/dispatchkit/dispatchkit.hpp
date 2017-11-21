@@ -261,7 +261,7 @@ namespace chaiscript
   };
 
   /// Convenience typedef for Module objects to be added to the ChaiScript runtime
-  typedef std::shared_ptr<Module> ModulePtr;
+  using ModulePtr = std::shared_ptr<Module>;
 
   namespace detail
   {
@@ -388,11 +388,11 @@ namespace chaiscript
         using SmallVector = std::vector<T>;
 
 
-      typedef SmallVector<std::pair<std::string, Boxed_Value>> Scope;
-      typedef SmallVector<Scope> StackData;
-      typedef SmallVector<StackData> Stacks;
-      typedef SmallVector<Boxed_Value> Call_Param_List;
-      typedef SmallVector<Call_Param_List> Call_Params;
+      using Scope = SmallVector<std::pair<std::string, Boxed_Value>>;
+      using StackData = SmallVector<Scope>;
+      using Stacks = SmallVector<StackData>;
+      using Call_Param_List = SmallVector<Boxed_Value>;
+      using Call_Params = SmallVector<Call_Param_List>;
 
       Stack_Holder()
       {
@@ -439,9 +439,9 @@ namespace chaiscript
     {
 
       public:
-        typedef std::map<std::string, chaiscript::Type_Info, str_less> Type_Name_Map;
-        typedef std::vector<std::pair<std::string, Boxed_Value>> Scope;
-        typedef Stack_Holder::StackData StackData;
+        using Type_Name_Map = std::map<std::string, chaiscript::Type_Info, str_less>;
+        using Scope = std::vector<std::pair<std::string, Boxed_Value>>;
+        using StackData = Stack_Holder::StackData;
 
         struct State
         {
@@ -1485,7 +1485,7 @@ namespace chaiscript
               t_c.reserve(t_c.size() + 1); // tightly control growth of memory usage here
               t_c.emplace_back(t_key, std::forward<Value>(t_value));
             } else {
-              typedef typename Container::value_type value_type;
+              using value_type = typename Container::value_type;
               *itr = value_type(t_key, std::forward<Value>(t_value));
             }
           }

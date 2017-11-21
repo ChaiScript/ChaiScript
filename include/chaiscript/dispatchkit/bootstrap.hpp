@@ -22,7 +22,7 @@ namespace chaiscript
     template<typename T, typename = typename std::enable_if<std::is_array<T>::value>::type >
       void array(const std::string &type, Module& m)
       {
-        typedef typename std::remove_extent<T>::type ReturnType;
+        using ReturnType = typename std::remove_extent<T>::type;
 
         m.add(user_type<T>(), type);
         m.add(fun(

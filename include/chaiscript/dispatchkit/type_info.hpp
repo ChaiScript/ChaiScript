@@ -24,7 +24,7 @@ namespace chaiscript
     template<typename T>
       struct Bare_Type
       {
-        typedef typename std::remove_cv<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::type type;
+        using type = typename std::remove_cv<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::type;
       };
   }
 

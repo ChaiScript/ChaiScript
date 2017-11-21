@@ -42,7 +42,7 @@ namespace chaiscript
   class Boxed_Number;
   struct AST_Node;
 
-  typedef std::unique_ptr<AST_Node> AST_NodePtr;
+  using AST_NodePtr = std::unique_ptr<AST_Node>;
 
   namespace dispatch
   {
@@ -338,11 +338,11 @@ namespace chaiscript
   }
 
   /// \brief Common typedef used for passing of any registered function in ChaiScript
-  typedef std::shared_ptr<dispatch::Proxy_Function_Base> Proxy_Function;
+  using Proxy_Function = std::shared_ptr<dispatch::Proxy_Function_Base>;
 
   /// \brief Const version of Proxy_Function. Points to a const Proxy_Function. This is how most registered functions
   ///        are handled internally.
-  typedef std::shared_ptr<const dispatch::Proxy_Function_Base> Const_Proxy_Function;
+  using Const_Proxy_Function = std::shared_ptr<const dispatch::Proxy_Function_Base>;
 
   namespace exception
   {

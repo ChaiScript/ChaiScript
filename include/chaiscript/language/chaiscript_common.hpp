@@ -84,7 +84,7 @@ namespace chaiscript
   };
 
   /// Signature of module entry point that all binary loadable modules must implement.
-  typedef ModulePtr (*Create_Module_Func)();
+  using Create_Module_Func = ModulePtr (*)();
 
 
   /// Types of AST nodes available to the parser and eval
@@ -150,8 +150,8 @@ namespace chaiscript
 
 
   /// \brief Typedef for pointers to AST_Node objects. Used in building of the AST_Node tree
-  typedef std::unique_ptr<AST_Node> AST_NodePtr;
-  typedef std::unique_ptr<const AST_Node> AST_NodePtr_Const;
+  using AST_NodePtr = std::unique_ptr<AST_Node>;
+  using AST_NodePtr_Const = std::unique_ptr<const AST_Node>;
 
   struct AST_Node_Trace;
 
