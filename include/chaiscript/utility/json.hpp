@@ -570,7 +570,6 @@ struct JSONParser {
     bool isNegative = false;
     int64_t exp = 0;
     bool isExpNegative = false;
-    long exp = 0;
     if( offset < str.size() && str.at(offset) == '-' ) {
       isNegative = true;
       ++offset;
