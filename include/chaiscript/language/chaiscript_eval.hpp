@@ -96,6 +96,8 @@ namespace chaiscript
             return Boxed_Number::clone(incoming);
           } else if (incoming.get_type_info().bare_equal_type_info(typeid(bool))) {
             return Boxed_Value(*static_cast<const bool*>(incoming.get_const_ptr()));
+          } else if (incoming.get_type_info().bare_equal_type_info(typeid(std::string))) {
+            return Boxed_Value(*static_cast<const std::string *>(incoming.get_const_ptr()));
           } else {
             std::array params{std::move(incoming)};
             return t_ss->call_function("clone", t_loc, Function_Params{params}, t_ss.conversions());
