@@ -1,3 +1,5 @@
+
+/*
 global clone_count = 0;
 
 class Cloneable
@@ -35,4 +37,5 @@ assert_equal(0, clone_count);
 var p = o;
 
 assert_equal(1, clone_count);
+*/
 
