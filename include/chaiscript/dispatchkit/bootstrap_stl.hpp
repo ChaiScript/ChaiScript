@@ -44,7 +44,7 @@ namespace chaiscript
       template<typename Container, typename IterType>
         struct Bidir_Range
         {
-          typedef Container container_type;
+          using container_type = Container;
 
           constexpr Bidir_Range(Container &c)
             : m_begin(c.begin()), m_end(c.end())
@@ -355,7 +355,7 @@ namespace chaiscript
                 , "back");
 
 
-          typedef void (ContainerType::*push_back)(const typename ContainerType::value_type &);
+          using push_back = void (ContainerType::*)(const typename ContainerType::value_type &);
           m.add(fun(static_cast<push_back>(&ContainerType::push_back)),
               [&]()->std::string{
               if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
@@ -395,8 +395,8 @@ namespace chaiscript
       template<typename ContainerType>
         void front_insertion_sequence_type(const std::string &type, Module& m)
         {
-          typedef void (ContainerType::*push_ptr)(typename ContainerType::const_reference);
-          typedef void (ContainerType::*pop_ptr)();
+          using push_ptr = void (ContainerType::*)(typename ContainerType::const_reference);
+          using pop_ptr = void (ContainerType::*)();
 
           m.add(fun([](ContainerType &container)->decltype(auto){ 
                       if (container.empty()) {
@@ -498,7 +498,7 @@ namespace chaiscript
         {
           m.add(fun(detail::count<ContainerType>), "count");
 
-          typedef size_t (ContainerType::*erase_ptr)(const typename ContainerType::key_type &);
+          using erase_ptr = size_t (ContainerType::*)(const typename ContainerType::key_type &);
 
           m.add(fun(static_cast<erase_ptr>(&ContainerType::erase)), "erase");
 
@@ -529,8 +529,8 @@ namespace chaiscript
         {
           m.add(user_type<MapType>(), type);
 
-          typedef typename MapType::mapped_type &(MapType::*elem_access)(const typename MapType::key_type &);
-          typedef const typename MapType::mapped_type &(MapType::*const_elem_access)(const typename MapType::key_type &) const;
+          using elem_access = typename MapType::mapped_type &(MapType::*)(const typename MapType::key_type &);
+          using const_elem_access = const typename MapType::mapped_type &(MapType::*)(const typename MapType::key_type &) const;
 
           m.add(fun(static_cast<elem_access>(&MapType::operator[])), "[]");
 
