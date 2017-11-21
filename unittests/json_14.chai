@@ -1,0 +1,5 @@
+assert_equal(from_json("9.9e-02"), 9.9e-02)
+assert_equal(from_json("-13.57e+3"), -13570.0)
+assert_equal(from_json("1E-01"), 0.1)
+assert_equal(from_json("-314159e-5"), -3.14159)
+assert_equal(from_json("5e+04"), 50000)
