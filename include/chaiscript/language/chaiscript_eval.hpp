@@ -88,6 +88,23 @@ namespace chaiscript
           return std::move(rv.retval);
         } 
       }
+
+      inline Boxed_Value clone_if_necessary(Boxed_Value incoming, std::atomic_uint_fast32_t &t_loc, const chaiscript::detail::Dispatch_State &t_ss)
+      {
+        if (!incoming.is_return_value())
+        {
+          if (incoming.get_type_info().is_arithmetic()) {
+            return Boxed_Number::clone(incoming);
+          } else if (incoming.get_type_info().bare_equal_type_info(typeid(bool))) {
+            return Boxed_Value(*static_cast<const bool*>(incoming.get_const_ptr()));
+          } else {
+            return t_ss->call_function("clone", t_loc, {incoming}, t_ss.conversions());
+          }
+        } else {
+          incoming.reset_return_value();
+          return incoming;
+        }
+      }
     }
 
     template<typename T>
@@ -459,11 +476,7 @@ namespace chaiscript
                   lhs.reset_return_value();
                   return rhs;
                 } else {
-                  if (!rhs.is_return_value())
-                  {
-                    rhs = t_ss->call_function("clone", m_clone_loc, {rhs}, t_ss.conversions());
-                  }
-                  rhs.reset_return_value();
+                  rhs = detail::clone_if_necessary(std::move(rhs), m_clone_loc, t_ss);
                 }
               }
 
@@ -1056,12 +1069,7 @@ namespace chaiscript
             if (!this->children.empty()) {
               vec.reserve(this->children[0]->children.size());
               for (const auto &child : this->children[0]->children) {
-                auto obj = child->eval(t_ss);
-                if (!obj.is_return_value()) {
-                  vec.push_back(t_ss->call_function("clone", m_loc, {obj}, t_ss.conversions()));
-                } else {
-                  vec.push_back(std::move(obj));
-                }
+                vec.push_back(detail::clone_if_necessary(child->eval(t_ss), m_loc, t_ss));
               }
             }
             return const_var(std::move(vec));
@@ -1086,12 +1094,8 @@ namespace chaiscript
             std::map<std::string, Boxed_Value> retval;
 
             for (const auto &child : this->children[0]->children) {
-              auto obj = child->children[1]->eval(t_ss);
-              if (!obj.is_return_value()) {
-                obj = t_ss->call_function("clone", m_loc, {obj}, t_ss.conversions());
-              }
-
-              retval[t_ss->boxed_cast<std::string>(child->children[0]->eval(t_ss))] = std::move(obj);
+              retval.insert(std::make_pair(t_ss->boxed_cast<std::string>(child->children[0]->eval(t_ss)), 
+                            detail::clone_if_necessary(child->children[1]->eval(t_ss), m_loc, t_ss)));
             }
 
             return const_var(std::move(retval));
@@ -1450,7 +1454,6 @@ namespace chaiscript
                   function_name);
             }
           } catch (const exception::name_conflict_error &e) {
-            std::cout << "Method!!" << std::endl;
             throw exception::eval_error("Method redefined '" + e.name() + "'");
           }
           return void_var();
