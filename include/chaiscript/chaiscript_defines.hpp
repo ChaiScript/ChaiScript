@@ -183,6 +183,7 @@ namespace chaiscript {
              break;
           case 'e':
           case 'E':
+             exponent = 1;
              decimal_place = 0;
              base = t;
              t = 0;
@@ -191,7 +192,6 @@ namespace chaiscript {
              exponent = -1;
              break;
           case '+':
-             exponent = 1;
              break;
           case '0':
           case '1':
