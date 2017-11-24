@@ -36,6 +36,7 @@
 #include "proxy_functions.hpp"
 #include "type_info.hpp"
 #include "short_alloc.hpp"
+#include "../utility/quick_flat_map.hpp"
 
 namespace chaiscript {
 class Boxed_Number;
@@ -388,7 +389,7 @@ namespace chaiscript
         using SmallVector = std::vector<T>;
 
 
-      using Scope = SmallVector<std::pair<std::string, Boxed_Value>>;
+      using Scope = utility::QuickFlatMap<std::string, Boxed_Value>;
       using StackData = SmallVector<Scope>;
       using Stacks = SmallVector<StackData>;
       using Call_Param_List = SmallVector<Boxed_Value>;
@@ -409,23 +410,12 @@ namespace chaiscript
       void push_stack()
       {
         stacks.emplace_back(1);
-//        stacks.emplace_back(StackData(1, Scope(scope_allocator), stack_data_allocator));
       }
 
       void push_call_params()
       {
         call_params.emplace_back();
-//        call_params.emplace_back(Call_Param_List(call_param_list_allocator));
       }
-
-      //Scope::allocator_type::arena_type scope_allocator;
-      //StackData::allocator_type::arena_type stack_data_allocator;
-      //Stacks::allocator_type::arena_type stacks_allocator;
-      //Call_Param_List::allocator_type::arena_type call_param_list_allocator;
-      //Call_Params::allocator_type::arena_type call_params_allocator;
-
-//      Stacks stacks = Stacks(stacks_allocator);
-//      Call_Params call_params = Call_Params(call_params_allocator);
 
       Stacks stacks;
       Call_Params call_params;
@@ -440,7 +430,7 @@ namespace chaiscript
 
       public:
         using Type_Name_Map = std::map<std::string, chaiscript::Type_Info, str_less>;
-        using Scope = std::vector<std::pair<std::string, Boxed_Value>>;
+        using Scope = utility::QuickFlatMap<std::string, Boxed_Value>;
         using StackData = Stack_Holder::StackData;
 
         struct State
@@ -486,12 +476,7 @@ namespace chaiscript
 
           for (auto stack_elem = stack.rbegin(); stack_elem != stack.rend(); ++stack_elem)
           {
-            auto itr = std::find_if(stack_elem->begin(), stack_elem->end(),
-                [&](const std::pair<std::string, Boxed_Value> &o) {
-                  return o.first == name;
-                });
-
-            if (itr != stack_elem->end())
+            if (auto itr = stack_elem->find(name); itr != stack_elem->end())
             {
               itr->second = std::move(obj);
               return;
@@ -504,38 +489,32 @@ namespace chaiscript
         /// Adds a named object to the current scope
         /// \warning This version does not check the validity of the name
         /// it is meant for internal use only
-        Boxed_Value &add_get_object(const std::string &t_name, Boxed_Value obj, Stack_Holder &t_holder)
+        Boxed_Value &add_get_object(std::string t_name, Boxed_Value obj, Stack_Holder &t_holder)
         {
           auto &stack_elem = get_stack_data(t_holder).back();
 
-          if (std::any_of(stack_elem.begin(), stack_elem.end(),
-              [&](const std::pair<std::string, Boxed_Value> &o) {
-                return o.first == t_name;
-              }))
+          if (auto result = stack_elem.insert(std::pair{std::move(t_name), std::move(obj)}); result.second)
           {
-            throw chaiscript::exception::name_conflict_error(t_name);
+            return result.first->second;
+          } else {
+            //insert failed
+            throw chaiscript::exception::name_conflict_error(result.first->first);
           }
-
-          return stack_elem.emplace_back(t_name, std::move(obj)).second;
         }
 
 
         /// Adds a named object to the current scope
         /// \warning This version does not check the validity of the name
         /// it is meant for internal use only
-        void add_object(const std::string &t_name, Boxed_Value obj, Stack_Holder &t_holder)
+        void add_object(std::string t_name, Boxed_Value obj, Stack_Holder &t_holder)
         {
           auto &stack_elem = get_stack_data(t_holder).back();
 
-          if (std::any_of(stack_elem.begin(), stack_elem.end(),
-              [&](const std::pair<std::string, Boxed_Value> &o) {
-                return o.first == t_name;
-              }))
+          if (auto result = stack_elem.insert(std::pair{std::move(t_name), std::move(obj)}); !result.second)
           {
-            throw chaiscript::exception::name_conflict_error(t_name);
+            //insert failed
+            throw chaiscript::exception::name_conflict_error(result.first->first);
           }
-
-          stack_elem.emplace_back(t_name, std::move(obj));
         }
 
 
@@ -566,46 +545,30 @@ namespace chaiscript
         }
 
         /// Adds a new global (non-const) shared object, between all the threads
-        Boxed_Value add_global_no_throw(const Boxed_Value &obj, const std::string &name)
+        Boxed_Value add_global_no_throw(Boxed_Value obj, std::string name)
         {
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-          const auto itr = m_state.m_global_objects.find(name);
-          if (itr == m_state.m_global_objects.end())
-          {
-            m_state.m_global_objects.insert(std::make_pair(name, obj));
-            return obj;
-          } else {
-            return itr->second;
-          }
+          return m_state.m_global_objects.insert(std::pair{std::move(name), std::move(obj)}).first->second;
         }
 
 
         /// Adds a new global (non-const) shared object, between all the threads
-        void add_global(const Boxed_Value &obj, const std::string &name)
+        void add_global(Boxed_Value obj, std::string name)
         {
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-          if (m_state.m_global_objects.find(name) != m_state.m_global_objects.end())
-          {
-            throw chaiscript::exception::name_conflict_error(name);
-          } else {
-            m_state.m_global_objects.insert(std::make_pair(name, obj));
+          if (auto result = m_state.m_global_objects.insert(std::pair{std::move(name), std::move(obj)}); !result.second) {
+            // insert failed
+            throw chaiscript::exception::name_conflict_error(result.first->first);
           }
         }
 
         /// Updates an existing global shared object or adds a new global shared object if not found
-        void set_global(const Boxed_Value &obj, const std::string &name)
+        void set_global(Boxed_Value obj, std::string name)
         {
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
-
-          const auto itr = m_state.m_global_objects.find(name);
-          if (itr != m_state.m_global_objects.end())
-          {
-            itr->second.assign(obj);
-          } else {
-            m_state.m_global_objects.insert(std::make_pair(name, obj));
-          }
+          m_state.m_global_objects.insert_or_assign(std::move(name), std::move(obj));
         }
 
         /// Adds a new scope to the stack
@@ -688,7 +651,7 @@ namespace chaiscript
           } else if ((loc & static_cast<uint_fast32_t>(Loc::is_local)) != 0u) {
             auto &stack = get_stack_data(t_holder);
 
-            return stack[stack.size() - 1 - ((loc & static_cast<uint_fast32_t>(Loc::stack_mask)) >> 16)][loc & static_cast<uint_fast32_t>(Loc::loc_mask)].second;
+            return stack[stack.size() - 1 - ((loc & static_cast<uint_fast32_t>(Loc::stack_mask)) >> 16)].at_index(loc & static_cast<uint_fast32_t>(Loc::loc_mask));
           }
 
           // Is the value we are looking for a global or function?

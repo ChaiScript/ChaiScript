@@ -35,6 +35,14 @@ namespace chaiscript::utility {
       return data.end();
     }
 
+    auto &back() noexcept {
+      return data.back();
+    }
+
+    const auto &back() const noexcept {
+      return data.back();
+    }
+
 
     Value &operator[](const Key &s) {
       const auto itr = find(s);
@@ -45,12 +53,57 @@ namespace chaiscript::utility {
       }
     }
 
+    Value &at_index(const std::size_t idx) noexcept
+    {
+      return data[idx].second;
+    }
+
+    const Value &at_index(const std::size_t idx) const noexcept
+    {
+      return data[idx].second;
+    }
+
+    bool empty() const noexcept 
+    {
+      return data.empty();
+    }
+
+    template<typename Itr>
+    void assign(Itr begin, Itr end)
+    {
+      data.assign(begin, end);
+    }
+
     Value &at(const Key &s) {
       const auto itr = find(s);
       if (itr != data.end()) {
         return itr->second;
       } else {
         throw std::out_of_range("Unknown key: " + s);
+      }
+    }
+
+
+    template<typename M>
+    auto insert_or_assign(Key &&key, M &&m)
+    {
+      if (auto itr = find(key); itr != data.end()) {
+        *itr = std::forward<M>(m);
+        return std::pair{itr, false};
+      } else {
+        return std::pair{data.emplace(itr, std::move(key), std::forward<M>(m)), true};
+      }
+    }
+
+
+    template<typename M>
+    auto insert_or_assign(const Key &key, M &&m)
+    {
+      if (auto itr = find(key); itr != data.end()) {
+        *itr = std::forward<M>(m);
+        return std::pair{itr, false};
+      } else {
+        return std::pair{data.emplace(itr, key, std::forward<M>(m)), true};
       }
     }
 
@@ -69,9 +122,18 @@ namespace chaiscript::utility {
 
     std::vector<std::pair<Key, Value>> data;
 
+    using value_type = std::pair<Key, Value>;
     using iterator = typename decltype(data)::iterator;
     using const_iterator = typename decltype(data)::const_iterator;
 
+    std::pair<iterator,bool> insert( value_type&& value )
+    {
+      if (const auto itr = find(value.first); itr != data.end()) {
+        return std::pair{itr, false};
+      } else {
+        return std::pair{data.insert(itr, std::move(value)), true};
+      }
+    }
 
   };
 
