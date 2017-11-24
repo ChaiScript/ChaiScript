@@ -142,6 +142,8 @@ namespace chaiscript
           // not a dynamic object
         }
 
+		    if (t_bv.is_null()) return json::JSON(); // a null value
+        
         throw std::runtime_error("Unknown object type to convert to JSON");
       }
 
