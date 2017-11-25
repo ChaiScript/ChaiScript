@@ -212,6 +212,18 @@ namespace chaiscript {
       return final_value(t, base, exponent, neg_exponent);
     }
 
+  struct str_equal {
+    [[nodiscard]] bool operator()(const std::string &t_lhs, const std::string &t_rhs) const noexcept {
+      return t_lhs == t_rhs;
+    }
+    template<typename LHS, typename RHS>
+      [[nodiscard]] constexpr bool operator()(const LHS &t_lhs, const RHS &t_rhs) const noexcept {
+        return std::equal(t_lhs.begin(), t_lhs.end(), t_rhs.begin(), t_rhs.end());
+      }
+    struct is_transparent{};
+  };
+
+
   struct str_less {
     [[nodiscard]] bool operator()(const std::string &t_lhs, const std::string &t_rhs) const noexcept {
       return t_lhs < t_rhs;

@@ -389,7 +389,7 @@ namespace chaiscript
         using SmallVector = std::vector<T>;
 
 
-      using Scope = utility::QuickFlatMap<std::string, Boxed_Value>;
+      using Scope = utility::QuickFlatMap<std::string, Boxed_Value, str_equal>;
       using StackData = SmallVector<Scope>;
       using Stacks = SmallVector<StackData>;
       using Call_Param_List = SmallVector<Boxed_Value>;
@@ -430,14 +430,14 @@ namespace chaiscript
 
       public:
         using Type_Name_Map = std::map<std::string, chaiscript::Type_Info, str_less>;
-        using Scope = utility::QuickFlatMap<std::string, Boxed_Value>;
+        using Scope = utility::QuickFlatMap<std::string, Boxed_Value, str_equal>;
         using StackData = Stack_Holder::StackData;
 
         struct State
         {
-          std::vector<std::pair<std::string, std::shared_ptr<std::vector<Proxy_Function>>>> m_functions;
-          std::vector<std::pair<std::string, Proxy_Function>> m_function_objects;
-          std::vector<std::pair<std::string, Boxed_Value>> m_boxed_functions;
+          utility::QuickFlatMap<std::string, std::shared_ptr<std::vector<Proxy_Function>>, str_equal> m_functions;
+          utility::QuickFlatMap<std::string, Proxy_Function, str_equal> m_function_objects;
+          utility::QuickFlatMap<std::string, Boxed_Value, str_equal> m_boxed_functions;
           std::map<std::string, Boxed_Value, str_less> m_global_objects;
           Type_Name_Map m_types;
         };
@@ -745,9 +745,7 @@ namespace chaiscript
 
           const auto &funs = get_functions_int();
 
-          auto itr = find_keyed_value(funs, t_name, t_hint);
-
-          if (itr != funs.end())
+          if (const auto itr = funs.find(t_name, t_hint); itr != funs.end())
           {
             return std::make_pair(std::distance(funs.begin(), itr), itr->second);
           } else {
@@ -771,9 +769,7 @@ namespace chaiscript
         {
           const auto &funs = get_boxed_functions_int();
 
-          auto itr = find_keyed_value(funs, t_name, t_hint);
-
-          if (itr != funs.end())
+          if (const auto itr = funs.find(t_name, t_hint); itr != funs.end())
           {
             return std::make_pair(std::distance(funs.begin(), itr), itr->second);
           } else {
@@ -787,8 +783,7 @@ namespace chaiscript
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-          const auto &functions = get_functions_int();
-          return find_keyed_value(functions, name) != functions.end();
+          return get_functions_int().count(name) > 0;
         }
 
         /// \returns All values in the local thread state in the parent scope, or if it doesn't exist,
@@ -1246,32 +1241,32 @@ namespace chaiscript
 
       private:
 
-        const std::vector<std::pair<std::string, Boxed_Value>> &get_boxed_functions_int() const noexcept
+        const decltype(State::m_boxed_functions) &get_boxed_functions_int() const noexcept
         {
           return m_state.m_boxed_functions;
         }
 
-        std::vector<std::pair<std::string, Boxed_Value>> &get_boxed_functions_int() noexcept
+        decltype(State::m_boxed_functions) &get_boxed_functions_int() noexcept
         {
           return m_state.m_boxed_functions;
         }
 
-        const std::vector<std::pair<std::string, Proxy_Function>> &get_function_objects_int() const noexcept
+        const decltype(State::m_function_objects) &get_function_objects_int() const noexcept
         {
           return m_state.m_function_objects;
         }
 
-        std::vector<std::pair<std::string, Proxy_Function>> &get_function_objects_int() noexcept
+        decltype(State::m_function_objects) &get_function_objects_int() noexcept
         {
           return m_state.m_function_objects;
         }
 
-        const std::vector<std::pair<std::string, std::shared_ptr<std::vector<Proxy_Function>>>> &get_functions_int() const noexcept
+        const decltype(State::m_functions) &get_functions_int() const noexcept
         {
           return m_state.m_functions;
         }
 
-        std::vector<std::pair<std::string, std::shared_ptr<std::vector<Proxy_Function>>>> &get_functions_int() noexcept
+        decltype(State::m_functions) &get_functions_int() noexcept
         {
           return m_state.m_functions;
         }
@@ -1360,63 +1355,17 @@ namespace chaiscript
           return false;
         }
 
-
-
-        template<typename Container, typename Key, typename Value>
-          static void add_keyed_value(Container &t_c, const Key &t_key, Value &&t_value)
-          {
-            auto itr = find_keyed_value(t_c, t_key);
-
-            if (itr == t_c.end()) {
-              t_c.reserve(t_c.size() + 1); // tightly control growth of memory usage here
-              t_c.emplace_back(t_key, std::forward<Value>(t_value));
-            } else {
-              using value_type = typename Container::value_type;
-              *itr = value_type(t_key, std::forward<Value>(t_value));
-            }
-          }
-
-        template<typename Container, typename Key>
-        static typename Container::iterator find_keyed_value(Container &t_c, const Key &t_key) noexcept
-          {
-            return std::find_if(t_c.begin(), t_c.end(), 
-                [&t_key](const typename Container::value_type &o) {
-                  return o.first == t_key;
-                });
-          }
-
-        template<typename Container, typename Key>
-        static typename Container::const_iterator find_keyed_value(const Container &t_c, const Key &t_key) noexcept
-          {
-            return std::find_if(t_c.begin(), t_c.end(), 
-                [&t_key](const typename Container::value_type &o) {
-                  return std::equal(o.first.begin(), o.first.end(), t_key.begin(), t_key.end());
-                });
-          }
-
-        template<typename Container, typename Key>
-        static typename Container::const_iterator find_keyed_value(const Container &t_c, const Key &t_key, const size_t t_hint) noexcept
-          {
-            if (t_c.size() > t_hint && t_c[t_hint].first == t_key) {
-              return std::next(t_c.begin(), static_cast<typename std::iterator_traits<typename Container::const_iterator>::difference_type>(t_hint));
-            } else {
-              return find_keyed_value(t_c, t_key);
-            }
-          }
-
-
         /// Implementation detail for adding a function. 
         /// \throws exception::name_conflict_error if there's a function matching the given one being added
         void add_function(const Proxy_Function &t_f, const std::string &t_name)
         {
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
-          auto &funcs = get_functions_int();
-
-          auto itr = find_keyed_value(funcs, t_name);
-
           Proxy_Function new_func =
             [&]() -> Proxy_Function {
+              auto &funcs = get_functions_int();
+              auto itr = funcs.find(t_name);
+
               if (itr != funcs.end())
               {
                 auto vec = *itr->second;
@@ -1437,17 +1386,21 @@ namespace chaiscript
                 // if the function is the only function but it also contains
                 // arithmetic operators, we must wrap it in a dispatch function
                 // to allow for automatic arithmetic type conversions
-                std::vector<Proxy_Function> vec({t_f});
-                funcs.emplace_back(t_name, std::make_shared<std::vector<Proxy_Function>>(vec));
+                std::vector<Proxy_Function> vec;
+                vec.push_back(t_f);
+                funcs.insert(std::pair{t_name, std::make_shared<std::vector<Proxy_Function>>(vec)});
                 return std::make_shared<Dispatch_Function>(std::move(vec));
               } else {
-                funcs.emplace_back(t_name, std::make_shared<std::vector<Proxy_Function>>(std::initializer_list<Proxy_Function>({t_f})));
+                auto vec = std::make_shared<std::vector<Proxy_Function>>();
+                vec->push_back(t_f);
+                funcs.insert(std::pair{t_name, vec});
                 return t_f;
               }
             }();
 
-          add_keyed_value(get_boxed_functions_int(), t_name, const_var(new_func));
-          add_keyed_value(get_function_objects_int(), t_name, std::move(new_func));
+
+          get_boxed_functions_int().insert_or_assign(t_name, const_var(new_func));
+          get_function_objects_int().insert_or_assign(t_name, std::move(new_func));
         }
 
         mutable chaiscript::detail::threading::shared_mutex m_mutex;

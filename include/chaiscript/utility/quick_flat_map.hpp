@@ -3,15 +3,29 @@
 
 namespace chaiscript::utility {
 
-  template<typename Key, typename Value>
+  template<typename Key, typename Value, typename Comparator=std::equal_to<>>
   struct QuickFlatMap
   {
-    auto find(const Key &s) noexcept {
-      return std::find_if(std::begin(data), std::end(data), [&s](const auto &d) { return d.first == s; });
+    Comparator comparator;
+
+    template<typename Lookup>
+    auto find(const Lookup &s) noexcept {
+      return std::find_if(std::begin(data), std::end(data), [&s, this](const auto &d) { return comparator(d.first, s); });
     }
 
-    auto find(const Key &s) const noexcept {
-      return std::find_if(std::begin(data), std::end(data), [&s](const auto &d) { return d.first == s; });
+    template<typename Lookup>
+    auto find(const Lookup &s) const noexcept {
+      return std::find_if(std::cbegin(data), std::cend(data), [&s, this](const auto &d) { return comparator(d.first, s); });
+    }
+
+    template<typename Lookup>
+    auto find(const Lookup &s, const std::size_t t_hint) const noexcept {
+      if (data.size() > t_hint && comparator(data[t_hint].first, s)) {
+        const auto begin = std::cbegin(data);
+        return std::next(begin, static_cast<typename std::iterator_traits<std::decay_t<decltype(begin)>>::difference_type>(t_hint));
+      } else {
+        return find(s);
+      }
     }
 
     auto size() const noexcept {
@@ -49,6 +63,7 @@ namespace chaiscript::utility {
       if (itr != data.end()) {
         return itr->second;
       } else {
+        grow();
         return data.emplace_back(s, Value()).second;
       }
     }
@@ -91,7 +106,8 @@ namespace chaiscript::utility {
         *itr = std::forward<M>(m);
         return std::pair{itr, false};
       } else {
-        return std::pair{data.emplace(itr, std::move(key), std::forward<M>(m)), true};
+        grow();
+        return std::pair{data.emplace(data.end(), std::move(key), std::forward<M>(m)), true};
       }
     }
 
@@ -100,10 +116,11 @@ namespace chaiscript::utility {
     auto insert_or_assign(const Key &key, M &&m)
     {
       if (auto itr = find(key); itr != data.end()) {
-        *itr = std::forward<M>(m);
+        itr->second = std::forward<M>(m);
         return std::pair{itr, false};
       } else {
-        return std::pair{data.emplace(itr, key, std::forward<M>(m)), true};
+        grow();
+        return std::pair{data.emplace(data.end(), key, std::forward<M>(m)), true};
       }
     }
 
@@ -116,7 +133,8 @@ namespace chaiscript::utility {
       }
     }
 
-    size_t count(const Key &s) const noexcept {
+    template<typename Lookup>
+    size_t count(const Lookup &s) const noexcept {
       return (find(s) != data.end())?1:0;
     }
 
@@ -131,9 +149,17 @@ namespace chaiscript::utility {
       if (const auto itr = find(value.first); itr != data.end()) {
         return std::pair{itr, false};
       } else {
-        return std::pair{data.insert(itr, std::move(value)), true};
+        grow();
+        return std::pair{data.insert(data.end(), std::move(value)), true};
       }
     }
+
+    void grow() {
+      if ((data.capacity() - data.size()) == 0) {
+        data.reserve(data.size() + 2);
+      }
+    }
+
 
   };
 
