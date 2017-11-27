@@ -392,21 +392,21 @@ namespace chaiscript {
         const auto &prefix_node = child_at(*for_node, 2);
 
         if (child_count(*for_node) == 4
-            && eq_node.identifier == AST_Node_Type::Equation
+            && eq_node.identifier == AST_Node_Type::Assign_Decl
             && child_count(eq_node) == 2
-            && child_at(eq_node, 0).identifier == AST_Node_Type::Var_Decl
+            && child_at(eq_node, 0).identifier == AST_Node_Type::Id
             && child_at(eq_node, 1).identifier == AST_Node_Type::Constant
             && binary_node.identifier == AST_Node_Type::Binary
             && binary_node.text == "<"
             && child_count(binary_node) == 2
             && child_at(binary_node, 0).identifier == AST_Node_Type::Id
-            && child_at(binary_node, 0).text == child_at(child_at(eq_node,0), 0).text
+            && child_at(binary_node, 0).text == child_at(eq_node,0).text
             && child_at(binary_node, 1).identifier == AST_Node_Type::Constant
             && prefix_node.identifier == AST_Node_Type::Prefix
             && prefix_node.text == "++"
             && child_count(prefix_node) == 1
             && child_at(prefix_node, 0).identifier == AST_Node_Type::Id
-            && child_at(prefix_node, 0).text == child_at(child_at(eq_node,0), 0).text)
+            && child_at(prefix_node, 0).text == child_at(eq_node,0).text)
         {
           const Boxed_Value &begin = dynamic_cast<const eval::Constant_AST_Node<T> &>(child_at(eq_node, 1)).m_value;
           const Boxed_Value &end = dynamic_cast<const eval::Constant_AST_Node<T> &>(child_at(binary_node, 1)).m_value;
