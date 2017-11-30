@@ -97,7 +97,7 @@ namespace chaiscript {
     template<typename T>
     bool contains_var_decl_in_scope(const eval::AST_Node_Impl<T> &node)
     {
-      if (node.identifier == AST_Node_Type::Var_Decl || node.identifier == AST_Node_Type::Assign_Decl) {
+      if (node.identifier == AST_Node_Type::Var_Decl || node.identifier == AST_Node_Type::Assign_Decl || node.identifier == AST_Node_Type::Reference) {
         return true;
       }
 
@@ -107,6 +107,7 @@ namespace chaiscript {
         const auto &child = child_at(node, i);
         if (child.identifier != AST_Node_Type::Block
             && child.identifier != AST_Node_Type::For
+            && child.identifier != AST_Node_Type::Ranged_For
             && contains_var_decl_in_scope(child)) {
           return true;
         }
