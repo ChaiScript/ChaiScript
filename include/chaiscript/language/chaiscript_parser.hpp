@@ -914,7 +914,7 @@ namespace chaiscript
             } break;
             case utility::fnv1a_32("__FUNC__"): {
               std::string fun_name = "NOT_IN_FUNCTION";
-              for (size_t idx = m_match_stack.size() - 1; idx > 0; --idx)
+              for (size_t idx = m_match_stack.empty() ? 0 : m_match_stack.size() - 1; idx > 0; --idx)
               {
                 if (m_match_stack[idx-1]->identifier == AST_Node_Type::Id
                     && m_match_stack[idx-0]->identifier == AST_Node_Type::Arg_List) {
@@ -927,7 +927,7 @@ namespace chaiscript
             } break;
             case utility::fnv1a_32("__CLASS__"): {
               std::string fun_name = "NOT_IN_CLASS";
-              for (size_t idx = m_match_stack.size() - 1; idx > 1; --idx)
+              for (size_t idx = m_match_stack.empty() ? 0 : m_match_stack.size() - 1; idx > 1; --idx)
               {
                 if (m_match_stack[idx-2]->identifier == AST_Node_Type::Id
                     && m_match_stack[idx-1]->identifier == AST_Node_Type::Id
