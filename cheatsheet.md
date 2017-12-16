@@ -5,7 +5,7 @@ ChaiScript tries to follow the [Semantic Versioning](http://semver.org/) scheme.
   * Major Version Number: API changes / breaking changes
   * Minor Version Number: New Features
   * Patch Version Number: Minor changes / enhancements
-  
+
 
 
 # Initializing ChaiScript
@@ -37,7 +37,7 @@ chai.add(chaiscript::fun(&Class::method_name, Class_instance_ptr), "method_name"
 chai.add(chaiscript::fun(&Class::member_name, Class_instance_ptr), "member_name");
 ```
 
-### With Overloads 
+### With Overloads
 
 #### Preferred
 
@@ -69,9 +69,9 @@ chai.add(chaiscript::fun(static_cast<int(Derived::*)>(&Derived::data)), "data");
 ```
 chai.add(
   chaiscript::fun<std::string (bool)>(
-    [](bool type) { 
-      if (type) { return "x"; } 
-      else { return "y"; } 
+    [](bool type) {
+      if (type) { return "x"; }
+      else { return "y"; }
     }), "function_name");
 ```
 
@@ -168,7 +168,7 @@ chai.set_global(chaiscript::var(somevar), "somevar"); // global non-const, overw
 
 ## Adding Namespaces
 
-Namespaces will not be populated until `import` is called.  
+Namespaces will not be populated until `import` is called.
 This saves memory and computing costs if a namespace is not imported into every ChaiScript instance.
 ```
 chai.register_namespace([](chaiscript::Namespace& math) {
