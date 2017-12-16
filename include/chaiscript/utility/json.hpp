@@ -50,11 +50,11 @@ class JSON
   private:
 
 
-    using Data = std::variant<nullptr_t, chaiscript::utility::QuickFlatMap<std::string, JSON>, std::vector<JSON>, std::string, double, int64_t, bool>;
+    using Data = std::variant<std::nullptr_t, chaiscript::utility::QuickFlatMap<std::string, JSON>, std::vector<JSON>, std::string, double, int64_t, bool>;
 
     struct Internal
     {
-      Internal(nullptr_t) : d(nullptr) { }
+      Internal(std::nullptr_t) : d(nullptr) { }
       Internal() : d(nullptr) { }
       Internal(Class c) : d(make_type(c)) { }
       template<typename T> Internal(T t) : d(std::move(t)) { }
@@ -96,7 +96,7 @@ class JSON
       template<auto ClassValue>
       auto &get_set_type() {
         set_type(ClassValue);
-        return std::get<static_cast<std::size_t>(ClassValue)>(d);
+        return (std::get<static_cast<std::size_t>(ClassValue)>(d));
       }
 
       auto &Map() {
