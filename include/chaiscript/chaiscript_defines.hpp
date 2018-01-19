@@ -170,7 +170,7 @@ namespace chaiscript {
     auto parse_num(const char *t_str) -> typename std::enable_if<!std::is_integral<T>::value, T>::type
     {
        T t = 0;
-       T base;
+       T base{};
        T decimal_place = 0;
        int exponent = 0;
 
