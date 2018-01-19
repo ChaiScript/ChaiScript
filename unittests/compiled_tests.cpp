@@ -382,7 +382,7 @@ TEST_CASE("Set and restore chai state")
   // set state should have reverted the state of the functions and dropped
   // the 'myfun'
 
-  CHECK_THROWS_AS(chai.eval<int>("myfun()"), chaiscript::exception::eval_error &);
+  CHECK_THROWS_AS(chai.eval<int>("myfun()"), chaiscript::exception::eval_error);
 
   // set state should not affect the local variables
   CHECK(chai.eval<int>("i") == 1);
@@ -390,7 +390,7 @@ TEST_CASE("Set and restore chai state")
   // After resetting the locals we expect the 'i' to be gone
   chai.set_locals(locals);
 
-  CHECK_THROWS_AS(chai.eval<int>("i"), chaiscript::exception::eval_error &);
+  CHECK_THROWS_AS(chai.eval<int>("i"), chaiscript::exception::eval_error);
 }
 
 
@@ -468,8 +468,8 @@ TEST_CASE("Simultaneous ChaiScript tests")
     CHECK(chai.eval<int>("do_something(" + std::to_string(i) + ")") == i + 2);
     CHECK(chai2.eval<int>("do_something_else(" + std::to_string(i) + ")") == i * 2);
 
-    CHECK_THROWS_AS(chai2.eval("do_something(1)"), chaiscript::exception::eval_error &);
-    CHECK_THROWS_AS(chai2.eval("i"), chaiscript::exception::eval_error &);
+    CHECK_THROWS_AS(chai2.eval("do_something(1)"), chaiscript::exception::eval_error);
+    CHECK_THROWS_AS(chai2.eval("i"), chaiscript::exception::eval_error);
     CHECK_NOTHROW(chai2.eval("do_something_else(1)"));
   }
 }
