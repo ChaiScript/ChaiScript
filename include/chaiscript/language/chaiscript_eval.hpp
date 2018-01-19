@@ -758,6 +758,8 @@ namespace chaiscript
               std::vector<AST_Node_Impl_Ptr<T>>(std::make_move_iterator(t_children.begin()), 
                                                 std::make_move_iterator(std::prev(t_children.end(), has_guard(t_children, 1)?2:1)))
               ),
+              // This apparent use after move is safe because we are only moving out the specific elements we need
+              // on each operation.
               m_body_node(get_body_node(std::move(t_children))),
               m_guard_node(get_guard_node(std::move(t_children), t_children.size()-this->children.size()==2))
 
