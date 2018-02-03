@@ -748,7 +748,9 @@ namespace chaiscript
             return const_var(static_cast<unsigned int>(u));
           } else if (!unsigned_ && !longlong_ && u >= std::numeric_limits<long>::min() && u <= std::numeric_limits<long>::max()) {
             return const_var(static_cast<long>(u));
-          } else if ((unsigned_ || base != 10) && !longlong_ && u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
+          } else if ((unsigned_ || base != 10) && !longlong_ 
+                     && u >= std::numeric_limits<unsigned long>::min() 
+                     && u <= std::numeric_limits<unsigned long>::max()) {
             return const_var(static_cast<unsigned long>(u));
           } else if (!unsigned_ && u >= std::numeric_limits<long long>::min() && u <= std::numeric_limits<long long>::max()) {
             return const_var(static_cast<long long>(u));
