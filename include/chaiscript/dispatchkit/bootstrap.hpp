@@ -144,6 +144,7 @@ namespace chaiscript
       construct_pod<T>(name, m);
 
       m.add(fun(&parse_string<T>), "to_" + name);
+      m.add(fun([](const T t){ return t; }), "to_" + name);
     }
 
 
