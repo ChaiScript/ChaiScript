@@ -205,15 +205,15 @@ namespace chaiscript {
           case '9':
              if (decimal_place < 10) {
                 t *= 10;
-                t += c - '0';
+                t += static_cast<T>(c - '0');
              }
              else {
-                t += (c - '0') / decimal_place;
+                t += static_cast<T>(c - '0') / decimal_place;
                 decimal_place *= 10;
              }
              break;
           default:
-             return exponent ? base * std::pow(T(10), t * exponent) : t;
+             return exponent ? base * std::pow(T(10), t * static_cast<T>(exponent)) : t;
           }
        }
     }
