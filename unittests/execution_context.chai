@@ -40,3 +40,13 @@ assert_equal(res3[2], "member2")
 assert_true(__FILE__.find("execution_context.chai") != -1)
 
 
+assert_equal(eval("__FILE__"), "__EVAL__")
+assert_equal(eval("__LINE__"), 1)
+assert_equal(eval("__FUNC__"), "NOT_IN_FUNCTION")
+assert_equal(eval("__CLASS__"), "NOT_IN_CLASS")
+
+
+
+
+
+
