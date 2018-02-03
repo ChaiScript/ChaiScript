@@ -86,7 +86,7 @@ namespace chaiscript
 
 // only compile this bit if noexcept is part of the type system
 //
-#if __cpp_noexcept_function_type >= 201510
+#if __cpp_noexcept_function_type >= 201510 || (defined(_NOEXCEPT_TYPES_SUPPORTED) && _MSC_VER >= 1912)
   template<typename Ret, typename ... Param>
     Proxy_Function fun(Ret (*func)(Param...) noexcept)
     {

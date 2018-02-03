@@ -170,6 +170,12 @@ endif()
 if(MSVC)
   add_definitions(/W4 /w14545 /w34242 /w34254 /w34287 /w44263 /w44265 /w44296 /w44311 /w44826 /we4289 /w14546 /w14547 /w14549 /w14555 /w14619 /w14905 /w14906 /w14928)
 
+  if (BUILD_IN_CPP17_MODE)
+    add_definitions(/std:c++17)
+  endif()
+
+
+
   if (MSVC_VERSION STREQUAL "1800")
     # VS2013 doesn't have magic statics
     add_definitions(/w44640)
@@ -178,7 +184,7 @@ if(MSVC)
     add_definitions(/w34062)
   endif()
 
-  add_definitions(/bigobj)
+  add_definitions(/bigobj /permissive-)
   # Note on MSVC compiler flags.
   # The code base selective disables warnings as necessary when the compiler is complaining too much
   # about something that is perfectly valid, or there is simply no technical way around it

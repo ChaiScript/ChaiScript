@@ -327,15 +327,17 @@ namespace chaiscript
 
           Boxed_Value fn(this->children[0]->eval(t_ss));
 
+          using ConstFunctionTypePtr = const dispatch::Proxy_Function_Base *;
           try {
-            return (*t_ss->boxed_cast<const dispatch::Proxy_Function_Base *>(fn))(params, t_ss.conversions());
+            return (*t_ss->boxed_cast<ConstFunctionTypePtr>(fn))(params, t_ss.conversions());
           }
           catch(const exception::dispatch_error &e){
             throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'", e.parameters, e.functions, false, *t_ss);
           }
           catch(const exception::bad_boxed_cast &){
             try {
-              Const_Proxy_Function f = t_ss->boxed_cast<const Const_Proxy_Function &>(fn);
+              using ConstFunctionTypeRef = const Const_Proxy_Function &;
+              Const_Proxy_Function f = t_ss->boxed_cast<ConstFunctionTypeRef>(fn);
               // handle the case where there is only 1 function to try to call and dispatch fails on it
               throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, {f}, false, *t_ss);
             } catch (const exception::bad_boxed_cast &) {
@@ -756,6 +758,8 @@ namespace chaiscript
               std::vector<AST_Node_Impl_Ptr<T>>(std::make_move_iterator(t_children.begin()), 
                                                 std::make_move_iterator(std::prev(t_children.end(), has_guard(t_children, 1)?2:1)))
               ),
+              // This apparent use after move is safe because we are only moving out the specific elements we need
+              // on each operation.
               m_body_node(get_body_node(std::move(t_children))),
               m_guard_node(get_guard_node(std::move(t_children), t_children.size()-this->children.size()==2))
 
