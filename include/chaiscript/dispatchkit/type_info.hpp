@@ -48,7 +48,7 @@ namespace chaiscript
 
       constexpr bool operator<(const Type_Info &ti) const noexcept
       {
-        return m_type_info < ti.m_type_info;
+        return m_type_info->before(*ti.m_type_info);
       }
 
       constexpr bool operator!=(const Type_Info &ti) const noexcept
