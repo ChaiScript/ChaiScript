@@ -117,6 +117,7 @@ configure_file(Doxyfile.in ${CMAKE_BINARY_DIR}/Doxyfile)
 
 include(CTest)
 include(CPack)
+include(cmake/Catch.cmake)
 
 if(NOT MINGW)
   find_library(READLINE_LIBRARY NAMES readline PATH /usr/lib /usr/local/lib /opt/local/lib)
@@ -337,37 +338,6 @@ endif()
 
 if(BUILD_TESTING)
 
-  # Add catch tests macro
-  macro(ADD_CATCH_TESTS executable)
-    if (MSVC)
-      file(TO_NATIVE_PATH "${QT_LIBRARY_DIR}" QT_LIB_PATH)
-      set(NEWPATH "${QT_LIB_PATH};$ENV{PATH}")
-    else()
-      set(NEWPATH $ENV{PATH})
-    endif()
-
-    get_target_property(target_files ${executable} SOURCES)
-
-    foreach(source ${target_files})
-      if(NOT "${source}" MATCHES "/moc_.*cxx")
-        string(REGEX MATCH .*cpp source "${source}")
-        if(source)
-          file(READ "${source}" contents)
-          string(REGEX MATCHALL "TEST_CASE\\([ ]*\"[^\"]+\"" found_tests ${contents})
-          foreach(hit ${found_tests})
-            string(REGEX REPLACE "TEST_CASE\\([ ]*(\"[^\"]+\").*" "\\1" test_name ${hit})
-            add_test(compiled.${test_name} "${executable}" ${test_name})
-            set_tests_properties(compiled.${test_name} PROPERTIES TIMEOUT 660 ENVIRONMENT "PATH=${NEWPATH}")
-          endforeach()
-        endif()
-      endif()
-    endforeach()
-  endmacro()
-
-
-
-
-
   option(UNIT_TEST_LIGHT "Unit tests light (expect module loading failures)" FALSE)
 
   add_test(version_check chai -c  "if(\"\\\${ version() };\\\${version_major()};\\\${version_minor()};\\\${version_patch()}\" != \"${CHAI_VERSION};${CPACK_PACKAGE_VERSION_MAJOR};${CPACK_PACKAGE_VERSION_MINOR};${CPACK_PACKAGE_VERSION_PATCH}\") { exit(-1) }")
@@ -425,7 +395,7 @@ if(BUILD_TESTING)
   if(NOT UNIT_TEST_LIGHT)
     add_executable(compiled_tests unittests/compiled_tests.cpp)
     target_link_libraries(compiled_tests ${LIBS} ${CHAISCRIPT_LIBS})
-    ADD_CATCH_TESTS(compiled_tests)
+    catch_discover_tests(compiled_tests)
 
     add_executable(static_chaiscript_test unittests/static_chaiscript.cpp)
     target_link_libraries(static_chaiscript_test ${LIBS})

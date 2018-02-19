@@ -50,23 +50,21 @@ string(REPLACE "\n" ";" output "${output}")
 
 # Parse output
 foreach(line ${output})
-  # Test name; strip spaces to get just the name...
-  string(REGEX REPLACE " +" "" test "${line}")
   # ...and add to script
   add_command(add_test
-    "${prefix}${test}${suffix}"
+    "${prefix}${line}${suffix}"
     ${TEST_EXECUTOR}
     "${TEST_EXECUTABLE}"
-    "${test}"
+    "${line}"
     ${extra_args}
   )
   add_command(set_tests_properties
-    "${prefix}${test}${suffix}"
+    "${prefix}${line}${suffix}"
     PROPERTIES
     WORKING_DIRECTORY "${TEST_WORKING_DIR}"
     ${properties}
   )
-  list(APPEND tests "${prefix}${test}${suffix}")
+  list(APPEND tests "${prefix}${line}${suffix}")
 endforeach()
 
 # Create a list of all discovered tests, which users may use to e.g. set
