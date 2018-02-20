@@ -110,7 +110,7 @@ namespace chaiscript
           {
             return json::JSON(bn.get_as<double>());
           } else {
-            return json::JSON(bn.get_as<long long>());
+            return json::JSON(bn.get_as<std::int64_t>());
           }
         } catch (const chaiscript::detail::exception::bad_any_cast &) {
           // not a number
