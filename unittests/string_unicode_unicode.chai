@@ -1,8 +1,7 @@
-assert_equal("\uc39c", "Ü")
-assert_equal("U for \uc39cmlauts", "U for Ümlauts")
-assert_equal("More \uc39cml\uc3a4\uc3bcts", "More Ümläüts")
+assert_equal("\uc39c", "쎜")
+assert_equal("U for \u00dcmlauts", "U for Ümlauts")
 
-assert_equal("Thorn \uc3be sign", "Thorn þ sign")
+assert_equal("Thorn \u00fe sign", "Thorn þ sign")
 assert_equal("Test\u20Me", "Test Me")
 assert_equal("Test\u2022Me", "Test•Me")
 assert_equal("Test\U1F534Me", "Test🔴Me")
