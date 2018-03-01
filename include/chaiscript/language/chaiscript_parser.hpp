@@ -1036,7 +1036,7 @@ namespace chaiscript
         bool saw_interpolation_marker = false;
         bool is_octal = false;
         bool is_hex = false;
-        bool is_unicode = false;
+        char is_unicode = 0;
         const bool interpolation_allowed;
 
         string_type octal_matches;
@@ -1086,11 +1086,34 @@ namespace chaiscript
 
         void process_unicode()
         {
-          auto val = stoll(hex_matches, nullptr, 16);
+          unsigned ch = std::stoi(hex_matches, nullptr, 16);
           hex_matches.clear();
-          match += detail::Char_Parser_Helper<string_type>::str_from_ll(val);
+          char buf[4];
+          if (ch < 0x80)
+            match += static_cast<char>(ch);
+          else if (ch < 0x800)
+          {
+            buf[0] = 0xC0 | (ch >> 6);
+            buf[1] = 0x80 | (ch & 0x3F);
+            match.append(buf, 2);
+          }
+          else if (ch < 0x10000)
+          {
+            buf[0] = 0xE0 |  (ch >> 12);
+            buf[1] = 0x80 | ((ch >>  6) & 0x3F);
+            buf[2] = 0x80 |  (ch        & 0x3F);
+            match.append(buf, 3);
+          }
+          else //if (ch < 0x200000)
+          {
+            buf[0] = 0xF0 |  (ch >> 18);
+            buf[1] = 0x80 | ((ch >> 12) & 0x3F);
+            buf[2] = 0x80 | ((ch >>  6) & 0x3F);
+            buf[3] = 0x80 |  (ch        & 0x3F);
+            match.append(buf, 4);
+          }
           is_escaped = false;
-          is_unicode = false;
+          is_unicode = 0;
         }
 
         void parse(const char_type t_char, const int line, const int col, const std::string &filename) {
@@ -1130,7 +1153,7 @@ namespace chaiscript
             if (is_hex_char) {
               hex_matches.push_back(t_char);
 
-            if(hex_matches.size() == 4) {
+            if(hex_matches.size() == is_unicode) {
               // Format is specified to be 'slash'uABCD
               // on collecting from A to D do parsing
               process_unicode();
@@ -1158,7 +1181,9 @@ namespace chaiscript
               } else if (t_char == 'x') {
                 is_hex = true;
               } else if (t_char == 'u') {
-                is_unicode = true;
+                is_unicode = 4;
+              } else if (t_char == 'U') {
+                is_unicode = 6;
               } else {
                 switch (t_char) {
                   case ('\'') : match.push_back('\''); break;
