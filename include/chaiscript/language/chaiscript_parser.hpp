@@ -1036,7 +1036,7 @@ namespace chaiscript
         bool saw_interpolation_marker = false;
         bool is_octal = false;
         bool is_hex = false;
-        char is_unicode = 0;
+        std::size_t unicode_size = 0;
         const bool interpolation_allowed;
 
         string_type octal_matches;
@@ -1059,7 +1059,7 @@ namespace chaiscript
             process_hex();
           }
 
-          if (is_unicode) {
+          if (unicode_size > 0) {
             process_unicode();
           }
         }
@@ -1086,34 +1086,32 @@ namespace chaiscript
 
         void process_unicode()
         {
-          unsigned ch = std::stoi(hex_matches, nullptr, 16);
+          const auto ch = static_cast<uint32_t>(std::stoi(hex_matches, nullptr, 16));
           hex_matches.clear();
           char buf[4];
-          if (ch < 0x80)
+          if (ch < 0x80) {
             match += static_cast<char>(ch);
-          else if (ch < 0x800)
-          {
-            buf[0] = 0xC0 | (ch >> 6);
-            buf[1] = 0x80 | (ch & 0x3F);
+          } else if (ch < 0x800) {
+            buf[0] = static_cast<char>(0xC0 | (ch >> 6));
+            buf[1] = static_cast<char>(0x80 | (ch & 0x3F));
             match.append(buf, 2);
-          }
-          else if (ch < 0x10000)
-          {
-            buf[0] = 0xE0 |  (ch >> 12);
-            buf[1] = 0x80 | ((ch >>  6) & 0x3F);
-            buf[2] = 0x80 |  (ch        & 0x3F);
+          } else if (ch < 0x10000) {
+            buf[0] = static_cast<char>(0xE0 |  (ch >> 12));
+            buf[1] = static_cast<char>(0x80 | ((ch >>  6) & 0x3F));
+            buf[2] = static_cast<char>(0x80 |  (ch        & 0x3F));
             match.append(buf, 3);
-          }
-          else //if (ch < 0x200000)
-          {
-            buf[0] = 0xF0 |  (ch >> 18);
-            buf[1] = 0x80 | ((ch >> 12) & 0x3F);
-            buf[2] = 0x80 | ((ch >>  6) & 0x3F);
-            buf[3] = 0x80 |  (ch        & 0x3F);
+          } else if (ch < 0x200000) {
+            buf[0] = static_cast<char>(0xF0 |  (ch >> 18));
+            buf[1] = static_cast<char>(0x80 | ((ch >> 12) & 0x3F));
+            buf[2] = static_cast<char>(0x80 | ((ch >>  6) & 0x3F));
+            buf[3] = static_cast<char>(0x80 |  (ch        & 0x3F));
             match.append(buf, 4);
+          } else {
+            // this must be an invalid escape sequence?
+            throw exception::eval_error("Unknown 32 bit unicode literal sequence");
           }
           is_escaped = false;
-          is_unicode = 0;
+          unicode_size = 0;
         }
 
         void parse(const char_type t_char, const int line, const int col, const std::string &filename) {
@@ -1149,16 +1147,17 @@ namespace chaiscript
             } else {
               process_hex();
             }
-          } else if (is_unicode) {
+          } else if (unicode_size > 0) {
             if (is_hex_char) {
               hex_matches.push_back(t_char);
 
-            if(hex_matches.size() == is_unicode) {
-              // Format is specified to be 'slash'uABCD
-              // on collecting from A to D do parsing
-              process_unicode();
-            }
-            return;
+              if(hex_matches.size() == unicode_size) {
+                // Format is specified to be 'slash'uABCD
+                // on collecting from A to D do parsing
+                process_unicode();
+              }
+              return;
+
             } else {
               // Not a unicode anymore, try parsing any way
               // May be someone used 'slash'uAA only
@@ -1181,9 +1180,9 @@ namespace chaiscript
               } else if (t_char == 'x') {
                 is_hex = true;
               } else if (t_char == 'u') {
-                is_unicode = 4;
+                unicode_size = 4;
               } else if (t_char == 'U') {
-                is_unicode = 6;
+                unicode_size = 6;
               } else {
                 switch (t_char) {
                   case ('\'') : match.push_back('\''); break;
