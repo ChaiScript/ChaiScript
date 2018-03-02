@@ -1064,6 +1064,13 @@ namespace chaiscript
           }
         }
 
+        void finalize_unicode()
+        {
+          if (unicode_size > 0) {
+            process_unicode();
+          }
+        }
+
         void process_hex()
         {
           auto val = stoll(hex_matches, nullptr, 16);
@@ -1087,17 +1094,20 @@ namespace chaiscript
         void process_unicode()
         {
           const auto ch = static_cast<uint32_t>(std::stoi(hex_matches, nullptr, 16));
+          const auto match_size = hex_matches.size();
           hex_matches.clear();
           is_escaped = false;
           const auto u_size = unicode_size;
           unicode_size = 0;
 
           char buf[4];
+          if (u_size != match_size) {
+            throw exception::eval_error("Incomplete unicode escape sequence");
+          }
           if (u_size == 4 && ch >= 0xD800 && ch <= 0xDFFF) {
             throw exception::eval_error("Invalid 16 bit universal character");
           }
 
-          unicode_size = 0;
 
           if (ch < 0x80) {
             match += static_cast<char>(ch);
@@ -1289,6 +1299,7 @@ namespace chaiscript
               }
             }
 
+            cparser.finalize_unicode();
             return cparser.is_interpolated;
           }();
 
@@ -1347,6 +1358,7 @@ namespace chaiscript
             for (auto s = start + 1, end = m_position - 1; s != end; ++s) {
               cparser.parse(*s, start.line, start.col, *m_filename);
             }
+            cparser.finalize_unicode();
           }
 
           if (match.size() != 1) {
