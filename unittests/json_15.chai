@@ -1,0 +1,19 @@
+// Various to_json() tests
+assert_equal(to_json(-13570), "-13570")
+assert_equal(to_json(0.654321), "0.654321")
+assert_equal(to_json("ChaiScript"), "\"ChaiScript\"")
+assert_equal(to_json(true), "true")
+assert_equal(to_json([1, 2, 3]), "[1, 2, 3]")
+assert_equal(to_json(Vector()), "[]") // empty vector
+assert_equal(to_json([]), "[]") // empty vector
+assert_equal(to_json(Map()), "{\n\n}") // empty map
+assert_equal(to_json(Dynamic_Object()), "{\n\n}") // empty object
+
+// Round-trip JSON tests
+assert_equal(from_json(to_json([])), [])
+assert_equal(from_json(to_json(Map())), Map())
+assert_equal(to_json(from_json("null")), "null")
+assert_equal(from_json(to_json(["a": 5, "b": "stuff"])), ["a": 5, "b": "stuff"])
+auto x = [3.5, true, false, "test", [], Vector(), Map()]
+assert_equal(from_json(to_json(x)), x)
+assert_equal(from_json(to_json(["aa\\zz":"aa\\zz"])), ["aa\\zz": "aa\\zz"])

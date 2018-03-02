@@ -18,4 +18,9 @@ for (x : retro(range([1,2,3,4]))) {
 
 assert_true(result > .6 && result < .7);
 
+var m=["a": ["t": "val"], "b": ["t": "val"]];
 
+for (i : m) {
+  var &ref=i.second["t"]; 
+  print(ref);
+}

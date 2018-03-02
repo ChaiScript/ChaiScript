@@ -1,0 +1,11 @@
+def var_test(int n)
+{
+    for (var i = 0; i < n; ++i)   {
+        var j = 0
+    }
+}
+
+var n = 500000
+var_test(n) // takes 2.6 s
+
+

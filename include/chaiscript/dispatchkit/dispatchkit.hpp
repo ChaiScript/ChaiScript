@@ -452,7 +452,7 @@ namespace chaiscript
         };
 
         explicit Dispatch_Engine(chaiscript::parser::ChaiScript_Parser_Base &parser)
-          : m_stack_holder(this),
+          : m_stack_holder(),
             m_parser(parser)
         {
         }
@@ -1142,25 +1142,17 @@ namespace chaiscript
         void dump_system() const
         {
           std::cout << "Registered Types: \n";
-          std::vector<std::pair<std::string, Type_Info> > types = get_types();
-          for (std::vector<std::pair<std::string, Type_Info> >::const_iterator itr = types.begin();
-              itr != types.end();
-              ++itr)
+          for (auto const &type: get_types())
           {
-            std::cout << itr->first << ": ";
-            std::cout << itr->second.bare_name();
-            std::cout << '\n';
+            std::cout << type.first << ": " << type.second.bare_name() << '\n';
           }
 
           std::cout << '\n';  
-          std::vector<std::pair<std::string, Proxy_Function > > funcs = get_functions();
 
           std::cout << "Functions: \n";
-          for (std::vector<std::pair<std::string, Proxy_Function > >::const_iterator itr = funcs.begin();
-              itr != funcs.end();
-              ++itr)
+          for (auto const &func: get_functions())
           {
-            dump_function(*itr);
+            dump_function(func);
           }
           std::cout << '\n';
         }

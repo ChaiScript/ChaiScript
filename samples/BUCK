@@ -1,0 +1,12 @@
+cxx_binary(
+  name = 'example', 
+  srcs = [
+    'example.cpp',
+  ],
+  compiler_flags = [
+    '-std=c++14',
+  ],
+  deps = [
+    '//:chaiscript',
+  ],
+)

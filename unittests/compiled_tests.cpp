@@ -12,6 +12,8 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #pragma GCC diagnostic ignored "-Wparentheses"
+// This one is necessary for the const return non-reference test
+#pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #endif
 
 
@@ -380,7 +382,7 @@ TEST_CASE("Set and restore chai state")
   // set state should have reverted the state of the functions and dropped
   // the 'myfun'
 
-  CHECK_THROWS_AS(chai.eval<int>("myfun()"), chaiscript::exception::eval_error &);
+  CHECK_THROWS_AS(chai.eval<int>("myfun()"), chaiscript::exception::eval_error);
 
   // set state should not affect the local variables
   CHECK(chai.eval<int>("i") == 1);
@@ -388,7 +390,7 @@ TEST_CASE("Set and restore chai state")
   // After resetting the locals we expect the 'i' to be gone
   chai.set_locals(locals);
 
-  CHECK_THROWS_AS(chai.eval<int>("i"), chaiscript::exception::eval_error &);
+  CHECK_THROWS_AS(chai.eval<int>("i"), chaiscript::exception::eval_error);
 }
 
 
@@ -466,8 +468,8 @@ TEST_CASE("Simultaneous ChaiScript tests")
     CHECK(chai.eval<int>("do_something(" + std::to_string(i) + ")") == i + 2);
     CHECK(chai2.eval<int>("do_something_else(" + std::to_string(i) + ")") == i * 2);
 
-    CHECK_THROWS_AS(chai2.eval("do_something(1)"), chaiscript::exception::eval_error &);
-    CHECK_THROWS_AS(chai2.eval("i"), chaiscript::exception::eval_error &);
+    CHECK_THROWS_AS(chai2.eval("do_something(1)"), chaiscript::exception::eval_error);
+    CHECK_THROWS_AS(chai2.eval("i"), chaiscript::exception::eval_error);
     CHECK_NOTHROW(chai2.eval("do_something_else(1)"));
   }
 }
@@ -1277,6 +1279,57 @@ TEST_CASE("Test unicode matches C++")
   CHECK("\U0001F34C" == chai.eval<std::string>(R"("\U0001F34C")"));
   CHECK(u8"\u2022" == chai.eval<std::string>(R"("\u2022")"));
 
+}
+
+
+const int add_3(const int &i)
+{
+  return i + 3;
+}
+
+TEST_CASE("Test returning by const non-reference")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+  // Note, C++ will not allow us to do this:
+  // chai.add(chaiscript::fun(&Reference_MyClass::x) , "x");
+  chai.add(chaiscript::fun(&add_3), "add_3");
+  auto v = chai.eval<int>("add_3(12)");
+  CHECK(v == 15);
+}
+
+
+struct MyException : std::runtime_error
+{
+  using std::runtime_error::runtime_error;
+  int value = 5;
+};
+
+void throws_a_thing()
+{
+  throw MyException("Hello World");
+}
+
+TEST_CASE("Test throwing and catching custom exception")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+  chai.add(chaiscript::user_type<MyException>(), "MyException");
+  chai.add(chaiscript::base_class<std::runtime_error, MyException>()); // be sure to register base class relationship
+  chai.add(chaiscript::fun(&throws_a_thing), "throws_a_thing");
+  chai.add(chaiscript::fun(&MyException::value), "value");
+
+  const auto s = chai.eval<std::string>("fun(){ try { throws_a_thing(); } catch (MyException ex) { return ex.what(); } }()");
+  CHECK(s == "Hello World");
+
+  // this has an explicit clone to prevent returning a pointer to the `value` from inside of MyException
+  const auto i = chai.eval<int>("fun(){ try { throws_a_thing(); } catch (MyException ex) { var v = clone(ex.value); print(v); return v; } }()");
+  CHECK(i == 5);
+}
+
+
+TEST_CASE("Test ability to get 'use' function from default construction")
+{
+  chaiscript::ChaiScript chai;
+  const auto use_function = chai.eval<std::function<chaiscript::Boxed_Value (const std::string &)>>("use");
 }
 
 

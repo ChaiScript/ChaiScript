@@ -144,6 +144,7 @@ namespace chaiscript
       construct_pod<T>(name, m);
 
       m.add(fun(&parse_string<T>), "to_" + name);
+      m.add(fun([](const T t){ return t; }), "to_" + name);
     }
 
 
@@ -305,13 +306,13 @@ namespace chaiscript
       static bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
       {
         const auto pf = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
-        return pf && pf->get_parse_tree();
+        return bool(pf);
       }
 
-      static chaiscript::AST_NodePtr get_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
+      static const chaiscript::AST_Node &get_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
       {
         const auto pf = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
-        if (pf && pf->get_parse_tree())
+        if (pf)
         {
           return pf->get_parse_tree();
         } else {
@@ -545,7 +546,7 @@ namespace chaiscript
                   std::vector<Boxed_Value> retval;
                   std::transform(t_eval_error.call_stack.begin(), t_eval_error.call_stack.end(),
                                  std::back_inserter(retval),
-                                 &chaiscript::var<const std::shared_ptr<const chaiscript::AST_Node> &>);
+                                 &chaiscript::var<const chaiscript::AST_Node_Trace &>);
                   return retval;
                 }), "call_stack"} }
             );
@@ -574,7 +575,7 @@ namespace chaiscript
                 const auto children = t_node.get_children();
                 std::transform(children.begin(), children.end(),
                                std::back_inserter(retval),
-                               &chaiscript::var<const std::shared_ptr<chaiscript::AST_Node> &>);
+                               &chaiscript::var<const std::reference_wrapper<chaiscript::AST_Node> &>);
                 return retval;
               }), "children"}
             }
