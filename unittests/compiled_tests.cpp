@@ -4,7 +4,7 @@
 
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4062 4242 4640 4702 6330 28251)
+#pragma warning(disable : 4062 4242 4566 4640 4702 6330 28251)
 #endif
 
 
@@ -1273,8 +1273,8 @@ TEST_CASE("Test unicode matches C++")
 {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
   CHECK(u8"\U000000AC" == chai.eval<std::string>(R"("\U000000AC")"));
-  CHECK(u8"\xF0\x9F\x8D\x8C" == chai.eval<std::string>(R"("\xF0\x9F\x8D\x8C")"));
-  CHECK(u8"\U0001F34C" == chai.eval<std::string>(R"("\U0001F34C")"));
+  CHECK("\xF0\x9F\x8D\x8C" == chai.eval<std::string>(R"("\xF0\x9F\x8D\x8C")"));
+  CHECK("\U0001F34C" == chai.eval<std::string>(R"("\U0001F34C")"));
   CHECK(u8"\u2022" == chai.eval<std::string>(R"("\u2022")"));
 
 }
