@@ -1088,7 +1088,17 @@ namespace chaiscript
         {
           const auto ch = static_cast<uint32_t>(std::stoi(hex_matches, nullptr, 16));
           hex_matches.clear();
+          is_escaped = false;
+          const auto u_size = unicode_size;
+          unicode_size = 0;
+
           char buf[4];
+          if (u_size == 4 && ch >= 0xD800 && ch <= 0xDFFF) {
+            throw exception::eval_error("Invalid 16 bit universal character");
+          }
+
+          unicode_size = 0;
+
           if (ch < 0x80) {
             match += static_cast<char>(ch);
           } else if (ch < 0x800) {
@@ -1108,10 +1118,8 @@ namespace chaiscript
             match.append(buf, 4);
           } else {
             // this must be an invalid escape sequence?
-            throw exception::eval_error("Unknown 32 bit unicode literal sequence");
+            throw exception::eval_error("Invalid 32 bit universal character");
           }
-          is_escaped = false;
-          unicode_size = 0;
         }
 
         void parse(const char_type t_char, const int line, const int col, const std::string &filename) {
@@ -1157,7 +1165,6 @@ namespace chaiscript
                 process_unicode();
               }
               return;
-
             } else {
               // Not a unicode anymore, try parsing any way
               // May be someone used 'slash'uAA only
@@ -1182,7 +1189,7 @@ namespace chaiscript
               } else if (t_char == 'u') {
                 unicode_size = 4;
               } else if (t_char == 'U') {
-                unicode_size = 6;
+                unicode_size = 8;
               } else {
                 switch (t_char) {
                   case ('\'') : match.push_back('\''); break;
