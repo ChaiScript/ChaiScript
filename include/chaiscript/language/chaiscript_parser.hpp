@@ -1062,15 +1062,12 @@ namespace chaiscript
               process_hex();
             }
 
-          if (unicode_size > 0) {
-            process_unicode();
-          }
-        }
-
-        void finalize_unicode()
-        {
-          if (unicode_size > 0) {
-            process_unicode();
+            if (unicode_size > 0) {
+              process_unicode();
+            }
+          } catch (const std::invalid_argument &) {
+          } catch (const exception::eval_error &) {
+            // Something happened with parsing, we'll catch it later?
           }
         }
 
@@ -1307,7 +1304,6 @@ namespace chaiscript
               }
             }
 
-            cparser.finalize_unicode();
             return cparser.is_interpolated;
           }();
 
@@ -1366,7 +1362,6 @@ namespace chaiscript
             for (auto s = start + 1, end = m_position - 1; s != end; ++s) {
               cparser.parse(*s, start.line, start.col, *m_filename);
             }
-            cparser.finalize_unicode();
           }
 
           if (match.size() != 1) {

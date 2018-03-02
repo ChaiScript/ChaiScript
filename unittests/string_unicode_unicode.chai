@@ -9,7 +9,7 @@ assert_equal("\xF0\x9F\x8D\x8C", "🍌")
 assert_equal("\U0001F34C", "🍌")
 
 assert_throws("Invalid 16 bit universal character", fun(){ parse("\"\\uD83C\""); });
-assert_throws("Incomplete unicode escape sequence", fun(){ parse("\"\\uD83\""); });
+assert_throws("Incomplete unicode escape sequence", fun(){ parse("\"\\uD83 \""); });
 
 assert_equal("\U00024B62", "𤭢")
 
