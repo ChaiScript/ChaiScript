@@ -2188,6 +2188,16 @@ namespace chaiscript
               }
               build_match<eval::Dot_Access_AST_Node<Tracer>>(prev_stack_top);
             }
+            else if (Eol()) {
+              auto start = --m_position;
+              while (Eol()) {}
+              if (Symbol(".")) {
+                has_more = true;
+                --m_position;
+              } else {
+                m_position = start;
+              }
+            }
           }
         }
 
