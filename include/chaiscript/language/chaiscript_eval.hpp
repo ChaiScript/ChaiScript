@@ -1027,9 +1027,19 @@ namespace chaiscript
               if (this->children[currentCase]->identifier == AST_Node_Type::Case) {
                 //This is a little odd, but because want to see both the switch and the case simultaneously, I do a downcast here.
                 try {
-                  if (hasMatched || boxed_cast<bool>(t_ss->call_function("==", m_loc, {match_value, this->children[currentCase]->children[0]->eval(t_ss)}, t_ss.conversions()))) {
+                  if (hasMatched) {
                     this->children[currentCase]->eval(t_ss);
-                    hasMatched = true;
+                  }
+                  else {
+                    auto case_value = this->children[currentCase]->children[0]->eval(t_ss);
+
+                    chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
+                    fpp.save_params({match_value, case_value});
+
+                    if (boxed_cast<bool>(t_ss->call_function("==", m_loc, {match_value, case_value}, t_ss.conversions()))) {
+                      this->children[currentCase]->eval(t_ss);
+                      hasMatched = true;
+                    }
                   }
                 }
                 catch (const exception::bad_boxed_cast &) {
