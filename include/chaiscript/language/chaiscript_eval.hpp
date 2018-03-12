@@ -227,12 +227,12 @@ namespace chaiscript
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
           auto lhs = this->children[0]->eval(t_ss);
           auto rhs = this->children[1]->eval(t_ss);
-          return do_oper(t_ss, m_oper, this->text, lhs, rhs);
+          return do_oper(t_ss, m_oper, this->text, lhs, rhs, m_loc );
         }
 
-      protected:
-        Boxed_Value do_oper(const chaiscript::detail::Dispatch_State &t_ss, 
-            Operators::Opers t_oper, const std::string &t_oper_string, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs) const
+        // static and public so we can use this to process Switch_AST_Node case equality
+        static Boxed_Value do_oper(const chaiscript::detail::Dispatch_State &t_ss, 
+            Operators::Opers t_oper, const std::string &t_oper_string, const Boxed_Value &t_lhs, const Boxed_Value &t_rhs, std::atomic_uint_fast32_t &loc )
         {
           try {
             if (t_oper != Operators::Opers::invalid && t_lhs.get_type_info().is_arithmetic() && t_rhs.get_type_info().is_arithmetic())
@@ -248,7 +248,7 @@ namespace chaiscript
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
               fpp.save_params({t_lhs, t_rhs});
-              return t_ss->call_function(t_oper_string, m_loc, {t_lhs, t_rhs}, t_ss.conversions());
+              return t_ss->call_function(t_oper_string, loc, {t_lhs, t_rhs}, t_ss.conversions());
             }
           }
           catch(const exception::dispatch_error &e){
@@ -1027,19 +1027,9 @@ namespace chaiscript
               if (this->children[currentCase]->identifier == AST_Node_Type::Case) {
                 //This is a little odd, but because want to see both the switch and the case simultaneously, I do a downcast here.
                 try {
-                  if (hasMatched) {
+                  if (hasMatched || boxed_cast<bool>(Binary_Operator_AST_Node<T>::do_oper(t_ss, Operators::Opers::equals, "==", match_value, this->children[currentCase]->children[0]->eval( t_ss ), m_loc))) {
                     this->children[currentCase]->eval(t_ss);
-                  }
-                  else {
-                    auto case_value = this->children[currentCase]->children[0]->eval(t_ss);
-
-                    chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-                    fpp.save_params({match_value, case_value});
-
-                    if (boxed_cast<bool>(t_ss->call_function("==", m_loc, {match_value, case_value}, t_ss.conversions()))) {
-                      this->children[currentCase]->eval(t_ss);
-                      hasMatched = true;
-                    }
+                    hasMatched = true;
                   }
                 }
                 catch (const exception::bad_boxed_cast &) {
