@@ -7,6 +7,5 @@ x.push_back("A")
 assert_equal(3, x.front());
 assert_equal("A", x.back());
 
-
-
-
+// Random access with List objects.
+assert_equal("A", x[1])
