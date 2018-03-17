@@ -31,7 +31,7 @@
 #include "register_function.hpp"
 #include "type_info.hpp"
 
-namespace chaiscript 
+namespace chaiscript
 {
   namespace bootstrap
   {
@@ -219,6 +219,51 @@ namespace chaiscript
         }
 
 
+      /// Add random_access_advance_container concept to the given ContainerType, using advance.
+      /// http://www.sgi.com/tech/stl/RandomAccessContainer.html
+      template<typename ContainerType>
+        void random_access_advance_container_type(const std::string &/*type*/, Module& m)
+        {
+          //In the interest of runtime safety for the m, we prefer the at() method for [] access,
+          //to throw an exception in an out of bounds condition.
+          m.add(
+              fun(
+                [](ContainerType &c, int index) -> typename ContainerType::reference {
+                  /// \todo we are prefering to keep the key as 'int' to avoid runtime conversions
+                  /// during dispatch. reevaluate
+                  auto itr = c.begin();
+                  auto end = c.end();
+                  if (index < 0 || std::distance(itr, end) < index)
+                  {
+                    throw std::range_error("Desired index out of range");
+                  }
+                  std::advance(itr, index);
+                  return *itr;
+                }), "[]");
+
+          m.add(
+              fun(
+                [](const ContainerType &c, int index) -> typename ContainerType::const_reference {
+                  /// \todo we are prefering to keep the key as 'int' to avoid runtime conversions
+                  /// during dispatch. reevaluate
+                  auto itr = c.begin();
+                  auto end = c.end();
+                  if (index < 0 || std::distance(itr, end) < index)
+                  {
+                    throw std::range_error("Desired index out of range");
+                  }
+                  std::advance(itr, index);
+                  return *itr;
+                }), "[]");
+        }
+      template<typename ContainerType>
+        ModulePtr random_access_advance_container_type(const std::string &type)
+        {
+          auto m = std::make_shared<Module>();
+          random_access_advance_container_type<ContainerType>(type, *m);
+          return m;
+        }
+
 
       /// Add assignable concept to the given ContainerType
       /// http://www.sgi.com/tech/stl/Assignable.html
@@ -335,7 +380,7 @@ namespace chaiscript
       template<typename ContainerType>
         void back_insertion_sequence_type(const std::string &type, Module& m)
         {
-          m.add(fun([](ContainerType &container)->decltype(auto){ 
+          m.add(fun([](ContainerType &container)->decltype(auto){
                       if (container.empty()) {
                         throw std::range_error("Container empty");
                       } else {
@@ -344,7 +389,7 @@ namespace chaiscript
                     }
                   )
                 , "back");
-          m.add(fun([](const ContainerType &container)->decltype(auto){ 
+          m.add(fun([](const ContainerType &container)->decltype(auto){
                       if (container.empty()) {
                         throw std::range_error("Container empty");
                       } else {
@@ -398,7 +443,7 @@ namespace chaiscript
           typedef void (ContainerType::*push_ptr)(typename ContainerType::const_reference);
           typedef void (ContainerType::*pop_ptr)();
 
-          m.add(fun([](ContainerType &container)->decltype(auto){ 
+          m.add(fun([](ContainerType &container)->decltype(auto){
                       if (container.empty()) {
                         throw std::range_error("Container empty");
                       } else {
@@ -408,7 +453,7 @@ namespace chaiscript
                   )
                 , "front");
 
-          m.add(fun([](const ContainerType &container)->decltype(auto){ 
+          m.add(fun([](const ContainerType &container)->decltype(auto){
                       if (container.empty()) {
                         throw std::range_error("Container empty");
                       } else {
@@ -559,7 +604,7 @@ namespace chaiscript
                        }
                    } )"
                  );
-          } 
+          }
 
           container_type<MapType>(type, m);
           default_constructible_type<MapType>(type, m);
@@ -591,6 +636,7 @@ namespace chaiscript
           default_constructible_type<ListType>(type, m);
           assignable_type<ListType>(type, m);
           input_range_type<ListType>(type, m);
+          random_access_advance_container_type<ListType>(type, m);
         }
       template<typename ListType>
         ModulePtr list_type(const std::string &type)
@@ -608,7 +654,7 @@ namespace chaiscript
         {
           m.add(user_type<VectorType>(), type);
 
-          m.add(fun([](VectorType &container)->decltype(auto){ 
+          m.add(fun([](VectorType &container)->decltype(auto){
                       if (container.empty()) {
                         throw std::range_error("Container empty");
                       } else {
@@ -618,7 +664,7 @@ namespace chaiscript
                   )
                 , "front");
 
-          m.add(fun([](const VectorType &container)->decltype(auto){ 
+          m.add(fun([](const VectorType &container)->decltype(auto){
                       if (container.empty()) {
                         throw std::range_error("Container empty");
                       } else {
@@ -663,7 +709,7 @@ namespace chaiscript
                        }
                    } )"
                  );
-          } 
+          }
         }
       template<typename VectorType>
         ModulePtr vector_type(const std::string &type)
@@ -706,7 +752,7 @@ namespace chaiscript
           m.add(fun([](const String *s, const String &f, size_t pos) { return s->find_last_of(f, pos); } ), "find_last_of");
           m.add(fun([](const String *s, const String &f, size_t pos) { return s->find_last_not_of(f, pos); } ), "find_last_not_of");
           m.add(fun([](const String *s, const String &f, size_t pos) { return s->find_first_not_of(f, pos); } ), "find_first_not_of");
-        
+
           m.add(fun([](String *s, typename String::value_type c) -> decltype(auto) { return (*s += c); } ), "+=");
 
           m.add(fun([](String *s) { s->clear(); } ), "clear");
