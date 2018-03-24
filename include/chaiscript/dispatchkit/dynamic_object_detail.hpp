@@ -68,7 +68,7 @@ namespace chaiscript
           }
 
 
-          Dynamic_Object_Function &operator=(const Dynamic_Object_Function) = delete;
+          Dynamic_Object_Function &operator=(Dynamic_Object_Function) = delete;
           Dynamic_Object_Function(Dynamic_Object_Function &) = delete;
 
           bool operator==(const Proxy_Function_Base &f) const override
@@ -189,7 +189,7 @@ namespace chaiscript
           static std::vector<Type_Info> build_type_list(const std::vector<Type_Info> &tl)
           {
             auto begin = tl.begin();
-            auto end = tl.end();
+            const auto end = tl.end();
 
             if (begin != end)
             {
@@ -201,7 +201,7 @@ namespace chaiscript
 
           bool operator==(const Proxy_Function_Base &f) const override
           {
-            const Dynamic_Object_Constructor *dc = dynamic_cast<const Dynamic_Object_Constructor*>(&f);
+            const auto *dc = dynamic_cast<const Dynamic_Object_Constructor*>(&f);
             return (dc != nullptr) && dc->m_type_name == m_type_name && (*dc->m_func) == (*m_func);
           }
 

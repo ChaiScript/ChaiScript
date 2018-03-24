@@ -79,7 +79,7 @@ namespace chaiscript {
 
             std::unique_ptr<Data> clone() const override
             {
-              return std::unique_ptr<Data>(new Data_Impl<T>(m_data));
+              return std::unique_ptr<Data>(std::make_unique<Data_Impl<T>>(m_data));
             }
 
             Data_Impl &operator=(const Data_Impl&) = delete;
@@ -134,8 +134,7 @@ namespace chaiscript {
 
 
         // modifiers
-        Any & swap(Any &t_other)
-        {
+        Any & swap(Any &t_other) noexcept {
           std::swap(t_other.m_data, m_data);
           return *this;
         }

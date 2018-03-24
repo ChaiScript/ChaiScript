@@ -160,6 +160,7 @@ namespace chaiscript {
             } else {
               const auto new_children = [&](){
                 std::vector<eval::AST_Node_Impl_Ptr<T>> retval;
+                retval.reserve(keepers.size());
                 for (const auto x : keepers)
                 {
                   retval.push_back(std::move(node->children[x]));

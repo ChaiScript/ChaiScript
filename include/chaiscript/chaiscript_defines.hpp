@@ -155,7 +155,7 @@ namespace chaiscript {
     auto parse_num(const char *t_str) -> typename std::enable_if<std::is_integral<T>::value, T>::type
     {
       T t = 0;
-      for (char c = *t_str; (c = *t_str) != 0; ++t_str) {
+      for (char c; (c = *t_str) != 0; ++t_str) {
         if (c < '0' || c > '9') {
           return t;
         }

@@ -663,7 +663,7 @@ namespace chaiscript
             loc_mask   = 0x0000FFFF
           };
 
-          uint_fast32_t loc = t_loc;
+          const uint_fast32_t loc = t_loc;
 
           if (loc == 0)
           {
@@ -733,7 +733,7 @@ namespace chaiscript
           if (t_throw) {
             throw std::range_error("Type Not Known");
           } else {
-            return Type_Info();
+            return {};
           }
         }
 
@@ -765,7 +765,7 @@ namespace chaiscript
 
         std::shared_ptr<std::vector<Proxy_Function>> get_method_missing_functions() const
         {
-          uint_fast32_t method_missing_loc = m_method_missing_loc;
+          const uint_fast32_t method_missing_loc = m_method_missing_loc;
           auto method_missing_funs = get_function("method_missing", method_missing_loc);
           if (method_missing_funs.first != method_missing_loc) { 
             m_method_missing_loc = uint_fast32_t(method_missing_funs.first); 
@@ -782,7 +782,7 @@ namespace chaiscript
 
           const auto &funs = get_functions_int();
 
-          auto itr = find_keyed_value(funs, t_name, t_hint);
+          const auto itr = find_keyed_value(funs, t_name, t_hint);
 
           if (itr != funs.end())
           {
@@ -808,7 +808,7 @@ namespace chaiscript
         {
           const auto &funs = get_boxed_functions_int();
 
-          auto itr = find_keyed_value(funs, t_name, t_hint);
+          const auto itr = find_keyed_value(funs, t_name, t_hint);
 
           if (itr != funs.end())
           {
@@ -959,7 +959,7 @@ namespace chaiscript
         Boxed_Value call_member(const std::string &t_name, std::atomic_uint_fast32_t &t_loc, const std::vector<Boxed_Value> &params, bool t_has_params,
                                 const Type_Conversions_State &t_conversions)
         {
-          uint_fast32_t loc = t_loc;
+          const uint_fast32_t loc = t_loc;
           const auto funs = get_function(t_name, loc);
           if (funs.first != loc) { t_loc = uint_fast32_t(funs.first); }
 
@@ -1079,7 +1079,7 @@ namespace chaiscript
         Boxed_Value call_function(const std::string &t_name, std::atomic_uint_fast32_t &t_loc, const std::vector<Boxed_Value> &params,
             const Type_Conversions_State &t_conversions) const
         {
-          uint_fast32_t loc = t_loc;
+          const uint_fast32_t loc = t_loc;
           const auto funs = get_function(t_name, loc);
           if (funs.first != loc) { t_loc = uint_fast32_t(funs.first);
 }
@@ -1233,7 +1233,7 @@ namespace chaiscript
         {
           if (t_s.call_depth == 0)
           {
-            m_conversions.enable_conversion_saves(t_saves, true);
+            chaiscript::Type_Conversions::enable_conversion_saves(t_saves, true);
           }
 
           ++t_s.call_depth;
@@ -1250,7 +1250,7 @@ namespace chaiscript
           if (t_s.call_depth == 0)
           {
             t_s.call_params.back().clear();
-            m_conversions.enable_conversion_saves(t_saves, false);
+            chaiscript::Type_Conversions::enable_conversion_saves(t_saves, false);
           }
         }
 
@@ -1326,8 +1326,8 @@ namespace chaiscript
         static bool function_less_than(const Proxy_Function &lhs, const Proxy_Function &rhs)
         {
 
-          auto dynamic_lhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(lhs));
-          auto dynamic_rhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(rhs));
+          const auto dynamic_lhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(lhs));
+          const auto dynamic_rhs(std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(rhs));
 
           if (dynamic_lhs && dynamic_rhs)
           {

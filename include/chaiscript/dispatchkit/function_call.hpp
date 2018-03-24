@@ -38,6 +38,7 @@ namespace chaiscript
     ///      build_function_caller(dispatchkit.get_function("print"));
     /// \returns A std::function object for dispatching
     /// \param[in] funcs the set of functions to dispatch on.
+    /// \param t_conversions
     template<typename FunctionType>
       std::function<FunctionType> functor(const std::vector<Const_Proxy_Function> &funcs, const Type_Conversions_State *t_conversions)
       {
@@ -65,6 +66,7 @@ namespace chaiscript
     /// }
     /// \returns A std::function object for dispatching
     /// \param[in] func A function to execute.
+    /// \param t_conversions
     template<typename FunctionType>
       std::function<FunctionType> functor(Const_Proxy_Function func, const Type_Conversions_State *t_conversions)
       {

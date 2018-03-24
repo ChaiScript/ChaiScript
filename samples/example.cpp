@@ -121,7 +121,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
 
   //If we would like a type-safe return value from all call, we can use
   //the templated version of eval:
-  int i = chai.eval<int>("5+5");
+  const auto i = chai.eval<int>("5+5");
 
   std::cout << "5+5: " << i << '\n';
 
@@ -129,7 +129,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   chai("var scripti = 15");
 
   //We can even get a handle to the variables in the system
-  int &scripti = chai.eval<int &>("scripti");
+  auto &scripti = chai.eval<int &>("scripti");
 
   std::cout << "scripti: " << scripti << '\n';
   scripti *= 2;
@@ -139,7 +139,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   //To do: Add examples of handling Boxed_Values directly when needed
 
   //Creating a functor on the stack and using it immediately 
-  int x = chai.eval<std::function<int (int, int)> >("fun (x, y) { return x + y; }")(5, 6);
+  const int x = chai.eval<std::function<int (int, int)> >("fun (x, y) { return x + y; }")(5, 6);
 
   std::stringstream ss;
   ss << x;

@@ -47,7 +47,7 @@ namespace chaiscript
   {
     template<typename T> struct AST_Node_Impl;
 
-    template<typename T> using AST_Node_Impl_Ptr = typename std::unique_ptr<AST_Node_Impl<T>>;
+    template<typename T> using AST_Node_Impl_Ptr = std::unique_ptr<AST_Node_Impl<T>>;
 
     namespace detail
     {
@@ -57,7 +57,7 @@ namespace chaiscript
         chaiscript::detail::Dispatch_State state(t_ss);
 
         const Boxed_Value *thisobj = [&]() -> const Boxed_Value *{
-          auto &stack = t_ss.get_stack_data(state.stack_holder()).back();
+          auto &stack = chaiscript::detail::Dispatch_Engine::get_stack_data(state.stack_holder()).back();
           if (!stack.empty() && stack.back().first == "__this") {
             return &stack.back().second;
           } else if (!t_vals.empty()) {
@@ -325,7 +325,7 @@ namespace chaiscript
             fpp.save_params(params);
           }
 
-          Boxed_Value fn(this->children[0]->eval(t_ss));
+          const Boxed_Value fn(this->children[0]->eval(t_ss));
 
           using ConstFunctionTypePtr = const dispatch::Proxy_Function_Base *;
           try {
@@ -337,7 +337,7 @@ namespace chaiscript
           catch(const exception::bad_boxed_cast &){
             try {
               using ConstFunctionTypeRef = const Const_Proxy_Function &;
-              Const_Proxy_Function f = t_ss->boxed_cast<ConstFunctionTypeRef>(fn);
+              const Const_Proxy_Function f = t_ss->boxed_cast<ConstFunctionTypeRef>(fn);
               // handle the case where there is only 1 function to try to call and dispatch fails on it
               throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, {f}, false, *t_ss);
             } catch (const exception::bad_boxed_cast &) {
@@ -689,7 +689,7 @@ namespace chaiscript
           const auto numparams = this->children[1]->children.size();
           const auto param_types = Arg_List_AST_Node<T>::get_arg_types(*this->children[1], t_ss);
 
-          std::reference_wrapper<chaiscript::detail::Dispatch_Engine> engine(*t_ss);
+          const std::reference_wrapper<chaiscript::detail::Dispatch_Engine> engine(*t_ss);
 
           return Boxed_Value(
               dispatch::make_dynamic_proxy_function(
@@ -1020,7 +1020,7 @@ namespace chaiscript
 
           chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
-          Boxed_Value match_value(this->children[0]->eval(t_ss));
+          const Boxed_Value match_value(this->children[0]->eval(t_ss));
 
           while (!breaking && (currentCase < this->children.size())) {
             try {
@@ -1322,7 +1322,7 @@ namespace chaiscript
                 else if (catch_block.children.size() == 3) {
                   //Variable capture, guards
 
-                  bool guard = false;
+                  bool guard;
                   try {
                     guard = boxed_cast<bool>(catch_block.children[1]->eval(t_ss));
                   } catch (const exception::bad_boxed_cast &) {

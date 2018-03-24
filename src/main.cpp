@@ -27,7 +27,7 @@
 #else
 
 char *mystrdup (const char *s) {
-  size_t len = strlen(s); // Space for length plus nul
+  const size_t len = strlen(s); // Space for length plus nul
   char *d = static_cast<char*>(malloc (len+1));
   if (d == nullptr) { return nullptr; }         // No memory
 #ifdef CHAISCRIPT_MSVC
@@ -78,8 +78,8 @@ std::vector<std::string> default_search_paths()
 
   std::string exepath(path, size);
 
-  size_t lastslash = exepath.rfind('\\');
-  size_t secondtolastslash = exepath.rfind('\\', lastslash - 1);
+  const size_t lastslash = exepath.rfind('\\');
+  const size_t secondtolastslash = exepath.rfind('\\', lastslash - 1);
   if (lastslash != std::string::npos)
   {
     paths.push_back(exepath.substr(0, lastslash));
@@ -87,7 +87,7 @@ std::vector<std::string> default_search_paths()
 
   if (secondtolastslash != std::string::npos)
   {
-    return {exepath.substr(0, secondtolastslash) + "\\lib\\chaiscript\\"};
+    return {exepath.substr(0, secondtolastslash) + R"(\lib\chaiscript\)"};
   }
 #else
 
@@ -128,7 +128,7 @@ std::vector<std::string> default_search_paths()
     exepath = std::string(rInfo.dli_fname);
   }
 
-  size_t lastslash = exepath.rfind('/');
+  const size_t lastslash = exepath.rfind('/');
 
   size_t secondtolastslash = exepath.rfind('/', lastslash - 1);
   if (lastslash != std::string::npos)
@@ -231,7 +231,7 @@ void interactive(chaiscript::ChaiScript_Basic& chai)
   using_history();
 
   for (;;) {
-    std::string input = get_next_command();
+    const std::string input = get_next_command();
     try {
       // evaluate input
       chaiscript::Boxed_Value val = chai.eval(input);

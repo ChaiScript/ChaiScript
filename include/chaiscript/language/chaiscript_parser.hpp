@@ -29,6 +29,7 @@
 #include "chaiscript_tracer.hpp"
 #include "../utility/fnv1a.hpp"
 #include "../utility/static_string.hpp"
+#include <array>
 
 #if defined(CHAISCRIPT_UTF16_UTF32)
 #include <locale>
@@ -126,7 +127,7 @@ namespace chaiscript
 
       static std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> build_alphabet()
       {
-        std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> alphabet;
+        std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> alphabet{};
 
         for (auto &alpha : alphabet) {
           alpha.fill(false);
@@ -461,8 +462,7 @@ namespace chaiscript
 
 
       /// Reads a symbol group from input if it matches the parameter, without skipping initial whitespace
-      inline auto Symbol_(const utility::Static_String &sym)
-      {
+      inline auto Symbol_(const utility::Static_String &sym) {
         const auto len = sym.size();
         if (m_position.remaining() >= len) {
           const char *file_pos = &(*m_position);
@@ -675,7 +675,7 @@ namespace chaiscript
 
         for (; i > 0; --i)
         {
-          char val = t_val[i-1];
+          const char val = t_val[i-1];
 
           if (val == 'f' || val == 'F')
           {
@@ -739,7 +739,7 @@ namespace chaiscript
 #endif
 
         try {
-          auto u = std::stoll(val,nullptr,base);
+          const auto u = std::stoll(val,nullptr,base);
 
 
           if (!unsigned_ && !long_ && u >= std::numeric_limits<int>::min() && u <= std::numeric_limits<int>::max()) {
@@ -761,7 +761,7 @@ namespace chaiscript
         } catch (const std::out_of_range &) {
           // too big to be signed
           try {
-            auto u = std::stoull(val,nullptr,base);
+            const auto u = std::stoull(val,nullptr,base);
 
             if (!longlong_ && u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
               return const_var(static_cast<unsigned long>(u));
@@ -1210,7 +1210,7 @@ namespace chaiscript
           std::string match;
           const auto prev_stack_top = m_match_stack.size();
 
-          bool is_interpolated = [&]()->bool {
+          const bool is_interpolated = [&]()->bool {
             Char_Parser<std::string> cparser(match, true);
 
 
@@ -1409,7 +1409,7 @@ namespace chaiscript
         bool retval = Symbol_(t_s);
 
         // ignore substring matches
-        if (retval && m_position.has_more() && (t_disallow_prevention == false) && char_in_alphabet(*m_position,detail::symbol_alphabet)) {
+        if (retval && m_position.has_more() && !t_disallow_prevention && char_in_alphabet(*m_position,detail::symbol_alphabet)) {
           if (*m_position != '=' && is_operator(Position::str(start, m_position)) && !is_operator(Position::str(start, m_position+1))) {
             // don't throw this away, it's a good match and the next is not
           } else {
@@ -1791,7 +1791,7 @@ namespace chaiscript
       bool Class(const bool t_class_allowed) {
         bool retval = false;
 
-        size_t prev_stack_top = m_match_stack.size();
+        const size_t prev_stack_top = m_match_stack.size();
 
         if (Keyword("class")) {
           if (!t_class_allowed) {

@@ -27,19 +27,14 @@ bool run_test_type_conversion(const Boxed_Value &bv, bool expectedpass)
     std::cerr << "Unexpected unknown exception when attempting cast_conversion.\n";
     return false;
   }
- 
-  if (expectedpass)
-  {
-    return true;
-  } else {
-    return false;
-  }
+
+  return expectedpass;
 }
 
 template<typename To>
 bool test_type_conversion(const Boxed_Value &bv, bool expectedpass)
 {
-  bool ret = run_test_type_conversion<To>(bv, expectedpass);
+  const bool ret = run_test_type_conversion<To>(bv, expectedpass);
 
   if (!ret)
   {
@@ -113,7 +108,7 @@ bool built_in_type_test(const T &initial, bool ispod)
   bool passed = true;
 
   /** value tests **/
-  T i = T(initial);
+  auto i = T(initial);
   passed &= do_test<T>(var(i), true, true, true, true, true, 
                                  true, true, true, true, true,
                                  true, true, true, true, true, true,
@@ -256,7 +251,7 @@ bool built_in_type_test(const T &initial, bool ispod)
 template<typename T>
 bool pointer_test(const T& default_value, const T& new_value)
 {
-  T *p = new T(default_value);
+  auto *p = new T(default_value);
 
   // we store a pointer to a pointer, so we can get a pointer to a pointer
   try {

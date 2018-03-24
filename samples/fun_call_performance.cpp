@@ -24,7 +24,7 @@
 #else
 
 char *mystrdup(const char *s) {
-  size_t len = strlen(s); // Space for length plus nul
+  const size_t len = strlen(s); // Space for length plus nul
   char *d = static_cast<char*>(malloc(len + 1));
   if (d == nullptr) return nullptr;          // No memory
 #ifdef CHAISCRIPT_MSVC
@@ -75,8 +75,8 @@ std::vector<std::string> default_search_paths()
 
   std::string exepath(path, size);
 
-  size_t lastslash = exepath.rfind('\\');
-  size_t secondtolastslash = exepath.rfind('\\', lastslash - 1);
+  const size_t lastslash = exepath.rfind('\\');
+  const size_t secondtolastslash = exepath.rfind('\\', lastslash - 1);
   if (lastslash != std::string::npos)
   {
     paths.push_back(exepath.substr(0, lastslash));
@@ -84,7 +84,7 @@ std::vector<std::string> default_search_paths()
 
   if (secondtolastslash != std::string::npos)
   {
-    return{ exepath.substr(0, secondtolastslash) + "\\lib\\chaiscript\\" };
+    return{ exepath.substr(0, secondtolastslash) + R"(\lib\chaiscript\)"};
   }
 #else
 
@@ -236,7 +236,7 @@ void interactive(chaiscript::ChaiScript& chai)
   using_history();
 
   for (;;) {
-    std::string input = get_next_command();
+    const std::string input = get_next_command();
     try {
       // evaluate input
       chaiscript::Boxed_Value val = chai.eval(input);
@@ -251,7 +251,7 @@ void interactive(chaiscript::ChaiScript& chai)
     }
     catch (const chaiscript::exception::eval_error &ee) {
       std::cout << ee.what();
-      if (ee.call_stack.size() > 0) {
+      if (!ee.call_stack.empty()) {
         std::cout << "during evaluation at (" << ee.call_stack[0].start().line << ", " << ee.call_stack[0].start().column << ")";
       }
       std::cout << std::endl;
@@ -315,7 +315,7 @@ int main(int argc, char *argv[])
   }
 
   clock_t end = clock();
-  double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+  const double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 
   //begin = clock();
 
@@ -375,7 +375,7 @@ int main(int argc, char *argv[])
       mode = eFile;
     }
 
-    chaiscript::Boxed_Value val;
+    chaiscript::Boxed_Value val; /* never accessed? */
     try {
       switch (mode) {
         case eInteractive: interactive(chai); break;
@@ -386,7 +386,7 @@ int main(int argc, char *argv[])
                       val = chai.eval_file(arg);
 
                       end = clock();
-                      double elapsed_secs1 = double(end - begin) / CLOCKS_PER_SEC;
+                      const auto elapsed_secs1 = double(end - begin) / CLOCKS_PER_SEC;
                       printf("**C++::time= %.10f\n", elapsed_secs);
                       printf("**ChaiScript::time= %.10f\n", elapsed_secs1);
                       break;

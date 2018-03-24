@@ -123,7 +123,7 @@ public:
 
     T* allocate(std::size_t n)
     {
-        return reinterpret_cast<T*>(a_.template allocate<alignof(T)>(n*sizeof(T)));
+        return reinterpret_cast<T*>(a_.allocate<alignof(T)>(n*sizeof(T)));
     }
     void deallocate(T* p, std::size_t n) noexcept
     {

@@ -6,6 +6,7 @@
 
 #ifndef CHAISCRIPT_POSIX_HPP_
 #define CHAISCRIPT_POSIX_HPP_
+#include "../dispatchkit/bootstrap.hpp"
 
 namespace chaiscript
 {
@@ -29,12 +30,9 @@ namespace chaiscript
         DLModule(const DLModule &) = delete;
         DLModule &operator=(const DLModule &) = delete;
 
-        ~DLModule()
-        {
-          dlclose(m_data);
-        }
+        ~DLModule() = default;
 
-        void *m_data;
+        void *m_data{};
       };
 
       template<typename T>
@@ -59,9 +57,13 @@ namespace chaiscript
       }
 
       DLModule m_dlmodule;
-      DLSym<Create_Module_Func> m_func;
-      ModulePtr m_moduleptr;
+      DLSym<Create_Module_Func> m_func{};
+      ModulePtr m_moduleptr{};
     };
+
+    inline Loadable_Module::DLModule::~DLModule() {
+      dlclose(m_data);
+    }
   }
 }
 #endif

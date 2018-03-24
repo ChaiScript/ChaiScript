@@ -41,7 +41,7 @@ namespace chaiscript
               return boxed_cast<Ret>(dispatch::dispatch(t_funcs, params, *t_conversions), t_conversions);
             } else {
               Type_Conversions conv;
-              Type_Conversions_State state(conv, conv.conversion_saves());
+              const Type_Conversions_State state(conv, conv.conversion_saves());
               return boxed_cast<Ret>(dispatch::dispatch(t_funcs, params, state), t_conversions);
             }
           }
@@ -60,7 +60,7 @@ namespace chaiscript
               return Boxed_Number(dispatch::dispatch(t_funcs, params, *t_conversions)).get_as<Ret>();
             } else {
               Type_Conversions conv;
-              Type_Conversions_State state(conv, conv.conversion_saves());
+              const Type_Conversions_State state(conv, conv.conversion_saves());
               return Boxed_Number(dispatch::dispatch(t_funcs, params, state)).get_as<Ret>();
             }
           }
@@ -80,7 +80,7 @@ namespace chaiscript
               dispatch::dispatch(t_funcs, params, *t_conversions);
             } else {
               Type_Conversions conv;
-              Type_Conversions_State state(conv, conv.conversion_saves());
+              const Type_Conversions_State state(conv, conv.conversion_saves());
               dispatch::dispatch(t_funcs, params, state);
             }
           }

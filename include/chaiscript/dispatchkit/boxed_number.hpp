@@ -769,22 +769,22 @@ namespace chaiscript
         return Boxed_Number(oper(Operators::Opers::pre_increment, t_lhs.bv));
       }
 
-      static const Boxed_Number sum(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs) 
+      static Boxed_Number sum(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs) 
       {
         return Boxed_Number(oper(Operators::Opers::sum, t_lhs.bv, t_rhs.bv));
       }
 
-      static const Boxed_Number unary_plus(const Boxed_Number &t_lhs) 
+      static Boxed_Number unary_plus(const Boxed_Number &t_lhs) 
       {
         return Boxed_Number(oper(Operators::Opers::unary_plus, t_lhs.bv));
       }
 
-      static const Boxed_Number unary_minus(const Boxed_Number &t_lhs)
+      static Boxed_Number unary_minus(const Boxed_Number &t_lhs)
       {
         return Boxed_Number(oper(Operators::Opers::unary_minus, t_lhs.bv));
       }
 
-      static const Boxed_Number difference(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs) 
+      static Boxed_Number difference(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs) 
       {
         return Boxed_Number(oper(Operators::Opers::difference, t_lhs.bv, t_rhs.bv));
       }
@@ -824,22 +824,22 @@ namespace chaiscript
         return Boxed_Number(oper(Operators::Opers::assign_shift_right, t_lhs.bv, t_rhs.bv));
       }
 
-      static const Boxed_Number bitwise_and(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs)
+      static Boxed_Number bitwise_and(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs)
       {
         return Boxed_Number(oper(Operators::Opers::bitwise_and, t_lhs.bv, t_rhs.bv));
       }
 
-      static const Boxed_Number bitwise_complement(const Boxed_Number &t_lhs)
+      static Boxed_Number bitwise_complement(const Boxed_Number &t_lhs)
       {
         return Boxed_Number(oper(Operators::Opers::bitwise_complement, t_lhs.bv, Boxed_Value(0)));
       }
 
-      static const Boxed_Number bitwise_xor(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs)
+      static Boxed_Number bitwise_xor(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs)
       {
         return Boxed_Number(oper(Operators::Opers::bitwise_xor, t_lhs.bv, t_rhs.bv));
       }
 
-      static const Boxed_Number bitwise_or(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs)
+      static Boxed_Number bitwise_or(const Boxed_Number &t_lhs, const Boxed_Number &t_rhs)
       {
         return Boxed_Number(oper(Operators::Opers::bitwise_or, t_lhs.bv, t_rhs.bv));
       }

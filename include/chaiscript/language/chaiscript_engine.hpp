@@ -20,6 +20,7 @@
 #include <mutex>
 #include <set>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 #include <cstring>
 
@@ -298,7 +299,7 @@ namespace chaiscript
                      std::vector<std::string> t_module_paths = {},
                      std::vector<std::string> t_use_paths = {},
                      const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options())
-      : ChaiScript_Basic({}, std::move(parser), t_module_paths, t_use_paths, t_opts)
+      : ChaiScript_Basic({}, std::move(parser), std::move(t_module_paths), std::move(t_use_paths), t_opts)
     {
       try {
         // attempt to load the stdlib
@@ -323,8 +324,7 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
                           const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options()) = delete;
 #endif
 
-    parser::ChaiScript_Parser_Base &get_parser()
-    {
+    parser::ChaiScript_Parser_Base &get_parser() const {
       return *m_parser;
     }
 
@@ -337,8 +337,7 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
       }
     }
 
-    AST_NodePtr parse(const std::string &t_input, const bool t_debug_print = false)
-    {
+    AST_NodePtr parse(const std::string &t_input, const bool t_debug_print = false) const {
       auto ast = m_parser->parse(t_input, "PARSE");
       if (t_debug_print) {
         m_parser->debug_print(*ast);
@@ -371,6 +370,7 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
         try {
           const auto appendedpath = path + t_filename;
 
+          // l and l2 never used?
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l2(m_mutex);
 
@@ -569,7 +569,7 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
 #else
       std::vector<exception::load_module_error> errors;
       std::string version_stripped_name = t_module_name;
-      size_t version_pos = version_stripped_name.find("-" + Build_Info::version());
+      const size_t version_pos = version_stripped_name.find("-" + Build_Info::version());
       if (version_pos != std::string::npos)
       {
         version_stripped_name.erase(version_pos);
@@ -616,7 +616,7 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
 
       if (m_loaded_modules.count(t_module_name) == 0)
       {
-        detail::Loadable_Module_Ptr lm(new detail::Loadable_Module(t_module_name, t_filename));
+        const detail::Loadable_Module_Ptr lm(new detail::Loadable_Module(t_module_name, t_filename));
         m_loaded_modules[t_module_name] = lm;
         m_active_loaded_modules.insert(t_module_name);
         add(lm->m_moduleptr);

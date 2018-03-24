@@ -48,7 +48,7 @@ namespace chaiscript
     ///        {fun(static_cast<test & (test::*)(const test &)>(&test::operator=)), "=" }
     ///        }
     ///      );
-    /// 
+    /// \endcode
     template<typename Class, typename ModuleType>
       void add_class(ModuleType &t_module,
           const std::string &t_class_name,
@@ -115,6 +115,7 @@ namespace chaiscript
         {
           t_module.add_global_const(chaiscript::const_var(EnumClass(constant.first)), constant.second);
         }
+        return {};
       }
   }
 }

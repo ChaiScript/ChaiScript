@@ -13,10 +13,10 @@ class TestBaseType
     TestBaseType(int *) : val(10), const_val(15), mdarray{} { }
 
     TestBaseType(const TestBaseType &) = default;
-    virtual ~TestBaseType() {}
+    virtual ~TestBaseType() = default;
     virtual int func() { return 0; }
 
-    int base_only_func() { return -9; }
+    int base_only_func() const { return -9; }
 
     const TestBaseType &constMe() const { return *this; }
 
@@ -24,19 +24,19 @@ class TestBaseType
     const int const_val;
     const int *const_val_ptr = &const_val;
 
-    const int *get_const_val_ptr() {
+    const int *get_const_val_ptr() const {
       return const_val_ptr;
     }
 
     int mdarray[2][3][5];
-    std::function<int (int)> func_member;
+    std::function<int (int)> func_member{};
 
     void set_string_val(std::string &t_str)
     {
       t_str = "42";
     }
 
-  private:
+  //private:
     TestBaseType &operator=(const TestBaseType &) = delete;
 };
 
@@ -44,7 +44,7 @@ class Type2
 {
   public:
     Type2(TestBaseType t_bt)
-      : m_bt(std::move(t_bt)),
+      : m_bt(t_bt),
         m_str("Hello World")
     {
     }
@@ -77,14 +77,15 @@ int to_int(TestEnum t)
 
 class TestDerivedType : public TestBaseType
 {
+  ;
   public:
-    virtual ~TestDerivedType() {}
+    virtual ~TestDerivedType() = default;
     TestDerivedType(const TestDerivedType &) = default;
     TestDerivedType() = default;
     virtual int func() override { return 1; }
     int derived_only_func() { return 19; }
 
-  private:
+  //private:
     TestDerivedType &operator=(const TestDerivedType &) = delete;
 };
 
@@ -93,7 +94,7 @@ class TestMoreDerivedType : public TestDerivedType
   public:
     TestMoreDerivedType(const TestMoreDerivedType &) = default;
     TestMoreDerivedType() = default;
-    virtual ~TestMoreDerivedType() {}
+    virtual ~TestMoreDerivedType() = default;
 };
 
 std::shared_ptr<TestBaseType> derived_type_factory()

@@ -820,6 +820,7 @@
 /// @namespace chaiscript::detail
 /// @brief Classes and functions reserved for internal use. Items in this namespace are not supported.
 
+#include <utility>
 #include "chaiscript_basic.hpp"
 #include "language/chaiscript_parser.hpp"
 #include "chaiscript_stdlib.hpp"
@@ -836,7 +837,7 @@ namespace chaiscript
         : ChaiScript_Basic(
             chaiscript::Std_Lib::library(),
             std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer_Default>>(),
-            t_modulepaths, t_usepaths, t_opts)
+            std::move(t_modulepaths), std::move(t_usepaths), t_opts)
         {
         }
   };

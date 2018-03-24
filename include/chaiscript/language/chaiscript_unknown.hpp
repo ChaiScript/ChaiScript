@@ -23,7 +23,7 @@ namespace chaiscript
 #endif
       }
 
-      ModulePtr m_moduleptr;
+      ModulePtr m_moduleptr{};
     };
   }
 }

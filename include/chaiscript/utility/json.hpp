@@ -134,7 +134,7 @@ class JSON
       Internal( int64_t l ) : Int( l ), Type(Class::Integral) {}
       Internal( bool   b ) : Bool( b ), Type(Class::Boolean) {}
       Internal( std::string s ) : String(std::make_unique<std::string>(std::move(s))), Type(Class::String) {}
-      Internal()           : Type(Class::Null) {}
+      Internal() = default;
 
       Internal(Class t_type) {
         set_type(t_type);
@@ -349,43 +349,39 @@ class JSON
 
     JSONWrapper<QuickFlatMap> object_range() {
       if( internal.Type == Class::Object ) {
-        return JSONWrapper<QuickFlatMap>( internal.Map.get() );
-      } else {
-        return JSONWrapper<QuickFlatMap>( nullptr );
+        return { internal.Map.get() };
       }
+      return { nullptr };
     }
 
     JSONWrapper<std::vector<JSON>> array_range() {
       if( internal.Type == Class::Array ) {
-        return JSONWrapper<std::vector<JSON>>( internal.List.get() );
-      } else {
-        return JSONWrapper<std::vector<JSON>>( nullptr );
+        return { internal.List.get() };
       }
+      return { nullptr };
     }
 
     JSONConstWrapper<QuickFlatMap> object_range() const {
       if( internal.Type == Class::Object ) {
-        return JSONConstWrapper<QuickFlatMap>( internal.Map.get() );
-      } else {
-        return JSONConstWrapper<QuickFlatMap>( nullptr );
+        return { internal.Map.get() };
       }
+      return { nullptr };
     }
 
 
     JSONConstWrapper<std::vector<JSON>> array_range() const { 
       if( internal.Type == Class::Array ) {
-        return JSONConstWrapper<std::vector<JSON>>( internal.List.get() );
-      } else {
-        return JSONConstWrapper<std::vector<JSON>>( nullptr );
+        return { internal.List.get() };
       }
+      return { nullptr };
     }
 
-    std::string dump( long depth = 1, std::string tab = "  ") const {
+    std::string dump( long depth = 1, const std::string &tab = "  ") const {
       switch( internal.Type ) {
         case Class::Null:
           return "null";
         case Class::Object: {
-                              std::string pad = "";
+                              std::string pad;
                               for( long i = 0; i < depth; ++i, pad += tab ) { }
 
                               std::string s = "{\n";
@@ -482,7 +478,7 @@ struct JSONParser {
         throw std::runtime_error(std::string("JSON ERROR: Object: Expected colon, found '") + str.at(offset) + "'\n");
       }
       consume_ws( str, ++offset );
-      JSON Value = parse_next( str, offset );
+      const JSON Value = parse_next( str, offset );
       Object[Key.to_string()] = Value;
 
       consume_ws( str, offset );
@@ -645,9 +641,8 @@ struct JSONParser {
   }
 
   static JSON parse_next( const std::string &str, size_t &offset ) {
-    char value;
     consume_ws( str, offset );
-    value = str.at(offset);
+    const char value = str.at(offset);
     switch( value ) {
       case '[' : return parse_array( str, offset );
       case '{' : return parse_object( str, offset );

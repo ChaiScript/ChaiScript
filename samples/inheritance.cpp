@@ -3,15 +3,13 @@
 class BaseClass
 {
   public:
-    BaseClass()
-    {
-    }
+    BaseClass() = default;
 
-    BaseClass(const BaseClass &) = default;
+  BaseClass(const BaseClass &) = default;
 
-    virtual ~BaseClass() {}
+    virtual ~BaseClass() = default;
 
-    virtual std::string doSomething(float, double) const = 0;
+  virtual std::string doSomething(float, double) const = default;
 
 
     void setValue(const std::string &t_val) {
@@ -29,7 +27,7 @@ class BaseClass
     virtual bool validateValue(const std::string &t_val) = 0;
 
   private:
-    std::string m_value;
+    std::string m_value{};
 };
 
 class ChaiScriptDerived : public BaseClass
@@ -63,8 +61,8 @@ class ChaiScriptDerived : public BaseClass
       t_param = chaiscript::boxed_cast<Param>(t_func);
     }
 
-    std::function<std::string (const ChaiScriptDerived&, float, double)> m_doSomethingImpl;
-    std::function<bool (ChaiScriptDerived&, const std::string &t_val)> m_validateValueImpl;
+    std::function<std::string (const ChaiScriptDerived&, float, double)> m_doSomethingImpl{};
+    std::function<bool (ChaiScriptDerived&, const std::string &t_val)> m_validateValueImpl{};
 };
 
 int main()
@@ -126,7 +124,7 @@ int main()
   assert(myderived.getValue() == "new");
 
   // call the other derived method via chaiscript and return the value to c++ land:
-  std::string retval = chai.eval<std::string>("myderived.doSomething(2,4.3)");
+  auto retval = chai.eval<std::string>("myderived.doSomething(2,4.3)");
   assert(retval == "new8.6");
 
   // The whole process is fully orthogonal

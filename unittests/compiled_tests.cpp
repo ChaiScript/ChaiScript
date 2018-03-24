@@ -58,7 +58,7 @@ TEST_CASE("Dynamic_Object attributes can be shared with C++")
 
   chai("attr bob::z; def bob::bob() { this.z = 10 }; auto x = bob()");
 
-  chaiscript::dispatch::Dynamic_Object &mydo = chai.eval<chaiscript::dispatch::Dynamic_Object &>("x");
+  auto &mydo = chai.eval<chaiscript::dispatch::Dynamic_Object &>("x");
 
   CHECK(mydo.get_type_name() == "bob");
 
@@ -347,7 +347,7 @@ TEST_CASE("Functor cast")
   chai.add(chaiscript::fun(&functor_cast_test_call), "test_call");
 
   chai.eval("def func(i) { return i * 6; };");
-  int d = chai.eval<int>("test_call(func, 3)");
+  auto d = chai.eval<int>("test_call(func, 3)");
 
   CHECK(d == 3 * 6);
 }
@@ -364,7 +364,7 @@ TEST_CASE("Set and restore chai state")
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
 
   // save the initial state of globals and locals
-  auto firststate = chai.get_state();
+  const auto firststate = chai.get_state();
   std::map<std::string, chaiscript::Boxed_Value> locals = chai.get_locals();
 
   // add some new globals and locals
@@ -598,8 +598,7 @@ class Object_Copy_Count_Test
       ++copycount();
     }
 
-    Object_Copy_Count_Test(Object_Copy_Count_Test &&)
-    {
+    Object_Copy_Count_Test(Object_Copy_Count_Test &&) noexcept {
       std::cout << "Object_Copy_Count_Test(Object_Copy_Count_Test &&)\n";
       ++movecount();
     }
@@ -868,10 +867,10 @@ TEST_CASE("Test long long dispatch")
 
 struct Returned_Converted_Config
 {
-  int num_iterations;
-  int something_else;
+  int num_iterations = 0;
+  int something_else = 0;
   std::string a_string;
-  std::function<int (const std::string &)> a_function;
+  std::function<int (const std::string &)> a_function{};
 };
 
 
@@ -947,7 +946,7 @@ TEST_CASE("Parse floats with non-posix locale")
   std::setlocale(LC_ALL, "en_ZA.utf8");
 #endif
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
-  const double parsed = chai.eval<double>("print(1.3); 1.3");
+  const auto parsed = chai.eval<double>("print(1.3); 1.3");
   CHECK(parsed == Approx(1.3));
   const std::string str = chai.eval<std::string>("to_string(1.3)");
   CHECK(str == "1.3");
@@ -1229,7 +1228,7 @@ TEST_CASE("Test typed chaiscript functions to perform conversions")
 
   chai.add(chaiscript::fun([]() -> std::shared_ptr<A> 
         {
-        return (std::shared_ptr<A>(new B()));
+        return std::static_pointer_cast<A>(std::make_shared<B>());
         }), "Create");
 
   chai.eval(R"(
@@ -1272,7 +1271,7 @@ TEST_CASE("Test reference member being registered")
 }
 
 
-const int add_3(const int &i)
+int add_3(const int &i)
 {
   return i + 3;
 }

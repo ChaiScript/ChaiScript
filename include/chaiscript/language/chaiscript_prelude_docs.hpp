@@ -2,6 +2,9 @@
 /// regarding the ChaiScript standard runtime library.
 
 /// \brief Items in this namespace exist in the ChaiScript language runtime. They are not part of the C++ API
+#ifndef CHAISCRIPT_PRELUDE_DOCS_HPP
+#define CHAISCRIPT_PRELUDE_DOCS_HPP
+
 namespace ChaiScript_Language
 {
 
@@ -58,7 +61,7 @@ class Map_Pair
 {
   public:
     /// \brief Returns the key of the Map entry
-    const string first();
+    string first();
 
     /// \brief Returns the value Object of the Map entry 
     Object second();
@@ -596,7 +599,7 @@ bool even(Object x);
 /// eval> odd(4)
 /// false 
 /// \endcode
-bool even(Object x);
+bool odd(Object x);
 
 
 /// \brief Applies the function f over each element in the Range c.
@@ -828,3 +831,4 @@ Const_Range retro(Const_Range);
 void throw(Object); 
 }
 
+#endif // CHAISCRIPT_PRELUDE_DOCS_HPP

@@ -208,15 +208,13 @@ namespace chaiscript
       Boxed_Value(const Boxed_Value&) = default;
       Boxed_Value& operator=(const Boxed_Value&) = default;
 
-      void swap(Boxed_Value &rhs)
-      {
+      void swap(Boxed_Value &rhs) noexcept {
         std::swap(m_data, rhs.m_data);
       }
 
       /// Copy the values stored in rhs.m_data to m_data.
       /// m_data pointers are not shared in this case
-      Boxed_Value assign(const Boxed_Value &rhs)
-      {
+      Boxed_Value assign(const Boxed_Value &rhs) const {
         (*m_data) = (*rhs.m_data);
         return *this;
       }
@@ -318,8 +316,7 @@ namespace chaiscript
         return m_data->m_const_data_ptr;
       }
 
-      Boxed_Value get_attr(const std::string &t_name)
-      {
+      Boxed_Value get_attr(const std::string &t_name) const {
         if (!m_data->m_attrs)
         {
           m_data->m_attrs = std::make_unique<std::map<std::string, std::shared_ptr<Data>>>();

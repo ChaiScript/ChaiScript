@@ -23,7 +23,7 @@ std::string get_next_command() {
 #endif
 }
 
-void function(void)
+void function()
 {
   // do nothing
 }
@@ -40,7 +40,7 @@ class test
     chai.add(chaiscript::fun(&function),"Whatever()");
   }
 
-  void RunFile(std::string sFile)
+  void RunFile(const std::string &sFile)
   {
     try {
       chaiscript::Boxed_Value val = chai.eval_file(sFile);
@@ -56,10 +56,10 @@ class test
 
 int main(int /*argc*/, char * /*argv*/[]) {
 
-  test myChai;
+  test myChai{};
 
 
-  std::string command = "";
+  std::string command;
 
   //
   // this loop increases memory usage, if RunFile is not called (just hitting enter)

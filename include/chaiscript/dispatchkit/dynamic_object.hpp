@@ -44,7 +44,7 @@ namespace chaiscript
     {
       public:
         explicit Dynamic_Object(std::string t_type_name)
-          : m_type_name(std::move(t_type_name)), m_option_explicit(false)
+          : m_type_name(std::move(t_type_name))
         {
         }
 
@@ -77,7 +77,7 @@ namespace chaiscript
 
         const Boxed_Value &get_attr(const std::string &t_attr_name) const
         {
-          auto a = m_attrs.find(t_attr_name);
+          const auto a = m_attrs.find(t_attr_name);
 
           if (a != m_attrs.end()) {
             return a->second;

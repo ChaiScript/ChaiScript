@@ -33,6 +33,7 @@ namespace chaiscript
   /// \brief Function for extracting a value stored in a Boxed_Value object
   /// \tparam Type The type to extract from the Boxed_Value
   /// \param[in] bv The Boxed_Value to extract a typed value from
+  /// \param t_conversions
   /// \returns Type equivalent to the requested type 
   /// \throws exception::bad_boxed_cast If the requested conversion is not possible
   /// 

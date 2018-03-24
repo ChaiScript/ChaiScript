@@ -73,7 +73,7 @@ namespace chaiscript
     Logical_And, Bitwise_Or, Bitwise_Xor, Bitwise_And, 
     Equality, Comparison, Shift, Addition, Multiplication, Prefix };
 
-  namespace
+  namespace  // TODO:: should not use unnamed namespaces in header files
   {
     /// Helper lookup to get the name of each node type
     inline const char *ast_node_type_to_string(AST_Node_Type ast_node_type) {
@@ -263,7 +263,7 @@ namespace chaiscript
           const chaiscript::detail::Dispatch_Engine &t_ss)
       {
         assert(t_func);
-        int arity = t_func->get_arity();
+        const int arity = t_func->get_arity();
         std::vector<Type_Info> types = t_func->get_param_types();
 
         std::string retval;
@@ -308,16 +308,16 @@ namespace chaiscript
         }
 
 
-        std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynfun 
+        const std::shared_ptr<const dispatch::Dynamic_Proxy_Function> dynfun 
           = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_func);
 
         if (dynfun && dynfun->has_parse_tree())
         {
-          Proxy_Function f = dynfun->get_guard();
+          const Proxy_Function f = dynfun->get_guard();
 
           if (f)
           {
-            auto dynfunguard = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(f);
+            const auto dynfunguard = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(f);
             if (dynfunguard && dynfunguard->has_parse_tree())
             {
               retval += " : " + format_guard(dynfunguard->get_parse_tree());
@@ -598,8 +598,7 @@ namespace chaiscript
       return oss.str();
     }
 
-    std::vector<AST_Node_Trace> get_children(const AST_Node &node)
-    {
+    std::vector<AST_Node_Trace> get_children(const AST_Node &node) const {
       const auto node_children = node.get_children();
       return std::vector<AST_Node_Trace>(node_children.begin(), node_children.end());
     }
@@ -707,13 +706,11 @@ namespace chaiscript
           m_ds->pop_function_call(m_ds.stack_holder(), m_ds.conversion_saves());
         }
 
-        void save_params(const std::vector<Boxed_Value> &t_params)
-        {
+        void save_params(const std::vector<Boxed_Value> &t_params) const {
           m_ds->save_function_params(t_params);
         }
 
-        void save_params(std::initializer_list<Boxed_Value> t_params)
-        {
+        void save_params(std::initializer_list<Boxed_Value> t_params) const {
           m_ds->save_function_params(t_params);
         }
 

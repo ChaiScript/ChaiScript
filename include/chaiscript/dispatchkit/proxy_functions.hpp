@@ -360,7 +360,7 @@ namespace chaiscript
 
         bool operator==(const Proxy_Function_Base &rhs) const override
         {
-          const Dynamic_Proxy_Function *prhs = dynamic_cast<const Dynamic_Proxy_Function *>(&rhs);
+          const auto *prhs = dynamic_cast<const Dynamic_Proxy_Function *>(&rhs);
 
           return this == &rhs
             || ((prhs != nullptr)
@@ -733,7 +733,7 @@ namespace chaiscript
 
         bool operator==(const Proxy_Function_Base &t_func) const override
         {
-          const Attribute_Access<T, Class> * aa 
+          const auto * aa 
             = dynamic_cast<const Attribute_Access<T, Class> *>(&t_func);
 
           if (aa) {

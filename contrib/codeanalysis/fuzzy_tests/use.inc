@@ -2,4 +2,4 @@ def greet {
   return("hello")
 }
 
-fun(){ "world" }
+fun() { return "world"; }

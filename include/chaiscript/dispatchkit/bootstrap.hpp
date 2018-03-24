@@ -271,7 +271,7 @@ namespace chaiscript
 
       static bool has_guard(const Const_Proxy_Function &t_pf)
       {
-        auto pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
+        const auto pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
         return pf && pf->get_guard();
       }
 
@@ -294,6 +294,7 @@ namespace chaiscript
  
           std::vector<Boxed_Value> vbv;
 
+          vbv.reserve(v.size());
           for (const auto &o: v)
           {
             vbv.push_back(const_var(o));

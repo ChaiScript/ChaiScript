@@ -10,7 +10,6 @@ Multi_Test_Chai::Multi_Test_Chai()
 }
 
 
-std::shared_ptr<chaiscript::ChaiScript_Basic> Multi_Test_Chai::get_chai()
-{
+std::shared_ptr<chaiscript::ChaiScript_Basic> Multi_Test_Chai::get_chai() const {
   return m_chai;
 }

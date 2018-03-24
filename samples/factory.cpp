@@ -7,9 +7,9 @@ class Entity
     int height;
     int x;
     int y;
-    std::string name;
+    std::string name{};
 
-    std::function<void (Entity &)> updater;
+    std::function<void (Entity &)> updater{};
 
     Entity(const int t_width, const int t_height, const int t_x, const int t_y, std::string t_name)
       : width(t_width), height(t_height), x(t_x), y(t_y), name(std::move(t_name))
@@ -72,7 +72,7 @@ int main()
   chai.add(chaiscript::user_type<Factory>(), "Factory"); // this isn't strictly necessary but makes error messages nicer
 
 
-  Factory f;
+  Factory f{};
   chai.add(chaiscript::var(&f), "f");
 
   std::string script = R""(

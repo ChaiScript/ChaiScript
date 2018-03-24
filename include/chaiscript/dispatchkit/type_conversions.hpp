@@ -156,11 +156,11 @@ namespace chaiscript
                 if (t_from.is_const())
                 {
                   const From &d = detail::Cast_Helper<const From &>::cast(t_from, nullptr);
-                  const To &data = static_cast<const To &>(d);
+                  const auto &data = static_cast<const To &>(d);
                   return Boxed_Value(std::cref(data));
                 } else {
                   From &d = detail::Cast_Helper<From &>::cast(t_from, nullptr);
-                  To &data = static_cast<To &>(d);
+                  auto &data = static_cast<To &>(d);
                   return Boxed_Value(std::ref(data));
                 }
               }
@@ -221,11 +221,11 @@ namespace chaiscript
                 if (t_from.is_const())
                 {
                   const From &d = detail::Cast_Helper<const From &>::cast(t_from, nullptr);
-                  const To &data = dynamic_cast<const To &>(d);
+                  const auto &data = dynamic_cast<const To &>(d);
                   return Boxed_Value(std::cref(data));
                 } else {
                   From &d = detail::Cast_Helper<From &>::cast(t_from, nullptr);
-                  To &data = dynamic_cast<To &>(d);
+                  auto &data = dynamic_cast<To &>(d);
                   return Boxed_Value(std::ref(data));
                 }
               }
@@ -335,18 +335,15 @@ namespace chaiscript
       };
 
       Type_Conversions()
-        : m_mutex(),
-          m_conversions(),
-          m_convertableTypes(),
-          m_num_types(0)
+        : m_num_types(0)
       {
       }
 
       Type_Conversions(const Type_Conversions &t_other) = delete;
-      Type_Conversions(Type_Conversions &&) = default;
+      Type_Conversions(Type_Conversions &&) = default;  //? this is implicitly deleted (because member not assignable or ...)
 
       Type_Conversions &operator=(const Type_Conversions &) = delete;
-      Type_Conversions &operator=(Type_Conversions &&) = default;
+      Type_Conversions &operator=(Type_Conversions &&) = default; // ? implcitly deleted
 
       const std::set<const std::type_info *, Less_Than> &thread_cache() const
       {
@@ -436,8 +433,7 @@ namespace chaiscript
         t_saves.enabled = t_val;
       }
 
-      std::vector<Boxed_Value> take_saves(Conversion_Saves &t_saves)
-      {
+      std::vector<Boxed_Value> take_saves(Conversion_Saves &t_saves) const {
         std::vector<Boxed_Value> ret;
         std::swap(ret, t_saves.saves);
         return ret;
@@ -504,8 +500,8 @@ namespace chaiscript
       std::set<std::shared_ptr<detail::Type_Conversion_Base>> m_conversions;
       std::set<const std::type_info *, Less_Than> m_convertableTypes;
       std::atomic_size_t m_num_types;
-      mutable chaiscript::detail::threading::Thread_Storage<std::set<const std::type_info *, Less_Than>> m_thread_cache;
-      mutable chaiscript::detail::threading::Thread_Storage<Conversion_Saves> m_conversion_saves;
+      mutable chaiscript::detail::threading::Thread_Storage<std::set<const std::type_info *, Less_Than>> m_thread_cache{};
+      mutable chaiscript::detail::threading::Thread_Storage<Conversion_Saves> m_conversion_saves{};
   };
 
   class Type_Conversions_State
