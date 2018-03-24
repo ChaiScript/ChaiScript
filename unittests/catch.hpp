@@ -583,7 +583,7 @@ namespace Catch {
     struct AssertionInfo
     {
         StringRef macroName;
-        SourceLineInfo lineInfo{};
+        SourceLineInfo lineInfo;
         StringRef capturedExpression;
         ResultDisposition::Flags resultDisposition;
 
