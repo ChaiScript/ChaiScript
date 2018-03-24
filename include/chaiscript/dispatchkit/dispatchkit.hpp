@@ -1286,7 +1286,7 @@ namespace chaiscript
           return m_stack_holder->stacks.back();
         }
 
-        parser::ChaiScript_Parser_Base &get_parser()
+        parser::ChaiScript_Parser_Base &get_parser() const
         {
           return m_parser.get();
         }

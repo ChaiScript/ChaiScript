@@ -76,7 +76,7 @@ int main()
   chai.add(chaiscript::user_type<BaseClass>(), "BaseClass");
   chai.add(chaiscript::user_type<ChaiScriptDerived>(), "ChaiScriptDerived");
 
-  std::string script = R""(
+  const std::string script = R""(
     def MakeDerived() {
       return ChaiScriptDerived(
           // create a dynamically created array and pass it in to the constructor

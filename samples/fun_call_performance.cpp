@@ -272,6 +272,7 @@ int main(int argc, char *argv[])
 #pragma warning(disable : 4996)
 #endif
 
+  // TODO:: Use _dupenv_s instead
   const char *usepath = getenv("CHAI_USE_PATH");
   const char *modulepath = getenv("CHAI_MODULE_PATH");
 
@@ -375,7 +376,7 @@ int main(int argc, char *argv[])
       mode = eFile;
     }
 
-    chaiscript::Boxed_Value val; /* never accessed? */
+    chaiscript::Boxed_Value val;
     try {
       switch (mode) {
         case eInteractive: interactive(chai); break;

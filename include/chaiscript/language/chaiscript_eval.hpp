@@ -629,7 +629,7 @@ namespace chaiscript
           fpp.save_params(params);
 
           try {
-            retval = t_ss->call_member(m_fun_name, m_loc, std::move(params), has_function_params, t_ss.conversions());
+            retval = t_ss->call_member(m_fun_name, m_loc, params, has_function_params, t_ss.conversions());
           }
           catch(const exception::dispatch_error &e){
             if (e.functions.empty())
@@ -1097,7 +1097,7 @@ namespace chaiscript
                 vec.push_back(detail::clone_if_necessary(child->eval(t_ss), m_loc, t_ss));
               }
             }
-            return const_var(std::move(vec));
+            return const_var(vec);
           }
           catch (const exception::dispatch_error &) {
             throw exception::eval_error("Can not find appropriate 'clone' or copy constructor for vector elements");
@@ -1123,7 +1123,7 @@ namespace chaiscript
                             detail::clone_if_necessary(child->children[1]->eval(t_ss), m_loc, t_ss)));
             }
 
-            return const_var(std::move(retval));
+            return const_var(retval);
           }
           catch (const exception::dispatch_error &e) {
             throw exception::eval_error("Can not find appropriate copy constructor or 'clone' while inserting into Map.", e.parameters, e.functions, false, *t_ss);

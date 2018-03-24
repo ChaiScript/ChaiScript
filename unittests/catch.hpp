@@ -4931,17 +4931,17 @@ inline void AssertionHandler::handleExceptionNotThrownAsExpected() {
         m_resultCapture.handleNonExpr(m_assertionInfo, ResultWas::Ok, m_reaction);
     }
 
-    void AssertionHandler::handleUnexpectedExceptionNotThrown() {
+inline void AssertionHandler::handleUnexpectedExceptionNotThrown() {
         m_resultCapture.handleUnexpectedExceptionNotThrown( m_assertionInfo, m_reaction );
     }
 
-    void AssertionHandler::handleThrowingCallSkipped() {
+inline void AssertionHandler::handleThrowingCallSkipped() {
         m_resultCapture.handleNonExpr(m_assertionInfo, ResultWas::Ok, m_reaction);
     }
 
     // This is the overload that takes a string and infers the Equals matcher from it
     // The more general overload, that takes any string matcher, is in catch_capture_matchers.cpp
-    void handleExceptionMatchExpr( AssertionHandler& handler, std::string const& str, StringRef matcherString  ) {
+inline void handleExceptionMatchExpr( AssertionHandler& handler, std::string const& str, StringRef matcherString  ) {
         handleExceptionMatchExpr( handler, Matchers::Equals( str ), matcherString );
     }
 
@@ -4950,11 +4950,11 @@ inline void AssertionHandler::handleExceptionNotThrownAsExpected() {
 // start catch_assertionresult.cpp
 
 namespace Catch {
-    AssertionResultData::AssertionResultData(ResultWas::OfType _resultType, LazyExpression const & _lazyExpression):
+inline AssertionResultData::AssertionResultData(ResultWas::OfType _resultType, LazyExpression const & _lazyExpression):
         lazyExpression(_lazyExpression),
         resultType(_resultType) {}
 
-    std::string AssertionResultData::reconstructExpression() const {
+inline std::string AssertionResultData::reconstructExpression() const {
 
         if( reconstructedExpression.empty() ) {
             if( lazyExpression ) {
@@ -4966,13 +4966,13 @@ namespace Catch {
         return reconstructedExpression;
     }
 
-    AssertionResult::AssertionResult( AssertionInfo const& info, AssertionResultData const& data )
+inline AssertionResult::AssertionResult( AssertionInfo const& info, AssertionResultData const& data )
     :   m_info( info ),
         m_resultData( data )
     {}
 
     // Result was a success
-    bool AssertionResult::succeeded() const {
+inline bool AssertionResult::succeeded() const {
         return Catch::isOk( m_resultData.resultType );
     }
 

@@ -113,7 +113,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
   //Call bound version of do_callbacks
   chai("do_callbacks()");
 
-  std::function<void ()> caller = chai.eval<std::function<void ()> >(
+  const std::function<void ()> caller = chai.eval<std::function<void ()> >(
     R"(fun() { system.do_callbacks("From Functor"); })"
   );
   caller();
@@ -165,8 +165,8 @@ int main(int /*argc*/, char * /*argv*/[]) {
   chai.add(fun(&bound_log, std::string("Msg")), "BoundFun");
 
   //Dynamic objects test
-  chai.add(chaiscript::Proxy_Function(new dispatch::detail::Dynamic_Object_Function("TestType", fun(&hello_world))), "hello_world");
-  chai.add(chaiscript::Proxy_Function(new dispatch::detail::Dynamic_Object_Constructor("TestType", fun(&hello_constructor))), "TestType");
+  chai.add(std::static_pointer_cast<dispatch::Proxy_Function_Base>(std::make_shared<dispatch::detail::Dynamic_Object_Function>("TestType", fun(&hello_world))), "hello_world");
+  chai.add(std::static_pointer_cast<dispatch::Proxy_Function_Base>(std::make_shared<dispatch::detail::Dynamic_Object_Constructor>("TestType", fun(&hello_constructor))), "TestType");
 //  chai.add(fun(std::function<Boxed_Value (dispatch::Dynamic_Object &)>(std::bind(&dispatch::detail::Dynamic_Object_Attribute::func, "TestType", "attr", std::placeholders::_1))), "attr");
 
   chai.eval("var x = TestType()");
