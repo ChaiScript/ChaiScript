@@ -65,10 +65,6 @@ namespace chaiscript
       DLSym<Create_Module_Func> m_func;
       ModulePtr m_moduleptr{};
     };
-
-    inline Loadable_Module::DLModule::~DLModule() {
-      dlclose(m_data);
-    }
   }
 }
 #endif
