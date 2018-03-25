@@ -30,7 +30,12 @@ namespace chaiscript
         DLModule(const DLModule &) = delete;
         DLModule &operator=(const DLModule &) = delete;
 
-        ~DLModule() = default;
+        ~DLModule()
+        {
+
+          dlclose(m_data);
+
+        };
 
         void *m_data{};
       };
@@ -57,7 +62,7 @@ namespace chaiscript
       }
 
       DLModule m_dlmodule;
-      DLSym<Create_Module_Func> m_func{};
+      DLSym<Create_Module_Func> m_func;
       ModulePtr m_moduleptr{};
     };
 

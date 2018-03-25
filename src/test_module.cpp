@@ -77,8 +77,7 @@ int to_int(TestEnum t)
 
 class TestDerivedType : public TestBaseType
 {
-  ;
-  public:
+public:
     virtual ~TestDerivedType() = default;
     TestDerivedType(const TestDerivedType &) = default;
     TestDerivedType() = default;
