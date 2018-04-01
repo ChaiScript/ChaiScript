@@ -223,7 +223,7 @@ namespace chaiscript
         return std::string();
       } else {
         std::vector<char> v(static_cast<size_t>(size));
-        infile.read(&v[0], size);
+        infile.read(&v[0], static_cast<std::streamsize>(size));
         return std::string(v.begin(), v.end());
       }
     }
