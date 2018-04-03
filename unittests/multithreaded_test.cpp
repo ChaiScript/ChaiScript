@@ -47,15 +47,16 @@ int main()
 
   const char *usepath = getenv("CHAI_USE_PATH");
   const char *modulepath = getenv("CHAI_MODULE_PATH");
+  const char *this_might_affect_test_result = "This might have adverse effect on the result of the test.";
   
   if(usepath == nullptr)
   {
-    std::cout << "Warning: usepath not set!\n";
+    std::cout << "Warning: environmental variable CHAI_USE_PATH not set! " << this_might_affect_test_result << "\n";
   }
   
   if(modulepath == nullptr)
   {
-    std::cout << "Warning: modulepath not set!\n";
+    std::cout << "Warning: environmental variable CHAI_MODULE_PATH not set! " << this_might_affect_test_result;
   }
 
 #ifdef CHAISCRIPT_MSVC
