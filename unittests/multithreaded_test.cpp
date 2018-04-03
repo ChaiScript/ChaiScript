@@ -47,13 +47,24 @@ int main()
 
   const char *usepath = getenv("CHAI_USE_PATH");
   const char *modulepath = getenv("CHAI_MODULE_PATH");
+  const char *this_might_affect_test_result = "This might have adverse effect on the result of the test.";
+  
+  if(usepath == NULL)
+  {
+    std::cout << "Warning: environmental variable CHAI_USE_PATH not set! " << this_might_affect_test_result << "\n";
+  }
+  
+  if(modulepath == NULL)
+  {
+    std::cout << "Warning: environmental variable CHAI_MODULE_PATH not set! " << this_might_affect_test_result << "\n";
+  }
 
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)
 #endif
 
   std::vector<std::string> usepaths;
-  usepaths.push_back("");
+  usepaths.emplace_back("");
   if (usepath)
   {
     usepaths.push_back(usepath);
@@ -100,15 +111,22 @@ int main()
   {
     std::stringstream ss;
     ss << i;
-    if (chai.eval<int>("getvalue(" + ss.str() + ")") != expected_value(4000))
+    try
     {
+      if (chai.eval<int>("getvalue(" + ss.str() + ")") != expected_value(4000))
+      {
+        return EXIT_FAILURE;
+      }
+
+      if (chai.eval<int>("getid(" + ss.str() + ")") != static_cast<int>(i))
+      {
+        return EXIT_FAILURE;
+      }
+    } catch (chaiscript::exception::eval_error &e) {
+      std::cout << e.what();
       return EXIT_FAILURE;
     }
 
-    if (chai.eval<int>("getid(" + ss.str() + ")") != static_cast<int>(i))
-    {
-      return EXIT_FAILURE;
-    }
   }
 
   return EXIT_SUCCESS;
