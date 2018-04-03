@@ -49,12 +49,12 @@ int main()
   const char *modulepath = getenv("CHAI_MODULE_PATH");
   const char *this_might_affect_test_result = "This might have adverse effect on the result of the test.";
   
-  if(usepath == nullptr)
+  if(usepath == NULL)
   {
     std::cout << "Warning: environmental variable CHAI_USE_PATH not set! " << this_might_affect_test_result << "\n";
   }
   
-  if(modulepath == nullptr)
+  if(modulepath == NULL)
   {
     std::cout << "Warning: environmental variable CHAI_MODULE_PATH not set! " << this_might_affect_test_result << "\n";
   }
@@ -67,7 +67,7 @@ int main()
   usepaths.emplace_back("");
   if (usepath)
   {
-    usepaths.emplace_back(usepath);
+    usepaths.push_back(usepath);
   }
 
   std::vector<std::string> modulepaths;
@@ -75,10 +75,10 @@ int main()
 #ifdef CHAISCRIPT_NO_DYNLOAD
   chaiscript::ChaiScript chai(/* unused */modulepaths, usepaths);
 #else
-  modulepaths.emplace_back("");
+  modulepaths.push_back("");
   if (modulepath)
   {
-    modulepaths.emplace_back(modulepath);
+    modulepaths.push_back(modulepath);
   }
   
   // For this test we are going to load the dynamic stdlib
