@@ -47,16 +47,26 @@ int main()
 
   const char *usepath = getenv("CHAI_USE_PATH");
   const char *modulepath = getenv("CHAI_MODULE_PATH");
+  
+  if(usepath == nullptr)
+  {
+    std::cout << "Warning: usepath not set!\n";
+  }
+  
+  if(modulepath == nullptr)
+  {
+    std::cout << "Warning: modulepath not set!\n";
+  }
 
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)
 #endif
 
   std::vector<std::string> usepaths;
-  usepaths.push_back("");
+  usepaths.emplace_back("");
   if (usepath)
   {
-    usepaths.push_back(usepath);
+    usepaths.emplace_back(usepath);
   }
 
   std::vector<std::string> modulepaths;
@@ -64,10 +74,10 @@ int main()
 #ifdef CHAISCRIPT_NO_DYNLOAD
   chaiscript::ChaiScript chai(/* unused */modulepaths, usepaths);
 #else
-  modulepaths.push_back("");
+  modulepaths.emplace_back("");
   if (modulepath)
   {
-    modulepaths.push_back(modulepath);
+    modulepaths.emplace_back(modulepath);
   }
   
   // For this test we are going to load the dynamic stdlib
