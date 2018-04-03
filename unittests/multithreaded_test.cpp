@@ -56,7 +56,7 @@ int main()
   
   if(modulepath == nullptr)
   {
-    std::cout << "Warning: environmental variable CHAI_MODULE_PATH not set! " << this_might_affect_test_result;
+    std::cout << "Warning: environmental variable CHAI_MODULE_PATH not set! " << this_might_affect_test_result << "\n";
   }
 
 #ifdef CHAISCRIPT_MSVC
