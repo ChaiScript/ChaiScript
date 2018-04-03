@@ -111,15 +111,22 @@ int main()
   {
     std::stringstream ss;
     ss << i;
-    if (chai.eval<int>("getvalue(" + ss.str() + ")") != expected_value(4000))
+    try
     {
+      if (chai.eval<int>("getvalue(" + ss.str() + ")") != expected_value(4000))
+      {
+        return EXIT_FAILURE;
+      }
+
+      if (chai.eval<int>("getid(" + ss.str() + ")") != static_cast<int>(i))
+      {
+        return EXIT_FAILURE;
+      }
+    } catch (chaiscript::exception::eval_error &e) {
+      std::cout << e.what();
       return EXIT_FAILURE;
     }
 
-    if (chai.eval<int>("getid(" + ss.str() + ")") != static_cast<int>(i))
-    {
-      return EXIT_FAILURE;
-    }
   }
 
   return EXIT_SUCCESS;
