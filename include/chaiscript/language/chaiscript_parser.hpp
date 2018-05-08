@@ -1038,7 +1038,7 @@ namespace chaiscript
         bool saw_interpolation_marker = false;
         bool is_octal = false;
         bool is_hex = false;
-        bool is_unicode = false;
+        std::size_t unicode_size = 0;
         const bool interpolation_allowed;
 
         string_type octal_matches;
@@ -1062,12 +1062,12 @@ namespace chaiscript
               process_hex();
             }
 
-            if (is_unicode) {
+            if (unicode_size > 0) {
               process_unicode();
             }
           } catch (const std::invalid_argument &) {
-            // escape sequence was invalid somehow, we'll pick this
-            // up in the next part of parsing
+          } catch (const exception::eval_error &) {
+            // Something happened with parsing, we'll catch it later?
           }
         }
 
@@ -1097,13 +1097,43 @@ namespace chaiscript
 
         void process_unicode()
         {
-          if (!hex_matches.empty()) {
-            auto val = stoll(hex_matches, nullptr, 16);
-            hex_matches.clear();
-            match += detail::Char_Parser_Helper<string_type>::str_from_ll(val);
-          }
+          const auto ch = static_cast<uint32_t>(std::stoi(hex_matches, nullptr, 16));
+          const auto match_size = hex_matches.size();
+          hex_matches.clear();
           is_escaped = false;
-          is_unicode = false;
+          const auto u_size = unicode_size;
+          unicode_size = 0;
+
+          char buf[4];
+          if (u_size != match_size) {
+            throw exception::eval_error("Incomplete unicode escape sequence");
+          }
+          if (u_size == 4 && ch >= 0xD800 && ch <= 0xDFFF) {
+            throw exception::eval_error("Invalid 16 bit universal character");
+          }
+
+
+          if (ch < 0x80) {
+            match += static_cast<char>(ch);
+          } else if (ch < 0x800) {
+            buf[0] = static_cast<char>(0xC0 | (ch >> 6));
+            buf[1] = static_cast<char>(0x80 | (ch & 0x3F));
+            match.append(buf, 2);
+          } else if (ch < 0x10000) {
+            buf[0] = static_cast<char>(0xE0 |  (ch >> 12));
+            buf[1] = static_cast<char>(0x80 | ((ch >>  6) & 0x3F));
+            buf[2] = static_cast<char>(0x80 |  (ch        & 0x3F));
+            match.append(buf, 3);
+          } else if (ch < 0x200000) {
+            buf[0] = static_cast<char>(0xF0 |  (ch >> 18));
+            buf[1] = static_cast<char>(0x80 | ((ch >> 12) & 0x3F));
+            buf[2] = static_cast<char>(0x80 | ((ch >>  6) & 0x3F));
+            buf[3] = static_cast<char>(0x80 |  (ch        & 0x3F));
+            match.append(buf, 4);
+          } else {
+            // this must be an invalid escape sequence?
+            throw exception::eval_error("Invalid 32 bit universal character");
+          }
         }
 
         void parse(const char_type t_char, const int line, const int col, const std::string &filename) {
@@ -1139,16 +1169,16 @@ namespace chaiscript
             } else {
               process_hex();
             }
-          } else if (is_unicode) {
+          } else if (unicode_size > 0) {
             if (is_hex_char) {
               hex_matches.push_back(t_char);
 
-            if(hex_matches.size() == 4) {
-              // Format is specified to be 'slash'uABCD
-              // on collecting from A to D do parsing
-              process_unicode();
-            }
-            return;
+              if(hex_matches.size() == unicode_size) {
+                // Format is specified to be 'slash'uABCD
+                // on collecting from A to D do parsing
+                process_unicode();
+              }
+              return;
             } else {
               // Not a unicode anymore, try parsing any way
               // May be someone used 'slash'uAA only
@@ -1171,7 +1201,9 @@ namespace chaiscript
               } else if (t_char == 'x') {
                 is_hex = true;
               } else if (t_char == 'u') {
-                is_unicode = true;
+                unicode_size = 4;
+              } else if (t_char == 'U') {
+                unicode_size = 8;
               } else {
                 switch (t_char) {
                   case ('\'') : match.push_back('\''); break;
