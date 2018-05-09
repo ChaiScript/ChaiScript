@@ -370,6 +370,25 @@ if (expression) { }
 if (statement; expression) { }
 ```
 
+## Switch Statements
+
+``` chaiscript
+var myvalue = 2
+switch (myvalue) {
+    case (1) {
+        print("My Value is 1");
+        break;
+    }
+    case (2) {
+        print("My Value is 2");
+        break;
+    }
+    default {
+        print("My Value is something else.";
+    }
+}
+```
+
 ## Built in Types
 
 ```
