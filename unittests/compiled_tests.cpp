@@ -352,6 +352,18 @@ TEST_CASE("Functor cast")
   CHECK(d == 3 * 6);
 }
 
+TEST_CASE("BOM at beginning of string")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+
+  chai.add(chaiscript::fun(&functor_cast_test_call), "test_call");
+
+  chai.eval("def func() { return \"Hello World\"; };");
+
+  std::string result = chai.eval<std::string>("\xef\xbb\xbf(func())");
+
+  CHECK(result.compare(std::string("Hello World")) == 0);
+}
 
 
 int set_state_test_myfun()
