@@ -360,9 +360,7 @@ TEST_CASE("BOM at beginning of string")
 
   chai.eval("def func() { return \"Hello World\"; };");
 
-  std::string result = chai.eval<std::string>("\xef\xbb\xbf(func())");
-
-  CHECK(result.compare(std::string("Hello World")) == 0);
+  CHECK(chai.eval<std::string>("\xef\xbb\xbf(func())") == "Hello World");
 }
 
 
