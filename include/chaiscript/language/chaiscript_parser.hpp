@@ -2569,6 +2569,13 @@ namespace chaiscript
           }
         }
 
+        //skip UTF-8 BOM
+        if ((t_input.size() > 3) && (t_input[0] == '\xef') && (t_input[1] == '\xbb' && t_input[2] == '\xbf')) {
+            while(m_position.has_more() && (m_position.col < 4)) {
+                ++m_position;
+            }
+        }
+
         if (Statements(true)) {
           if (m_position.has_more()) {
             throw exception::eval_error("Unparsed input", File_Position(m_position.line, m_position.col), *m_filename);
