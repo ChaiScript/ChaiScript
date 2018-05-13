@@ -207,11 +207,11 @@ namespace chaiscript
 
     /// Skip BOM at the beginning of file
     static bool skip_bom(std::ifstream &infile) {
-        char buffer[4];
+        size_t bytes_needed = 3;
+        std::vector<char> v(bytes_needed);
 
-        memset(buffer, '\0', 4);
-        infile.readsome(buffer, 3);
-        std::string buffer_string(buffer);
+        infile.read(&v[0], static_cast<std::streamsize>(bytes_needed));
+        std::string buffer_string(v.begin(), v.end());
 
         if (chaiscript::parser::detail::Char_Parser_Helper<std::string>::has_utf8_bom(buffer_string)) {
             infile.seekg(3);
@@ -231,12 +231,14 @@ namespace chaiscript
         throw chaiscript::exception::file_not_found_error(t_filename);
       }
 
-      const auto size = infile.tellg();
+      auto size = infile.tellg();
       infile.seekg(0, std::ios::beg);
 
       assert(size >= 0);
 
-      skip_bom(infile);
+      if (skip_bom(infile)) {
+          size-=3; // decrement the BOM size from file size, otherwise we'll get parsing errors
+      }
 
       if (size == std::streampos(0))
       {
