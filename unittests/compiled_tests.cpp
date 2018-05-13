@@ -355,12 +355,7 @@ TEST_CASE("Functor cast")
 TEST_CASE("BOM at beginning of string")
 {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
-
-  chai.add(chaiscript::fun(&functor_cast_test_call), "test_call");
-
-  chai.eval("def func() { return \"Hello World\"; };");
-
-  CHECK(chai.eval<std::string>("\xef\xbb\xbf(func())") == "Hello World");
+  CHECK_THROWS_AS(chai.eval<std::string>("\xef\xbb\xbfprint \"Hello World\""), chaiscript::exception::eval_error);
 }
 
 
