@@ -52,6 +52,7 @@
 
 
 #include "../dispatchkit/exception_specification.hpp"
+#include "chaiscript_parser.hpp"
 
 namespace chaiscript
 {
@@ -204,6 +205,23 @@ namespace chaiscript
       m_engine.add(fun([this](const std::string& t_namespace_name) { import(t_namespace_name); }), "import");
     }
 
+    /// Skip BOM at the beginning of file
+    static bool skip_bom(std::ifstream &infile) {
+        char buffer[4];
+
+        memset(buffer, '\0', 4);
+        infile.readsome(buffer, 3);
+        std::string buffer_string(buffer);
+
+        if (chaiscript::parser::detail::Char_Parser_Helper<std::string>::has_utf8_bom(buffer_string)) {
+            infile.seekg(3);
+            return true;
+        }
+
+        infile.seekg(0);
+
+        return false;
+    }
 
     /// Helper function for loading a file
     static std::string load_file(const std::string &t_filename) {
@@ -217,6 +235,8 @@ namespace chaiscript
       infile.seekg(0, std::ios::beg);
 
       assert(size >= 0);
+
+      skip_bom(infile);
 
       if (size == std::streampos(0))
       {

@@ -114,11 +114,11 @@ namespace chaiscript
           // little SFINAE trick to avoid base class
           return Char_Parser_Helper<std::true_type>::u8str_from_ll(val);
         }
-        
+
         static bool has_utf8_bom(const std::string &t_input)
         {
           //skip UTF-8 BOM
-          return ((t_input.size() > 3) && (t_input[0] == '\xef') && (t_input[1] == '\xbb' && t_input[2] == '\xbf'));
+          return ((t_input.size() > 2) && (t_input[0] == '\xef') && (t_input[1] == '\xbb' && t_input[2] == '\xbf'));
         }
       };
     }
@@ -2568,7 +2568,7 @@ namespace chaiscript
       AST_NodePtr parse_internal(const std::string &t_input, std::string t_fname) {
         m_position = Position(t_input.begin(), t_input.end());
         m_filename = std::make_shared<std::string>(std::move(t_fname));
-        
+
         if (detail::Char_Parser_Helper<std::string>::has_utf8_bom(t_input)) {
            throw exception::eval_error("UTF-8 in user provided input!");
         }
