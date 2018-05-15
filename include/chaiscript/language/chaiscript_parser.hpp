@@ -526,6 +526,7 @@ namespace chaiscript
 
       /// Skips ChaiScript whitespace, which means space and tab, but not cr/lf
       /// jespada: Modified SkipWS to skip optionally CR ('\n') and/or LF+CR ("\r\n")
+      /// AlekMosingiewicz: Added exception when illegal character detected
       bool SkipWS(bool skip_cr=false) {
         bool retval = false;
 
