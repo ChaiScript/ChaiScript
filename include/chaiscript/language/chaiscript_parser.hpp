@@ -114,12 +114,6 @@ namespace chaiscript
           // little SFINAE trick to avoid base class
           return Char_Parser_Helper<std::true_type>::u8str_from_ll(val);
         }
-
-        static bool has_utf8_bom(const std::string &t_input)
-        {
-          //skip UTF-8 BOM
-          return ((t_input.size() > 2) && (t_input[0] == '\xef') && (t_input[1] == '\xbb' && t_input[2] == '\xbf'));
-        }
       };
     }
 

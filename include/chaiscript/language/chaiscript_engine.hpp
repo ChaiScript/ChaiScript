@@ -52,7 +52,6 @@
 
 
 #include "../dispatchkit/exception_specification.hpp"
-#include "chaiscript_parser.hpp"
 
 namespace chaiscript
 {
@@ -213,7 +212,11 @@ namespace chaiscript
         infile.read(&v[0], static_cast<std::streamsize>(bytes_needed));
         std::string buffer_string(v.begin(), v.end());
 
-        if (chaiscript::parser::detail::Char_Parser_Helper<std::string>::has_utf8_bom(buffer_string)) {
+        if ((buffer_string.size() > 2)
+            && (buffer_string[0] == '\xef')
+            && (buffer_string[1] == '\xbb')
+            && (buffer_string[2] == '\xbf')) {
+
             infile.seekg(3);
             return true;
         }
