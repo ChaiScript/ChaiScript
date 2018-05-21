@@ -352,10 +352,10 @@ TEST_CASE("Functor cast")
   CHECK(d == 3 * 6);
 }
 
-TEST_CASE("BOM at beginning of string")
+TEST_CASE("Non-ASCII characters in string")
 {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
-  CHECK_THROWS_AS(chai.eval<std::string>("\xef\xbb\xbfprint \"Hello World\""), chaiscript::exception::eval_error);
+  CHECK_THROWS_AS(chai.eval<std::string>("prin\xeft \"Hello World\""), chaiscript::exception::eval_error);
 }
 
 
