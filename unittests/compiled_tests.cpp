@@ -370,6 +370,12 @@ TEST_CASE("Non-ASCII characters in the end of string")
     CHECK_THROWS_AS(chai.eval<std::string>("print \"Hello World\"\xef"), chaiscript::exception::eval_error);
 }
 
+TEST_CASE("BOM in string")
+{
+    chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+    CHECK_THROWS_AS(chai.eval<std::string>("\xef\xbb\xbfprint \"Hello World\""), chaiscript::exception::eval_error);
+}
+
 int set_state_test_myfun()
 {
   return 2;
