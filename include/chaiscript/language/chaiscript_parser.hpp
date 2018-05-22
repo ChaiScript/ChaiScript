@@ -525,7 +525,7 @@ namespace chaiscript
         bool retval = false;
 
         while (m_position.has_more()) {
-          if(static_cast<size_t>(*m_position) > 0x7e) {
+          if(static_cast<unsigned char>(*m_position) > 0x7e) {
             throw exception::eval_error("Illegal character", File_Position(m_position.line, m_position.col), *m_filename);
           }
           auto end_line = (*m_position != 0) && ((*m_position == '\n') || (*m_position == '\r' && *(m_position+1) == '\n'));
@@ -2598,10 +2598,6 @@ namespace chaiscript
       AST_NodePtr parse_internal(const std::string &t_input, std::string t_fname) {
         m_position = Position(t_input.begin(), t_input.end());
         m_filename = std::make_shared<std::string>(std::move(t_fname));
-
-        //if (detail::Char_Parser_Helper<std::string>::has_utf8_bom(t_input)) {
-        //   throw exception::eval_error("UTF-8 in user provided input!");
-        //}
 
         if ((t_input.size() > 1) && (t_input[0] == '#') && (t_input[1] == '!')) {
           while (m_position.has_more() && (!Eol())) {
