@@ -241,6 +241,7 @@ namespace chaiscript
 
       if (skip_bom(infile)) {
           size-=3; // decrement the BOM size from file size, otherwise we'll get parsing errors
+          assert(size >=0 ); //and check if there's more text
       }
 
       if (size == std::streampos(0))
