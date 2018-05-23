@@ -212,7 +212,7 @@ namespace chaiscript
         infile.read(&v[0], static_cast<std::streamsize>(bytes_needed));
         std::string buffer_string(v.begin(), v.end());
 
-        if ((buffer_string.size() > 2)
+        if (!infile.eof()
             && (buffer_string[0] == '\xef')
             && (buffer_string[1] == '\xbb')
             && (buffer_string[2] == '\xbf')) {
