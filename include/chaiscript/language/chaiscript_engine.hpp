@@ -207,15 +207,18 @@ namespace chaiscript
     /// Skip BOM at the beginning of file
     static bool skip_bom(std::ifstream &infile) {
         size_t bytes_needed = 3;
-        std::vector<char> v(bytes_needed);
+        size_t bytes_read = 0;
+        char buffer[256];
 
-        infile.read(&v[0], static_cast<std::streamsize>(bytes_needed));
-        std::string buffer_string(v.begin(), v.end());
+        while (bytes_read < bytes_needed) {
+            infile >> buffer;
+            bytes_read++;
+        }
 
-        if (!infile.eof()
-            && (buffer_string[0] == '\xef')
-            && (buffer_string[1] == '\xbb')
-            && (buffer_string[2] == '\xbf')) {
+        if (bytes_needed == bytes_read
+            && (buffer[0] == '\xef')
+            && (buffer[1] == '\xbb')
+            && (buffer[2] == '\xbf')) {
 
             infile.seekg(3);
             return true;
@@ -239,7 +242,7 @@ namespace chaiscript
 
       assert(size >= 0);
 
-      if (skip_bom(infile)) {
+      if (size >= 3 && skip_bom(infile)) {
           size-=3; // decrement the BOM size from file size, otherwise we'll get parsing errors
           assert(size >=0 ); //and check if there's more text
       }
