@@ -206,14 +206,11 @@ namespace chaiscript
 
     /// Skip BOM at the beginning of file
     static bool skip_bom(std::ifstream &infile) {
-        size_t bytes_needed = 3;
-        size_t bytes_read = 0;
-        char buffer[256];
+        std::streamsize bytes_needed = 3;
+        std::streamsize bytes_read = 0;
+        char buffer[3];
 
-        while (bytes_read < bytes_needed) {
-            infile >> buffer;
-            bytes_read++;
-        }
+        bytes_read = infile.readsome(buffer, bytes_needed);
 
         if (bytes_needed == bytes_read
             && (buffer[0] == '\xef')
@@ -242,7 +239,7 @@ namespace chaiscript
 
       assert(size >= 0);
 
-      if (size >= 3 && skip_bom(infile)) {
+      if (skip_bom(infile)) {
           size-=3; // decrement the BOM size from file size, otherwise we'll get parsing errors
           assert(size >=0 ); //and check if there's more text
       }
