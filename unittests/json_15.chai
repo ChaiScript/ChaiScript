@@ -16,3 +16,4 @@ assert_equal(to_json(from_json("null")), "null")
 assert_equal(from_json(to_json(["a": 5, "b": "stuff"])), ["a": 5, "b": "stuff"])
 auto x = [3.5, true, false, "test", [], Vector(), Map()]
 assert_equal(from_json(to_json(x)), x)
+assert_equal(from_json(to_json(["aa\\zz":"aa\\zz"])), ["aa\\zz": "aa\\zz"])

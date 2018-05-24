@@ -4,13 +4,6 @@ if(NOT ${CMAKE_VERSION} VERSION_LESS "3.1")
   cmake_policy(SET CMP0054 NEW)
 endif()
 
-IF(BIICODE)
-  INIT_BIICODE_BLOCK()
-  ADD_BIICODE_TARGETS()
-ELSE()
-  # Your regular CMakeLists configuration here
-
-
 project(chaiscript)
 
 option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" TRUE)
@@ -503,5 +496,3 @@ install(FILES "${chaiscript_BINARY_DIR}/lib/pkgconfig/chaiscript.pc"
         DESTINATION lib/pkgconfig)
 
     
-ENDIF()
-

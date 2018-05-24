@@ -731,7 +731,7 @@ namespace chaiscript
           }
 
           if (t_throw) {
-            throw std::range_error("Type Not Known");
+            throw std::range_error("Type Not Known: " + name);
           } else {
             return Type_Info();
           }
@@ -767,8 +767,8 @@ namespace chaiscript
         {
           uint_fast32_t method_missing_loc = m_method_missing_loc;
           auto method_missing_funs = get_function("method_missing", method_missing_loc);
-          if (method_missing_funs.first != method_missing_loc) { 
-            m_method_missing_loc = uint_fast32_t(method_missing_funs.first); 
+          if (method_missing_funs.first != method_missing_loc) {
+            m_method_missing_loc = uint_fast32_t(method_missing_funs.first);
           }
 
           return std::move(method_missing_funs.second);
@@ -879,7 +879,7 @@ namespace chaiscript
           for (auto itr = stack.rbegin(); itr != stack.rend(); ++itr)
           {
             retval.insert(itr->begin(), itr->end());
-          } 
+          }
 
           // add the global values
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
@@ -963,7 +963,7 @@ namespace chaiscript
           const auto funs = get_function(t_name, loc);
           if (funs.first != loc) { t_loc = uint_fast32_t(funs.first); }
 
-          const auto do_attribute_call = 
+          const auto do_attribute_call =
             [this](int l_num_params, const std::vector<Boxed_Value> &l_params, const std::vector<Proxy_Function> &l_funs, const Type_Conversions_State &l_conversions)->Boxed_Value
             {
               std::vector<Boxed_Value> attr_params{l_params.begin(), l_params.begin() + l_num_params};
@@ -992,11 +992,11 @@ namespace chaiscript
                   } catch (const chaiscript::exception::arity_error &) {
                   } catch (const chaiscript::exception::guard_error &) {
                   }
-                  throw chaiscript::exception::dispatch_error({l_params.begin() + l_num_params, l_params.end()}, 
+                  throw chaiscript::exception::dispatch_error({l_params.begin() + l_num_params, l_params.end()},
                       std::vector<Const_Proxy_Function>{boxed_cast<Const_Proxy_Function>(bv)});
                 } catch (const chaiscript::exception::bad_boxed_cast &) {
                   // unable to convert bv into a Proxy_Function_Base
-                  throw chaiscript::exception::dispatch_error({l_params.begin() + l_num_params, l_params.end()}, 
+                  throw chaiscript::exception::dispatch_error({l_params.begin() + l_num_params, l_params.end()},
                       std::vector<Const_Proxy_Function>(l_funs.begin(), l_funs.end()));
                 }
               } else {
@@ -1056,7 +1056,7 @@ namespace chaiscript
                   return dispatch::dispatch(functions, {params[0], var(t_name), var(std::vector<Boxed_Value>(params.begin()+1, params.end()))}, t_conversions);
                 }
               } catch (const dispatch::option_explicit_set &e) {
-                throw chaiscript::exception::dispatch_error(params, std::vector<Const_Proxy_Function>(funs.second->begin(), funs.second->end()), 
+                throw chaiscript::exception::dispatch_error(params, std::vector<Const_Proxy_Function>(funs.second->begin(), funs.second->end()),
                     e.what());
               }
             }
@@ -1147,7 +1147,7 @@ namespace chaiscript
             std::cout << type.first << ": " << type.second.bare_name() << '\n';
           }
 
-          std::cout << '\n';  
+          std::cout << '\n';
 
           std::cout << "Functions: \n";
           for (auto const &func: get_functions())
@@ -1298,7 +1298,7 @@ namespace chaiscript
           return m_state.m_boxed_functions;
         }
 
-        std::vector<std::pair<std::string, Boxed_Value>> &get_boxed_functions_int() 
+        std::vector<std::pair<std::string, Boxed_Value>> &get_boxed_functions_int()
         {
           return m_state.m_boxed_functions;
         }
@@ -1308,7 +1308,7 @@ namespace chaiscript
           return m_state.m_function_objects;
         }
 
-        std::vector<std::pair<std::string, Proxy_Function>> &get_function_objects_int() 
+        std::vector<std::pair<std::string, Proxy_Function>> &get_function_objects_int()
         {
           return m_state.m_function_objects;
         }
@@ -1318,7 +1318,7 @@ namespace chaiscript
           return m_state.m_functions;
         }
 
-        std::vector<std::pair<std::string, std::shared_ptr<std::vector<Proxy_Function>>>> &get_functions_int() 
+        std::vector<std::pair<std::string, std::shared_ptr<std::vector<Proxy_Function>>>> &get_functions_int()
         {
           return m_state.m_functions;
         }
@@ -1426,7 +1426,7 @@ namespace chaiscript
         template<typename Container, typename Key>
         static typename Container::iterator find_keyed_value(Container &t_c, const Key &t_key)
           {
-            return std::find_if(t_c.begin(), t_c.end(), 
+            return std::find_if(t_c.begin(), t_c.end(),
                 [&t_key](const typename Container::value_type &o) {
                   return o.first == t_key;
                 });

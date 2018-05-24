@@ -1,5 +1,16 @@
-assert_equal("\uc39c", "Ü")
-assert_equal("U for \uc39cmlauts", "U for Ümlauts")
-assert_equal("More \uc39cml\uc3a4\uc3bcts", "More Ümläüts")
+assert_equal("\uc39c", "쎜")
+assert_equal("U for \u00dcmlauts", "U for Ümlauts")
 
-assert_equal("Thorn \uc3be sign", "Thorn þ sign")
+assert_equal("Thorn \u00fe sign", "Thorn þ sign")
+assert_equal("Test\u0020Me", "Test Me")
+assert_equal("Test\u2022Me", "Test•Me")
+
+assert_equal("\xF0\x9F\x8D\x8C", "🍌")
+assert_equal("\U0001F34C", "🍌")
+
+assert_throws("Invalid 16 bit universal character", fun(){ parse("\"\\uD83C\""); });
+assert_throws("Incomplete unicode escape sequence", fun(){ parse("\"\\uD83 \""); });
+
+assert_equal("\U00024B62", "𤭢")
+
+assert_equal("Test\U0001F534Me", "Test🔴Me")
