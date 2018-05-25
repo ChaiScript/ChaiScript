@@ -211,7 +211,7 @@ namespace chaiscript
 
         memset(buffer, '\0', bytes_needed);
 
-        infile.read(buffer, bytes_needed);
+        infile.read(buffer, static_cast<std::streamsize>(bytes_needed));
 
         if ((buffer[0] == '\xef')
             && (buffer[1] == '\xbb')
