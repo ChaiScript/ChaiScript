@@ -43,6 +43,8 @@ if(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   if(ENABLE_ADDRESS_SANITIZER)
     add_definitions(-fsanitize=address -g)
     set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=address")
+
+    option(BUILD_LIBFUZZ_TESTER "Build libfuzzer tool" FALSE)
   endif()
 
   option(ENABLE_MEMORY_SANITIZER "Enable memory sanitizer testing in gcc/clang" FALSE)
@@ -301,6 +303,7 @@ if(BUILD_MODULES)
   set(MODULES stl_extra)
 endif()
 
+
 file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.chai ${CMAKE_CURRENT_SOURCE_DIR}/unittests/3.x/*.chai)
 list(SORT UNIT_TESTS)
 
@@ -471,6 +474,15 @@ if(BUILD_TESTING)
     install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript)
   endif()
 endif()
+
+
+
+if(BUILD_LIBFUZZ_TESTER)
+  add_executable(fuzzer src/libfuzzer_client.cpp src/sha3.cpp)
+  target_compile_options(fuzzer PRIVATE "-fsanitize=fuzzer,address")
+  target_link_libraries(fuzzer PRIVATE ${LIBS} "-fsanitize=fuzzer,address")
+endif()
+
 
 install(TARGETS chai chaiscript_stdlib-${CHAI_VERSION} ${MODULES} RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript)
 
