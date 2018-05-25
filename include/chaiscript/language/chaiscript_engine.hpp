@@ -206,14 +206,14 @@ namespace chaiscript
 
     /// Skip BOM at the beginning of file
     static bool skip_bom(std::ifstream &infile) {
-        size_t bytes_needed = 3;
+        std::streamsize bytes_needed = 3;
+        std::streamsize bytes_read = 0;
         char buffer[3];
 
-        memset(buffer, '\0', bytes_needed);
+        bytes_read = infile.readsome(buffer, bytes_needed);
 
-        infile.readsome(buffer, bytes_needed);
-
-        if ((buffer[0] == '\xef')
+        if (bytes_needed == bytes_read
+            && (buffer[0] == '\xef')
             && (buffer[1] == '\xbb')
             && (buffer[2] == '\xbf')) {
 
