@@ -208,9 +208,9 @@ namespace chaiscript
     static bool skip_bom(std::ifstream &infile) {
         std::streamsize bytes_needed = 3;
         std::streamsize bytes_read = 0;
-        char buffer[3];
+        char buffer[4];
 
-        bytes_read = infile.readsome(&buffer[0], bytes_needed);
+        bytes_read = infile.readsome(buffer, bytes_needed);
 
         if (bytes_needed == bytes_read
             && (buffer[0] == '\xef')
