@@ -448,19 +448,22 @@ namespace chaiscript
           Boxed_Value rhs = this->children[1]->eval(t_ss); 
           Boxed_Value lhs = this->children[0]->eval(t_ss);
 
+          if (lhs.is_return_value()) {
+            throw exception::eval_error("Error, cannot assign to temporary value.");
+          } else if (lhs.is_const()) {
+            throw exception::eval_error("Error, cannot assign to constant value.");
+          }
+
+
           if (m_oper != Operators::Opers::invalid && lhs.get_type_info().is_arithmetic() &&
               rhs.get_type_info().is_arithmetic())
           {
             try {
               return Boxed_Number::do_oper(m_oper, lhs, rhs);
             } catch (const std::exception &) {
-              throw exception::eval_error("Error with unsupported arithmetic assignment operation");
+              throw exception::eval_error("Error with unsupported arithmetic assignment operation.");
             }
           } else if (m_oper == Operators::Opers::assign) {
-            if (lhs.is_return_value()) {
-              throw exception::eval_error("Error, cannot assign to temporary value.");
-            }
-
             try {
 
               if (lhs.is_undef()) {
@@ -470,7 +473,7 @@ namespace chaiscript
                               && this->children[0]->children[0]->identifier == AST_Node_Type::Reference)
                        )
                    )
-                  
+
                 {
                   /// \todo This does not handle the case of an unassigned reference variable
                   ///       being assigned outside of its declaration
@@ -1141,10 +1144,10 @@ namespace chaiscript
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override{
           if (!this->children.empty()) {
-            throw detail::Return_Value(this->children[0]->eval(t_ss));
+            throw detail::Return_Value{this->children[0]->eval(t_ss)};
           }
           else {
-            throw detail::Return_Value(void_var());
+            throw detail::Return_Value{void_var()};
           }
         }
     };
@@ -1201,6 +1204,10 @@ namespace chaiscript
             // short circuit arithmetic operations
             if (m_oper != Operators::Opers::invalid && m_oper != Operators::Opers::bitwise_and && bv.get_type_info().is_arithmetic())
             {
+              if ((m_oper == Operators::Opers::pre_increment || m_oper == Operators::Opers::pre_decrement) && bv.is_const())
+              {
+                throw exception::eval_error("Error with prefix operator evaluation: cannot modify constant value.");
+              }
               return Boxed_Number::do_oper(m_oper, bv);
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
@@ -1409,7 +1416,7 @@ namespace chaiscript
 
         Method_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Method, std::move(t_loc),
-              std::vector<AST_Node_Impl_Ptr<T>>(std::make_move_iterator(t_children.begin()), 
+              std::vector<AST_Node_Impl_Ptr<T>>(std::make_move_iterator(t_children.begin()),
                                                 std::make_move_iterator(std::prev(t_children.end(), Def_AST_Node<T>::has_guard(t_children, 1)?2:1)))
               ),
             m_body_node(Def_AST_Node<T>::get_body_node(std::move(t_children))),

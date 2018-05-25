@@ -164,15 +164,15 @@ void help(int n) {
   }
 }
 
-bool throws_exception(const std::function<void ()> &f)
+std::string throws_exception(const std::function<void ()> &f)
 {
   try {
     f();
-  } catch (...) {
-    return true;
+  } catch (const std::exception &e) {
+    return e.what();
   }
 
-  return false;
+  return "";
 }
 
 chaiscript::exception::eval_error get_eval_error(const std::function<void ()> &f)

@@ -66,10 +66,10 @@ auto group = group_guard.get_contained_functions();
 assert_equal(true, group[0].has_guard())
 assert_equal(false, group[1].has_guard())
 
-assert_throws("Function does not have a guard", fun() { group[0].get_guard(); } );
-assert_throws("Function does not have a guard", fun() { without_guard.get_guard(); } );
+assert_throws("Function does not have a guard", fun[group]() { group[1].get_guard(); } );
+assert_throws("Function does not have a guard", fun[without_guard]() { without_guard.get_guard(); } );
 
 auto guard = with_guard.get_guard();
 
 assert_equal(false, guard.has_guard());
-assert_throws("Function does not have a guard", fun() { guard.get_guard(); } );
+assert_throws("Function does not have a guard", fun[guard]() { guard.get_guard(); } );

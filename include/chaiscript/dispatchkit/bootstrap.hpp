@@ -466,7 +466,7 @@ namespace chaiscript
         m.add(fun([](const char c) { return std::string(1, c); }), "to_string");
         m.add(fun(&Boxed_Number::to_string), "to_string");
 
-        
+
         bootstrap_pod_type<double>("double", m);
         bootstrap_pod_type<long double>("long_double", m);
         bootstrap_pod_type<float>("float", m);
@@ -495,7 +495,7 @@ namespace chaiscript
 
         opers_arithmetic_pod(m);
 
-        
+
         m.add(fun(&Build_Info::version_major), "version_major");
         m.add(fun(&Build_Info::version_minor), "version_minor");
         m.add(fun(&Build_Info::version_patch), "version_patch");

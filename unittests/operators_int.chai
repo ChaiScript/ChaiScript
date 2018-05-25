@@ -29,3 +29,13 @@ assert_equal(2, j += 1);
 assert_equal(1, --j);
 assert_equal(2, ++j);
 
+
+assert_throws("Error: \"Error with prefix operator evaluation: cannot modify constant value.\"", fun() { ++4; });
+assert_throws("Error: \"Error with prefix operator evaluation: cannot modify constant value.\"", fun() { --4; });
+
+assert_throws("Error: \"Error, cannot assign to constant value.\"", fun() { 5 = 5; });
+assert_throws("Error: \"Error, cannot assign to constant value.\"", fun() { int(5) = 5; });
+
+
+
+

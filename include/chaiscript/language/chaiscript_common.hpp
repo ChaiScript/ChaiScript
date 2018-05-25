@@ -647,8 +647,6 @@ namespace chaiscript
       /// Special type for returned values
       struct Return_Value {
         Boxed_Value retval;
-
-        explicit Return_Value(Boxed_Value t_return_value) : retval(std::move(t_return_value)) { }
       };
 
 
