@@ -124,6 +124,28 @@ namespace chaiscript
         return &m_tracer;
       }
 
+      std::size_t m_current_parse_depth = 0;
+
+      struct Depth_Counter
+      {
+        static const auto max_depth = 128;
+        Depth_Counter(ChaiScript_Parser *t_parser) : parser(t_parser)
+        {
+          ++parser->m_current_parse_depth;
+          if (parser->m_current_parse_depth > max_depth) {
+            throw exception::eval_error("Maximum parse depth exceeded", 
+                File_Position(parser->m_position.line, parser->m_position.col), *(parser->m_filename));
+          }
+        }
+
+        ~Depth_Counter() noexcept
+        {
+          --parser->m_current_parse_depth;
+        }
+
+        ChaiScript_Parser *parser;
+      };
+
       static std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> build_alphabet()
       {
         std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> alphabet;
@@ -1234,6 +1256,7 @@ namespace chaiscript
 
       /// Reads (and potentially captures) a quoted string from input.  Translates escaped sequences.
       bool Quoted_String() {
+        Depth_Counter dc{this};
         SkipWS();
 
         const auto start = m_position;
@@ -1349,6 +1372,7 @@ namespace chaiscript
 
       /// Reads (and potentially captures) a char group from input.  Translates escaped sequences.
       bool Single_Quoted_String() {
+        Depth_Counter dc{this};
         SkipWS();
 
         const auto start = m_position;
@@ -1388,6 +1412,7 @@ namespace chaiscript
 
       /// Reads (and potentially captures) a char from input if it matches the parameter
       bool Char(const char t_c) {
+        Depth_Counter dc{this};
         SkipWS();
         return Char_(t_c);
       }
@@ -1412,6 +1437,7 @@ namespace chaiscript
 
       /// Reads (and potentially captures) a string from input if it matches the parameter
       bool Keyword(const utility::Static_String &t_s) {
+        Depth_Counter dc{this};
         SkipWS();
         const auto start = m_position;
         bool retval = Keyword_(t_s);
@@ -1436,6 +1462,7 @@ namespace chaiscript
 
       /// Reads (and potentially captures) a symbol group from input if it matches the parameter
       bool Symbol(const utility::Static_String &t_s, const bool t_disallow_prevention=false) {
+        Depth_Counter dc{this};
         SkipWS();
         const auto start = m_position;
         bool retval = Symbol_(t_s);
@@ -1470,6 +1497,7 @@ namespace chaiscript
 
       /// Reads until the end of the current statement
       bool Eos() {
+        Depth_Counter dc{this};
         SkipWS();
 
         return Eol_(true);
@@ -1477,6 +1505,7 @@ namespace chaiscript
 
       /// Reads (and potentially captures) an end-of-line group from input
       bool Eol() {
+        Depth_Counter dc{this};
         SkipWS();
 
         return Eol_();
@@ -1484,6 +1513,7 @@ namespace chaiscript
 
       /// Reads a comma-separated list of values from input. Id's only, no types allowed
       bool Id_Arg_List() {
+        Depth_Counter dc{this};
         SkipWS(true);
         bool retval = false;
 
@@ -1509,6 +1539,7 @@ namespace chaiscript
 
       /// Reads a comma-separated list of values from input, for function declarations
       bool Decl_Arg_List() {
+        Depth_Counter dc{this};
         SkipWS(true);
         bool retval = false;
 
@@ -1535,6 +1566,7 @@ namespace chaiscript
 
       /// Reads a comma-separated list of values from input
       bool Arg_List() {
+        Depth_Counter dc{this};
         SkipWS(true);
         bool retval = false;
 
@@ -1560,6 +1592,7 @@ namespace chaiscript
 
       /// Reads possible special container values, including ranges and map_pairs
       bool Container_Arg_List() {
+        Depth_Counter dc{this};
         bool retval = false;
         SkipWS(true);
 
@@ -1597,6 +1630,7 @@ namespace chaiscript
 
       /// Reads a lambda (anonymous function) from input
       bool Lambda() {
+        Depth_Counter dc{this};
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
@@ -1638,6 +1672,7 @@ namespace chaiscript
 
       /// Reads a function definition from input
       bool Def(const bool t_class_context = false, const std::string &t_class_name = "") {
+        Depth_Counter dc{this};
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
@@ -1697,6 +1732,7 @@ namespace chaiscript
 
       /// Reads a function definition from input
       bool Try() {
+        Depth_Counter dc{this};
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
@@ -1756,6 +1792,7 @@ namespace chaiscript
 
       /// Reads an if/else if/else block from input
       bool If() {
+        Depth_Counter dc{this};
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
@@ -1821,6 +1858,7 @@ namespace chaiscript
 
       /// Reads a class block from input
       bool Class(const bool t_class_allowed) {
+        Depth_Counter dc{this};
         bool retval = false;
 
         size_t prev_stack_top = m_match_stack.size();
@@ -1853,6 +1891,7 @@ namespace chaiscript
 
       /// Reads a while block from input
       bool While() {
+        Depth_Counter dc{this};
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
@@ -1882,6 +1921,7 @@ namespace chaiscript
 
       /// Reads the ranged `for` conditions from input
       bool Range_Expression() {
+        Depth_Counter dc{this};
         // the first element will have already been captured by the For_Guards() call that preceeds it
         return Char(':') && Equation();
       }
@@ -1889,6 +1929,7 @@ namespace chaiscript
 
       /// Reads the C-style `for` conditions from input
       bool For_Guards() {
+        Depth_Counter dc{this};
         if (!(Equation() && Eol()))
         {
           if (!Eol())
@@ -1920,6 +1961,7 @@ namespace chaiscript
 
       /// Reads a for block from input
       bool For() {
+        Depth_Counter dc{this};
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
@@ -1963,6 +2005,7 @@ namespace chaiscript
 
       /// Reads a case block from input
       bool Case() {
+        Depth_Counter dc{this};
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
@@ -2003,6 +2046,7 @@ namespace chaiscript
 
       /// Reads a switch statement from input
       bool Switch() {
+        Depth_Counter dc{this};
         const auto prev_stack_top = m_match_stack.size();
 
         if (Keyword("switch")) {
@@ -2046,6 +2090,7 @@ namespace chaiscript
 
       /// Reads a curly-brace C-style class block from input
       bool Class_Block(const std::string &t_class_name) {
+        Depth_Counter dc{this};
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
@@ -2070,6 +2115,7 @@ namespace chaiscript
 
       /// Reads a curly-brace C-style block from input
       bool Block() {
+        Depth_Counter dc{this};
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
@@ -2094,6 +2140,7 @@ namespace chaiscript
 
       /// Reads a return statement from input
       bool Return() {
+        Depth_Counter dc{this};
         const auto prev_stack_top = m_match_stack.size();
 
         if (Keyword("return")) {
@@ -2107,6 +2154,7 @@ namespace chaiscript
 
       /// Reads a break statement from input
       bool Break() {
+        Depth_Counter dc{this};
         const auto prev_stack_top = m_match_stack.size();
 
         if (Keyword("break")) {
@@ -2119,6 +2167,7 @@ namespace chaiscript
 
       /// Reads a continue statement from input
       bool Continue() {
+        Depth_Counter dc{this};
         const auto prev_stack_top = m_match_stack.size();
 
         if (Keyword("continue")) {
@@ -2131,6 +2180,7 @@ namespace chaiscript
 
       /// Reads a dot expression(member access), then proceeds to check if it's a function or array call
       bool Dot_Fun_Array() {
+        Depth_Counter dc{this};
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
@@ -2201,6 +2251,7 @@ namespace chaiscript
 
       /// Reads a variable declaration from input
       bool Var_Decl(const bool t_class_context = false, const std::string &t_class_name = "") {
+        Depth_Counter dc{this};
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
@@ -2256,6 +2307,7 @@ namespace chaiscript
 
       /// Reads an expression surrounded by parentheses from input
       bool Paren_Expression() {
+        Depth_Counter dc{this};
         if (Char('(')) {
           if (!Operator()) {
             throw exception::eval_error("Incomplete expression", File_Position(m_position.line, m_position.col), *m_filename);
@@ -2271,6 +2323,7 @@ namespace chaiscript
 
       /// Reads, and identifies, a short-form container initialization from input
       bool Inline_Container() {
+        Depth_Counter dc{this};
         const auto prev_stack_top = m_match_stack.size();
 
         if (Char('[')) {
@@ -2302,6 +2355,7 @@ namespace chaiscript
 
       /// Parses a variable specified with a & aka reference
       bool Reference() {
+        Depth_Counter dc{this};
         const auto prev_stack_top = m_match_stack.size();
 
         if (Symbol("&")) {
@@ -2318,6 +2372,7 @@ namespace chaiscript
 
       /// Reads a unary prefixed expression from input
       bool Prefix() {
+        Depth_Counter dc{this};
         const auto prev_stack_top = m_match_stack.size();
         using SS = utility::Static_String;
         constexpr const std::array<utility::Static_String, 6> prefix_opers{{
@@ -2348,10 +2403,12 @@ namespace chaiscript
 
       /// Parses any of a group of 'value' style ast_node groups from input
       bool Value() {
+        Depth_Counter dc{this};
         return Var_Decl() || Dot_Fun_Array() || Prefix();
       }
 
       bool Operator_Helper(const size_t t_precedence, std::string &oper) {
+        Depth_Counter dc{this};
         for (auto & elem : m_operator_matches[t_precedence]) {
           if (Symbol(elem)) {
             oper = elem.c_str();
@@ -2362,6 +2419,7 @@ namespace chaiscript
       }
 
       bool Operator(const size_t t_precedence = 0) {
+        Depth_Counter dc{this};
         bool retval = false;
         const auto prev_stack_top = m_match_stack.size();
 
@@ -2426,6 +2484,7 @@ namespace chaiscript
 
       /// Reads a pair of values used to create a map initialization from input
       bool Map_Pair() {
+        Depth_Counter dc{this};
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
@@ -2453,6 +2512,7 @@ namespace chaiscript
 
       /// Reads a pair of values used to create a range initialization from input
       bool Value_Range() {
+        Depth_Counter dc{this};
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
@@ -2480,6 +2540,7 @@ namespace chaiscript
 
       /// Parses a string of binary equation operators
       bool Equation() {
+        Depth_Counter dc{this};
         const auto prev_stack_top = m_match_stack.size();
 
         using SS = utility::Static_String;
@@ -2505,6 +2566,7 @@ namespace chaiscript
 
       /// Parses statements allowed inside of a class block
       bool Class_Statements(const std::string &t_class_name) {
+        Depth_Counter dc{this};
         bool retval = false;
 
         bool has_more = true;
@@ -2533,6 +2595,7 @@ namespace chaiscript
 
       /// Top level parser, starts parsing of all known parses
       bool Statements(const bool t_class_allowed = false) {
+        Depth_Counter dc{this};
         bool retval = false;
 
         bool has_more = true;
