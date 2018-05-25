@@ -11,7 +11,7 @@ build_script:
 
     cd build
 
-  cmake c:\Projects\chaiscript -G "%VS_VERSION%" -D BUILD_TESTING:BOOL=ON -D BUILD_MODULES:BOOL=ON
+    cmake c:\Projects\chaiscript -G "%VS_VERSION%" -D BUILD_TESTING:BOOL=ON -D BUILD_MODULES:BOOL=ON
 
     cmake --build . --config Debug
 test_script:
