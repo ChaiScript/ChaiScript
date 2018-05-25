@@ -212,7 +212,7 @@ namespace chaiscript
 
         bytes_read = infile.readsome(buffer, bytes_needed);
 
-        if (bytes_needed == bytes_read
+        if (!bytes_needed < bytes_read
             && (buffer[0] == '\xef')
             && (buffer[1] == '\xbb')
             && (buffer[2] == '\xbf')) {
