@@ -119,6 +119,7 @@ configure_file(Doxyfile.in ${CMAKE_BINARY_DIR}/Doxyfile)
 
 include(CTest)
 include(CPack)
+include(CMake/Catch.cmake)
 
 if(NOT MINGW)
   find_library(READLINE_LIBRARY NAMES readline PATH /usr/lib /usr/local/lib /opt/local/lib)
@@ -428,7 +429,7 @@ if(BUILD_TESTING)
   if(NOT UNIT_TEST_LIGHT)
     add_executable(compiled_tests unittests/compiled_tests.cpp)
     target_link_libraries(compiled_tests ${LIBS} ${CHAISCRIPT_LIBS})
-    ADD_CATCH_TESTS(compiled_tests)
+    catch_discover_tests(compiled_tests TEST_PREFIX "compiled.")
 
     add_executable(static_chaiscript_test unittests/static_chaiscript.cpp)
     target_link_libraries(static_chaiscript_test ${LIBS})
