@@ -542,10 +542,14 @@ namespace chaiscript
 
       /// Skips ChaiScript whitespace, which means space and tab, but not cr/lf
       /// jespada: Modified SkipWS to skip optionally CR ('\n') and/or LF+CR ("\r\n")
+      /// AlekMosingiewicz: Added exception when illegal character detected
       bool SkipWS(bool skip_cr=false) {
         bool retval = false;
 
         while (m_position.has_more()) {
+          if(static_cast<unsigned char>(*m_position) > 0x7e) {
+            throw exception::eval_error("Illegal character", File_Position(m_position.line, m_position.col), *m_filename);
+          }
           auto end_line = (*m_position != 0) && ((*m_position == '\n') || (*m_position == '\r' && *(m_position+1) == '\n'));
 
           if ( char_in_alphabet(*m_position,detail::white_alphabet) || (skip_cr && end_line)) {

@@ -204,6 +204,27 @@ namespace chaiscript
       m_engine.add(fun([this](const std::string& t_namespace_name) { import(t_namespace_name); }), "import");
     }
 
+    /// Skip BOM at the beginning of file
+    static bool skip_bom(std::ifstream &infile) {
+        size_t bytes_needed = 3;
+        char buffer[3];
+
+        memset(buffer, '\0', bytes_needed);
+
+        infile.read(buffer, static_cast<std::streamsize>(bytes_needed));
+
+        if ((buffer[0] == '\xef')
+            && (buffer[1] == '\xbb')
+            && (buffer[2] == '\xbf')) {
+
+            infile.seekg(3);
+            return true;
+        }
+
+        infile.seekg(0);
+
+        return false;
+    }
 
     /// Helper function for loading a file
     static std::string load_file(const std::string &t_filename) {
@@ -213,10 +234,15 @@ namespace chaiscript
         throw chaiscript::exception::file_not_found_error(t_filename);
       }
 
-      const auto size = infile.tellg();
+      auto size = infile.tellg();
       infile.seekg(0, std::ios::beg);
 
       assert(size >= 0);
+
+      if (skip_bom(infile)) {
+          size-=3; // decrement the BOM size from file size, otherwise we'll get parsing errors
+          assert(size >=0 ); //and check if there's more text
+      }
 
       if (size == std::streampos(0))
       {
