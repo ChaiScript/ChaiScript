@@ -119,7 +119,7 @@ configure_file(Doxyfile.in ${CMAKE_BINARY_DIR}/Doxyfile)
 
 include(CTest)
 include(CPack)
-include(CMake/Catch.cmake)
+include(cmake/Catch.cmake)
 
 if(NOT MINGW)
   find_library(READLINE_LIBRARY NAMES readline PATH /usr/lib /usr/local/lib /opt/local/lib)
