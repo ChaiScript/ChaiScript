@@ -332,15 +332,15 @@ def assert_throws(desc, x)
     chai.eval(std::string(reinterpret_cast<const char *>(data), size));
     std::ofstream ofs("VALID/" + sha);
     ofs << input;
-  } catch (const chaiscript::exception::eval_error &ee) {
+  } catch (const chaiscript::exception::eval_error &) {
     std::ofstream ofs("EVAL_ERROR/" + sha);
     ofs << input;
-  } catch (const chaiscript::Boxed_Value &e) {
+  } catch (const chaiscript::Boxed_Value &) {
     std::ofstream ofs("BOXED_VALUE/" + sha);
     ofs << input;
   } catch (const chaiscript::exception::load_module_error &e) {
     std::cout << "Unhandled module load error\n" << e.what() << '\n';
-  } catch (const std::exception &e) {
+  } catch (const std::exception &) {
     std::ofstream ofs("STD_EXCEPTION/" + sha);
     ofs << input;
   } catch (...) {

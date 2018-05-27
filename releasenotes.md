@@ -12,6 +12,7 @@ Current Version: 6.1.0
  * Various JSON fixes #377 #400 #409 #371 @totalgee @dinghram @arcoRocks
  * Various cleanups, bugfixes and warning fixes and minor performance improvements
  * Support for C++17 compilers!
+ * Support for UTF8 BOM #439 @AlekMosingiewicz @MarioLiebisch
 
 ### Changes since 5.8.6
 
