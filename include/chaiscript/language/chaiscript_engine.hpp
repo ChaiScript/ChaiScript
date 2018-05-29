@@ -241,7 +241,7 @@ namespace chaiscript
 
       if (skip_bom(infile)) {
           size-=3; // decrement the BOM size from file size, otherwise we'll get parsing errors
-          assert(size >=0 ); //and check if there's more text
+          assert(size >= 0); //and check if there's more text
       }
 
       if (size == std::streampos(0))
@@ -394,8 +394,8 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
     {
       for (const auto &path : m_use_paths)
       {
+        const auto appendedpath = path + t_filename;
         try {
-          const auto appendedpath = path + t_filename;
 
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
           chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l2(m_mutex);
@@ -411,7 +411,11 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
           }
 
           return retval; // return, we loaded it, or it was already loaded
-        } catch (const exception::file_not_found_error &) {
+        } catch (const exception::file_not_found_error &e) {
+          if (e.filename != appendedpath) {
+            // a nested file include failed
+            throw;
+          }
           // failed to load, try the next path
         }
       }

@@ -480,11 +480,14 @@ namespace chaiscript
     /// Errors generated when loading a file
     struct file_not_found_error : std::runtime_error {
       explicit file_not_found_error(const std::string &t_filename) noexcept
-        : std::runtime_error("File Not Found: " + t_filename)
+        : std::runtime_error("File Not Found: " + t_filename),
+          filename(t_filename)
       { }
 
       file_not_found_error(const file_not_found_error &) = default;
       ~file_not_found_error() noexcept override = default;
+
+      std::string filename;
     };
 
   }
