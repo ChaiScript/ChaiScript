@@ -1,15 +1,17 @@
-version: 5.8.x.{build}
-os: Visual Studio 2015
+version: 6.1.x.{build}
+image: 
+ - Visual Studio 2017
 environment:
   matrix:
-  - {}
+    - VS_VERSION: "Visual Studio 14"
+    - VS_VERSION: "Visual Studio 15"
 build_script:
 - cmd: >-
     mkdir build
 
     cd build
 
-    cmake c:\Projects\chaiscript -G "Visual Studio 14"
+    cmake c:\Projects\chaiscript -G "%VS_VERSION%" -DBUILD_TESTING:BOOL=ON -DBUILD_MODULES:BOOL=ON
 
     cmake --build . --config Debug
 test_script:

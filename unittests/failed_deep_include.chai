@@ -1,0 +1,11 @@
+
+
+try {
+  use("failed_deep_include.inc")
+  assert_true(false);
+} catch (e) {
+  puts("Caught exception while trying to use file");
+  assert_equal(e.what(), "File Not Found: totally_missing_file.inc");
+}
+
+

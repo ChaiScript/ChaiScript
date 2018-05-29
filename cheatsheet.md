@@ -5,7 +5,7 @@ ChaiScript tries to follow the [Semantic Versioning](http://semver.org/) scheme.
   * Major Version Number: API changes / breaking changes
   * Minor Version Number: New Features
   * Patch Version Number: Minor changes / enhancements
-  
+
 
 
 # Initializing ChaiScript
@@ -14,6 +14,9 @@ ChaiScript tries to follow the [Semantic Versioning](http://semver.org/) scheme.
 chaiscript::ChaiScript chai; // loads stdlib from loadable module on file system
 chaiscript::ChaiScript chai(chaiscript::Std_Lib::library()); // compiles in stdlib
 ```
+
+Note that ChaiScript cannot be used as a global / static object unless it is being compiled with `CHAISCRIPT_NO_THREADS`.
+
 
 # Adding Things To The Engine
 
@@ -34,7 +37,7 @@ chai.add(chaiscript::fun(&Class::method_name, Class_instance_ptr), "method_name"
 chai.add(chaiscript::fun(&Class::member_name, Class_instance_ptr), "member_name");
 ```
 
-### With Overloads 
+### With Overloads
 
 #### Preferred
 
@@ -66,9 +69,9 @@ chai.add(chaiscript::fun(static_cast<int(Derived::*)>(&Derived::data)), "data");
 ```
 chai.add(
   chaiscript::fun<std::string (bool)>(
-    [](bool type) { 
-      if (type) { return "x"; } 
-      else { return "y"; } 
+    [](bool type) {
+      if (type) { return "x"; }
+      else { return "y"; }
     }), "function_name");
 ```
 
@@ -161,6 +164,23 @@ chai.add(chaiscript::const_var(somevar), "somevar"); // copied in and made const
 chai.add_global_const(chaiscript::const_var(somevar), "somevar"); // global const. Throws if value is non-const, throws if object exists
 chai.add_global(chaiscript::var(somevar), "somevar"); // global non-const, throws if object exists
 chai.set_global(chaiscript::var(somevar), "somevar"); // global non-const, overwrites existing object
+```
+
+## Adding Namespaces
+
+Namespaces will not be populated until `import` is called.
+This saves memory and computing costs if a namespace is not imported into every ChaiScript instance.
+```
+chai.register_namespace([](chaiscript::Namespace& math) {
+    math["pi"] = chaiscript::const_var(3.14159);
+    math["sin"] = chaiscript::var(chaiscript::fun([](const double x) { return sin(x); })); },
+    "math");
+```
+
+Import namespace in ChaiScript
+```
+import("math")
+print(math.pi) // prints 3.14159
 ```
 
 # Using STL
@@ -350,6 +370,25 @@ if (expression) { }
 if (statement; expression) { }
 ```
 
+## Switch Statements
+
+``` chaiscript
+var myvalue = 2
+switch (myvalue) {
+    case (1) {
+        print("My Value is 1");
+        break;
+    }
+    case (2) {
+        print("My Value is 2");
+        break;
+    }
+    default {
+        print("My Value is something else.";
+    }
+}
+```
+
 ## Built in Types
 
 ```
@@ -474,6 +513,20 @@ var o = Dynamic_Object();
 o.x = 3;
 o.f = fun(y) { print(this.x + y); }
 o.f(10); // prints 13
+```
+
+## Namespaces
+
+Namespaces in ChaiScript are Dynamic Objects with global scope
+
+```
+namespace("math") // create a new namespace
+
+math.square = fun(x) { x * x } // add a function to the "math" namespace
+math.sum_squares = fun(x, y) { math.square(x) + math.square(y) }
+
+print(math.square(4)) // prints 16
+print(math.sum_squares(2, 5)) // prints 29
 ```
 
 ### Option Explicit

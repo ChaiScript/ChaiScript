@@ -1,0 +1,12 @@
+def keys(map)
+{ 
+  auto v = Vector();                // create empty vector
+  for( i : map )
+  {
+    v.push_back(i.first);    // append key to the vector
+  }
+  v;                              // return the new vector
+} 
+print(keys(["1a":111, "2b":222]));
+
+

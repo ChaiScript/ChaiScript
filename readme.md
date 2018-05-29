@@ -25,7 +25,7 @@ Release under the BSD license, see "license.txt" for details.
 Introduction
 ============
 
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/ChaiScript/ChaiScript?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/ChaiScript/ChaiScript?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ChaiScript is one of the only embedded scripting language designed from the 
 ground up to directly target C++ and take advantage of modern C++ development 
@@ -79,7 +79,7 @@ directory, and for more in-depth look at the language, the unit tests in the
 "unittests" directory cover the most ground.
 
 For examples of how to register parts of your C++ application, see 
-"example.cpp" in the "src" directory. Example.cpp is verbose and shows every 
+"example.cpp" in the "samples" directory. Example.cpp is verbose and shows every 
 possible way of working with the library. For further documentation generate 
 the doxygen documentation in the build folder or see the website 
 http://www.chaiscript.com.
@@ -87,44 +87,21 @@ http://www.chaiscript.com.
 
 The shortest complete example possible follows:
 
-    /// main.cpp
+```C++
+/// main.cpp
 
-    #include <chaiscript/chaiscript.hpp>
+#include <chaiscript/chaiscript.hpp>
 
-    double function(int i, double j)
-    {
-      return i * j;
-    }
+double function(int i, double j)
+{
+  return i * j;
+}
 
-    int main()
-    {
-      chaiscript::ChaiScript chai;
-      chai.add(chaiscript::fun(&function), "function");
+int main()
+{
+  chaiscript::ChaiScript chai;
+  chai.add(chaiscript::fun(&function), "function");
 
-      double d = chai.eval<double>("function(3, 4.75);");
-    }
-
-
-
-Or, if you want to compile the std lib into your code, which reduces
-runtime requirements.
-
-    /// main.cpp
-
-    #include <chaiscript/chaiscript.hpp>
-    #include <chaiscript/chaiscript_stdlib.hpp>
-
-    double function(int i, double j)
-    {
-      return i * j;
-    }
-
-    int main()
-    {
-      chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
-      chai.add(chaiscript::fun(&function), "function");
-
-      double d = chai.eval<double>("function(3, 4.75);");
-    }
-
-
+  double d = chai.eval<double>("function(3, 4.75);");
+}
+```

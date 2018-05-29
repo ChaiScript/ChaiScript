@@ -1,0 +1,7 @@
+namespace("math")
+
+math.square = fun(x) { x * x }
+math.sum_squares = fun(x, y) { math.square(x) + math.square(y) }
+
+assert_equal(16, math.square(4))
+assert_equal(29, math.sum_squares(2, 5))

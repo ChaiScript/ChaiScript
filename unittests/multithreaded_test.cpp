@@ -2,6 +2,9 @@
 
 #include <algorithm>
 
+#ifdef CHAISCRIPT_NO_DYNLOAD
+#include <chaiscript/chaiscript.hpp>
+#endif
 #include <chaiscript/chaiscript_basic.hpp>
 #include <chaiscript/language/chaiscript_parser.hpp>
 
@@ -57,18 +60,22 @@ int main()
   }
 
   std::vector<std::string> modulepaths;
+
+#ifdef CHAISCRIPT_NO_DYNLOAD
+  chaiscript::ChaiScript chai(/* unused */modulepaths, usepaths);
+#else
   modulepaths.push_back("");
   if (modulepath)
   {
     modulepaths.push_back(modulepath);
   }
-
   
   // For this test we are going to load the dynamic stdlib
   // to make sure it continues to work
   chaiscript::ChaiScript_Basic chai(
       std::make_unique<chaiscript::parser::ChaiScript_Parser<chaiscript::eval::Noop_Tracer, chaiscript::optimizer::Optimizer_Default>>(),
       modulepaths,usepaths);
+#endif
 
   std::vector<std::shared_ptr<std::thread> > threads;
 

@@ -42,12 +42,14 @@ def assert_not_equal(x, y)
 
 def assert_throws(desc, x)
 {
-  if (throws_exception(x))
+  auto result = trim(throws_exception(x));
+  if (result == desc)
   {
     // Passes
   } else {
     // Fails
-    print("assert_throws failure, function did not throw exception: " + to_string(desc));
+    print("assert_throws failed: got '${result}' expected '${desc}'");
     exit(-1);
   }
 }
+

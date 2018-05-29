@@ -71,6 +71,7 @@ std::vector<std::string> default_search_paths()
 {
   std::vector<std::string> paths;
 
+#ifndef CHAISCRIPT_NO_DYNLOAD
 #ifdef CHAISCRIPT_WINDOWS  // force no unicode
   CHAR path[4096];
   int size = GetModuleFileNameA(nullptr, path, sizeof(path)-1);
@@ -140,6 +141,7 @@ std::vector<std::string> default_search_paths()
     paths.push_back(exepath.substr(0, secondtolastslash) + "/lib/chaiscript/");
   }
 #endif
+#endif // ifndef CHAISCRIPT_NO_DYNLOAD
 
   return paths;
 }
@@ -162,15 +164,15 @@ void help(int n) {
   }
 }
 
-bool throws_exception(const std::function<void ()> &f)
+std::string throws_exception(const std::function<void ()> &f)
 {
   try {
     f();
-  } catch (...) {
-    return true;
+  } catch (const std::exception &e) {
+    return e.what();
   }
 
-  return false;
+  return "";
 }
 
 chaiscript::exception::eval_error get_eval_error(const std::function<void ()> &f)
@@ -245,7 +247,7 @@ void interactive(chaiscript::ChaiScript_Basic& chai)
     catch (const chaiscript::exception::eval_error &ee) {
       std::cout << ee.what();
       if ( !ee.call_stack.empty() ) {
-        std::cout << "during evaluation at (" << ee.call_stack[0]->start().line << ", " << ee.call_stack[0]->start().column << ")";
+        std::cout << "during evaluation at (" << ee.call_stack[0].start().line << ", " << ee.call_stack[0].start().column << ")";
       }
       std::cout << '\n';
     }
@@ -306,6 +308,7 @@ int main(int argc, char *argv[])
 
   bool eval_error_ok = false;
   bool boxed_exception_ok = false;
+  bool any_exception_ok = false;
 
   for (int i = 0; i < argc; ++i) {
     if ( i == 0 && argc > 1 ) {
@@ -341,6 +344,9 @@ int main(int argc, char *argv[])
       continue;
     } else if ( arg == "--exception" ) {
       boxed_exception_ok = true;
+      continue;
+    } else if ( arg == "--any-exception" ) {
+      any_exception_ok = true;
       continue;
     } else if ( arg == "-i" || arg == "--interactive" ) {
       mode = eInteractive ;
@@ -381,11 +387,18 @@ int main(int argc, char *argv[])
     catch (const chaiscript::exception::load_module_error &e) {
       std::cout << "Unhandled module load error\n" << e.what() << '\n';
     }
-
-//    catch (std::exception &e) {
-//      std::cout << e.what() << '\n';
-//      return EXIT_FAILURE;
-//    }
+    catch (std::exception &e) {
+      std::cout << "Unhandled standard exception: " << e.what() << '\n';
+      if (!any_exception_ok) {
+        throw;
+      }
+    }
+    catch (...) {
+      std::cout << "Unhandled unknown exception" << '\n';
+      if (!any_exception_ok) {
+        throw;
+      }
+    }
   }
 
   return EXIT_SUCCESS;
