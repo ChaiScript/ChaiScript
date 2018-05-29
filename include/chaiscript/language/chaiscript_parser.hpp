@@ -118,7 +118,7 @@ namespace chaiscript
     }
 
 
-    template<typename Tracer, typename Optimizer>
+    template<typename Tracer, typename Optimizer, std::size_t Parse_Depth=512>
     class ChaiScript_Parser final : public ChaiScript_Parser_Base {
       void *get_tracer_ptr() override {
         return &m_tracer;
@@ -128,7 +128,7 @@ namespace chaiscript
 
       struct Depth_Counter
       {
-        static const auto max_depth = 128;
+        static const auto max_depth = Parse_Depth;
         Depth_Counter(ChaiScript_Parser *t_parser) : parser(t_parser)
         {
           ++parser->m_current_parse_depth;
