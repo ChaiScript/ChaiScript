@@ -49,6 +49,19 @@ namespace chaiscript
             }
           }
 
+          static T cast_symbol(void *p) noexcept
+          {
+            union cast_union
+            {
+              T func_ptr;
+              void *in_ptr;
+            };
+
+            cast_union c;
+            c.in_ptr = p;
+            return c.func_ptr;
+          }
+
           T m_symbol;
         };
 

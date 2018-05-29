@@ -34,11 +34,9 @@
 #include "chaiscript_algebraic.hpp"
 #include "chaiscript_common.hpp"
 
-namespace chaiscript {
-namespace exception {
+namespace chaiscript::exception {
 class bad_boxed_cast;
-}  // namespace exception
-}  // namespace chaiscript
+}  // namespace chaiscript::exception
 
 namespace chaiscript
 {
@@ -57,8 +55,9 @@ namespace chaiscript
         chaiscript::detail::Dispatch_State state(t_ss);
 
         const Boxed_Value *thisobj = [&]() -> const Boxed_Value *{
-          auto &stack = t_ss.get_stack_data(state.stack_holder()).back();
-          if (!stack.empty() && stack.back().first == "__this") {
+          if (auto &stack = t_ss.get_stack_data(state.stack_holder()).back();
+              !stack.empty() && stack.back().first == "__this") 
+          {
             return &stack.back().second;
           } else if (!t_vals.empty()) {
             return &t_vals[0];
@@ -71,8 +70,8 @@ namespace chaiscript
         if (thisobj && !has_this_capture) { state.add_object("this", *thisobj); }
 
         if (t_locals) {
-          for (const auto &local : *t_locals) {
-            state.add_object(local.first, local.second);
+          for (const auto &[name, value] : *t_locals) {
+            state.add_object(name, value);
           }
         }
 
@@ -126,7 +125,7 @@ namespace chaiscript
       std::vector<std::reference_wrapper<AST_Node>> get_children() const final {
         std::vector<std::reference_wrapper<AST_Node>> retval;
         retval.reserve(children.size());
-        for (auto &&child : children) {
+        for (auto &child : children) {
           retval.emplace_back(*child);
         }
 
@@ -706,7 +705,7 @@ namespace chaiscript
               );
         }
 
-        static bool has_this_capture(const std::vector<AST_Node_Impl_Ptr<T>> &children) {
+        static bool has_this_capture(const std::vector<AST_Node_Impl_Ptr<T>> &children) noexcept {
           return std::any_of(std::begin(children), std::end(children),
                 [](const auto &child){
                   return child->children[0]->text == "this";
@@ -782,7 +781,7 @@ namespace chaiscript
           return std::move(vec.back());
         }
 
-        static bool has_guard(const std::vector<AST_Node_Impl_Ptr<T>> &t_children, const std::size_t offset)
+        static bool has_guard(const std::vector<AST_Node_Impl_Ptr<T>> &t_children, const std::size_t offset) noexcept
         {
           if ((t_children.size() > 2 + offset) && (t_children[1+offset]->identifier == AST_Node_Type::Arg_List)) {
             if (t_children.size() > 3 + offset) {
@@ -909,9 +908,9 @@ namespace chaiscript
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override{
           const auto get_function = [&t_ss](const std::string &t_name, auto &t_hint){
             uint_fast32_t hint = t_hint;
-            auto funs = t_ss->get_function(t_name, hint);
-            if (funs.first != hint) { t_hint = uint_fast32_t(funs.first); }
-            return std::move(funs.second);
+            auto [funs_loc, funs] = t_ss->get_function(t_name, hint);
+            if (funs_loc != hint) { t_hint = uint_fast32_t(funs_loc); }
+            return std::move(funs);
           };
 
           const auto call_function = [&t_ss](const auto &t_funcs, const Boxed_Value &t_param) {

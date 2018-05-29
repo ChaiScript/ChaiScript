@@ -27,7 +27,7 @@
 #include "chaiscript_common.hpp"
 #include "chaiscript_optimizer.hpp"
 #include "chaiscript_tracer.hpp"
-#include "../utility/fnv1a.hpp"
+#include "../utility/hash.hpp"
 #include "../utility/static_string.hpp"
 
 #if defined(CHAISCRIPT_UTF16_UTF32)
@@ -76,7 +76,7 @@ namespace chaiscript
         // common for all implementations
         static std::string u8str_from_ll(long long val)
         {
-          typedef std::string::value_type char_type;
+          using char_type = std::string::value_type;
 
           char_type c[2];
           c[1] = char_type(val);
@@ -92,7 +92,7 @@ namespace chaiscript
 
         static string_type str_from_ll(long long val)
         {
-          typedef typename string_type::value_type target_char_type;
+          using target_char_type = typename string_type::value_type;
 #if defined (CHAISCRIPT_UTF16_UTF32)
           // prepare converter
           std::wstring_convert<std::codecvt_utf8<target_char_type>, target_char_type> converter;
@@ -120,7 +120,7 @@ namespace chaiscript
 
     template<typename Tracer, typename Optimizer, std::size_t Parse_Depth=512>
     class ChaiScript_Parser final : public ChaiScript_Parser_Base {
-      void *get_tracer_ptr() override {
+      void *get_tracer_ptr() noexcept override {
         return &m_tracer;
       }
 
@@ -146,97 +146,147 @@ namespace chaiscript
         ChaiScript_Parser *parser;
       };
 
-      static std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> build_alphabet()
+      template<typename Array2D, typename First, typename Second>
+      constexpr static void set_alphabet(Array2D &array, const First first, const Second second) noexcept
       {
-        std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> alphabet;
+        auto *first_ptr = &std::get<0>(array) + static_cast<std::size_t>(first);
+        auto *second_ptr = &std::get<0>(*first_ptr) + static_cast<std::size_t>(second);
+        *second_ptr = true;
+      }
 
-        for (auto &alpha : alphabet) {
-          alpha.fill(false);
-        }
+      constexpr static std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> build_alphabet() noexcept
+      {
+        std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> alphabet{};
 
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('?')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('+')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('-')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('*')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('/')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('|')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('&')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('^')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('=')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('.')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('<')]=true;
-        alphabet[detail::symbol_alphabet][static_cast<size_t>('>')]=true;
+        set_alphabet(alphabet, detail::symbol_alphabet, '?');
 
-        for ( size_t c = 'a' ; c <= 'z' ; ++c ) { alphabet[detail::keyword_alphabet][c]=true; }
-        for ( size_t c = 'A' ; c <= 'Z' ; ++c ) { alphabet[detail::keyword_alphabet][c]=true; }
-        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::keyword_alphabet][c]=true; }
-        alphabet[detail::keyword_alphabet][static_cast<size_t>('_')]=true;
+        set_alphabet(alphabet, detail::symbol_alphabet, '?');
+        set_alphabet(alphabet, detail::symbol_alphabet, '+');
+        set_alphabet(alphabet, detail::symbol_alphabet, '-');
+        set_alphabet(alphabet, detail::symbol_alphabet, '*');
+        set_alphabet(alphabet, detail::symbol_alphabet, '/');
+        set_alphabet(alphabet, detail::symbol_alphabet, '|');
+        set_alphabet(alphabet, detail::symbol_alphabet, '&');
+        set_alphabet(alphabet, detail::symbol_alphabet, '^');
+        set_alphabet(alphabet, detail::symbol_alphabet, '=');
+        set_alphabet(alphabet, detail::symbol_alphabet, '.');
+        set_alphabet(alphabet, detail::symbol_alphabet, '<');
+        set_alphabet(alphabet, detail::symbol_alphabet, '>');
 
-        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::int_alphabet][c]=true; }
-        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::float_alphabet][c]=true; }
-        alphabet[detail::float_alphabet][static_cast<size_t>('.')]=true;
+        for ( size_t c = 'a' ; c <= 'z' ; ++c ) { set_alphabet(alphabet, detail::keyword_alphabet, c); }
+        for ( size_t c = 'A' ; c <= 'Z' ; ++c ) { set_alphabet(alphabet, detail::keyword_alphabet, c); }
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { set_alphabet(alphabet, detail::keyword_alphabet, c); }
+        set_alphabet(alphabet, detail::keyword_alphabet, '_');
 
-        for ( size_t c = '0' ; c <= '9' ; ++c ) { alphabet[detail::hex_alphabet][c]=true; }
-        for ( size_t c = 'a' ; c <= 'f' ; ++c ) { alphabet[detail::hex_alphabet][c]=true; }
-        for ( size_t c = 'A' ; c <= 'F' ; ++c ) { alphabet[detail::hex_alphabet][c]=true; }
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { set_alphabet(alphabet, detail::int_alphabet, c); }
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { set_alphabet(alphabet, detail::float_alphabet, c); }
+        set_alphabet(alphabet, detail::float_alphabet, '.');
 
-        alphabet[detail::x_alphabet][static_cast<size_t>('x')]=true;
-        alphabet[detail::x_alphabet][static_cast<size_t>('X')]=true;
+        for ( size_t c = '0' ; c <= '9' ; ++c ) { set_alphabet(alphabet, detail::hex_alphabet, c); }
+        for ( size_t c = 'a' ; c <= 'f' ; ++c ) { set_alphabet(alphabet, detail::hex_alphabet, c); }
+        for ( size_t c = 'A' ; c <= 'F' ; ++c ) { set_alphabet(alphabet, detail::hex_alphabet, c); }
 
-        for ( size_t c = '0' ; c <= '1' ; ++c ) { alphabet[detail::bin_alphabet][c]=true; }
-        alphabet[detail::b_alphabet][static_cast<size_t>('b')]=true;
-        alphabet[detail::b_alphabet][static_cast<size_t>('B')]=true;
+        set_alphabet(alphabet, detail::x_alphabet, 'x');
+        set_alphabet(alphabet, detail::x_alphabet, 'X');
 
-        for ( size_t c = 'a' ; c <= 'z' ; ++c ) { alphabet[detail::id_alphabet][c]=true; }
-        for ( size_t c = 'A' ; c <= 'Z' ; ++c ) { alphabet[detail::id_alphabet][c]=true; }
-        alphabet[detail::id_alphabet][static_cast<size_t>('_')] = true;
+        for ( size_t c = '0' ; c <= '1' ; ++c ) { set_alphabet(alphabet, detail::bin_alphabet, c); }
+        set_alphabet(alphabet, detail::b_alphabet, 'b');
+        set_alphabet(alphabet, detail::b_alphabet, 'B');
 
-        alphabet[detail::white_alphabet][static_cast<size_t>(' ')]=true;
-        alphabet[detail::white_alphabet][static_cast<size_t>('\t')]=true;
+        for ( size_t c = 'a' ; c <= 'z' ; ++c ) { set_alphabet(alphabet, detail::id_alphabet, c); }
+        for ( size_t c = 'A' ; c <= 'Z' ; ++c ) { set_alphabet(alphabet, detail::id_alphabet, c); }
+        set_alphabet(alphabet, detail::id_alphabet, '_');
 
-        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('l')] = true;
-        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('L')] = true;
-        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('u')] = true;
-        alphabet[detail::int_suffix_alphabet][static_cast<size_t>('U')] = true;
+        set_alphabet(alphabet, detail::white_alphabet, ' ');
+        set_alphabet(alphabet, detail::white_alphabet, '\t');
 
-        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('l')] = true;
-        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('L')] = true;
-        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('f')] = true;
-        alphabet[detail::float_suffix_alphabet][static_cast<size_t>('F')] = true;
+        set_alphabet(alphabet, detail::int_suffix_alphabet, 'l');
+        set_alphabet(alphabet, detail::int_suffix_alphabet, 'L');
+        set_alphabet(alphabet, detail::int_suffix_alphabet, 'u');
+        set_alphabet(alphabet, detail::int_suffix_alphabet, 'U');
+
+        set_alphabet(alphabet, detail::float_suffix_alphabet, 'l');
+        set_alphabet(alphabet, detail::float_suffix_alphabet, 'L');
+        set_alphabet(alphabet, detail::float_suffix_alphabet, 'f');
+        set_alphabet(alphabet, detail::float_suffix_alphabet, 'F');
 
         return alphabet;
       }
 
-      static const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &create_alphabet()
+
+      struct Operator_Matches
       {
-        static const auto alpha = build_alphabet();
-        return alpha;
-      }
+        using SS = utility::Static_String;
 
-
-      static const std::vector<std::vector<utility::Static_String>> &create_operator_matches() {
-        static const std::vector<std::vector<utility::Static_String>> operator_matches {
-          {"?"},
-          {"||"},
-          {"&&"},
-          {"|"},
-          {"^"},
-          {"&"},
-          {"==", "!="},
-          {"<", "<=", ">", ">="},
-          {"<<", ">>"},
+        std::array<utility::Static_String, 1> m_0  {{SS("?")}};
+        std::array<utility::Static_String, 1> m_1  {{SS("||")}};
+        std::array<utility::Static_String, 1> m_2  {{SS("&&")}};
+        std::array<utility::Static_String, 1> m_3  {{SS("|")}};
+        std::array<utility::Static_String, 1> m_4  {{SS("^")}};
+        std::array<utility::Static_String, 1> m_5  {{SS("&")}};
+        std::array<utility::Static_String, 2> m_6  {{SS("=="), SS("!=")}};
+        std::array<utility::Static_String, 4> m_7  {{SS("<"), SS("<="), SS(">"), SS(">=")}};
+        std::array<utility::Static_String, 2> m_8  {{SS("<<"), SS(">>")}};
           //We share precedence here but then separate them later
-          {"+", "-"},
-          {"*", "/", "%"},
-          {"++", "--", "-", "+", "!", "~"}
-        };
+        std::array<utility::Static_String, 2> m_9  {{SS("+"), SS("-")}};
+        std::array<utility::Static_String, 3> m_10 {{SS("*"), SS("/"), SS("%")}};
+        std::array<utility::Static_String, 6> m_11 {{SS("++"), SS("--"), SS("-"), SS("+"), SS("!"), SS("~")}};
 
-        return operator_matches;
-      }
+        bool is_match(const std::string_view &t_str) const noexcept {
+          constexpr std::array<std::size_t, 12> groups{{0,1,2,3,4,5,6,7,8,9,10,11}};
+          return std::any_of(groups.begin(), groups.end(), [&t_str, this](const std::size_t group){ return is_match(group, t_str); });
+        }
 
+        template<typename Predicate>
+        bool any_of(const std::size_t t_group, Predicate &&predicate) const
+        {
+          auto match = [&predicate](const auto &array) {
+            return std::any_of(array.begin(), array.end(), predicate);
+          };
 
-      static const std::array<Operator_Precidence, 12> &create_operators() {
-        static const std::array<Operator_Precidence, 12> operators = { {
+          switch (t_group) {
+            case 0: return match(m_0);
+            case 1: return match(m_1);
+            case 2: return match(m_2);
+            case 3: return match(m_3);
+            case 4: return match(m_4);
+            case 5: return match(m_5);
+            case 6: return match(m_6);
+            case 7: return match(m_7);
+            case 8: return match(m_8);
+            case 9: return match(m_9);
+            case 10: return match(m_10);
+            case 11: return match(m_11);
+            default: return false;
+          }
+        }
+
+        constexpr bool is_match(const std::size_t t_group, const std::string_view &t_str) const noexcept {
+          auto match = [&t_str](const auto &array) {
+            return std::any_of(array.begin(), array.end(), [&t_str](const auto &v){ return v == t_str; });
+          };
+
+          switch (t_group) {
+            case 0: return match(m_0);
+            case 1: return match(m_1);
+            case 2: return match(m_2);
+            case 3: return match(m_3);
+            case 4: return match(m_4);
+            case 5: return match(m_5);
+            case 6: return match(m_6);
+            case 7: return match(m_7);
+            case 8: return match(m_8);
+            case 9: return match(m_9);
+            case 10: return match(m_10);
+            case 11: return match(m_11);
+            default: return false;
+          }
+        }
+
+      };
+
+      constexpr static std::array<Operator_Precidence, 12> create_operators() noexcept {
+        std::array<Operator_Precidence, 12> operators = { {
           Operator_Precidence::Ternary_Cond,
           Operator_Precidence::Logical_Or,
           Operator_Precidence::Logical_And,
@@ -253,39 +303,12 @@ namespace chaiscript
         return operators;
       }
 
-      static const utility::Static_String &multiline_comment_end()
-      {
-        static const utility::Static_String s("*/");
-        return s;
-      }
-
-      static const utility::Static_String &multiline_comment_begin()
-      {
-        static const utility::Static_String s("/*");
-        return s;
-      }
-
-      static const utility::Static_String &singleline_comment()
-      {
-        static const utility::Static_String s("//");
-        return s;
-      }
-
-      static const utility::Static_String &annotation()
-      {
-        static const utility::Static_String s("#");
-        return s;
-      }
-
-      static const utility::Static_String &cr_lf()
-      {
-        static const utility::Static_String s("\r\n");
-        return s;
-      }
-
-      const std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> &m_alphabet = create_alphabet();
-      const std::vector<std::vector<utility::Static_String>> &m_operator_matches = create_operator_matches();
-      const std::array<Operator_Precidence, 12> &m_operators = create_operators();
+      constexpr static utility::Static_String m_multiline_comment_end{"*/"};
+      constexpr static utility::Static_String m_multiline_comment_begin{"/*"};
+      constexpr static utility::Static_String m_singleline_comment{"//"};
+      constexpr static utility::Static_String m_annotation{"#"};
+      constexpr static utility::Static_String m_cr_lf{"\r\n"};
+      constexpr static auto m_operators = create_operators();
 
       std::shared_ptr<std::string> m_filename;
       std::vector<eval::AST_Node_Impl_Ptr<Tracer>> m_match_stack;
@@ -293,22 +316,27 @@ namespace chaiscript
 
       struct Position
       {
-        Position() = default;
+        constexpr Position() = default;
 
-        Position(std::string::const_iterator t_pos, std::string::const_iterator t_end)
+        constexpr Position(const char * t_pos, const char * t_end) noexcept
           : line(1), col(1), m_pos(t_pos), m_end(t_end), m_last_col(1)
         {
         }
 
-        static std::string str(const Position &t_begin, const Position &t_end) {
-          return std::string(t_begin.m_pos, t_end.m_pos);
+        static std::string_view str(const Position &t_begin, const Position &t_end) noexcept {
+          if (t_begin.m_pos != nullptr && t_end.m_pos != nullptr) {
+            return std::string_view(t_begin.m_pos, std::distance(t_begin.m_pos, t_end.m_pos));
+          } else {
+            return {};
+          }
         }
 
-        Position &operator++() {
+        constexpr Position &operator++() noexcept {
           if (m_pos != m_end) {
             if (*m_pos == '\n') {
               ++line;
-              m_last_col = std::exchange(col, 1);
+              m_last_col = col;
+              col = 1;
             } else {
               ++col;
             }
@@ -318,7 +346,7 @@ namespace chaiscript
           return *this;
         }
 
-        Position &operator--() {
+        constexpr Position &operator--() noexcept {
           --m_pos;
           if (*m_pos == '\n') {
             --line;
@@ -329,12 +357,12 @@ namespace chaiscript
           return *this;
         }
 
-        Position &operator+=(size_t t_distance) {
+        constexpr Position &operator+=(size_t t_distance) noexcept {
           *this = (*this) + t_distance;
           return *this;
         }
 
-        Position operator+(size_t t_distance) const {
+        constexpr Position operator+(size_t t_distance) const noexcept {
           Position ret(*this);
           for (size_t i = 0; i < t_distance; ++i) {
             ++ret;
@@ -342,12 +370,12 @@ namespace chaiscript
           return ret;
         }
 
-        Position &operator-=(size_t t_distance) {
+        constexpr Position &operator-=(size_t t_distance) noexcept {
           *this = (*this) - t_distance;
           return *this;
         }
 
-        Position operator-(size_t t_distance) const {
+        constexpr Position operator-(size_t t_distance) const noexcept {
           Position ret(*this);
           for (size_t i = 0; i < t_distance; ++i) {
             --ret;
@@ -355,26 +383,25 @@ namespace chaiscript
           return ret;
         }
 
-        bool operator==(const Position &t_rhs) const {
+        constexpr bool operator==(const Position &t_rhs) const noexcept {
           return m_pos == t_rhs.m_pos;
         }
 
-        bool operator!=(const Position &t_rhs) const {
+        constexpr bool operator!=(const Position &t_rhs) const noexcept {
           return m_pos != t_rhs.m_pos;
         }
 
-        bool has_more() const {
+        constexpr bool has_more() const noexcept {
           return m_pos != m_end;
         }
 
-        size_t remaining() const {
-          return static_cast<size_t>(std::distance(m_pos, m_end));
+        constexpr size_t remaining() const noexcept {
+          return static_cast<size_t>(m_end - m_pos);
         }
 
-        const char& operator*() const {
+        constexpr const char& operator*() const noexcept {
           if (m_pos == m_end) {
-            static const char ktmp ='\0';
-            return ktmp;
+            return ""[0];
           } else {
             return *m_pos;
           }
@@ -384,8 +411,8 @@ namespace chaiscript
         int col = -1;
 
         private:
-          std::string::const_iterator m_pos;
-          std::string::const_iterator m_end;
+          const char *m_pos = nullptr;
+          const char *m_end = nullptr;
           int m_last_col = -1;
       };
 
@@ -394,14 +421,14 @@ namespace chaiscript
       Tracer m_tracer;
       Optimizer m_optimizer;
 
-      void validate_object_name(const std::string &name) const
+      void validate_object_name(const std::string_view &name) const
       {
         if (!Name_Validator::valid_object_name(name)) {
-          throw exception::eval_error("Invalid Object Name: " + name, File_Position(m_position.line, m_position.col), *m_filename);
+          throw exception::eval_error("Invalid Object Name: " + std::string(name), File_Position(m_position.line, m_position.col), *m_filename);
         }
       }
 
-      public:
+    public:
       explicit ChaiScript_Parser(Tracer tracer = Tracer(), Optimizer optimizer=Optimizer())
         : m_tracer(std::move(tracer)),
           m_optimizer(std::move(optimizer))
@@ -409,12 +436,12 @@ namespace chaiscript
         m_match_stack.reserve(2);
       }
 
-      Tracer &get_tracer() 
+      Tracer &get_tracer() noexcept
       {
         return m_tracer;
       }
 
-      Optimizer &get_optimizer()
+      Optimizer &get_optimizer() noexcept
       {
         return m_optimizer;
       }
@@ -424,8 +451,13 @@ namespace chaiscript
       ChaiScript_Parser(ChaiScript_Parser &&) = default;
       ChaiScript_Parser &operator=(ChaiScript_Parser &&) = delete;
 
+      constexpr static auto m_alphabet = build_alphabet();
+      constexpr static Operator_Matches m_operator_matches{};
+
       /// test a char in an m_alphabet
-      bool char_in_alphabet(char c, detail::Alphabet a) const { return m_alphabet[a][static_cast<uint8_t>(c)]; }
+      constexpr bool char_in_alphabet(char c, detail::Alphabet a) const noexcept { 
+        return m_alphabet[a][static_cast<uint8_t>(c)]; 
+      }
 
       /// Prints the parsed ast_nodes as a tree
       void debug_print(const AST_Node &t, std::string prepend = "") const override {
@@ -483,7 +515,7 @@ namespace chaiscript
 
 
       /// Reads a symbol group from input if it matches the parameter, without skipping initial whitespace
-      inline auto Symbol_(const utility::Static_String &sym)
+      inline auto Symbol_(const utility::Static_String &sym) noexcept
       {
         const auto len = sym.size();
         if (m_position.remaining() >= len) {
@@ -500,18 +532,18 @@ namespace chaiscript
 
       /// Skips any multi-line or single-line comment
       bool SkipComment() {
-        if (Symbol_(multiline_comment_begin())) {
+        if (Symbol_(m_multiline_comment_begin)) {
           while (m_position.has_more()) {
-            if (Symbol_(multiline_comment_end())) {
+            if (Symbol_(m_multiline_comment_end)) {
               break;
             } else if (!Eol_()) {
               ++m_position;
             }
           }
           return true;
-        } else if (Symbol_(singleline_comment())) {
+        } else if (Symbol_(m_singleline_comment)) {
           while (m_position.has_more()) {
-            if (Symbol_(cr_lf())) {
+            if (Symbol_(m_cr_lf)) {
               m_position -= 2;
               break;
             } else if (Char_('\n')) {
@@ -522,9 +554,9 @@ namespace chaiscript
             }
           }
           return true;
-        } else if (Symbol_(annotation())) {
+        } else if (Symbol_(m_annotation)) {
           while (m_position.has_more()) {
-            if (Symbol_(cr_lf())) {
+            if (Symbol_(m_cr_lf)) {
               m_position -= 2;
               break;
             } else if (Char_('\n')) {
@@ -575,7 +607,7 @@ namespace chaiscript
       }
 
       /// Reads the optional exponent (scientific notation) and suffix for a Float
-      bool read_exponent_and_suffix() {
+      bool read_exponent_and_suffix() noexcept {
         // Support a form of scientific notation: 1e-5, 35.5E+8, 0.01e19
         if (m_position.has_more() && (std::tolower(*m_position) == 'e')) {
           ++m_position;
@@ -603,7 +635,7 @@ namespace chaiscript
 
 
       /// Reads a floating point value from input, without skipping initial whitespace
-      bool Float_() {
+      bool Float_() noexcept {
         if (m_position.has_more() && char_in_alphabet(*m_position,detail::float_alphabet) ) {
           while (m_position.has_more() && char_in_alphabet(*m_position,detail::int_alphabet) ) {
             ++m_position;
@@ -631,7 +663,7 @@ namespace chaiscript
       }
 
       /// Reads a hex value from input, without skipping initial whitespace
-      bool Hex_() {
+      bool Hex_() noexcept {
         if (m_position.has_more() && (*m_position == '0')) {
           ++m_position;
 
@@ -692,7 +724,7 @@ namespace chaiscript
       }
 
       /// Parses a floating point value and returns a Boxed_Value representation of it
-      static Boxed_Value buildFloat(const std::string &t_val)
+      static Boxed_Value buildFloat(const std::string_view &t_val)
       {
         bool float_ = false;
         bool long_ = false;
@@ -725,7 +757,7 @@ namespace chaiscript
 
 
 
-      static Boxed_Value buildInt(const int base, const std::string &t_val, const bool prefixed)
+      static Boxed_Value buildInt(const int base, std::string_view t_val, const bool prefixed)
       {
         bool unsigned_ = false;
         bool long_ = false;
@@ -752,7 +784,7 @@ namespace chaiscript
           }
         }
 
-        const auto val = prefixed?std::string(t_val.begin()+2,t_val.end()):t_val;
+        if (prefixed) { t_val.remove_prefix(2); };
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -766,7 +798,8 @@ namespace chaiscript
 #endif
 
         try {
-          auto u = std::stoll(val,nullptr,base);
+          /// TODO fix this to use from_chars
+          auto u = std::stoll(std::string(t_val),nullptr,base);
 
 
           if (!unsigned_ && !long_ && u >= std::numeric_limits<int>::min() && u <= std::numeric_limits<int>::max()) {
@@ -789,7 +822,8 @@ namespace chaiscript
         } catch (const std::out_of_range &) {
           // too big to be signed
           try {
-            auto u = std::stoull(val,nullptr,base);
+            /// TODO fix this to use from_chars
+            auto u = std::stoull(std::string(t_val),nullptr,base);
 
             if (!longlong_ && u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
               return const_var(static_cast<unsigned long>(u));
@@ -809,9 +843,9 @@ namespace chaiscript
       }
 
       template<typename T, typename ... Param>
-      std::unique_ptr<eval::AST_Node_Impl<Tracer>> make_node(std::string t_match, const int t_prev_line, const int t_prev_col, Param && ...param)
+      std::unique_ptr<eval::AST_Node_Impl<Tracer>> make_node(std::string_view t_match, const int t_prev_line, const int t_prev_col, Param && ...param)
       {
-        return chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, T>(std::move(t_match), Parse_Location(m_filename, t_prev_line, t_prev_col, m_position.line, m_position.col), std::forward<Param>(param)...);
+        return chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, T>(std::string(t_match), Parse_Location(m_filename, t_prev_line, t_prev_col, m_position.line, m_position.col), std::forward<Param>(param)...);
       }
 
       /// Reads a number from the input, detecting if it's an integer or floating point
@@ -824,20 +858,20 @@ namespace chaiscript
             if (Hex_()) {
               auto match = Position::str(start, m_position);
               auto bv = buildInt(16, match, true);
-              m_match_stack.emplace_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              m_match_stack.emplace_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, std::move(bv)));
               return true;
             }
 
             if (Binary_()) {
               auto match = Position::str(start, m_position);
               auto bv = buildInt(2, match, true);
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, std::move(bv)));
               return true;
             }
             if (Float_()) {
               auto match = Position::str(start, m_position);
               auto bv = buildFloat(match);
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, std::move(bv)));
               return true;
             }
             else {
@@ -845,11 +879,11 @@ namespace chaiscript
               auto match = Position::str(start, m_position);
               if (!match.empty() && (match[0] == '0')) {
                 auto bv = buildInt(8, match, false);
-                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, std::move(bv)));
               }
               else if (!match.empty()) {
                 auto bv = buildInt(10, match, false);
-                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(match), start.line, start.col, std::move(bv)));
+                m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, std::move(bv)));
               } else {
                 return false;
               }
@@ -908,7 +942,7 @@ namespace chaiscript
         if (Id_()) {
 
           auto text = Position::str(start, m_position);
-          const auto text_hash = utility::fnv1a_32(text.c_str());
+          const auto text_hash = utility::hash(text);
 
           if (validate) {
             validate_object_name(text);
@@ -920,29 +954,29 @@ namespace chaiscript
 #endif
 
           switch (text_hash) {
-            case utility::fnv1a_32("true"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col, const_var(true)));
+            case utility::hash("true"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, const_var(true)));
             } break;
-            case utility::fnv1a_32("false"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col, const_var(false)));
+            case utility::hash("false"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, const_var(false)));
             } break;
-            case utility::fnv1a_32("Infinity"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+            case utility::hash("Infinity"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
                 const_var(std::numeric_limits<double>::infinity())));
             } break;
-            case utility::fnv1a_32("NaN"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+            case utility::hash("NaN"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
                 const_var(std::numeric_limits<double>::quiet_NaN())));
             } break;
-            case utility::fnv1a_32("__LINE__"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+            case utility::hash("__LINE__"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
                 const_var(start.line)));
             } break;
-            case utility::fnv1a_32("__FILE__"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+            case utility::hash("__FILE__"): {
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
                 const_var(m_filename)));
             } break;
-            case utility::fnv1a_32("__FUNC__"): {
+            case utility::hash("__FUNC__"): {
               std::string fun_name = "NOT_IN_FUNCTION";
               for (size_t idx = m_match_stack.empty() ? 0 : m_match_stack.size() - 1; idx > 0; --idx)
               {
@@ -952,10 +986,10 @@ namespace chaiscript
                 }
               }
 
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
                 const_var(fun_name)));
             } break;
-            case utility::fnv1a_32("__CLASS__"): {
+            case utility::hash("__CLASS__"): {
               std::string fun_name = "NOT_IN_CLASS";
               for (size_t idx = m_match_stack.empty() ? 0 : m_match_stack.size() - 1; idx > 1; --idx)
               {
@@ -969,15 +1003,16 @@ namespace chaiscript
               m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
                 const_var(fun_name)));
             } break;
-            case utility::fnv1a_32("_"): {
+            case utility::hash("_"): {
               m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
                 Boxed_Value(std::make_shared<dispatch::Placeholder_Object>())));
             } break;
             default: {
-                std::string val = std::move(text);
+              auto val = text;
               if (*start == '`') {
                 // 'escaped' literal, like an operator name
                 val = Position::str(start+1, m_position-1);
+                // val.remove_prefix(1); val.remove_suffix(1);
               }
               m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>(val, start.line, start.col));
             } break;
@@ -1060,7 +1095,7 @@ namespace chaiscript
       struct Char_Parser
       {
         string_type &match;
-        typedef typename string_type::value_type char_type;
+        using char_type = typename string_type::value_type;
         bool is_escaped = false;
         bool is_interpolated = false;
         bool saw_interpolation_marker = false;
@@ -1456,14 +1491,8 @@ namespace chaiscript
         return retval;
       }
 
-      bool is_operator(const std::string &t_s) const {
-        return std::any_of(m_operator_matches.begin(), m_operator_matches.end(),
-            [t_s](const std::vector<utility::Static_String> &opers) {
-              return std::any_of(opers.begin(), opers.end(), 
-                [t_s](const utility::Static_String &s) {
-                  return t_s == s.c_str();
-                });
-            });
+      bool is_operator(const std::string_view &t_s) const noexcept {
+        return m_operator_matches.is_match(t_s);
       }
 
       /// Reads (and potentially captures) a symbol group from input if it matches the parameter
@@ -1490,7 +1519,7 @@ namespace chaiscript
       bool Eol_(const bool t_eos = false) {
         bool retval = false;
 
-        if (m_position.has_more() && (Symbol_(cr_lf()) || Char_('\n'))) {
+        if (m_position.has_more() && (Symbol_(m_cr_lf) || Char_('\n'))) {
           retval = true;
           //++m_position.line;
           m_position.col = 1;
@@ -2381,7 +2410,7 @@ namespace chaiscript
         Depth_Counter dc{this};
         const auto prev_stack_top = m_match_stack.size();
         using SS = utility::Static_String;
-        constexpr const std::array<utility::Static_String, 6> prefix_opers{{
+        const std::array<utility::Static_String, 6> prefix_opers{{
             SS{"++"}, 
             SS{"--"}, 
             SS{"-"}, 
@@ -2414,15 +2443,18 @@ namespace chaiscript
       }
 
       bool Operator_Helper(const size_t t_precedence, std::string &oper) {
-        Depth_Counter dc{this};
-        for (auto & elem : m_operator_matches[t_precedence]) {
-          if (Symbol(elem)) {
-            oper = elem.c_str();
-            return true;
-          }
-        }
-        return false;
+        return m_operator_matches.any_of(t_precedence,
+            [&oper, this](const auto &elem){ 
+              if (Symbol(elem)) {
+                oper = elem.c_str();
+                return true;
+              } else {
+                return false;
+              }
+            }
+          );
       }
+
 
       bool Operator(const size_t t_precedence = 0) {
         Depth_Counter dc{this};
@@ -2661,7 +2693,9 @@ namespace chaiscript
 
       /// Parses the given input string, tagging parsed ast_nodes with the given m_filename.
       AST_NodePtr parse_internal(const std::string &t_input, std::string t_fname) {
-        m_position = Position(t_input.begin(), t_input.end());
+        const auto begin = t_input.empty() ? nullptr : &t_input.front();
+        const auto end = begin == nullptr ? nullptr : begin + t_input.size();
+        m_position = Position(begin, end);
         m_filename = std::make_shared<std::string>(std::move(t_fname));
 
         if ((t_input.size() > 1) && (t_input[0] == '#') && (t_input[1] == '!')) {

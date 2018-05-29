@@ -24,7 +24,7 @@ namespace chaiscript
     template<typename T>
       struct Bare_Type
       {
-        typedef typename std::remove_cv<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::type type;
+        using type = typename std::remove_cv<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::type;
       };
   }
 
@@ -34,7 +34,7 @@ namespace chaiscript
   {
     public:
       constexpr Type_Info(const bool t_is_const, const bool t_is_reference, const bool t_is_pointer, const bool t_is_void, 
-          const bool t_is_arithmetic, const std::type_info *t_ti, const std::type_info *t_bare_ti)
+          const bool t_is_arithmetic, const std::type_info *t_ti, const std::type_info *t_bare_ti) noexcept
         : m_type_info(t_ti), m_bare_type_info(t_bare_ti),
           m_flags((static_cast<unsigned int>(t_is_const) << is_const_flag)
                 + (static_cast<unsigned int>(t_is_reference) << is_reference_flag)
@@ -44,7 +44,7 @@ namespace chaiscript
       {
       }
 
-      constexpr Type_Info() = default;
+      constexpr Type_Info() noexcept = default;
 
       bool operator<(const Type_Info &ti) const noexcept
       {
@@ -90,7 +90,7 @@ namespace chaiscript
       constexpr bool is_undef() const noexcept { return (m_flags & (1 << is_undef_flag)) != 0; }
       constexpr bool is_pointer() const noexcept { return (m_flags & (1 << is_pointer_flag)) != 0; }
 
-      std::string name() const
+      const char * name() const noexcept
       {
         if (!is_undef())
         {
@@ -100,7 +100,7 @@ namespace chaiscript
         }
       }
 
-      std::string bare_name() const
+      const char * bare_name() const noexcept
       {
         if (!is_undef())
         {
@@ -110,7 +110,7 @@ namespace chaiscript
         }
       }
 
-      constexpr const std::type_info *bare_type_info() const
+      constexpr const std::type_info *bare_type_info() const noexcept
       {
         return m_bare_type_info;
       }
@@ -135,7 +135,7 @@ namespace chaiscript
     template<typename T>
       struct Get_Type_Info
       {
-        static constexpr Type_Info get()
+        constexpr static Type_Info get() noexcept
         {
           return Type_Info(std::is_const<typename std::remove_pointer<typename std::remove_reference<T>::type>::type>::value, 
               std::is_reference<T>::value, std::is_pointer<T>::value, 
@@ -152,7 +152,7 @@ namespace chaiscript
       {
 //        typedef T type;
 
-        static constexpr Type_Info get()
+        constexpr static Type_Info get() noexcept
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
@@ -170,7 +170,7 @@ namespace chaiscript
     template<typename T>
       struct Get_Type_Info<const std::shared_ptr<T> &>
       {
-        static constexpr Type_Info get()
+        constexpr static Type_Info get() noexcept
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
@@ -183,7 +183,7 @@ namespace chaiscript
     template<typename T>
       struct Get_Type_Info<std::reference_wrapper<T> >
       {
-        static constexpr Type_Info get()
+        constexpr static Type_Info get() noexcept
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
@@ -196,7 +196,7 @@ namespace chaiscript
     template<typename T>
       struct Get_Type_Info<const std::reference_wrapper<T> &>
       {
-        static constexpr Type_Info get()
+        constexpr static Type_Info get() noexcept
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 
               std::is_void<T>::value,
@@ -218,7 +218,7 @@ namespace chaiscript
   /// chaiscript::Type_Info ti = chaiscript::user_type(i);
   /// \endcode
   template<typename T>
-  constexpr Type_Info user_type(const T &/*t*/)
+  constexpr Type_Info user_type(const T &/*t*/) noexcept
   {
     return detail::Get_Type_Info<T>::get();
   }
@@ -233,7 +233,7 @@ namespace chaiscript
   /// chaiscript::Type_Info ti = chaiscript::user_type<int>();
   /// \endcode
   template<typename T>
-  constexpr Type_Info user_type()
+  constexpr Type_Info user_type() noexcept
   {
     return detail::Get_Type_Info<T>::get();
   }

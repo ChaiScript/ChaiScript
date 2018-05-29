@@ -23,6 +23,7 @@
 #include "../dispatchkit/dispatchkit.hpp"
 #include "../dispatchkit/proxy_functions.hpp"
 #include "../dispatchkit/type_info.hpp"
+#include <unordered_set>
 
 namespace chaiscript {
 struct AST_Node;
@@ -31,34 +32,59 @@ struct AST_Node;
 namespace chaiscript
 {
   struct Name_Validator {
-    static bool is_reserved_word(const std::string &name)
+    template<typename T>
+    static bool is_reserved_word(const T &s) noexcept
     {
-      static const std::set<std::string> m_reserved_words 
-        = {"def", "fun", "while", "for", "if", "else", "&&", "||", ",", "auto", 
-          "return", "break", "true", "false", "class", "attr", "var", "global", "GLOBAL", "_",
-          "__LINE__", "__FILE__", "__FUNC__", "__CLASS__"};
-      return m_reserved_words.count(name) > 0;
+      const static std::unordered_set<std::uint32_t> words{
+        utility::hash("def"),
+        utility::hash("fun"), 
+        utility::hash("while"),
+        utility::hash("for"),
+        utility::hash("if"),
+        utility::hash("else"),
+        utility::hash("&&"),
+        utility::hash("||"),
+        utility::hash(","),
+        utility::hash("auto"),
+        utility::hash("return"),
+        utility::hash("break"),
+        utility::hash("true"),
+        utility::hash("false"),
+        utility::hash("class"),
+        utility::hash("attr"),
+        utility::hash("var"),
+        utility::hash("global"),
+        utility::hash("GLOBAL"),
+        utility::hash("_"),
+        utility::hash("__LINE__"),
+        utility::hash("__FILE__"),
+        utility::hash("__FUNC__"),
+        utility::hash("__CLASS__")};
+
+      return words.count(utility::hash(s)) == 1;
     }
 
-    static bool valid_object_name(const std::string &name)
+    template<typename T>
+    static bool valid_object_name(const T &name) noexcept
     {
       return name.find("::") == std::string::npos && !is_reserved_word(name);
     }
 
-    static void validate_object_name(const std::string &name)
+    template<typename T>
+    static void validate_object_name(const T &name)
     {
       if (is_reserved_word(name)) {
-        throw exception::reserved_word_error(name);
+        throw exception::reserved_word_error(std::string(name));
       }
 
       if (name.find("::") != std::string::npos) {
-        throw exception::illegal_name_error(name);
+        throw exception::illegal_name_error(std::string(name));
       }
     }
   };
 
   /// Signature of module entry point that all binary loadable modules must implement.
-  typedef ModulePtr (*Create_Module_Func)();
+  using Create_Module_Func = ModulePtr (*)();
 
 
   /// Types of AST nodes available to the parser and eval
@@ -76,8 +102,8 @@ namespace chaiscript
   namespace
   {
     /// Helper lookup to get the name of each node type
-    inline const char *ast_node_type_to_string(AST_Node_Type ast_node_type) {
-      static const char * const ast_node_types[] = { "Id", "Fun_Call", "Unused_Return_Fun_Call", "Arg_List", "Equation", "Var_Decl", "Assign_Decl",
+    constexpr const char *ast_node_type_to_string(AST_Node_Type ast_node_type) noexcept {
+      constexpr const char * const ast_node_types[] = { "Id", "Fun_Call", "Unused_Return_Fun_Call", "Arg_List", "Equation", "Var_Decl", "Assign_Decl",
                                     "Array_Call", "Dot_Access", 
                                     "Lambda", "Block", "Scopeless_Block", "Def", "While", "If", "For", "Ranged_For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range",
                                     "Inline_Range", "Try", "Catch", "Finally", "Method", "Attr_Decl",
@@ -89,13 +115,13 @@ namespace chaiscript
 
   /// \brief Convenience type for file positions
   struct File_Position {
-    int line;
-    int column;
+    int line = 0;
+    int column = 0;
 
-    File_Position(int t_file_line, int t_file_column)
+    constexpr File_Position(int t_file_line, int t_file_column) noexcept
       : line(t_file_line), column(t_file_column) { }
 
-    File_Position() : line(0), column(0) { }
+    constexpr File_Position() noexcept = default;
   };
 
   struct Parse_Location {
@@ -124,8 +150,8 @@ namespace chaiscript
 
 
   /// \brief Typedef for pointers to AST_Node objects. Used in building of the AST_Node tree
-  typedef std::unique_ptr<AST_Node> AST_NodePtr;
-  typedef std::unique_ptr<const AST_Node> AST_NodePtr_Const;
+  using AST_NodePtr = std::unique_ptr<AST_Node>;
+  using AST_NodePtr_Const = std::unique_ptr<const AST_Node>;
 
   struct AST_Node_Trace;
 
@@ -136,7 +162,7 @@ namespace chaiscript
     /// \brief Thrown if an error occurs while attempting to load a binary module
     struct load_module_error : std::runtime_error
     {
-      explicit load_module_error(const std::string &t_reason) noexcept
+      explicit load_module_error(const std::string &t_reason)
         : std::runtime_error(t_reason)
       {
       }
@@ -228,7 +254,7 @@ namespace chaiscript
     private:
 
       template<typename T>
-        static AST_Node_Type id(const T& t)
+        static AST_Node_Type id(const T& t) noexcept
         {
           return t.identifier;
         }
@@ -240,7 +266,7 @@ namespace chaiscript
         }
 
       template<typename T>
-        static const std::string &fname(const T& t)
+        static const std::string &fname(const T& t) noexcept
         {
           return t.filename();
         }
@@ -479,7 +505,7 @@ namespace chaiscript
 
     /// Errors generated when loading a file
     struct file_not_found_error : std::runtime_error {
-      explicit file_not_found_error(const std::string &t_filename) noexcept
+      explicit file_not_found_error(const std::string &t_filename)
         : std::runtime_error("File Not Found: " + t_filename),
           filename(t_filename)
       { }
@@ -500,15 +526,15 @@ namespace chaiscript
       const std::string text;
       Parse_Location location;
 
-      const std::string &filename() const {
+      const std::string &filename() const noexcept {
         return *location.filename;
       }
 
-      const File_Position &start() const {
+      const File_Position &start() const noexcept {
         return location.start;
       }
 
-      const File_Position &end() const {
+      const File_Position &end() const noexcept {
         return location.end;
       }
 
@@ -553,7 +579,7 @@ namespace chaiscript
       }
 
 
-      virtual ~AST_Node() = default;
+      virtual ~AST_Node() noexcept = default;
       AST_Node(AST_Node &&) = default;
       AST_Node &operator=(AST_Node &&) = default;
       AST_Node(const AST_Node &) = delete;
@@ -576,15 +602,15 @@ namespace chaiscript
     const std::string text;
     Parse_Location location;
 
-    const std::string &filename() const {
+    const std::string &filename() const noexcept {
       return *location.filename;
     }
 
-    const File_Position &start() const {
+    const File_Position &start() const noexcept {
       return location.start;
     }
 
-    const File_Position &end() const {
+    const File_Position &end() const noexcept {
       return location.end;
     }
 
@@ -632,7 +658,7 @@ namespace chaiscript
         ChaiScript_Parser_Base &operator=(const ChaiScript_Parser_Base &&) = delete;
 
         template<typename T>
-        T &get_tracer()
+        T &get_tracer() noexcept
         {
           // to do type check this somehow?
           return *static_cast<T*>(get_tracer_ptr());
@@ -655,13 +681,11 @@ namespace chaiscript
 
       /// Special type indicating a call to 'break'
       struct Break_Loop {
-        Break_Loop() = default;
       };
 
 
       /// Special type indicating a call to 'continue'
       struct Continue_Loop {
-        Continue_Loop() = default;
       };
 
 

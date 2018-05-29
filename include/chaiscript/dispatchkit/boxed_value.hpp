@@ -208,14 +208,14 @@ namespace chaiscript
       Boxed_Value(const Boxed_Value&) = default;
       Boxed_Value& operator=(const Boxed_Value&) = default;
 
-      void swap(Boxed_Value &rhs)
+      void swap(Boxed_Value &rhs) noexcept
       {
         std::swap(m_data, rhs.m_data);
       }
 
       /// Copy the values stored in rhs.m_data to m_data.
       /// m_data pointers are not shared in this case
-      Boxed_Value assign(const Boxed_Value &rhs)
+      Boxed_Value assign(const Boxed_Value &rhs) noexcept
       {
         (*m_data) = (*rhs.m_data);
         return *this;
@@ -244,7 +244,7 @@ namespace chaiscript
 
 
       template<typename T>
-      auto pointer_sentinel(std::shared_ptr<T> &ptr) const
+      auto pointer_sentinel(std::shared_ptr<T> &ptr) const noexcept
       {
         struct Sentinel {
           Sentinel(std::shared_ptr<T> &t_ptr, Data &data)
@@ -263,7 +263,7 @@ namespace chaiscript
           Sentinel& operator=(Sentinel&&s) = default;
           Sentinel(Sentinel &&s) = default;
 
-          operator std::shared_ptr<T>&() const
+          operator std::shared_ptr<T>&() const noexcept
           {
             return m_ptr.get();
           }
@@ -308,7 +308,7 @@ namespace chaiscript
         return !is_ref();
       }
 
-      void *get_ptr() const noexcept
+      void *get_ptr() const noexcept 
       {
         return m_data->m_data_ptr;
       }

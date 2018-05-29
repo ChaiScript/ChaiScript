@@ -22,11 +22,12 @@ namespace chaiscript
     template<typename T, typename = typename std::enable_if<std::is_array<T>::value>::type >
       void array(const std::string &type, Module& m)
       {
-        typedef typename std::remove_extent<T>::type ReturnType;
+        using ReturnType = typename std::remove_extent<T>::type;
+
         m.add(user_type<T>(), type);
         m.add(fun(
               [](T& t, size_t index)->ReturnType &{
-                constexpr auto extent = std::extent<T>::value;
+                constexpr const auto extent = std::extent<T>::value;
                 if (extent > 0 && index >= extent) {
                   throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
                 } else {
@@ -38,7 +39,7 @@ namespace chaiscript
 
         m.add(fun(
               [](const T &t, size_t index)->const ReturnType &{
-                constexpr auto extent = std::extent<T>::value;
+                constexpr const auto extent = std::extent<T>::value;
                 if (extent > 0 && index >= extent) {
                   throw std::range_error("Array index out of range. Received: " + std::to_string(index)  + " expected < " + std::to_string(extent));
                 } else {
@@ -50,8 +51,7 @@ namespace chaiscript
 
         m.add(fun(
               [](const T &) {
-                constexpr auto extent = std::extent<T>::value;
-                return extent;
+                return std::extent<T>::value;
               }), "size");
       }
 
@@ -111,30 +111,19 @@ namespace chaiscript
     /// Internal function for converting from a string to a value
     /// uses ostream operator >> to perform the conversion
     template<typename Input>
-    auto parse_string(const std::string &i)
-      -> typename std::enable_if<
-             !std::is_same<Input, wchar_t>::value
-             && !std::is_same<Input, char16_t>::value
-             && !std::is_same<Input, char32_t>::value,
-      Input>::type
+    Input parse_string(const std::string &i)
     {
-      std::stringstream ss(i);
-      Input t;
-      ss >> t;
-      return t;
+      if constexpr (!std::is_same<Input, wchar_t>::value
+          && !std::is_same<Input, char16_t>::value
+          && !std::is_same<Input, char32_t>::value) {
+        std::stringstream ss(i);
+        Input t;
+        ss >> t;
+        return t;
+      } else {
+        throw std::runtime_error("Parsing of wide characters is not yet supported");
+      }
     }
-
-    template<typename Input>
-    auto parse_string(const std::string &) 
-      -> typename std::enable_if<
-             std::is_same<Input, wchar_t>::value
-             || std::is_same<Input, char16_t>::value
-             || std::is_same<Input, char32_t>::value,
-      Input>::type
-    {
-      throw std::runtime_error("Parsing of wide characters is not yet supported");
-    }
-
 
     /// Add all common functions for a POD type. All operators, and
     /// common conversions
@@ -202,12 +191,12 @@ namespace chaiscript
         }
       }
 
-      static void print(const std::string &s)
+      static void print(const std::string &s) noexcept
       {
         fwrite(s.c_str(), 1, s.size(), stdout);
       }
 
-      static void println(const std::string &s)
+      static void println(const std::string &s) noexcept
       {
         puts(s.c_str());
       }
@@ -271,10 +260,10 @@ namespace chaiscript
       }
 
 
-      static bool has_guard(const Const_Proxy_Function &t_pf)
+      static bool has_guard(const Const_Proxy_Function &t_pf) noexcept
       {
         auto pf = std::dynamic_pointer_cast<const dispatch::Dynamic_Proxy_Function>(t_pf);
-        return pf && pf->get_guard();
+        return pf && pf->has_guard();
       }
 
       static Const_Proxy_Function get_guard(const Const_Proxy_Function &t_pf)
@@ -305,7 +294,7 @@ namespace chaiscript
         }
 
 
-      static bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf)
+      static bool has_parse_tree(const chaiscript::Const_Proxy_Function &t_pf) noexcept
       {
         const auto pf = std::dynamic_pointer_cast<const chaiscript::dispatch::Dynamic_Proxy_Function>(t_pf);
         return bool(pf);

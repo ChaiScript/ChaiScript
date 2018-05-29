@@ -98,7 +98,7 @@ namespace chaiscript
 
 
     /// Evaluates the given file and looks in the 'use' paths
-    const Boxed_Value internal_eval_file(const std::string &t_filename) {
+    Boxed_Value internal_eval_file(const std::string &t_filename) {
       for (const auto &path : m_use_paths)
       {
         try {
@@ -119,7 +119,7 @@ namespace chaiscript
 
 
     /// Evaluates the given string, used during eval() inside of a script
-    const Boxed_Value internal_eval(const std::string &t_e) {
+    Boxed_Value internal_eval(const std::string &t_e) {
       try {
         return do_eval(t_e, "__EVAL__", true);
       } catch (const exception::eval_error &t_ee) {
@@ -128,7 +128,7 @@ namespace chaiscript
     }
 
     /// Returns the current evaluation m_engine
-    chaiscript::detail::Dispatch_Engine &get_eval_engine() {
+    chaiscript::detail::Dispatch_Engine &get_eval_engine() noexcept {
       return m_engine;
     }
 
@@ -343,13 +343,13 @@ namespace chaiscript
       }
     }
 #else // CHAISCRIPT_NO_DYNLOAD
-explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
-                          std::vector<std::string> t_module_paths = {},
-                          std::vector<std::string> t_use_paths = {},
-                          const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options()) = delete;
+    explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
+                              std::vector<std::string> t_module_paths = {},
+                              std::vector<std::string> t_use_paths = {},
+                              const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options()) = delete;
 #endif
 
-    parser::ChaiScript_Parser_Base &get_parser()
+    parser::ChaiScript_Parser_Base &get_parser() noexcept
     {
       return *m_parser;
     }
@@ -594,7 +594,6 @@ explicit ChaiScript_Basic(std::unique_ptr<parser::ChaiScript_Parser_Base> &&pars
     std::string load_module(const std::string &t_module_name)
     {
 #ifdef CHAISCRIPT_NO_DYNLOAD
-      (void)t_module_name; // -Wunused-parameter
       throw chaiscript::exception::load_module_error("Loadable module support was disabled (CHAISCRIPT_NO_DYNLOAD)");
 #else
       std::vector<exception::load_module_error> errors;

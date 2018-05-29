@@ -21,20 +21,11 @@ namespace chaiscript {
       class bad_any_cast : public std::bad_cast
       {
         public:
-          bad_any_cast() = default;
-
-          bad_any_cast(const bad_any_cast &) = default;
-
-          ~bad_any_cast() noexcept override = default;
-
           /// \brief Description of what error occurred
           const char * what() const noexcept override
           {
-            return m_what.c_str();
+            return "bad any cast";
           }
-
-        private:
-          std::string m_what = "bad any cast";
       };
     }
   
@@ -43,18 +34,18 @@ namespace chaiscript {
       private:
         struct Data
         {
-          explicit Data(const std::type_info &t_type) 
+          constexpr explicit Data(const std::type_info &t_type) noexcept
             : m_type(t_type)
           {
           }
 
           Data &operator=(const Data &) = delete;
 
-          virtual ~Data() = default;
+          virtual ~Data() noexcept = default;
 
-          virtual void *data() = 0;
+          virtual void *data() noexcept = 0;
 
-          const std::type_info &type() const
+          const std::type_info &type() const noexcept
           {
             return m_type;
           }
@@ -72,14 +63,14 @@ namespace chaiscript {
             {
             }
 
-            void *data() override
+            void *data() noexcept override 
             {
               return &m_data;
             }
 
             std::unique_ptr<Data> clone() const override
             {
-              return std::unique_ptr<Data>(new Data_Impl<T>(m_data));
+              return std::make_unique<Data_Impl<T>>(m_data);
             }
 
             Data_Impl &operator=(const Data_Impl&) = delete;
@@ -91,25 +82,19 @@ namespace chaiscript {
 
       public:
         // construct/copy/destruct
-        Any() = default;
+        constexpr Any() noexcept = default;
         Any(Any &&) = default;
         Any &operator=(Any &&t_any) = default;
 
-        Any(const Any &t_any) 
-        { 
-          if (!t_any.empty())
-          {
-            m_data = t_any.m_data->clone(); 
-          } else {
-            m_data.reset();
-          }
+        Any(const Any &t_any)
+          : m_data(t_any.empty() ? nullptr : t_any.m_data->clone())
+        {
         }
 
-
         template<typename ValueType,
-          typename = typename std::enable_if<!std::is_same<Any, typename std::decay<ValueType>::type>::value>::type>
+          typename = std::enable_if_t<!std::is_same_v<Any, std::decay_t<ValueType>>>>
         explicit Any(ValueType &&t_value)
-          : m_data(std::unique_ptr<Data>(new Data_Impl<typename std::decay<ValueType>::type>(std::forward<ValueType>(t_value))))
+          : m_data(std::make_unique<Data_Impl<std::decay_t<ValueType>>>(std::forward<ValueType>(t_value)))
         {
         }
 
@@ -141,12 +126,12 @@ namespace chaiscript {
         }
 
         // queries
-        bool empty() const
+        bool empty() const noexcept
         {
           return !bool(m_data);
         }
 
-        const std::type_info & type() const
+        const std::type_info & type() const noexcept
         {
           if (m_data) {
             return m_data->type();

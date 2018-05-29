@@ -14,7 +14,7 @@ namespace chaiscript {
     struct Noop_Tracer_Detail
     {
       template<typename T>
-        void trace(const chaiscript::detail::Dispatch_State &, const AST_Node_Impl<T> *)
+        constexpr void trace(const chaiscript::detail::Dispatch_State &, const AST_Node_Impl<T> *) noexcept
         {
         }
     };
@@ -23,13 +23,13 @@ namespace chaiscript {
       struct Tracer : T...
     {
       Tracer() = default;
-      explicit Tracer(T ... t)
+      constexpr explicit Tracer(T ... t)
         : T(std::move(t))...
       {
       }
 
       void do_trace(const chaiscript::detail::Dispatch_State &ds, const AST_Node_Impl<Tracer<T...>> *node) {
-        (void)std::initializer_list<int>{ (static_cast<T&>(*this).trace(ds, node), 0)... };
+        (static_cast<T&>(*this).trace(ds, node), ... );
       }
 
       static void trace(const chaiscript::detail::Dispatch_State &ds, const AST_Node_Impl<Tracer<T...>> *node) {

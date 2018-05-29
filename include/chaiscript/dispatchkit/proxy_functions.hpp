@@ -41,7 +41,7 @@ namespace chaiscript
   class Boxed_Number;
   struct AST_Node;
 
-  typedef std::unique_ptr<AST_Node> AST_NodePtr;
+  using AST_NodePtr = std::unique_ptr<AST_Node>;
 
   namespace dispatch
   {
@@ -52,14 +52,12 @@ namespace chaiscript
     {
       public:
         Param_Types()
-          : m_has_types(false),
-            m_doti(user_type<Dynamic_Object>())
+          : m_has_types(false)
         {}
 
         explicit Param_Types(std::vector<std::pair<std::string, Type_Info>> t_types)
           : m_types(std::move(t_types)),
-            m_has_types(false),
-            m_doti(user_type<Dynamic_Object>())
+            m_has_types(false)
         {
           update_has_types();
         }
@@ -70,20 +68,21 @@ namespace chaiscript
           update_has_types();
         }
 
-        bool operator==(const Param_Types &t_rhs) const
+        bool operator==(const Param_Types &t_rhs) const noexcept
         {
           return m_types == t_rhs.m_types;
         }
 
         std::vector<Boxed_Value> convert(std::vector<Boxed_Value> vals, const Type_Conversions_State &t_conversions) const
         {
+          constexpr auto dynamic_object_type_info = user_type<Dynamic_Object>();
           for (size_t i = 0; i < vals.size(); ++i)
           {
             const auto &name = m_types[i].first;
             if (!name.empty()) {
               const auto &bv = vals[i];
 
-              if (!bv.get_type_info().bare_equal(m_doti))
+              if (!bv.get_type_info().bare_equal(dynamic_object_type_info))
               {
                 const auto &ti = m_types[i].second;
                 if (!ti.is_undef())
@@ -114,8 +113,9 @@ namespace chaiscript
 
         // first result: is a match
         // second result: needs conversions
-        std::pair<bool, bool> match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const
+        std::pair<bool, bool> match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const noexcept
         {
+          constexpr auto dynamic_object_type_info = user_type<Dynamic_Object>();
           bool needs_conversion = false;
 
           if (!m_has_types) { return std::make_pair(true, needs_conversion); }
@@ -127,7 +127,7 @@ namespace chaiscript
             if (!name.empty()) {
               const auto &bv = vals[i];
 
-              if (bv.get_type_info().bare_equal(m_doti))
+              if (bv.get_type_info().bare_equal(dynamic_object_type_info))
               {
                 try {
                   const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bv, &t_conversions);
@@ -158,7 +158,7 @@ namespace chaiscript
           return std::make_pair(true, needs_conversion);
         }
 
-        const std::vector<std::pair<std::string, Type_Info>> &types() const
+        const std::vector<std::pair<std::string, Type_Info>> &types() const noexcept
         {
           return m_types;
         }
@@ -180,7 +180,6 @@ namespace chaiscript
 
         std::vector<std::pair<std::string, Type_Info>> m_types;
         bool m_has_types;
-        Type_Info m_doti;
 
     };
 
@@ -210,14 +209,14 @@ namespace chaiscript
         /// if the function is variadic or takes no arguments (arity of 0 or -1), the returned
         /// value contains exactly 1 Type_Info object: the return type
         /// \returns the types of all parameters. 
-        const std::vector<Type_Info> &get_param_types() const { return m_types; }
+        const std::vector<Type_Info> &get_param_types() const noexcept { return m_types; }
 
-        virtual bool operator==(const Proxy_Function_Base &) const = 0;
+        virtual bool operator==(const Proxy_Function_Base &) const noexcept = 0;
         virtual bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const = 0;
 
-        virtual bool is_attribute_function() const { return false; }
+        virtual bool is_attribute_function() const noexcept { return false; }
 
-        bool has_arithmetic_param() const 
+        bool has_arithmetic_param() const noexcept
         {
           return m_has_arithmetic_param;
         }
@@ -229,7 +228,7 @@ namespace chaiscript
 
         //! Return true if the function is a possible match
         //! to the passed in values
-        bool filter(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const
+        bool filter(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const noexcept
         {
           assert(m_arity == -1 || (m_arity > 0 && static_cast<int>(vals.size()) == m_arity));
 
@@ -244,19 +243,23 @@ namespace chaiscript
         }
 
         /// \returns the number of arguments the function takes or -1 if it is variadic
-        int get_arity() const
+        int get_arity() const noexcept
         {
           return m_arity;
         }
 
-        static bool compare_type_to_param(const Type_Info &ti, const Boxed_Value &bv, const Type_Conversions_State &t_conversions)
+        static bool compare_type_to_param(const Type_Info &ti, const Boxed_Value &bv, const Type_Conversions_State &t_conversions) noexcept
         {
+          constexpr auto boxed_value_ti = user_type<Boxed_Value>();
+          constexpr auto boxed_number_ti = user_type<Boxed_Number>();
+          constexpr auto function_ti = user_type<std::shared_ptr<const Proxy_Function_Base>>();
+
           if (ti.is_undef() 
-              || ti.bare_equal(user_type<Boxed_Value>())
+              || ti.bare_equal(boxed_value_ti)
               || (!bv.get_type_info().is_undef()
-                && ( (ti.bare_equal(user_type<Boxed_Number>()) && bv.get_type_info().is_arithmetic())
+                && ( (ti.bare_equal(boxed_number_ti) && bv.get_type_info().is_arithmetic())
                   || ti.bare_equal(bv.get_type_info())
-                  || bv.get_type_info().bare_equal(user_type<std::shared_ptr<const Proxy_Function_Base> >())
+                  || bv.get_type_info().bare_equal(function_ti)
                   || t_conversions->converts(ti, bv.get_type_info()) 
                   )
                 )
@@ -268,8 +271,9 @@ namespace chaiscript
           }
         }
 
-        virtual bool compare_first_type(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const
+        virtual bool compare_first_type(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const noexcept
         {
+          /// TODO is m_types guaranteed to be at least 2??
           return compare_type_to_param(m_types[1], bv, t_conversions);
         }
 
@@ -292,7 +296,7 @@ namespace chaiscript
 
 
         static bool compare_types(const std::vector<Type_Info> &tis, const std::vector<Boxed_Value> &bvs, 
-                                  const Type_Conversions_State &t_conversions)
+                                  const Type_Conversions_State &t_conversions) noexcept
         {
           if (tis.size() - 1 != bvs.size())
           {
@@ -314,11 +318,11 @@ namespace chaiscript
   }
 
   /// \brief Common typedef used for passing of any registered function in ChaiScript
-  typedef std::shared_ptr<dispatch::Proxy_Function_Base> Proxy_Function;
+  using Proxy_Function = std::shared_ptr<dispatch::Proxy_Function_Base>;
 
   /// \brief Const version of Proxy_Function. Points to a const Proxy_Function. This is how most registered functions
   ///        are handled internally.
-  typedef std::shared_ptr<const dispatch::Proxy_Function_Base> Const_Proxy_Function;
+  using Const_Proxy_Function = std::shared_ptr<const dispatch::Proxy_Function_Base>;
 
   namespace exception
   {
@@ -358,7 +362,7 @@ namespace chaiscript
         }
 
 
-        bool operator==(const Proxy_Function_Base &rhs) const override
+        bool operator==(const Proxy_Function_Base &rhs) const noexcept override
         {
           const Dynamic_Proxy_Function *prhs = dynamic_cast<const Dynamic_Proxy_Function *>(&rhs);
 
@@ -374,13 +378,17 @@ namespace chaiscript
           return call_match_internal(vals, t_conversions).first;
         }
 
+        bool has_guard() const noexcept
+        {
+          return bool(m_guard);
+        }
 
-        Proxy_Function get_guard() const
+        Proxy_Function get_guard() const noexcept
         {
           return m_guard;
         }
 
-        bool has_parse_tree() const {
+        bool has_parse_tree() const noexcept {
           return static_cast<bool>(m_parsenode);
         }
 
@@ -528,7 +536,7 @@ namespace chaiscript
           assert(m_f->get_arity() < 0 || m_f->get_arity() == static_cast<int>(m_args.size()));
         }
 
-        bool operator==(const Proxy_Function_Base &t_f) const override
+        bool operator==(const Proxy_Function_Base &t_f) const noexcept override
         {
           return &t_f == this;
         }
@@ -620,13 +628,13 @@ namespace chaiscript
         {
         }
 
-        bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
+        bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const noexcept override
         {
           return static_cast<int>(vals.size()) == get_arity() 
             && (compare_types(m_types, vals, t_conversions) && compare_types_with_cast(vals, t_conversions));
         }
 
-        virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const = 0;
+        virtual bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const noexcept = 0;
     };
 
 
@@ -642,12 +650,12 @@ namespace chaiscript
         {
         }
 
-        bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
+        bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const noexcept override
         {
           return detail::compare_types_cast(static_cast<Func *>(nullptr), vals, t_conversions);
         }
 
-        bool operator==(const Proxy_Function_Base &t_func) const override
+        bool operator==(const Proxy_Function_Base &t_func) const noexcept override
         {
           return dynamic_cast<const Proxy_Function_Callable_Impl<Func, Callable> *>(&t_func) != nullptr;
         }
@@ -656,7 +664,7 @@ namespace chaiscript
       protected:
         Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
-          return detail::call_func(detail::Function_Signature<Func>(), m_f, params, t_conversions);
+          return detail::call_func(static_cast<Func *>(nullptr), m_f, params, t_conversions);
         }
 
       private:
@@ -686,12 +694,12 @@ namespace chaiscript
           assert(!m_shared_ptr_holder || m_shared_ptr_holder.get() == &m_f.get());
         }
 
-        bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
+        bool compare_types_with_cast(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const noexcept override
         {
           return detail::compare_types_cast(static_cast<Func *>(nullptr), vals, t_conversions);
         }
 
-        bool operator==(const Proxy_Function_Base &t_func) const override
+        bool operator==(const Proxy_Function_Base &t_func) const noexcept override
         {
           return dynamic_cast<const Assignable_Proxy_Function_Impl<Func> *>(&t_func) != nullptr;
         }
@@ -708,7 +716,7 @@ namespace chaiscript
       protected:
         Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
         {
-          return detail::call_func(detail::Function_Signature<Func>(), m_f.get(), params, t_conversions);
+          return detail::call_func(static_cast<Func *>(nullptr), m_f.get(), params, t_conversions);
         }
 
 
@@ -729,9 +737,9 @@ namespace chaiscript
         {
         }
 
-        bool is_attribute_function() const override { return true; } 
+        bool is_attribute_function() const noexcept override { return true; } 
 
-        bool operator==(const Proxy_Function_Base &t_func) const override
+        bool operator==(const Proxy_Function_Base &t_func) const noexcept override
         {
           const Attribute_Access<T, Class> * aa 
             = dynamic_cast<const Attribute_Access<T, Class> *>(&t_func);
@@ -743,14 +751,14 @@ namespace chaiscript
           }
         }
 
-        bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &) const override
+        bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &) const noexcept override
         {
           if (vals.size() != 1)
           {
             return false;
           }
-
-          return vals[0].get_type_info().bare_equal(user_type<Class>());
+          constexpr auto class_type_info = user_type<Class>();
+          return vals[0].get_type_info().bare_equal(class_type_info);
         }
 
       protected:
@@ -769,29 +777,24 @@ namespace chaiscript
 
       private:
         template<typename Type>
-        auto do_call_impl(Class *o) const -> std::enable_if_t<std::is_pointer<Type>::value, Boxed_Value>
+        auto do_call_impl(Class *o) const
         {
-          return detail::Handle_Return<Type>::handle(o->*m_attr);
+          if constexpr(std::is_pointer<Type>::value) {
+            return detail::Handle_Return<Type>::handle(o->*m_attr);
+          } else {
+            return detail::Handle_Return<typename std::add_lvalue_reference<Type>::type>::handle(o->*m_attr);
+          }
         }
 
         template<typename Type>
-        auto do_call_impl(const Class *o) const -> std::enable_if_t<std::is_pointer<Type>::value, Boxed_Value>
+        auto do_call_impl(const Class *o) const
         {
-          return detail::Handle_Return<const Type>::handle(o->*m_attr);
+          if constexpr(std::is_pointer<Type>::value) {
+            return detail::Handle_Return<const Type>::handle(o->*m_attr);
+          } else {
+            return detail::Handle_Return<typename std::add_lvalue_reference<typename std::add_const<Type>::type>::type>::handle(o->*m_attr);
+          }
         }
-
-        template<typename Type>
-        auto do_call_impl(Class *o) const -> std::enable_if_t<!std::is_pointer<Type>::value, Boxed_Value>
-        {
-          return detail::Handle_Return<typename std::add_lvalue_reference<Type>::type>::handle(o->*m_attr);
-        }
-
-        template<typename Type>
-        auto do_call_impl(const Class *o) const -> std::enable_if_t<!std::is_pointer<Type>::value, Boxed_Value>
-        {
-          return detail::Handle_Return<typename std::add_lvalue_reference<typename std::add_const<Type>::type>::type>::handle(o->*m_attr);
-        }
-
 
 
         static std::vector<Type_Info> param_types()
@@ -799,6 +802,7 @@ namespace chaiscript
           return {user_type<T>(), user_type<Class>()};
         }
 
+        std::vector<Type_Info> m_param_types{user_type<T>(), user_type<Class>()};
         T Class::* m_attr;
     };
   }
@@ -841,7 +845,7 @@ namespace chaiscript
     {
       template<typename FuncType>
         bool types_match_except_for_arithmetic(const FuncType &t_func, const std::vector<Boxed_Value> &plist,
-            const Type_Conversions_State &t_conversions)
+            const Type_Conversions_State &t_conversions) noexcept
         {
           const std::vector<Type_Info> &types = t_func->get_param_types();
 

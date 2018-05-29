@@ -24,13 +24,13 @@ namespace chaiscript {
 
       template<typename Tracer>
       auto optimize(eval::AST_Node_Impl_Ptr<Tracer> p) {
-        (void)std::initializer_list<int>{ (p = static_cast<T&>(*this).optimize(std::move(p)), 0)... };
+        ( (p = static_cast<T&>(*this).optimize(std::move(p))), ... );
         return p;
       }
     };
 
     template<typename T>
-      eval::AST_Node_Impl<T> &child_at(eval::AST_Node_Impl<T> &node, const size_t offset) {
+      eval::AST_Node_Impl<T> &child_at(eval::AST_Node_Impl<T> &node, const size_t offset) noexcept {
         if (node.children[offset]->identifier == AST_Node_Type::Compiled) {
           return *(dynamic_cast<eval::Compiled_AST_Node<T> &>(*node.children[offset]).m_original_node);
         } else {
@@ -39,7 +39,7 @@ namespace chaiscript {
       }
 
     template<typename T>
-      const eval::AST_Node_Impl<T> &child_at(const eval::AST_Node_Impl<T> &node, const size_t offset) {
+      const eval::AST_Node_Impl<T> &child_at(const eval::AST_Node_Impl<T> &node, const size_t offset) noexcept {
         if (node.children[offset]->identifier == AST_Node_Type::Compiled) {
           return *(dynamic_cast<const eval::Compiled_AST_Node<T> &>(*node.children[offset]).m_original_node);
         } else {
@@ -57,7 +57,7 @@ namespace chaiscript {
       }
 
     template<typename T>
-      auto child_count(const eval::AST_Node_Impl<T> &node) {
+      auto child_count(const eval::AST_Node_Impl<T> &node) noexcept {
         if (node.identifier == AST_Node_Type::Compiled) {
           return dynamic_cast<const eval::Compiled_AST_Node<T>&>(node).m_original_node->children.size();
         } else {
@@ -95,7 +95,7 @@ namespace chaiscript {
     };
 
     template<typename T>
-    bool contains_var_decl_in_scope(const eval::AST_Node_Impl<T> &node)
+    bool contains_var_decl_in_scope(const eval::AST_Node_Impl<T> &node) noexcept
     {
       if (node.identifier == AST_Node_Type::Var_Decl || node.identifier == AST_Node_Type::Assign_Decl || node.identifier == AST_Node_Type::Reference) {
         return true;
@@ -469,3 +469,4 @@ namespace chaiscript {
 
 
 #endif
+

@@ -20,6 +20,7 @@
 #include <typeinfo>
 
 #include "../chaiscript_threading.hpp"
+#include "../utility/static_string.hpp"
 #include "bad_boxed_cast.hpp"
 #include "boxed_cast_helper.hpp"
 #include "boxed_value.hpp"
@@ -33,7 +34,7 @@ namespace chaiscript
     {
       public:
         bad_boxed_dynamic_cast(const Type_Info &t_from, const std::type_info &t_to,
-            const std::string &t_what) noexcept
+            const utility::Static_String &t_what) noexcept
           : bad_boxed_cast(t_from, t_to, t_what)
         {
         }
@@ -43,7 +44,7 @@ namespace chaiscript
         {
         }
 
-        explicit bad_boxed_dynamic_cast(const std::string &w) noexcept
+        explicit bad_boxed_dynamic_cast(const utility::Static_String &w) noexcept
           : bad_boxed_cast(w)
         {
         }
@@ -57,7 +58,7 @@ namespace chaiscript
     {
       public:
         bad_boxed_type_cast(const Type_Info &t_from, const std::type_info &t_to,
-            const std::string &t_what) noexcept
+            const utility::Static_String &t_what) noexcept
           : bad_boxed_cast(t_from, t_to, t_what)
         {
         }
@@ -67,7 +68,7 @@ namespace chaiscript
         {
         }
 
-        explicit bad_boxed_type_cast(const std::string &w) noexcept
+        explicit bad_boxed_type_cast(const utility::Static_String &w) noexcept
           : bad_boxed_cast(w)
         {
         }
@@ -87,16 +88,16 @@ namespace chaiscript
         virtual Boxed_Value convert(const Boxed_Value &from) const = 0;
         virtual Boxed_Value convert_down(const Boxed_Value &to) const = 0;
 
-        const Type_Info &to() const
+        const Type_Info &to() const noexcept
         {
           return m_to;
         }
-        const Type_Info &from() const
+        const Type_Info &from() const noexcept
         {
           return m_from;
         }
 
-        virtual bool bidir() const
+        virtual bool bidir() const noexcept
         {
           return true;
         }
@@ -122,6 +123,7 @@ namespace chaiscript
         public: 
           static Boxed_Value cast(const Boxed_Value &t_from)
           {
+
             if (t_from.get_type_info().bare_equal(chaiscript::user_type<From>()))
             {
               if (t_from.is_pointer())
@@ -272,7 +274,7 @@ namespace chaiscript
               "Unable to cast down inheritance hierarchy with non-polymorphic types");
         }
 
-        bool bidir() const override
+        bool bidir() const noexcept override
         {
           return false;
         }
@@ -306,7 +308,7 @@ namespace chaiscript
           return m_func(t_from);
         }
 
-        bool bidir() const override
+        bool bidir() const noexcept override
         {
           return false;
         }
@@ -328,7 +330,7 @@ namespace chaiscript
 
       struct Less_Than
       {
-        bool operator()(const std::type_info *t_lhs, const std::type_info *t_rhs) const
+        bool operator()(const std::type_info *t_lhs, const std::type_info *t_rhs) const noexcept
         {
           return *t_lhs != *t_rhs && t_lhs->before(*t_rhs);
         }
@@ -370,18 +372,19 @@ namespace chaiscript
       }
 
       template<typename T>
-        bool convertable_type() const
+        bool convertable_type() const noexcept
         {
-          return thread_cache().count(user_type<T>().bare_type_info()) != 0;
+          constexpr auto type = user_type<T>().bare_type_info();
+          return thread_cache().count(type) != 0;
         }
 
       template<typename To, typename From>
-        bool converts() const
+        bool converts() const noexcept
         {
           return converts(user_type<To>(), user_type<From>());
         }
 
-      bool converts(const Type_Info &to, const Type_Info &from) const
+      bool converts(const Type_Info &to, const Type_Info &from) const noexcept
       {
         const auto &types = thread_cache();
         if (types.count(to.bare_type_info()) != 0 && types.count(from.bare_type_info()) != 0)
@@ -459,11 +462,11 @@ namespace chaiscript
         {
           return *itr;
         } else {
-          throw std::out_of_range("No such conversion exists from " + from.bare_name() + " to " + to.bare_name());
+          throw std::out_of_range(std::string("No such conversion exists from ") + from.bare_name() + " to " + to.bare_name());
         }
       }
 
-      Conversion_Saves &conversion_saves() const {
+      Conversion_Saves &conversion_saves() const noexcept {
         return *m_conversion_saves;
       }
 
@@ -518,15 +521,15 @@ namespace chaiscript
       {
       }
 
-      const Type_Conversions *operator->() const {
+      const Type_Conversions *operator->() const noexcept {
         return &m_conversions.get();
       }
 
-      const Type_Conversions *get() const {
+      const Type_Conversions *get() const noexcept {
         return &m_conversions.get();
       }
 
-      Type_Conversions::Conversion_Saves &saves() const {
+      Type_Conversions::Conversion_Saves &saves() const noexcept {
         return m_saves;
       }
 
@@ -535,7 +538,7 @@ namespace chaiscript
       std::reference_wrapper<Type_Conversions::Conversion_Saves> m_saves;
   };
 
-  typedef std::shared_ptr<chaiscript::detail::Type_Conversion_Base> Type_Conversion;
+  using Type_Conversion = std::shared_ptr<chaiscript::detail::Type_Conversion_Base>;
 
   /// \brief Used to register a to / parent class relationship with ChaiScript. Necessary if you
   ///        want automatic conversions up your inheritance hierarchy.
@@ -559,23 +562,17 @@ namespace chaiscript
   /// \endcode
   /// 
   template<typename Base, typename Derived>
-  Type_Conversion base_class(typename std::enable_if<std::is_polymorphic<Base>::value && std::is_polymorphic<Derived>::value>::type* = nullptr)
+  Type_Conversion base_class()
   {
     //Can only be used with related polymorphic types
     //may be expanded some day to support conversions other than child -> parent
     static_assert(std::is_base_of<Base,Derived>::value, "Classes are not related by inheritance");
 
-    return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Dynamic_Conversion_Impl<Base, Derived>>();
-  }
-
-  template<typename Base, typename Derived>
-  Type_Conversion base_class(typename std::enable_if<!std::is_polymorphic<Base>::value || !std::is_polymorphic<Derived>::value>::type* = nullptr)
-  {
-    //Can only be used with related polymorphic types
-    //may be expanded some day to support conversions other than child -> parent
-    static_assert(std::is_base_of<Base,Derived>::value, "Classes are not related by inheritance");
-
-    return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Static_Conversion_Impl<Base, Derived>>();
+    if constexpr(std::is_polymorphic<Base>::value && std::is_polymorphic<Derived>::value) {
+      return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Dynamic_Conversion_Impl<Base, Derived>>();
+    } else {
+      return chaiscript::make_shared<detail::Type_Conversion_Base, detail::Static_Conversion_Impl<Base, Derived>>();
+    }
   }
 
 

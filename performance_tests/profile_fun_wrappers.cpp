@@ -7,7 +7,7 @@ double f(const std::string &, double, bool) noexcept {
 
 int main()
 {
-  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
+  chaiscript::ChaiScript chai;
 
   chai.add(chaiscript::fun(&f), "f");
 
