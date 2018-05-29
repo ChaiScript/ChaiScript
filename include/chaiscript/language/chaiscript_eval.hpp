@@ -925,10 +925,16 @@ namespace chaiscript
 
           const auto do_loop = [&loop_var_name, &t_ss, this](const auto &ranged_thing){
             try {
-              chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
-              Boxed_Value &obj = t_ss.add_get_object(loop_var_name, void_var());
-              for (auto loop_var : ranged_thing) {
-                obj = Boxed_Value(std::move(loop_var));
+              for (auto &&loop_var : ranged_thing) {
+                // This scope push and pop might not be the best thing for perf
+                // but we know it's 100% correct
+                chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+                /// to-do make this if-constexpr with C++17 branch
+                if (!std::is_same<std::decay_t<decltype(loop_var)>, Boxed_Value>::value) {
+                  t_ss.add_get_object(loop_var_name, Boxed_Value(std::ref(loop_var)));
+                } else {
+                  t_ss.add_get_object(loop_var_name, Boxed_Value(loop_var));
+                }
                 try {
                   this->children[2]->eval(t_ss);
                 } catch (detail::Continue_Loop &) {
@@ -952,10 +958,9 @@ namespace chaiscript
 
             try {
               const auto range_obj = call_function(range_funcs, range_expression_result);
-              chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
-              Boxed_Value &obj = t_ss.add_get_object(loop_var_name, void_var());
               while (!boxed_cast<bool>(call_function(empty_funcs, range_obj))) {
-                obj = call_function(front_funcs, range_obj);
+                chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+                t_ss.add_get_object(loop_var_name, call_function(front_funcs, range_obj));
                 try {
                   this->children[2]->eval(t_ss);
                 } catch (detail::Continue_Loop &) {

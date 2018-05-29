@@ -14,6 +14,7 @@ Current Version: 6.1.0
  * Support for C++17 compilers!
  * Support for UTF8 BOM #439 @AlekMosingiewicz @MarioLiebisch
 
+
 ### Changes since 5.8.6
 
 *6.0.0 is a massive rework compared to 5.x. It now requires a C++14 enabled compiler*
