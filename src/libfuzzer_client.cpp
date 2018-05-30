@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2018, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
@@ -20,6 +20,7 @@
 #include "../static_libs/chaiscript_parser.hpp"
 #include "../static_libs/chaiscript_stdlib.hpp"
 
+#include "sha3.h"
 
 #ifdef READLINE_AVAILABLE
 #include <readline/readline.h>
@@ -323,17 +324,28 @@ def assert_throws(desc, x)
   }
 })chaiscript");
 
+  SHA3 sha3;
+  std::string sha = sha3(data, size);
+
+  std::string input(reinterpret_cast<const char *>(data), size);
   try {
     chai.eval(std::string(reinterpret_cast<const char *>(data), size));
-  } catch (const chaiscript::exception::eval_error &ee) {
-    std::cout << ee.pretty_print();
-    std::cout << '\n';
-  } catch (const chaiscript::Boxed_Value &e) {
-    std::cout << "Unhandled exception thrown of type " << e.get_type_info().name() << '\n';
+    std::ofstream ofs("VALID/" + sha);
+    ofs << input;
+  } catch (const chaiscript::exception::eval_error &) {
+    std::ofstream ofs("EVAL_ERROR/" + sha);
+    ofs << input;
+  } catch (const chaiscript::Boxed_Value &) {
+    std::ofstream ofs("BOXED_VALUE/" + sha);
+    ofs << input;
   } catch (const chaiscript::exception::load_module_error &e) {
     std::cout << "Unhandled module load error\n" << e.what() << '\n';
-  } catch (const std::exception &e) {
-    std::cout << "unhandled unknown exception: " << e.what() << '\n';
+  } catch (const std::exception &) {
+    std::ofstream ofs("STD_EXCEPTION/" + sha);
+    ofs << input;
+  } catch (...) {
+    std::ofstream ofs("UNKOWN_EXCEPTION/" + sha);
+    ofs << input;
   }
 
   return 0;

@@ -4,6 +4,11 @@
 // and Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
+
+// NOT TO BE USED AS A SOURCE OF BEST PRACTICES 
+// FOR CHAISCRIPT
+
+
 #include <iostream>
 #include <ctime>
 
@@ -156,7 +161,7 @@ int main(int /*argc*/, char * /*argv*/[]) {
 
   //Ability to create our own container types when needed. std::vector and std::map are
   //mostly supported currently
-  chai.add(bootstrap::standard_library::vector_type<std::vector<int> >("IntVector"));
+  //chai.add(bootstrap::standard_library::vector_type<std::vector<int> >("IntVector"));
 
 
   // Test ability to register a function that excepts a shared_ptr version of a type

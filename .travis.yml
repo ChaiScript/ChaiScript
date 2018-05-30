@@ -24,10 +24,10 @@ matrix:
       sudo: false
       env: GCC_VER="4.9"
       compiler: gcc
-    - os: linux
-      sudo: false
-      env: GCC_VER="4.9" CMAKE_OPTIONS="-D DYNLOAD_ENABLED:BOOL=FALSE -D MULTITHREAD_SUPPORT_ENABLED:BOOL=FALSE -D USE_STD_MAKE_SHARED:BOOL=TRUE" BUILD_ONLY=1
-      compiler: gcc
+      #    - os: linux
+      #sudo: false
+      #env: GCC_VER="6" CMAKE_OPTIONS="-D DYNLOAD_ENABLED:BOOL=FALSE -D MULTITHREAD_SUPPORT_ENABLED:BOOL=FALSE -D USE_STD_MAKE_SHARED:BOOL=TRUE" BUILD_ONLY=1
+      #compiler: gcc
     - os: linux
       sudo: false
       env: GCC_VER="5" CPPCHECK=1 CMAKE_OPTIONS="-D RUN_FUZZY_TESTS:BOOL=TRUE"

@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2018, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
@@ -682,7 +682,7 @@ namespace chaiscript
         }
 
         /// Returns the type info for a named type
-        Type_Info get_type(const std::string_view &name, bool t_throw = true) const
+        Type_Info get_type(std::string_view name, bool t_throw = true) const
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
@@ -694,7 +694,7 @@ namespace chaiscript
           }
 
           if (t_throw) {
-            throw std::range_error("Type Not Known");
+            throw std::range_error("Type Not Known: " + std::string(name));
           } else {
             return Type_Info();
           }
@@ -730,8 +730,8 @@ namespace chaiscript
         {
           uint_fast32_t method_missing_loc = m_method_missing_loc;
           auto method_missing_funs = get_function("method_missing", method_missing_loc);
-          if (method_missing_funs.first != method_missing_loc) { 
-            m_method_missing_loc = uint_fast32_t(method_missing_funs.first); 
+          if (method_missing_funs.first != method_missing_loc) {
+            m_method_missing_loc = uint_fast32_t(method_missing_funs.first);
           }
 
           return std::move(method_missing_funs.second);
@@ -837,7 +837,7 @@ namespace chaiscript
           for (auto itr = stack.rbegin(); itr != stack.rend(); ++itr)
           {
             retval.insert(itr->begin(), itr->end());
-          } 
+          }
 
           // add the global values
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
@@ -950,11 +950,11 @@ namespace chaiscript
                   } catch (const chaiscript::exception::arity_error &) {
                   } catch (const chaiscript::exception::guard_error &) {
                   }
-                  throw chaiscript::exception::dispatch_error({l_params.begin() + l_num_params, l_params.end()}, 
+                  throw chaiscript::exception::dispatch_error({l_params.begin() + l_num_params, l_params.end()},
                       std::vector<Const_Proxy_Function>{boxed_cast<Const_Proxy_Function>(bv)});
                 } catch (const chaiscript::exception::bad_boxed_cast &) {
                   // unable to convert bv into a Proxy_Function_Base
-                  throw chaiscript::exception::dispatch_error({l_params.begin() + l_num_params, l_params.end()}, 
+                  throw chaiscript::exception::dispatch_error({l_params.begin() + l_num_params, l_params.end()},
                       std::vector<Const_Proxy_Function>(l_funs.begin(), l_funs.end()));
                 }
               } else {
@@ -1011,7 +1011,7 @@ namespace chaiscript
                   tmp_params.insert(tmp_params.begin() + 1, var(t_name));
                   return do_attribute_call(2, Function_Params(tmp_params), functions, t_conversions);
                 } else {
-                  std::array p{params[0], var(t_name), var(std::vector<Boxed_Value>(params.begin()+1, params.end()))};
+                  std::array<Boxed_Value, 3> p{params[0], var(t_name), var(std::vector<Boxed_Value>(params.begin()+1, params.end()))};
                   return dispatch::dispatch(functions, Function_Params{p}, t_conversions);
                 }
               } catch (const dispatch::option_explicit_set &e) {

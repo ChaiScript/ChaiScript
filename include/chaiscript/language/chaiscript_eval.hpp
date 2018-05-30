@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2018, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
@@ -99,7 +99,7 @@ namespace chaiscript
           } else if (incoming.get_type_info().bare_equal_type_info(typeid(std::string))) {
             return Boxed_Value(*static_cast<const std::string *>(incoming.get_const_ptr()));
           } else {
-            std::array params{std::move(incoming)};
+            std::array<Boxed_Value, 1> params{std::move(incoming)};
             return t_ss->call_function("clone", t_loc, Function_Params{params}, t_ss.conversions());
           }
         } else {
@@ -203,7 +203,7 @@ namespace chaiscript
               }
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-              std::array params{t_lhs, m_rhs};
+              std::array<Boxed_Value, 2> params{t_lhs, m_rhs};
               fpp.save_params(Function_Params{params});
               return t_ss->call_function(t_oper_string, m_loc, Function_Params{params}, t_ss.conversions());
             }
@@ -250,7 +250,7 @@ namespace chaiscript
               }
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-              std::array params{t_lhs, t_rhs};
+              std::array<Boxed_Value, 2> params{t_lhs, t_rhs};
               fpp.save_params(Function_Params(params));
               return t_ss->call_function(t_oper_string, m_loc, Function_Params(params), t_ss.conversions());
             }
@@ -331,6 +331,7 @@ namespace chaiscript
 
           Boxed_Value fn(this->children[0]->eval(t_ss));
 
+          using ConstFunctionTypePtr = const dispatch::Proxy_Function_Base *;
           try {
             return (*t_ss->boxed_cast<const dispatch::Proxy_Function_Base *>(fn))(Function_Params{params}, t_ss.conversions());
           }
@@ -339,7 +340,8 @@ namespace chaiscript
           }
           catch(const exception::bad_boxed_cast &){
             try {
-              Const_Proxy_Function f = t_ss->boxed_cast<const Const_Proxy_Function &>(fn);
+              using ConstFunctionTypeRef = const Const_Proxy_Function &;
+              Const_Proxy_Function f = t_ss->boxed_cast<ConstFunctionTypeRef>(fn);
               // handle the case where there is only 1 function to try to call and dispatch fails on it
               throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, make_vector(f), false, *t_ss);
             } catch (const exception::bad_boxed_cast &) {
@@ -455,9 +457,15 @@ namespace chaiscript
             // for the RHS
             auto rhs = this->children[1]->eval(t_ss);
             auto lhs = this->children[0]->eval(t_ss);
-            std::array p{std::move(lhs), std::move(rhs)};
+            std::array<Boxed_Value, 2> p{std::move(lhs), std::move(rhs)};
             return p;
           }();
+
+          if (params[0].is_return_value()) {
+            throw exception::eval_error("Error, cannot assign to temporary value.");
+          } else if (params[0].is_const()) {
+            throw exception::eval_error("Error, cannot assign to constant value.");
+          }
 
 
           if (m_oper != Operators::Opers::invalid && params[0].get_type_info().is_arithmetic() &&
@@ -466,13 +474,9 @@ namespace chaiscript
             try {
               return Boxed_Number::do_oper(m_oper, params[0], params[1]);
             } catch (const std::exception &) {
-              throw exception::eval_error("Error with unsupported arithmetic assignment operation");
+              throw exception::eval_error("Error with unsupported arithmetic assignment operation.");
             }
           } else if (m_oper == Operators::Opers::assign) {
-            if (params[0].is_return_value()) {
-              throw exception::eval_error("Error, cannot assign to temporary value.");
-            }
-
             try {
 
               if (params[0].is_undef()) {
@@ -599,7 +603,7 @@ namespace chaiscript
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
           chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
 
-          std::array params{this->children[0]->eval(t_ss), this->children[1]->eval(t_ss)};
+          std::array<Boxed_Value, 2> params{this->children[0]->eval(t_ss), this->children[1]->eval(t_ss)};
 
           try {
             fpp.save_params(Function_Params{params});
@@ -657,7 +661,7 @@ namespace chaiscript
 
           if (this->children[1]->identifier == AST_Node_Type::Array_Call) {
             try {
-              std::array p{retval, this->children[1]->children[1]->eval(t_ss)};
+              std::array<Boxed_Value, 2> p{retval, this->children[1]->children[1]->eval(t_ss)};
               retval = t_ss->call_function("[]", m_array_loc, Function_Params{p}, t_ss.conversions());
             }
             catch(const exception::dispatch_error &e){
@@ -771,6 +775,8 @@ namespace chaiscript
               std::vector<AST_Node_Impl_Ptr<T>>(std::make_move_iterator(t_children.begin()), 
                                                 std::make_move_iterator(std::prev(t_children.end(), has_guard(t_children, 1)?2:1)))
               ),
+              // This apparent use after move is safe because we are only moving out the specific elements we need
+              // on each operation.
               m_body_node(get_body_node(std::move(t_children))),
               m_guard_node(get_guard_node(std::move(t_children), t_children.size()-this->children.size()==2))
 
@@ -933,10 +939,16 @@ namespace chaiscript
 
           const auto do_loop = [&loop_var_name, &t_ss, this](const auto &ranged_thing){
             try {
-              chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
-              Boxed_Value &obj = t_ss.add_get_object(loop_var_name, void_var());
-              for (auto loop_var : ranged_thing) {
-                obj = Boxed_Value(std::move(loop_var));
+              for (auto &&loop_var : ranged_thing) {
+                // This scope push and pop might not be the best thing for perf
+                // but we know it's 100% correct
+                chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+                /// to-do make this if-constexpr with C++17 branch
+                if (!std::is_same<std::decay_t<decltype(loop_var)>, Boxed_Value>::value) {
+                  t_ss.add_get_object(loop_var_name, Boxed_Value(std::ref(loop_var)));
+                } else {
+                  t_ss.add_get_object(loop_var_name, Boxed_Value(loop_var));
+                }
                 try {
                   this->children[2]->eval(t_ss);
                 } catch (detail::Continue_Loop &) {
@@ -960,10 +972,9 @@ namespace chaiscript
 
             try {
               const auto range_obj = call_function(range_funcs, range_expression_result);
-              chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
-              Boxed_Value &obj = t_ss.add_get_object(loop_var_name, void_var());
               while (!boxed_cast<bool>(call_function(empty_funcs, range_obj))) {
-                obj = call_function(front_funcs, range_obj);
+                chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
+                t_ss.add_get_object(loop_var_name, call_function(front_funcs, range_obj));
                 try {
                   this->children[2]->eval(t_ss);
                 } catch (detail::Continue_Loop &) {
@@ -1039,7 +1050,7 @@ namespace chaiscript
               if (this->children[currentCase]->identifier == AST_Node_Type::Case) {
                 //This is a little odd, but because want to see both the switch and the case simultaneously, I do a downcast here.
                 try {
-                  std::array p{match_value, this->children[currentCase]->children[0]->eval(t_ss)};
+                  std::array<Boxed_Value, 2> p{match_value, this->children[currentCase]->children[0]->eval(t_ss)};
                   if (hasMatched || boxed_cast<bool>(t_ss->call_function("==", m_loc, Function_Params{p}, t_ss.conversions()))) {
                     this->children[currentCase]->eval(t_ss);
                     hasMatched = true;
@@ -1154,10 +1165,10 @@ namespace chaiscript
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override{
           if (!this->children.empty()) {
-            throw detail::Return_Value(this->children[0]->eval(t_ss));
+            throw detail::Return_Value{this->children[0]->eval(t_ss)};
           }
           else {
-            throw detail::Return_Value(void_var());
+            throw detail::Return_Value{void_var()};
           }
         }
     };
@@ -1214,6 +1225,10 @@ namespace chaiscript
             // short circuit arithmetic operations
             if (m_oper != Operators::Opers::invalid && m_oper != Operators::Opers::bitwise_and && bv.get_type_info().is_arithmetic())
             {
+              if ((m_oper == Operators::Opers::pre_increment || m_oper == Operators::Opers::pre_decrement) && bv.is_const())
+              {
+                throw exception::eval_error("Error with prefix operator evaluation: cannot modify constant value.");
+              }
               return Boxed_Number::do_oper(m_oper, bv);
             } else {
               chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
@@ -1283,7 +1298,7 @@ namespace chaiscript
 
         Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override{
           try {
-            std::array params{
+            std::array<Boxed_Value, 2> params{
               this->children[0]->children[0]->children[0]->eval(t_ss),
               this->children[0]->children[0]->children[1]->eval(t_ss)
             };
@@ -1408,7 +1423,7 @@ namespace chaiscript
 
         Method_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children) :
           AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Method, std::move(t_loc),
-              std::vector<AST_Node_Impl_Ptr<T>>(std::make_move_iterator(t_children.begin()), 
+              std::vector<AST_Node_Impl_Ptr<T>>(std::make_move_iterator(t_children.begin()),
                                                 std::make_move_iterator(std::prev(t_children.end(), Def_AST_Node<T>::has_guard(t_children, 1)?2:1)))
               ),
             m_body_node(Def_AST_Node<T>::get_body_node(std::move(t_children))),

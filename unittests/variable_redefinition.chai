@@ -1,2 +1,2 @@
-assert_throws("Variable already defined", fun() { auto y = 10; auto y = 20; })
+assert_throws("Error: \"Variable redefined 'y'\"", fun() { auto y = 10; auto y = 20; })
 

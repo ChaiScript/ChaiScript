@@ -1,6 +1,19 @@
 Notes:
 =======
-Current Version: 6.0.0
+Current Version: 6.1.0
+
+### Changes since 6.0.0
+
+ * Add namespacing support #290 @stephenberry
+ * Add utf parsing support
+ * cheatsheet.md updates
+ * `add_class` utility support for scoped enums #306 @StanEpp
+ * Parser optimizations #300 @niXman
+ * Various JSON fixes #377 #400 #409 #371 @totalgee @dinghram @arcoRocks
+ * Various cleanups, bugfixes and warning fixes and minor performance improvements
+ * Support for C++17 compilers!
+ * Support for UTF8 BOM #439 @AlekMosingiewicz @MarioLiebisch
+
 
 ### Changes since 5.8.6
 

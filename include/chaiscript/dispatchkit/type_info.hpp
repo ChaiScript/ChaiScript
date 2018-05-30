@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2018, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
@@ -46,9 +46,9 @@ namespace chaiscript
 
       constexpr Type_Info() noexcept = default;
 
-      constexpr bool operator<(const Type_Info &ti) const noexcept
+      bool operator<(const Type_Info &ti) const noexcept
       {
-        return m_type_info < ti.m_type_info;
+        return m_type_info->before(*ti.m_type_info);
       }
 
       constexpr bool operator!=(const Type_Info &ti) const noexcept

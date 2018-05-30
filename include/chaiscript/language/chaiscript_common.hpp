@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2018, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
@@ -506,11 +506,14 @@ namespace chaiscript
     /// Errors generated when loading a file
     struct file_not_found_error : std::runtime_error {
       explicit file_not_found_error(const std::string &t_filename)
-        : std::runtime_error("File Not Found: " + t_filename)
+        : std::runtime_error("File Not Found: " + t_filename),
+          filename(t_filename)
       { }
 
       file_not_found_error(const file_not_found_error &) = default;
       ~file_not_found_error() noexcept override = default;
+
+      std::string filename;
     };
 
   }
@@ -673,9 +676,6 @@ namespace chaiscript
       /// Special type for returned values
       struct Return_Value {
         Boxed_Value retval;
-
-
-        explicit Return_Value(Boxed_Value &&t_return_value) : retval(std::move(t_return_value)) { }
       };
 
 

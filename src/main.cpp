@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2018, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
@@ -164,15 +164,15 @@ void help(int n) {
   }
 }
 
-bool throws_exception(const std::function<void ()> &f)
+std::string throws_exception(const std::function<void ()> &f)
 {
   try {
     f();
-  } catch (...) {
-    return true;
+  } catch (const std::exception &e) {
+    return e.what();
   }
 
-  return false;
+  return "";
 }
 
 chaiscript::exception::eval_error get_eval_error(const std::function<void ()> &f)

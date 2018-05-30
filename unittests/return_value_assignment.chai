@@ -6,6 +6,20 @@ try {
   print("Caught Error: " + e.what());
 }
 
+def get_value()
+{
+  var i = 5;
+  return i;
+}
+
+def get_value_2()
+{
+  return 5;
+}
+
+// TODO these should be fixed somehow
+//assert_throws("Cannot assign to temporary", fun[](){ get_value() = 3; });
+//assert_throws("Cannot assign to temporary", fun[](){ get_value_2() = 3; });
 
 
 try {

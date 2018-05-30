@@ -1,4 +1,4 @@
-version: 5.8.x.{build}
+version: 6.1.x.{build}
 image: 
  - Visual Studio 2017
 environment:
@@ -11,7 +11,7 @@ build_script:
 
     cd build
 
-    cmake c:\Projects\chaiscript -G "%VS_VERSION%"
+    cmake c:\Projects\chaiscript -G "%VS_VERSION%" -DBUILD_TESTING:BOOL=ON -DBUILD_MODULES:BOOL=ON
 
     cmake --build . --config Debug
 test_script:

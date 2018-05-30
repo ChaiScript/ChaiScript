@@ -4,13 +4,6 @@ if(NOT ${CMAKE_VERSION} VERSION_LESS "3.1")
   cmake_policy(SET CMP0054 NEW)
 endif()
 
-IF(BIICODE)
-  INIT_BIICODE_BLOCK()
-  ADD_BIICODE_TARGETS()
-ELSE()
-  # Your regular CMakeLists configuration here
-
-
 project(chaiscript)
 
 option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" TRUE)
@@ -49,6 +42,8 @@ if(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   if(ENABLE_ADDRESS_SANITIZER)
     add_definitions(-fsanitize=address -g)
     set(LINKER_FLAGS "${LINKER_FLAGS} -fsanitize=address")
+
+    option(BUILD_LIBFUZZ_TESTER "Build libfuzzer tool" FALSE)
   endif()
 
   option(ENABLE_MEMORY_SANITIZER "Enable memory sanitizer testing in gcc/clang" FALSE)
@@ -102,7 +97,7 @@ set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/license.txt")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/readme.md")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/description.txt")
 
-set(CPACK_PACKAGE_VERSION_MAJOR 6)
+set(CPACK_PACKAGE_VERSION_MAJOR 7)
 set(CPACK_PACKAGE_VERSION_MINOR 0)
 set(CPACK_PACKAGE_VERSION_PATCH 0)
 
@@ -123,6 +118,7 @@ configure_file(Doxyfile.in ${CMAKE_BINARY_DIR}/Doxyfile)
 
 include(CTest)
 include(CPack)
+include(cmake/Catch.cmake)
 
 if(NOT MINGW)
   find_library(READLINE_LIBRARY NAMES readline PATH /usr/lib /usr/local/lib /opt/local/lib)
@@ -155,6 +151,9 @@ endif()
 if(MSVC)
   add_definitions(/std:c++latest /W4 /w14545 /w34242 /w34254 /w34287 /w44263 /w44265 /w44296 /w44311 /w44826 /we4289 /w14546 /w14547 /w14549 /w14555 /w14619 /w14905 /w14906 /w14928)
 
+  add_definitions(/std:c++17)
+
+
   if (MSVC_VERSION STREQUAL "1800")
     # VS2013 doesn't have magic statics
     add_definitions(/w44640)
@@ -163,7 +162,7 @@ if(MSVC)
     add_definitions(/w34062)
   endif()
 
-  add_definitions(/bigobj)
+  add_definitions(/bigobj /permissive-)
   # Note on MSVC compiler flags.
   # The code base selective disables warnings as necessary when the compiler is complaining too much
   # about something that is perfectly valid, or there is simply no technical way around it
@@ -262,8 +261,8 @@ add_executable(chai src/main.cpp ${Chai_INCLUDES})
 target_link_libraries(chai ${LIBS} ${CHAISCRIPT_LIBS})
 
 if(BUILD_SAMPLES)
-  add_executable(example samples/example.cpp)
-  target_link_libraries(example ${LIBS})
+  add_executable(sanity_checks src/sanity_checks.cpp)
+  target_link_libraries(sanity_checks ${LIBS})
   add_executable(test_num_exceptions samples/test_num_exceptions.cpp)
   target_link_libraries(test_num_exceptions ${LIBS} ${CHAISCRIPT_LIBS})
   add_executable(memory_leak_test samples/memory_leak_test.cpp)
@@ -286,6 +285,7 @@ if(BUILD_MODULES)
 
   set(MODULES stl_extra)
 endif()
+
 
 file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.chai ${CMAKE_CURRENT_SOURCE_DIR}/unittests/3.x/*.chai)
 list(SORT UNIT_TESTS)
@@ -411,7 +411,7 @@ if(BUILD_TESTING)
   if(NOT UNIT_TEST_LIGHT)
     add_executable(compiled_tests unittests/compiled_tests.cpp)
     target_link_libraries(compiled_tests ${LIBS} ${CHAISCRIPT_LIBS})
-    ADD_CATCH_TESTS(compiled_tests)
+    catch_discover_tests(compiled_tests TEST_PREFIX "compiled.")
 
     add_executable(static_chaiscript_test unittests/static_chaiscript.cpp)
     target_link_libraries(static_chaiscript_test ${LIBS})
@@ -458,6 +458,15 @@ if(BUILD_TESTING)
   endif()
 endif()
 
+
+
+if(BUILD_LIBFUZZ_TESTER)
+  add_executable(fuzzer src/libfuzzer_client.cpp src/sha3.cpp)
+  target_compile_options(fuzzer PRIVATE "-fsanitize=fuzzer,address")
+  target_link_libraries(fuzzer PRIVATE ${LIBS} "-fsanitize=fuzzer,address")
+endif()
+
+
 install(TARGETS chai chaiscript_stdlib-${CHAI_VERSION} ${MODULES} RUNTIME DESTINATION bin LIBRARY DESTINATION lib/chaiscript)
 
 install(DIRECTORY include/chaiscript DESTINATION include
@@ -482,5 +491,3 @@ install(FILES "${chaiscript_BINARY_DIR}/lib/pkgconfig/chaiscript.pc"
         DESTINATION lib/pkgconfig)
 
     
-ENDIF()
-

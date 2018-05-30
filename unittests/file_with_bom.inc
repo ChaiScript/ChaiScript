@@ -1,0 +1,3 @@
+﻿def alwaysTrue() {
+   return true
+}

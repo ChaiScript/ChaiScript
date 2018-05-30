@@ -1,7 +1,7 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2018, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 #ifndef CHAISCRIPT_DEFINES_HPP_
@@ -76,7 +76,7 @@ static_assert(_MSC_FULL_VER >= 190024210, "Visual C++ 2015 Update 3 or later req
 #include <cmath>
 
 namespace chaiscript {
-  constexpr static const int version_major = 6;
+  constexpr static const int version_major = 7;
   constexpr static const int version_minor = 0;
   constexpr static const int version_patch = 0;
 
@@ -153,8 +153,7 @@ namespace chaiscript {
 
 
   template<typename T>
-    [[nodiscard]] constexpr auto parse_num(const std::string_view &t_str) noexcept 
-        -> typename std::enable_if<std::is_integral<T>::value, T>::type
+    [[nodiscard]] constexpr auto parse_num(const std::string_view t_str) noexcept -> typename std::enable_if<std::is_integral<T>::value, T>::type
     {
       T t = 0;
       for (const auto c : t_str) {
@@ -168,60 +167,15 @@ namespace chaiscript {
     }
 
 
-  template<typename T>
-    [[nodiscard]] auto parse_num(const std::string_view &t_str) noexcept 
-    -> typename std::enable_if<!std::is_integral<T>::value, T>::type
-    {
-      T t = 0;
-      T base = 0;
-      T decimal_place = 0;
-      bool exponent = false;
-      bool neg_exponent = false;
-
-      const auto final_value = [](const T val, const T baseval, const bool hasexp, const bool negexp) -> T {
-        if (!hasexp) {
-          return val;
-        } else {
-          return baseval * std::pow(T(10), val*T(negexp?-1:1));
-        }
-      };
-
-      for (const auto c : t_str) {
-        if (c == '.') {
-          decimal_place = 10;
-        } else if (c == 'e' || c == 'E') {
-          exponent = true;
-          decimal_place = 0;
-          base = t;
-          t = 0;
-        } else if (c == '-' && exponent) {
-          neg_exponent = true;
-        } else if (c == '+' && exponent) {
-          neg_exponent = false;
-        } else if (c < '0' || c > '9') {
-          return final_value(t, base, exponent, neg_exponent);
-        } else if (decimal_place < T(10)) {
-          t *= T(10);
-          t += T(c - '0');
-        } else {
-          t += (T(c - '0') / (T(decimal_place)));
-          decimal_place *= 10;
-        }
-      }
-
-      return final_value(t, base, exponent, neg_exponent);
-    }
-
     template<typename T>
-    auto parse_num(const char *t_str) -> typename std::enable_if<!std::is_integral<T>::value, T>::type
+    [[nodiscard]] auto parse_num(const std::string_view t_str) -> typename std::enable_if<!std::is_integral<T>::value, T>::type
     {
        T t = 0;
-       T base;
+       T base{};
        T decimal_place = 0;
        int exponent = 0;
 
-       for (char c;; ++t_str) {
-          c = *t_str;
+       for (const auto c : t_str) {
           switch (c)
           {
           case '.':
@@ -251,17 +205,18 @@ namespace chaiscript {
           case '9':
              if (decimal_place < 10) {
                 t *= 10;
-                t += c - '0';
+                t += static_cast<T>(c - '0');
              }
              else {
-                t += (c - '0') / decimal_place;
+                t += static_cast<T>(c - '0') / decimal_place;
                 decimal_place *= 10;
              }
              break;
           default:
-             return exponent ? base * std::pow(T(10), t * exponent) : t;
+             break;
           }
        }
+       return exponent ? base * std::pow(T(10), t * static_cast<T>(exponent)) : t;
     }
 
   struct str_equal {
