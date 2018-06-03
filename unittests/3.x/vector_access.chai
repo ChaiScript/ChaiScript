@@ -1,2 +1,0 @@
-var x = [1, 2, 3]
-assert_equal(3, x[2])

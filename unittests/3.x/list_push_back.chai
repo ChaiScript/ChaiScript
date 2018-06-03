@@ -1,8 +1,0 @@
-load_module("stl_extra")
-
-var x = List()
-x.push_back(3)
-x.push_back("A")
-
-assert_equal(3, x.front());
-assert_equal("A", x.back());

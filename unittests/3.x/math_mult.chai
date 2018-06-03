@@ -1,1 +1,0 @@
-assert_equal(12, 3 * 4)

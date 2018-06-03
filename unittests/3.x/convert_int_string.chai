@@ -1,1 +1,0 @@
-assert_equal("3bob", 3.to_string + "bob")

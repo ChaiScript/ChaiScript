@@ -1,2 +1,0 @@
-assert_throws("Error: \"Unable to find appropriate'=' operator.\" With parameters: (int, const Function)", fun() { auto x = 5; x = `-`; } );
-

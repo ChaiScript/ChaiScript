@@ -1,4 +1,0 @@
-//If the following succeeds, the test passes
-
-
-"Hello World".for_each(fun(x) { print(x) } )
