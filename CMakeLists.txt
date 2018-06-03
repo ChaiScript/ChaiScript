@@ -145,13 +145,7 @@ endif()
 if(CMAKE_COMPILER_IS_GNUCC)
   execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
 
-  if(GCC_VERSION VERSION_LESS 4.9)
-    set(CPP14_FLAG "-std=c++1y")
-  else()
-    set(CPP14_FLAG "-std=c++1z")
-  endif()
-else()
-  set(CPP14_FLAG "-std=c++1z")
+  set(CPP17_FLAG "-std=c++1z")
 endif()
 
 if(MSVC)
@@ -178,7 +172,7 @@ if(MSVC)
   # how to workaround or fix the error. So I'm disabling it globally.
   add_definitions(/wd4503)
 else()
-  add_definitions(-Wall -Wextra -Wconversion -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wcast-qual -Wunused -Woverloaded-virtual -Wno-noexcept-type -Wpedantic ${CPP14_FLAG})
+  add_definitions(-Wall -Wextra -Wconversion -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wcast-qual -Wunused -Woverloaded-virtual -Wno-noexcept-type -Wpedantic ${CPP17_FLAG})
 
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     add_definitions(-Weverything -Wno-c++98-compat-pedantic  -Wno-c++98-compat -Wno-documentation -Wno-switch-enum -Wno-weak-vtables -Wno-missing-prototypes -Wno-padded -Wno-missing-noreturn -Wno-exit-time-destructors -Wno-documentation-unknown-command -Wno-unused-template -Wno-undef )
@@ -196,12 +190,12 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
   if(USE_LIBCXX)
     add_definitions(-stdlib=libc++)
-    set(LINKER_FLAGS "${LINKER_FLAGS} ${CPP14_FLAG} -stdlib=libc++")
+    set(LINKER_FLAGS "${LINKER_FLAGS} ${CPP17_FLAG} -stdlib=libc++")
   else()
-    set(LINKER_FLAGS "${LINKER_FLAGS} ${CPP14_FLAG}")
+    set(LINKER_FLAGS "${LINKER_FLAGS} ${CPP17_FLAG}")
   endif()
 elseif(CMAKE_COMPILER_IS_GNUCC)
-  set(LINKER_FLAGS "${LINKER_FLAGS} ${CPP14_FLAG}")
+  set(LINKER_FLAGS "${LINKER_FLAGS} ${CPP17_FLAG}")
 endif()
 
 # limitations in MinGW require us to make an optimized build
@@ -267,8 +261,8 @@ add_executable(chai src/main.cpp ${Chai_INCLUDES})
 target_link_libraries(chai ${LIBS} ${CHAISCRIPT_LIBS})
 
 if(BUILD_SAMPLES)
-  add_executable(example samples/example.cpp)
-  target_link_libraries(example ${LIBS})
+  add_executable(sanity_checks src/sanity_checks.cpp)
+  target_link_libraries(sanity_checks ${LIBS})
   add_executable(test_num_exceptions samples/test_num_exceptions.cpp)
   target_link_libraries(test_num_exceptions ${LIBS} ${CHAISCRIPT_LIBS})
   add_executable(memory_leak_test samples/memory_leak_test.cpp)
@@ -328,37 +322,6 @@ endif()
 
 
 if(BUILD_TESTING)
-
-  # Add catch tests macro
-  macro(ADD_CATCH_TESTS executable)
-    if (MSVC)
-      file(TO_NATIVE_PATH "${QT_LIBRARY_DIR}" QT_LIB_PATH)
-      set(NEWPATH "${QT_LIB_PATH};$ENV{PATH}")
-    else()
-      set(NEWPATH $ENV{PATH})
-    endif()
-
-    get_target_property(target_files ${executable} SOURCES)
-
-    foreach(source ${target_files})
-      if(NOT "${source}" MATCHES "/moc_.*cxx")
-        string(REGEX MATCH .*cpp source "${source}")
-        if(source)
-          file(READ "${source}" contents)
-          string(REGEX MATCHALL "TEST_CASE\\([ ]*\"[^\"]+\"" found_tests ${contents})
-          foreach(hit ${found_tests})
-            string(REGEX REPLACE "TEST_CASE\\([ ]*(\"[^\"]+\").*" "\\1" test_name ${hit})
-            add_test(compiled.${test_name} "${executable}" ${test_name})
-            set_tests_properties(compiled.${test_name} PROPERTIES TIMEOUT 660 ENVIRONMENT "PATH=${NEWPATH}")
-          endforeach()
-        endif()
-      endif()
-    endforeach()
-  endmacro()
-
-
-
-
 
   option(UNIT_TEST_LIGHT "Unit tests light (expect module loading failures)" FALSE)
 

@@ -83,7 +83,7 @@ namespace chaiscript {
       public:
         // construct/copy/destruct
         constexpr Any() noexcept = default;
-        Any(Any &&) = default;
+        Any(Any &&) noexcept = default;
         Any &operator=(Any &&t_any) = default;
 
         Any(const Any &t_any)
@@ -128,7 +128,7 @@ namespace chaiscript {
         // queries
         bool empty() const noexcept
         {
-          return !bool(m_data);
+          return !static_cast<bool>(m_data);
         }
 
         const std::type_info & type() const noexcept

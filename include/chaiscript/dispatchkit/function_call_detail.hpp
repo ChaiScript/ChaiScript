@@ -29,66 +29,7 @@ namespace chaiscript
   {
     namespace detail
     {
-      /// Internal helper class for handling the return
-      /// value of a build_function_caller
-      template<typename Ret, bool is_arithmetic>
-        struct Function_Caller_Ret
-        {
-          static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
-              const std::vector<Boxed_Value> &params, const Type_Conversions_State *t_conversions)
-          {
-            if (t_conversions != nullptr) {
-              return boxed_cast<Ret>(dispatch::dispatch(t_funcs, params, *t_conversions), t_conversions);
-            } else {
-              Type_Conversions conv;
-              Type_Conversions_State state(conv, conv.conversion_saves());
-              return boxed_cast<Ret>(dispatch::dispatch(t_funcs, params, state), t_conversions);
-            }
-          }
-        };
-
-      /**
-       * Specialization for arithmetic return types
-       */
-      template<typename Ret>
-        struct Function_Caller_Ret<Ret, true>
-        {
-          static Ret call(const std::vector<Const_Proxy_Function> &t_funcs, 
-              const std::vector<Boxed_Value> &params, const Type_Conversions_State *t_conversions)
-          {
-            if (t_conversions != nullptr) {
-              return Boxed_Number(dispatch::dispatch(t_funcs, params, *t_conversions)).get_as<Ret>();
-            } else {
-              Type_Conversions conv;
-              Type_Conversions_State state(conv, conv.conversion_saves());
-              return Boxed_Number(dispatch::dispatch(t_funcs, params, state)).get_as<Ret>();
-            }
-          }
-        };
-
-
-      /**
-       * Specialization for void return types
-       */
-      template<>
-        struct Function_Caller_Ret<void, false>
-        {
-          static void call(const std::vector<Const_Proxy_Function> &t_funcs, 
-              const std::vector<Boxed_Value> &params, const Type_Conversions_State *t_conversions)
-          {
-            if (t_conversions != nullptr) {
-              dispatch::dispatch(t_funcs, params, *t_conversions);
-            } else {
-              Type_Conversions conv;
-              Type_Conversions_State state(conv, conv.conversion_saves());
-              dispatch::dispatch(t_funcs, params, state);
-            }
-          }
-        };
-
-      /**
-       * used internally for unwrapping a function call's types
-       */
+      /// used internally for unwrapping a function call's types
       template<typename Ret, typename ... Param>
         struct Build_Function_Caller_Helper
         {
@@ -98,41 +39,44 @@ namespace chaiscript
           {
           }
 
+          Ret call(const Function_Params &params, const Type_Conversions_State &t_state)
+          {
+            if constexpr (std::is_arithmetic_v<Ret>) {
+              return Boxed_Number(dispatch::dispatch(m_funcs, params, t_state)).get_as<Ret>();
+            } else if constexpr (std::is_same_v<void, Ret>) {
+              dispatch::dispatch(m_funcs, params, t_state);
+            } else {
+              return boxed_cast<Ret>(dispatch::dispatch(m_funcs, params, t_state), &t_state);
+            }
+          }
+
           template<typename ... P>
           Ret operator()(P&&  ...  param)
           {
+            std::array<Boxed_Value, sizeof...(P)> params{box<P>(std::forward<P>(param))...};
+
             if (m_conversions) {
               Type_Conversions_State state(*m_conversions, m_conversions->conversion_saves());
-              return Function_Caller_Ret<Ret, std::is_arithmetic<Ret>::value && !std::is_same<Ret, bool>::value>::call(m_funcs, { 
-                  box<P>(std::forward<P>(param))...
-                  }, &state
-                  );
+              return call(Function_Params{params}, state);
             } else {
-              return Function_Caller_Ret<Ret, std::is_arithmetic<Ret>::value && !std::is_same<Ret, bool>::value>::call(m_funcs, { 
-                  box<P>(std::forward<P>(param))...
-                  }, nullptr
-                  );
+              Type_Conversions conv;
+              Type_Conversions_State state(conv, conv.conversion_saves());
+              return call(Function_Params{params}, state);
             }
 
           }
 
-          template<typename P, typename Q>
-          static auto box(Q&& q) -> typename std::enable_if<std::is_reference<P>::value&&!std::is_same<chaiscript::Boxed_Value, typename std::remove_const<typename std::remove_reference<P>::type>::type>::value, Boxed_Value>::type
-          {
-            return Boxed_Value(std::ref(std::forward<Q>(q)));
-          }
 
           template<typename P, typename Q>
-          static auto box(Q&& q) -> typename std::enable_if<!std::is_reference<P>::value&&!std::is_same<chaiscript::Boxed_Value, typename std::remove_const<typename std::remove_reference<P>::type>::type>::value, Boxed_Value>::type
-          {
-            return Boxed_Value(std::forward<Q>(q));
-          }
-
-          template<typename P>
-          static Boxed_Value box(Boxed_Value bv) noexcept
-          {
-            return bv;
-          }
+            static Boxed_Value box(Q &&q) {
+              if constexpr (std::is_same_v<chaiscript::Boxed_Value, std::decay_t<Q>>) {
+                return std::forward<Q>(q);
+              } else if constexpr (std::is_reference_v<P>) {
+                return Boxed_Value(std::ref(std::forward<Q>(q)));
+              } else {
+                return Boxed_Value(std::forward<Q>(q));
+              }
+            }
 
 
           std::vector<Const_Proxy_Function> m_funcs;

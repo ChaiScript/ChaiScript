@@ -149,7 +149,7 @@ namespace chaiscript
 
       m_engine.add(
           dispatch::make_dynamic_proxy_function(
-              [this](const std::vector<Boxed_Value> &t_params) {
+              [this](const Function_Params &t_params) {
                 return m_engine.call_exists(t_params);
               })
           , "call_exists");
@@ -158,7 +158,7 @@ namespace chaiscript
       m_engine.add(fun(
             [=](const dispatch::Proxy_Function_Base &t_fun, const std::vector<Boxed_Value> &t_params) -> Boxed_Value {
               Type_Conversions_State s(this->m_engine.conversions(), this->m_engine.conversions().conversion_saves());
-              return t_fun(t_params, s);
+              return t_fun(Function_Params{t_params}, s);
             }), "call");
 
 
@@ -200,6 +200,7 @@ namespace chaiscript
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global(t_bv, t_name); }), "add_global");
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ set_global(t_bv, t_name); }), "set_global");
 
+      // why this unused parameter to Namespace?
       m_engine.add(fun([this](const std::string& t_namespace_name) { register_namespace([](Namespace& /*space*/) {}, t_namespace_name); import(t_namespace_name); }), "namespace");
       m_engine.add(fun([this](const std::string& t_namespace_name) { import(t_namespace_name); }), "import");
     }

@@ -285,20 +285,20 @@ namespace chaiscript
 
       };
 
-      constexpr static std::array<Operator_Precidence, 12> create_operators() noexcept {
-        std::array<Operator_Precidence, 12> operators = { {
-          Operator_Precidence::Ternary_Cond,
-          Operator_Precidence::Logical_Or,
-          Operator_Precidence::Logical_And,
-          Operator_Precidence::Bitwise_Or,
-          Operator_Precidence::Bitwise_Xor,
-          Operator_Precidence::Bitwise_And,
-          Operator_Precidence::Equality,
-          Operator_Precidence::Comparison,
-          Operator_Precidence::Shift,
-          Operator_Precidence::Addition,
-          Operator_Precidence::Multiplication,
-          Operator_Precidence::Prefix
+      constexpr static std::array<Operator_Precedence, 12> create_operators() noexcept {
+        std::array<Operator_Precedence, 12> operators = { {
+          Operator_Precedence::Ternary_Cond,
+          Operator_Precedence::Logical_Or,
+          Operator_Precedence::Logical_And,
+          Operator_Precedence::Bitwise_Or,
+          Operator_Precedence::Bitwise_Xor,
+          Operator_Precedence::Bitwise_And,
+          Operator_Precedence::Equality,
+          Operator_Precedence::Comparison,
+          Operator_Precedence::Shift,
+          Operator_Precedence::Addition,
+          Operator_Precedence::Multiplication,
+          Operator_Precedence::Prefix
         } };
         return operators;
       }
@@ -1791,11 +1791,6 @@ namespace chaiscript
                 if (!(Arg() && Char(')'))) {
                   throw exception::eval_error("Incomplete 'catch' expression", File_Position(m_position.line, m_position.col), *m_filename);
                 }
-                if (Char(':')) {
-                  if (!Operator()) {
-                    throw exception::eval_error("Missing guard expression for catch", File_Position(m_position.line, m_position.col), *m_filename);
-                  }
-                }
               }
 
               while (Eol()) {}
@@ -2471,7 +2466,7 @@ namespace chaiscript
         bool retval = false;
         const auto prev_stack_top = m_match_stack.size();
 
-        if (m_operators[t_precedence] != Operator_Precidence::Prefix) {
+        if (m_operators[t_precedence] != Operator_Precedence::Prefix) {
           if (Operator(t_precedence+1)) {
             retval = true;
             std::string oper;
@@ -2483,7 +2478,7 @@ namespace chaiscript
               }
 
               switch (m_operators[t_precedence]) {
-                case(Operator_Precidence::Ternary_Cond) :
+                case(Operator_Precedence::Ternary_Cond) :
                   if (Symbol(":")) {
                     if (!Operator(t_precedence+1)) {
                       throw exception::eval_error("Incomplete '" + oper + "' expression",
@@ -2497,24 +2492,24 @@ namespace chaiscript
                   }
                   break;
 
-                case(Operator_Precidence::Addition) :
-                case(Operator_Precidence::Multiplication) :
-                case(Operator_Precidence::Shift) :
-                case(Operator_Precidence::Equality) :
-                case(Operator_Precidence::Bitwise_And) :
-                case(Operator_Precidence::Bitwise_Xor) :
-                case(Operator_Precidence::Bitwise_Or) :
-                case(Operator_Precidence::Comparison) :
+                case(Operator_Precedence::Addition) :
+                case(Operator_Precedence::Multiplication) :
+                case(Operator_Precedence::Shift) :
+                case(Operator_Precedence::Equality) :
+                case(Operator_Precedence::Bitwise_And) :
+                case(Operator_Precedence::Bitwise_Xor) :
+                case(Operator_Precedence::Bitwise_Or) :
+                case(Operator_Precedence::Comparison) :
                   build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, oper);
                   break;
 
-                case(Operator_Precidence::Logical_And) :
+                case(Operator_Precedence::Logical_And) :
                   build_match<eval::Logical_And_AST_Node<Tracer>>(prev_stack_top, oper);
                   break;
-                case(Operator_Precidence::Logical_Or) :
+                case(Operator_Precedence::Logical_Or) :
                   build_match<eval::Logical_Or_AST_Node<Tracer>>(prev_stack_top, oper);
                   break;
-                case(Operator_Precidence::Prefix) :
+                case(Operator_Precedence::Prefix) :
                   assert(false); // cannot reach here because of if() statement at the top
                   break;
 

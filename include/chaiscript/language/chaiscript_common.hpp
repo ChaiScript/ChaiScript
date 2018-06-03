@@ -95,7 +95,7 @@ namespace chaiscript
     Logical_And, Logical_Or, Reference, Switch, Case, Default, Noop, Class, Binary, Arg, Global_Decl, Constant, Compiled
   };
 
-  enum class Operator_Precidence { Ternary_Cond, Logical_Or, 
+  enum class Operator_Precedence { Ternary_Cond, Logical_Or, 
     Logical_And, Bitwise_Or, Bitwise_Xor, Bitwise_And, 
     Equality, Comparison, Shift, Addition, Multiplication, Prefix };
 
@@ -732,12 +732,7 @@ namespace chaiscript
           m_ds->pop_function_call(m_ds.stack_holder(), m_ds.conversion_saves());
         }
 
-        void save_params(const std::vector<Boxed_Value> &t_params)
-        {
-          m_ds->save_function_params(t_params);
-        }
-
-        void save_params(std::initializer_list<Boxed_Value> t_params)
+        void save_params(const Function_Params &t_params)
         {
           m_ds->save_function_params(t_params);
         }

@@ -152,7 +152,7 @@ namespace chaiscript
 
     /// Specific version of shared_ptr_clone just for Proxy_Functions
     template<typename Type>
-    std::shared_ptr<typename std::remove_const<Type>::type> shared_ptr_unconst_clone(const std::shared_ptr<typename std::add_const<Type>::type> &p)
+    std::shared_ptr<std::remove_const_t<Type>> shared_ptr_unconst_clone(const std::shared_ptr<std::add_const_t<Type>> &p)
     {
       return std::const_pointer_cast<typename std::remove_const<Type>::type>(p);
     }
@@ -242,7 +242,7 @@ namespace chaiscript
 
       /// Create a bound function object. The first param is the function to bind
       /// the remaining parameters are the args to bind into the result
-      static Boxed_Value bind_function(const std::vector<Boxed_Value> &params)
+      static Boxed_Value bind_function(const Function_Params &params)
       {
         if (params.empty()) {
           throw exception::arity_error(0, 1);

@@ -96,7 +96,7 @@ class JSON
       template<auto ClassValue>
       auto &get_set_type() {
         set_type(ClassValue);
-        return std::get<static_cast<std::size_t>(ClassValue)>(d);
+        return (std::get<static_cast<std::size_t>(ClassValue)>(d));
       }
 
       auto &Map() {

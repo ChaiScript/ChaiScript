@@ -42,7 +42,7 @@ namespace chaiscript
   {
     public:
 
-      static ModulePtr library()
+      [[nodiscard]] static ModulePtr library()
       {
         auto lib = std::make_shared<Module>();
         bootstrap::Bootstrap::bootstrap(*lib);

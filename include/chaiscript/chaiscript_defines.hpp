@@ -105,47 +105,47 @@ namespace chaiscript {
   }
 
   struct Build_Info {
-    constexpr static int version_major() noexcept
+    [[nodiscard]] constexpr static int version_major() noexcept
     {
       return chaiscript::version_major;
     }
 
-    constexpr static int version_minor() noexcept
+    [[nodiscard]] constexpr static int version_minor() noexcept
     {
       return chaiscript::version_minor;
     }
 
-    constexpr static int version_patch() noexcept
+    [[nodiscard]] constexpr static int version_patch() noexcept
     {
       return chaiscript::version_patch;
     }
 
-    static std::string version()
+    [[nodiscard]] static std::string version()
     {
       return std::to_string(version_major()) + '.' + std::to_string(version_minor()) + '.' + std::to_string(version_patch());
     }
 
-    static std::string compiler_id()
+    [[nodiscard]] static std::string compiler_id()
     {
       return compiler_name() + '-' + compiler_version();
     }
 
-    static std::string build_id()
+    [[nodiscard]] static std::string build_id()
     {
       return compiler_id() + (debug_build()?"-Debug":"-Release");
     }
 
-    static std::string compiler_version()
+    [[nodiscard]] static std::string compiler_version()
     {
       return chaiscript::compiler_version;
     }
 
-    static std::string compiler_name()
+    [[nodiscard]] static std::string compiler_name()
     {
       return chaiscript::compiler_name;
     }
 
-    constexpr static bool debug_build() noexcept
+    [[nodiscard]] constexpr static bool debug_build() noexcept
     {
       return chaiscript::debug_build;
     }
@@ -153,7 +153,7 @@ namespace chaiscript {
 
 
   template<typename T>
-    constexpr auto parse_num(const std::string_view t_str) noexcept -> typename std::enable_if<std::is_integral<T>::value, T>::type
+    [[nodiscard]] constexpr auto parse_num(const std::string_view t_str) noexcept -> typename std::enable_if<std::is_integral<T>::value, T>::type
     {
       T t = 0;
       for (const auto c : t_str) {
@@ -168,7 +168,7 @@ namespace chaiscript {
 
 
     template<typename T>
-    auto parse_num(const std::string_view t_str) -> typename std::enable_if<!std::is_integral<T>::value, T>::type
+    [[nodiscard]] auto parse_num(const std::string_view t_str) -> typename std::enable_if<!std::is_integral<T>::value, T>::type
     {
        T t = 0;
        T base{};
@@ -217,16 +217,26 @@ namespace chaiscript {
           }
        }
        return exponent ? base * std::pow(T(10), t * static_cast<T>(exponent)) : t;
-
-
     }
 
+  struct str_equal {
+    [[nodiscard]] bool operator()(const std::string &t_lhs, const std::string &t_rhs) const noexcept {
+      return t_lhs == t_rhs;
+    }
+    template<typename LHS, typename RHS>
+      [[nodiscard]] constexpr bool operator()(const LHS &t_lhs, const RHS &t_rhs) const noexcept {
+        return std::equal(t_lhs.begin(), t_lhs.end(), t_rhs.begin(), t_rhs.end());
+      }
+    struct is_transparent{};
+  };
+
+
   struct str_less {
-    bool operator()(const std::string &t_lhs, const std::string &t_rhs) const noexcept {
+    [[nodiscard]] bool operator()(const std::string &t_lhs, const std::string &t_rhs) const noexcept {
       return t_lhs < t_rhs;
     }
     template<typename LHS, typename RHS>
-      constexpr bool operator()(const LHS &t_lhs, const RHS &t_rhs) const noexcept {
+      [[nodiscard]] constexpr bool operator()(const LHS &t_lhs, const RHS &t_rhs) const noexcept {
         return std::lexicographical_compare(t_lhs.begin(), t_lhs.end(), t_rhs.begin(), t_rhs.end());
       }
     struct is_transparent{};
@@ -239,6 +249,37 @@ namespace chaiscript {
     No_External_Scripts,
     External_Scripts
   };
+
+  template<typename From, typename To>
+  struct is_nothrow_forward_constructible
+    : std::bool_constant<noexcept(To{std::declval<From>()})>
+  {
+  };
+
+  template< class From, class To >
+  inline constexpr bool is_nothrow_forward_constructible_v 
+    = is_nothrow_forward_constructible<From, To>::value;
+
+  template<typename Container, typename ... T>
+  [[nodiscard]] constexpr auto make_container(T && ... t)
+  {
+    Container c;
+    c.reserve(sizeof...(t));
+    (c.push_back(std::forward<T>(t)), ...);
+    return c;
+  }
+
+
+  template<typename ... T>
+  [[nodiscard]] auto make_vector(T && ... t)
+  {
+    using container_type = 
+      std::vector<std::common_type_t<std::decay_t<T>...>>;
+
+    return make_container<container_type>(std::forward<T>(t)...);
+  }
+
+
 
   static inline std::vector<Options> default_options()
   {

@@ -83,7 +83,7 @@ namespace chaiscript
 
           bool is_attribute_function() const noexcept override { return m_is_attribute; } 
 
-          bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const noexcept override
+          bool call_match(const Function_Params &vals, const Type_Conversions_State &t_conversions) const noexcept override
           {
             if (dynamic_object_typename_match(vals, m_type_name, m_ti, t_conversions))
             {
@@ -99,7 +99,7 @@ namespace chaiscript
           }
 
         protected:
-          Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+          Boxed_Value do_call(const Function_Params &params, const Type_Conversions_State &t_conversions) const override
           {
             if (dynamic_object_typename_match(params, m_type_name, m_ti, t_conversions))
             {
@@ -148,7 +148,7 @@ namespace chaiscript
 
           }
 
-          bool dynamic_object_typename_match(const std::vector<Boxed_Value> &bvs, const std::string &name,
+          bool dynamic_object_typename_match(const Function_Params &bvs, const std::string &name,
               const std::unique_ptr<Type_Info> &ti, const Type_Conversions_State &t_conversions) const noexcept
           {
             if (!bvs.empty())
@@ -205,22 +205,22 @@ namespace chaiscript
             return (dc != nullptr) && dc->m_type_name == m_type_name && (*dc->m_func) == (*m_func);
           }
 
-          bool call_match(const std::vector<Boxed_Value> &vals, const Type_Conversions_State &t_conversions) const override
+          bool call_match(const Function_Params &vals, const Type_Conversions_State &t_conversions) const override
           {
             std::vector<Boxed_Value> new_vals{Boxed_Value(Dynamic_Object(m_type_name))};
             new_vals.insert(new_vals.end(), vals.begin(), vals.end());
 
-            return m_func->call_match(new_vals, t_conversions);
+            return m_func->call_match(Function_Params{new_vals}, t_conversions);
           }
 
         protected:
-          Boxed_Value do_call(const std::vector<Boxed_Value> &params, const Type_Conversions_State &t_conversions) const override
+          Boxed_Value do_call(const Function_Params &params, const Type_Conversions_State &t_conversions) const override
           {
             auto bv = Boxed_Value(Dynamic_Object(m_type_name), true);
             std::vector<Boxed_Value> new_params{bv};
             new_params.insert(new_params.end(), params.begin(), params.end());
 
-            (*m_func)(new_params, t_conversions);
+            (*m_func)(Function_Params{new_params}, t_conversions);
 
             return bv;
           }
