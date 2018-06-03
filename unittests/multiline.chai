@@ -1,3 +1,14 @@
+class MyClass {
+    var value;
+    def MyClass(v) { this.value = v; }
+    def getWrappedIncrement() { return MyClass(this.value + 1); }
+    def getValue { return this.value; }
+};
+
+def foo(x) {
+    return MyClass(x+1);
+}
+
 auto x = [1, 2,
  3, 4]
 
@@ -7,3 +18,21 @@ auto y = map(x,
  fun(x) { x + 1 })
 
 assert_equal(2, y[0])
+
+auto z = foo(1)
+.value
+
+assert_equal(2, z)
+
+auto v = foo(2)
+.getValue()
+
+assert_equal(3, v)
+
+auto u = MyClass(3)
+.getWrappedIncrement()
+
+.getWrappedIncrement()
+.getValue()
+
+assert_equal(5, u)
