@@ -385,7 +385,7 @@ namespace chaiscript
       void add_conversion(const std::shared_ptr<detail::Type_Conversion_Base> &conversion)
       {
         chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
-        if (has_conversion(conversion)) {
+        if (find_bidir(conversion->to(), conversion->from()) != m_conversions.end()) {
             throw exception::conversion_error(conversion->to(), conversion->from(),
                     "Trying to re-insert an existing conversion!");
         }
@@ -473,12 +473,6 @@ namespace chaiscript
       {
         chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
         return find_bidir(to, from) != m_conversions.end();
-      }
-
-      /// \brief has_conversion overloaded for Type_Conversion_Base parameter
-      bool has_conversion(const std::shared_ptr<detail::Type_Conversion_Base> &conversion)
-      {
-          return has_conversion(conversion->to(), conversion->from());
       }
 
       std::shared_ptr<detail::Type_Conversion_Base> get_conversion(const Type_Info &to, const Type_Info &from) const
