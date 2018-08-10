@@ -42,9 +42,10 @@ namespace chaiscript
             return m_what.c_str();
         }
 
-       private:
-         const Type_Info&  to;
-         const Type_Info&  from;
+        const Type_Info& to;
+        const Type_Info& from;
+
+    private:
          utility::Static_String m_what;
 
     };
