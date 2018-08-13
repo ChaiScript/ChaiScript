@@ -34,7 +34,7 @@ namespace chaiscript
     class conversion_error
     {
        public:
-         conversion_error(const Type_Info& t_to, const Type_Info& t_from, const utility::Static_String what): to(t_to),
+         conversion_error(const Type_Info t_to, const Type_Info t_from, const utility::Static_String what): to(t_to),
          from(t_from), m_what(std::move(what)) {};
 
         const char * what() const noexcept
@@ -42,8 +42,8 @@ namespace chaiscript
             return m_what.c_str();
         }
 
-        const Type_Info& to;
-        const Type_Info& from;
+        Type_Info to;
+        Type_Info from;
 
     private:
          utility::Static_String m_what;
