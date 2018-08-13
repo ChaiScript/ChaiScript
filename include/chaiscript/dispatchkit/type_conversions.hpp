@@ -38,8 +38,6 @@ namespace chaiscript
          : bad_boxed_cast(t_from, (*t_to.bare_type_info()), what), type_to(t_to) {};
 
         Type_Info type_to;
-
-
     };
 
     class bad_boxed_dynamic_cast : public bad_boxed_cast
