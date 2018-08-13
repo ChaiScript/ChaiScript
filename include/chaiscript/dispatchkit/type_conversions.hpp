@@ -31,22 +31,14 @@ namespace chaiscript
   namespace exception
   {
     /// \brief Error thrown when there's a problem with type conversion
-    class conversion_error
+    class conversion_error: public bad_boxed_cast
     {
        public:
-         conversion_error(const Type_Info t_to, const Type_Info t_from, const utility::Static_String what): to(t_to),
-         from(t_from), m_what(std::move(what)) {};
+         conversion_error(const Type_Info t_to, const Type_Info t_from, const utility::Static_String what) noexcept
+         : bad_boxed_cast(t_from, (*t_to.bare_type_info()), what), type_to(t_to) {};
 
-        const char * what() const noexcept
-        {
-            return m_what.c_str();
-        }
+        Type_Info type_to;
 
-        Type_Info to;
-        Type_Info from;
-
-    private:
-         utility::Static_String m_what;
 
     };
 
