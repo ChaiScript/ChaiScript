@@ -204,6 +204,31 @@ TEST_CASE("Throw int or double")
   }
 }
 
+TEST_CASE("Deduction of pointer return types")
+{
+  int val = 5;
+  int *val_ptr = &val;
+  auto &val_ptr_ref = val_ptr;
+  const auto &val_ptr_const_ref = val_ptr;
+
+  auto get_val_ptr = [&]() -> int * { return val_ptr; };
+  auto get_val_const_ptr = [&]() -> int const * { return val_ptr; };
+  auto get_val_ptr_ref = [&]() -> int *& { return val_ptr_ref; };
+  auto get_val_const_ptr_ref = [&]() -> int * const & { return val_ptr_const_ref; };
+
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+  chai.add(chaiscript::fun(get_val_ptr), "get_val_ptr");
+  chai.add(chaiscript::fun(get_val_const_ptr), "get_val_const_ptr");
+  chai.add(chaiscript::fun(get_val_ptr_ref), "get_val_ptr_ref");
+  chai.add(chaiscript::fun(get_val_const_ptr_ref), "get_val_const_ptr_ref");
+
+  CHECK(chai.eval<int *>("get_val_ptr()") == &val);
+  CHECK(chai.eval<int * const>("get_val_const_ptr()") == &val);
+  CHECK(chai.eval<int *&>("get_val_ptr_ref()") == &val);
+  CHECK(chai.eval<int * const &>("get_val_const_ptr_ref()") == &val);
+}
+
+
 TEST_CASE("Throw a runtime_error")
 {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
