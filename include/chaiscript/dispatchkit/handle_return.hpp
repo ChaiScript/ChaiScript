@@ -167,16 +167,32 @@ namespace chaiscript
           }
         };
 
-
-
-      template<typename Ret>
-        struct Handle_Return<const Ret &>
+      template<typename Ret, bool Ptr>
+        struct Handle_Return_Ref
         {
-          static Boxed_Value handle(const Ret &r)
+          template<typename T>
+          static Boxed_Value handle(T &&r)
           {
             return Boxed_Value(std::cref(r), true);
           }
         };
+
+      template<typename Ret>
+        struct Handle_Return_Ref<Ret, true>
+        {
+          template<typename T>
+          static Boxed_Value handle(T &&r)
+          {
+            return Boxed_Value(typename std::remove_reference<decltype(r)>::type{r}, true);
+          }
+        };
+
+      template<typename Ret>
+        struct Handle_Return<const Ret &> : Handle_Return_Ref<const Ret &, std::is_pointer<typename std::remove_reference<const Ret &>::type>::value>
+        {
+
+        };
+
 
       template<typename Ret>
         struct Handle_Return<const Ret>

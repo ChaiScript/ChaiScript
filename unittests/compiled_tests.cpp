@@ -214,18 +214,28 @@ TEST_CASE("Deduction of pointer return types")
   auto get_val_ptr = [&]() -> int * { return val_ptr; };
   auto get_val_const_ptr = [&]() -> int const * { return val_ptr; };
   auto get_val_ptr_ref = [&]() -> int *& { return val_ptr_ref; };
-  auto get_val_const_ptr_ref = [&]() -> int * const & { return val_ptr_const_ref; };
+  auto get_val_ptr_const_ref = [&]() -> int * const & { return val_ptr_const_ref; };
+//  auto get_val_const_ptr_const_ref = [ref=std::cref(val_ptr)]() -> int const * const & { return ref.get(); };
 
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
   chai.add(chaiscript::fun(get_val_ptr), "get_val_ptr");
   chai.add(chaiscript::fun(get_val_const_ptr), "get_val_const_ptr");
   chai.add(chaiscript::fun(get_val_ptr_ref), "get_val_ptr_ref");
-  chai.add(chaiscript::fun(get_val_const_ptr_ref), "get_val_const_ptr_ref");
+  chai.add(chaiscript::fun(get_val_ptr_const_ref), "get_val_ptr_const_ref");
+//  chai.add(chaiscript::fun(get_val_const_ptr_const_ref), "get_val_const_ptr_const_ref");
 
   CHECK(chai.eval<int *>("get_val_ptr()") == &val);
-  CHECK(chai.eval<int * const>("get_val_const_ptr()") == &val);
-  CHECK(chai.eval<int *&>("get_val_ptr_ref()") == &val);
-  CHECK(chai.eval<int * const &>("get_val_const_ptr_ref()") == &val);
+  CHECK(*chai.eval<int *>("get_val_ptr()") == val);
+  CHECK(chai.eval<int const *>("get_val_const_ptr()") == &val);
+  CHECK(*chai.eval<int const *>("get_val_const_ptr()") == val);
+
+  // note that we cannot maintain the references here,
+  // chaiscript internals cannot handle that, effectively pointer to pointer
+  CHECK(chai.eval<int *>("get_val_ptr_ref()") == &val);
+  CHECK(*chai.eval<int *>("get_val_ptr_ref()") == val);
+  CHECK(chai.eval<int *>("get_val_ptr_const_ref()") == &val);
+  CHECK(*chai.eval<int *>("get_val_ptr_const_ref()") == val);
+//  CHECK(chai.eval<int const *>("get_val_const_ptr_const_ref()") == &val);
 }
 
 
