@@ -30,6 +30,16 @@ namespace chaiscript
 {
   namespace exception
   {
+    /// \brief Error thrown when there's a problem with type conversion
+    class conversion_error: public bad_boxed_cast
+    {
+       public:
+         conversion_error(const Type_Info t_to, const Type_Info t_from, const utility::Static_String what) noexcept
+         : bad_boxed_cast(t_from, (*t_to.bare_type_info()), what), type_to(t_to) {};
+
+        Type_Info type_to;
+    };
+
     class bad_boxed_dynamic_cast : public bad_boxed_cast
     {
       public:
@@ -362,10 +372,14 @@ namespace chaiscript
         return cache;
       }
 
+
       void add_conversion(const std::shared_ptr<detail::Type_Conversion_Base> &conversion)
       {
         chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
-        /// \todo error if a conversion already exists
+        if (find_bidir(conversion->to(), conversion->from()) != m_conversions.end()) {
+            throw exception::conversion_error(conversion->to(), conversion->from(),
+                    "Trying to re-insert an existing conversion!");
+        }
         m_conversions.insert(conversion);
         m_convertableTypes.insert({conversion->to().bare_type_info(), conversion->from().bare_type_info()});
         m_num_types = m_convertableTypes.size();

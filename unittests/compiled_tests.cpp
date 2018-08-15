@@ -1389,4 +1389,23 @@ TEST_CASE("Test ability to get 'use' function from default construction")
   const auto use_function = chai.eval<std::function<chaiscript::Boxed_Value (const std::string &)>>("use");
 }
 
+TEST_CASE("Throw an exception when trying to add same conversion twice")
+{
+  struct my_int {
+      int value;
+      my_int(int val): value(val) {};
+  };
+
+  chaiscript::ChaiScript chai;
+  chai.add(chaiscript::type_conversion<int, my_int>([](int x) {
+      std::cout << "My_int type conversion 1\n";
+      return my_int(x);
+  }));
+  CHECK_THROWS_AS(chai.add(chaiscript::type_conversion<int, my_int>([](int x) {
+      std::cout << "My_int type conversion 2\n";
+      return my_int(x);
+  })), chaiscript::exception::conversion_error);
+
+}
+
 
