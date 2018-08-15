@@ -77,7 +77,7 @@ static_assert(_MSC_FULL_VER >= 190024210, "Visual C++ 2015 Update 3 or later req
 namespace chaiscript {
   static const int version_major = 6;
   static const int version_minor = 1;
-  static const int version_patch = 0;
+  static const int version_patch = 1;
 
   static const char *compiler_version = CHAISCRIPT_COMPILER_VERSION;
   static const char *compiler_name = CHAISCRIPT_COMPILER_NAME;

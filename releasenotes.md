@@ -1,6 +1,10 @@
 Notes:
 =======
-Current Version: 6.1.0
+Current Version: 6.1.1
+
+### Changes since 6.1.0
+
+ * Handle the returning of `&` to `*` types. This specifically comes up with `std::vector<int *>` and similar containers
 
 ### Changes since 6.0.0
 
