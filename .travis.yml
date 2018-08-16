@@ -38,7 +38,7 @@ matrix:
     - os: osx
       compiler: clang
       osx_image: xcode9.4
-      env: COMPILER="clang-5.0"
+      env: COMPILER="clang-3.4"
     - os: osx
       compiler: clang
       osx_image: xcode9.4
