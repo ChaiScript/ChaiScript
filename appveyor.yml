@@ -3,7 +3,6 @@ image:
  - Visual Studio 2017
 environment:
   matrix:
-    - VS_VERSION: "Visual Studio 14"
     - VS_VERSION: "Visual Studio 15"
 build_script:
 - cmd: >-
