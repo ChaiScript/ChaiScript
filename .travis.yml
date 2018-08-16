@@ -21,7 +21,7 @@ matrix:
   include:
     - os: linux
       sudo: false
-      env: GCC_VER="4.9"
+      env: GCC_VER="7"
       compiler: gcc
       #    - os: linux
       #sudo: false
