@@ -6,9 +6,8 @@ addons:
     sources: 
       - ubuntu-toolchain-r-test
     packages:
-      - g++-4.9
-      - g++-5
-      - g++-6
+      - g++-7
+      - g++-8
   coverity_scan:
     project:
       name: "ChaiScript/ChaiScript"
