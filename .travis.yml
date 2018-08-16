@@ -40,6 +40,7 @@ matrix:
     - os: osx
       compiler: clang
       osx_image: xcode9.4
+      env: COMPILER="clang-6.0"
     - os: osx
       compiler: clang
       osx_image: xcode9.4
@@ -53,6 +54,7 @@ env:
 
 before_install:
   - if [ "${GCC_VER}" != "" ]; then export CXX="g++-$GCC_VER" CC="gcc-$GCC_VER" GCOV="gcov-$GCC_VER" ; fi
+  - if [ "${COMPILER}" != "" ]; then export CXX="$COMPILER" CC="$COMPILER" ; fi
   - pip install --user cpp-coveralls
 
 script: 
