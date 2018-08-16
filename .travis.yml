@@ -37,10 +37,10 @@ matrix:
       compiler: gcc
     - os: osx
       compiler: clang
-      osx_image: xcode8
+      osx_image: xcode9.4
     - os: osx
       compiler: clang
-      osx_image: xcode8
+      osx_image: xcode9.4
       env: CMAKE_OPTIONS="-D DYNLOAD_ENABLED:BOOL=FALSE -D MULTITHREAD_SUPPORT_ENABLED:BOOL=FALSE -D USE_STD_MAKE_SHARED:BOOL=TRUE" BUILD_ONLY=1
   
 env:
