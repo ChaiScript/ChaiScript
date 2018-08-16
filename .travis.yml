@@ -5,9 +5,11 @@ addons:
   apt:
     sources: 
       - ubuntu-toolchain-r-test
+      - llvm-toolchain-trusty-6.0
     packages:
       - g++-7
       - g++-8
+      - clang-6.0
   coverity_scan:
     project:
       name: "ChaiScript/ChaiScript"
@@ -38,7 +40,7 @@ matrix:
     - os: osx
       compiler: clang
       osx_image: xcode9.4
-      env: COMPILER="clang-5.0"
+      env: COMPILER="clang-6.0"
     - os: osx
       compiler: clang
       osx_image: xcode9.4
