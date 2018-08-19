@@ -9,7 +9,7 @@ addons:
     packages:
       - g++-7
       - g++-8
-      - clang-6.0
+      - clang-3.7
   coverity_scan:
     project:
       name: "ChaiScript/ChaiScript"
