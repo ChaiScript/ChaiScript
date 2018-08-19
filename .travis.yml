@@ -40,11 +40,11 @@ matrix:
     - os: osx
       compiler: clang
       osx_image: xcode9.4
-      env: COMPILER="clang-6.0"
+      env: CLANGCC="clang-6.0" CLANGCXX="clang++-6.0" CMAKE_OPTIONS="-stdlib=libc++"
     - os: osx
       compiler: clang
       osx_image: xcode9.4
-      env: CMAKE_OPTIONS="-D DYNLOAD_ENABLED:BOOL=FALSE -D MULTITHREAD_SUPPORT_ENABLED:BOOL=FALSE -D USE_STD_MAKE_SHARED:BOOL=TRUE" BUILD_ONLY=1
+      env: CLANGCC="clang-6.0" CLANGCXX="clang++-6.0" CMAKE_OPTIONS="-D DYNLOAD_ENABLED:BOOL=FALSE -D MULTITHREAD_SUPPORT_ENABLED:BOOL=FALSE -D USE_STD_MAKE_SHARED:BOOL=TRUE -stdlib=libc++" BUILD_ONLY=1
   
 env:
   global:
@@ -54,7 +54,8 @@ env:
 
 before_install:
   - if [ "${GCC_VER}" != "" ]; then export CXX="g++-$GCC_VER" CC="gcc-$GCC_VER" GCOV="gcov-$GCC_VER" ; fi
-  - if [ "${COMPILER}" != "" ]; then export CXX="$COMPILER" CC="$COMPILER" ; fi
+  - if [ "${CLANGCC}" != "" ]; then export CC="$CLANGCC" ; fi
+  - if [ "${CLANGXX}" != "" ]; then export CXX="$CLANGXX" ; fi
   - pip install --user cpp-coveralls
 
 script: 
