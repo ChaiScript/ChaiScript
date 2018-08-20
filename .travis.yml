@@ -42,11 +42,11 @@ matrix:
     - os: osx
       compiler: clang
       #osx_image: xcode10
-      env: CLANG_VER=6.0
+      env: CLANG_VER="6.0"
     - os: osx
       compiler: clang
       #osx_image: xcode10
-      env: CLANG_VER=6.0 CMAKE_OPTIONS="-D DYNLOAD_ENABLED:BOOL=FALSE -D MULTITHREAD_SUPPORT_ENABLED:BOOL=FALSE -D USE_STD_MAKE_SHARED:BOOL=TRUE" BUILD_ONLY=1
+      env: CLANG_VER="6.0" CMAKE_OPTIONS="-D DYNLOAD_ENABLED:BOOL=FALSE -D MULTITHREAD_SUPPORT_ENABLED:BOOL=FALSE -D USE_STD_MAKE_SHARED:BOOL=TRUE" BUILD_ONLY=1
   
 env:
   global:
@@ -58,6 +58,10 @@ before_install:
   - if [ "${GCC_VER}" != "" ]; then export CXX="g++-$GCC_VER" CC="gcc-$GCC_VER" GCOV="gcov-$GCC_VER" ; fi
   - if [ "${CLANG_VER}" != "" ]; then export CXX="clang++-$CLANG_VER" CC="clang-$CLANG_VER" ; fi
   - pip install --user cpp-coveralls
+
+install:
+  - sudo apt-get install --allow-unauthenticated -qq clang-6.0
+  - sudo apt-get install --allow-unauthenticated -qq clang++-6.0
 
 script: 
   - cmake -D ENABLE_COVERAGE:BOOL=TRUE -D CMAKE_BUILD_TYPE:STRING=Debug $CMAKE_OPTIONS . 
