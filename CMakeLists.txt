@@ -4,6 +4,9 @@ if(NOT ${CMAKE_VERSION} VERSION_LESS "3.1")
   cmake_policy(SET CMP0054 NEW)
 endif()
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 project(chaiscript)
 
 option(MULTITHREAD_SUPPORT_ENABLED "Multithreaded Support Enabled" TRUE)
