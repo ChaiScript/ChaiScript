@@ -45,7 +45,7 @@ matrix:
       env: CLANG_VER="5.0"
     - os: osx
       compiler: clang
-      #sx_image: xcode10
+      osx_image: xcode10
       env: CLANG_VER="5.0" CMAKE_OPTIONS="-D DYNLOAD_ENABLED:BOOL=FALSE -D MULTITHREAD_SUPPORT_ENABLED:BOOL=FALSE -D USE_STD_MAKE_SHARED:BOOL=TRUE" BUILD_ONLY=1
   
 env:
