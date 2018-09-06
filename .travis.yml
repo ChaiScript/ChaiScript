@@ -11,7 +11,6 @@ addons:
     packages:
       - g++-7
       - g++-8
-      - clang-5.0
   coverity_scan:
     project:
       name: "ChaiScript/ChaiScript"
@@ -43,10 +42,10 @@ matrix:
       compiler: clang
       osx_image: xcode10
       env: CLANG_VER="5.0"
-    - os: osx
-      compiler: clang
-      osx_image: xcode10
-      env: CLANG_VER="5.0" CMAKE_OPTIONS="-D DYNLOAD_ENABLED:BOOL=FALSE -D MULTITHREAD_SUPPORT_ENABLED:BOOL=FALSE -D USE_STD_MAKE_SHARED:BOOL=TRUE" BUILD_ONLY=1
+    #- os: osx
+    #  compiler: clang
+    #  osx_image: xcode10
+    #  env: CLANG_VER="5.0" CMAKE_OPTIONS="-D DYNLOAD_ENABLED:BOOL=FALSE -D MULTITHREAD_SUPPORT_ENABLED:BOOL=FALSE -D USE_STD_MAKE_SHARED:BOOL=TRUE" BUILD_ONLY=1
   
 env:
   global:
