@@ -566,7 +566,7 @@ If both a 2 parameter and a 3 parameter signature match, the 3 parameter functio
  * `__LINE__` Current file line number
  * `__FILE__` Full path of current file
  * `__CLASS__` Name of current class
- * `__FUNC__` Mame of current function
+ * `__FUNC__` Name of current function
 
 
 # Built In Functions
