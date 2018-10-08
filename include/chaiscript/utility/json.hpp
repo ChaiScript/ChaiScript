@@ -18,12 +18,7 @@
 #include <initializer_list>
 #include <ostream>
 #include <iostream>
-#ifdef __APPLE__
-  #include <experimental/variant>
-#else
-  #include <variant>
-#endif
-
+#include <variant>
 #include "../chaiscript_defines.hpp"
 #include "quick_flat_map.hpp"
 
