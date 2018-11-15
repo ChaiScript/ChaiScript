@@ -107,7 +107,7 @@ namespace chaiscript
             /// does there is no possible way to recover
             static std::unordered_map<const void*, T> &t() noexcept
             {
-              thread_local std::unordered_map<const void *, T> my_t;
+              static thread_local std::unordered_map<const void *, T> my_t;
               return my_t;
             }
         };
