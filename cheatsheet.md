@@ -198,9 +198,6 @@ chai.eval(R"_(
   )_");
 ```
 
-## Adding STL math
-ChaiScript itself does not provide a link to the math functions defined in `<cmath>`. You can either add them yourself, or use the [https://github.com/ChaiScript/ChaiScript_Extras](ChaiScript_Extras) helper library. (Which also provides some additional string functions.)
-
 # Executing Script
 
 ## General
@@ -587,3 +584,6 @@ Both `use` and `eval_file` search the 'usepaths' passed to the ChaiScript constr
 
  * `from_json` converts a JSON string into its strongly typed (map, vector, int, double, string) representations
  * `to_json` converts a ChaiScript object (either a `Object` or one of map, vector, int, double, string) tree into its JSON string representation
+ 
+## Extras
+ChaiScript itself does not provide a link to the math functions defined in `<cmath>`. You can either add them yourself, or use the [https://github.com/ChaiScript/ChaiScript_Extras](ChaiScript_Extras) helper library. (Which also provides some additional string functions.)
