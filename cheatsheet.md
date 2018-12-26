@@ -11,12 +11,10 @@ ChaiScript tries to follow the [Semantic Versioning](http://semver.org/) scheme.
 # Initializing ChaiScript
 
 ```
-chaiscript::ChaiScript chai; // loads stdlib from loadable module on file system
-chaiscript::ChaiScript chai(chaiscript::Std_Lib::library()); // compiles in stdlib
+chaiscript::ChaiScript chai; // initializes ChaiScript, adding the standard ChaiScript types (map, string, ...)
 ```
 
 Note that ChaiScript cannot be used as a global / static object unless it is being compiled with `CHAISCRIPT_NO_THREADS`.
-
 
 # Adding Things To The Engine
 
@@ -571,23 +569,6 @@ If both a 2 parameter and a 3 parameter signature match, the 3 parameter functio
 
 # Built In Functions
 
-## Disabling Built-Ins
-
-When constructing a ChaiScript object, a vector of parameters can be passed in to disable or enable various built-in methods.
-
-Current options:
-
-```
-enum class Options
-{
-  Load_Modules,
-  No_Load_Modules,
-  External_Scripts,
-  No_External_Scripts
-};
-```
-
-
 ## Evaluation
 
 ```
@@ -603,3 +584,6 @@ Both `use` and `eval_file` search the 'usepaths' passed to the ChaiScript constr
 
  * `from_json` converts a JSON string into its strongly typed (map, vector, int, double, string) representations
  * `to_json` converts a ChaiScript object (either a `Object` or one of map, vector, int, double, string) tree into its JSON string representation
+ 
+## Extras
+ChaiScript itself does not provide a link to the math functions defined in `<cmath>`. You can either add them yourself, or use the [https://github.com/ChaiScript/ChaiScript_Extras](ChaiScript_Extras) helper library. (Which also provides some additional string functions.)
