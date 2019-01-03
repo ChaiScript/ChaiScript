@@ -1,9 +1,14 @@
-version: 6.1.x.{build}
+version: 7.0.x.{build}
 image:
   - Visual Studio 2017
 environment:
   matrix:
   - VS_VERSION: "Visual Studio 15"
+    additional_flags: "/permissive- /std:c++17"
+
+before_build:
+  - set CXXFLAGS=%additional_flags%
+
 build_script:
 - cmd: >-
     mkdir build
