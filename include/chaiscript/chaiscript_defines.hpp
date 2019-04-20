@@ -271,7 +271,7 @@ namespace chaiscript {
 
 
   template<typename ... T>
-  [[nodiscard]] auto make_vector(T && ... t)
+  [[nodiscard]] auto make_vector(T &&... t) -> std::vector<std::common_type_t<std::decay_t<T>...>>
   {
     using container_type = 
       std::vector<std::common_type_t<std::decay_t<T>...>>;

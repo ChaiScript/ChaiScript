@@ -1303,8 +1303,8 @@ namespace chaiscript
           const auto lhssize = lhsparamtypes.size();
           const auto rhssize = rhsparamtypes.size();
 
-          constexpr const auto boxed_type = user_type<Boxed_Value>();
-          constexpr const auto boxed_pod_type = user_type<Boxed_Number>();
+          const auto boxed_type = user_type<Boxed_Value>();
+          const auto boxed_pod_type = user_type<Boxed_Number>();
 
           for (size_t i = 1; i < lhssize && i < rhssize; ++i)
           {

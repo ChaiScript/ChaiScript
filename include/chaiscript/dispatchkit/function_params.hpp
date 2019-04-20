@@ -36,7 +36,7 @@ namespace chaiscript {
 
       template<size_t Size>
       constexpr explicit Function_Params(const std::array<Boxed_Value, Size> &a)
-        : m_begin(std::begin(a)), m_end(std::end(a))
+        : m_begin(&*std::begin(a)), m_end(&*std::end(a))
       {
       }
 
