@@ -87,7 +87,7 @@ namespace chaiscript
   template<typename T>
     Proxy_Function fun(T &&t)
     {
-      return dispatch::detail::make_callable(std::forward<T>(t), dispatch::detail::Function_Signature{t});
+      return dispatch::detail::make_callable(std::forward<T>(t), dispatch::detail::function_signature(t));
     }
 
 
