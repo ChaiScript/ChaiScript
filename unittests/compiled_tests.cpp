@@ -996,6 +996,29 @@ TEST_CASE("Map conversions")
 }
 
 
+TEST_CASE("Pair conversions")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+  chai.add(chaiscript::pair_conversion<std::string, std::string>());
+  chai.add(chaiscript::pair_conversion<int, double>());
+
+  {
+    const auto p = chai.eval<std::pair<std::string, std::string>>(R"cs(
+      Pair("chai", "script");
+    )cs");
+    CHECK(p.first == std::string{"chai"});
+    CHECK(p.second == "script");
+  }
+  {
+    const auto p = chai.eval<std::pair<int, double>>(R"cs(
+      Pair(5, 3.14);
+    )cs");
+    CHECK(p.first == 5);
+    CHECK(p.second == Approx(3.14));
+  }
+}
+
+
 TEST_CASE("Parse floats with non-posix locale")
 {
 #ifdef CHAISCRIPT_MSVC
