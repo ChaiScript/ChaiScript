@@ -459,6 +459,7 @@ struct JSONParser {
 
   static JSON parse_string( const std::string &str, size_t &offset ) {
     std::string val;
+    std::string hex_matches;
     for( char c = str.at(++offset); c != '\"' ; c = str.at(++offset) ) {
       if( c == '\\' ) {
         switch( str.at(++offset) ) {
@@ -471,16 +472,38 @@ struct JSONParser {
           case 'r' : val += '\r'; break;
           case 't' : val += '\t'; break;
           case 'u' : {
-                       val += "\\u" ;
+                       // val += "\\u" ;
+			hex_matches.clear();
                        for( size_t i = 1; i <= 4; ++i ) {
                          c = str.at(offset+i);
                          if( (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') ) {
-                           val += c;
+                           //val += c;
+			   hex_matches += c;
                          } else {
                            throw std::runtime_error(std::string("JSON ERROR: String: Expected hex character in unicode escape, found '") + c + "'");
                          }
                        }
                        offset += 4;
+		       const auto ch = static_cast<uint32_t>(std::stoi(hex_matches, nullptr, 16));
+			if (ch < 0x80) {
+			  val += static_cast<char>(ch);
+			} else if (ch < 0x800) {
+			  val += static_cast<char>(0xC0 | (ch >> 6));
+			  val += static_cast<char>(0x80 | (ch & 0x3F));
+			} else if (ch < 0x10000) {
+			  val += static_cast<char>(0xE0 |  (ch >> 12));
+			  val += static_cast<char>(0x80 | ((ch >>  6) & 0x3F));
+			  val += static_cast<char>(0x80 |  (ch        & 0x3F));
+			} else if (ch < 0x200000) {
+			  val += static_cast<char>(0xF0 |  (ch >> 18));
+			  val += static_cast<char>(0x80 | ((ch >> 12) & 0x3F));
+			  val += static_cast<char>(0x80 | ((ch >>  6) & 0x3F));
+			  val += static_cast<char>(0x80 |  (ch        & 0x3F));
+			} else {
+			  // this must be an invalid escape sequence?
+			  throw std::runtime_error(std::string("JSON ERROR: String: Invalid 32 bit universal character"));
+			}
+
                      } break;
           default  : val += '\\'; break;
         }
