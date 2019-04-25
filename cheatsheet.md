@@ -389,10 +389,22 @@ switch (myvalue) {
 
 ## Built in Types
 
+There are a number of build-in types that are part of ChaiScript.
+
+### Vectors and Maps
+
 ```
 var v = [1,2,3u,4ll,"16", `+`]; // creates vector of heterogenous values
 var m = ["a":1, "b":2]; // map of string:value pairs
+
+// Add a value to the vector by value.
+v.push_back(123);
+
+// Add an object to the vector by reference.
+v.push_back_ref(m);
 ```
+
+### Numbers
 
 Floating point values default to `double` type and integers default to `int` type. All C++ suffixes
 such as `f`, `ll`, `u` as well as scientific notation are supported
