@@ -66,7 +66,7 @@ chai.add(chaiscript::fun(static_cast<int(Derived::*)>(&Derived::data)), "data");
 
 ```
 chai.add(
-  chaiscript::fun<std::string (bool)>(
+  chaiscript::fun<std::function<std::string (bool)>>(
     [](bool type) {
       if (type) { return "x"; }
       else { return "y"; }
