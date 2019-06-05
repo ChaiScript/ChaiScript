@@ -386,9 +386,9 @@ namespace chaiscript
     }
 
 
-    /// \brief Loads and parses a file. If the file is already, it is not reloaded
-    /// The use paths specified at ChaiScript construction time are searched for the 
-    /// requested file.
+    /// \brief Loads and parses a file. If the file is already open, it is not
+    /// reloaded. The use paths specified at ChaiScript construction time are 
+    /// searched for the requested file.
     ///
     /// \param[in] t_filename Filename to load and evaluate
     Boxed_Value use(const std::string &t_filename)
