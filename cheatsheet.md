@@ -598,4 +598,4 @@ Both `use` and `eval_file` search the 'usepaths' passed to the ChaiScript constr
  * `to_json` converts a ChaiScript object (either a `Object` or one of map, vector, int, double, string) tree into its JSON string representation
  
 ## Extras
-ChaiScript itself does not provide a link to the math functions defined in `<cmath>`. You can either add them yourself, or use the [https://github.com/ChaiScript/ChaiScript_Extras](ChaiScript_Extras) helper library. (Which also provides some additional string functions.)
+ChaiScript itself does not provide a link to the math functions defined in `<cmath>`. You can either add them yourself, or use the [ChaiScript_Extras](https://github.com/ChaiScript/ChaiScript_Extras) helper library. (Which also provides some additional string functions.)
