@@ -5,6 +5,9 @@ Current Version: 6.1.1
 ### Changes since 6.1.0
 
  * Handle the returning of `&` to `*` types. This specifically comes up with `std::vector<int *>` and similar containers
+ * Update CMake to use `LIBDIR` instead of `lib` #502 by @guoyunhe
+ * Add documentation for installing ChaiScript with vcpkg #500 by @grdowns
+ * Fix warning for implicit 'this' lambda capture in C++20 #495 by @Josh-Thompson
 
 ### Changes since 6.0.0
 
@@ -17,7 +20,6 @@ Current Version: 6.1.1
  * Various cleanups, bugfixes and warning fixes and minor performance improvements
  * Support for C++17 compilers!
  * Support for UTF8 BOM #439 @AlekMosingiewicz @MarioLiebisch
-
 
 ### Changes since 5.8.6
 
