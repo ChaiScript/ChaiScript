@@ -458,7 +458,7 @@ install(DIRECTORY samples DESTINATION share/chaiscript
   PATTERN "*/.git*" EXCLUDE
   PATTERN "*~" EXCLUDE)
 
-configure_file(contrib/pkgconfig/chaiscript.pc.in LIBDIR/pkgconfig/chaiscript.pc @ONLY)
+configure_file(contrib/pkgconfig/chaiscript.pc.in lib/pkgconfig/chaiscript.pc @ONLY)
 install(FILES "${chaiscript_BINARY_DIR}/lib/pkgconfig/chaiscript.pc"
         DESTINATION LIBDIR/pkgconfig)
 
