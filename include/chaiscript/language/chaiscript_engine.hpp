@@ -156,7 +156,7 @@ namespace chaiscript
 
 
       m_engine.add(fun(
-            [=](const dispatch::Proxy_Function_Base &t_fun, const std::vector<Boxed_Value> &t_params) -> Boxed_Value {
+            [=, this](const dispatch::Proxy_Function_Base &t_fun, const std::vector<Boxed_Value> &t_params) -> Boxed_Value {
               Type_Conversions_State s(this->m_engine.conversions(), this->m_engine.conversions().conversion_saves());
               return t_fun(Function_Params{t_params}, s);
             }), "call");
@@ -168,7 +168,7 @@ namespace chaiscript
       m_engine.add(fun([this](const std::string &t_type_name){ return m_engine.get_type(t_type_name, true); }), "type");
 
       m_engine.add(fun(
-            [=](const Type_Info &t_from, const Type_Info &t_to, const std::function<Boxed_Value (const Boxed_Value &)> &t_func) {
+            [=, this](const Type_Info &t_from, const Type_Info &t_to, const std::function<Boxed_Value (const Boxed_Value &)> &t_func) {
               m_engine.add(chaiscript::type_conversion(t_from, t_to, t_func));
             }
           ), "add_type_conversion");
