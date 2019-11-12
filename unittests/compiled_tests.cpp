@@ -50,6 +50,26 @@ TEST_CASE("C++11 Lambdas Can Be Registered")
   CHECK(chai.eval<std::string>("f2()") == "world");
 }
 
+TEST_CASE("Lambdas can return boolean")
+{
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+
+  // check lambdas returning bool from chaiscript:
+  std::function<bool ()> chai_function;
+
+  CHECK_NOTHROW(chai_function = chai.eval<std::function<bool ()>>("fun() { 42 != 0 }"));
+
+  bool result = false;
+  CHECK_NOTHROW(result = chai_function());
+
+  CHECK(result == true);
+
+  // check lambdas returning bool from C++:
+  auto cpp_function = [](int x) { return x == 42; };
+  CHECK_NOTHROW(chai.add(chaiscript::fun(cpp_function), "cpp_function"));
+  CHECK_NOTHROW(result = chai.eval<bool>("cpp_function(314)"));
+  CHECK(result == false);
+}
 
 // dynamic_object tests
 TEST_CASE("Dynamic_Object attributes can be shared with C++")
