@@ -49,6 +49,15 @@ namespace chaiscript
 #pragma warning(disable : 4244 4018 4389 4146 4365 4267 4242)
 #endif
 
+//
+// Disable the switch completeness warnings because they raise a false positive, in the 
+// operations. 
+//
+#ifdef CHAISCRIPT_MSVC
+#pragma warning(push)
+#pragma warning(disable : 4062)
+#endif
+
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
