@@ -306,7 +306,7 @@ namespace chaiscript
             } else {
                 const std::string& filename = "Unknown";
                 throw exception::eval_error(what, file_position, filename);
-              }
+            }
           }
         }
 
