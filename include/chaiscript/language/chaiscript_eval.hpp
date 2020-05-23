@@ -298,7 +298,15 @@ namespace chaiscript
             return t_ss.get_object(this->text, m_loc);
           }
           catch (std::exception &) {
-            throw exception::eval_error("Can not find object: " + this->text);
+            File_Position file_position(this->location.start.line, this->location.start.column);
+            std::string what = std::string("Can not find object: ") + this->text;
+            if (this->location.filename != nullptr) {
+                const std::string& filename = *this->location.filename.get();
+                throw exception::eval_error(what, file_position, filename);
+            } else {
+                const std::string& filename = "Unknown";
+                throw exception::eval_error(what, file_position, filename);
+              }
           }
         }
 
