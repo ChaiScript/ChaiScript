@@ -3,7 +3,7 @@ image:
   - Visual Studio 2019
 environment:
   matrix:
-  - VS_VERSION: "Visual Studio 19"
+  - VS_VERSION: "Visual Studio 16 2019"
 build_script:
 - cmd: >-
     mkdir build
