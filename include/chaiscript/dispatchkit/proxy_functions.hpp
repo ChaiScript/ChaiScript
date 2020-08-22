@@ -81,7 +81,7 @@ namespace chaiscript
         {
           auto vals = t_params.to_vector();
           
-          const std::type_info * floop { &typeid(int) };
+          const std::type_info * floop = &typeid(Boxed_Value);
           constexpr Type_Info IAMATEST(false,false,false,false,false,floop,floop);
           std::cout << IAMATEST.name() << std::endl;
           
