@@ -80,9 +80,11 @@ namespace chaiscript
         std::vector<Boxed_Value> convert(Function_Params t_params, const Type_Conversions_State &t_conversions) const
         {
           auto vals = t_params.to_vector();
-          const auto * intid { &typeid(int) };
-          constexpr Type_Info IAMATEST(false,false,false,false,false,intid,intid);
+          
+          const std::type_info * floop { &typeid(int) };
+          constexpr Type_Info IAMATEST(false,false,false,false,false,floop,floop);
           std::cout << IAMATEST.name() << std::endl;
+          
           constexpr auto dynamic_object_type_info = user_type<Dynamic_Object>();
           for (size_t i = 0; i < vals.size(); ++i)
           {
