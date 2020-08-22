@@ -29,7 +29,7 @@ Introduction
 
 ChaiScript is one of the only embedded scripting language designed from the 
 ground up to directly target C++ and take advantage of modern C++ development 
-techniques, working with the developer like he expects it to work.  Being a 
+techniques, working with the developer how they would expect it to work.  Being a
 native C++ application, it has some advantages over existing embedded scripting 
 languages:
 
@@ -47,6 +47,19 @@ ChaiScript requires a C++14 compiler to build with support for variadic
 templates.  It has been tested with gcc 4.9 and clang 3.6 (with libcxx). 
 For more information see the build 
 [dashboard](http://chaiscript.com/ChaiScript-BuildResults/index.html).
+
+Installation using vcpkg
+========================
+
+You can download and install ChaiScript using the [vcpkg](https://github.com/Microsoft/vcpkg/) dependency manager:
+
+    git clone https://github.com/Microsoft/vcpkg.git
+    cd vcpkg
+    ./bootstrap-vcpkg.sh
+    ./vcpkg integrate install
+    vcpkg install chaiscript
+
+The ChaiScript port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
 
 Usage
 =====
