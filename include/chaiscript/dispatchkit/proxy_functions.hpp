@@ -29,6 +29,9 @@
 #include "dynamic_object.hpp"
 #include "function_params.hpp"
 
+// TODO: remove me - just for testing
+#include <iostream>
+
 namespace chaiscript {
 class Type_Conversions;
 namespace exception {
@@ -77,6 +80,8 @@ namespace chaiscript
         std::vector<Boxed_Value> convert(Function_Params t_params, const Type_Conversions_State &t_conversions) const
         {
           auto vals = t_params.to_vector();
+          constexpr Type_Info IAMATEST{};
+          std::cout << IAMATEST.name() << std::endl;
           constexpr auto dynamic_object_type_info = user_type<Dynamic_Object>();
           for (size_t i = 0; i < vals.size(); ++i)
           {
