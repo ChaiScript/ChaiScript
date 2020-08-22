@@ -139,36 +139,36 @@ namespace chaiscript
         add(t_lib);
       }
 
-      m_engine.add(fun([this](){ m_engine.dump_system(); }), "dump_system");
-      m_engine.add(fun([this](const Boxed_Value &t_bv){ m_engine.dump_object(t_bv); }), "dump_object");
-      m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_type){ return m_engine.is_type(t_bv, t_type); }), "is_type");
-      m_engine.add(fun([this](const Boxed_Value &t_bv){ return m_engine.type_name(t_bv); }), "type_name");
-      m_engine.add(fun([this](const std::string &t_f){ return m_engine.function_exists(t_f); }), "function_exists");
-      m_engine.add(fun([this](){ return m_engine.get_function_objects(); }), "get_functions");
-      m_engine.add(fun([this](){ return m_engine.get_scripting_objects(); }), "get_objects");
+      m_engine.add(fun([&](){ m_engine.dump_system(); }), "dump_system");
+      m_engine.add(fun([&](const Boxed_Value &t_bv){ m_engine.dump_object(t_bv); }), "dump_object");
+      m_engine.add(fun([&](const Boxed_Value &t_bv, const std::string &t_type){ return m_engine.is_type(t_bv, t_type); }), "is_type");
+      m_engine.add(fun([&](const Boxed_Value &t_bv){ return m_engine.type_name(t_bv); }), "type_name");
+      m_engine.add(fun([&](const std::string &t_f){ return m_engine.function_exists(t_f); }), "function_exists");
+      m_engine.add(fun([&](){ return m_engine.get_function_objects(); }), "get_functions");
+      m_engine.add(fun([&](){ return m_engine.get_scripting_objects(); }), "get_objects");
 
       m_engine.add(
           dispatch::make_dynamic_proxy_function(
-              [this](const Function_Params &t_params) {
+              [&](const Function_Params &t_params) {
                 return m_engine.call_exists(t_params);
               })
           , "call_exists");
 
 
       m_engine.add(fun(
-            [this](const dispatch::Proxy_Function_Base &t_fun, const std::vector<Boxed_Value> &t_params) -> Boxed_Value {
+            [&](const dispatch::Proxy_Function_Base &t_fun, const std::vector<Boxed_Value> &t_params) -> Boxed_Value {
               Type_Conversions_State s(this->m_engine.conversions(), this->m_engine.conversions().conversion_saves());
               return t_fun(Function_Params{t_params}, s);
             }), "call");
 
 
-      m_engine.add(fun([this](const Type_Info &t_ti){ return m_engine.get_type_name(t_ti); }), "name");
+      m_engine.add(fun([&](const Type_Info &t_ti){ return m_engine.get_type_name(t_ti); }), "name");
 
-      m_engine.add(fun([this](const std::string &t_type_name, bool t_throw){ return m_engine.get_type(t_type_name, t_throw); }), "type");
-      m_engine.add(fun([this](const std::string &t_type_name){ return m_engine.get_type(t_type_name, true); }), "type");
+      m_engine.add(fun([&](const std::string &t_type_name, bool t_throw){ return m_engine.get_type(t_type_name, t_throw); }), "type");
+      m_engine.add(fun([&](const std::string &t_type_name){ return m_engine.get_type(t_type_name, true); }), "type");
 
       m_engine.add(fun(
-            [this](const Type_Info &t_from, const Type_Info &t_to, const std::function<Boxed_Value (const Boxed_Value &)> &t_func) {
+            [&](const Type_Info &t_from, const Type_Info &t_to, const std::function<Boxed_Value (const Boxed_Value &)> &t_func) {
               m_engine.add(chaiscript::type_conversion(t_from, t_to, t_func));
             }
           ), "add_type_conversion");
@@ -178,31 +178,31 @@ namespace chaiscript
       if (std::find(t_opts.begin(), t_opts.end(), Options::No_Load_Modules) == t_opts.end()
           && std::find(t_opts.begin(), t_opts.end(), Options::Load_Modules) != t_opts.end()) 
       {
-        m_engine.add(fun([this](const std::string &t_module, const std::string &t_file){ return load_module(t_module, t_file); }), "load_module");
-        m_engine.add(fun([this](const std::string &t_module){ return load_module(t_module); }), "load_module");
+        m_engine.add(fun([&](const std::string &t_module, const std::string &t_file){ return load_module(t_module, t_file); }), "load_module");
+        m_engine.add(fun([&](const std::string &t_module){ return load_module(t_module); }), "load_module");
       }
 
       if (std::find(t_opts.begin(), t_opts.end(), Options::No_External_Scripts) == t_opts.end()
           && std::find(t_opts.begin(), t_opts.end(), Options::External_Scripts) != t_opts.end())
       {
-        m_engine.add(fun([this](const std::string &t_file){ return use(t_file); }), "use");
-        m_engine.add(fun([this](const std::string &t_file){ return internal_eval_file(t_file); }), "eval_file");
+        m_engine.add(fun([&](const std::string &t_file){ return use(t_file); }), "use");
+        m_engine.add(fun([&](const std::string &t_file){ return internal_eval_file(t_file); }), "eval_file");
       }
 
-      m_engine.add(fun([this](const std::string &t_str){ return internal_eval(t_str); }), "eval");
-      m_engine.add(fun([this](const AST_Node &t_ast){ return eval(t_ast); }), "eval");
+      m_engine.add(fun([&](const std::string &t_str){ return internal_eval(t_str); }), "eval");
+      m_engine.add(fun([&](const AST_Node &t_ast){ return eval(t_ast); }), "eval");
 
-      m_engine.add(fun([this](const std::string &t_str, const bool t_dump){ return parse(t_str, t_dump); }), "parse");
-      m_engine.add(fun([this](const std::string &t_str){ return parse(t_str); }), "parse");
+      m_engine.add(fun([&](const std::string &t_str, const bool t_dump){ return parse(t_str, t_dump); }), "parse");
+      m_engine.add(fun([&](const std::string &t_str){ return parse(t_str); }), "parse");
 
 
-      m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global_const(t_bv, t_name); }), "add_global_const");
-      m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ add_global(t_bv, t_name); }), "add_global");
-      m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ set_global(t_bv, t_name); }), "set_global");
+      m_engine.add(fun([&](const Boxed_Value &t_bv, const std::string &t_name){ add_global_const(t_bv, t_name); }), "add_global_const");
+      m_engine.add(fun([&](const Boxed_Value &t_bv, const std::string &t_name){ add_global(t_bv, t_name); }), "add_global");
+      m_engine.add(fun([&](const Boxed_Value &t_bv, const std::string &t_name){ set_global(t_bv, t_name); }), "set_global");
 
       // why this unused parameter to Namespace?
-      m_engine.add(fun([this](const std::string& t_namespace_name) { register_namespace([](Namespace& /*space*/) {}, t_namespace_name); import(t_namespace_name); }), "namespace");
-      m_engine.add(fun([this](const std::string& t_namespace_name) { import(t_namespace_name); }), "import");
+      m_engine.add(fun([&](const std::string& t_namespace_name) { register_namespace([](Namespace& /*space*/) {}, t_namespace_name); import(t_namespace_name); }), "namespace");
+      m_engine.add(fun([&](const std::string& t_namespace_name) { import(t_namespace_name); }), "import");
     }
 
     /// Skip BOM at the beginning of file
