@@ -82,7 +82,7 @@ namespace chaiscript
           auto vals = t_params.to_vector();
           
           constexpr std::type_info * floop { &typeid(int) };
-          std:.cout << floop->name() << std::endl; // should print 'i' or smth like that
+          std::cout << floop->name() << std::endl; // should print 'i' or smth like that
           
           constexpr auto dynamic_object_type_info = user_type<Dynamic_Object>();
           for (size_t i = 0; i < vals.size(); ++i)
