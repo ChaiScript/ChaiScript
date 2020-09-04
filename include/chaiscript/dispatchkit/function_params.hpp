@@ -30,13 +30,19 @@ namespace chaiscript {
       }
 
       explicit Function_Params(const std::vector<Boxed_Value> &vec)
-        : m_begin(&vec.front()), m_end(&vec.front() + vec.size())
+        : m_begin(vec.empty() ? nullptr : &vec.front()), m_end(vec.empty() ? nullptr : &vec.front() + vec.size())
       {
       }
 
       template<size_t Size>
       constexpr explicit Function_Params(const std::array<Boxed_Value, Size> &a)
-        : m_begin(&*std::begin(a)), m_end(&*std::end(a))
+        : m_begin(&a.front()), m_end(&a.front() + Size)
+      {
+      }
+
+      template<>
+      constexpr explicit Function_Params(const std::array<Boxed_Value, size_t{0}> &a)
+        : m_begin(nullptr), m_end(nullptr)
       {
       }
 
