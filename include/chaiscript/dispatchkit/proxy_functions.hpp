@@ -844,7 +844,7 @@ namespace chaiscript
     namespace detail
     {
       template<typename FuncType>
-        bool types_match_except_for_arithmetic(const FuncType &t_func, const Function_Params &plist,
+        bool types_match_except_for_arithmetic(const FuncType &t_func, const chaiscript::Function_Params &plist,
             const Type_Conversions_State &t_conversions) noexcept
         {
           const std::vector<Type_Info> &types = t_func->get_param_types();
@@ -863,7 +863,7 @@ namespace chaiscript
         }
 
       template<typename InItr, typename Funcs>
-        Boxed_Value dispatch_with_conversions(InItr begin, const InItr &end, const Function_Params &plist,
+        Boxed_Value dispatch_with_conversions(InItr begin, const InItr &end, const chaiscript::Function_Params &plist,
             const Type_Conversions_State &t_conversions, const Funcs &t_funcs)
         {
           InItr matching_func(end);
@@ -919,7 +919,7 @@ namespace chaiscript
                        );
 
           try {
-            return (*(matching_func->second))(Function_Params{newplist}, t_conversions);
+            return (*(matching_func->second))(chaiscript::Function_Params{newplist}, t_conversions);
           } catch (const exception::bad_boxed_cast &) {
             //parameter failed to cast
           } catch (const exception::arity_error &) {

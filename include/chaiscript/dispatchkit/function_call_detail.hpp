@@ -39,7 +39,7 @@ namespace chaiscript
           {
           }
 
-          Ret call(const Function_Params &params, const Type_Conversions_State &t_state)
+          Ret call(const chaiscript::Function_Params &params, const Type_Conversions_State &t_state)
           {
             if constexpr (std::is_arithmetic_v<Ret>) {
               return Boxed_Number(dispatch::dispatch(m_funcs, params, t_state)).get_as<Ret>();
@@ -57,11 +57,11 @@ namespace chaiscript
 
             if (m_conversions) {
               Type_Conversions_State state(*m_conversions, m_conversions->conversion_saves());
-              return call(Function_Params{params}, state);
+              return call(chaiscript::Function_Params{params}, state);
             } else {
               Type_Conversions conv;
               Type_Conversions_State state(conv, conv.conversion_saves());
-              return call(Function_Params{params}, state);
+              return call(chaiscript::Function_Params{params}, state);
             }
 
           }

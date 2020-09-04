@@ -78,7 +78,7 @@ namespace chaiscript
        */
       template<typename Ret, typename ... Params>
         bool compare_types_cast(Ret (*)(Params...),
-             const Function_Params &params, const Type_Conversions_State &t_conversions) noexcept
+             const chaiscript::Function_Params &params, const Type_Conversions_State &t_conversions) noexcept
         {
           try {
             std::vector<Boxed_Value>::size_type i = 0;
@@ -93,7 +93,7 @@ namespace chaiscript
       template<typename Callable, typename Ret, typename ... Params, size_t ... I>
         Ret call_func(Ret (*)(Params...), 
                       std::index_sequence<I...>, const Callable &f,
-                      [[maybe_unused]] const Function_Params &params, 
+                      [[maybe_unused]] const chaiscript::Function_Params &params, 
                       [[maybe_unused]] const Type_Conversions_State &t_conversions)
         {
           return f(boxed_cast<Params>(params[I], &t_conversions)...);
@@ -106,7 +106,7 @@ namespace chaiscript
       /// the bad_boxed_cast is passed up to the caller.
       template<typename Callable, typename Ret, typename ... Params>
         Boxed_Value call_func(Ret (*sig)(Params...), const Callable &f,
-            const Function_Params &params, const Type_Conversions_State &t_conversions)
+            const chaiscript::Function_Params &params, const Type_Conversions_State &t_conversions)
         {
           if constexpr (std::is_same_v<Ret, void>) {
             call_func(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions);
