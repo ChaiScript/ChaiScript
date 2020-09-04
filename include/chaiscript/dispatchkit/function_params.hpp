@@ -40,12 +40,6 @@ namespace chaiscript {
       {
       }
 
-      template<>
-      constexpr explicit Function_Params(const std::array<Boxed_Value, size_t{0}> &a)
-        : m_begin(nullptr), m_end(nullptr)
-      {
-      }
-
       [[nodiscard]] constexpr const Boxed_Value &operator[](const std::size_t t_i) const noexcept {
         return m_begin[t_i];
       }
@@ -79,6 +73,13 @@ namespace chaiscript {
       const Boxed_Value *m_end = nullptr;
 
   };
+
+  // Constructor specialization for array of size 0
+  template<>
+  constexpr Function_Params::Function_Params(const std::array<Boxed_Value, size_t{0}> &a)
+    : m_begin(nullptr), m_end(nullptr)
+  {
+  }
 
 }
 
