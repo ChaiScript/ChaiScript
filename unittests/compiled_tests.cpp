@@ -713,15 +713,8 @@ TEST_CASE("Object copy counts")
 
   CHECK(Object_Copy_Count_Test::copycount() == 0);
   CHECK(Object_Copy_Count_Test::constructcount() == 1);
-
-
-#ifdef CHAISCRIPT_MSVC
-  CHECK(Object_Copy_Count_Test::destructcount() == 3);
-  CHECK(Object_Copy_Count_Test::movecount() == 2);
-#else
   CHECK(Object_Copy_Count_Test::destructcount() == 2);
   CHECK(Object_Copy_Count_Test::movecount() == 1);
-#endif
 }
 
 
