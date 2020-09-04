@@ -22,7 +22,7 @@ Note that ChaiScript cannot be used as a global / static object unless it is bei
 
 ### General
 
-```
+```cpp
 chai.add(chaiscript::fun(&function_name), "function_name");
 chai.add(chaiscript::fun(&Class::method_name), "method_name");
 chai.add(chaiscript::fun(&Class::member_name), "member_name");
@@ -30,7 +30,7 @@ chai.add(chaiscript::fun(&Class::member_name), "member_name");
 
 ### Bound Member Functions
 
-```
+```cpp
 chai.add(chaiscript::fun(&Class::method_name, Class_instance_ptr), "method_name");
 chai.add(chaiscript::fun(&Class::member_name, Class_instance_ptr), "member_name");
 ```
@@ -39,18 +39,18 @@ chai.add(chaiscript::fun(&Class::member_name, Class_instance_ptr), "member_name"
 
 #### Preferred
 
-```
+```cpp
 chai.add(chaiscript::fun<ReturnType (ParamType1, ParamType2)>(&function_with_overloads), "function_name");
 ```
 
 #### Alternative
 
-```
+```cpp
 chai.add(chaiscript::fun(std::static_cast<ReturnType (*)(ParamType1, ParamType2)>(&function_with_overloads)), "function_name");
 ```
 This overload technique is also used when exposing base member using derived type
 
-```
+```cpp
 struct Base
 {
   int data;
@@ -64,9 +64,9 @@ chai.add(chaiscript::fun(static_cast<int(Derived::*)>(&Derived::data)), "data");
 
 ### Lambda
 
-```
+```cpp
 chai.add(
-  chaiscript::fun<std::string (bool)>(
+  chaiscript::fun<std::function<std::string (bool)>>(
     [](bool type) {
       if (type) { return "x"; }
       else { return "y"; }
@@ -75,7 +75,7 @@ chai.add(
 
 ### Constructors
 
-```
+```cpp
 chai.add(chaiscript::constructor<MyType ()>(), "MyType");
 chai.add(chaiscript::constructor<MyType (const MyType &)>(), "MyType");
 ```
@@ -84,7 +84,7 @@ chai.add(chaiscript::constructor<MyType (const MyType &)>(), "MyType");
 
 It's not strictly necessary to add types, but it helps with many things. Cloning, better errors, etc.
 
-```
+```cpp
 chai.add(chaiscript::user_type<MyClass>(), "MyClass");
 ```
 
@@ -107,27 +107,27 @@ add_type_conversion(type("string"), type("Type_Info"), fun(s) { return type(s); 
 
 Invoking a C++ type conversion possible with `static_cast`
 
-```
+```cpp
 chai.add(chaiscript::type_conversion<T, bool>());
 ```
 
 Calling a user defined type conversion that takes a lambda
 
-```
+```cpp
 chai.add(chaiscript::type_conversion<TestBaseType, Type2>([](const TestBaseType &t_bt) { /* return converted thing */ }));
 ```
 
 ### Class Hierarchies
 
-If you want objects to be convertable between base and derived classes, you must tell ChaiScritp about the relationship.
+If you want objects to be convertable between base and derived classes, you must tell ChaiScript about the relationship.
 
-```
+```cpp
 chai.add(chaiscript::base_class<Base, Derived>());
 ```
 
 If you have multiple classes in your inheritance graph, you will probably want to tell ChaiScript about all relationships.
 
-```
+```cpp
 chai.add(chaiscript::base_class<Base, Derived>());
 chai.add(chaiscript::base_class<Derived, MoreDerived>());
 chai.add(chaiscript::base_class<Base, MoreDerived>());
@@ -168,7 +168,8 @@ chai.set_global(chaiscript::var(somevar), "somevar"); // global non-const, overw
 
 Namespaces will not be populated until `import` is called.
 This saves memory and computing costs if a namespace is not imported into every ChaiScript instance.
-```
+
+```cpp
 chai.register_namespace([](chaiscript::Namespace& math) {
     math["pi"] = chaiscript::const_var(3.14159);
     math["sin"] = chaiscript::var(chaiscript::fun([](const double x) { return sin(x); })); },
@@ -184,7 +185,7 @@ print(math.pi) // prints 3.14159
 # Using STL
 ChaiScript recognize many types from STL, but you have to add specific instantiation yourself.
 
-```
+```cpp
 typedef std::vector<std::pair<int, std::string>> data_list;
 data_list my_list{ make_pair(0, "Hello"), make_pair(1, "World") };
 chai.add(chaiscript::bootstrap::standard_library::vector_type<data_list>("DataList"));
@@ -202,7 +203,7 @@ chai.eval(R"_(
 
 ## General
 
-```
+```cpp
 chai.eval("print(\"Hello World\")");
 chai.eval(R"(print("Hello World"))");
 ```
@@ -213,13 +214,13 @@ Returns values are of the type `Boxed_Value` which is meant to be opaque to the 
 
 ### Prefered
 
-```
+```cpp
 chai.eval<double>("5.3 + 2.1"); // returns 7.4 as a C++ double
 ```
 
 ### Alternative
 
-```
+```cpp
 auto v = chai.eval("5.3 + 2.1");
 chai.boxed_cast<double>(v); // extracts double value from boxed_value and applies known conversions
 chaiscript::boxed_cast<double>(v); // free function version, does not know about conversions
@@ -227,7 +228,7 @@ chaiscript::boxed_cast<double>(v); // free function version, does not know about
 
 ### Converting Between Algebraic Types
 
-```
+```cpp
 chaiscript::Boxed_Number(chai.eval("5.3 + 2.1")).get_as<int>(); // works with any number type
 // which is equivalent to, but much more automatic than:
 static_cast<int>(chai.eval<double>("5.3+2.1")); // this version only works if we know that it's a double
@@ -257,7 +258,7 @@ int main()
 
 ## Sharing Values
 
-```
+```cpp
 double &d = chai.eval("var i = 5.2; i"); // d is now a reference to i in the script
 std::shared_ptr<double> d = chai.eval("var i = 5.2; i"); // same result but reference counted
 
@@ -267,7 +268,7 @@ chai.eval("print(i)"); // prints 3
 
 ## Catching Eval Errors
 
-```
+```cpp
 try {
   chai.eval("2.3 + \"String\"");
 } catch (const chaiscript::exception::eval_error &e) {
@@ -277,7 +278,7 @@ try {
 
 ## Catching Errors Thrown From Script
 
-```
+```cpp
 try {
   chai.eval("throw(runtime_error(\"error\"))", chaiscript::exception_specification<int, double, float, const std::string &, const std::exception &>());
 } catch (const double e) {
@@ -292,19 +293,19 @@ try {
 ## Sharing Functions
 
 
-```
+```cpp
 auto p = chai.eval<std::function<std::string (double)>>("to_string"); 
 p(5); // calls chaiscript's 'to_string' function, returning std::string("5")
 ```
 
 Note: backtick treats operators as normal functions
 
-```
+```cpp
 auto p = chai.eval<std::function<int (int, int)>>(`+`); 
 p(5, 6); // calls chaiscript's '+' function, returning 11
 ```
 
-```
+```cpp
 auto p = chai.eval<std::function<std::string (int, double)>>("fun(x,y) { to_string(x) + to_string(y); }");
 p(3,4.2); // evaluates the lambda function, returning the string "34.2" to C++
 ```
@@ -389,10 +390,22 @@ switch (myvalue) {
 
 ## Built in Types
 
+There are a number of build-in types that are part of ChaiScript.
+
+### Vectors and Maps
+
 ```
 var v = [1,2,3u,4ll,"16", `+`]; // creates vector of heterogenous values
 var m = ["a":1, "b":2]; // map of string:value pairs
+
+// Add a value to the vector by value.
+v.push_back(123);
+
+// Add an object to the vector by reference.
+v.push_back_ref(m);
 ```
+
+### Numbers
 
 Floating point values default to `double` type and integers default to `int` type. All C++ suffixes
 such as `f`, `ll`, `u` as well as scientific notation are supported
@@ -586,4 +599,4 @@ Both `use` and `eval_file` search the 'usepaths' passed to the ChaiScript constr
  * `to_json` converts a ChaiScript object (either a `Object` or one of map, vector, int, double, string) tree into its JSON string representation
  
 ## Extras
-ChaiScript itself does not provide a link to the math functions defined in `<cmath>`. You can either add them yourself, or use the [https://github.com/ChaiScript/ChaiScript_Extras](ChaiScript_Extras) helper library. (Which also provides some additional string functions.)
+ChaiScript itself does not provide a link to the math functions defined in `<cmath>`. You can either add them yourself, or use the [ChaiScript_Extras](https://github.com/ChaiScript/ChaiScript_Extras) helper library. (Which also provides some additional string functions.)
