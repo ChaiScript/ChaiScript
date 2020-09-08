@@ -345,7 +345,7 @@ while (some_condition()) { /* do something */ }
 
 ```
 // ranged for
-for (x : [1,2,3]) { print(i); }
+for (i : [1, 2, 3]) { print(i); }
 ```
 
 Each of the loop styles can be broken using the `break` statement. For example:
