@@ -33,7 +33,7 @@ techniques, working with the developer how they would expect it to work.  Being 
 native C++ application, it has some advantages over existing embedded scripting 
 languages:
 
-1. It uses a header-only approach, which makes it easy to integrate with 
+1. It uses a header-only approach, which makes it easier to integrate with 
    existing projects.
 2. It maintains type safety between your C++ application and the user scripts.
 3. It supports a variety of C++ techniques including callbacks, overloaded 
@@ -73,7 +73,7 @@ Usage
   see below for an example.
 
 Once instantiated, the engine is ready to start running ChaiScript source.  You
-have two main options for processing ChaiScript source: a line at a time using 
+have two(2) main options for processing ChaiScript source: a line at a time using 
 `chai.eval(string)` and a file at a time using `chai.eval_file(fname)`
 
 To make functions in your C++ code visible to scripts, they must be registered 
@@ -110,7 +110,7 @@ double function(int i, double j)
   return i * j;
 }
 
-int main()
+int main();
 {
   chaiscript::ChaiScript chai;
   chai.add(chaiscript::fun(&function), "function");
