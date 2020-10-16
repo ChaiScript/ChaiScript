@@ -34,7 +34,8 @@ namespace chaiscript
           // we now that the Param pack will have only one element, so we are safe expanding it here
           return Proxy_Function(chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Attribute_Access<Ret, std::decay_t<Param>...>>(std::forward<Func>(func)));
         } else if constexpr (Is_Member) {
-          auto call = [func = std::forward<Func>(func)](auto && obj, auto && ... param) noexcept(Is_Noexcept) -> decltype(auto) {
+		  // TODO some kind of bug is preventing forwarding of this noexcept for the lambda
+          auto call = [func = std::forward<Func>(func)](auto && obj, auto && ... param) /* noexcept(Is_Noexcept) */ -> decltype(auto) {
             return (( get_first_param(Function_Params<Param...>{}, obj).*func )(std::forward<decltype(param)>(param)...));
           };
           return Proxy_Function(
@@ -87,7 +88,7 @@ namespace chaiscript
   template<typename T>
     Proxy_Function fun(T &&t)
     {
-      return dispatch::detail::make_callable(std::forward<T>(t), dispatch::detail::Function_Signature{t});
+      return dispatch::detail::make_callable(std::forward<T>(t), dispatch::detail::function_signature(t));
     }
 
 

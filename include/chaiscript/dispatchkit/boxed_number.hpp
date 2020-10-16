@@ -185,7 +185,9 @@ namespace chaiscript
             return const_var(c_lhs * c_rhs);
           case Operators::Opers::difference:
             return const_var(c_lhs - c_rhs);
-        }
+          default:
+            break;
+          }
 
 
         if constexpr (!std::is_floating_point<LHS>::value && !std::is_floating_point<RHS>::value) {
@@ -203,7 +205,9 @@ namespace chaiscript
               return const_var(c_lhs | c_rhs);
             case Operators::Opers::bitwise_xor:
               return const_var(c_lhs ^ c_rhs);
-          }
+            default:
+              break;
+            }
         }
 
         if (t_lhs) {
@@ -224,7 +228,9 @@ namespace chaiscript
             case Operators::Opers::assign_difference:
               *t_lhs -= c_rhs;
               return t_bv;
-          }
+            default:
+              break;
+            }
 
           if constexpr (!std::is_floating_point<LHS>::value && !std::is_floating_point<RHS>::value) {
             switch (t_oper) {
@@ -247,7 +253,9 @@ namespace chaiscript
               case Operators::Opers::assign_bitwise_xor:
                 *t_lhs ^= c_rhs;
                 return t_bv;
-            }
+              default:
+                break;
+              }
           }
         }
 
@@ -299,7 +307,9 @@ namespace chaiscript
                 case Operators::Opers::pre_decrement:
                   --(*lhs);
                   return t_lhs;
-              }
+                default:
+                  break;
+                }
             }
 
             switch (t_oper) {
@@ -307,13 +317,17 @@ namespace chaiscript
                 return const_var(-c_lhs);
               case Operators::Opers::unary_plus:
                 return const_var(+c_lhs);
-            }
+              default:
+                break;
+              }
 
             if constexpr (!std::is_floating_point_v<std::decay_t<decltype(c_lhs)>>) {
               switch (t_oper) {
                 case Operators::Opers::bitwise_complement:
                   return const_var(~c_lhs);
-              }
+                default:
+                  break;
+                }
             }
 
             throw chaiscript::detail::exception::bad_any_cast();
