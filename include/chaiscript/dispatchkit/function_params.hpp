@@ -76,7 +76,7 @@ namespace chaiscript {
 
   // Constructor specialization for array of size 0
   template<>
-  constexpr Function_Params::Function_Params(const std::array<Boxed_Value, size_t{0}> &a)
+  constexpr Function_Params::Function_Params(const std::array<Boxed_Value, size_t{0}> & /* a */)
     : m_begin(nullptr), m_end(nullptr)
   {
   }
