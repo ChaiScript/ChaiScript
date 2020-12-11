@@ -41,7 +41,7 @@ namespace chaiscript
 
           Ret call(const chaiscript::Function_Params &params, const Type_Conversions_State &t_state)
           {
-            if constexpr (std::is_arithmetic_v<Ret>) {
+            if constexpr (std::is_arithmetic_v<Ret> && !std::is_same_v<std::remove_cv_t<std::remove_reference_t<Ret>>, bool>) {
               return Boxed_Number(dispatch::dispatch(m_funcs, params, t_state)).get_as<Ret>();
             } else if constexpr (std::is_same_v<void, Ret>) {
               dispatch::dispatch(m_funcs, params, t_state);
