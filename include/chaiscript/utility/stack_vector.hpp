@@ -43,7 +43,7 @@ struct Stack_Vector
   };
 
   void pop_back() noexcept(std::is_nothrow_destructible_v<T>) {
-    (*this)[m_size--].~T();
+    (*this)[--m_size].~T();
   }
 
   ~Stack_Vector() noexcept(std::is_nothrow_destructible_v<T>) 
