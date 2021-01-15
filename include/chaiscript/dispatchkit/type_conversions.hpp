@@ -645,7 +645,7 @@ namespace chaiscript
         const std::map<std::string, Boxed_Value> &from_map = detail::Cast_Helper<const std::map<std::string, Boxed_Value> &>::cast(t_bv, nullptr);
 
         To map;
-        for (const std::pair<std::string, Boxed_Value> &p : from_map) {
+        for (const std::pair<const std::string, Boxed_Value> &p : from_map) {
           map.insert(std::make_pair(p.first, detail::Cast_Helper<typename To::mapped_type>::cast(p.second, nullptr)));
         }
 
