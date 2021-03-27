@@ -77,7 +77,7 @@ namespace chaiscript
         std::vector<Boxed_Value> convert(Function_Params t_params, const Type_Conversions_State &t_conversions) const
         {
           auto vals = t_params.to_vector();
-          constexpr auto dynamic_object_type_info = user_type<Dynamic_Object>();
+          const auto dynamic_object_type_info = user_type<Dynamic_Object>();
           for (size_t i = 0; i < vals.size(); ++i)
           {
             const auto &name = m_types[i].first;
@@ -117,7 +117,7 @@ namespace chaiscript
         // second result: needs conversions
         std::pair<bool, bool> match(const Function_Params &vals, const Type_Conversions_State &t_conversions) const noexcept
         {
-          constexpr auto dynamic_object_type_info = user_type<Dynamic_Object>();
+          const auto dynamic_object_type_info = user_type<Dynamic_Object>();
           bool needs_conversion = false;
 
           if (!m_has_types) { return std::make_pair(true, needs_conversion); }
@@ -252,9 +252,9 @@ namespace chaiscript
 
         static bool compare_type_to_param(const Type_Info &ti, const Boxed_Value &bv, const Type_Conversions_State &t_conversions) noexcept
         {
-          constexpr auto boxed_value_ti = user_type<Boxed_Value>();
-          constexpr auto boxed_number_ti = user_type<Boxed_Number>();
-          constexpr auto function_ti = user_type<std::shared_ptr<const Proxy_Function_Base>>();
+          const auto boxed_value_ti = user_type<Boxed_Value>();
+          const auto boxed_number_ti = user_type<Boxed_Number>();
+          const auto function_ti = user_type<std::shared_ptr<const Proxy_Function_Base>>();
 
           if (ti.is_undef()
               || ti.bare_equal(boxed_value_ti)
@@ -757,7 +757,7 @@ namespace chaiscript
           {
             return false;
           }
-          constexpr auto class_type_info = user_type<Class>();
+          const auto class_type_info = user_type<Class>();
           return vals[0].get_type_info().bare_equal(class_type_info);
         }
 
@@ -844,7 +844,7 @@ namespace chaiscript
     namespace detail
     {
       template<typename FuncType>
-        bool types_match_except_for_arithmetic(const FuncType &t_func, const Function_Params &plist,
+        bool types_match_except_for_arithmetic(const FuncType &t_func, const chaiscript::Function_Params &plist,
             const Type_Conversions_State &t_conversions) noexcept
         {
           const std::vector<Type_Info> &types = t_func->get_param_types();
@@ -863,7 +863,7 @@ namespace chaiscript
         }
 
       template<typename InItr, typename Funcs>
-        Boxed_Value dispatch_with_conversions(InItr begin, const InItr &end, const Function_Params &plist,
+        Boxed_Value dispatch_with_conversions(InItr begin, const InItr &end, const chaiscript::Function_Params &plist,
             const Type_Conversions_State &t_conversions, const Funcs &t_funcs)
         {
           InItr matching_func(end);
@@ -919,7 +919,7 @@ namespace chaiscript
                        );
 
           try {
-            return (*(matching_func->second))(Function_Params{newplist}, t_conversions);
+            return (*(matching_func->second))(chaiscript::Function_Params{newplist}, t_conversions);
           } catch (const exception::bad_boxed_cast &) {
             //parameter failed to cast
           } catch (const exception::arity_error &) {

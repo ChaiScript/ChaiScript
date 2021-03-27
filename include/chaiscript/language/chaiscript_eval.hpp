@@ -331,7 +331,6 @@ namespace chaiscript
 
           Boxed_Value fn(this->children[0]->eval(t_ss));
 
-          using ConstFunctionTypePtr = const dispatch::Proxy_Function_Base *;
           try {
             return (*t_ss->boxed_cast<const dispatch::Proxy_Function_Base *>(fn))(Function_Params{params}, t_ss.conversions());
           }
