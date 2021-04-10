@@ -37,6 +37,15 @@ namespace chaiscript
   {
     namespace standard_library
     {
+        template <class T>
+        struct isUnorderedMap {
+            static constexpr bool value = false;
+        };
+
+        template<class Key,class Value>
+        struct isUnorderedMap<std::unordered_map<Key,Value>> {
+            static constexpr bool value = true;
+        };
 
       /// Bidir_Range, based on the D concept of ranges.
       /// \todo Update the Range code to base its capabilities on
@@ -71,7 +80,14 @@ namespace chaiscript
             {
               throw std::range_error("Range empty");
             }
-            --m_end;
+            if constexpr (!isUnorderedMap<typename std::decay<Container>::type>::value)
+            {
+              --m_end;
+            }
+            else
+            {
+              throw std::range_error("Cannot call pop_back for unordered_map");
+            }
           }
 
           decltype(auto) front() const
@@ -90,7 +106,14 @@ namespace chaiscript
               throw std::range_error("Range empty");
             }
             auto pos = m_end;
-            --pos;
+            if constexpr (!isUnorderedMap<typename std::decay<Container>::type>::value)
+            {
+              --pos;
+            }
+            else
+            {
+              throw std::range_error("Cannot call back for unordered_map");
+            }
             return (*(pos));
           }
 
