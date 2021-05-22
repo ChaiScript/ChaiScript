@@ -67,7 +67,7 @@ namespace chaiscript
           std::uint32_t hash = 0;
 
           while (begin != end) {
-            hash += *begin;
+            hash += std::uint32_t(*begin);
             hash += hash << 10;
             hash ^= hash >> 6;
             ++begin;
