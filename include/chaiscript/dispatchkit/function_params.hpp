@@ -57,7 +57,7 @@ namespace chaiscript {
       }
 
       [[nodiscard]] constexpr std::size_t size() const noexcept {
-        return m_end - m_begin;
+        return std::size_t(m_end - m_begin);
       }
 
       [[nodiscard]] std::vector<Boxed_Value> to_vector() const {

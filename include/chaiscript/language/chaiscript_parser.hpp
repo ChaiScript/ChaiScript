@@ -325,7 +325,7 @@ namespace chaiscript
 
         static std::string_view str(const Position &t_begin, const Position &t_end) noexcept {
           if (t_begin.m_pos != nullptr && t_end.m_pos != nullptr) {
-            return std::string_view(t_begin.m_pos, std::distance(t_begin.m_pos, t_end.m_pos));
+            return std::string_view(t_begin.m_pos, std::size_t(std::distance(t_begin.m_pos, t_end.m_pos)));
           } else {
             return {};
           }
