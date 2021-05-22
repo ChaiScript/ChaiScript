@@ -35,7 +35,7 @@ namespace chaiscript
     {
        public:
          conversion_error(const Type_Info t_to, const Type_Info t_from, const utility::Static_String what) noexcept
-         : bad_boxed_cast(t_from, (*t_to.bare_type_info()), what), type_to(t_to) {};
+         : bad_boxed_cast(t_from, (*t_to.bare_type_info()), what), type_to(t_to) {}
 
         Type_Info type_to;
     };

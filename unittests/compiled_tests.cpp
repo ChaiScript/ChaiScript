@@ -1406,7 +1406,7 @@ TEST_CASE("Throw an exception when trying to add same conversion twice")
 {
   struct my_int {
       int value;
-      my_int(int val): value(val) {};
+      my_int(int val): value(val) {}
   };
 
   chaiscript::ChaiScript chai;
