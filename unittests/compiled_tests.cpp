@@ -795,7 +795,7 @@ struct Object_Lifetime_Vector2
 {
   Object_Lifetime_Vector2() : x(0), y(0) {}
   Object_Lifetime_Vector2(T px, T py) : x(px), y(py) {}
-  Object_Lifetime_Vector2(const Object_Lifetime_Vector2& cp) : x(cp.x), y(cp.y) {}
+  Object_Lifetime_Vector2(const Object_Lifetime_Vector2& cp) noexcept : x(cp.x), y(cp.y) {}
 
   Object_Lifetime_Vector2& operator+=(const Object_Lifetime_Vector2& vec_r)
   {
