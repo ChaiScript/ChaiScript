@@ -52,7 +52,7 @@ namespace chaiscript
           return hash(std::begin(str), std::end(str)-1);
         }
 
-      static constexpr std::uint32_t hash(const std::string_view &sv) noexcept {
+      static constexpr std::uint32_t hash(std::string_view sv) noexcept {
         return hash(sv.begin(), sv.end());
       }
 
@@ -84,7 +84,7 @@ namespace chaiscript
           return hash(std::begin(str), std::end(str)-1);
         }
 
-      static constexpr std::uint32_t hash(const std::string_view &sv) noexcept {
+      static constexpr std::uint32_t hash(std::string_view sv) noexcept {
         return hash(sv.begin(), sv.end());
       }
 

@@ -198,7 +198,7 @@ namespace chaiscript
           apply_globals(m_globals.begin(), m_globals.end(), t_engine);
         }
 
-      bool has_function(const Proxy_Function &new_f, const std::string_view &name) noexcept
+      bool has_function(const Proxy_Function &new_f, std::string_view name) noexcept
       {
         return std::any_of(m_funcs.begin(), m_funcs.end(),
             [&](const std::pair<Proxy_Function, std::string> &existing_f) {
@@ -617,7 +617,7 @@ namespace chaiscript
         /// Searches the current stack for an object of the given name
         /// includes a special overload for the _ place holder object to
         /// ensure that it is always in scope.
-        Boxed_Value get_object(const std::string_view &name, std::atomic_uint_fast32_t &t_loc, Stack_Holder &t_holder) const
+        Boxed_Value get_object(std::string_view name, std::atomic_uint_fast32_t &t_loc, Stack_Holder &t_holder) const
         {
           enum class Loc : uint_fast32_t {
             located    = 0x80000000,
@@ -739,7 +739,7 @@ namespace chaiscript
 
 
         /// Return a function by name
-        std::pair<size_t, std::shared_ptr<std::vector< Proxy_Function>>> get_function(const std::string_view &t_name, const size_t t_hint) const
+        std::pair<size_t, std::shared_ptr<std::vector< Proxy_Function>>> get_function(std::string_view t_name, const size_t t_hint) const
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
@@ -765,7 +765,7 @@ namespace chaiscript
         /// \returns a function object (Boxed_Value wrapper) if it exists
         /// \throws std::range_error if it does not
         /// \warn does not obtain a mutex lock. \sa get_function_object for public version
-        std::pair<size_t, Boxed_Value> get_function_object_int(const std::string_view &t_name, const size_t t_hint) const
+        std::pair<size_t, Boxed_Value> get_function_object_int(std::string_view t_name, const size_t t_hint) const
         {
           const auto &funs = get_boxed_functions_int();
 
@@ -779,7 +779,7 @@ namespace chaiscript
 
 
         /// Return true if a function exists
-        bool function_exists(const std::string_view &name) const
+        bool function_exists(std::string_view name) const
         {
           chaiscript::detail::threading::shared_lock<chaiscript::detail::threading::shared_mutex> l(m_mutex);
 
@@ -1035,7 +1035,7 @@ namespace chaiscript
 
 
 
-        Boxed_Value call_function(const std::string_view &t_name, std::atomic_uint_fast32_t &t_loc, const Function_Params &params,
+        Boxed_Value call_function(std::string_view t_name, std::atomic_uint_fast32_t &t_loc, const Function_Params &params,
             const Type_Conversions_State &t_conversions) const
         {
           uint_fast32_t loc = t_loc;
@@ -1116,7 +1116,7 @@ namespace chaiscript
         }
 
         /// return true if the Boxed_Value matches the registered type by name
-        bool is_type(const Boxed_Value &r, const std::string_view &user_typename) const noexcept
+        bool is_type(const Boxed_Value &r, std::string_view user_typename) const noexcept
         {
           try {
             if (get_type(user_typename).bare_equal(r.get_type_info()))
@@ -1453,7 +1453,7 @@ namespace chaiscript
           return m_engine.get().add_object(t_name, std::move(obj), m_stack_holder.get());
         }
 
-        Boxed_Value get_object(const std::string_view &t_name, std::atomic_uint_fast32_t &t_loc) const {
+        Boxed_Value get_object(std::string_view t_name, std::atomic_uint_fast32_t &t_loc) const {
           return m_engine.get().get_object(t_name, t_loc, m_stack_holder.get());
         }
 
