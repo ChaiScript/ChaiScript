@@ -189,7 +189,7 @@ else()
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  option(USE_LIBCXX "Use clang's libcxx" TRUE)
+  option(USE_LIBCXX "Use clang's libcxx" FALSE)
 
   if(USE_LIBCXX)
     add_definitions(-stdlib=libc++)
