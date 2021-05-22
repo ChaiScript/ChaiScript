@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 2.8)
-
-if(NOT ${CMAKE_VERSION} VERSION_LESS "3.1")
-  cmake_policy(SET CMP0054 NEW)
-endif()
+cmake_minimum_required(VERSION 3.12)
+cmake_policy(SET CMP0054 NEW)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# required since cmake 3.4 at least for libc++
+set(CMAKE_ENABLE_EXPORTS ON)
 
 project(chaiscript)
 
@@ -62,10 +62,9 @@ if(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   endif()
 
   option(ENABLE_LTO "Enable Link Time Optimization" FALSE)
-
-  if (ENABLE_LTO)
-    add_definitions(-flto)
-    set(LINKER_FLAGS "${LINKER_FLAGS} -flto")
+  if(ENABLE_LTO)
+    check_ipo_supported()
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
   endif()
 
   option(GPROF_OUTPUT "Generate profile data" FALSE)
