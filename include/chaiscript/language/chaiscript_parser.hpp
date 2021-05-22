@@ -792,6 +792,8 @@ namespace chaiscript
 
 #ifdef CHAISCRIPT_CLANG
 #pragma GCC diagnostic ignored "-Wtautological-compare"
+#pragma GCC diagnostic ignored "-Wtautological-unsigned-zero-compare"
+#pragma GCC diagnostic ignored "-Wtautological-type-limit-compare"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #endif
 
