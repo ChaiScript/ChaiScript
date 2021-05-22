@@ -581,7 +581,7 @@ namespace chaiscript
 
       virtual ~AST_Node() noexcept = default;
       AST_Node(AST_Node &&) = default;
-      AST_Node &operator=(AST_Node &&) = default;
+      AST_Node &operator=(AST_Node &&) = delete;
       AST_Node(const AST_Node &) = delete;
       AST_Node& operator=(const AST_Node &) = delete;
 
@@ -693,7 +693,7 @@ namespace chaiscript
       struct Scope_Push_Pop
       {
         Scope_Push_Pop(Scope_Push_Pop &&) = default;
-        Scope_Push_Pop& operator=(Scope_Push_Pop &&) = default;
+        Scope_Push_Pop& operator=(Scope_Push_Pop &&) = delete;
         Scope_Push_Pop(const Scope_Push_Pop &) = delete;
         Scope_Push_Pop& operator=(const Scope_Push_Pop &) = delete;
 
@@ -717,7 +717,7 @@ namespace chaiscript
       struct Function_Push_Pop
       {
         Function_Push_Pop(Function_Push_Pop &&) = default;
-        Function_Push_Pop& operator=(Function_Push_Pop &&) = default;
+        Function_Push_Pop& operator=(Function_Push_Pop &&) = delete;
         Function_Push_Pop(const Function_Push_Pop &) = delete;
         Function_Push_Pop& operator=(const Function_Push_Pop &) = delete;
 
@@ -746,7 +746,7 @@ namespace chaiscript
       struct Stack_Push_Pop
       {
         Stack_Push_Pop(Stack_Push_Pop &&) = default;
-        Stack_Push_Pop& operator=(Stack_Push_Pop &&) = default;
+        Stack_Push_Pop& operator=(Stack_Push_Pop &&) = delete;
         Stack_Push_Pop(const Stack_Push_Pop &) = delete;
         Stack_Push_Pop& operator=(const Stack_Push_Pop &) = delete;
 
