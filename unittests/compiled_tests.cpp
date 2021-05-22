@@ -1417,7 +1417,45 @@ TEST_CASE("Throw an exception when trying to add same conversion twice")
       std::cout << "My_int type conversion 2\n";
       return my_int(x);
   })), chaiscript::exception::conversion_error);
-
 }
 
+TEST_CASE("Test if non copyable/movable types can be registered")
+{
+    struct Noncopyable {
+        Noncopyable() {str = "test";}
+        Noncopyable(const Noncopyable&) = delete;
+        Noncopyable& operator=(const Noncopyable&) = delete;
 
+        std::string str;
+    };
+
+    struct Nonmovable {
+        Nonmovable() {str = "test";}
+        Nonmovable(Nonmovable&&) = delete;
+        Nonmovable& operator=(Nonmovable&&) = delete;
+
+        std::string str;
+    };
+
+    struct Nothing {
+        Nothing() {str = "test";}
+
+        Nothing(Nothing&&) = delete;
+        Nothing& operator=(Nothing&&) = delete;
+
+        Nothing(const Nothing&) = delete;
+        Nothing& operator=(const Nothing&) = delete;
+
+        std::string str;
+    };
+
+    chaiscript::ChaiScript chai;
+    chai.add(chaiscript::user_type<Noncopyable>(), "Noncopyable");
+    chai.add(chaiscript::constructor<Noncopyable()>(), "Noncopyable");
+
+    chai.add(chaiscript::user_type<Nonmovable>(), "Nonmovable");
+    chai.add(chaiscript::constructor<Nonmovable()>(), "Nonmovable");
+
+    chai.add(chaiscript::user_type<Nothing>(), "Nothing");
+    chai.add(chaiscript::constructor<Nothing()>(), "Nothing");
+}
