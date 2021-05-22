@@ -155,7 +155,7 @@ if(MSVC)
     add_definitions(/w34062)
   endif()
 
-  add_definitions(/bigobj /permissive-)
+  add_definitions(/bigobj /permissive- /utf-8)
   # Note on MSVC compiler flags.
   # The code base selective disables warnings as necessary when the compiler is complaining too much
   # about something that is perfectly valid, or there is simply no technical way around it

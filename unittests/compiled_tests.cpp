@@ -1341,6 +1341,8 @@ TEST_CASE("Test reference member being registered")
   CHECK(d == Approx(2.3));
 }
 
+// starting with C++20 u8"" strings cannot be compared with std::string
+// and the support for std::u8strings is still terrible.
 TEST_CASE("Test unicode matches C++")
 {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
