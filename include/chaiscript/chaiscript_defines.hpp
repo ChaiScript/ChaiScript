@@ -257,7 +257,7 @@ namespace chaiscript {
   };
 
   template< class From, class To >
-  inline constexpr bool is_nothrow_forward_constructible_v 
+  static inline constexpr bool is_nothrow_forward_constructible_v
     = is_nothrow_forward_constructible<From, To>::value;
 
   template<typename Container, typename ... T>
