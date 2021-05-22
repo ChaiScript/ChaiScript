@@ -51,7 +51,7 @@ namespace chaiscript
     {
       /// Helper function that will set up the scope around a function call, including handling the named function parameters
       template<typename T>
-      static Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_Node_Impl<T> &t_node, const std::vector<std::string> &t_param_names, const Function_Params &t_vals, const std::map<std::string, Boxed_Value> *t_locals=nullptr, bool has_this_capture = false) {
+      Boxed_Value eval_function(chaiscript::detail::Dispatch_Engine &t_ss, const AST_Node_Impl<T> &t_node, const std::vector<std::string> &t_param_names, const Function_Params &t_vals, const std::map<std::string, Boxed_Value> *t_locals=nullptr, bool has_this_capture = false) {
         chaiscript::detail::Dispatch_State state(t_ss);
 
         const Boxed_Value *thisobj = [&]() -> const Boxed_Value *{
