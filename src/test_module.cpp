@@ -91,7 +91,7 @@ int to_int(TestEnum t)
 class TestDerivedType : public TestBaseType
 {
   public:
-    virtual int func() override { return 1; }
+    int func() override { return 1; }
     int derived_only_func() { return 19; }
 
 };
