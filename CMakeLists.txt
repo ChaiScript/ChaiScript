@@ -69,20 +69,20 @@ if(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   endif()
 
   option(GPROF_OUTPUT "Generate profile data" FALSE)
-  if (GPROF_OUTPUT)
+  if(GPROF_OUTPUT)
     add_definitions(-pg)
     set(LINKER_FLAGS "${LINKER_FLAGS} -pg")
   endif()
 
 
   option(PROFILE_GENERATE "Generate profile data" FALSE)
-  if (PROFILE_GENERATE)
+  if(PROFILE_GENERATE)
     add_definitions(-fprofile-generate)
     set(LINKER_FLAGS "${LINKER_FLAGS} -fprofile-generate")
   endif()
 
   option(PROFILE_USE "Use profile data" FALSE)
-  if (PROFILE_USE)
+  if(PROFILE_USE)
     add_definitions(-fprofile-use)
     set(LINKER_FLAGS "${LINKER_FLAGS} -fprofile-use")
   endif()
@@ -127,7 +127,7 @@ if(NOT MINGW)
   find_library(READLINE_LIBRARY NAMES readline PATH /usr/lib /usr/local/lib /opt/local/lib)
 endif()
 
-if (UNIX AND NOT APPLE)
+if(UNIX AND NOT APPLE)
   find_program(VALGRIND NAMES valgrind PATH /usr/bin /usr/local/bin)
 endif()
 
@@ -157,7 +157,7 @@ if(MSVC)
   add_definitions(/std:c++17)
 
 
-  if (MSVC_VERSION STREQUAL "1800")
+  if(MSVC_VERSION STREQUAL "1800")
     # VS2013 doesn't have magic statics
     add_definitions(/w44640)
   else()
@@ -297,7 +297,7 @@ file(GLOB PERFORMANCE_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/performance_tes
 list(SORT PERFORMANCE_TESTS)
 
 
-if (RUN_FUZZY_TESTS)
+if(RUN_FUZZY_TESTS)
 
   file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/unittests")
 
@@ -357,7 +357,7 @@ if(BUILD_TESTING)
     list(APPEND TESTS unit.${filename})
   endforeach()
 
-  if (RUN_PERFORMANCE_TESTS)
+  if(RUN_PERFORMANCE_TESTS)
     foreach(filename ${PERFORMANCE_TESTS})
       message(STATUS "Adding performance test ${filename}")
 
@@ -414,9 +414,7 @@ if(BUILD_TESTING)
         "CHAI_USE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/unittests/"
         "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
       )
-
     endif()
-
 
     add_executable(multifile_test
       unittests/multifile_test_main.cpp
