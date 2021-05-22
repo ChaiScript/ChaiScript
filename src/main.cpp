@@ -282,19 +282,19 @@ int main(int argc, char *argv[])
 #endif
 
   std::vector<std::string> usepaths;
-  usepaths.push_back("");
+  usepaths.emplace_back("");
   if (usepath != nullptr)
   {
-    usepaths.push_back(usepath);
+    usepaths.emplace_back(usepath);
   }
 
   std::vector<std::string> modulepaths;
   std::vector<std::string> searchpaths = default_search_paths();
   modulepaths.insert(modulepaths.end(), searchpaths.begin(), searchpaths.end());
-  modulepaths.push_back("");
+  modulepaths.emplace_back("");
   if (modulepath != nullptr)
   {
-    modulepaths.push_back(modulepath);
+    modulepaths.emplace_back(modulepath);
   }
 
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser(),modulepaths,usepaths);
