@@ -288,10 +288,8 @@ namespace chaiscript
               return callable(*static_cast<const float *>(bv.get_const_ptr()));
             case Common_Types::t_long_double:
               return callable(*static_cast<const long double *>(bv.get_const_ptr()));
-            default:
-              throw chaiscript::detail::exception::bad_any_cast();
-
           }
+          throw chaiscript::detail::exception::bad_any_cast();
         }
 
         inline static Boxed_Value oper(Operators::Opers t_oper, const Boxed_Value &t_lhs)
