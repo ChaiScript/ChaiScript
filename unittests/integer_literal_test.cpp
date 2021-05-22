@@ -25,9 +25,8 @@ bool test_literal(T val, const std::string &str, bool use_boxed_number = false)
   T val2 = [&](){
     if (!use_boxed_number) {
       return chai.eval<T>(str);
-    } else {
-      return chai.eval<chaiscript::Boxed_Number>(str).get_as_checked<T>();
     }
+    return chai.eval<chaiscript::Boxed_Number>(str).get_as_checked<T>();
   }();
 
   std::cout << "' chai '" << val2 << "'\n";
@@ -272,10 +271,9 @@ int main()
       )
   {
     return EXIT_SUCCESS;
-  } else {
-    return EXIT_FAILURE;
   }
 
+  return EXIT_FAILURE;
 }
 
 
