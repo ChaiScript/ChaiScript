@@ -145,12 +145,6 @@ else()
   set(READLINE_FLAG)
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCC)
-  execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-
-  set(CPP17_FLAG "-std=c++1z")
-endif()
-
 if(MSVC)
   add_definitions(/std:c++latest /W4 /w14545 /w34242 /w34254 /w34287 /w44263 /w44265 /w44296 /w44311 /w44826 /we4289 /w14546 /w14547 /w14549 /w14555 /w14619 /w14905 /w14906 /w14928)
 
@@ -175,7 +169,7 @@ if(MSVC)
   # how to workaround or fix the error. So I'm disabling it globally.
   add_definitions(/wd4503)
 else()
-  add_definitions(-Wall -Wextra -Wconversion -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wcast-qual -Wunused -Woverloaded-virtual -Wno-noexcept-type -Wpedantic ${CPP17_FLAG})
+  add_definitions(-Wall -Wextra -Wconversion -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wcast-qual -Wunused -Woverloaded-virtual -Wno-noexcept-type -Wpedantic -Werror=return-type)
 
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     add_definitions(-Weverything -Wno-c++98-compat-pedantic  -Wno-c++98-compat -Wno-documentation -Wno-switch-enum -Wno-weak-vtables -Wno-missing-prototypes -Wno-padded -Wno-missing-noreturn -Wno-exit-time-destructors -Wno-documentation-unknown-command -Wno-unused-template -Wno-undef )
@@ -193,12 +187,8 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
   if(USE_LIBCXX)
     add_definitions(-stdlib=libc++)
-    set(LINKER_FLAGS "${LINKER_FLAGS} ${CPP17_FLAG} -stdlib=libc++")
-  else()
-    set(LINKER_FLAGS "${LINKER_FLAGS} ${CPP17_FLAG}")
+    set(LINKER_FLAGS "${LINKER_FLAGS} -stdlib=libc++")
   endif()
-elseif(CMAKE_COMPILER_IS_GNUCC)
-  set(LINKER_FLAGS "${LINKER_FLAGS} ${CPP17_FLAG}")
 endif()
 
 # limitations in MinGW require us to make an optimized build
@@ -427,7 +417,6 @@ if(BUILD_TESTING)
     install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/chaiscript")
   endif()
 endif()
-
 
 
 if(BUILD_LIBFUZZ_TESTER)
