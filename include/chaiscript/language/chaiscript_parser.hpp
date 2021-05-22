@@ -784,7 +784,7 @@ namespace chaiscript
           }
         }
 
-        if (prefixed) { t_val.remove_prefix(2); };
+        if (prefixed) { t_val.remove_prefix(2); }
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
