@@ -1450,7 +1450,7 @@ namespace chaiscript
         }
 
         void add_object(const std::string &t_name, Boxed_Value obj) const {
-          return m_engine.get().add_object(t_name, std::move(obj), m_stack_holder.get());
+          m_engine.get().add_object(t_name, std::move(obj), m_stack_holder.get());
         }
 
         Boxed_Value get_object(std::string_view t_name, std::atomic_uint_fast32_t &t_loc) const {

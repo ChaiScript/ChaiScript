@@ -178,7 +178,7 @@ namespace chaiscript
       if (std::find(t_opts.begin(), t_opts.end(), Options::No_Load_Modules) == t_opts.end()
           && std::find(t_opts.begin(), t_opts.end(), Options::Load_Modules) != t_opts.end()) 
       {
-        m_engine.add(fun([this](const std::string &t_module, const std::string &t_file){ return load_module(t_module, t_file); }), "load_module");
+        m_engine.add(fun([this](const std::string &t_module, const std::string &t_file){ load_module(t_module, t_file); }), "load_module");
         m_engine.add(fun([this](const std::string &t_module){ return load_module(t_module); }), "load_module");
       }
 
