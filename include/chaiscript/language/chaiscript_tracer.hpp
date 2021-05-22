@@ -37,7 +37,7 @@ namespace chaiscript {
       }
     };
 
-    typedef Tracer<Noop_Tracer_Detail> Noop_Tracer;
+    using Noop_Tracer = Tracer<Noop_Tracer_Detail>;
 
   }
 }

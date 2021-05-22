@@ -1073,7 +1073,7 @@ struct Count_Tracer
 
 TEST_CASE("Test count tracer")
 {
-  typedef chaiscript::parser::ChaiScript_Parser< chaiscript::eval::Tracer<Count_Tracer>, chaiscript::optimizer::Optimizer_Default >  Parser_Type;
+  using Parser_Type = chaiscript::parser::ChaiScript_Parser< chaiscript::eval::Tracer<Count_Tracer>, chaiscript::optimizer::Optimizer_Default >;
 
   chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library(),
       std::make_unique<Parser_Type>());

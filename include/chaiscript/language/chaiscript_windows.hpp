@@ -52,7 +52,7 @@ namespace chaiscript
 
       static std::string get_error_message(DWORD t_err)
       {
-        typedef LPTSTR StringType;
+        using StringType = LPTSTR;
 
 #if defined(_UNICODE) || defined(UNICODE)
         std::wstring retval = L"Unknown Error";

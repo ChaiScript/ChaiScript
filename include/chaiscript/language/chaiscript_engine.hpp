@@ -60,7 +60,7 @@ namespace chaiscript
 
   namespace detail
   {
-    typedef std::shared_ptr<Loadable_Module> Loadable_Module_Ptr;
+    using Loadable_Module_Ptr = std::shared_ptr<Loadable_Module>;
   }
 
 
