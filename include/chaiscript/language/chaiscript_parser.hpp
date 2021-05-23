@@ -1369,6 +1369,10 @@ namespace chaiscript
               }
             }
 
+            if (cparser.saw_interpolation_marker) {
+              match.push_back('$');
+            }
+
             return cparser.is_interpolated;
           }();
 
