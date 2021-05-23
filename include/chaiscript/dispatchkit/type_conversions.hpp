@@ -35,7 +35,7 @@ namespace chaiscript
     {
        public:
          conversion_error(const Type_Info t_to, const Type_Info t_from, const utility::Static_String what) noexcept
-         : bad_boxed_cast(t_from, (*t_to.bare_type_info()), what), type_to(t_to) {};
+         : bad_boxed_cast(t_from, (*t_to.bare_type_info()), what), type_to(t_to) {}
 
         Type_Info type_to;
     };
@@ -355,10 +355,10 @@ namespace chaiscript
       }
 
       Type_Conversions(const Type_Conversions &t_other) = delete;
-      Type_Conversions(Type_Conversions &&) = default;
+      Type_Conversions(Type_Conversions &&) = delete;
 
       Type_Conversions &operator=(const Type_Conversions &) = delete;
-      Type_Conversions &operator=(Type_Conversions &&) = default;
+      Type_Conversions &operator=(Type_Conversions &&) = delete;
 
       const std::set<const std::type_info *, Less_Than> &thread_cache() const
       {

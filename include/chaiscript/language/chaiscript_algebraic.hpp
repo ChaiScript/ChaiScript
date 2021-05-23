@@ -50,7 +50,7 @@ namespace chaiscript
       return opers[static_cast<int>(t_oper)];
     }
 
-    constexpr static Opers to_operator(const std::string_view &t_str, bool t_is_unary = false) noexcept
+    constexpr static Opers to_operator(std::string_view t_str, bool t_is_unary = false) noexcept
     {
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(push)

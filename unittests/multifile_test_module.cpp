@@ -2,9 +2,7 @@
 
 #include "multifile_test_module.hpp"
 
-Multi_Test_Module::Multi_Test_Module()
-{
-}
+Multi_Test_Module::Multi_Test_Module() noexcept = default;
 
 int Multi_Test_Module::get_module_value()
 {

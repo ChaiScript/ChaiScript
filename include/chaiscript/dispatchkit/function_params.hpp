@@ -57,10 +57,10 @@ namespace chaiscript {
       }
 
       [[nodiscard]] constexpr std::size_t size() const noexcept {
-        return m_end - m_begin;
+        return std::size_t(m_end - m_begin);
       }
 
-      std::vector<Boxed_Value> to_vector() const {
+      [[nodiscard]] std::vector<Boxed_Value> to_vector() const {
         return std::vector<Boxed_Value>{m_begin, m_end};
       }
 
@@ -71,7 +71,6 @@ namespace chaiscript {
     private:
       const Boxed_Value *m_begin = nullptr;
       const Boxed_Value *m_end = nullptr;
-
   };
 
   // Constructor specialization for array of size 0
@@ -83,6 +82,4 @@ namespace chaiscript {
 
 }
 
-
 #endif
-

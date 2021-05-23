@@ -60,7 +60,7 @@ namespace chaiscript
 
   namespace detail
   {
-    typedef std::shared_ptr<Loadable_Module> Loadable_Module_Ptr;
+    using Loadable_Module_Ptr = std::shared_ptr<Loadable_Module>;
   }
 
 
@@ -178,7 +178,7 @@ namespace chaiscript
       if (std::find(t_opts.begin(), t_opts.end(), Options::No_Load_Modules) == t_opts.end()
           && std::find(t_opts.begin(), t_opts.end(), Options::Load_Modules) != t_opts.end()) 
       {
-        m_engine.add(fun([this](const std::string &t_module, const std::string &t_file){ return load_module(t_module, t_file); }), "load_module");
+        m_engine.add(fun([this](const std::string &t_module, const std::string &t_file){ load_module(t_module, t_file); }), "load_module");
         m_engine.add(fun([this](const std::string &t_module){ return load_module(t_module); }), "load_module");
       }
 
@@ -201,7 +201,7 @@ namespace chaiscript
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name){ set_global(t_bv, t_name); }), "set_global");
 
       // why this unused parameter to Namespace?
-      m_engine.add(fun([this](const std::string& t_namespace_name) { register_namespace([](Namespace& /*space*/) {}, t_namespace_name); import(t_namespace_name); }), "namespace");
+      m_engine.add(fun([this](const std::string& t_namespace_name) { register_namespace([] (Namespace& /*space*/) noexcept {}, t_namespace_name); import(t_namespace_name); }), "namespace");
       m_engine.add(fun([this](const std::string& t_namespace_name) { import(t_namespace_name); }), "import");
     }
 

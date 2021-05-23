@@ -150,8 +150,6 @@ namespace chaiscript
     template<typename T>
       struct Get_Type_Info<std::shared_ptr<T> >
       {
-//        typedef T type;
-
         constexpr static Type_Info get() noexcept
         {
           return Type_Info(std::is_const<T>::value, std::is_reference<T>::value, std::is_pointer<T>::value, 

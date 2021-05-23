@@ -257,7 +257,7 @@ namespace chaiscript {
   };
 
   template< class From, class To >
-  inline constexpr bool is_nothrow_forward_constructible_v 
+  static inline constexpr bool is_nothrow_forward_constructible_v
     = is_nothrow_forward_constructible<From, To>::value;
 
   template<typename Container, typename ... T>
@@ -281,7 +281,7 @@ namespace chaiscript {
 
 
 
-  static inline std::vector<Options> default_options()
+  [[nodiscard]] inline std::vector<Options> default_options()
   {
 #ifdef CHAISCRIPT_NO_DYNLOAD
     return {Options::No_Load_Modules, Options::External_Scripts};

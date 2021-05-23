@@ -17,9 +17,8 @@ bool run_test_type_conversion(const Boxed_Value &bv, bool expectedpass)
     if (expectedpass) {
       std::cerr << "Failure in run_test_type_conversion: " << e.what() << '\n';
       return false;
-    } else {
-      return true;
     }
+    return true;
   } catch (const std::exception &e) {
     std::cerr << "Unexpected standard exception when attempting cast_conversion: " << e.what() << '\n';
     return false;
@@ -28,12 +27,7 @@ bool run_test_type_conversion(const Boxed_Value &bv, bool expectedpass)
     return false;
   }
  
-  if (expectedpass)
-  {
-    return true;
-  } else {
-    return false;
-  }
+  return expectedpass;
 }
 
 template<typename To>
@@ -287,8 +281,6 @@ bool pointer_test(const T& default_value, const T& new_value)
     delete p;
     return false;
   }
-
-
 }
 
 
@@ -315,11 +307,9 @@ int main()
   // storing a pointer 
   passed &= pointer_test<int>(1, 0);
 
-  if (passed)
-  {
+  if (passed) {
     return EXIT_SUCCESS;
-  } else {
-    return EXIT_FAILURE;
   }
 
+  return EXIT_FAILURE;
 }

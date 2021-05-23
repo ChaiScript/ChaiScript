@@ -1,11 +1,11 @@
-cmake_minimum_required(VERSION 2.8)
-
-if(NOT ${CMAKE_VERSION} VERSION_LESS "3.1")
-  cmake_policy(SET CMP0054 NEW)
-endif()
+cmake_minimum_required(VERSION 3.12)
+cmake_policy(SET CMP0054 NEW)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# required since cmake 3.4 at least for libc++
+set(CMAKE_ENABLE_EXPORTS ON)
 
 project(chaiscript)
 
@@ -62,27 +62,26 @@ if(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   endif()
 
   option(ENABLE_LTO "Enable Link Time Optimization" FALSE)
-
-  if (ENABLE_LTO)
-    add_definitions(-flto)
-    set(LINKER_FLAGS "${LINKER_FLAGS} -flto")
+  if(ENABLE_LTO)
+    check_ipo_supported()
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
   endif()
 
   option(GPROF_OUTPUT "Generate profile data" FALSE)
-  if (GPROF_OUTPUT)
+  if(GPROF_OUTPUT)
     add_definitions(-pg)
     set(LINKER_FLAGS "${LINKER_FLAGS} -pg")
   endif()
 
 
   option(PROFILE_GENERATE "Generate profile data" FALSE)
-  if (PROFILE_GENERATE)
+  if(PROFILE_GENERATE)
     add_definitions(-fprofile-generate)
     set(LINKER_FLAGS "${LINKER_FLAGS} -fprofile-generate")
   endif()
 
   option(PROFILE_USE "Use profile data" FALSE)
-  if (PROFILE_USE)
+  if(PROFILE_USE)
     add_definitions(-fprofile-use)
     set(LINKER_FLAGS "${LINKER_FLAGS} -fprofile-use")
   endif()
@@ -127,7 +126,7 @@ if(NOT MINGW)
   find_library(READLINE_LIBRARY NAMES readline PATH /usr/lib /usr/local/lib /opt/local/lib)
 endif()
 
-if (UNIX AND NOT APPLE)
+if(UNIX AND NOT APPLE)
   find_program(VALGRIND NAMES valgrind PATH /usr/bin /usr/local/bin)
 endif()
 
@@ -145,19 +144,10 @@ else()
   set(READLINE_FLAG)
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCC)
-  execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-
-  set(CPP17_FLAG "-std=c++1z")
-endif()
-
 if(MSVC)
-  add_definitions(/std:c++latest /W4 /w14545 /w34242 /w34254 /w34287 /w44263 /w44265 /w44296 /w44311 /w44826 /we4289 /w14546 /w14547 /w14549 /w14555 /w14619 /w14905 /w14906 /w14928)
+  add_definitions(/W4 /w14545 /w34242 /w34254 /w34287 /w44263 /w44265 /w44296 /w44311 /w44826 /we4289 /w14546 /w14547 /w14549 /w14555 /w14619 /w14905 /w14906 /w14928)
 
-  add_definitions(/std:c++17)
-
-
-  if (MSVC_VERSION STREQUAL "1800")
+  if(MSVC_VERSION STREQUAL "1800")
     # VS2013 doesn't have magic statics
     add_definitions(/w44640)
   else()
@@ -165,7 +155,7 @@ if(MSVC)
     add_definitions(/w34062)
   endif()
 
-  add_definitions(/bigobj /permissive-)
+  add_definitions(/bigobj /permissive- /utf-8)
   # Note on MSVC compiler flags.
   # The code base selective disables warnings as necessary when the compiler is complaining too much
   # about something that is perfectly valid, or there is simply no technical way around it
@@ -175,10 +165,10 @@ if(MSVC)
   # how to workaround or fix the error. So I'm disabling it globally.
   add_definitions(/wd4503)
 else()
-  add_definitions(-Wall -Wextra -Wconversion -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wcast-qual -Wunused -Woverloaded-virtual -Wno-noexcept-type -Wpedantic ${CPP17_FLAG})
+  add_definitions(-Wall -Wextra -Wconversion -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wcast-qual -Wunused -Woverloaded-virtual -Wno-noexcept-type -Wpedantic -Werror=return-type)
 
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    add_definitions(-Weverything -Wno-c++98-compat-pedantic  -Wno-c++98-compat -Wno-documentation -Wno-switch-enum -Wno-weak-vtables -Wno-missing-prototypes -Wno-padded -Wno-missing-noreturn -Wno-exit-time-destructors -Wno-documentation-unknown-command -Wno-unused-template -Wno-undef )
+    add_definitions(-Weverything -Wno-c++98-compat-pedantic  -Wno-c++98-compat -Wno-documentation -Wno-switch-enum -Wno-weak-vtables -Wno-missing-prototypes -Wno-padded -Wno-missing-noreturn -Wno-exit-time-destructors -Wno-documentation-unknown-command -Wno-unused-template -Wno-undef -Wno-double-promotion)
   else()
     add_definitions(-Wnoexcept)
   endif()
@@ -189,16 +179,12 @@ else()
 endif()
 
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  option(USE_LIBCXX "Use clang's libcxx" TRUE)
+  option(USE_LIBCXX "Use clang's libcxx" FALSE)
 
   if(USE_LIBCXX)
     add_definitions(-stdlib=libc++)
-    set(LINKER_FLAGS "${LINKER_FLAGS} ${CPP17_FLAG} -stdlib=libc++")
-  else()
-    set(LINKER_FLAGS "${LINKER_FLAGS} ${CPP17_FLAG}")
+    set(LINKER_FLAGS "${LINKER_FLAGS} -stdlib=libc++")
   endif()
-elseif(CMAKE_COMPILER_IS_GNUCC)
-  set(LINKER_FLAGS "${LINKER_FLAGS} ${CPP17_FLAG}")
 endif()
 
 # limitations in MinGW require us to make an optimized build
@@ -297,7 +283,7 @@ file(GLOB PERFORMANCE_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/performance_tes
 list(SORT PERFORMANCE_TESTS)
 
 
-if (RUN_FUZZY_TESTS)
+if(RUN_FUZZY_TESTS)
 
   file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/unittests")
 
@@ -357,7 +343,7 @@ if(BUILD_TESTING)
     list(APPEND TESTS unit.${filename})
   endforeach()
 
-  if (RUN_PERFORMANCE_TESTS)
+  if(RUN_PERFORMANCE_TESTS)
     foreach(filename ${PERFORMANCE_TESTS})
       message(STATUS "Adding performance test ${filename}")
 
@@ -414,9 +400,7 @@ if(BUILD_TESTING)
         "CHAI_USE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/unittests/"
         "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
       )
-
     endif()
-
 
     add_executable(multifile_test
       unittests/multifile_test_main.cpp
@@ -429,7 +413,6 @@ if(BUILD_TESTING)
     install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/chaiscript")
   endif()
 endif()
-
 
 
 if(BUILD_LIBFUZZ_TESTER)

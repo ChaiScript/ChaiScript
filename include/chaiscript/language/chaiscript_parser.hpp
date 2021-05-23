@@ -232,7 +232,7 @@ namespace chaiscript
         std::array<utility::Static_String, 3> m_10 {{SS("*"), SS("/"), SS("%")}};
         std::array<utility::Static_String, 6> m_11 {{SS("++"), SS("--"), SS("-"), SS("+"), SS("!"), SS("~")}};
 
-        bool is_match(const std::string_view &t_str) const noexcept {
+        bool is_match(std::string_view t_str) const noexcept {
           constexpr std::array<std::size_t, 12> groups{{0,1,2,3,4,5,6,7,8,9,10,11}};
           return std::any_of(groups.begin(), groups.end(), [&t_str, this](const std::size_t group){ return is_match(group, t_str); });
         }
@@ -261,7 +261,7 @@ namespace chaiscript
           }
         }
 
-        constexpr bool is_match(const std::size_t t_group, const std::string_view &t_str) const noexcept {
+        constexpr bool is_match(const std::size_t t_group, std::string_view t_str) const noexcept {
           auto match = [&t_str](const auto &array) {
             return std::any_of(array.begin(), array.end(), [&t_str](const auto &v){ return v == t_str; });
           };
@@ -325,7 +325,7 @@ namespace chaiscript
 
         static std::string_view str(const Position &t_begin, const Position &t_end) noexcept {
           if (t_begin.m_pos != nullptr && t_end.m_pos != nullptr) {
-            return std::string_view(t_begin.m_pos, std::distance(t_begin.m_pos, t_end.m_pos));
+            return std::string_view(t_begin.m_pos, std::size_t(std::distance(t_begin.m_pos, t_end.m_pos)));
           } else {
             return {};
           }
@@ -421,7 +421,7 @@ namespace chaiscript
       Tracer m_tracer;
       Optimizer m_optimizer;
 
-      void validate_object_name(const std::string_view &name) const
+      void validate_object_name(std::string_view name) const
       {
         if (!Name_Validator::valid_object_name(name)) {
           throw exception::eval_error("Invalid Object Name: " + std::string(name), File_Position(m_position.line, m_position.col), *m_filename);
@@ -724,7 +724,7 @@ namespace chaiscript
       }
 
       /// Parses a floating point value and returns a Boxed_Value representation of it
-      static Boxed_Value buildFloat(const std::string_view &t_val)
+      static Boxed_Value buildFloat(std::string_view t_val)
       {
         bool float_ = false;
         bool long_ = false;
@@ -784,7 +784,7 @@ namespace chaiscript
           }
         }
 
-        if (prefixed) { t_val.remove_prefix(2); };
+        if (prefixed) { t_val.remove_prefix(2); }
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -792,6 +792,8 @@ namespace chaiscript
 
 #ifdef CHAISCRIPT_CLANG
 #pragma GCC diagnostic ignored "-Wtautological-compare"
+#pragma GCC diagnostic ignored "-Wtautological-unsigned-zero-compare"
+#pragma GCC diagnostic ignored "-Wtautological-type-limit-compare"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #endif
 
@@ -809,7 +811,6 @@ namespace chaiscript
           } else if (!unsigned_ && !longlong_ && u >= std::numeric_limits<long>::min() && u <= std::numeric_limits<long>::max()) {
             return const_var(static_cast<long>(u));
           } else if ((unsigned_ || base != 10) && !longlong_
-
                      && u >= std::numeric_limits<unsigned long>::min()
                      && u <= std::numeric_limits<unsigned long>::max()) {
             return const_var(static_cast<unsigned long>(u));
@@ -1368,6 +1369,10 @@ namespace chaiscript
               }
             }
 
+            if (cparser.saw_interpolation_marker) {
+              match.push_back('$');
+            }
+
             return cparser.is_interpolated;
           }();
 
@@ -1491,7 +1496,7 @@ namespace chaiscript
         return retval;
       }
 
-      bool is_operator(const std::string_view &t_s) const noexcept {
+      bool is_operator(std::string_view t_s) const noexcept {
         return m_operator_matches.is_match(t_s);
       }
 

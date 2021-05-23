@@ -832,11 +832,11 @@ namespace chaiscript
     public:
       ChaiScript(std::vector<std::string> t_modulepaths = {},
           std::vector<std::string> t_usepaths = {},
-          const std::vector<Options> &t_opts = chaiscript::default_options())
+          std::vector<Options> t_opts = chaiscript::default_options())
         : ChaiScript_Basic(
             chaiscript::Std_Lib::library(),
             std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer_Default>>(),
-            t_modulepaths, t_usepaths, t_opts)
+            std::move(t_modulepaths), std::move(t_usepaths), std::move(t_opts))
         {
         }
   };

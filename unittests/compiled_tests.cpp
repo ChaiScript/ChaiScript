@@ -795,7 +795,7 @@ struct Object_Lifetime_Vector2
 {
   Object_Lifetime_Vector2() : x(0), y(0) {}
   Object_Lifetime_Vector2(T px, T py) : x(px), y(py) {}
-  Object_Lifetime_Vector2(const Object_Lifetime_Vector2& cp) : x(cp.x), y(cp.y) {}
+  Object_Lifetime_Vector2(const Object_Lifetime_Vector2& cp) noexcept : x(cp.x), y(cp.y) {}
 
   Object_Lifetime_Vector2& operator+=(const Object_Lifetime_Vector2& vec_r)
   {
@@ -1073,7 +1073,7 @@ struct Count_Tracer
 
 TEST_CASE("Test count tracer")
 {
-  typedef chaiscript::parser::ChaiScript_Parser< chaiscript::eval::Tracer<Count_Tracer>, chaiscript::optimizer::Optimizer_Default >  Parser_Type;
+  using Parser_Type = chaiscript::parser::ChaiScript_Parser< chaiscript::eval::Tracer<Count_Tracer>, chaiscript::optimizer::Optimizer_Default >;
 
   chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library(),
       std::make_unique<Parser_Type>());
@@ -1341,14 +1341,15 @@ TEST_CASE("Test reference member being registered")
   CHECK(d == Approx(2.3));
 }
 
+// starting with C++20 u8"" strings cannot be compared with std::string
+// and the support for std::u8strings is still terrible.
 TEST_CASE("Test unicode matches C++")
 {
-  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
-  CHECK(u8"\U000000AC" == chai.eval<std::string>(R"("\U000000AC")"));
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+  CHECK("\U000000AC" == chai.eval<std::string>(R"("\U000000AC")"));
   CHECK("\xF0\x9F\x8D\x8C" == chai.eval<std::string>(R"("\xF0\x9F\x8D\x8C")"));
-  CHECK(u8"\U0001F34C" == chai.eval<std::string>(R"("\U0001F34C")"));
-  CHECK(u8"\u2022" == chai.eval<std::string>(R"("\u2022")"));
-
+  CHECK("\U0001F34C" == chai.eval<std::string>(R"("\U0001F34C")"));
+  CHECK("\u2022" == chai.eval<std::string>(R"("\u2022")"));
 }
 
 
@@ -1406,7 +1407,7 @@ TEST_CASE("Throw an exception when trying to add same conversion twice")
 {
   struct my_int {
       int value;
-      my_int(int val): value(val) {};
+      my_int(int val): value(val) {}
   };
 
   chaiscript::ChaiScript chai;
@@ -1418,7 +1419,45 @@ TEST_CASE("Throw an exception when trying to add same conversion twice")
       std::cout << "My_int type conversion 2\n";
       return my_int(x);
   })), chaiscript::exception::conversion_error);
-
 }
 
+TEST_CASE("Test if non copyable/movable types can be registered")
+{
+    struct Noncopyable {
+        Noncopyable() {str = "test";}
+        Noncopyable(const Noncopyable&) = delete;
+        Noncopyable& operator=(const Noncopyable&) = delete;
 
+        std::string str;
+    };
+
+    struct Nonmovable {
+        Nonmovable() {str = "test";}
+        Nonmovable(Nonmovable&&) = delete;
+        Nonmovable& operator=(Nonmovable&&) = delete;
+
+        std::string str;
+    };
+
+    struct Nothing {
+        Nothing() {str = "test";}
+
+        Nothing(Nothing&&) = delete;
+        Nothing& operator=(Nothing&&) = delete;
+
+        Nothing(const Nothing&) = delete;
+        Nothing& operator=(const Nothing&) = delete;
+
+        std::string str;
+    };
+
+    chaiscript::ChaiScript chai;
+    chai.add(chaiscript::user_type<Noncopyable>(), "Noncopyable");
+    chai.add(chaiscript::constructor<Noncopyable()>(), "Noncopyable");
+
+    chai.add(chaiscript::user_type<Nonmovable>(), "Nonmovable");
+    chai.add(chaiscript::constructor<Nonmovable()>(), "Nonmovable");
+
+    chai.add(chaiscript::user_type<Nothing>(), "Nothing");
+    chai.add(chaiscript::constructor<Nothing()>(), "Nothing");
+}

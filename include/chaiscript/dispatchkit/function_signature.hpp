@@ -110,7 +110,7 @@ template<typename Ret, typename Class, typename... Param>
 Function_Signature(Ret (Class::*f)(Param...) const &&noexcept)->Function_Signature<Ret, Function_Params<const Class &&, Param...>, true, true>;
 
 template<typename Ret, typename Class>
-Function_Signature(Ret(Class::*f))->Function_Signature<Ret, Function_Params<Class &>, true, true, true>;
+Function_Signature(Ret Class::*f)->Function_Signature<Ret, Function_Params<Class &>, true, true, true>;
 
 // primary template handles types that have no nested ::type member:
 template<class, class = std::void_t<>>

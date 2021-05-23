@@ -53,10 +53,10 @@ int main()
 #endif
 
   std::vector<std::string> usepaths;
-  usepaths.push_back("");
+  usepaths.emplace_back("");
   if (usepath)
   {
-    usepaths.push_back(usepath);
+    usepaths.emplace_back(usepath);
   }
 
   std::vector<std::string> modulepaths;
@@ -64,10 +64,10 @@ int main()
 #ifdef CHAISCRIPT_NO_DYNLOAD
   chaiscript::ChaiScript chai(/* unused */modulepaths, usepaths);
 #else
-  modulepaths.push_back("");
+  modulepaths.emplace_back("");
   if (modulepath)
   {
-    modulepaths.push_back(modulepath);
+    modulepaths.emplace_back(modulepath);
   }
   
   // For this test we are going to load the dynamic stdlib

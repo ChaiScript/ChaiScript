@@ -36,7 +36,7 @@ namespace chaiscript
         return data + m_size;
       }
 
-      constexpr bool operator==(const std::string_view &other) const noexcept {
+      constexpr bool operator==(std::string_view other) const noexcept {
         //return std::string_view(data, m_size) == other;
         auto b1 = begin();
         const auto e1 = end();

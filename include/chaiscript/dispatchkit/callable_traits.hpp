@@ -81,23 +81,23 @@ namespace chaiscript {
       template<typename Ret, typename ... Params>
       struct Function_Signature<Ret (Params...)>
         {
-          typedef Ret Return_Type;
-          typedef Ret (Signature)(Params...);
+          using Return_Type = Ret;
+          using Signature = Ret ()(Params...);
         };
 
       template<typename Ret, typename T, typename ... Params>
       struct Function_Signature<Ret (T::*)(Params...) const>
         {
-          typedef Ret Return_Type;
-          typedef Ret (Signature)(Params...);
+          using Return_Type = Ret;
+          using Signature = Ret ()(Params...);
         };
 
 
       template<typename T>
         struct Callable_Traits
         {
-          typedef typename Function_Signature<decltype(&T::operator())>::Signature Signature;
-          typedef typename Function_Signature<decltype(&T::operator())>::Return_Type Return_Type;
+          using Signature = typename Function_Signature<decltype(&T::operator())>::Signature;
+          using Return_Type = typename Function_Signature<decltype(&T::operator())>::Return_Type;
         };
     }
   }
