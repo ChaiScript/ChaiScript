@@ -1,1 +1,0 @@
-assert_throws("Error: \"Error, cannot assign to constant value.\"", fun() { clone = `-` } );

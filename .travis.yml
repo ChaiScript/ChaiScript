@@ -5,10 +5,12 @@ addons:
   apt:
     sources: 
       - ubuntu-toolchain-r-test
+      - llvm-toolchain-trusty-5.0
+      - sourceline: 'deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-5.0 main'
+        key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
     packages:
-      - g++-4.9
-      - g++-5
-      - g++-6
+      - g++-7
+      - g++-8
   coverity_scan:
     project:
       name: "ChaiScript/ChaiScript"
@@ -22,7 +24,7 @@ matrix:
   include:
     - os: linux
       sudo: false
-      env: GCC_VER="4.9"
+      env: GCC_VER="7"
       compiler: gcc
       #    - os: linux
       #sudo: false
@@ -30,19 +32,20 @@ matrix:
       #compiler: gcc
     - os: linux
       sudo: false
-      env: GCC_VER="5" CPPCHECK=1 CMAKE_OPTIONS="-D RUN_FUZZY_TESTS:BOOL=TRUE"
+      env: GCC_VER="7" CPPCHECK=1 CMAKE_OPTIONS="-D RUN_FUZZY_TESTS:BOOL=TRUE"
       compiler: gcc
     - os: linux
       sudo: false
-      env: GCC_VER="6" CPPCHECK=1 COVERAGE=1 CMAKE_OPTIONS="-D RUN_FUZZY_TESTS:BOOL=TRUE"
+      env: GCC_VER="8" CPPCHECK=1 COVERAGE=1 CMAKE_OPTIONS="-D RUN_FUZZY_TESTS:BOOL=TRUE"
       compiler: gcc
-    - os: osx
-      compiler: clang
-      osx_image: xcode8
-    - os: osx
-      compiler: clang
-      osx_image: xcode8
-      env: CMAKE_OPTIONS="-D DYNLOAD_ENABLED:BOOL=FALSE -D MULTITHREAD_SUPPORT_ENABLED:BOOL=FALSE -D USE_STD_MAKE_SHARED:BOOL=TRUE" BUILD_ONLY=1
+    #- os: osx
+    #  compiler: clang
+    #  osx_image: xcode10
+    #  env: CLANG_VER="5.0"
+    #- os: osx
+    #  compiler: clang
+    #  osx_image: xcode10
+    #  env: CLANG_VER="5.0" CMAKE_OPTIONS="-D DYNLOAD_ENABLED:BOOL=FALSE -D MULTITHREAD_SUPPORT_ENABLED:BOOL=FALSE -D USE_STD_MAKE_SHARED:BOOL=TRUE" BUILD_ONLY=1
   
 env:
   global:
@@ -52,6 +55,7 @@ env:
 
 before_install:
   - if [ "${GCC_VER}" != "" ]; then export CXX="g++-$GCC_VER" CC="gcc-$GCC_VER" GCOV="gcov-$GCC_VER" ; fi
+  #- if [ "${CLANG_VER}" != "" ]; then export CXX="clang++-$CLANG_VER"; fi
   - pip install --user cpp-coveralls
 
 script: 

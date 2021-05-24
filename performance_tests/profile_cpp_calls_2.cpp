@@ -5,9 +5,8 @@ double f(const std::string &, double, bool) noexcept {
   return .0;
 }
 
-int main()
-{
-  chaiscript::ChaiScript chai(chaiscript::Std_Lib::library());
+int main() {
+  chaiscript::ChaiScript chai;
 
   chai.add(chaiscript::fun(&f), "f");
 
@@ -16,5 +15,4 @@ int main()
         f("str", 1.2, false);
       }
     )");
-
 }

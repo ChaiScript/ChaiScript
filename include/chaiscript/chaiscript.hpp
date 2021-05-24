@@ -1,31 +1,29 @@
 // This file is distributed under the BSD License.
 // See "license.txt" for details.
 // Copyright 2009-2012, Jonathan Turner (jonathan@emptycrate.com)
-// Copyright 2009-2017, Jason Turner (jason@emptycrate.com)
+// Copyright 2009-2018, Jason Turner (jason@emptycrate.com)
 // http://www.chaiscript.com
 
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 
-
 #ifndef CHAISCRIPT_HPP_
 #define CHAISCRIPT_HPP_
-
-
 
 /// @mainpage
 /// [ChaiScript](http://www.chaiscript.com") is a scripting language designed specifically for integration with C++. It provides
 /// seamless integration with C++ on all levels, including shared_ptr objects, functors and exceptions.
-/// 
-/// The parts of the ChaiScript API that the average user will be concerned with are contained in the 
+///
+/// The parts of the ChaiScript API that the average user will be concerned with are contained in the
 /// chaiscript namespace and the chaiscript::ChaiScript class.
 ///
 /// The end user parts of the API are extremely simple both in size and ease of use.
 ///
-/// Currently, all source control and project management aspects of ChaiScript occur on [github](http://www.github.com/ChaiScript/ChaiScript").
+/// Currently, all source control and project management aspects of ChaiScript occur on
+/// [github](http://www.github.com/ChaiScript/ChaiScript").
 ///
 /// ------------------------------------------------------------
-/// 
+///
 /// @sa chaiscript
 /// @sa chaiscript::ChaiScript
 /// @sa ChaiScript_Language for Built in Functions
@@ -51,16 +49,16 @@
 /// - @ref functionobjects
 /// - @ref threading
 /// - @ref exceptions
-/// 
-/// 
+///
+///
 /// @subsection basics Basics
-/// 
+///
 /// Basic simple example:
 ///
 /// ~~~~~~~{.cpp}
 /// //main.cpp
 /// #include <chaiscript/chaiscript.hpp>
-/// 
+///
 /// double function(int i, double j)
 /// {
 ///   return i * j;
@@ -72,7 +70,7 @@
 ///   chai.add(chaiscript::fun(&function), "function");
 ///
 ///   double d = chai.eval<double>("function(3, 4.75);");
-/// } 
+/// }
 /// ~~~~~~~
 ///
 /// ------------------------------------------------------
@@ -81,14 +79,14 @@
 ///
 /// ChaiScript is a header only library with only one dependency: The
 /// operating system provided dynamic library loader, which has to be specified on some platforms.
-/// 
+///
 /// @subsubsection compilinggcc Compiling with GCC
-/// 
+///
 /// To compile the above application on a Unix like operating system (MacOS, Linux) with GCC you need to link
 /// the dynamic loader. For example:
 ///
 /// ~~~~~~~~
-/// gcc main.cpp -I/path/to/chaiscript/headers -ldl 
+/// gcc main.cpp -I/path/to/chaiscript/headers -ldl
 /// ~~~~~~~~
 ///
 /// Alternatively, you may compile without threading support.
@@ -111,11 +109,11 @@
 /// chaiscript::ChaiScript chai;
 /// chai("print(@"hello world@")");
 /// ~~~~~~~~
-/// 
+///
 /// @sa chaiscript::ChaiScript::operator()(const std::string &)
 ///
 /// @subsubsection evalmethod Method 'eval'
-/// 
+///
 /// The eval method is somewhat more verbose and can be used to get type safely return values
 /// from the script.
 ///
@@ -129,15 +127,15 @@
 /// @sa chaiscript::ChaiScript::eval
 ///
 /// @subsubsection evalfilemethod Method 'eval_file'
-/// 
+///
 /// The 'eval_file' method loads a file from disk and executes the script in it
-/// 
+///
 /// ~~~~~~~~{.cpp}
 /// chaiscript::ChaiScript chai;
 /// chai.eval_file("myfile.chai");
 /// std::string result = chai.eval_file<std::string>("myfile.chai") // extract the last value returned from the file
 /// ~~~~~~~~
-/// 
+///
 /// @sa chaiscript::ChaiScript::eval_file
 ///
 /// --------------------------------------------------
@@ -149,10 +147,10 @@
 /// @subsubsection adding_objects Adding Objects
 ///
 /// Named objects can be created with the chaiscript::var function. Note: adding a object
-/// adds it to the current thread scope, not to a global scope. If you have multiple 
+/// adds it to the current thread scope, not to a global scope. If you have multiple
 /// threads that need to access the same variables you will need to add them
 /// separately for each thread, from the thread itself.
-/// 
+///
 /// ~~~~~~~~~{.cpp}
 /// using namespace chaiscript;
 /// ChaiScript chai;
@@ -167,23 +165,23 @@
 /// chai.add(const_var(i), "i");
 /// chai("i = 5"); // exception throw, cannot assign const var
 /// ~~~~~~~~~
-/// 
+///
 /// Named variables can only be accessed from the context they are created in.
-/// If you want a global variable, it must be const, and created with the 
+/// If you want a global variable, it must be const, and created with the
 /// chaiscript::ChaiScript::add_global_const function.
 ///
 /// ~~~~~~~~~{.cpp}
 /// chai.add_global_const(const_var(i), "i");
 /// chai("def somefun() { print(i); }; somefun();");
 /// ~~~~~~~~~
-/// 
+///
 /// @subsubsection adding_functions Adding Functions
-/// 
+///
 /// Functions, methods and members are all added using the same function: chaiscript::fun.
 ///
 /// ~~~~~~~~~{.cpp}
 /// using namespace chaiscript;
-/// 
+///
 /// class MyClass {
 ///   public:
 ///     int memberdata;
@@ -193,7 +191,7 @@
 ///     void overloadedmethod();
 ///     void overloadedmethod(const std::string &);
 /// };
-/// 
+///
 /// ChaiScript chai;
 /// chai.add(fun(&MyClass::memberdata), "memberdata");
 /// chai.add(fun(&MyClass::method), "method");
@@ -208,7 +206,7 @@
 /// ~~~~~~~~~
 ///
 /// There are also shortcuts built into chaiscript::fun for binding up to the first two parameters of the function.
-/// 
+///
 /// ~~~~~~~~~{.cpp}
 /// MyClass obj;
 /// chai.add(fun(&MyClass::method, &obj), "method");
@@ -220,7 +218,7 @@
 /// @subsubsection addingtypeinfo Adding Type Info
 ///
 /// ChaiScript will automatically support any type implicitly provided to it in the form
-/// of objects and function parameters / return types. However, it can be nice to let ChaiScript 
+/// of objects and function parameters / return types. However, it can be nice to let ChaiScript
 /// know more details about the types you are giving it. For instance, the "clone" functionality
 /// cannot work unless there is a copy constructor registered and the name of the type is known
 /// (so that ChaiScript can look up the copy constructor).
@@ -232,23 +230,23 @@
 /// ~~~~~~~~
 ///
 /// @subsubsection adding_modules Adding Modules
-/// 
+///
 /// Modules are holders for collections of ChaiScript registrations.
 ///
 /// ~~~~~~~~{.cpp}
 /// ModulePtr module = get_sum_module();
 /// chai.add(module);
 /// ~~~~~~~~
-/// 
+///
 /// @sa chaiscript::Module
 ///
 /// -----------------------------------------------------------------------
 ///
 /// @subsection operatoroverloading Operator Overloading
-/// 
+///
 /// Operators are just like any other function in ChaiScript, to overload an operator, simply register it.
-/// 
-/// ~~~~~~~~{.cpp} 
+///
+/// ~~~~~~~~{.cpp}
 /// class MyClass {
 ///   MyClass operator+(const MyClass &) const;
 /// };
@@ -270,7 +268,7 @@
 /// -----------------------------------------------------------------------
 ///
 /// @subsection add_class Class Helper Utility
-/// 
+///
 /// Much of the work of adding new classes to ChaiScript can be reduced with the help
 /// of the add_class helper utility.
 ///
@@ -295,8 +293,8 @@
 ///        constructor<Test(const Test &)>() },
 ///      { {fun(&Test::function), "function"},
 ///        {fun(&Test::function2), "function2"},
-///        {fun(&Test::function2), "function3"} 
-///        {fun(static_cast<std::string Test::*(double)>(&Test::functionOverload)), "functionOverload"} 
+///        {fun(&Test::function2), "function3"}
+///        {fun(static_cast<std::string Test::*(double)>(&Test::functionOverload)), "functionOverload"}
 ///        {fun(static_cast<std::string Test::*(int)>(&Test::functionOverload)), "functionOverload"} }
 ///      );
 ///
@@ -305,7 +303,7 @@
 ///   chai.add(m);
 /// }
 /// ~~~~~~~~
-/// 
+///
 /// @sa @ref adding_modules
 ///
 /// -----------------------------------------------------------------------
@@ -315,8 +313,8 @@
 /// As much as possible, ChaiScript attempts to convert between &, *, const &, const *, std::shared_ptr<T>,
 /// std::shared_ptr<const T>, std::reference_wrapper<T>, std::reference_wrapper<const T> and value types automatically.
 ///
-/// If a chaiscript::var object was created in C++ from a pointer, it cannot be converted to a shared_ptr (this would add invalid reference counting).
-/// Const may be added, but never removed. 
+/// If a chaiscript::var object was created in C++ from a pointer, it cannot be converted to a shared_ptr (this would add invalid reference
+/// counting). Const may be added, but never removed.
 ///
 /// The take away is that you can pretty much expect function calls to Just Work when you need them to.
 ///
@@ -359,16 +357,16 @@
 ///   chai("fun8(i)");
 ///   chai("fun9(i)");
 ///   chai("fun10(i)");
-/// }  
+/// }
 /// ~~~~~~~~
 ///
-/// See the unit test unittests/boxed_cast_test.cpp for a complete breakdown of the automatic casts that 
+/// See the unit test unittests/boxed_cast_test.cpp for a complete breakdown of the automatic casts that
 /// available and tested.
-/// 
+///
 /// -----------------------------------------------------------------------
 ///
 /// @subsection baseclasses Base Classes
-/// 
+///
 /// ChaiScript supports handling of passing a derived class object to a function expecting a base class object.
 /// For the process to work, the base/derived relationship must be registered with the engine.
 ///
@@ -387,7 +385,7 @@
 ///   chai("myfunction(d)");
 /// }
 /// ~~~~~~~~
-/// 
+///
 /// -----------------------------------------------------------------------
 ///
 ///
@@ -401,7 +399,7 @@
 /// {
 ///   t_func("bob");
 /// }
-/// 
+///
 /// int main()
 /// {
 ///   chaiscript::ChaiScript chai;
@@ -413,16 +411,16 @@
 ///   f(); // call the ChaiScript function dump_system, from C++
 /// }
 /// ~~~~~~~~
-/// 
+///
 /// -----------------------------------------------------------------------
 ///
 ///
 /// @subsection threading Threading
-/// 
+///
 /// Thread safety is automatically handled within the ChaiScript system. Objects can be added
 /// and scripts executed from multiple threads. For each thread that executes scripts, a new
 /// context is created and managed by the engine.
-/// 
+///
 /// Thread safety can be disabled by defining CHAISCRIPT_NO_THREADS when using the library.
 ///
 /// Disabling thread safety increases performance in many cases.
@@ -431,10 +429,10 @@
 ///
 ///
 /// @subsection exceptions Exception Handling
-/// 
+///
 /// @subsubsection exceptionsbasics Exception Handling Basics
 ///
-/// Exceptions can be thrown in ChaiScript and caught in C++ or thrown in C++ and caught in 
+/// Exceptions can be thrown in ChaiScript and caught in C++ or thrown in C++ and caught in
 /// ChaiScript.
 ///
 /// ~~~~~~~~{.cpp}
@@ -442,14 +440,14 @@
 /// {
 ///   throw std::runtime_error("err");
 /// }
-/// 
+///
 /// int main()
 /// {
 ///   // Throw in C++, catch in ChaiScript
 ///   chaiscript::ChaiScript chai;
 ///   chai.add(chaiscript::fun(&throwexception), "throwexception");
 ///   chai("try { throwexception(); } catch (e) { print(e.what()); }"); // prints "err"
-/// 
+///
 ///   // Throw in ChaiScript, catch in C++
 ///   try {
 ///     chai("throw(1)");
@@ -459,18 +457,19 @@
 ///   }
 /// }
 /// ~~~~~~~~
-/// 
+///
 /// @subsubsection exceptionsautomatic Exception Handling Automatic Unboxing
 ///
-/// As an alternative to the manual unboxing of exceptions shown above, exception specifications allow the user to tell 
-/// ChaiScript what possible exceptions are expected from the script being executed. 
+/// As an alternative to the manual unboxing of exceptions shown above, exception specifications allow the user to tell
+/// ChaiScript what possible exceptions are expected from the script being executed.
 ///
 /// Example:
 /// ~~~~~~~~{.cpp}
 /// chaiscript::ChaiScript chai;
 ///
 /// try {
-///   chai.eval("throw(runtime_error(@"error@"))", chaiscript::exception_specification<int, double, float, const std::string &, const std::exception &>());
+///   chai.eval("throw(runtime_error(@"error@"))", chaiscript::exception_specification<int, double, float, const std::string &, const
+///   std::exception &>());
 /// } catch (const double e) {
 /// } catch (int) {
 /// } catch (float) {
@@ -480,10 +479,8 @@
 /// }
 /// ~~~~~~~~
 ///
-/// @sa chaiscript::Exception_Handler for details on automatic exception unboxing 
+/// @sa chaiscript::Exception_Handler for details on automatic exception unboxing
 /// @sa chaiscript::exception_specification
-
-
 
 /// @page LangObjectSystemRef ChaiScript Language Object Model Reference
 ///
@@ -495,7 +492,7 @@
 /// attr Rectangle::width
 /// def Rectangle::Rectangle() { this.height = 10; this.width = 20 }
 /// def Rectangle::area() { this.height * this.width }
-/// 
+///
 /// var rect = Rectangle()
 /// rect.height = 30
 /// print(rect.area())
@@ -521,7 +518,7 @@
 
 /// @page LangInPlaceRef ChaiScript Language In-Place Creation Reference
 /// @section inplacevector Vector
-/// 
+///
 /// ~~~~~~~~~
 /// In-place Vector ::= "[" [expression ("," expression)*]  "]"
 /// ~~~~~~~~~
@@ -541,9 +538,9 @@
 /// ~~~~~~~~
 
 /// @page LangGettingStarted ChaiScript Language Getting Started
-/// 
+///
 /// ChaiScript is a simple language that should feel familiar to anyone who knows
-/// C++ or ECMAScript (JavaScript). 
+/// C++ or ECMAScript (JavaScript).
 ///
 /// -----------------------------------------------------------------------
 ///
@@ -575,10 +572,10 @@
 /// @section chaiscriptifs Conditionals
 ///
 /// If statements work as expected
-/// 
+///
 /// ~~~~~~~~
 /// var b = true;
-/// 
+///
 /// if (b) {
 ///   // do something
 /// } else if (c < 10) {
@@ -593,9 +590,9 @@
 /// -----------------------------------------------------------------------
 ///
 /// @section chaiscriptfunctions Functions
-/// 
+///
 /// Functions are defined with the def keyword
-/// 
+///
 /// ~~~~~~~~
 /// def myfun(x) { print(x); }
 ///
@@ -612,7 +609,7 @@
 /// eval> myfun2(12)
 /// 10 or greater
 /// ~~~~~~~~
-/// 
+///
 /// @sa @ref keyworddef
 /// @sa @ref keywordattr
 /// @sa @ref LangObjectSystemRef
@@ -620,7 +617,7 @@
 /// -----------------------------------------------------------------------
 ///
 /// @section chaiscriptfunctionobjects Function Objects
-/// 
+///
 /// Functions are first class types in ChaiScript and can be used as variables.
 ///
 /// ~~~~~~~~
@@ -628,8 +625,8 @@
 /// eval> p(1);
 /// 1
 /// ~~~~~~~~
-/// 
-/// They can also be passed to functions. 
+///
+/// They can also be passed to functions.
 ///
 /// ~~~~~~~~
 /// eval> def callfunc(f, lhs, rhs) { return f(lhs, rhs); }
@@ -639,7 +636,7 @@
 /// ~~~~~~~~
 ///
 /// Operators can also be treated as functions by using the back tick operator. Building on the above example:
-/// 
+///
 /// ~~~~~~~~
 /// eval> callfunc(`+`, 1, 4);
 /// 5
@@ -652,7 +649,6 @@
 /// @sa @ref LangKeywordRef
 /// @sa ChaiScript_Language for Built in Functions
 
-
 /// @page LangKeywordRef ChaiScript Language Keyword Reference
 ///
 ///
@@ -660,8 +656,8 @@
 ///
 /// @section keywordattr attr
 /// Defines a ChaiScript object attribute
-/// 
-/// ~~~~~~~~ 
+///
+/// ~~~~~~~~
 /// Attribute Definition ::= "attr" class_name "::" attribute_name
 /// ~~~~~~~~
 ///
@@ -690,7 +686,7 @@
 /// ~~~~~~~~
 ///
 /// @sa @ref keywordfor
-/// @sa @ref keywordwhile 
+/// @sa @ref keywordwhile
 ///
 ///
 /// -----------------------------------------------------------------------
@@ -702,7 +698,7 @@
 /// Function Definition ::= "def" identifier "(" [[type] arg ("," [type] arg)*] ")" [":" guard] block
 /// Method Definition ::= "def" class_name "::" method_name "(" [[type] arg ("," [type] arg)*] ")" [":" guard] block
 /// ~~~~~~~~
-/// 
+///
 /// identifier: name of function. Required.
 /// args: comma-delimited list of parameter names with optional type specifiers. Optional.
 /// guards: guarding statement that act as a prerequisite for the function. Optional.
@@ -722,7 +718,7 @@
 /// -----------------------------------------------------------------------
 ///
 /// @section keywordelse else
-/// @sa @ref keywordif 
+/// @sa @ref keywordif
 ///
 ///
 /// -----------------------------------------------------------------------
@@ -762,7 +758,7 @@
 /// Else If Block ::= "else if" "(" condition ")" block
 /// Else Block ::= "else" block
 /// ~~~~~~~~
-/// 
+///
 /// _Example_
 ///
 /// ~~~~~~~~
@@ -780,8 +776,8 @@
 ///
 /// @section keywordtry try
 /// ~~~~~~~~
-/// Try Block ::= "try" block 
-///  ("catch" ["(" [type] variable ")"] [":" guards] block)+ 
+/// Try Block ::= "try" block
+///  ("catch" ["(" [type] variable ")"] [":" guards] block)+
 ///    ["finally" block]
 /// ~~~~~~~~
 ///
@@ -791,7 +787,7 @@
 /// -----------------------------------------------------------------------
 ///
 /// @section keywordwhile while
-/// 
+///
 /// Begins a conditional block of code that loops 0 or more times, as long as the condition is true
 ///
 /// ~~~~~~~~
@@ -804,7 +800,7 @@
 /// -----------------------------------------------------------------------
 ///
 /// @section keywordvar var
-/// 
+///
 /// Defines a variable
 ///
 /// ~~~~~~~~
@@ -813,7 +809,6 @@
 ///
 /// Synonym for @ref keywordauto
 
-
 /// @namespace chaiscript
 /// @brief Namespace chaiscript contains every API call that the average user will be concerned with.
 
@@ -821,25 +816,22 @@
 /// @brief Classes and functions reserved for internal use. Items in this namespace are not supported.
 
 #include "chaiscript_basic.hpp"
-#include "language/chaiscript_parser.hpp"
 #include "chaiscript_stdlib.hpp"
+#include "language/chaiscript_parser.hpp"
 
-
-namespace chaiscript 
-{
-  class ChaiScript : public ChaiScript_Basic
-  {
-    public:
-      ChaiScript(std::vector<std::string> t_modulepaths = {},
-          std::vector<std::string> t_usepaths = {},
-          const std::vector<Options> &t_opts = chaiscript::default_options())
-        : ChaiScript_Basic(
-            chaiscript::Std_Lib::library(),
-            std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer_Default>>(),
-            t_modulepaths, t_usepaths, t_opts)
-        {
-        }
+namespace chaiscript {
+  class ChaiScript : public ChaiScript_Basic {
+  public:
+    ChaiScript(std::vector<std::string> t_modulepaths = {},
+               std::vector<std::string> t_usepaths = {},
+               std::vector<Options> t_opts = chaiscript::default_options())
+        : ChaiScript_Basic(chaiscript::Std_Lib::library(),
+                           std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer_Default>>(),
+                           std::move(t_modulepaths),
+                           std::move(t_usepaths),
+                           std::move(t_opts)) {
+    }
   };
-}
+} // namespace chaiscript
 
 #endif /* CHAISCRIPT_HPP_ */

@@ -1,10 +1,9 @@
 version: 6.1.x.{build}
-image: 
- - Visual Studio 2017
+image:
+  - Visual Studio 2019
 environment:
   matrix:
-    - VS_VERSION: "Visual Studio 14"
-    - VS_VERSION: "Visual Studio 15"
+  - VS_VERSION: "Visual Studio 16"
 build_script:
 - cmd: >-
     mkdir build

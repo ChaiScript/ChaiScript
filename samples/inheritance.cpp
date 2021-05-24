@@ -1,79 +1,66 @@
 #include <chaiscript/chaiscript.hpp>
 
-class BaseClass
-{
-  public:
-    BaseClass()
-    {
+class BaseClass {
+public:
+  BaseClass() = default;
+
+  BaseClass(const BaseClass &) = default;
+
+  virtual ~BaseClass() = default;
+
+  virtual std::string doSomething(float, double) const = 0;
+
+  void setValue(const std::string &t_val) {
+    if (validateValue(t_val)) {
+      m_value = t_val;
     }
+  }
 
-    BaseClass(const BaseClass &) = default;
+  std::string getValue() const { return m_value; }
 
-    virtual ~BaseClass() {}
+protected:
+  virtual bool validateValue(const std::string &t_val) = 0;
 
-    virtual std::string doSomething(float, double) const = 0;
-
-
-    void setValue(const std::string &t_val) {
-      if (validateValue(t_val))
-      {
-        m_value = t_val;
-      }
-    }
-
-    std::string getValue() const {
-      return m_value;
-    }
-
-  protected:
-    virtual bool validateValue(const std::string &t_val) = 0;
-
-  private:
-    std::string m_value;
+private:
+  std::string m_value;
 };
 
-class ChaiScriptDerived : public BaseClass
-{
-  public:
-    ChaiScriptDerived(const std::vector<chaiscript::Boxed_Value> &t_funcs)
-    {
-      // using the range-checked .at() methods to give us an exception
-      // instead of a crash if the user passed in too-few params
-      tie(t_funcs.at(0), m_doSomethingImpl);
-      tie(t_funcs.at(1), m_validateValueImpl);
-    }
+class ChaiScriptDerived : public BaseClass {
+public:
+  ChaiScriptDerived(const std::vector<chaiscript::Boxed_Value> &t_funcs) {
+    // using the range-checked .at() methods to give us an exception
+    // instead of a crash if the user passed in too-few params
+    tie(t_funcs.at(0), m_doSomethingImpl);
+    tie(t_funcs.at(1), m_validateValueImpl);
+  }
 
-    std::string doSomething(float f, double d) const override
-    {
-      assert(m_doSomethingImpl);
-      return m_doSomethingImpl(*this, f, d);
-    }
+  std::string doSomething(float f, double d) const override {
+    assert(m_doSomethingImpl);
+    return m_doSomethingImpl(*this, f, d);
+  }
 
-  protected:
-    bool validateValue(const std::string &t_val) override
-    {
-      assert(m_validateValueImpl);
-      return m_validateValueImpl(*this, t_val);
-    }
+protected:
+  bool validateValue(const std::string &t_val) override {
+    assert(m_validateValueImpl);
+    return m_validateValueImpl(*this, t_val);
+  }
 
-  private:
-    template<typename Param>
-    void tie(const chaiscript::Boxed_Value &t_func, Param &t_param)
-    {
-      t_param = chaiscript::boxed_cast<Param>(t_func);
-    }
+private:
+  template<typename Param>
+  void tie(const chaiscript::Boxed_Value &t_func, Param &t_param) {
+    t_param = chaiscript::boxed_cast<Param>(t_func);
+  }
 
-    std::function<std::string (const ChaiScriptDerived&, float, double)> m_doSomethingImpl;
-    std::function<bool (ChaiScriptDerived&, const std::string &t_val)> m_validateValueImpl;
+  std::function<std::string(const ChaiScriptDerived &, float, double)> m_doSomethingImpl;
+  std::function<bool(ChaiScriptDerived &, const std::string &t_val)> m_validateValueImpl;
 };
 
-int main()
-{
+int main() {
   chaiscript::ChaiScript chai;
   chai.add(chaiscript::fun(&BaseClass::doSomething), "doSomething");
   chai.add(chaiscript::fun(&BaseClass::setValue), "setValue");
   chai.add(chaiscript::fun(&BaseClass::getValue), "getValue");
-  chai.add(chaiscript::constructor<ChaiScriptDerived (const std::vector<chaiscript::Boxed_Value> &)>(), "ChaiScriptDerived");
+  chai.add(chaiscript::constructor<ChaiScriptDerived(const std::vector<chaiscript::Boxed_Value> &)>(), "ChaiScriptDerived");
   chai.add(chaiscript::base_class<BaseClass, ChaiScriptDerived>());
   chai.add(chaiscript::user_type<BaseClass>(), "BaseClass");
   chai.add(chaiscript::user_type<ChaiScriptDerived>(), "ChaiScriptDerived");
@@ -105,8 +92,8 @@ int main()
     )"";
 
   chai.eval(script);
-  
-  BaseClass &myderived = chai.eval<ChaiScriptDerived&>("myderived");
+
+  BaseClass &myderived = chai.eval<ChaiScriptDerived &>("myderived");
 
   // at this point in the code myderived is both a ChaiScript variable and a C++ variable. In both cases
   // it is a derivation of BaseClass, and the implementation is provided via ChaiScript functors
@@ -121,7 +108,6 @@ int main()
   myderived.setValue("12345");
   assert(myderived.getValue() == "1234");
 
-
   chai.eval(R"(myderived.setValue("new"))"); // set the value via chaiscript
   assert(myderived.getValue() == "new");
 
@@ -131,5 +117,3 @@ int main()
 
   // The whole process is fully orthogonal
 }
-
-

@@ -1,5 +1,0 @@
-def sam() {
-  return 5
-}
-
-assert_equal(5, sam())

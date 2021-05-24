@@ -1,3 +1,0 @@
-var i = 3
-assert_equal(4, ++i)
-assert_equal(4, i)

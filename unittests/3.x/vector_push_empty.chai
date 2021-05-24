@@ -1,4 +1,0 @@
-var bob = []
-bob.push_back(3)
-assert_equal(1, bob.size())
-assert_equal(3, bob.front())

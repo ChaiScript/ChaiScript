@@ -1,4 +1,0 @@
-var x=.5
-assert_equal(.5, x)
-var y=-.5
-assert_equal(-.5, y)

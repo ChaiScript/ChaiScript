@@ -1,0 +1,41 @@
+
+/*
+global clone_count = 0;
+
+class Cloneable
+{
+  def Cloneable() {
+  }
+
+}
+
+
+def clone(Cloneable c)
+{
+  print("Clone called");
+  ++clone_count;
+  return c;
+}
+
+
+class MyObject
+{
+  def MyObject() {
+    this.data = Cloneable();
+  }
+
+  var data;
+}
+
+
+assert_equal(0, clone_count);
+
+var o = MyObject();
+
+assert_equal(0, clone_count);
+
+var p = o;
+
+assert_equal(1, clone_count);
+*/
+

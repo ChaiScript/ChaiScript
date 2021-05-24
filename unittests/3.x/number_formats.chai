@@ -1,3 +1,0 @@
-assert_equal(10, 012)
-assert_equal(31, 0x1f)
-assert_equal(3, 0b11)

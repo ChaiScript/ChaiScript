@@ -1,2 +1,0 @@
-assert_throws("Error: \"Error, cannot assign to constant value.\"", fun() { 1 = 2 } );
-assert_throws("Error: \"Error, cannot assign to constant value.\"", fun() { 1 + 2 = 2 } );

@@ -2,15 +2,12 @@
 #include <chaiscript/dispatchkit/bootstrap_stl.hpp>
 #include <chaiscript/dispatchkit/function_call.hpp>
 
-int main( int /*argc*/ , char * /*argv*/[] )
-{
+int main(int /*argc*/, char * /*argv*/[]) {
   chaiscript::ChaiScript ch;
 
-
-  try
-  {
-    static const char script[ ] =
-      R""(
+  try {
+    static const char script[] =
+        R""(
 
       class Rectangle
       {
@@ -21,12 +18,9 @@ int main( int /*argc*/ , char * /*argv*/[] )
 
     )"";
 
-
-    ch.eval( script );
-  }
-  catch ( const std::exception &e )
-  {
-    printf( " >>> Exception thrown: %s \n" , e.what( ) );
+    ch.eval(script);
+  } catch (const std::exception &e) {
+    printf(" >>> Exception thrown: %s \n", e.what());
   }
 
   return 1;
