@@ -7,12 +7,10 @@
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 
-
 /// \file
 /// This file contains utility functions for registration of STL container
 /// classes. The methodology used is based on the SGI STL concepts.
 /// http://www.sgi.com/tech/stl/table_of_contents.html
-
 
 #ifndef CHAISCRIPT_BOOTSTRAP_STL_HPP_
 #define CHAISCRIPT_BOOTSTRAP_STL_HPP_
@@ -31,412 +29,353 @@
 #include "register_function.hpp"
 #include "type_info.hpp"
 
-namespace chaiscript 
-{
-  namespace bootstrap
-  {
-    namespace standard_library
-    {
+namespace chaiscript::bootstrap::standard_library {
+  /// Bidir_Range, based on the D concept of ranges.
+  /// \todo Update the Range code to base its capabilities on
+  ///       the user_typetraits of the iterator passed in
+  template<typename Container, typename IterType>
+  struct Bidir_Range {
+    using container_type = Container;
 
-      /// Bidir_Range, based on the D concept of ranges.
-      /// \todo Update the Range code to base its capabilities on
-      ///       the user_typetraits of the iterator passed in
-      template<typename Container, typename IterType>
-        struct Bidir_Range
-        {
-          using container_type = Container;
+    constexpr Bidir_Range(Container &c)
+        : m_begin(c.begin())
+        , m_end(c.end()) {
+    }
 
-          constexpr Bidir_Range(Container &c)
-            : m_begin(c.begin()), m_end(c.end())
-          {
-          }
+    constexpr bool empty() const noexcept { return m_begin == m_end; }
 
-          constexpr bool empty() const noexcept
-          {
-            return m_begin == m_end;
-          }
+    constexpr void pop_front() {
+      if (empty()) {
+        throw std::range_error("Range empty");
+      }
+      ++m_begin;
+    }
 
-          constexpr void pop_front()
-          {
-            if (empty())
-            {
-              throw std::range_error("Range empty");
-            }
-            ++m_begin;
-          }
+    constexpr void pop_back() {
+      if (empty()) {
+        throw std::range_error("Range empty");
+      }
+      --m_end;
+    }
 
-          constexpr void pop_back()
-          {
-            if (empty())
-            {
-              throw std::range_error("Range empty");
-            }
-            --m_end;
-          }
+    constexpr decltype(auto) front() const {
+      if (empty()) {
+        throw std::range_error("Range empty");
+      }
+      return (*m_begin);
+    }
 
-          constexpr decltype(auto) front() const
-          {
-            if (empty())
-            {
-              throw std::range_error("Range empty");
-            }
-            return (*m_begin);
-          }
+    constexpr decltype(auto) back() const {
+      if (empty()) {
+        throw std::range_error("Range empty");
+      }
+      auto pos = m_end;
+      --pos;
+      return (*(pos));
+    }
 
-          constexpr decltype(auto) back() const
-          {
-            if (empty())
-            {
-              throw std::range_error("Range empty");
-            }
-            auto pos = m_end;
-            --pos;
-            return (*(pos));
-          }
+    IterType m_begin;
+    IterType m_end;
+  };
 
-          IterType m_begin;
-          IterType m_end;
-        };
+  namespace detail {
+    template<typename T>
+    size_t count(const T &t_target, const typename T::key_type &t_key) {
+      return t_target.count(t_key);
+    }
 
-      namespace detail {
+    template<typename T>
+    void insert(T &t_target, const T &t_other) {
+      t_target.insert(t_other.begin(), t_other.end());
+    }
 
-        template<typename T>
-        size_t count(const T &t_target, const typename T::key_type &t_key)
-        {
-          return t_target.count(t_key);
-        }
+    template<typename T>
+    void insert_ref(T &t_target, const typename T::value_type &t_val) {
+      t_target.insert(t_val);
+    }
 
-        template<typename T>
-          void insert(T &t_target, const T &t_other)
-          {
-            t_target.insert(t_other.begin(), t_other.end());
-          }
+    /// Add Bidir_Range support for the given ContainerType
+    template<typename Bidir_Type>
+    void input_range_type_impl(const std::string &type, Module &m) {
+      m.add(user_type<Bidir_Type>(), type + "_Range");
 
-        template<typename T>
-          void insert_ref(T &t_target, const typename T::value_type &t_val)
-          {
-            t_target.insert(t_val);
-          }
+      copy_constructor<Bidir_Type>(type + "_Range", m);
 
+      m.add(constructor<Bidir_Type(typename Bidir_Type::container_type &)>(), "range_internal");
 
+      m.add(fun(&Bidir_Type::empty), "empty");
+      m.add(fun(&Bidir_Type::pop_front), "pop_front");
+      m.add(fun(&Bidir_Type::front), "front");
+      m.add(fun(&Bidir_Type::pop_back), "pop_back");
+      m.add(fun(&Bidir_Type::back), "back");
+    }
 
-        /// Add Bidir_Range support for the given ContainerType
-        template<typename Bidir_Type>
-          void input_range_type_impl(const std::string &type, Module& m)
-          {
-            m.add(user_type<Bidir_Type>(), type + "_Range");
+    /// Algorithm for inserting at a specific position into a container
+    template<typename Type>
+    void insert_at(Type &container, int pos, const typename Type::value_type &v) {
+      auto itr = container.begin();
+      auto end = container.end();
 
-            copy_constructor<Bidir_Type>(type + "_Range", m);
-
-            m.add(constructor<Bidir_Type (typename Bidir_Type::container_type &)>(), "range_internal");
-
-            m.add(fun(&Bidir_Type::empty), "empty");
-            m.add(fun(&Bidir_Type::pop_front), "pop_front");
-            m.add(fun(&Bidir_Type::front), "front");
-            m.add(fun(&Bidir_Type::pop_back), "pop_back");
-            m.add(fun(&Bidir_Type::back), "back");
-          }
-
-
-        /// Algorithm for inserting at a specific position into a container
-        template<typename Type>
-          void insert_at(Type &container, int pos, const typename Type::value_type &v)
-          {
-            auto itr = container.begin();
-            auto end = container.end();
-
-            if (pos < 0 || std::distance(itr, end) < pos)
-            {
-              throw std::range_error("Cannot insert past end of range");
-            }
-
-            std::advance(itr, pos);
-            container.insert(itr, v);
-          }
-
-
-        /// Algorithm for erasing a specific position from a container
-        template<typename Type>
-          void erase_at(Type &container, int pos)
-          {
-            auto itr = container.begin();
-            auto end = container.end();
-
-            if (pos < 0 || std::distance(itr, end) < (pos-1))
-            {
-              throw std::range_error("Cannot erase past end of range");
-            }
-
-            std::advance(itr, pos);
-            container.erase(itr);
-          }
+      if (pos < 0 || std::distance(itr, end) < pos) {
+        throw std::range_error("Cannot insert past end of range");
       }
 
-      template<typename ContainerType>
-        void input_range_type(const std::string &type, Module& m)
-        {
-          detail::input_range_type_impl<Bidir_Range<ContainerType, typename ContainerType::iterator> >(type,m);
-          detail::input_range_type_impl<Bidir_Range<const ContainerType, typename ContainerType::const_iterator> >("Const_" + type,m);
-        }
+      std::advance(itr, pos);
+      container.insert(itr, v);
+    }
 
+    /// Algorithm for erasing a specific position from a container
+    template<typename Type>
+    void erase_at(Type &container, int pos) {
+      auto itr = container.begin();
+      auto end = container.end();
 
-      /// Add random_access_container concept to the given ContainerType
-      /// http://www.sgi.com/tech/stl/RandomAccessContainer.html
-      template<typename ContainerType>
-        void random_access_container_type(const std::string &/*type*/, Module& m)
-        {
-          //In the interest of runtime safety for the m, we prefer the at() method for [] access,
-          //to throw an exception in an out of bounds condition.
-          m.add(
-              fun(
-                [](ContainerType &c, int index) -> typename ContainerType::reference {
-                  /// \todo we are preferring to keep the key as 'int' to avoid runtime conversions
-                  /// during dispatch. reevaluate
-                  return c.at(static_cast<typename ContainerType::size_type>(index));
-                }), "[]");
+      if (pos < 0 || std::distance(itr, end) < (pos - 1)) {
+        throw std::range_error("Cannot erase past end of range");
+      }
 
-          m.add(
-              fun(
-                [](const ContainerType &c, int index) -> typename ContainerType::const_reference {
-                  /// \todo we are preferring to keep the key as 'int' to avoid runtime conversions
-                  /// during dispatch. reevaluate
-                  return c.at(static_cast<typename ContainerType::size_type>(index));
-                }), "[]");
-        }
+      std::advance(itr, pos);
+      container.erase(itr);
+    }
+  } // namespace detail
 
+  template<typename ContainerType>
+  void input_range_type(const std::string &type, Module &m) {
+    detail::input_range_type_impl<Bidir_Range<ContainerType, typename ContainerType::iterator>>(type, m);
+    detail::input_range_type_impl<Bidir_Range<const ContainerType, typename ContainerType::const_iterator>>("Const_" + type, m);
+  }
 
-      /// Add assignable concept to the given ContainerType
-      /// http://www.sgi.com/tech/stl/Assignable.html
-      template<typename ContainerType>
-        void assignable_type(const std::string &type, Module& m)
-        {
-          copy_constructor<ContainerType>(type, m);
-          operators::assign<ContainerType>(m);
-        }
+  /// Add random_access_container concept to the given ContainerType
+  /// http://www.sgi.com/tech/stl/RandomAccessContainer.html
+  template<typename ContainerType>
+  void random_access_container_type(const std::string & /*type*/, Module &m) {
+    // In the interest of runtime safety for the m, we prefer the at() method for [] access,
+    // to throw an exception in an out of bounds condition.
+    m.add(fun([](ContainerType &c, int index) -> typename ContainerType::reference {
+            /// \todo we are preferring to keep the key as 'int' to avoid runtime conversions
+            /// during dispatch. reevaluate
+            return c.at(static_cast<typename ContainerType::size_type>(index));
+          }),
+          "[]");
 
-      /// Add container resize concept to the given ContainerType
-      /// http://www.cplusplus.com/reference/stl/
-      template<typename ContainerType>
-        void resizable_type(const std::string &/*type*/, Module& m)
-        {
-          m.add(fun([](ContainerType *a, typename ContainerType::size_type n, const typename ContainerType::value_type& val) { return a->resize(n, val); } ), "resize");
-          m.add(fun([](ContainerType *a, typename ContainerType::size_type n) { return a->resize(n); } ), "resize");
-        }
+    m.add(fun([](const ContainerType &c, int index) -> typename ContainerType::const_reference {
+            /// \todo we are preferring to keep the key as 'int' to avoid runtime conversions
+            /// during dispatch. reevaluate
+            return c.at(static_cast<typename ContainerType::size_type>(index));
+          }),
+          "[]");
+  }
 
-      /// Add container reserve concept to the given ContainerType
-      /// http://www.cplusplus.com/reference/stl/
-      template<typename ContainerType>
-        void reservable_type(const std::string &/*type*/, Module& m)
-        {
-          m.add(fun([](ContainerType *a, typename ContainerType::size_type n) { return a->reserve(n); } ), "reserve");
-          m.add(fun([](const ContainerType *a) { return a->capacity(); } ), "capacity");
-        }
+  /// Add assignable concept to the given ContainerType
+  /// http://www.sgi.com/tech/stl/Assignable.html
+  template<typename ContainerType>
+  void assignable_type(const std::string &type, Module &m) {
+    copy_constructor<ContainerType>(type, m);
+    operators::assign<ContainerType>(m);
+  }
 
-      /// Add container concept to the given ContainerType
-      /// http://www.sgi.com/tech/stl/Container.html
-      template<typename ContainerType>
-        void container_type(const std::string &/*type*/, Module& m)
-        {
-          m.add(fun([](const ContainerType *a) { return a->size(); } ), "size");
-          m.add(fun([](const ContainerType *a) { return a->empty(); } ), "empty");
-          m.add(fun([](ContainerType *a) { a->clear(); } ), "clear");
-        }
+  /// Add container resize concept to the given ContainerType
+  /// http://www.cplusplus.com/reference/stl/
+  template<typename ContainerType>
+  void resizable_type(const std::string & /*type*/, Module &m) {
+    m.add(fun([](ContainerType *a, typename ContainerType::size_type n, const typename ContainerType::value_type &val) {
+            return a->resize(n, val);
+          }),
+          "resize");
+    m.add(fun([](ContainerType *a, typename ContainerType::size_type n) { return a->resize(n); }), "resize");
+  }
 
-      /// Add default constructable concept to the given Type
-      /// http://www.sgi.com/tech/stl/DefaultConstructible.html
-      template<typename Type>
-        void default_constructible_type(const std::string &type, Module& m)
-        {
-          m.add(constructor<Type ()>(), type);
-        }
+  /// Add container reserve concept to the given ContainerType
+  /// http://www.cplusplus.com/reference/stl/
+  template<typename ContainerType>
+  void reservable_type(const std::string & /*type*/, Module &m) {
+    m.add(fun([](ContainerType *a, typename ContainerType::size_type n) { return a->reserve(n); }), "reserve");
+    m.add(fun([](const ContainerType *a) { return a->capacity(); }), "capacity");
+  }
 
-      /// Add sequence concept to the given ContainerType
-      /// http://www.sgi.com/tech/stl/Sequence.html
-      template<typename ContainerType>
-        void sequence_type(const std::string &/*type*/, Module& m)
-        {
-          m.add(fun(&detail::insert_at<ContainerType>),
-              []()->std::string{
-                if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
-                  return "insert_ref_at";
-                } else {
-                  return "insert_at";
-                }
-              }());
+  /// Add container concept to the given ContainerType
+  /// http://www.sgi.com/tech/stl/Container.html
+  template<typename ContainerType>
+  void container_type(const std::string & /*type*/, Module &m) {
+    m.add(fun([](const ContainerType *a) { return a->size(); }), "size");
+    m.add(fun([](const ContainerType *a) { return a->empty(); }), "empty");
+    m.add(fun([](ContainerType *a) { a->clear(); }), "clear");
+  }
 
-          m.add(fun(&detail::erase_at<ContainerType>), "erase_at");
-        }
+  /// Add default constructable concept to the given Type
+  /// http://www.sgi.com/tech/stl/DefaultConstructible.html
+  template<typename Type>
+  void default_constructible_type(const std::string &type, Module &m) {
+    m.add(constructor<Type()>(), type);
+  }
 
-      /// Add back insertion sequence concept to the given ContainerType
-      /// http://www.sgi.com/tech/stl/BackInsertionSequence.html
-      template<typename ContainerType>
-        void back_insertion_sequence_type(const std::string &type, Module& m)
-        {
-          m.add(fun([](ContainerType &container)->decltype(auto){ 
-                      if (container.empty()) {
-                        throw std::range_error("Container empty");
-                      } else {
-                        return (container.back());
-                      }
-                    }
-                  )
-                , "back");
-          m.add(fun([](const ContainerType &container)->decltype(auto){ 
-                      if (container.empty()) {
-                        throw std::range_error("Container empty");
-                      } else {
-                        return (container.back());
-                      }
-                    }
-                  )
-                , "back");
+  /// Add sequence concept to the given ContainerType
+  /// http://www.sgi.com/tech/stl/Sequence.html
+  template<typename ContainerType>
+  void sequence_type(const std::string & /*type*/, Module &m) {
+    m.add(fun(&detail::insert_at<ContainerType>), []() -> std::string {
+      if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
+        return "insert_ref_at";
+      } else {
+        return "insert_at";
+      }
+    }());
 
+    m.add(fun(&detail::erase_at<ContainerType>), "erase_at");
+  }
 
-          using push_back = void (ContainerType::*)(const typename ContainerType::value_type &);
-          m.add(fun(static_cast<push_back>(&ContainerType::push_back)),
-              [&]()->std::string{
-              if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
-                m.eval(
-                    "# Pushes the second value onto the container while making a clone of the value\n"
-                    "def push_back(" + type + " container, x)\n"
-                    "{ \n"
-                    "  if (x.is_var_return_value()) {\n"
-                    "    x.reset_var_return_value() \n"
-                    "    container.push_back_ref(x) \n"
-                    "  } else { \n"
-                    "    container.push_back_ref(clone(x)); \n"
-                    "  }\n"
-                    "} \n"
-                    );
+  /// Add back insertion sequence concept to the given ContainerType
+  /// http://www.sgi.com/tech/stl/BackInsertionSequence.html
+  template<typename ContainerType>
+  void back_insertion_sequence_type(const std::string &type, Module &m) {
+    m.add(fun([](ContainerType &container) -> decltype(auto) {
+            if (container.empty()) {
+              throw std::range_error("Container empty");
+            } else {
+              return (container.back());
+            }
+          }),
+          "back");
+    m.add(fun([](const ContainerType &container) -> decltype(auto) {
+            if (container.empty()) {
+              throw std::range_error("Container empty");
+            } else {
+              return (container.back());
+            }
+          }),
+          "back");
 
-                  return "push_back_ref";
-                } else {
-                  return "push_back";
-                }
-              }());
+    using push_back = void (ContainerType::*)(const typename ContainerType::value_type &);
+    m.add(fun(static_cast<push_back>(&ContainerType::push_back)), [&]() -> std::string {
+      if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
+        m.eval("# Pushes the second value onto the container while making a clone of the value\n"
+               "def push_back("
+               + type
+               + " container, x)\n"
+                 "{ \n"
+                 "  if (x.is_var_return_value()) {\n"
+                 "    x.reset_var_return_value() \n"
+                 "    container.push_back_ref(x) \n"
+                 "  } else { \n"
+                 "    container.push_back_ref(clone(x)); \n"
+                 "  }\n"
+                 "} \n");
 
-          m.add(fun(&ContainerType::pop_back), "pop_back");
-        }
+        return "push_back_ref";
+      } else {
+        return "push_back";
+      }
+    }());
 
+    m.add(fun(&ContainerType::pop_back), "pop_back");
+  }
 
-      /// Front insertion sequence
-      /// http://www.sgi.com/tech/stl/FrontInsertionSequence.html
-      template<typename ContainerType>
-        void front_insertion_sequence_type(const std::string &type, Module& m)
-        {
-          using push_ptr = void (ContainerType::*)(typename ContainerType::const_reference);
-          using pop_ptr = void (ContainerType::*)();
+  /// Front insertion sequence
+  /// http://www.sgi.com/tech/stl/FrontInsertionSequence.html
+  template<typename ContainerType>
+  void front_insertion_sequence_type(const std::string &type, Module &m) {
+    using push_ptr = void (ContainerType::*)(typename ContainerType::const_reference);
+    using pop_ptr = void (ContainerType::*)();
 
-          m.add(fun([](ContainerType &container)->decltype(auto){ 
-                      if (container.empty()) {
-                        throw std::range_error("Container empty");
-                      } else {
-                        return (container.front());
-                      }
-                    }
-                  )
-                , "front");
+    m.add(fun([](ContainerType &container) -> decltype(auto) {
+            if (container.empty()) {
+              throw std::range_error("Container empty");
+            } else {
+              return (container.front());
+            }
+          }),
+          "front");
 
-          m.add(fun([](const ContainerType &container)->decltype(auto){ 
-                      if (container.empty()) {
-                        throw std::range_error("Container empty");
-                      } else {
-                        return (container.front());
-                      }
-                    }
-                  )
-                , "front");
+    m.add(fun([](const ContainerType &container) -> decltype(auto) {
+            if (container.empty()) {
+              throw std::range_error("Container empty");
+            } else {
+              return (container.front());
+            }
+          }),
+          "front");
 
+    m.add(fun(static_cast<push_ptr>(&ContainerType::push_front)), [&]() -> std::string {
+      if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
+        m.eval("# Pushes the second value onto the front of container while making a clone of the value\n"
+               "def push_front("
+               + type
+               + " container, x)\n"
+                 "{ \n"
+                 "  if (x.is_var_return_value()) {\n"
+                 "    x.reset_var_return_value() \n"
+                 "    container.push_front_ref(x) \n"
+                 "  } else { \n"
+                 "    container.push_front_ref(clone(x)); \n"
+                 "  }\n"
+                 "} \n");
+        return "push_front_ref";
+      } else {
+        return "push_front";
+      }
+    }());
 
-          m.add(fun(static_cast<push_ptr>(&ContainerType::push_front)),
-              [&]()->std::string{
-                if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
-                  m.eval(
-                      "# Pushes the second value onto the front of container while making a clone of the value\n"
-                      "def push_front(" + type + " container, x)\n"
-                      "{ \n"
-                      "  if (x.is_var_return_value()) {\n"
-                      "    x.reset_var_return_value() \n"
-                      "    container.push_front_ref(x) \n"
-                      "  } else { \n"
-                      "    container.push_front_ref(clone(x)); \n"
-                      "  }\n"
-                      "} \n"
-                      );
-                  return "push_front_ref";
-                } else {
-                  return "push_front";
-                }
-              }());
+    m.add(fun(static_cast<pop_ptr>(&ContainerType::pop_front)), "pop_front");
+  }
 
-          m.add(fun(static_cast<pop_ptr>(&ContainerType::pop_front)), "pop_front");
-        }
+  /// bootstrap a given PairType
+  /// http://www.sgi.com/tech/stl/pair.html
+  template<typename PairType>
+  void pair_type(const std::string &type, Module &m) {
+    m.add(user_type<PairType>(), type);
 
-      /// bootstrap a given PairType
-      /// http://www.sgi.com/tech/stl/pair.html
-      template<typename PairType>
-        void pair_type(const std::string &type, Module& m)
-        {
-          m.add(user_type<PairType>(), type);
+    m.add(fun(&PairType::first), "first");
+    m.add(fun(&PairType::second), "second");
 
-          m.add(fun(&PairType::first), "first");
-          m.add(fun(&PairType::second), "second");
+    basic_constructors<PairType>(type, m);
+    m.add(constructor<PairType(const typename PairType::first_type &, const typename PairType::second_type &)>(), type);
+  }
 
-          basic_constructors<PairType>(type, m);
-          m.add(constructor<PairType (const typename PairType::first_type &, const typename PairType::second_type &)>(), type);
-        }
+  /// Add pair associative container concept to the given ContainerType
+  /// http://www.sgi.com/tech/stl/PairAssociativeContainer.html
 
+  template<typename ContainerType>
+  void pair_associative_container_type(const std::string &type, Module &m) {
+    pair_type<typename ContainerType::value_type>(type + "_Pair", m);
+  }
 
-      /// Add pair associative container concept to the given ContainerType
-      /// http://www.sgi.com/tech/stl/PairAssociativeContainer.html
+  /// Add unique associative container concept to the given ContainerType
+  /// http://www.sgi.com/tech/stl/UniqueAssociativeContainer.html
+  template<typename ContainerType>
+  void unique_associative_container_type(const std::string & /*type*/, Module &m) {
+    m.add(fun(detail::count<ContainerType>), "count");
 
-      template<typename ContainerType>
-        void pair_associative_container_type(const std::string &type, Module& m)
-        {
-          pair_type<typename ContainerType::value_type>(type + "_Pair", m);
-        }
+    using erase_ptr = size_t (ContainerType::*)(const typename ContainerType::key_type &);
 
-      /// Add unique associative container concept to the given ContainerType
-      /// http://www.sgi.com/tech/stl/UniqueAssociativeContainer.html
-      template<typename ContainerType>
-        void unique_associative_container_type(const std::string &/*type*/, Module& m)
-        {
-          m.add(fun(detail::count<ContainerType>), "count");
+    m.add(fun(static_cast<erase_ptr>(&ContainerType::erase)), "erase");
 
-          using erase_ptr = size_t (ContainerType::*)(const typename ContainerType::key_type &);
+    m.add(fun(&detail::insert<ContainerType>), "insert");
 
-          m.add(fun(static_cast<erase_ptr>(&ContainerType::erase)), "erase");
+    m.add(fun(&detail::insert_ref<ContainerType>), []() -> std::string {
+      if (typeid(typename ContainerType::mapped_type) == typeid(Boxed_Value)) {
+        return "insert_ref";
+      } else {
+        return "insert";
+      }
+    }());
+  }
 
-          m.add(fun(&detail::insert<ContainerType>), "insert");
+  /// Add a MapType container
+  /// http://www.sgi.com/tech/stl/Map.html
+  template<typename MapType>
+  void map_type(const std::string &type, Module &m) {
+    m.add(user_type<MapType>(), type);
 
-          m.add(fun(&detail::insert_ref<ContainerType>),
-              []()->std::string{
-                if (typeid(typename ContainerType::mapped_type) == typeid(Boxed_Value)) {
-                  return "insert_ref";
-                } else {
-                  return "insert";
-                }
-              }());
-        }
+    using elem_access = typename MapType::mapped_type &(MapType::*)(const typename MapType::key_type &);
+    using const_elem_access = const typename MapType::mapped_type &(MapType::*)(const typename MapType::key_type &) const;
 
-      /// Add a MapType container
-      /// http://www.sgi.com/tech/stl/Map.html
-      template<typename MapType>
-        void map_type(const std::string &type, Module& m)
-        {
-          m.add(user_type<MapType>(), type);
+    m.add(fun(static_cast<elem_access>(&MapType::operator[])), "[]");
 
-          using elem_access = typename MapType::mapped_type &(MapType::*)(const typename MapType::key_type &);
-          using const_elem_access = const typename MapType::mapped_type &(MapType::*)(const typename MapType::key_type &) const;
+    m.add(fun(static_cast<elem_access>(&MapType::at)), "at");
+    m.add(fun(static_cast<const_elem_access>(&MapType::at)), "at");
 
-          m.add(fun(static_cast<elem_access>(&MapType::operator[])), "[]");
-
-          m.add(fun(static_cast<elem_access>(&MapType::at)), "at");
-          m.add(fun(static_cast<const_elem_access>(&MapType::at)), "at");
-
-          if (typeid(MapType) == typeid(std::map<std::string, Boxed_Value>))
-          {
-            m.eval(R"(
+    if (typeid(MapType) == typeid(std::map<std::string, Boxed_Value>)) {
+      m.eval(R"(
                     def Map::`==`(Map rhs) {
                        if ( rhs.size() != this.size() ) {
                          return false;
@@ -454,77 +393,68 @@ namespace chaiscript
                          }
                          true;
                        }
-                   } )"
-                 );
-          } 
+                   } )");
+    }
 
-          container_type<MapType>(type, m);
-          default_constructible_type<MapType>(type, m);
-          assignable_type<MapType>(type, m);
-          unique_associative_container_type<MapType>(type, m);
-          pair_associative_container_type<MapType>(type, m);
-          input_range_type<MapType>(type, m);
-        }
+    container_type<MapType>(type, m);
+    default_constructible_type<MapType>(type, m);
+    assignable_type<MapType>(type, m);
+    unique_associative_container_type<MapType>(type, m);
+    pair_associative_container_type<MapType>(type, m);
+    input_range_type<MapType>(type, m);
+  }
 
-      /// http://www.sgi.com/tech/stl/List.html
-      template<typename ListType>
-        void list_type(const std::string &type, Module& m)
-        {
-          m.add(user_type<ListType>(), type);
+  /// http://www.sgi.com/tech/stl/List.html
+  template<typename ListType>
+  void list_type(const std::string &type, Module &m) {
+    m.add(user_type<ListType>(), type);
 
-          front_insertion_sequence_type<ListType>(type, m);
-          back_insertion_sequence_type<ListType>(type, m);
-          sequence_type<ListType>(type, m);
-          resizable_type<ListType>(type, m);
-          container_type<ListType>(type, m);
-          default_constructible_type<ListType>(type, m);
-          assignable_type<ListType>(type, m);
-          input_range_type<ListType>(type, m);
-        }
+    front_insertion_sequence_type<ListType>(type, m);
+    back_insertion_sequence_type<ListType>(type, m);
+    sequence_type<ListType>(type, m);
+    resizable_type<ListType>(type, m);
+    container_type<ListType>(type, m);
+    default_constructible_type<ListType>(type, m);
+    assignable_type<ListType>(type, m);
+    input_range_type<ListType>(type, m);
+  }
 
-      /// Create a vector type with associated concepts
-      /// http://www.sgi.com/tech/stl/Vector.html
-      template<typename VectorType>
-        void vector_type(const std::string &type, Module& m)
-        {
-          m.add(user_type<VectorType>(), type);
+  /// Create a vector type with associated concepts
+  /// http://www.sgi.com/tech/stl/Vector.html
+  template<typename VectorType>
+  void vector_type(const std::string &type, Module &m) {
+    m.add(user_type<VectorType>(), type);
 
-          m.add(fun([](VectorType &container)->decltype(auto){ 
-                      if (container.empty()) {
-                        throw std::range_error("Container empty");
-                      } else {
-                        return (container.front());
-                      }
-                    }
-                  )
-                , "front");
+    m.add(fun([](VectorType &container) -> decltype(auto) {
+            if (container.empty()) {
+              throw std::range_error("Container empty");
+            } else {
+              return (container.front());
+            }
+          }),
+          "front");
 
-          m.add(fun([](const VectorType &container)->decltype(auto){ 
-                      if (container.empty()) {
-                        throw std::range_error("Container empty");
-                      } else {
-                        return (container.front());
-                      }
-                    }
-                  )
-                , "front");
+    m.add(fun([](const VectorType &container) -> decltype(auto) {
+            if (container.empty()) {
+              throw std::range_error("Container empty");
+            } else {
+              return (container.front());
+            }
+          }),
+          "front");
 
+    back_insertion_sequence_type<VectorType>(type, m);
+    sequence_type<VectorType>(type, m);
+    random_access_container_type<VectorType>(type, m);
+    resizable_type<VectorType>(type, m);
+    reservable_type<VectorType>(type, m);
+    container_type<VectorType>(type, m);
+    default_constructible_type<VectorType>(type, m);
+    assignable_type<VectorType>(type, m);
+    input_range_type<VectorType>(type, m);
 
-
-
-          back_insertion_sequence_type<VectorType>(type, m);
-          sequence_type<VectorType>(type, m);
-          random_access_container_type<VectorType>(type, m);
-          resizable_type<VectorType>(type, m);
-          reservable_type<VectorType>(type, m);
-          container_type<VectorType>(type, m);
-          default_constructible_type<VectorType>(type, m);
-          assignable_type<VectorType>(type, m);
-          input_range_type<VectorType>(type, m);
-
-          if (typeid(VectorType) == typeid(std::vector<Boxed_Value>))
-          {
-            m.eval(R"(
+    if (typeid(VectorType) == typeid(std::vector<Boxed_Value>)) {
+      m.eval(R"(
                     def Vector::`==`(Vector rhs) {
                        if ( rhs.size() != this.size() ) {
                          return false;
@@ -542,73 +472,62 @@ namespace chaiscript
                          }
                          true;
                        }
-                   } )"
-                 );
-          } 
-        }
-
-      /// Add a String container
-      /// http://www.sgi.com/tech/stl/basic_string.html
-      template<typename String>
-        void string_type(const std::string &type, Module& m)
-        {
-          m.add(user_type<String>(), type);
-          operators::addition<String>(m);
-          operators::assign_sum<String>(m);
-          opers_comparison<String>(m);
-          random_access_container_type<String>(type, m);
-          sequence_type<String>(type, m);
-          default_constructible_type<String>(type, m);
-          // container_type<String>(type, m);
-          assignable_type<String>(type, m);
-          input_range_type<String>(type, m);
-
-          //Special case: add push_back to string (which doesn't support other back_insertion operations
-          m.add(fun(&String::push_back),
-              []()->std::string{
-                if (typeid(typename String::value_type) == typeid(Boxed_Value)) {
-                  return "push_back_ref";
-                } else {
-                  return "push_back";
-                }
-              }());
-
-
-          m.add(fun([](const String *s, const String &f, size_t pos) { return s->find(f, pos); } ), "find");
-          m.add(fun([](const String *s, const String &f, size_t pos) { return s->rfind(f, pos); } ), "rfind");
-          m.add(fun([](const String *s, const String &f, size_t pos) { return s->find_first_of(f, pos); } ), "find_first_of");
-          m.add(fun([](const String *s, const String &f, size_t pos) { return s->find_last_of(f, pos); } ), "find_last_of");
-          m.add(fun([](const String *s, const String &f, size_t pos) { return s->find_last_not_of(f, pos); } ), "find_last_not_of");
-          m.add(fun([](const String *s, const String &f, size_t pos) { return s->find_first_not_of(f, pos); } ), "find_first_not_of");
-        
-          m.add(fun([](String *s, typename String::value_type c) -> decltype(auto) { return (*s += c); } ), "+=");
-
-          m.add(fun([](String *s) { s->clear(); } ), "clear");
-          m.add(fun([](const String *s) { return s->empty(); } ), "empty");
-          m.add(fun([](const String *s) { return s->size(); } ), "size");
-
-          m.add(fun([](const String *s) { return s->c_str(); } ), "c_str");
-          m.add(fun([](const String *s) { return s->data(); } ), "data");
-          m.add(fun([](const String *s, size_t pos, size_t len) { return s->substr(pos, len); } ), "substr");
-        }
-
-
-      /// Add a MapType container
-      /// http://www.sgi.com/tech/stl/Map.html
-      template<typename FutureType>
-        void future_type(const std::string &type, Module& m)
-        {
-          m.add(user_type<FutureType>(), type);
-
-          m.add(fun([](const FutureType &t) { return t.valid(); }), "valid");
-          m.add(fun([](FutureType &t) { return t.get(); }), "get");
-          m.add(fun(&FutureType::wait), "wait");
-        }
+                   } )");
     }
   }
-}
 
+  /// Add a String container
+  /// http://www.sgi.com/tech/stl/basic_string.html
+  template<typename String>
+  void string_type(const std::string &type, Module &m) {
+    m.add(user_type<String>(), type);
+    operators::addition<String>(m);
+    operators::assign_sum<String>(m);
+    opers_comparison<String>(m);
+    random_access_container_type<String>(type, m);
+    sequence_type<String>(type, m);
+    default_constructible_type<String>(type, m);
+    // container_type<String>(type, m);
+    assignable_type<String>(type, m);
+    input_range_type<String>(type, m);
+
+    // Special case: add push_back to string (which doesn't support other back_insertion operations
+    m.add(fun(&String::push_back), []() -> std::string {
+      if (typeid(typename String::value_type) == typeid(Boxed_Value)) {
+        return "push_back_ref";
+      } else {
+        return "push_back";
+      }
+    }());
+
+    m.add(fun([](const String *s, const String &f, size_t pos) { return s->find(f, pos); }), "find");
+    m.add(fun([](const String *s, const String &f, size_t pos) { return s->rfind(f, pos); }), "rfind");
+    m.add(fun([](const String *s, const String &f, size_t pos) { return s->find_first_of(f, pos); }), "find_first_of");
+    m.add(fun([](const String *s, const String &f, size_t pos) { return s->find_last_of(f, pos); }), "find_last_of");
+    m.add(fun([](const String *s, const String &f, size_t pos) { return s->find_last_not_of(f, pos); }), "find_last_not_of");
+    m.add(fun([](const String *s, const String &f, size_t pos) { return s->find_first_not_of(f, pos); }), "find_first_not_of");
+
+    m.add(fun([](String *s, typename String::value_type c) -> decltype(auto) { return (*s += c); }), "+=");
+
+    m.add(fun([](String *s) { s->clear(); }), "clear");
+    m.add(fun([](const String *s) { return s->empty(); }), "empty");
+    m.add(fun([](const String *s) { return s->size(); }), "size");
+
+    m.add(fun([](const String *s) { return s->c_str(); }), "c_str");
+    m.add(fun([](const String *s) { return s->data(); }), "data");
+    m.add(fun([](const String *s, size_t pos, size_t len) { return s->substr(pos, len); }), "substr");
+  }
+
+  /// Add a MapType container
+  /// http://www.sgi.com/tech/stl/Map.html
+  template<typename FutureType>
+  void future_type(const std::string &type, Module &m) {
+    m.add(user_type<FutureType>(), type);
+
+    m.add(fun([](const FutureType &t) { return t.valid(); }), "valid");
+    m.add(fun([](FutureType &t) { return t.get(); }), "get");
+    m.add(fun(&FutureType::wait), "wait");
+  }
+} // namespace chaiscript::bootstrap::standard_library
 
 #endif
-
-

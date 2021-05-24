@@ -4,13 +4,11 @@
 
 Multi_Test_Module::Multi_Test_Module() noexcept = default;
 
-int Multi_Test_Module::get_module_value()
-{
+int Multi_Test_Module::get_module_value() {
   return 0;
 }
 
-chaiscript::ModulePtr Multi_Test_Module::get_module()
-{
+chaiscript::ModulePtr Multi_Test_Module::get_module() {
   chaiscript::ModulePtr module(new chaiscript::Module());
 
   module->add(chaiscript::fun(&Multi_Test_Module::get_module_value), "get_module_value");

@@ -8,8 +8,9 @@
 #define CHAISCRIPT_PRELUDE_HPP_
 
 namespace chaiscript {
-struct ChaiScript_Prelude {
-  static std::string chaiscript_prelude() {  return R"chaiscript(
+  struct ChaiScript_Prelude {
+    static std::string chaiscript_prelude() {
+      return R"chaiscript(
 
 def lt(l, r) {
   if (call_exists(`<`, l, r)) {
@@ -554,9 +555,8 @@ def find(container, value) {
 
 
 )chaiscript";
-}
-
-};
-}
+    }
+  };
+} // namespace chaiscript
 
 #endif /* CHAISCRIPT_PRELUDE_HPP_ */

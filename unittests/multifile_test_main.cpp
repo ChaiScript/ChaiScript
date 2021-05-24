@@ -3,8 +3,7 @@
 
 #include <chaiscript/chaiscript_basic.hpp>
 
-int main()
-{
+int main() {
   Multi_Test_Chai chaitest;
   Multi_Test_Module chaimodule;
 
