@@ -113,6 +113,50 @@ TEST_CASE("Function objects can be created from chaiscript functions")
   CHECK(chai.eval<std::function<std::string (const chaiscript::Boxed_Value &)> >("to_string")(chaiscript::var(6)) == "6");
 }
 
+TEST_CASE("Function callbacks can be set, tested and cleared")
+{
+  struct MyObject {
+    std::function<int(int)> callback;
+  };
+
+  using namespace chaiscript;
+  ModulePtr m = chaiscript::ModulePtr(new chaiscript::Module());
+  ChaiScript_Basic chai(create_chaiscript_stdlib(),create_chaiscript_parser());
+  utility::add_class<MyObject>(*m,
+      "MyObject",
+      { constructor<MyObject ()>(),
+        constructor<MyObject (const MyObject &)>() },
+      { {fun(&MyObject::callback), "callback"},
+        {fun(static_cast<MyObject & (MyObject::*)(const MyObject &)>(&MyObject::operator=)), "=" }
+        }
+      );
+  m->add(fun([](dispatch::Assignable_Proxy_Function const& func) { return !func; }), "empty");
+  m->add(fun([](dispatch::Assignable_Proxy_Function& func) { func.clear(); }), "clear");
+  chai.add(m);
+
+  // Function object set from C++
+  MyObject test;
+  test.callback = [](int i) { return i + 10; };
+  chai.add(var(std::ref(test)), "test");
+  CHECK(chai.eval<int>("!test.callback.empty ? test.callback(13) : -1") == 23);
+  CHECK(chai.eval<int>("test.callback(9)") == 19);
+  CHECK(chai.eval<bool>("test.callback.empty") == false);
+  chai.eval("test.callback.clear");
+  CHECK(chai.eval<bool>("test.callback.empty") == true);
+  CHECK_THROWS(chai.eval<int>("test.callback(1)") == 11);
+
+  // Function object set from ChaiScript
+  chai.eval("auto o = MyObject()");
+  CHECK(chai.eval<bool>("o.callback.empty") == true);
+  chai.eval("o.callback = fun(int i) { return i + 10 }");
+  CHECK(chai.eval<bool>("o.callback.empty") == false);
+  CHECK(chai.eval<int>("!o.callback.empty ? o.callback(13) : -1") == 23);
+  CHECK(chai.eval<int>("o.callback(9)") == 19);
+  chai.eval("o.callback.clear");
+  CHECK(chai.eval<bool>("o.callback.empty") == true);
+  CHECK_THROWS(chai.eval<int>("o.callback(1)") == 11);
+
+}
 
 TEST_CASE("ChaiScript can be created and destroyed on heap")
 {

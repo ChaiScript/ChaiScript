@@ -681,6 +681,13 @@ namespace chaiscript
         }
 
         virtual void assign(const std::shared_ptr<const Proxy_Function_Base> &t_rhs) = 0;
+
+        // Check whether the function is callable (not empty)
+        // Note: this conversion *should* be marked "explicit", but virtual together
+        // with explicit isn't allowed with MSVC (bug)
+        virtual operator bool() const = 0;
+
+        virtual void clear() = 0;
     };
 
     template<typename Func>
@@ -711,6 +718,16 @@ namespace chaiscript
 
         void assign(const std::shared_ptr<const Proxy_Function_Base> &t_rhs) override {
           m_f.get() = dispatch::functor<Func>(t_rhs, nullptr);
+        }
+
+        operator bool() const override
+        {
+          return static_cast<bool>(m_f.get());
+        }
+
+        void clear() override
+        {
+          m_f.get() = nullptr;
         }
 
       protected:
