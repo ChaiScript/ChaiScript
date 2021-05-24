@@ -43,8 +43,8 @@ languages:
 Requirements
 ============
 
-ChaiScript requires a C++14 compiler to build with support for variadic 
-templates.  It has been tested with gcc 4.9 and clang 3.6 (with libcxx). 
+ChaiScript requires a C++17 compiler to build with support for variadic
+templates.  It has been tested with gcc 7 and clang 6 (with libcxx).
 For more information see the build 
 [dashboard](http://chaiscript.com/ChaiScript-BuildResults/index.html).
 
