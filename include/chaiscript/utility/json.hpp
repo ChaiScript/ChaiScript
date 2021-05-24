@@ -19,7 +19,7 @@
 #include <variant>
 #include <vector>
 
-namespace json {
+namespace chaiscript::json {
   using std::enable_if;
   using std::initializer_list;
   using std::is_convertible;
@@ -593,6 +593,6 @@ namespace json {
     return JSONParser::parse_next(str, offset);
   }
 
-} // End Namespace json
+} // namespace chaiscript::json
 
 #endif
