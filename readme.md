@@ -40,8 +40,6 @@ Requirements
 
 ChaiScript requires a C++17 compiler to build with support for variadic
 templates.  It has been tested with gcc 7 and clang 6 (with libcxx).
-For more information see the build 
-[dashboard](http://chaiscript.com/ChaiScript-BuildResults/index.html).
 
 Installation using vcpkg
 ========================
