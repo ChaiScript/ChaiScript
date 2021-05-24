@@ -7,32 +7,28 @@
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 
-
 #ifndef CHAISCRIPT_PARSER_HPP_
 #define CHAISCRIPT_PARSER_HPP_
 
+#include <cctype>
+#include <cstring>
 #include <exception>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <cctype>
-#include <cstring>
-
-
-
 
 #include "../dispatchkit/boxed_value.hpp"
+#include "../utility/hash.hpp"
+#include "../utility/static_string.hpp"
 #include "chaiscript_common.hpp"
 #include "chaiscript_optimizer.hpp"
 #include "chaiscript_tracer.hpp"
-#include "../utility/hash.hpp"
-#include "../utility/static_string.hpp"
 
 #if defined(CHAISCRIPT_UTF16_UTF32)
-#include <locale>
 #include <codecvt>
+#include <locale>
 #endif
 
 #if defined(CHAISCRIPT_MSVC) && defined(max) && defined(min)
@@ -43,57 +39,49 @@
 #undef min
 #endif
 
-
-namespace chaiscript
-{
+namespace chaiscript {
   /// \brief Classes and functions used during the parsing process.
-  namespace parser
-  {
+  namespace parser {
     /// \brief Classes and functions internal to the parsing process. Not supported for the end user.
-    namespace detail 
-    {
-      enum Alphabet
-      {   symbol_alphabet = 0
-        ,   keyword_alphabet
-          ,   int_alphabet
-          ,   float_alphabet
-          ,   x_alphabet
-          ,   hex_alphabet
-          ,   b_alphabet
-          ,   bin_alphabet
-          ,   id_alphabet
-          ,   white_alphabet
-          ,   int_suffix_alphabet
-          ,   float_suffix_alphabet
-          ,   max_alphabet
-          ,   lengthof_alphabet = 256
+    namespace detail {
+      enum Alphabet {
+        symbol_alphabet = 0,
+        keyword_alphabet,
+        int_alphabet,
+        float_alphabet,
+        x_alphabet,
+        hex_alphabet,
+        b_alphabet,
+        bin_alphabet,
+        id_alphabet,
+        white_alphabet,
+        int_suffix_alphabet,
+        float_suffix_alphabet,
+        max_alphabet,
+        lengthof_alphabet = 256
       };
 
       // Generic for u16, u32 and wchar
       template<typename string_type>
-      struct Char_Parser_Helper
-      {
+      struct Char_Parser_Helper {
         // common for all implementations
-        static std::string u8str_from_ll(long long val)
-        {
+        static std::string u8str_from_ll(long long val) {
           using char_type = std::string::value_type;
 
           char_type c[2];
           c[1] = char_type(val);
           c[0] = char_type(val >> 8);
 
-          if (c[0] == 0)
-          {
+          if (c[0] == 0) {
             return std::string(1, c[1]); // size, character
           }
 
           return std::string(c, 2); // char buffer, size
         }
 
-        static string_type str_from_ll(long long val)
-        {
+        static string_type str_from_ll(long long val) {
           using target_char_type = typename string_type::value_type;
-#if defined (CHAISCRIPT_UTF16_UTF32)
+#if defined(CHAISCRIPT_UTF16_UTF32)
           // prepare converter
           std::wstring_convert<std::codecvt_utf8<target_char_type>, target_char_type> converter;
           // convert
@@ -107,55 +95,45 @@ namespace chaiscript
 
       // Specialization for char AKA UTF-8
       template<>
-      struct Char_Parser_Helper<std::string>
-      {
-        static std::string str_from_ll(long long val)
-        {
+      struct Char_Parser_Helper<std::string> {
+        static std::string str_from_ll(long long val) {
           // little SFINAE trick to avoid base class
           return Char_Parser_Helper<std::true_type>::u8str_from_ll(val);
         }
       };
-    }
+    } // namespace detail
 
-
-    template<typename Tracer, typename Optimizer, std::size_t Parse_Depth=512>
+    template<typename Tracer, typename Optimizer, std::size_t Parse_Depth = 512>
     class ChaiScript_Parser final : public ChaiScript_Parser_Base {
-      void *get_tracer_ptr() noexcept override {
-        return &m_tracer;
-      }
+      void *get_tracer_ptr() noexcept override { return &m_tracer; }
 
       std::size_t m_current_parse_depth = 0;
 
-      struct Depth_Counter
-      {
+      struct Depth_Counter {
         static const auto max_depth = Parse_Depth;
-        Depth_Counter(ChaiScript_Parser *t_parser) : parser(t_parser)
-        {
+        Depth_Counter(ChaiScript_Parser *t_parser)
+            : parser(t_parser) {
           ++parser->m_current_parse_depth;
           if (parser->m_current_parse_depth > max_depth) {
-            throw exception::eval_error("Maximum parse depth exceeded", 
-                File_Position(parser->m_position.line, parser->m_position.col), *(parser->m_filename));
+            throw exception::eval_error("Maximum parse depth exceeded",
+                                        File_Position(parser->m_position.line, parser->m_position.col),
+                                        *(parser->m_filename));
           }
         }
 
-        ~Depth_Counter() noexcept
-        {
-          --parser->m_current_parse_depth;
-        }
+        ~Depth_Counter() noexcept { --parser->m_current_parse_depth; }
 
         ChaiScript_Parser *parser;
       };
 
       template<typename Array2D, typename First, typename Second>
-      constexpr static void set_alphabet(Array2D &array, const First first, const Second second) noexcept
-      {
+      constexpr static void set_alphabet(Array2D &array, const First first, const Second second) noexcept {
         auto *first_ptr = &std::get<0>(array) + static_cast<std::size_t>(first);
         auto *second_ptr = &std::get<0>(*first_ptr) + static_cast<std::size_t>(second);
         *second_ptr = true;
       }
 
-      constexpr static std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> build_alphabet() noexcept
-      {
+      constexpr static std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> build_alphabet() noexcept {
         std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> alphabet{};
 
         set_alphabet(alphabet, detail::symbol_alphabet, '?');
@@ -173,28 +151,50 @@ namespace chaiscript
         set_alphabet(alphabet, detail::symbol_alphabet, '<');
         set_alphabet(alphabet, detail::symbol_alphabet, '>');
 
-        for ( size_t c = 'a' ; c <= 'z' ; ++c ) { set_alphabet(alphabet, detail::keyword_alphabet, c); }
-        for ( size_t c = 'A' ; c <= 'Z' ; ++c ) { set_alphabet(alphabet, detail::keyword_alphabet, c); }
-        for ( size_t c = '0' ; c <= '9' ; ++c ) { set_alphabet(alphabet, detail::keyword_alphabet, c); }
+        for (size_t c = 'a'; c <= 'z'; ++c) {
+          set_alphabet(alphabet, detail::keyword_alphabet, c);
+        }
+        for (size_t c = 'A'; c <= 'Z'; ++c) {
+          set_alphabet(alphabet, detail::keyword_alphabet, c);
+        }
+        for (size_t c = '0'; c <= '9'; ++c) {
+          set_alphabet(alphabet, detail::keyword_alphabet, c);
+        }
         set_alphabet(alphabet, detail::keyword_alphabet, '_');
 
-        for ( size_t c = '0' ; c <= '9' ; ++c ) { set_alphabet(alphabet, detail::int_alphabet, c); }
-        for ( size_t c = '0' ; c <= '9' ; ++c ) { set_alphabet(alphabet, detail::float_alphabet, c); }
+        for (size_t c = '0'; c <= '9'; ++c) {
+          set_alphabet(alphabet, detail::int_alphabet, c);
+        }
+        for (size_t c = '0'; c <= '9'; ++c) {
+          set_alphabet(alphabet, detail::float_alphabet, c);
+        }
         set_alphabet(alphabet, detail::float_alphabet, '.');
 
-        for ( size_t c = '0' ; c <= '9' ; ++c ) { set_alphabet(alphabet, detail::hex_alphabet, c); }
-        for ( size_t c = 'a' ; c <= 'f' ; ++c ) { set_alphabet(alphabet, detail::hex_alphabet, c); }
-        for ( size_t c = 'A' ; c <= 'F' ; ++c ) { set_alphabet(alphabet, detail::hex_alphabet, c); }
+        for (size_t c = '0'; c <= '9'; ++c) {
+          set_alphabet(alphabet, detail::hex_alphabet, c);
+        }
+        for (size_t c = 'a'; c <= 'f'; ++c) {
+          set_alphabet(alphabet, detail::hex_alphabet, c);
+        }
+        for (size_t c = 'A'; c <= 'F'; ++c) {
+          set_alphabet(alphabet, detail::hex_alphabet, c);
+        }
 
         set_alphabet(alphabet, detail::x_alphabet, 'x');
         set_alphabet(alphabet, detail::x_alphabet, 'X');
 
-        for ( size_t c = '0' ; c <= '1' ; ++c ) { set_alphabet(alphabet, detail::bin_alphabet, c); }
+        for (size_t c = '0'; c <= '1'; ++c) {
+          set_alphabet(alphabet, detail::bin_alphabet, c);
+        }
         set_alphabet(alphabet, detail::b_alphabet, 'b');
         set_alphabet(alphabet, detail::b_alphabet, 'B');
 
-        for ( size_t c = 'a' ; c <= 'z' ; ++c ) { set_alphabet(alphabet, detail::id_alphabet, c); }
-        for ( size_t c = 'A' ; c <= 'Z' ; ++c ) { set_alphabet(alphabet, detail::id_alphabet, c); }
+        for (size_t c = 'a'; c <= 'z'; ++c) {
+          set_alphabet(alphabet, detail::id_alphabet, c);
+        }
+        for (size_t c = 'A'; c <= 'Z'; ++c) {
+          set_alphabet(alphabet, detail::id_alphabet, c);
+        }
         set_alphabet(alphabet, detail::id_alphabet, '_');
 
         set_alphabet(alphabet, detail::white_alphabet, ' ');
@@ -213,93 +213,111 @@ namespace chaiscript
         return alphabet;
       }
 
-
-      struct Operator_Matches
-      {
+      struct Operator_Matches {
         using SS = utility::Static_String;
 
-        std::array<utility::Static_String, 1> m_0  {{SS("?")}};
-        std::array<utility::Static_String, 1> m_1  {{SS("||")}};
-        std::array<utility::Static_String, 1> m_2  {{SS("&&")}};
-        std::array<utility::Static_String, 1> m_3  {{SS("|")}};
-        std::array<utility::Static_String, 1> m_4  {{SS("^")}};
-        std::array<utility::Static_String, 1> m_5  {{SS("&")}};
-        std::array<utility::Static_String, 2> m_6  {{SS("=="), SS("!=")}};
-        std::array<utility::Static_String, 4> m_7  {{SS("<"), SS("<="), SS(">"), SS(">=")}};
-        std::array<utility::Static_String, 2> m_8  {{SS("<<"), SS(">>")}};
-          //We share precedence here but then separate them later
-        std::array<utility::Static_String, 2> m_9  {{SS("+"), SS("-")}};
-        std::array<utility::Static_String, 3> m_10 {{SS("*"), SS("/"), SS("%")}};
-        std::array<utility::Static_String, 6> m_11 {{SS("++"), SS("--"), SS("-"), SS("+"), SS("!"), SS("~")}};
+        std::array<utility::Static_String, 1> m_0{{SS("?")}};
+        std::array<utility::Static_String, 1> m_1{{SS("||")}};
+        std::array<utility::Static_String, 1> m_2{{SS("&&")}};
+        std::array<utility::Static_String, 1> m_3{{SS("|")}};
+        std::array<utility::Static_String, 1> m_4{{SS("^")}};
+        std::array<utility::Static_String, 1> m_5{{SS("&")}};
+        std::array<utility::Static_String, 2> m_6{{SS("=="), SS("!=")}};
+        std::array<utility::Static_String, 4> m_7{{SS("<"), SS("<="), SS(">"), SS(">=")}};
+        std::array<utility::Static_String, 2> m_8{{SS("<<"), SS(">>")}};
+        // We share precedence here but then separate them later
+        std::array<utility::Static_String, 2> m_9{{SS("+"), SS("-")}};
+        std::array<utility::Static_String, 3> m_10{{SS("*"), SS("/"), SS("%")}};
+        std::array<utility::Static_String, 6> m_11{{SS("++"), SS("--"), SS("-"), SS("+"), SS("!"), SS("~")}};
 
         bool is_match(std::string_view t_str) const noexcept {
-          constexpr std::array<std::size_t, 12> groups{{0,1,2,3,4,5,6,7,8,9,10,11}};
-          return std::any_of(groups.begin(), groups.end(), [&t_str, this](const std::size_t group){ return is_match(group, t_str); });
+          constexpr std::array<std::size_t, 12> groups{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}};
+          return std::any_of(groups.begin(), groups.end(), [&t_str, this](const std::size_t group) { return is_match(group, t_str); });
         }
 
         template<typename Predicate>
-        bool any_of(const std::size_t t_group, Predicate &&predicate) const
-        {
-          auto match = [&predicate](const auto &array) {
-            return std::any_of(array.begin(), array.end(), predicate);
-          };
+        bool any_of(const std::size_t t_group, Predicate &&predicate) const {
+          auto match = [&predicate](const auto &array) { return std::any_of(array.begin(), array.end(), predicate); };
 
           switch (t_group) {
-            case 0: return match(m_0);
-            case 1: return match(m_1);
-            case 2: return match(m_2);
-            case 3: return match(m_3);
-            case 4: return match(m_4);
-            case 5: return match(m_5);
-            case 6: return match(m_6);
-            case 7: return match(m_7);
-            case 8: return match(m_8);
-            case 9: return match(m_9);
-            case 10: return match(m_10);
-            case 11: return match(m_11);
-            default: return false;
+            case 0:
+              return match(m_0);
+            case 1:
+              return match(m_1);
+            case 2:
+              return match(m_2);
+            case 3:
+              return match(m_3);
+            case 4:
+              return match(m_4);
+            case 5:
+              return match(m_5);
+            case 6:
+              return match(m_6);
+            case 7:
+              return match(m_7);
+            case 8:
+              return match(m_8);
+            case 9:
+              return match(m_9);
+            case 10:
+              return match(m_10);
+            case 11:
+              return match(m_11);
+            default:
+              return false;
           }
         }
 
         constexpr bool is_match(const std::size_t t_group, std::string_view t_str) const noexcept {
           auto match = [&t_str](const auto &array) {
-            return std::any_of(array.begin(), array.end(), [&t_str](const auto &v){ return v == t_str; });
+            return std::any_of(array.begin(), array.end(), [&t_str](const auto &v) { return v == t_str; });
           };
 
           switch (t_group) {
-            case 0: return match(m_0);
-            case 1: return match(m_1);
-            case 2: return match(m_2);
-            case 3: return match(m_3);
-            case 4: return match(m_4);
-            case 5: return match(m_5);
-            case 6: return match(m_6);
-            case 7: return match(m_7);
-            case 8: return match(m_8);
-            case 9: return match(m_9);
-            case 10: return match(m_10);
-            case 11: return match(m_11);
-            default: return false;
+            case 0:
+              return match(m_0);
+            case 1:
+              return match(m_1);
+            case 2:
+              return match(m_2);
+            case 3:
+              return match(m_3);
+            case 4:
+              return match(m_4);
+            case 5:
+              return match(m_5);
+            case 6:
+              return match(m_6);
+            case 7:
+              return match(m_7);
+            case 8:
+              return match(m_8);
+            case 9:
+              return match(m_9);
+            case 10:
+              return match(m_10);
+            case 11:
+              return match(m_11);
+            default:
+              return false;
           }
         }
-
       };
 
       constexpr static std::array<Operator_Precedence, 12> create_operators() noexcept {
-        std::array<Operator_Precedence, 12> operators = { {
-          Operator_Precedence::Ternary_Cond,
-          Operator_Precedence::Logical_Or,
-          Operator_Precedence::Logical_And,
-          Operator_Precedence::Bitwise_Or,
-          Operator_Precedence::Bitwise_Xor,
-          Operator_Precedence::Bitwise_And,
-          Operator_Precedence::Equality,
-          Operator_Precedence::Comparison,
-          Operator_Precedence::Shift,
-          Operator_Precedence::Addition,
-          Operator_Precedence::Multiplication,
-          Operator_Precedence::Prefix
-        } };
+        std::array<Operator_Precedence, 12> operators = {{Operator_Precedence::Ternary_Cond,
+                                                          Operator_Precedence::Logical_Or,
+                                                          Operator_Precedence::Logical_And,
+                                                          Operator_Precedence::Bitwise_Or,
+                                                          Operator_Precedence::Bitwise_Xor,
+                                                          Operator_Precedence::Bitwise_And,
+                                                          Operator_Precedence::Equality,
+                                                          Operator_Precedence::Comparison,
+                                                          Operator_Precedence::Shift,
+                                                          Operator_Precedence::Addition,
+                                                          Operator_Precedence::Multiplication,
+                                                          Operator_Precedence::Prefix}};
         return operators;
       }
 
@@ -313,14 +331,15 @@ namespace chaiscript
       std::shared_ptr<std::string> m_filename;
       std::vector<eval::AST_Node_Impl_Ptr<Tracer>> m_match_stack;
 
-
-      struct Position
-      {
+      struct Position {
         constexpr Position() = default;
 
-        constexpr Position(const char * t_pos, const char * t_end) noexcept
-          : line(1), col(1), m_pos(t_pos), m_end(t_end), m_last_col(1)
-        {
+        constexpr Position(const char *t_pos, const char *t_end) noexcept
+            : line(1)
+            , col(1)
+            , m_pos(t_pos)
+            , m_end(t_end)
+            , m_last_col(1) {
         }
 
         static std::string_view str(const Position &t_begin, const Position &t_end) noexcept {
@@ -383,23 +402,15 @@ namespace chaiscript
           return ret;
         }
 
-        constexpr bool operator==(const Position &t_rhs) const noexcept {
-          return m_pos == t_rhs.m_pos;
-        }
+        constexpr bool operator==(const Position &t_rhs) const noexcept { return m_pos == t_rhs.m_pos; }
 
-        constexpr bool operator!=(const Position &t_rhs) const noexcept {
-          return m_pos != t_rhs.m_pos;
-        }
+        constexpr bool operator!=(const Position &t_rhs) const noexcept { return m_pos != t_rhs.m_pos; }
 
-        constexpr bool has_more() const noexcept {
-          return m_pos != m_end;
-        }
+        constexpr bool has_more() const noexcept { return m_pos != m_end; }
 
-        constexpr size_t remaining() const noexcept {
-          return static_cast<size_t>(m_end - m_pos);
-        }
+        constexpr size_t remaining() const noexcept { return static_cast<size_t>(m_end - m_pos); }
 
-        constexpr const char& operator*() const noexcept {
+        constexpr const char &operator*() const noexcept {
           if (m_pos == m_end) {
             return ""[0];
           } else {
@@ -410,10 +421,10 @@ namespace chaiscript
         int line = -1;
         int col = -1;
 
-        private:
-          const char *m_pos = nullptr;
-          const char *m_end = nullptr;
-          int m_last_col = -1;
+      private:
+        const char *m_pos = nullptr;
+        const char *m_end = nullptr;
+        int m_last_col = -1;
       };
 
       Position m_position;
@@ -421,30 +432,22 @@ namespace chaiscript
       Tracer m_tracer;
       Optimizer m_optimizer;
 
-      void validate_object_name(std::string_view name) const
-      {
+      void validate_object_name(std::string_view name) const {
         if (!Name_Validator::valid_object_name(name)) {
           throw exception::eval_error("Invalid Object Name: " + std::string(name), File_Position(m_position.line, m_position.col), *m_filename);
         }
       }
 
     public:
-      explicit ChaiScript_Parser(Tracer tracer = Tracer(), Optimizer optimizer=Optimizer())
-        : m_tracer(std::move(tracer)),
-          m_optimizer(std::move(optimizer))
-      {
+      explicit ChaiScript_Parser(Tracer tracer = Tracer(), Optimizer optimizer = Optimizer())
+          : m_tracer(std::move(tracer))
+          , m_optimizer(std::move(optimizer)) {
         m_match_stack.reserve(2);
       }
 
-      Tracer &get_tracer() noexcept
-      {
-        return m_tracer;
-      }
+      Tracer &get_tracer() noexcept { return m_tracer; }
 
-      Optimizer &get_optimizer() noexcept
-      {
-        return m_optimizer;
-      }
+      Optimizer &get_optimizer() noexcept { return m_optimizer; }
 
       ChaiScript_Parser(const ChaiScript_Parser &) = delete;
       ChaiScript_Parser &operator=(const ChaiScript_Parser &) = delete;
@@ -455,74 +458,60 @@ namespace chaiscript
       constexpr static Operator_Matches m_operator_matches{};
 
       /// test a char in an m_alphabet
-      constexpr bool char_in_alphabet(char c, detail::Alphabet a) const noexcept { 
-        return m_alphabet[a][static_cast<uint8_t>(c)]; 
-      }
+      constexpr bool char_in_alphabet(char c, detail::Alphabet a) const noexcept { return m_alphabet[a][static_cast<uint8_t>(c)]; }
 
       /// Prints the parsed ast_nodes as a tree
       void debug_print(const AST_Node &t, std::string prepend = "") const override {
-        std::cout << prepend << "(" << ast_node_type_to_string(t.identifier) << ") " << t.text << " : " << t.start().line << ", " << t.start().column << '\n';
+        std::cout << prepend << "(" << ast_node_type_to_string(t.identifier) << ") " << t.text << " : " << t.start().line << ", "
+                  << t.start().column << '\n';
         for (const auto &node : t.get_children()) {
           debug_print(node.get(), prepend + "  ");
         }
       }
-
 
       /// Helper function that collects ast_nodes from a starting position to the top of the stack into a new AST node
       template<typename NodeType>
       void build_match(size_t t_match_start, std::string t_text = "") {
         bool is_deep = false;
 
-        Parse_Location filepos = [&]()->Parse_Location{ 
-          //so we want to take everything to the right of this and make them children
+        Parse_Location filepos = [&]() -> Parse_Location {
+          // so we want to take everything to the right of this and make them children
           if (t_match_start != m_match_stack.size()) {
             is_deep = true;
-            return Parse_Location(
-                m_filename,
-                m_match_stack[t_match_start]->location.start.line,
-                m_match_stack[t_match_start]->location.start.column,
-                m_position.line,
-                m_position.col 
-              );
+            return Parse_Location(m_filename,
+                                  m_match_stack[t_match_start]->location.start.line,
+                                  m_match_stack[t_match_start]->location.start.column,
+                                  m_position.line,
+                                  m_position.col);
           } else {
-            return Parse_Location(
-                m_filename,
-                m_position.line,
-                m_position.col,
-                m_position.line,
-                m_position.col
-              );
+            return Parse_Location(m_filename, m_position.line, m_position.col, m_position.line, m_position.col);
           }
         }();
 
         std::vector<eval::AST_Node_Impl_Ptr<Tracer>> new_children;
 
         if (is_deep) {
-          new_children.assign(std::make_move_iterator(m_match_stack.begin() + static_cast<int>(t_match_start)), 
+          new_children.assign(std::make_move_iterator(m_match_stack.begin() + static_cast<int>(t_match_start)),
                               std::make_move_iterator(m_match_stack.end()));
           m_match_stack.erase(m_match_stack.begin() + static_cast<int>(t_match_start), m_match_stack.end());
         }
 
         /// \todo fix the fact that a successful match that captured no ast_nodes doesn't have any real start position
         m_match_stack.push_back(
-            m_optimizer.optimize(
-              chaiscript::make_unique<chaiscript::eval::AST_Node_Impl<Tracer>, NodeType>(
-                std::move(t_text),
-                std::move(filepos),
-                std::move(new_children)))
-            );
+            m_optimizer.optimize(chaiscript::make_unique<chaiscript::eval::AST_Node_Impl<Tracer>, NodeType>(std::move(t_text),
+                                                                                                            std::move(filepos),
+                                                                                                            std::move(new_children))));
       }
 
-
       /// Reads a symbol group from input if it matches the parameter, without skipping initial whitespace
-      inline auto Symbol_(const utility::Static_String &sym) noexcept
-      {
+      inline auto Symbol_(const utility::Static_String &sym) noexcept {
         const auto len = sym.size();
         if (m_position.remaining() >= len) {
           const char *file_pos = &(*m_position);
-          for (size_t pos = 0; pos < len; ++pos)
-          {
-            if (sym.c_str()[pos] != file_pos[pos]) { return false; }
+          for (size_t pos = 0; pos < len; ++pos) {
+            if (sym.c_str()[pos] != file_pos[pos]) {
+              return false;
+            }
           }
           m_position += len;
           return true;
@@ -571,23 +560,21 @@ namespace chaiscript
         return false;
       }
 
-
       /// Skips ChaiScript whitespace, which means space and tab, but not cr/lf
       /// jespada: Modified SkipWS to skip optionally CR ('\n') and/or LF+CR ("\r\n")
       /// AlekMosingiewicz: Added exception when illegal character detected
-      bool SkipWS(bool skip_cr=false) {
+      bool SkipWS(bool skip_cr = false) {
         bool retval = false;
 
         while (m_position.has_more()) {
-          if(static_cast<unsigned char>(*m_position) > 0x7e) {
+          if (static_cast<unsigned char>(*m_position) > 0x7e) {
             throw exception::eval_error("Illegal character", File_Position(m_position.line, m_position.col), *m_filename);
           }
-          auto end_line = (*m_position != 0) && ((*m_position == '\n') || (*m_position == '\r' && *(m_position+1) == '\n'));
+          auto end_line = (*m_position != 0) && ((*m_position == '\n') || (*m_position == '\r' && *(m_position + 1) == '\n'));
 
-          if ( char_in_alphabet(*m_position,detail::white_alphabet) || (skip_cr && end_line)) {
-
-            if(end_line) {
-              if(*m_position == '\r') {
+          if (char_in_alphabet(*m_position, detail::white_alphabet) || (skip_cr && end_line)) {
+            if (end_line) {
+              if (*m_position == '\r') {
                 // discards lf
                 ++m_position;
               }
@@ -596,8 +583,7 @@ namespace chaiscript
             ++m_position;
 
             retval = true;
-          }
-          else if (SkipComment()) {
+          } else if (SkipComment()) {
             retval = true;
           } else {
             break;
@@ -615,7 +601,7 @@ namespace chaiscript
             ++m_position;
           }
           auto exponent_pos = m_position;
-          while (m_position.has_more() && char_in_alphabet(*m_position,detail::int_alphabet) ) {
+          while (m_position.has_more() && char_in_alphabet(*m_position, detail::int_alphabet)) {
             ++m_position;
           }
           if (m_position == exponent_pos) {
@@ -625,30 +611,27 @@ namespace chaiscript
         }
 
         // Parse optional float suffix
-        while (m_position.has_more() && char_in_alphabet(*m_position, detail::float_suffix_alphabet))
-        {
+        while (m_position.has_more() && char_in_alphabet(*m_position, detail::float_suffix_alphabet)) {
           ++m_position;
         }
 
         return true;
       }
 
-
       /// Reads a floating point value from input, without skipping initial whitespace
       bool Float_() noexcept {
-        if (m_position.has_more() && char_in_alphabet(*m_position,detail::float_alphabet) ) {
-          while (m_position.has_more() && char_in_alphabet(*m_position,detail::int_alphabet) ) {
+        if (m_position.has_more() && char_in_alphabet(*m_position, detail::float_alphabet)) {
+          while (m_position.has_more() && char_in_alphabet(*m_position, detail::int_alphabet)) {
             ++m_position;
           }
 
           if (m_position.has_more() && (std::tolower(*m_position) == 'e')) {
             // The exponent is valid even without any decimal in the Float (1e8, 3e-15)
             return read_exponent_and_suffix();
-          }
-          else if (m_position.has_more() && (*m_position == '.')) {
+          } else if (m_position.has_more() && (*m_position == '.')) {
             ++m_position;
-            if (m_position.has_more() && char_in_alphabet(*m_position,detail::int_alphabet)) {
-              while (m_position.has_more() && char_in_alphabet(*m_position,detail::int_alphabet) ) {
+            if (m_position.has_more() && char_in_alphabet(*m_position, detail::int_alphabet)) {
+              while (m_position.has_more() && char_in_alphabet(*m_position, detail::int_alphabet)) {
                 ++m_position;
               }
 
@@ -667,24 +650,21 @@ namespace chaiscript
         if (m_position.has_more() && (*m_position == '0')) {
           ++m_position;
 
-          if (m_position.has_more() && char_in_alphabet(*m_position, detail::x_alphabet) ) {
+          if (m_position.has_more() && char_in_alphabet(*m_position, detail::x_alphabet)) {
             ++m_position;
             if (m_position.has_more() && char_in_alphabet(*m_position, detail::hex_alphabet)) {
-              while (m_position.has_more() && char_in_alphabet(*m_position, detail::hex_alphabet) ) {
+              while (m_position.has_more() && char_in_alphabet(*m_position, detail::hex_alphabet)) {
                 ++m_position;
               }
-              while (m_position.has_more() && char_in_alphabet(*m_position, detail::int_suffix_alphabet))
-              {
+              while (m_position.has_more() && char_in_alphabet(*m_position, detail::int_suffix_alphabet)) {
                 ++m_position;
               }
 
               return true;
-            }
-            else {
+            } else {
               --m_position;
             }
-          }
-          else {
+          } else {
             --m_position;
           }
         }
@@ -694,8 +674,7 @@ namespace chaiscript
 
       /// Reads an integer suffix
       void IntSuffix_() {
-        while (m_position.has_more() && char_in_alphabet(*m_position, detail::int_suffix_alphabet))
-        {
+        while (m_position.has_more() && char_in_alphabet(*m_position, detail::int_suffix_alphabet)) {
           ++m_position;
         }
       }
@@ -705,10 +684,10 @@ namespace chaiscript
         if (m_position.has_more() && (*m_position == '0')) {
           ++m_position;
 
-          if (m_position.has_more() && char_in_alphabet(*m_position, detail::b_alphabet) ) {
+          if (m_position.has_more() && char_in_alphabet(*m_position, detail::b_alphabet)) {
             ++m_position;
-            if (m_position.has_more() && char_in_alphabet(*m_position, detail::bin_alphabet) ) {
-              while (m_position.has_more() && char_in_alphabet(*m_position, detail::bin_alphabet) ) {
+            if (m_position.has_more() && char_in_alphabet(*m_position, detail::bin_alphabet)) {
+              while (m_position.has_more() && char_in_alphabet(*m_position, detail::bin_alphabet)) {
                 ++m_position;
               }
               return true;
@@ -724,19 +703,16 @@ namespace chaiscript
       }
 
       /// Parses a floating point value and returns a Boxed_Value representation of it
-      static Boxed_Value buildFloat(std::string_view t_val)
-      {
+      static Boxed_Value buildFloat(std::string_view t_val) {
         bool float_ = false;
         bool long_ = false;
 
         auto i = t_val.size();
 
-        for (; i > 0; --i)
-        {
-          char val = t_val[i-1];
+        for (; i > 0; --i) {
+          char val = t_val[i - 1];
 
-          if (val == 'f' || val == 'F')
-          {
+          if (val == 'f' || val == 'F') {
             float_ = true;
           } else if (val == 'l' || val == 'L') {
             long_ = true;
@@ -745,36 +721,29 @@ namespace chaiscript
           }
         }
 
-        if (float_)
-        {
-          return const_var(parse_num<float>(t_val.substr(0,i)));
+        if (float_) {
+          return const_var(parse_num<float>(t_val.substr(0, i)));
         } else if (long_) {
-          return const_var(parse_num<long double>(t_val.substr(0,i)));
+          return const_var(parse_num<long double>(t_val.substr(0, i)));
         } else {
-          return const_var(parse_num<double>(t_val.substr(0,i)));
+          return const_var(parse_num<double>(t_val.substr(0, i)));
         }
       }
 
-
-
-      static Boxed_Value buildInt(const int base, std::string_view t_val, const bool prefixed)
-      {
+      static Boxed_Value buildInt(const int base, std::string_view t_val, const bool prefixed) {
         bool unsigned_ = false;
         bool long_ = false;
         bool longlong_ = false;
 
         auto i = t_val.size();
 
-        for (; i > 0; --i)
-        {
-          const char val = t_val[i-1];
+        for (; i > 0; --i) {
+          const char val = t_val[i - 1];
 
-          if (val == 'u' || val == 'U')
-          {
+          if (val == 'u' || val == 'U') {
             unsigned_ = true;
           } else if (val == 'l' || val == 'L') {
-            if (long_)
-            {
+            if (long_) {
               longlong_ = true;
             }
 
@@ -784,7 +753,9 @@ namespace chaiscript
           }
         }
 
-        if (prefixed) { t_val.remove_prefix(2); }
+        if (prefixed) {
+          t_val.remove_prefix(2);
+        }
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -801,17 +772,16 @@ namespace chaiscript
 
         try {
           /// TODO fix this to use from_chars
-          auto u = std::stoll(std::string(t_val),nullptr,base);
-
+          auto u = std::stoll(std::string(t_val), nullptr, base);
 
           if (!unsigned_ && !long_ && u >= std::numeric_limits<int>::min() && u <= std::numeric_limits<int>::max()) {
             return const_var(static_cast<int>(u));
-          } else if ((unsigned_ || base != 10) && !long_ && u >= std::numeric_limits<unsigned int>::min() && u <= std::numeric_limits<unsigned int>::max()) {
+          } else if ((unsigned_ || base != 10) && !long_ && u >= std::numeric_limits<unsigned int>::min()
+                     && u <= std::numeric_limits<unsigned int>::max()) {
             return const_var(static_cast<unsigned int>(u));
           } else if (!unsigned_ && !longlong_ && u >= std::numeric_limits<long>::min() && u <= std::numeric_limits<long>::max()) {
             return const_var(static_cast<long>(u));
-          } else if ((unsigned_ || base != 10) && !longlong_
-                     && u >= std::numeric_limits<unsigned long>::min()
+          } else if ((unsigned_ || base != 10) && !longlong_ && u >= std::numeric_limits<unsigned long>::min()
                      && u <= std::numeric_limits<unsigned long>::max()) {
             return const_var(static_cast<unsigned long>(u));
           } else if (!unsigned_ && u >= std::numeric_limits<long long>::min() && u <= std::numeric_limits<long long>::max()) {
@@ -824,7 +794,7 @@ namespace chaiscript
           // too big to be signed
           try {
             /// TODO fix this to use from_chars
-            auto u = std::stoull(std::string(t_val),nullptr,base);
+            auto u = std::stoull(std::string(t_val), nullptr, base);
 
             if (!longlong_ && u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
               return const_var(static_cast<unsigned long>(u));
@@ -840,13 +810,15 @@ namespace chaiscript
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
-
       }
 
-      template<typename T, typename ... Param>
-      std::unique_ptr<eval::AST_Node_Impl<Tracer>> make_node(std::string_view t_match, const int t_prev_line, const int t_prev_col, Param && ...param)
-      {
-        return chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, T>(std::string(t_match), Parse_Location(m_filename, t_prev_line, t_prev_col, m_position.line, m_position.col), std::forward<Param>(param)...);
+      template<typename T, typename... Param>
+      std::unique_ptr<eval::AST_Node_Impl<Tracer>>
+      make_node(std::string_view t_match, const int t_prev_line, const int t_prev_col, Param &&...param) {
+        return chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, T>(
+            std::string(t_match),
+            Parse_Location(m_filename, t_prev_line, t_prev_col, m_position.line, m_position.col),
+            std::forward<Param>(param)...);
       }
 
       /// Reads a number from the input, detecting if it's an integer or floating point
@@ -854,7 +826,7 @@ namespace chaiscript
         SkipWS();
 
         const auto start = m_position;
-        if (m_position.has_more() && char_in_alphabet(*m_position, detail::float_alphabet) ) {
+        if (m_position.has_more() && char_in_alphabet(*m_position, detail::float_alphabet)) {
           try {
             if (Hex_()) {
               auto match = Position::str(start, m_position);
@@ -874,15 +846,13 @@ namespace chaiscript
               auto bv = buildFloat(match);
               m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, std::move(bv)));
               return true;
-            }
-            else {
+            } else {
               IntSuffix_();
               auto match = Position::str(start, m_position);
               if (!match.empty() && (match[0] == '0')) {
                 auto bv = buildInt(8, match, false);
                 m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, std::move(bv)));
-              }
-              else if (!match.empty()) {
+              } else if (!match.empty()) {
                 auto bv = buildInt(10, match, false);
                 m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, std::move(bv)));
               } else {
@@ -894,8 +864,7 @@ namespace chaiscript
             // error parsing number passed in to buildFloat/buildInt
             return false;
           }
-        }
-        else {
+        } else {
           return false;
         }
       }
@@ -903,7 +872,7 @@ namespace chaiscript
       /// Reads an identifier from input which conforms to C's identifier naming conventions, without skipping initial whitespace
       bool Id_() {
         if (m_position.has_more() && char_in_alphabet(*m_position, detail::id_alphabet)) {
-          while (m_position.has_more() && char_in_alphabet(*m_position, detail::keyword_alphabet) ) {
+          while (m_position.has_more() && char_in_alphabet(*m_position, detail::keyword_alphabet)) {
             ++m_position;
           }
 
@@ -914,17 +883,17 @@ namespace chaiscript
 
           while (m_position.has_more() && (*m_position != '`')) {
             if (Eol()) {
-              throw exception::eval_error("Carriage return in identifier literal", File_Position(m_position.line, m_position.col), *m_filename);
-            }
-            else {
+              throw exception::eval_error("Carriage return in identifier literal",
+                                          File_Position(m_position.line, m_position.col),
+                                          *m_filename);
+            } else {
               ++m_position;
             }
           }
 
           if (start == m_position) {
             throw exception::eval_error("Missing contents of identifier literal", File_Position(m_position.line, m_position.col), *m_filename);
-          }
-          else if (!m_position.has_more()) {
+          } else if (!m_position.has_more()) {
             throw exception::eval_error("Incomplete identifier literal", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
@@ -941,7 +910,6 @@ namespace chaiscript
 
         const auto start = m_position;
         if (Id_()) {
-
           auto text = Position::str(start, m_position);
           const auto text_hash = utility::hash(text);
 
@@ -962,57 +930,58 @@ namespace chaiscript
               m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, const_var(false)));
             } break;
             case utility::hash("Infinity"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
-                const_var(std::numeric_limits<double>::infinity())));
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text,
+                                                                                 start.line,
+                                                                                 start.col,
+                                                                                 const_var(std::numeric_limits<double>::infinity())));
             } break;
             case utility::hash("NaN"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
-                const_var(std::numeric_limits<double>::quiet_NaN())));
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text,
+                                                                                 start.line,
+                                                                                 start.col,
+                                                                                 const_var(std::numeric_limits<double>::quiet_NaN())));
             } break;
             case utility::hash("__LINE__"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
-                const_var(start.line)));
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, const_var(start.line)));
             } break;
             case utility::hash("__FILE__"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
-                const_var(m_filename)));
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, const_var(m_filename)));
             } break;
             case utility::hash("__FUNC__"): {
               std::string fun_name = "NOT_IN_FUNCTION";
-              for (size_t idx = m_match_stack.empty() ? 0 : m_match_stack.size() - 1; idx > 0; --idx)
-              {
-                if (m_match_stack[idx-1]->identifier == AST_Node_Type::Id
-                    && m_match_stack[idx-0]->identifier == AST_Node_Type::Arg_List) {
-                  fun_name = m_match_stack[idx-1]->text;
+              for (size_t idx = m_match_stack.empty() ? 0 : m_match_stack.size() - 1; idx > 0; --idx) {
+                if (m_match_stack[idx - 1]->identifier == AST_Node_Type::Id
+                    && m_match_stack[idx - 0]->identifier == AST_Node_Type::Arg_List) {
+                  fun_name = m_match_stack[idx - 1]->text;
                 }
               }
 
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col,
-                const_var(fun_name)));
+              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(text, start.line, start.col, const_var(fun_name)));
             } break;
             case utility::hash("__CLASS__"): {
               std::string fun_name = "NOT_IN_CLASS";
-              for (size_t idx = m_match_stack.empty() ? 0 : m_match_stack.size() - 1; idx > 1; --idx)
-              {
-                if (m_match_stack[idx-2]->identifier == AST_Node_Type::Id
-                    && m_match_stack[idx-1]->identifier == AST_Node_Type::Id
-                    && m_match_stack[idx-0]->identifier == AST_Node_Type::Arg_List) {
-                  fun_name = m_match_stack[idx-2]->text;
+              for (size_t idx = m_match_stack.empty() ? 0 : m_match_stack.size() - 1; idx > 1; --idx) {
+                if (m_match_stack[idx - 2]->identifier == AST_Node_Type::Id && m_match_stack[idx - 1]->identifier == AST_Node_Type::Id
+                    && m_match_stack[idx - 0]->identifier == AST_Node_Type::Arg_List) {
+                  fun_name = m_match_stack[idx - 2]->text;
                 }
               }
 
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
-                const_var(fun_name)));
+              m_match_stack.push_back(
+                  make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col, const_var(fun_name)));
             } break;
             case utility::hash("_"): {
-              m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(std::move(text), start.line, start.col,
-                Boxed_Value(std::make_shared<dispatch::Placeholder_Object>())));
+              m_match_stack.push_back(
+                  make_node<eval::Constant_AST_Node<Tracer>>(std::move(text),
+                                                             start.line,
+                                                             start.col,
+                                                             Boxed_Value(std::make_shared<dispatch::Placeholder_Object>())));
             } break;
             default: {
               auto val = text;
               if (*start == '`') {
                 // 'escaped' literal, like an operator name
-                val = Position::str(start+1, m_position-1);
+                val = Position::str(start + 1, m_position - 1);
                 // val.remove_prefix(1); val.remove_suffix(1);
               }
               m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>(val, start.line, start.col));
@@ -1022,7 +991,6 @@ namespace chaiscript
 #ifdef CHAISCRIPT_MSVC
 #pragma warning(pop)
 #endif
-
 
           return true;
         } else {
@@ -1050,8 +1018,6 @@ namespace chaiscript
         return true;
       }
 
-
-
       /// Reads a quoted string from input, without skipping initial whitespace
       bool Quoted_String_() {
         if (m_position.has_more() && (*m_position == '\"')) {
@@ -1062,7 +1028,6 @@ namespace chaiscript
           bool in_quote = false;
 
           while (m_position.has_more() && ((*m_position != '\"') || (in_interpolation > 0) || (prev_char == '\\'))) {
-
             if (!Eol_()) {
               if (prev_char == '$' && *m_position == '{') {
                 ++in_interpolation;
@@ -1093,8 +1058,7 @@ namespace chaiscript
       }
 
       template<typename string_type>
-      struct Char_Parser
-      {
+      struct Char_Parser {
         string_type &match;
         using char_type = typename string_type::value_type;
         bool is_escaped = false;
@@ -1109,14 +1073,13 @@ namespace chaiscript
         string_type hex_matches;
 
         Char_Parser(string_type &t_match, const bool t_interpolation_allowed)
-          : match(t_match),
-            interpolation_allowed(t_interpolation_allowed)
-        {
+            : match(t_match)
+            , interpolation_allowed(t_interpolation_allowed) {
         }
 
         Char_Parser &operator=(const Char_Parser &) = delete;
 
-        ~Char_Parser(){
+        ~Char_Parser() {
           try {
             if (is_octal) {
               process_octal();
@@ -1135,8 +1098,7 @@ namespace chaiscript
           }
         }
 
-        void process_hex()
-        {
+        void process_hex() {
           if (!hex_matches.empty()) {
             auto val = stoll(hex_matches, nullptr, 16);
             match.push_back(char_type(val));
@@ -1146,9 +1108,7 @@ namespace chaiscript
           is_hex = false;
         }
 
-
-        void process_octal()
-        {
+        void process_octal() {
           if (!octal_matches.empty()) {
             auto val = stoll(octal_matches, nullptr, 8);
             match.push_back(char_type(val));
@@ -1158,9 +1118,7 @@ namespace chaiscript
           is_octal = false;
         }
 
-
-        void process_unicode()
-        {
+        void process_unicode() {
           const auto ch = static_cast<uint32_t>(std::stoi(hex_matches, nullptr, 16));
           const auto match_size = hex_matches.size();
           hex_matches.clear();
@@ -1176,7 +1134,6 @@ namespace chaiscript
             throw exception::eval_error("Invalid 16 bit universal character");
           }
 
-
           if (ch < 0x80) {
             match += static_cast<char>(ch);
           } else if (ch < 0x800) {
@@ -1184,15 +1141,15 @@ namespace chaiscript
             buf[1] = static_cast<char>(0x80 | (ch & 0x3F));
             match.append(buf, 2);
           } else if (ch < 0x10000) {
-            buf[0] = static_cast<char>(0xE0 |  (ch >> 12));
-            buf[1] = static_cast<char>(0x80 | ((ch >>  6) & 0x3F));
-            buf[2] = static_cast<char>(0x80 |  (ch        & 0x3F));
+            buf[0] = static_cast<char>(0xE0 | (ch >> 12));
+            buf[1] = static_cast<char>(0x80 | ((ch >> 6) & 0x3F));
+            buf[2] = static_cast<char>(0x80 | (ch & 0x3F));
             match.append(buf, 3);
           } else if (ch < 0x200000) {
-            buf[0] = static_cast<char>(0xF0 |  (ch >> 18));
+            buf[0] = static_cast<char>(0xF0 | (ch >> 18));
             buf[1] = static_cast<char>(0x80 | ((ch >> 12) & 0x3F));
-            buf[2] = static_cast<char>(0x80 | ((ch >>  6) & 0x3F));
-            buf[3] = static_cast<char>(0x80 |  (ch        & 0x3F));
+            buf[2] = static_cast<char>(0x80 | ((ch >> 6) & 0x3F));
+            buf[3] = static_cast<char>(0x80 | (ch & 0x3F));
             match.append(buf, 4);
           } else {
             // this must be an invalid escape sequence?
@@ -1203,9 +1160,7 @@ namespace chaiscript
         void parse(const char_type t_char, const int line, const int col, const std::string &filename) {
           const bool is_octal_char = t_char >= '0' && t_char <= '7';
 
-          const bool is_hex_char  = (t_char >= '0' && t_char <= '9')
-                                 || (t_char >= 'a' && t_char <= 'f')
-                                 || (t_char >= 'A' && t_char <= 'F');
+          const bool is_hex_char = (t_char >= '0' && t_char <= '9') || (t_char >= 'a' && t_char <= 'f') || (t_char >= 'A' && t_char <= 'F');
 
           if (is_octal) {
             if (is_octal_char) {
@@ -1222,7 +1177,7 @@ namespace chaiscript
             if (is_hex_char) {
               hex_matches.push_back(t_char);
 
-              if (hex_matches.size() == 2*sizeof(char_type)) {
+              if (hex_matches.size() == 2 * sizeof(char_type)) {
                 // This rule differs from the C/C++ standard, but ChaiScript
                 // does not offer the same workaround options, and having
                 // hexadecimal sequences longer than can fit into the char
@@ -1237,7 +1192,7 @@ namespace chaiscript
             if (is_hex_char) {
               hex_matches.push_back(t_char);
 
-              if(hex_matches.size() == unicode_size) {
+              if (hex_matches.size() == unicode_size) {
                 // Format is specified to be 'slash'uABCD
                 // on collecting from A to D do parsing
                 process_unicode();
@@ -1270,18 +1225,41 @@ namespace chaiscript
                 unicode_size = 8;
               } else {
                 switch (t_char) {
-                  case ('\'') : match.push_back('\''); break;
-                  case ('\"') : match.push_back('\"'); break;
-                  case ('?') : match.push_back('?'); break;
-                  case ('a') : match.push_back('\a'); break;
-                  case ('b') : match.push_back('\b'); break;
-                  case ('f') : match.push_back('\f'); break;
-                  case ('n') : match.push_back('\n'); break;
-                  case ('r') : match.push_back('\r'); break;
-                  case ('t') : match.push_back('\t'); break;
-                  case ('v') : match.push_back('\v'); break;
-                  case ('$') : match.push_back('$'); break;
-                  default: throw exception::eval_error("Unknown escaped sequence in string", File_Position(line, col), filename);
+                  case ('\''):
+                    match.push_back('\'');
+                    break;
+                  case ('\"'):
+                    match.push_back('\"');
+                    break;
+                  case ('?'):
+                    match.push_back('?');
+                    break;
+                  case ('a'):
+                    match.push_back('\a');
+                    break;
+                  case ('b'):
+                    match.push_back('\b');
+                    break;
+                  case ('f'):
+                    match.push_back('\f');
+                    break;
+                  case ('n'):
+                    match.push_back('\n');
+                    break;
+                  case ('r'):
+                    match.push_back('\r');
+                    break;
+                  case ('t'):
+                    match.push_back('\t');
+                    break;
+                  case ('v'):
+                    match.push_back('\v');
+                    break;
+                  case ('$'):
+                    match.push_back('$');
+                    break;
+                  default:
+                    throw exception::eval_error("Unknown escaped sequence in string", File_Position(line, col), filename);
                 }
                 is_escaped = false;
               }
@@ -1292,9 +1270,7 @@ namespace chaiscript
             }
           }
         }
-
       };
-
 
       /// Reads (and potentially captures) a quoted string from input.  Translates escaped sequences.
       bool Quoted_String() {
@@ -1307,25 +1283,24 @@ namespace chaiscript
           std::string match;
           const auto prev_stack_top = m_match_stack.size();
 
-          bool is_interpolated = [&]()->bool {
+          bool is_interpolated = [&]() -> bool {
             Char_Parser<std::string> cparser(match, true);
-
 
             auto s = start + 1, end = m_position - 1;
 
             while (s != end) {
               if (cparser.saw_interpolation_marker) {
                 if (*s == '{') {
-                  //We've found an interpolation point
+                  // We've found an interpolation point
 
                   m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(match)));
 
                   if (cparser.is_interpolated) {
-                    //If we've seen previous interpolation, add on instead of making a new one
+                    // If we've seen previous interpolation, add on instead of making a new one
                     build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, "+");
                   }
 
-                  //We've finished with the part of the string up to this point, so clear it
+                  // We've finished with the part of the string up to this point, so clear it
                   match.clear();
 
                   std::string eval_match;
@@ -1435,13 +1410,14 @@ namespace chaiscript
           }
 
           if (match.size() != 1) {
-            throw exception::eval_error("Single-quoted strings must be 1 character long", File_Position(m_position.line, m_position.col), *m_filename);
+            throw exception::eval_error("Single-quoted strings must be 1 character long",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
           }
 
           m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(char(match.at(0)))));
           return true;
-        }
-        else {
+        } else {
           return false;
         }
       }
@@ -1488,7 +1464,7 @@ namespace chaiscript
         const auto start = m_position;
         bool retval = Keyword_(t_s);
         // ignore substring matches
-        if ( retval && m_position.has_more() && char_in_alphabet(*m_position, detail::keyword_alphabet) ) {
+        if (retval && m_position.has_more() && char_in_alphabet(*m_position, detail::keyword_alphabet)) {
           m_position = start;
           retval = false;
         }
@@ -1496,20 +1472,18 @@ namespace chaiscript
         return retval;
       }
 
-      bool is_operator(std::string_view t_s) const noexcept {
-        return m_operator_matches.is_match(t_s);
-      }
+      bool is_operator(std::string_view t_s) const noexcept { return m_operator_matches.is_match(t_s); }
 
       /// Reads (and potentially captures) a symbol group from input if it matches the parameter
-      bool Symbol(const utility::Static_String &t_s, const bool t_disallow_prevention=false) {
+      bool Symbol(const utility::Static_String &t_s, const bool t_disallow_prevention = false) {
         Depth_Counter dc{this};
         SkipWS();
         const auto start = m_position;
         bool retval = Symbol_(t_s);
 
         // ignore substring matches
-        if (retval && m_position.has_more() && (t_disallow_prevention == false) && char_in_alphabet(*m_position,detail::symbol_alphabet)) {
-          if (*m_position != '=' && is_operator(Position::str(start, m_position)) && !is_operator(Position::str(start, m_position+1))) {
+        if (retval && m_position.has_more() && (t_disallow_prevention == false) && char_in_alphabet(*m_position, detail::symbol_alphabet)) {
+          if (*m_position != '=' && is_operator(Position::str(start, m_position)) && !is_operator(Position::str(start, m_position + 1))) {
             // don't throw this away, it's a good match and the next is not
           } else {
             m_position = start;
@@ -1561,14 +1535,16 @@ namespace chaiscript
 
         if (Arg(false)) {
           retval = true;
-          while (Eol()) {}
+          while (Eol()) {
+          }
 
           while (Char(',')) {
-            while (Eol()) {}
+            while (Eol()) {
+            }
             if (!Arg(false)) {
               throw exception::eval_error("Unexpected value in parameter list", File_Position(m_position.line, m_position.col), *m_filename);
             }
-          } 
+          }
         }
         build_match<eval::Arg_List_AST_Node<Tracer>>(prev_stack_top);
 
@@ -1587,10 +1563,12 @@ namespace chaiscript
 
         if (Arg()) {
           retval = true;
-          while (Eol()) {}
+          while (Eol()) {
+          }
 
           while (Char(',')) {
-            while (Eol()) {}
+            while (Eol()) {
+            }
             if (!Arg()) {
               throw exception::eval_error("Unexpected value in parameter list", File_Position(m_position.line, m_position.col), *m_filename);
             }
@@ -1603,7 +1581,6 @@ namespace chaiscript
         return retval;
       }
 
-
       /// Reads a comma-separated list of values from input
       bool Arg_List() {
         Depth_Counter dc{this};
@@ -1614,9 +1591,11 @@ namespace chaiscript
 
         if (Equation()) {
           retval = true;
-          while (Eol()) {}
+          while (Eol()) {
+          }
           while (Char(',')) {
-            while (Eol()) {}
+            while (Eol()) {
+            }
             if (!Equation()) {
               throw exception::eval_error("Unexpected value in parameter list", File_Position(m_position.line, m_position.col), *m_filename);
             }
@@ -1643,9 +1622,11 @@ namespace chaiscript
           build_match<eval::Arg_List_AST_Node<Tracer>>(prev_stack_top);
         } else if (Map_Pair()) {
           retval = true;
-          while (Eol()) {}
+          while (Eol()) {
+          }
           while (Char(',')) {
-            while (Eol()) {}
+            while (Eol()) {
+            }
             if (!Map_Pair()) {
               throw exception::eval_error("Unexpected value in container", File_Position(m_position.line, m_position.col), *m_filename);
             }
@@ -1653,9 +1634,11 @@ namespace chaiscript
           build_match<eval::Arg_List_AST_Node<Tracer>>(prev_stack_top);
         } else if (Operator()) {
           retval = true;
-          while (Eol()) {}
+          while (Eol()) {
+          }
           while (Char(',')) {
-            while (Eol()) {}
+            while (Eol()) {
+            }
             if (!Operator()) {
               throw exception::eval_error("Unexpected value in container", File_Position(m_position.line, m_position.col), *m_filename);
             }
@@ -1697,8 +1680,8 @@ namespace chaiscript
             throw exception::eval_error("Incomplete anonymous function", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
-
-          while (Eol()) {}
+          while (Eol()) {
+          }
 
           if (!Block()) {
             throw exception::eval_error("Incomplete anonymous function", File_Position(m_position.line, m_position.col), *m_filename);
@@ -1731,7 +1714,7 @@ namespace chaiscript
           bool is_method = false;
 
           if (Symbol("::")) {
-            //We're now a method
+            // We're now a method
             is_method = true;
 
             if (!Id(true)) {
@@ -1746,15 +1729,19 @@ namespace chaiscript
             }
           }
 
-          while (Eos()) {}
+          while (Eos()) {
+          }
 
           if (Char(':')) {
             if (!Operator()) {
-              throw exception::eval_error("Missing guard expression for function", File_Position(m_position.line, m_position.col), *m_filename);
+              throw exception::eval_error("Missing guard expression for function",
+                                          File_Position(m_position.line, m_position.col),
+                                          *m_filename);
             }
           }
 
-          while (Eol()) {}
+          while (Eol()) {
+          }
           if (!Block()) {
             throw exception::eval_error("Incomplete function definition", File_Position(m_position.line, m_position.col), *m_filename);
           }
@@ -1764,7 +1751,6 @@ namespace chaiscript
           } else {
             build_match<eval::Def_AST_Node<Tracer>>(prev_stack_top);
           }
-
         }
 
         return retval;
@@ -1780,7 +1766,8 @@ namespace chaiscript
         if (Keyword("try")) {
           retval = true;
 
-          while (Eol()) {}
+          while (Eol()) {
+          }
 
           if (!Block()) {
             throw exception::eval_error("Incomplete 'try' block", File_Position(m_position.line, m_position.col), *m_filename);
@@ -1788,17 +1775,21 @@ namespace chaiscript
 
           bool has_matches = true;
           while (has_matches) {
-            while (Eol()) {}
+            while (Eol()) {
+            }
             has_matches = false;
             if (Keyword("catch")) {
               const auto catch_stack_top = m_match_stack.size();
               if (Char('(')) {
                 if (!(Arg() && Char(')'))) {
-                  throw exception::eval_error("Incomplete 'catch' expression", File_Position(m_position.line, m_position.col), *m_filename);
+                  throw exception::eval_error("Incomplete 'catch' expression",
+                                              File_Position(m_position.line, m_position.col),
+                                              *m_filename);
                 }
               }
 
-              while (Eol()) {}
+              while (Eol()) {
+              }
 
               if (!Block()) {
                 throw exception::eval_error("Incomplete 'catch' block", File_Position(m_position.line, m_position.col), *m_filename);
@@ -1807,11 +1798,13 @@ namespace chaiscript
               has_matches = true;
             }
           }
-          while (Eol()) {}
+          while (Eol()) {
+          }
           if (Keyword("finally")) {
             const auto finally_stack_top = m_match_stack.size();
 
-            while (Eol()) {}
+            while (Eol()) {
+            }
 
             if (!Block()) {
               throw exception::eval_error("Incomplete 'finally' block", File_Position(m_position.line, m_position.col), *m_filename);
@@ -1849,7 +1842,8 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'if' expression", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
-          while (Eol()) {}
+          while (Eol()) {
+          }
 
           if (!Block()) {
             throw exception::eval_error("Incomplete 'if' block", File_Position(m_position.line, m_position.col), *m_filename);
@@ -1857,13 +1851,15 @@ namespace chaiscript
 
           bool has_matches = true;
           while (has_matches) {
-            while (Eol()) {}
+            while (Eol()) {
+            }
             has_matches = false;
             if (Keyword("else")) {
               if (If()) {
                 has_matches = true;
               } else {
-                while (Eol()) {}
+                while (Eol()) {
+                }
 
                 if (!Block()) {
                   throw exception::eval_error("Incomplete 'else' block", File_Position(m_position.line, m_position.col), *m_filename);
@@ -1875,15 +1871,14 @@ namespace chaiscript
 
           const auto num_children = m_match_stack.size() - prev_stack_top;
 
-          if ((is_if_init && num_children == 3)
-              || (!is_if_init && num_children == 2)) {
+          if ((is_if_init && num_children == 3) || (!is_if_init && num_children == 2)) {
             m_match_stack.push_back(chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
           }
 
           if (!is_if_init) {
             build_match<eval::If_AST_Node<Tracer>>(prev_stack_top);
           } else {
-            build_match<eval::If_AST_Node<Tracer>>(prev_stack_top+1);
+            build_match<eval::If_AST_Node<Tracer>>(prev_stack_top + 1);
             build_match<eval::Block_AST_Node<Tracer>>(prev_stack_top);
           }
         }
@@ -1900,7 +1895,9 @@ namespace chaiscript
 
         if (Keyword("class")) {
           if (!t_class_allowed) {
-            throw exception::eval_error("Class definitions only allowed at top scope", File_Position(m_position.line, m_position.col), *m_filename);
+            throw exception::eval_error("Class definitions only allowed at top scope",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
           }
 
           retval = true;
@@ -1911,7 +1908,8 @@ namespace chaiscript
 
           const auto class_name = m_match_stack.back()->text;
 
-          while (Eol()) {}
+          while (Eol()) {
+          }
 
           if (!Class_Block(class_name)) {
             throw exception::eval_error("Incomplete 'class' block", File_Position(m_position.line, m_position.col), *m_filename);
@@ -1922,7 +1920,6 @@ namespace chaiscript
 
         return retval;
       }
-
 
       /// Reads a while block from input
       bool While() {
@@ -1942,7 +1939,8 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'while' expression", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
-          while (Eol()) {}
+          while (Eol()) {
+          }
 
           if (!Block()) {
             throw exception::eval_error("Incomplete 'while' block", File_Position(m_position.line, m_position.col), *m_filename);
@@ -1961,38 +1959,32 @@ namespace chaiscript
         return Char(':') && Equation();
       }
 
-
       /// Reads the C-style `for` conditions from input
       bool For_Guards() {
         Depth_Counter dc{this};
-        if (!(Equation() && Eol()))
-        {
-          if (!Eol())
-          {
+        if (!(Equation() && Eol())) {
+          if (!Eol()) {
             return false;
           } else {
             m_match_stack.push_back(chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
           }
         }
 
-        if (!(Equation() && Eol()))
-        {
-          if (!Eol())
-          {
+        if (!(Equation() && Eol())) {
+          if (!Eol()) {
             return false;
           } else {
-            m_match_stack.push_back(chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, eval::Constant_AST_Node<Tracer>>(Boxed_Value(true)));
+            m_match_stack.push_back(
+                chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, eval::Constant_AST_Node<Tracer>>(Boxed_Value(true)));
           }
         }
 
-        if (!Equation())
-        {
+        if (!Equation()) {
           m_match_stack.push_back(chaiscript::make_unique<eval::AST_Node_Impl<Tracer>, eval::Noop_AST_Node<Tracer>>());
         }
 
-        return true; 
+        return true;
       }
-
 
       /// Reads a for block from input
       bool For() {
@@ -2013,7 +2005,8 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'for' expression", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
-          while (Eol()) {}
+          while (Eol()) {
+          }
 
           if (!Block()) {
             throw exception::eval_error("Incomplete 'for' block", File_Position(m_position.line, m_position.col), *m_filename);
@@ -2037,7 +2030,6 @@ namespace chaiscript
         return retval;
       }
 
-
       /// Reads a case block from input
       bool Case() {
         Depth_Counter dc{this};
@@ -2056,7 +2048,8 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'case' expression", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
-          while (Eol()) {}
+          while (Eol()) {
+          }
 
           if (!Block()) {
             throw exception::eval_error("Incomplete 'case' block", File_Position(m_position.line, m_position.col), *m_filename);
@@ -2066,7 +2059,8 @@ namespace chaiscript
         } else if (Keyword("default")) {
           retval = true;
 
-          while (Eol()) {}
+          while (Eol()) {
+          }
 
           if (!Block()) {
             throw exception::eval_error("Incomplete 'default' block", File_Position(m_position.line, m_position.col), *m_filename);
@@ -2078,14 +2072,12 @@ namespace chaiscript
         return retval;
       }
 
-
       /// Reads a switch statement from input
       bool Switch() {
         Depth_Counter dc{this};
         const auto prev_stack_top = m_match_stack.size();
 
         if (Keyword("switch")) {
-
           if (!Char('(')) {
             throw exception::eval_error("Incomplete 'switch' expression", File_Position(m_position.line, m_position.col), *m_filename);
           }
@@ -2094,22 +2086,25 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'switch' expression", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
-          while (Eol()) {}
+          while (Eol()) {
+          }
 
           if (Char('{')) {
-            while (Eol()) {}
-
-            while (Case()) {
-              while (Eol()) { } // eat
+            while (Eol()) {
             }
 
-            while (Eol()) { } // eat
+            while (Case()) {
+              while (Eol()) {
+              } // eat
+            }
+
+            while (Eol()) {
+            } // eat
 
             if (!Char('}')) {
               throw exception::eval_error("Incomplete block", File_Position(m_position.line, m_position.col), *m_filename);
             }
-          }
-          else {
+          } else {
             throw exception::eval_error("Incomplete block", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
@@ -2119,9 +2114,7 @@ namespace chaiscript
         } else {
           return false;
         }
-
       }
-
 
       /// Reads a curly-brace C-style class block from input
       bool Class_Block(const std::string &t_class_name) {
@@ -2219,9 +2212,7 @@ namespace chaiscript
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
-        if (Lambda() || Num() || Quoted_String() || Single_Quoted_String() ||
-            Paren_Expression() || Inline_Container() || Id(false))
-        {
+        if (Lambda() || Num() || Quoted_String() || Single_Quoted_String() || Paren_Expression() || Inline_Container() || Id(false)) {
           retval = true;
           bool has_more = true;
 
@@ -2240,21 +2231,33 @@ namespace chaiscript
               /// \todo Work around for method calls until we have a better solution
               if (!m_match_stack.back()->children.empty()) {
                 if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Dot_Access) {
-                  if (m_match_stack.empty()) { throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
-}
-                  if (m_match_stack.back()->children.empty()) { throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
-}
+                  if (m_match_stack.empty()) {
+                    throw exception::eval_error("Incomplete dot access fun call",
+                                                File_Position(m_position.line, m_position.col),
+                                                *m_filename);
+                  }
+                  if (m_match_stack.back()->children.empty()) {
+                    throw exception::eval_error("Incomplete dot access fun call",
+                                                File_Position(m_position.line, m_position.col),
+                                                *m_filename);
+                  }
                   auto dot_access = std::move(m_match_stack.back()->children[0]);
                   auto func_call = std::move(m_match_stack.back());
                   m_match_stack.pop_back();
                   func_call->children.erase(func_call->children.begin());
-                  if (dot_access->children.empty()) { throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
-}
+                  if (dot_access->children.empty()) {
+                    throw exception::eval_error("Incomplete dot access fun call",
+                                                File_Position(m_position.line, m_position.col),
+                                                *m_filename);
+                  }
                   func_call->children.insert(func_call->children.begin(), std::move(dot_access->children.back()));
                   dot_access->children.pop_back();
                   dot_access->children.push_back(std::move(func_call));
-                  if (dot_access->children.size() != 2) { throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
-}
+                  if (dot_access->children.size() != 2) {
+                    throw exception::eval_error("Incomplete dot access fun call",
+                                                File_Position(m_position.line, m_position.col),
+                                                *m_filename);
+                  }
                   m_match_stack.push_back(std::move(dot_access));
                 }
               }
@@ -2266,21 +2269,20 @@ namespace chaiscript
               }
 
               build_match<eval::Array_Call_AST_Node<Tracer>>(prev_stack_top);
-            }
-            else if (Symbol(".")) {
+            } else if (Symbol(".")) {
               has_more = true;
               if (!(Id(true))) {
                 throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
               }
 
-              if ( std::distance(m_match_stack.begin() + static_cast<int>(prev_stack_top), m_match_stack.end()) != 2) {
+              if (std::distance(m_match_stack.begin() + static_cast<int>(prev_stack_top), m_match_stack.end()) != 2) {
                 throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
               }
               build_match<eval::Dot_Access_AST_Node<Tracer>>(prev_stack_top);
-            }
-            else if (Eol()) {
+            } else if (Eol()) {
               auto start = --m_position;
-              while (Eol()) {}
+              while (Eol()) {
+              }
               if (Symbol(".")) {
                 has_more = true;
                 --m_position;
@@ -2311,7 +2313,7 @@ namespace chaiscript
           }
 
           build_match<eval::Attr_Decl_AST_Node<Tracer>>(prev_stack_top);
-        } else if (Keyword("auto") || Keyword("var") ) {
+        } else if (Keyword("auto") || Keyword("var")) {
           retval = true;
 
           if (Reference()) {
@@ -2342,7 +2344,6 @@ namespace chaiscript
           if (!Id(true)) {
             throw exception::eval_error("Missing attribute name in definition", File_Position(m_position.line, m_position.col), *m_filename);
           }
-
 
           build_match<eval::Attr_Decl_AST_Node<Tracer>>(prev_stack_top);
         }
@@ -2375,20 +2376,19 @@ namespace chaiscript
           Container_Arg_List();
 
           if (!Char(']')) {
-            throw exception::eval_error("Missing closing square bracket ']' in container initializer", File_Position(m_position.line, m_position.col), *m_filename);
+            throw exception::eval_error("Missing closing square bracket ']' in container initializer",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
           }
           if ((prev_stack_top != m_match_stack.size()) && (!m_match_stack.back()->children.empty())) {
             if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Value_Range) {
               build_match<eval::Inline_Range_AST_Node<Tracer>>(prev_stack_top);
-            }
-            else if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Map_Pair) {
+            } else if (m_match_stack.back()->children[0]->identifier == AST_Node_Type::Map_Pair) {
               build_match<eval::Inline_Map_AST_Node<Tracer>>(prev_stack_top);
-            }
-            else {
+            } else {
               build_match<eval::Inline_Array_AST_Node<Tracer>>(prev_stack_top);
             }
-          }
-          else {
+          } else {
             build_match<eval::Inline_Array_AST_Node<Tracer>>(prev_stack_top);
           }
 
@@ -2420,22 +2420,15 @@ namespace chaiscript
         Depth_Counter dc{this};
         const auto prev_stack_top = m_match_stack.size();
         using SS = utility::Static_String;
-        const std::array<utility::Static_String, 6> prefix_opers{{
-            SS{"++"}, 
-            SS{"--"}, 
-            SS{"-"}, 
-            SS{"+"}, 
-            SS{"!"}, 
-            SS{"~"}
-        }};
+        const std::array<utility::Static_String, 6> prefix_opers{{SS{"++"}, SS{"--"}, SS{"-"}, SS{"+"}, SS{"!"}, SS{"~"}}};
 
-        for (const auto &oper : prefix_opers)
-        {
+        for (const auto &oper : prefix_opers) {
           const bool is_char = oper.size() == 1;
-          if ((is_char && Char(oper.c_str()[0])) || (!is_char && Symbol(oper)))
-          {
-            if (!Operator(m_operators.size()-1)) {
-              throw exception::eval_error("Incomplete prefix '" + std::string(oper.c_str()) + "' expression", File_Position(m_position.line, m_position.col), *m_filename);
+          if ((is_char && Char(oper.c_str()[0])) || (!is_char && Symbol(oper))) {
+            if (!Operator(m_operators.size() - 1)) {
+              throw exception::eval_error("Incomplete prefix '" + std::string(oper.c_str()) + "' expression",
+                                          File_Position(m_position.line, m_position.col),
+                                          *m_filename);
             }
 
             build_match<eval::Prefix_AST_Node<Tracer>>(prev_stack_top, oper.c_str());
@@ -2453,18 +2446,15 @@ namespace chaiscript
       }
 
       bool Operator_Helper(const size_t t_precedence, std::string &oper) {
-        return m_operator_matches.any_of(t_precedence,
-            [&oper, this](const auto &elem){ 
-              if (Symbol(elem)) {
-                oper = elem.c_str();
-                return true;
-              } else {
-                return false;
-              }
-            }
-          );
+        return m_operator_matches.any_of(t_precedence, [&oper, this](const auto &elem) {
+          if (Symbol(elem)) {
+            oper = elem.c_str();
+            return true;
+          } else {
+            return false;
+          }
+        });
       }
-
 
       bool Operator(const size_t t_precedence = 0) {
         Depth_Counter dc{this};
@@ -2472,54 +2462,58 @@ namespace chaiscript
         const auto prev_stack_top = m_match_stack.size();
 
         if (m_operators[t_precedence] != Operator_Precedence::Prefix) {
-          if (Operator(t_precedence+1)) {
+          if (Operator(t_precedence + 1)) {
             retval = true;
             std::string oper;
             while (Operator_Helper(t_precedence, oper)) {
-              while (Eol()) {}
-              if (!Operator(t_precedence+1)) {
+              while (Eol()) {
+              }
+              if (!Operator(t_precedence + 1)) {
                 throw exception::eval_error("Incomplete '" + oper + "' expression",
-                    File_Position(m_position.line, m_position.col), *m_filename);
+                                            File_Position(m_position.line, m_position.col),
+                                            *m_filename);
               }
 
               switch (m_operators[t_precedence]) {
-                case(Operator_Precedence::Ternary_Cond) :
+                case (Operator_Precedence::Ternary_Cond):
                   if (Symbol(":")) {
-                    if (!Operator(t_precedence+1)) {
+                    if (!Operator(t_precedence + 1)) {
                       throw exception::eval_error("Incomplete '" + oper + "' expression",
-                          File_Position(m_position.line, m_position.col), *m_filename);
+                                                  File_Position(m_position.line, m_position.col),
+                                                  *m_filename);
                     }
                     build_match<eval::If_AST_Node<Tracer>>(prev_stack_top);
-                  }
-                  else {
+                  } else {
                     throw exception::eval_error("Incomplete '" + oper + "' expression",
-                        File_Position(m_position.line, m_position.col), *m_filename);
+                                                File_Position(m_position.line, m_position.col),
+                                                *m_filename);
                   }
                   break;
 
-                case(Operator_Precedence::Addition) :
-                case(Operator_Precedence::Multiplication) :
-                case(Operator_Precedence::Shift) :
-                case(Operator_Precedence::Equality) :
-                case(Operator_Precedence::Bitwise_And) :
-                case(Operator_Precedence::Bitwise_Xor) :
-                case(Operator_Precedence::Bitwise_Or) :
-                case(Operator_Precedence::Comparison) :
+                case (Operator_Precedence::Addition):
+                case (Operator_Precedence::Multiplication):
+                case (Operator_Precedence::Shift):
+                case (Operator_Precedence::Equality):
+                case (Operator_Precedence::Bitwise_And):
+                case (Operator_Precedence::Bitwise_Xor):
+                case (Operator_Precedence::Bitwise_Or):
+                case (Operator_Precedence::Comparison):
                   build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, oper);
                   break;
 
-                case(Operator_Precedence::Logical_And) :
+                case (Operator_Precedence::Logical_And):
                   build_match<eval::Logical_And_AST_Node<Tracer>>(prev_stack_top, oper);
                   break;
-                case(Operator_Precedence::Logical_Or) :
+                case (Operator_Precedence::Logical_Or):
                   build_match<eval::Logical_Or_AST_Node<Tracer>>(prev_stack_top, oper);
                   break;
-                case(Operator_Precedence::Prefix) :
+                case (Operator_Precedence::Prefix):
                   assert(false); // cannot reach here because of if() statement at the top
                   break;
 
-//                default:
-//                  throw exception::eval_error("Internal error: unhandled ast_node", File_Position(m_position.line, m_position.col), *m_filename);
+                  //                default:
+                  //                  throw exception::eval_error("Internal error: unhandled ast_node",
+                  //                  File_Position(m_position.line, m_position.col), *m_filename);
               }
             }
           }
@@ -2546,8 +2540,7 @@ namespace chaiscript
             }
 
             build_match<eval::Map_Pair_AST_Node<Tracer>>(prev_stack_top);
-          }
-          else {
+          } else {
             m_position = prev_pos;
             while (prev_stack_top != m_match_stack.size()) {
               m_match_stack.pop_back();
@@ -2574,8 +2567,7 @@ namespace chaiscript
             }
 
             build_match<eval::Value_Range_AST_Node<Tracer>>(prev_stack_top);
-          }
-          else {
+          } else {
             m_position = prev_pos;
             while (prev_stack_top != m_match_stack.size()) {
               m_match_stack.pop_back();
@@ -2594,8 +2586,8 @@ namespace chaiscript
         using SS = utility::Static_String;
 
         if (Operator()) {
-          for (const auto &sym : {SS{"="}, SS{":="}, SS{"+="}, SS{"-="}, SS{"*="}, SS{"/="}, SS{"%="}, SS{"<<="}, SS{">>="}, SS{"&="}, SS{"^="}, SS{"|="}}) 
-          {
+          for (const auto &sym :
+               {SS{"="}, SS{":="}, SS{"+="}, SS{"-="}, SS{"*="}, SS{"/="}, SS{"%="}, SS{"<<="}, SS{">>="}, SS{"&="}, SS{"^="}, SS{"|="}}) {
             if (Symbol(sym, true)) {
               SkipWS(true);
               if (!Equation()) {
@@ -2624,7 +2616,9 @@ namespace chaiscript
           const auto start = m_position;
           if (Def(true, t_class_name) || Var_Decl(true, t_class_name)) {
             if (!saw_eol) {
-              throw exception::eval_error("Two function definitions missing line separator", File_Position(start.line, start.col), *m_filename);
+              throw exception::eval_error("Two function definitions missing line separator",
+                                          File_Position(start.line, start.col),
+                                          *m_filename);
             }
             has_more = true;
             retval = true;
@@ -2653,26 +2647,25 @@ namespace chaiscript
           const auto start = m_position;
           if (Def() || Try() || If() || While() || Class(t_class_allowed) || For() || Switch()) {
             if (!saw_eol) {
-              throw exception::eval_error("Two function definitions missing line separator", File_Position(start.line, start.col), *m_filename);
+              throw exception::eval_error("Two function definitions missing line separator",
+                                          File_Position(start.line, start.col),
+                                          *m_filename);
             }
             has_more = true;
             retval = true;
             saw_eol = true;
-          }
-          else if (Return() || Break() || Continue() || Equation()) {
+          } else if (Return() || Break() || Continue() || Equation()) {
             if (!saw_eol) {
               throw exception::eval_error("Two expressions missing line separator", File_Position(start.line, start.col), *m_filename);
             }
             has_more = true;
             retval = true;
             saw_eol = false;
-          }
-          else if (Block() || Eol()) {
+          } else if (Block() || Eol()) {
             has_more = true;
             retval = true;
             saw_eol = true;
-          }
-          else {
+          } else {
             has_more = false;
           }
         }
@@ -2680,16 +2673,14 @@ namespace chaiscript
         return retval;
       }
 
-      AST_NodePtr parse(const std::string &t_input, const std::string &t_fname) override
-      {
+      AST_NodePtr parse(const std::string &t_input, const std::string &t_fname) override {
         ChaiScript_Parser<Tracer, Optimizer> parser(m_tracer, m_optimizer);
         return parser.parse_internal(t_input, t_fname);
       }
 
-      eval::AST_Node_Impl_Ptr<Tracer> parse_instr_eval(const std::string &t_input)
-      {
-        auto last_position    = m_position;
-        auto last_filename    = m_filename;
+      eval::AST_Node_Impl_Ptr<Tracer> parse_instr_eval(const std::string &t_input) {
+        auto last_position = m_position;
+        auto last_filename = m_filename;
         auto last_match_stack = std::exchange(m_match_stack, decltype(m_match_stack){});
 
         auto retval = parse_internal(t_input, "instr eval");
@@ -2698,7 +2689,7 @@ namespace chaiscript
         m_filename = std::move(last_filename);
         m_match_stack = std::move(last_match_stack);
 
-        return eval::AST_Node_Impl_Ptr<Tracer>(dynamic_cast<eval::AST_Node_Impl<Tracer>*>(retval.release()));
+        return eval::AST_Node_Impl_Ptr<Tracer>(dynamic_cast<eval::AST_Node_Impl<Tracer> *>(retval.release()));
       }
 
       /// Parses the given input string, tagging parsed ast_nodes with the given m_filename.
@@ -2729,8 +2720,8 @@ namespace chaiscript
         return retval;
       }
     };
-  }
-}
+  } // namespace parser
+} // namespace chaiscript
 
 #if defined(CHAISCRIPT_MSVC) && defined(CHAISCRIPT_PUSHED_MIN_MAX)
 #undef CHAISCRIPT_PUSHED_MIN_MAX
@@ -2738,6 +2729,4 @@ namespace chaiscript
 #pragma pop_macro("max")
 #endif
 
-
 #endif /* CHAISCRIPT_PARSER_HPP_ */
-

@@ -3,11 +3,9 @@
 #include <chaiscript/chaiscript.hpp>
 
 #ifdef READLINE_AVAILABLE
-#include <readline/readline.h>
 #include <readline/history.h>
+#include <readline/readline.h>
 #endif
-
-
 
 std::string get_next_command() {
 #ifdef READLINE_AVAILABLE
@@ -23,41 +21,31 @@ std::string get_next_command() {
 #endif
 }
 
-void function(void)
-{
+void function(void) {
   // do nothing
 }
 
-class test
-{
+class test {
   chaiscript::ChaiScript chai;
   chaiscript::ChaiScript::State backupState = chai.get_state();
 
-  public:
-  void ResetState()
-  {
+public:
+  void ResetState() {
     chai.set_state(backupState);
-    chai.add(chaiscript::fun(&function),"Whatever()");
+    chai.add(chaiscript::fun(&function), "Whatever()");
   }
 
-  void RunFile(std::string sFile)
-  {
+  void RunFile(std::string sFile) {
     try {
       chaiscript::Boxed_Value val = chai.eval_file(sFile);
-    }
-    catch (std::exception &e) {
+    } catch (std::exception &e) {
       std::cout << e.what() << '\n';
     }
   }
-
 };
 
-
-
 int main(int /*argc*/, char * /*argv*/[]) {
-
   test myChai;
-
 
   std::string command = "";
 
@@ -70,12 +58,11 @@ int main(int /*argc*/, char * /*argv*/[]) {
   // scenario3 - RunFile gets in changing intervals: memory usage goes up and down, but never as
   //            low as in case 1 scenario3 :
 
-  while(command != "quit")
-  {
-    for(int i = 1; i < 200; i++)
+  while (command != "quit") {
+    for (int i = 1; i < 200; i++)
       myChai.ResetState();
 
-    if(command == "runfile")
+    if (command == "runfile")
       myChai.RunFile("Test.chai");
 
     command = get_next_command();

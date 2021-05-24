@@ -8,20 +8,17 @@
 #include <chaiscript/chaiscript_basic.hpp>
 #include <chaiscript/language/chaiscript_parser.hpp>
 
-int expected_value(int num_iters)
-{
+int expected_value(int num_iters) {
   int i = 0;
-  for (int k = 0; k<num_iters * 10; ++k)
-  {
+  for (int k = 0; k < num_iters * 10; ++k) {
     i += k;
   }
 
   return i;
 }
 
-void do_work(chaiscript::ChaiScript_Basic &c, const size_t id)
-{
-  try{
+void do_work(chaiscript::ChaiScript_Basic &c, const size_t id) {
+  try {
     std::stringstream ss;
     ss << "MyVar" << rand();
     c.add(chaiscript::var(5), ss.str());
@@ -34,9 +31,8 @@ void do_work(chaiscript::ChaiScript_Basic &c, const size_t id)
   }
 }
 
-int main()
-{
-  // Disable deprecation warning for getenv call.
+int main() {
+// Disable deprecation warning for getenv call.
 #ifdef CHAISCRIPT_MSVC
 #ifdef max // Why Microsoft? why?
 #undef max
@@ -54,63 +50,54 @@ int main()
 
   std::vector<std::string> usepaths;
   usepaths.emplace_back("");
-  if (usepath)
-  {
+  if (usepath) {
     usepaths.emplace_back(usepath);
   }
 
   std::vector<std::string> modulepaths;
 
 #ifdef CHAISCRIPT_NO_DYNLOAD
-  chaiscript::ChaiScript chai(/* unused */modulepaths, usepaths);
+  chaiscript::ChaiScript chai(/* unused */ modulepaths, usepaths);
 #else
   modulepaths.emplace_back("");
-  if (modulepath)
-  {
+  if (modulepath) {
     modulepaths.emplace_back(modulepath);
   }
-  
+
   // For this test we are going to load the dynamic stdlib
   // to make sure it continues to work
   chaiscript::ChaiScript_Basic chai(
       std::make_unique<chaiscript::parser::ChaiScript_Parser<chaiscript::eval::Noop_Tracer, chaiscript::optimizer::Optimizer_Default>>(),
-      modulepaths,usepaths);
+      modulepaths,
+      usepaths);
 #endif
 
-  std::vector<std::shared_ptr<std::thread> > threads;
+  std::vector<std::shared_ptr<std::thread>> threads;
 
   // Ensure at least two, but say only 7 on an 8 core processor
   size_t num_threads = static_cast<size_t>(std::max(static_cast<int>(std::thread::hardware_concurrency()) - 1, 2));
 
   std::cout << "Num threads: " << num_threads << '\n';
 
-  for (size_t i = 0; i < num_threads; ++i)
-  {
+  for (size_t i = 0; i < num_threads; ++i) {
     threads.push_back(std::make_shared<std::thread>(do_work, std::ref(chai), i));
   }
 
-  for (size_t i = 0; i < num_threads; ++i)
-  {
+  for (size_t i = 0; i < num_threads; ++i) {
     threads[i]->join();
   }
 
-
-
-  for (size_t i = 0; i < num_threads; ++i)
-  {
+  for (size_t i = 0; i < num_threads; ++i) {
     std::stringstream ss;
     ss << i;
-    if (chai.eval<int>("getvalue(" + ss.str() + ")") != expected_value(4000))
-    {
+    if (chai.eval<int>("getvalue(" + ss.str() + ")") != expected_value(4000)) {
       return EXIT_FAILURE;
     }
 
-    if (chai.eval<int>("getid(" + ss.str() + ")") != static_cast<int>(i))
-    {
+    if (chai.eval<int>("getid(" + ss.str() + ")") != static_cast<int>(i)) {
       return EXIT_FAILURE;
     }
   }
 
   return EXIT_SUCCESS;
 }
-

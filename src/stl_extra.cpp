@@ -7,7 +7,6 @@
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 
-
 #include <chaiscript/chaiscript_basic.hpp>
 #include <chaiscript/dispatchkit/bootstrap_stl.hpp>
 #include <list>
@@ -25,11 +24,10 @@
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #endif
 
-CHAISCRIPT_MODULE_EXPORT chaiscript::ModulePtr create_chaiscript_module_stl_extra()
-{
+CHAISCRIPT_MODULE_EXPORT chaiscript::ModulePtr create_chaiscript_module_stl_extra() {
   auto module = std::make_shared<chaiscript::Module>();
-  chaiscript::bootstrap::standard_library::list_type<std::list<chaiscript::Boxed_Value> >("List", *module);
-  chaiscript::bootstrap::standard_library::vector_type<std::vector<uint16_t> >("u16vector", *module);
+  chaiscript::bootstrap::standard_library::list_type<std::list<chaiscript::Boxed_Value>>("List", *module);
+  chaiscript::bootstrap::standard_library::vector_type<std::vector<uint16_t>>("u16vector", *module);
   module->add(chaiscript::vector_conversion<std::vector<uint16_t>>());
   return module;
 }

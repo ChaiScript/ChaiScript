@@ -7,7 +7,6 @@
 // This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 
-
 #ifndef CHAISCRIPT_EXCEPTION_SPECIFICATION_HPP_
 #define CHAISCRIPT_EXCEPTION_SPECIFICATION_HPP_
 
@@ -17,39 +16,28 @@
 #include "boxed_cast.hpp"
 
 namespace chaiscript {
-class Boxed_Value;
-namespace exception {
-class bad_boxed_cast;
-}  // namespace exception
-}  // namespace chaiscript
-
-namespace chaiscript
-{
-  namespace detail
-  {
-    struct Exception_Handler_Base
-    {
+  namespace detail {
+    struct Exception_Handler_Base {
       virtual void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) = 0;
 
       virtual ~Exception_Handler_Base() = default;
 
-      protected:
-        template<typename T>
-        static void throw_type(const Boxed_Value &bv, const Dispatch_Engine &t_engine)
-        {
-          try { T t = t_engine.boxed_cast<T>(bv); throw t; } catch (const chaiscript::exception::bad_boxed_cast &) {}
+    protected:
+      template<typename T>
+      static void throw_type(const Boxed_Value &bv, const Dispatch_Engine &t_engine) {
+        try {
+          T t = t_engine.boxed_cast<T>(bv);
+          throw t;
+        } catch (const chaiscript::exception::bad_boxed_cast &) {
         }
+      }
     };
 
-    template<typename ... T>
-      struct Exception_Handler_Impl : Exception_Handler_Base
-      {
-        void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) override
-        {
-          (throw_type<T>(bv, t_engine), ...);
-        }
-      };
-  }
+    template<typename... T>
+    struct Exception_Handler_Impl : Exception_Handler_Base {
+      void handle(const Boxed_Value &bv, const Dispatch_Engine &t_engine) override { (throw_type<T>(bv, t_engine), ...); }
+    };
+  } // namespace detail
 
   /// \brief Used in the automatic unboxing of exceptions thrown during script evaluation
   ///
@@ -61,7 +49,8 @@ namespace chaiscript
   /// chaiscript::ChaiScript chai;
   ///
   /// try {
-  ///   chai.eval("throw(runtime_error(\"error\"))", chaiscript::exception_specification<int, double, float, const std::string &, const std::exception &>());
+  ///   chai.eval("throw(runtime_error(\"error\"))", chaiscript::exception_specification<int, double, float, const std::string &, const
+  ///   std::exception &>());
   /// } catch (const double e) {
   /// } catch (int) {
   /// } catch (float) {
@@ -86,7 +75,7 @@ namespace chaiscript
   ///
   /// Similarly, if you are using the ChaiScript::eval form that unboxes the return value, then chaiscript::exception::bad_boxed_cast
   /// should be handled as well.
-  /// 
+  ///
   /// \code
   /// try {
   ///   chai.eval<int>("1.0", chaiscript::exception_specification<const std::exception &>());
@@ -105,13 +94,10 @@ namespace chaiscript
 
   /// \brief creates a chaiscript::Exception_Handler which handles one type of exception unboxing
   /// \sa \ref exceptions
-  template<typename ... T>
-  Exception_Handler exception_specification()
-  {
+  template<typename... T>
+  Exception_Handler exception_specification() {
     return std::make_shared<detail::Exception_Handler_Impl<T...>>();
   }
-}
-
+} // namespace chaiscript
 
 #endif
-
