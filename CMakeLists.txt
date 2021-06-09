@@ -248,7 +248,9 @@ set(CHAISCRIPT_LIBS stdlib parser)
 
 add_executable(chai src/main.cpp ${Chai_INCLUDES})
 target_link_libraries(chai ${LIBS} ${CHAISCRIPT_LIBS})
-target_include_directories(chai PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+add_library(chaiscript INTERFACE)
+target_include_directories(chaiscript INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 if(BUILD_SAMPLES)
   add_executable(sanity_checks src/sanity_checks.cpp)
