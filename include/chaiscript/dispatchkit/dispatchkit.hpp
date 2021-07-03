@@ -588,7 +588,7 @@ namespace chaiscript {
           }
         }
 
-        return ti.bare_name();
+        return ti.demangled_name();
       }
 
       /// Return all registered types
