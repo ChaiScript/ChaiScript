@@ -130,7 +130,7 @@ namespace chaiscript::bootstrap::standard_library {
       auto itr = container.begin();
       auto end = container.end();
 
-      if (pos < 0 || std::distance(itr, end) < (pos - 1)) {
+      if (pos < 0 || std::distance(itr, end) <= pos) {
         throw std::range_error("Cannot erase past end of range");
       }
 

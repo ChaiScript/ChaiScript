@@ -1,3 +1,25 @@
 auto x = [1, 2, 3]
 x.insert_at(1, 6)
 assert_equal([1,6,2,3], x);
+
+try {
+  // We expect this to throw because of inserting an out of bounds index
+  x.insert_at(5, 55)
+  assert_true(false)
+} catch (e) {
+  assert_true(true)
+}
+
+// Inserting to the end should be allowed
+x.insert_at(4, 44)
+
+try {
+  // We expect this to throw because of inserting an out of bounds index
+  x.insert_at(-1, 111)
+  assert_true(false)
+} catch (e) {
+  assert_true(true)
+}
+
+x.insert_at(0, 100)
+assert_equal([100, 1, 6, 2, 3, 44], x)
