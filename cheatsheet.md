@@ -46,7 +46,7 @@ chai.add(chaiscript::fun<ReturnType (ParamType1, ParamType2)>(&function_with_ove
 #### Alternative
 
 ```cpp
-chai.add(chaiscript::fun(std::static_cast<ReturnType (*)(ParamType1, ParamType2)>(&function_with_overloads)), "function_name");
+chai.add(chaiscript::fun(static_cast<ReturnType (*)(ParamType1, ParamType2)>(&function_with_overloads)), "function_name");
 ```
 This overload technique is also used when exposing base member using derived type
 
