@@ -42,7 +42,7 @@ namespace chaiscript
       auto bind_first(Ret (Class::*f)(Param...), O&& o)
       {
         return [f, o](Param...param) -> Ret {
-          return (get_pointer(o)->*f)(std::forward<Param>(param)...);
+          return (detail::get_pointer(o)->*f)(std::forward<Param>(param)...);
         };
       }
 
@@ -50,7 +50,7 @@ namespace chaiscript
       auto bind_first(Ret (Class::*f)(Param...) const, O&& o)
       {
         return [f, o](Param...param) -> Ret {
-          return (get_pointer(o)->*f)(std::forward<Param>(param)...);
+          return (detail::get_pointer(o)->*f)(std::forward<Param>(param)...);
         };
 
       }
