@@ -2280,7 +2280,7 @@ namespace chaiscript {
               }
               build_match<eval::Dot_Access_AST_Node<Tracer>>(prev_stack_top);
             } else if (Eol()) {
-              auto start = --m_position;
+              const auto& start = --m_position;
               while (Eol()) {
               }
               if (Symbol(".")) {
