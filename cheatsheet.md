@@ -155,7 +155,7 @@ This allows you to pass a ChaiScript function to a function requiring `std::vect
 
 ```
 chai.add(chaiscript::var(somevar), "somevar"); // copied in
-chai.add(chaiscript::var(std::ref(somevar), "somevar"); // by reference, shared between C++ and chai
+chai.add(chaiscript::var(std::ref(somevar)), "somevar"); // by reference, shared between C++ and chai
 auto shareddouble = std::make_shared<double>(4.3);
 chai.add(chaiscript::var(shareddouble), "shareddouble"); // by shared_ptr, shared between c++ and chai
 chai.add(chaiscript::const_var(somevar), "somevar"); // copied in and made const
@@ -301,7 +301,7 @@ p(5); // calls chaiscript's 'to_string' function, returning std::string("5")
 Note: backtick treats operators as normal functions
 
 ```cpp
-auto p = chai.eval<std::function<int (int, int)>>(`+`); 
+auto p = chai.eval<std::function<int (int, int)>>("`+`"); 
 p(5, 6); // calls chaiscript's '+' function, returning 11
 ```
 
