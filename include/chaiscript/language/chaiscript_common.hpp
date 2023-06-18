@@ -26,6 +26,10 @@
 
 namespace chaiscript {
   struct AST_Node;
+  struct AST_Node_Trace;
+  namespace exception {
+    struct eval_error;
+  }
 } // namespace chaiscript
 
 namespace chaiscript {
@@ -166,11 +170,104 @@ namespace chaiscript {
     std::shared_ptr<std::string> filename;
   };
 
+  /// \brief Struct that doubles as both a parser ast_node and an AST node.
+  struct AST_Node {
+  public:
+    const AST_Node_Type identifier;
+    const std::string text;
+    Parse_Location location;
+
+    const std::string &filename() const noexcept { return *location.filename; }
+
+    const File_Position &start() const noexcept { return location.start; }
+
+    const File_Position &end() const noexcept { return location.end; }
+
+    std::string pretty_print() const {
+      std::ostringstream oss;
+
+      oss << text;
+
+      for (auto &elem : get_children()) {
+        oss << elem.get().pretty_print() << ' ';
+      }
+
+      return oss.str();
+    }
+
+    virtual std::vector<std::reference_wrapper<AST_Node>> get_children() const = 0;
+    virtual Boxed_Value eval(const chaiscript::detail::Dispatch_State &t_e) const = 0;
+
+    /// Prints the contents of an AST node, including its children, recursively
+    std::string to_string(const std::string &t_prepend = "") const {
+      std::ostringstream oss;
+
+      oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") " << this->text << " : " << this->location.start.line
+          << ", " << this->location.start.column << '\n';
+
+      for (auto &elem : get_children()) {
+        oss << elem.get().to_string(t_prepend + "  ");
+      }
+      return oss.str();
+    }
+
+    static inline bool get_bool_condition(const Boxed_Value &t_bv, const chaiscript::detail::Dispatch_State &t_ss);
+
+    virtual ~AST_Node() noexcept = default;
+    AST_Node(AST_Node &&) = default;
+    AST_Node &operator=(AST_Node &&) = delete;
+    AST_Node(const AST_Node &) = delete;
+    AST_Node &operator=(const AST_Node &) = delete;
+
+  protected:
+    AST_Node(std::string t_ast_node_text, AST_Node_Type t_id, Parse_Location t_loc)
+        : identifier(t_id)
+        , text(std::move(t_ast_node_text))
+        , location(std::move(t_loc)) {
+    }
+  };
+
   /// \brief Typedef for pointers to AST_Node objects. Used in building of the AST_Node tree
   using AST_NodePtr = std::unique_ptr<AST_Node>;
   using AST_NodePtr_Const = std::unique_ptr<const AST_Node>;
 
-  struct AST_Node_Trace;
+  struct AST_Node_Trace {
+    const AST_Node_Type identifier;
+    const std::string text;
+    Parse_Location location;
+
+    const std::string &filename() const noexcept { return *location.filename; }
+
+    const File_Position &start() const noexcept { return location.start; }
+
+    const File_Position &end() const noexcept { return location.end; }
+
+    std::string pretty_print() const {
+      std::ostringstream oss;
+
+      oss << text;
+
+      for (const auto &elem : children) {
+        oss << elem.pretty_print() << ' ';
+      }
+
+      return oss.str();
+    }
+
+    std::vector<AST_Node_Trace> get_children(const AST_Node &node) {
+      const auto node_children = node.get_children();
+      return std::vector<AST_Node_Trace>(node_children.begin(), node_children.end());
+    }
+
+    AST_Node_Trace(const AST_Node &node)
+        : identifier(node.identifier)
+        , text(node.text)
+        , location(node.location)
+        , children(get_children(node)) {
+    }
+
+    std::vector<AST_Node_Trace> children;
+  };
 
   /// \brief Classes which may be thrown during error cases when ChaiScript is executing.
   namespace exception {
@@ -495,106 +592,14 @@ namespace chaiscript {
 
   } // namespace exception
 
-  /// \brief Struct that doubles as both a parser ast_node and an AST node.
-  struct AST_Node {
-  public:
-    const AST_Node_Type identifier;
-    const std::string text;
-    Parse_Location location;
-
-    const std::string &filename() const noexcept { return *location.filename; }
-
-    const File_Position &start() const noexcept { return location.start; }
-
-    const File_Position &end() const noexcept { return location.end; }
-
-    std::string pretty_print() const {
-      std::ostringstream oss;
-
-      oss << text;
-
-      for (auto &elem : get_children()) {
-        oss << elem.get().pretty_print() << ' ';
-      }
-
-      return oss.str();
-    }
-
-    virtual std::vector<std::reference_wrapper<AST_Node>> get_children() const = 0;
-    virtual Boxed_Value eval(const chaiscript::detail::Dispatch_State &t_e) const = 0;
-
-    /// Prints the contents of an AST node, including its children, recursively
-    std::string to_string(const std::string &t_prepend = "") const {
-      std::ostringstream oss;
-
-      oss << t_prepend << "(" << ast_node_type_to_string(this->identifier) << ") " << this->text << " : " << this->location.start.line
-          << ", " << this->location.start.column << '\n';
-
-      for (auto &elem : get_children()) {
-        oss << elem.get().to_string(t_prepend + "  ");
-      }
-      return oss.str();
-    }
-
-    static bool get_bool_condition(const Boxed_Value &t_bv, const chaiscript::detail::Dispatch_State &t_ss) {
+  //static
+  bool AST_Node::get_bool_condition(const Boxed_Value &t_bv, const chaiscript::detail::Dispatch_State &t_ss) {
       try {
         return t_ss->boxed_cast<bool>(t_bv);
       } catch (const exception::bad_boxed_cast &) {
         throw exception::eval_error("Condition not boolean");
       }
-    }
-
-    virtual ~AST_Node() noexcept = default;
-    AST_Node(AST_Node &&) = default;
-    AST_Node &operator=(AST_Node &&) = delete;
-    AST_Node(const AST_Node &) = delete;
-    AST_Node &operator=(const AST_Node &) = delete;
-
-  protected:
-    AST_Node(std::string t_ast_node_text, AST_Node_Type t_id, Parse_Location t_loc)
-        : identifier(t_id)
-        , text(std::move(t_ast_node_text))
-        , location(std::move(t_loc)) {
-    }
-  };
-
-  struct AST_Node_Trace {
-    const AST_Node_Type identifier;
-    const std::string text;
-    Parse_Location location;
-
-    const std::string &filename() const noexcept { return *location.filename; }
-
-    const File_Position &start() const noexcept { return location.start; }
-
-    const File_Position &end() const noexcept { return location.end; }
-
-    std::string pretty_print() const {
-      std::ostringstream oss;
-
-      oss << text;
-
-      for (const auto &elem : children) {
-        oss << elem.pretty_print() << ' ';
-      }
-
-      return oss.str();
-    }
-
-    std::vector<AST_Node_Trace> get_children(const AST_Node &node) {
-      const auto node_children = node.get_children();
-      return std::vector<AST_Node_Trace>(node_children.begin(), node_children.end());
-    }
-
-    AST_Node_Trace(const AST_Node &node)
-        : identifier(node.identifier)
-        , text(node.text)
-        , location(node.location)
-        , children(get_children(node)) {
-    }
-
-    std::vector<AST_Node_Trace> children;
-  };
+  }
 
   namespace parser {
     class ChaiScript_Parser_Base {
