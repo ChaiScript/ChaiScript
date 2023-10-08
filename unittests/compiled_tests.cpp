@@ -1032,7 +1032,7 @@ TEST_CASE("Use unique_ptr") {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
 
   chai.add(chaiscript::fun([](int &i) { ++i; }), "inci");
-  chai.add(chaiscript::fun([](int i) { ++i; }), "copyi");
+  chai.add(chaiscript::fun([]([[maybe_unused]] int i) { ++i; }), "copyi");
   chai.add(chaiscript::fun([](int *i) { ++(*i); }), "derefi");
   chai.add(chaiscript::fun([](const std::unique_ptr<int> &i) { ++(*i); }), "constrefuniqptri");
   chai.add(chaiscript::fun([](std::unique_ptr<int> &i) { ++(*i); }), "refuniqptri");

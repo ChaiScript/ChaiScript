@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 cmake_policy(SET CMP0054 NEW)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # required since cmake 3.4 at least for libc++
@@ -167,7 +167,7 @@ if(MSVC)
 else()
   add_definitions(-Wall -Wextra -Wconversion -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wcast-qual -Wunused -Woverloaded-virtual -Wno-noexcept-type -Wpedantic -Werror=return-type)
 
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
     add_definitions(-Weverything -Wno-c++98-compat-pedantic  -Wno-c++98-compat -Wno-documentation -Wno-switch-enum -Wno-weak-vtables -Wno-missing-prototypes -Wno-padded -Wno-missing-noreturn -Wno-exit-time-destructors -Wno-documentation-unknown-command -Wno-unused-template -Wno-undef -Wno-double-promotion)
   else()
     add_definitions(-Wnoexcept)
