@@ -48,7 +48,7 @@ chai.add(chaiscript::fun<ReturnType (ParamType1, ParamType2)>(&function_with_ove
 ```cpp
 chai.add(chaiscript::fun(static_cast<ReturnType (*)(ParamType1, ParamType2)>(&function_with_overloads)), "function_name");
 ```
-This overload technique is also used when exposing base member using derived type
+This overload technique is also used when exposing base members using derived type
 
 ```cpp
 struct Base
@@ -90,7 +90,7 @@ chai.add(chaiscript::user_type<MyClass>(), "MyClass");
 
 ## Adding Type Conversions
 
-User defined type conversions are possible, defined in either script or in C++.
+User-defined type conversions are possible, defined in either script or in C++.
 
 
 
@@ -111,7 +111,7 @@ Invoking a C++ type conversion possible with `static_cast`
 chai.add(chaiscript::type_conversion<T, bool>());
 ```
 
-Calling a user defined type conversion that takes a lambda
+Calling a user-defined type conversion that takes a lambda
 
 ```cpp
 chai.add(chaiscript::type_conversion<TestBaseType, Type2>([](const TestBaseType &t_bt) { /* return converted thing */ }));
@@ -183,7 +183,7 @@ print(math.pi) // prints 3.14159
 ```
 
 # Using STL
-ChaiScript recognize many types from STL, but you have to add specific instantiation yourself.
+ChaiScript recognizes many types from STL, but you have to add specific instantiation yourself.
 
 ```cpp
 typedef std::vector<std::pair<int, std::string>> data_list;
@@ -286,7 +286,7 @@ try {
 } catch (float) {
 } catch (const std::string &) {
 } catch (const std::exception &e) {
-  // This is the one what will be called in the specific throw() above
+  // This is the one that will be called in the specific throw() above
 }
 ```
 
@@ -388,9 +388,9 @@ switch (myvalue) {
 }
 ```
 
-## Built in Types
+## Built-in Types
 
-There are a number of build-in types that are part of ChaiScript.
+There are a number of built-in types that are part of ChaiScript.
 
 ### Vectors and Maps
 
@@ -427,7 +427,7 @@ on your platform.
 ## Functions
 
 Note that any type of ChaiScript function can be passed freely to C++ and automatically
-converted into an `std::function` object.
+converted into a `std::function` object.
 
 ### General 
 
@@ -580,7 +580,7 @@ If both a 2 parameter and a 3 parameter signature match, the 3 parameter functio
  * `__FUNC__` Name of current function
 
 
-# Built In Functions
+# Built-in Functions
 
 ## Evaluation
 
