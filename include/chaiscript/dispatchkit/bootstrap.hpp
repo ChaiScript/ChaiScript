@@ -384,6 +384,7 @@ namespace chaiscript::bootstrap {
       m.add(fun(&Type_Info::is_arithmetic), "is_type_arithmetic");
       m.add(fun(&Type_Info::name), "cpp_name");
       m.add(fun(&Type_Info::bare_name), "cpp_bare_name");
+      m.add(fun(&Type_Info::demangled_name), "cpp_demangled_name");
       m.add(fun(&Type_Info::bare_equal), "bare_equal");
 
       basic_constructors<bool>("bool", m);
