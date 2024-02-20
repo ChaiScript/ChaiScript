@@ -568,48 +568,71 @@ TEST_CASE("Utility_Test utility class wrapper for enum") {
 
 ////// Object copy count test
 
-class Object_Copy_Count_Test {
-public:
-  Object_Copy_Count_Test() {
-    std::cout << "Object_Copy_Count_Test()\n";
-    ++constructcount();
-  }
+struct Object_Copy_Count_Test_State {
+  int ctor;
+  int copy_ctor;
+  int move_ctor;
+  int copy;
+  int move;
+  int dtor;
+};
 
-  Object_Copy_Count_Test(const Object_Copy_Count_Test &) {
-    std::cout << "Object_Copy_Count_Test(const Object_Copy_Count_Test &)\n";
-    ++copycount();
-  }
+bool operator==(const Object_Copy_Count_Test_State &s1, const Object_Copy_Count_Test_State &s2) {
+  return std::make_tuple(s1.ctor, s1.copy_ctor, s1.move_ctor, s1.copy, s1.move, s1.dtor) == std::make_tuple(s2.ctor, s2.copy_ctor, s2.move_ctor, s2.copy, s2.move, s2.dtor);
+}
 
-  Object_Copy_Count_Test(Object_Copy_Count_Test &&) {
-    std::cout << "Object_Copy_Count_Test(Object_Copy_Count_Test &&)\n";
-    ++movecount();
-  }
+std::ostream &operator<<(std::ostream &o, const Object_Copy_Count_Test_State &state) {
+  o << "ctor: " << state.ctor << " copy_ctor: " << state.copy_ctor << " move_ctor: " << state.move_ctor << " copy: " << state.copy << " move: " << state.move << " dtor: " << state.dtor << "\n";
+  return o;
+}
+
+struct Object_Copy_Count_Test {
+  Object_Copy_Count_Test() { state.ctor++; }
 
   ~Object_Copy_Count_Test() {
-    std::cout << "~Object_Copy_Count_Test()\n";
-    ++destructcount();
+    state.dtor++;
   }
 
-  static int &constructcount() {
-    static int c = 0;
-    return c;
+  Object_Copy_Count_Test(Object_Copy_Count_Test &&other) {
+    std::swap(state, other.state);
+    state.move_ctor++;
+  }
+  Object_Copy_Count_Test &operator=(Object_Copy_Count_Test &&other) {
+    std::swap(state, other.state);
+    state.move++;
+    return *this;
   }
 
-  static int &copycount() {
-    static int c = 0;
-    return c;
+  Object_Copy_Count_Test(const Object_Copy_Count_Test &other) {
+    state = other.state;
+    state.copy_ctor++;
+  }
+  Object_Copy_Count_Test &operator=(const Object_Copy_Count_Test &other) {
+    state = other.state;
+    state.copy++;
+    return *this;
   }
 
-  static int &movecount() {
-    static int c = 0;
-    return c;
-  }
-
-  static int &destructcount() {
-    static int c = 0;
-    return c;
-  }
+  static Object_Copy_Count_Test_State state;
 };
+Object_Copy_Count_Test_State Object_Copy_Count_Test::state = {};
+
+TEST_CASE("Test if objects are only copied if necessary") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+  chaiscript::utility::add_class<Object_Copy_Count_Test>(chai,
+                                                         "Object_Copy_Count_Test",
+                                                         {chaiscript::constructor<Object_Copy_Count_Test()>()},
+                                                         {});
+
+  Object_Copy_Count_Test::state = {};
+  {
+    Object_Copy_Count_Test_State state{};
+    chai.eval("{auto obj = Object_Copy_Count_Test();}");
+    state.ctor = 1;
+    state.dtor = 1;
+    CHECK(state == Object_Copy_Count_Test::state);
+  }
+}
 
 Object_Copy_Count_Test object_copy_count_create() {
   return Object_Copy_Count_Test();
@@ -626,12 +649,16 @@ TEST_CASE("Object copy counts") {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
   chai.add(m);
 
+  Object_Copy_Count_Test::state = {};
   chai.eval(" { auto i = create(); } ");
 
-  CHECK(Object_Copy_Count_Test::copycount() == 0);
-  CHECK(Object_Copy_Count_Test::constructcount() == 1);
-  CHECK(Object_Copy_Count_Test::destructcount() == 2);
-  CHECK(Object_Copy_Count_Test::movecount() == 1);
+  {
+    Object_Copy_Count_Test_State state{};
+    state.ctor = 1;
+    state.move_ctor = 1;
+    state.dtor = 2;
+    CHECK(state == Object_Copy_Count_Test::state);
+  }
 }
 
 ///////////////////// Object lifetime test 1

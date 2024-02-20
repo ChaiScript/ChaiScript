@@ -15,14 +15,17 @@
 namespace chaiscript::dispatch::detail {
   template<typename Class, typename... Params>
   Proxy_Function build_constructor_(Class (*)(Params...)) {
-    if constexpr (!std::is_copy_constructible_v<Class>) {
+    // is_copy_constructible is required to avoid compilation errors if classes cannot be copied
+    // is_trivially_destructible is required to avoid bugs if classes don't correctly implement
+    // copy or move. To avoid unexpected runtime behavior we allocate them as shared_ptrs.
+    if constexpr (!std::is_copy_constructible_v<Class> || !std::is_trivially_destructible_v<Class>) {
       auto call = [](auto &&...param) { return std::make_shared<Class>(std::forward<decltype(param)>(param)...); };
 
       return Proxy_Function(
           chaiscript::make_shared<dispatch::Proxy_Function_Base,
                                   dispatch::Proxy_Function_Callable_Impl<std::shared_ptr<Class>(Params...), decltype(call)>>(call));
     } else if constexpr (true) {
-      auto call = [](auto &&...param) { return Class(std::forward<decltype(param)>(param)...); };
+      auto call = [](auto &&...param) { return Class{std::forward<decltype(param)>(param)...}; };
 
       return Proxy_Function(
           chaiscript::make_shared<dispatch::Proxy_Function_Base, dispatch::Proxy_Function_Callable_Impl<Class(Params...), decltype(call)>>(
