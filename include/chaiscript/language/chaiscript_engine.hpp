@@ -236,6 +236,10 @@ namespace chaiscript {
     }
 
   public:
+     
+    /// \brief Virtual destructor for ChaiScript
+    virtual ~ChaiScript_Basic() = default;
+     
     /// \brief Constructor for ChaiScript
     /// \param[in] t_lib Standard library to apply to this ChaiScript instance
     /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
