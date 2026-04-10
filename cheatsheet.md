@@ -593,6 +593,126 @@ use("filename") // evals file exactly once and returns value of last statement
 
 Both `use` and `eval_file` search the 'usepaths' passed to the ChaiScript constructor
 
+## Reflection and Introspection
+
+ChaiScript provides built-in reflection capabilities for inspecting types, functions, and objects at runtime.
+
+### Type Inspection
+
+```
+type_name(x)            // returns the type name of a value as a string
+is_type(x, "typename")  // returns true if x is of the named type
+type("typename")        // returns a Type_Info object for the named type
+
+// Examples
+type_name(1)            // "int"
+type_name("hello")      // "string"
+is_type(1, "int")       // true
+is_type(1, "string")    // false
+```
+
+### Object Inspection Methods
+
+Every object in ChaiScript supports these methods:
+
+```
+x.get_type_info()     // returns a Type_Info object for the value
+x.is_type("string")   // returns true if x is of the named type
+x.is_type(string_type) // returns true if x matches the Type_Info
+x.is_var_const()      // returns true if x is immutable
+x.is_var_null()       // returns true if x is a null pointer
+x.is_var_pointer()    // returns true if x is stored as a pointer
+x.is_var_reference()  // returns true if x is stored as a reference
+x.is_var_undef()      // returns true if x is undefined
+```
+
+### Type_Info
+
+`Type_Info` objects describe a type. You can get them via `type("typename")` or `x.get_type_info()`.
+
+```
+var ti = type("int")
+ti.name()              // ChaiScript registered name, e.g. "int"
+ti.cpp_name()          // mangled C++ type name
+ti.cpp_bare_name()     // C++ name without const/pointer/reference
+ti.bare_equal(other)   // true if types match ignoring const/ptr/ref
+ti.is_type_const()     // true if type is const
+ti.is_type_reference() // true if type is a reference
+ti.is_type_void()      // true if type is void
+ti.is_type_undef()     // true if type is undefined
+ti.is_type_pointer()   // true if type is a pointer
+ti.is_type_arithmetic() // true if type is arithmetic (int, double, etc.)
+```
+
+Built-in type constants are available: `int_type`, `double_type`, `string_type`, `bool_type`, `Object_type`, `Function_type`, `vector_type`, `map_type`.
+
+### Function Introspection
+
+Function objects support these introspection methods:
+
+```
+f.get_arity()                // number of parameters (-1 for variadic)
+f.get_param_types()          // Vector of Type_Info (first element is return type)
+f.get_contained_functions()  // Vector of overloaded functions (empty if not a conglomerate)
+f.has_guard()                // true if the function has a guard condition
+f.get_guard()                // returns the guard function (throws if none)
+f.get_annotation()           // returns the annotation description
+f.call([param1, param2])     // call the function with a vector of parameters
+
+// Examples
+def my_func(a, b) { return a + b; }
+my_func.get_arity()          // 2
+my_func.has_guard()          // false
+
+def guarded(x) : x > 0 { return x; }
+guarded.has_guard()          // true
+guarded.get_guard().get_arity() // 1
+
+// Calling functions dynamically
+`+`.call([1, 2])             // 3
+```
+
+### System Introspection
+
+```
+get_functions()        // returns a Map of all registered functions (name -> function)
+get_objects()          // returns a Map of all scripting objects (name -> value)
+function_exists("f")   // returns true if a function named "f" is registered
+call_exists(`f`, args) // returns true if f can be called with the given args
+dump_system()          // prints all registered functions to stdout
+dump_object(x)         // prints information about a value to stdout
+
+// Examples
+var funcs = get_functions()
+funcs["print"]                  // the print function object
+function_exists("print")        // true
+call_exists(`+`, 1, 2)          // true
+```
+
+### Dynamic_Object Reflection
+
+ChaiScript-defined classes are Dynamic_Objects internally. They support:
+
+```
+obj.get_type_name()    // returns the ChaiScript class name (e.g. "MyClass")
+obj.get_attrs()        // returns a Map of all attributes
+obj.has_attr("name")   // returns true if the attribute exists
+obj.get_attr("name")   // returns the value of the attribute
+obj.set_explicit(true) // disables dynamic attribute creation
+obj.is_explicit()      // returns true if explicit mode is enabled
+
+// Example
+class MyClass {
+  var x
+  def MyClass() { this.x = 10; }
+}
+var m = MyClass()
+m.get_type_name()      // "MyClass"
+m.get_attrs()          // map containing "x" -> 10
+type_name(m)           // "Dynamic_Object" (the underlying C++ type)
+m.is_type("MyClass")   // true (checks the ChaiScript class name)
+```
+
 ## JSON
 
  * `from_json` converts a JSON string into its strongly typed (map, vector, int, double, string) representations
