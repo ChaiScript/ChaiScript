@@ -1,0 +1,23 @@
+// Basic raw string
+assert_equal("hello", R"(hello)")
+
+// Raw string with no interpolation
+assert_equal("\${5+5}", R"(${5+5})")
+
+// Raw string preserves backslashes
+assert_equal("hello\\nworld", R"(hello\nworld)")
+
+// Raw string with custom delimiter
+assert_equal("hello)world", R"foo(hello)world)foo")
+
+// Raw string with quotes inside
+assert_equal("he said \"hi\"", R"(he said "hi")")
+
+// Raw string with dollar signs
+assert_equal("cost is \$100", R"(cost is $100)")
+
+// Empty raw string
+assert_equal("", R"()")
+
+// Raw string with backslash-dollar
+assert_equal("\\\${foo}", R"(\${foo})")
