@@ -233,6 +233,12 @@ namespace chaiscript {
         }
       }
 
+      /// Returns the Dynamic_Object type name this function is bound to, or empty string if not a Dynamic_Object function
+      virtual const std::string &dynamic_object_type_name() const noexcept {
+        static const std::string empty;
+        return empty;
+      }
+
       virtual bool compare_first_type(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const noexcept {
         /// TODO is m_types guaranteed to be at least 2??
         return compare_type_to_param(m_types[1], bv, t_conversions);

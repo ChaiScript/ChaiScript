@@ -16,7 +16,6 @@
 #include <map>
 #include <memory>
 #include <ostream>
-#include <set>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -837,60 +836,16 @@ namespace chaiscript {
         const bool has_base_class = (this->children.size() == 3);
         const auto &block = has_base_class ? this->children[2] : this->children[1];
 
-        // Evaluate the class block first (registers derived-specific methods/attrs)
-        block->eval(t_ss);
-
+        // Register inheritance before evaluating the class body so that
+        // function dispatch ordering can account for the relationship
         if (has_base_class) {
           const auto &base_name = this->children[1]->text;
           dispatch::Dynamic_Object::register_inheritance(class_name, base_name);
-          copy_base_functions(*t_ss, base_name, class_name);
         }
+
+        block->eval(t_ss);
 
         return void_var();
-      }
-
-    private:
-      /// Collect the set of method/attr names already defined for a given dynamic object type
-      static std::set<std::string> get_defined_method_names(chaiscript::detail::Dispatch_Engine &t_engine,
-                                                            const std::string &type_name) {
-        std::set<std::string> names;
-        for (const auto &[func_name, func] : t_engine.get_functions()) {
-          const auto *dof = dynamic_cast<const dispatch::detail::Dynamic_Object_Function *>(func.get());
-          if (dof && dof->get_dynamic_object_type_name() == type_name) {
-            names.insert(func_name);
-          }
-        }
-        return names;
-      }
-
-      /// Copy base class methods and attributes to derived class, skipping overrides
-      static void copy_base_functions(chaiscript::detail::Dispatch_Engine &t_engine,
-                                      const std::string &base_name,
-                                      const std::string &derived_name) {
-        const auto derived_methods = get_defined_method_names(t_engine, derived_name);
-        const auto functions = t_engine.get_functions();
-
-        for (const auto &[func_name, func] : functions) {
-          const auto *dof = dynamic_cast<const dispatch::detail::Dynamic_Object_Function *>(func.get());
-          if (dof && dof->get_dynamic_object_type_name() == base_name) {
-            // Skip if derived class already defines this method/attr
-            if (derived_methods.count(func_name) > 0) {
-              continue;
-            }
-            auto contained = dof->get_contained_functions();
-            if (!contained.empty()) {
-              try {
-                t_engine.add(std::make_shared<dispatch::detail::Dynamic_Object_Function>(
-                                 derived_name,
-                                 std::const_pointer_cast<dispatch::Proxy_Function_Base>(contained[0]),
-                                 dof->is_attribute_function()),
-                             func_name);
-              } catch (const chaiscript::exception::name_conflict_error &) {
-                // already registered, skip
-              }
-            }
-          }
-        }
       }
     };
 

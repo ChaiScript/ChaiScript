@@ -1060,6 +1060,19 @@ namespace chaiscript {
           return true;
         }
 
+        // Sort more-derived Dynamic_Object types before base types so that
+        // overridden methods in derived classes are tried first during dispatch
+        const auto &lhs_dotn = lhs->dynamic_object_type_name();
+        const auto &rhs_dotn = rhs->dynamic_object_type_name();
+        if (!lhs_dotn.empty() && !rhs_dotn.empty() && lhs_dotn != rhs_dotn) {
+          if (dispatch::Dynamic_Object::type_matches(lhs_dotn, rhs_dotn)) {
+            return true; // lhs is derived from rhs, so lhs is more specific
+          }
+          if (dispatch::Dynamic_Object::type_matches(rhs_dotn, lhs_dotn)) {
+            return false; // rhs is derived from lhs, so rhs is more specific
+          }
+        }
+
         const auto &lhsparamtypes = lhs->get_param_types();
         const auto &rhsparamtypes = rhs->get_param_types();
 
