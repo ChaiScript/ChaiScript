@@ -1,4 +1,4 @@
-// Test for class features documented in the cheatsheet (issue #591)
+// Test for class features documented in the cheatsheet
 
 // --- Class definition (preferred block syntax) ---
 class Rectangle {
