@@ -38,9 +38,18 @@
 namespace chaiscript {
   class Std_Lib {
   public:
-    [[nodiscard]] static ModulePtr library() {
+    [[nodiscard]] static ModulePtr library(const std::vector<Options> &t_opts = {}) {
+      if (std::find(t_opts.begin(), t_opts.end(), Options::No_Stdlib) != t_opts.end()) {
+        return std::make_shared<Module>();
+      }
+
       auto lib = std::make_shared<Module>();
-      bootstrap::Bootstrap::bootstrap(*lib);
+
+      const bool no_io = std::find(t_opts.begin(), t_opts.end(), Options::No_IO) != t_opts.end();
+      const bool no_prelude = std::find(t_opts.begin(), t_opts.end(), Options::No_Prelude) != t_opts.end();
+      const bool no_json = std::find(t_opts.begin(), t_opts.end(), Options::No_JSON) != t_opts.end();
+
+      bootstrap::Bootstrap::bootstrap(*lib, no_io);
 
       bootstrap::standard_library::vector_type<std::vector<Boxed_Value>>("Vector", *lib);
       bootstrap::standard_library::string_type<std::string>("string", *lib);
@@ -54,9 +63,13 @@ namespace chaiscript {
                "async");
 #endif
 
-      json_wrap::library(*lib);
+      if (!no_json) {
+        json_wrap::library(*lib);
+      }
 
-      lib->eval(ChaiScript_Prelude::chaiscript_prelude() /*, "standard prelude"*/);
+      if (!no_prelude) {
+        lib->eval(ChaiScript_Prelude::chaiscript_prelude() /*, "standard prelude"*/);
+      }
 
       return lib;
     }

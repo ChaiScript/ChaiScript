@@ -825,7 +825,7 @@ namespace chaiscript {
     ChaiScript(std::vector<std::string> t_modulepaths = {},
                std::vector<std::string> t_usepaths = {},
                std::vector<Options> t_opts = chaiscript::default_options())
-        : ChaiScript_Basic(chaiscript::Std_Lib::library(),
+        : ChaiScript_Basic(chaiscript::Std_Lib::library(t_opts),
                            std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer_Default>>(),
                            std::move(t_modulepaths),
                            std::move(t_usepaths),

@@ -1283,3 +1283,93 @@ TEST_CASE("Test if non copyable/movable types can be registered") {
   chai.add(chaiscript::user_type<Nothing>(), "Nothing");
   chai.add(chaiscript::constructor<Nothing()>(), "Nothing");
 }
+
+// Tests for issue #146: configuration to bypass registering built-in functions
+
+TEST_CASE("No_Stdlib option disables all standard library functions") {
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Options::No_Stdlib}),
+                                    create_chaiscript_parser(),
+                                    {},
+                                    {},
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+
+  // Core types should still work (they are part of bootstrap)
+  CHECK_NOTHROW(chai.eval("var x = 5"));
+
+  // print should not exist
+  CHECK_THROWS(chai.eval("print(\"hello\")"));
+
+  // Vector should not exist
+  CHECK_THROWS(chai.eval("var v = Vector()"));
+
+  // String methods from prelude should not exist
+  CHECK_THROWS(chai.eval("\"hello\".trim()"));
+
+  // JSON should not exist
+  CHECK_THROWS(chai.eval("from_json(\"[1,2,3]\")"));
+}
+
+TEST_CASE("No_IO option disables print functions") {
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Options::No_IO}),
+                                    create_chaiscript_parser(),
+                                    {},
+                                    {},
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+
+  // print_string and println_string should not exist
+  CHECK_THROWS(chai.eval("print_string(\"hello\")"));
+  CHECK_THROWS(chai.eval("println_string(\"hello\")"));
+
+  // Other functionality should still work
+  CHECK(chai.eval<int>("5 + 3") == 8);
+  CHECK_NOTHROW(chai.eval("var v = Vector()"));
+}
+
+TEST_CASE("No_Prelude option disables prelude functions") {
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Options::No_Prelude}),
+                                    create_chaiscript_parser(),
+                                    {},
+                                    {},
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+
+  // print (from prelude) should not exist
+  CHECK_THROWS(chai.eval("print(\"hello\")"));
+
+  // But print_string (from bootstrap) should still work
+  CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
+
+  // Prelude utility functions should not exist
+  CHECK_THROWS(chai.eval("filter([1,2,3], fun(x) { x > 1 })"));
+
+  // Core arithmetic should still work
+  CHECK(chai.eval<int>("5 + 3") == 8);
+}
+
+TEST_CASE("No_JSON option disables JSON support") {
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Options::No_JSON}),
+                                    create_chaiscript_parser(),
+                                    {},
+                                    {},
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+
+  // JSON functions should not exist
+  CHECK_THROWS(chai.eval("from_json(\"[1,2,3]\")"));
+
+  // Other functionality should still work
+  CHECK(chai.eval<int>("5 + 3") == 8);
+  CHECK_NOTHROW(chai.eval("print(\"hello\")"));
+}
+
+TEST_CASE("Default library has all functions") {
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library(),
+                                    create_chaiscript_parser(),
+                                    {},
+                                    {},
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+
+  // Everything should work with default options
+  CHECK_NOTHROW(chai.eval("print(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("var v = Vector()"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+}
