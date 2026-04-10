@@ -550,6 +550,41 @@ namespace chaiscript {
     };
 
     template<typename T>
+    struct Const_Var_Decl_AST_Node final : AST_Node_Impl<T> {
+      Const_Var_Decl_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children)
+          : AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Const_Var_Decl, std::move(t_loc), std::move(t_children)) {
+      }
+
+      Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &) const override {
+        throw exception::eval_error("const variables must be initialized at declaration");
+      }
+    };
+
+    template<typename T>
+    struct Const_Assign_Decl_AST_Node final : AST_Node_Impl<T> {
+      Const_Assign_Decl_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children)
+          : AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Const_Assign_Decl, std::move(t_loc), std::move(t_children)) {
+      }
+
+      Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
+        const std::string &idname = this->children[0]->text;
+
+        try {
+          Boxed_Value bv(detail::clone_if_necessary(this->children[1]->eval(t_ss), m_loc, t_ss));
+          bv.reset_return_value();
+          bv.make_const();
+          t_ss.add_object(idname, bv);
+          return bv;
+        } catch (const exception::name_conflict_error &e) {
+          throw exception::eval_error("Variable redefined '" + e.name() + "'");
+        }
+      }
+
+    private:
+      mutable std::atomic_uint_fast32_t m_loc = {0};
+    };
+
+    template<typename T>
     struct Array_Call_AST_Node final : AST_Node_Impl<T> {
       Array_Call_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children)
           : AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Array_Call, std::move(t_loc), std::move(t_children)) {
