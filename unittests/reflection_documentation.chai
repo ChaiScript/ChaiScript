@@ -1,0 +1,123 @@
+
+// Tests for ChaiScript reflection / introspection capabilities
+// Ensures all documented reflection functions work correctly
+
+// --- Global reflection functions ---
+
+// type_name: returns the type name of a value
+assert_equal("int", type_name(1))
+assert_equal("string", type_name("hello"))
+assert_equal("bool", type_name(true))
+assert_equal("double", type_name(1.0))
+
+// is_type: checks if a value is of the given type
+assert_true(is_type(1, "int"))
+assert_true(is_type("hello", "string"))
+assert_false(is_type(1, "string"))
+
+// function_exists: checks if a named function is registered
+assert_true(function_exists("print"))
+assert_true(function_exists("type_name"))
+assert_true(function_exists("function_exists"))
+assert_false(function_exists("this_function_does_not_exist_xyz"))
+
+// get_functions: returns a Map of all registered functions
+var funcs = get_functions()
+assert_true(funcs.size() > 0)
+assert_true(funcs.count("print") > 0)
+assert_true(funcs.count("type_name") > 0)
+
+// get_objects: returns a Map of all scripting objects
+var my_test_var = 42
+var objs = get_objects()
+assert_true(objs.size() > 0)
+assert_true(objs.count("my_test_var") > 0)
+
+// type: returns a Type_Info for a named type
+var ti = type("int")
+assert_equal("int", ti.name())
+
+// call_exists: checks if a function call with given params exists
+assert_true(call_exists(`+`, 1, 2))
+assert_true(call_exists(`+`, "a", "b"))
+
+// --- Object methods ---
+
+// get_type_info: returns Type_Info for a value
+var s = "hello"
+assert_equal("string", s.get_type_info().name())
+assert_equal("int", 1.get_type_info().name())
+
+// is_type on objects
+assert_true("hello".is_type("string"))
+assert_true(1.is_type("int"))
+assert_false(1.is_type("string"))
+
+// is_type with Type_Info
+assert_true("hello".is_type(string_type))
+assert_true(1.is_type(int_type))
+
+// is_var_* methods
+var x = 5
+assert_false(x.is_var_const())
+assert_false(x.is_var_null())
+assert_false(x.is_var_undef())
+
+// --- Type_Info methods ---
+var int_ti = type("int")
+assert_equal("int", int_ti.name())
+assert_false(int_ti.is_type_const())
+assert_false(int_ti.is_type_void())
+assert_false(int_ti.is_type_undef())
+assert_false(int_ti.is_type_reference())
+assert_false(int_ti.is_type_pointer())
+
+// bare_equal: compares types ignoring const/pointer/reference
+assert_true(int_ti.bare_equal(1.get_type_info()))
+
+// --- Function introspection ---
+
+def my_reflection_test_func(a, b) { return a + b; }
+
+// get_arity
+assert_equal(2, my_reflection_test_func.get_arity())
+
+// get_param_types
+var param_types = my_reflection_test_func.get_param_types()
+assert_true(param_types.size() > 0)
+
+// get_contained_functions
+assert_equal(0, my_reflection_test_func.get_contained_functions().size())
+
+// has_guard
+assert_false(my_reflection_test_func.has_guard())
+
+// Guarded function
+def my_guarded_func(x) : x > 0 { return x; }
+assert_true(my_guarded_func.has_guard())
+var g = my_guarded_func.get_guard()
+assert_equal(1, g.get_arity())
+
+// call: invoke a function with a vector of parameters
+assert_equal(3, `+`.call([1, 2]))
+
+// --- Dynamic_Object reflection ---
+var obj = Dynamic_Object()
+obj.name = "test"
+obj.value = 42
+var attrs = obj.get_attrs()
+assert_true(attrs.count("name") > 0)
+assert_true(attrs.count("value") > 0)
+
+// --- Class reflection ---
+class ReflectionTestClass {
+  var x
+  def ReflectionTestClass() { this.x = 10; }
+  def get_x() { return this.x; }
+}
+
+var rtc = ReflectionTestClass()
+assert_equal("ReflectionTestClass", rtc.get_type_name())
+assert_true(rtc.is_type("ReflectionTestClass"))
+assert_equal("Dynamic_Object", type_name(rtc))
+assert_equal("ReflectionTestClass", rtc.get_type_name())
