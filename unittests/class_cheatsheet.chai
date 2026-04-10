@@ -1,0 +1,103 @@
+// Test for class features documented in the cheatsheet (issue #591)
+
+// --- Class definition (preferred block syntax) ---
+class Rectangle {
+  var width
+  var height
+  def Rectangle(w, h) { this.width = w; this.height = h; }
+  def Rectangle() { this.width = 0; this.height = 0; }
+  def area() { this.width * this.height; }
+}
+
+auto r = Rectangle(3, 4)
+assert_equal(12, r.area())
+
+// --- Default constructor ---
+auto r2 = Rectangle()
+assert_equal(0, r2.area())
+
+// --- Alternative open syntax ---
+attr Circle::radius
+def Circle::Circle(r) { this.radius = r; }
+def Circle::circumference() { 2.0 * 3.14159 * this.radius; }
+
+auto c = Circle(5.0)
+assert_equal(5.0, c.radius)
+
+// --- attr, auto, var all work for attributes ---
+class AttrTest {
+  attr a
+  auto b
+  var c
+  def AttrTest() { this.a = 1; this.b = 2; this.c = 3; }
+}
+
+auto at = AttrTest()
+assert_equal(1, at.a)
+assert_equal(2, at.b)
+assert_equal(3, at.c)
+
+// --- Constructor guards ---
+class Clamped {
+  var value
+  def Clamped(x) : x >= 0 { this.value = x; }
+  def Clamped(x) { this.value = 0; }
+}
+
+assert_equal(5, Clamped(5).value)
+assert_equal(0, Clamped(-3).value)
+
+// --- Method guards ---
+class Abs {
+  var x
+  def Abs(v) { this.x = v; }
+  def get() : this.x >= 0 { this.x; }
+  def get() { -this.x; }
+}
+
+assert_equal(5, Abs(5).get())
+assert_equal(3, Abs(-3).get())
+
+// --- Operator overloading ---
+class Vec2 {
+  var x
+  var y
+  def Vec2(x, y) { this.x = x; this.y = y; }
+  def `+`(other) { Vec2(this.x + other.x, this.y + other.y); }
+}
+
+auto v = Vec2(1, 2) + Vec2(3, 4)
+assert_equal(4, v.x)
+assert_equal(6, v.y)
+
+// --- Cloning objects ---
+auto r3 = Rectangle(10, 20)
+auto r4 = clone(r3)
+r4.width = 99
+assert_equal(10, r3.width)
+assert_equal(99, r4.width)
+
+// --- Dynamic attributes ---
+auto r5 = Rectangle(1, 1)
+r5.color = "red"
+assert_equal("red", r5.color)
+
+// --- Explicit mode ---
+class Strict {
+  var x
+  def Strict() {
+    this.x = 0
+    this.set_explicit(true)
+  }
+}
+
+auto s = Strict()
+assert_equal(0, s.x)
+assert_equal(true, s.is_explicit())
+
+try {
+  s.y = 10
+  assert_equal(true, false) // should not reach here
+} catch(e) {
+  // expected: cannot add dynamic attribute in explicit mode
+}

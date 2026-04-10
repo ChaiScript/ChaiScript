@@ -477,34 +477,109 @@ n(2); // returns 20
 
 
 
-## ChaiScript Defined Types
+## ChaiScript Defined Types (Classes)
 
-Define a type called "MyType" with one member value "a" and a getter
+ChaiScript supports user-defined types using the `class` keyword. Classes can have attributes,
+constructors, methods, guards, and operator overloads. There is no inheritance between
+ChaiScript-defined types, but C++ class hierarchies can be exposed (see *Class Hierarchies* above).
 
-### Preferred
+### Class Definition (Block Syntax)
 
-```
-class MyType {
-  var value;
-  def MyType() { this.value = "a"; }
-  def get_value() { "Value Is: " + this.value; }
-};
-```
-
-### Alternative 
+Define a type with attributes, a constructor, and methods inside a `class` block.
+The keywords `var`, `attr`, and `auto` are interchangeable for declaring attributes.
 
 ```
-attr MyType::value;
-def MyType::MyType() { this.value = "a"; }
-def MyType::get_value() { "Value Is: " + this.value; }
+class Rectangle {
+  var width
+  var height
+  def Rectangle(w, h) { this.width = w; this.height = h; }
+  def Rectangle() { this.width = 0; this.height = 0; }
+  def area() { this.width * this.height; }
+}
+
+var r = Rectangle(3, 4)
+print(r.area()) // prints 12
+```
+
+### Class Definition (Open Syntax)
+
+Equivalently, attributes and methods can be defined outside a block using the `TypeName::` prefix.
+
+```
+attr Circle::radius
+def Circle::Circle(r) { this.radius = r; }
+def Circle::circumference() { 2.0 * 3.14159 * this.radius; }
+```
+
+Methods can also be added to an existing class after its initial definition:
+
+```
+def Rectangle::perimeter() { 2 * (this.width + this.height); }
 ```
 
 ### Using
 
 ```
-var m = MyType(); // calls constructor
-print(m.get_value()); // prints "Value Is: a"
-print(get_value(m)); // prints "Value Is: a"
+var m = Rectangle(5, 10)
+print(m.area())       // prints 50 — method call syntax
+print(area(m))        // prints 50 — function call syntax (equivalent)
+```
+
+### Constructor and Method Guards
+
+Constructors and methods can have guard expressions (after `:`) that control which
+overload is selected at call time.
+
+```
+class Clamped {
+  var value
+  def Clamped(x) : x >= 0 { this.value = x; }
+  def Clamped(x) { this.value = 0; }  // fallback when guard fails
+}
+
+Clamped(5).value   // 5
+Clamped(-3).value  // 0
+
+class Abs {
+  var x
+  def Abs(v) { this.x = v; }
+  def get() : this.x >= 0 { this.x; }
+  def get() { -this.x; }
+}
+```
+
+### Operator Overloading
+
+Operators can be overloaded on user-defined types using backtick-quoted operator names.
+
+```
+class Vec2 {
+  var x
+  var y
+  def Vec2(x, y) { this.x = x; this.y = y; }
+  def `+`(other) { Vec2(this.x + other.x, this.y + other.y); }
+}
+
+var v = Vec2(1, 2) + Vec2(3, 4)  // v.x == 4, v.y == 6
+```
+
+Operators can also be overloaded as free functions with guards:
+
+```
+def `-`(a, b) : is_type(a, "Vec2") && is_type(b, "Vec2") {
+  Vec2(a.x - b.x, a.y - b.y)
+}
+```
+
+### Cloning Objects
+
+Use `clone()` to create a deep copy of a ChaiScript-defined object.
+
+```
+var original = Rectangle(10, 20)
+var copy = clone(original)
+copy.width = 99
+print(original.width)  // still 10
 ```
 
 ## Dynamic Objects
