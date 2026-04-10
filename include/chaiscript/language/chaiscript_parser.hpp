@@ -1908,6 +1908,13 @@ namespace chaiscript {
 
           const auto class_name = m_match_stack.back()->text;
 
+          // Optionally parse ': BaseClassName' for inheritance
+          if (Char(':')) {
+            if (!Id(true)) {
+              throw exception::eval_error("Missing base class name in definition", File_Position(m_position.line, m_position.col), *m_filename);
+            }
+          }
+
           while (Eol()) {
           }
 

@@ -120,7 +120,7 @@ namespace chaiscript {
             if (bv.get_type_info().bare_equal(dynamic_object_type_info)) {
               try {
                 const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bv, &t_conversions);
-                if (!(name == "Dynamic_Object" || d.get_type_name() == name)) {
+                if (!(name == "Dynamic_Object" || Dynamic_Object::type_matches(d.get_type_name(), name))) {
                   return std::make_pair(false, false);
                 }
               } catch (const std::bad_cast &) {

@@ -1,0 +1,60 @@
+
+class Base
+{
+  attr x
+
+  def Base()
+  {
+    this.x = 10
+  }
+
+  def do_something()
+  {
+    return this.x * 2
+  }
+}
+
+class Derived : Base
+{
+  attr y
+
+  def Derived()
+  {
+    this.x = 10
+    this.y = 20
+  }
+
+  def do_other()
+  {
+    return this.y * 3
+  }
+}
+
+// Test basic inheritance - derived can call base methods
+auto d = Derived()
+assert_equal(10, d.x)
+assert_equal(20, d.y)
+assert_equal(20, d.do_something())
+assert_equal(60, d.do_other())
+
+// Test base class still works independently
+auto b = Base()
+assert_equal(10, b.x)
+assert_equal(20, b.do_something())
+
+// Test method override
+class Derived2 : Base
+{
+  def Derived2()
+  {
+    this.x = 5
+  }
+
+  def do_something()
+  {
+    return this.x * 100
+  }
+}
+
+auto d2 = Derived2()
+assert_equal(500, d2.do_something())

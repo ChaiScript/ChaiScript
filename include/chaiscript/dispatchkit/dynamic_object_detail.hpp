@@ -72,6 +72,8 @@ namespace chaiscript {
 
         bool is_attribute_function() const noexcept override { return m_is_attribute; }
 
+        const std::string &get_dynamic_object_type_name() const noexcept { return m_type_name; }
+
         bool call_match(const chaiscript::Function_Params &vals, const Type_Conversions_State &t_conversions) const noexcept override {
           if (dynamic_object_typename_match(vals, m_type_name, m_ti, t_conversions)) {
             return m_func->call_match(vals, t_conversions);

@@ -44,6 +44,28 @@ namespace chaiscript {
 
       Dynamic_Object() = default;
 
+      /// Register that derived_name inherits from base_name
+      static void register_inheritance(const std::string &derived_name, const std::string &base_name) {
+        inheritance_map()[derived_name] = base_name;
+      }
+
+      /// Check if type_name is, or inherits from, base_name
+      static bool type_matches(const std::string &type_name, const std::string &base_name) noexcept {
+        if (type_name == base_name) {
+          return true;
+        }
+        const auto &m = inheritance_map();
+        auto it = m.find(type_name);
+        while (it != m.end()) {
+          if (it->second == base_name) {
+            return true;
+          }
+          it = m.find(it->second);
+        }
+        return false;
+      }
+
+
       bool is_explicit() const noexcept { return m_option_explicit; }
 
       void set_explicit(const bool t_explicit) noexcept { m_option_explicit = t_explicit; }
@@ -87,6 +109,11 @@ namespace chaiscript {
       std::map<std::string, Boxed_Value> get_attrs() const { return m_attrs; }
 
     private:
+      static std::map<std::string, std::string> &inheritance_map() {
+        static std::map<std::string, std::string> s_map;
+        return s_map;
+      }
+
       const std::string m_type_name = "";
       bool m_option_explicit = false;
 
