@@ -412,6 +412,25 @@ TEST_CASE("Set and restore chai state") {
   CHECK_THROWS_AS(chai.eval<int>("i"), chaiscript::exception::eval_error);
 }
 
+TEST_CASE("Get function objects from public API") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  // Add a custom function
+  chai.add(chaiscript::fun(&set_state_test_myfun), "myfun");
+
+  // get_function_objects should be accessible from the public API
+  auto funcs = chai.get_function_objects();
+
+  // Our custom function should be in the map
+  CHECK(funcs.count("myfun") == 1);
+
+  // Built-in functions should also be present
+  CHECK(funcs.count("to_string") == 1);
+
+  // The function should be callable
+  CHECK(chai.eval<int>("myfun()") == 2);
+}
+
 //// Short comparisons
 
 class Short_Comparison_Test {

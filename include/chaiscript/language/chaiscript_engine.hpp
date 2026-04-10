@@ -473,6 +473,12 @@ namespace chaiscript {
     /// \returns All values in the local thread state, added through the add() function
     std::map<std::string, Boxed_Value> get_locals() const { return m_engine.get_locals(); }
 
+    /// \returns All accessible function objects, as a map of name to Boxed_Value
+    std::map<std::string, Boxed_Value> get_function_objects() const { return m_engine.get_function_objects(); }
+
+    /// \returns All accessible scripting objects (locals + globals), as a map of name to Boxed_Value
+    std::map<std::string, Boxed_Value> get_scripting_objects() const { return m_engine.get_scripting_objects(); }
+
     /// \brief Sets all of the locals for the current thread state.
     ///
     /// \param[in] t_locals The map<name, value> set of variables to replace the current state with
