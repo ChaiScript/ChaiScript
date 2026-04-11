@@ -1,0 +1,16 @@
+// Test that assignment expressions work inside return statements
+// Issue #473: `return foo = 5` should work
+
+def return_assign() {
+  var x = 0
+  return x = 5
+}
+
+assert_equal(5, return_assign())
+
+def return_member_assign() {
+  var o = Dynamic_Object()
+  return o.value = 42
+}
+
+assert_equal(42, return_member_assign())

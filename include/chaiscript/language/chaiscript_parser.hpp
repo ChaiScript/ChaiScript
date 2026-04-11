@@ -2282,7 +2282,7 @@ namespace chaiscript {
         const auto prev_stack_top = m_match_stack.size();
 
         if (Keyword("return")) {
-          Operator();
+          Equation();
           build_match<eval::Return_AST_Node<Tracer>>(prev_stack_top);
           return true;
         } else {
