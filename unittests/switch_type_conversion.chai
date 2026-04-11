@@ -1,0 +1,50 @@
+// Test for issue #421: switch statement with custom == operator on
+// dynamic objects must properly manage object lifetimes during
+// case comparisons.
+
+class MyType {
+  var value
+  def MyType(v) { this.value = v }
+}
+
+def `==`(a, b) : a.is_type("MyType") && b.is_type("MyType") {
+  return a.value == b.value
+}
+
+var result = 0
+var obj = MyType(2)
+
+switch(obj) {
+  case (MyType(1)) {
+    result = 1
+    break
+  }
+  case (MyType(2)) {
+    result = 2
+    break
+  }
+  case (MyType(3)) {
+    result = 3
+    break
+  }
+}
+
+assert_equal(result, 2)
+
+// Also test fall-through with custom == operator
+var total = 0
+var obj2 = MyType(2)
+
+switch(obj2) {
+  case (MyType(1)) {
+    total += 1
+  }
+  case (MyType(2)) {
+    total += 2
+  }
+  case (MyType(3)) {
+    total += 4
+  }
+}
+
+assert_equal(total, 6)

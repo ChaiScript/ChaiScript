@@ -1304,3 +1304,97 @@ TEST_CASE("Test if non copyable/movable types can be registered") {
   chai.add(chaiscript::user_type<Nothing>(), "Nothing");
   chai.add(chaiscript::constructor<Nothing()>(), "Nothing");
 }
+
+// Issue #421: Class with type_conversion from int and "==" operator
+// causes switch statement to compare destroyed objects.
+// The switch case comparison must use Function_Push_Pop to properly
+// manage the lifetime of temporaries created by type conversions.
+TEST_CASE("Issue #421 - Switch with type_conversion does not compare destroyed objects") {
+  struct MyType {
+    int value;
+    explicit MyType(int v) : value(v) {}
+  };
+
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+  chai.add(chaiscript::user_type<MyType>(), "MyType");
+  chai.add(chaiscript::constructor<MyType(int)>(), "MyType");
+  chai.add(chaiscript::fun(&MyType::value), "value");
+  chai.add(chaiscript::fun([](const MyType &a, const MyType &b) { return a.value == b.value; }), "==");
+  chai.add(chaiscript::type_conversion<int, MyType>([](const int &i) { return MyType(i); }));
+
+  // Test switch with type conversion - the case integer literals must be
+  // converted to MyType via the registered conversion before comparison.
+  // Without Function_Push_Pop, the converted temporaries may be destroyed
+  // before the == operator can compare them.
+  CHECK(chai.eval<int>(R"({
+    var result = 0
+    var obj = MyType(2)
+    switch(obj) {
+      case (1) {
+        result = 1
+        break
+      }
+      case (2) {
+        result = 2
+        break
+      }
+      case (3) {
+        result = 3
+        break
+      }
+    }
+    result
+  })") == 2);
+
+  // Test fall-through with type conversion
+  CHECK(chai.eval<int>(R"({
+    var total = 0
+    var obj = MyType(2)
+    switch(obj) {
+      case (1) {
+        total += 1
+      }
+      case (2) {
+        total += 2
+      }
+      case (3) {
+        total += 4
+      }
+    }
+    total
+  })") == 6);
+
+  // Test matching the first case
+  CHECK(chai.eval<int>(R"({
+    var result = 0
+    var obj = MyType(1)
+    switch(obj) {
+      case (1) {
+        result = 10
+        break
+      }
+      case (2) {
+        result = 20
+        break
+      }
+    }
+    result
+  })") == 10);
+
+  // Test no match
+  CHECK(chai.eval<int>(R"({
+    var result = 0
+    var obj = MyType(5)
+    switch(obj) {
+      case (1) {
+        result = 1
+        break
+      }
+      case (2) {
+        result = 2
+        break
+      }
+    }
+    result
+  })") == 0);
+}
