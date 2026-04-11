@@ -377,6 +377,8 @@ namespace chaiscript {
 
       Dispatch_Engine(const Dispatch_Engine &) = delete;
       Dispatch_Engine &operator=(const Dispatch_Engine &) = delete;
+      Dispatch_Engine(Dispatch_Engine &&) = default;
+      Dispatch_Engine &operator=(Dispatch_Engine &&) = default;
 
 #ifndef CHAISCRIPT_NO_THREADS
       /// Track an async thread so it can be joined during destruction
