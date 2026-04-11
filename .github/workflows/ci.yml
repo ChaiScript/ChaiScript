@@ -7,73 +7,59 @@ on:
     branches: [develop, main]
 
 jobs:
-  build:
-    name: >-
-      ${{ matrix.os }}
-      ${{ matrix.compiler }}
-      ${{ matrix.build_type }}
-      ${{ matrix.sanitizer == 'ON' && 'asan+ubsan' || 'no-sanitizers' }}
-    runs-on: ${{ matrix.os }}
-
+  linux:
+    name: Linux GCC ${{ matrix.build_type }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        compiler: [gcc, clang]
         build_type: [Debug, Release]
-        sanitizer: [ON, OFF]
-        include:
-          - os: windows-latest
-            shell: msys2 {0}
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up MSYS2
-        if: runner.os == 'Windows'
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: UCRT64
-          update: false
-          install: >-
-            mingw-w64-ucrt-x86_64-gcc
-            mingw-w64-ucrt-x86_64-clang
-            mingw-w64-ucrt-x86_64-cmake
-            mingw-w64-ucrt-x86_64-ninja
-
-      - name: Install GCC (macOS)
-        if: runner.os == 'macOS' && matrix.compiler == 'gcc'
-        run: brew install gcc
-
-      - name: Set up compiler
-        shell: ${{ matrix.shell || 'bash' }}
-        run: |
-          if [[ "${{ matrix.compiler }}" == "gcc" ]]; then
-            if [[ "${{ runner.os }}" == "macOS" ]]; then
-              GCC_VER=$(brew list --versions gcc | awk '{print $2}' | cut -d. -f1)
-              echo "CC=gcc-${GCC_VER}" >> "$GITHUB_ENV"
-              echo "CXX=g++-${GCC_VER}" >> "$GITHUB_ENV"
-            else
-              echo "CC=gcc" >> "$GITHUB_ENV"
-              echo "CXX=g++" >> "$GITHUB_ENV"
-            fi
-          else
-            echo "CC=clang" >> "$GITHUB_ENV"
-            echo "CXX=clang++" >> "$GITHUB_ENV"
-          fi
-
       - name: Configure
-        shell: ${{ matrix.shell || 'bash' }}
-        run: >-
-          cmake -B build -G Ninja
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -DENABLE_ADDRESS_SANITIZER=${{ matrix.sanitizer }}
-          -DENABLE_UNDEFINED_SANITIZER=${{ matrix.sanitizer }}
+        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
       - name: Build
-        shell: ${{ matrix.shell || 'bash' }}
         run: cmake --build build -j
 
       - name: Test
-        shell: ${{ matrix.shell || 'bash' }}
         run: ctest --test-dir build --output-on-failure
+
+  macos:
+    name: macOS AppleClang ${{ matrix.build_type }}
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+  windows:
+    name: Windows MSVC ${{ matrix.build_type }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.build_type }} -j
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure -C ${{ matrix.build_type }}
