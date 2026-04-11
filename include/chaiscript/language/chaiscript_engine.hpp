@@ -83,10 +83,6 @@ namespace chaiscript {
       fwrite(s.c_str(), 1, s.size(), stdout);
     };
 
-    std::function<void(const std::string &)> m_println_handler = [](const std::string &s) noexcept {
-      puts(s.c_str());
-    };
-
     /// Evaluates the given string in by parsing it and running the results through the evaluator
     Boxed_Value do_eval(const std::string &t_input, const std::string &t_filename = "__EVAL__", bool /* t_internal*/ = false) {
       try {
@@ -133,7 +129,11 @@ namespace chaiscript {
       }
 
       m_engine.add(fun([this](const std::string &s) { m_print_handler(s); }), "print_string");
-      m_engine.add(fun([this](const std::string &s) { m_println_handler(s); }), "println_string");
+      m_engine.add(fun([this](const std::string &s) { m_print_handler(s + "\n"); }), "println_string");
+
+      m_engine.add(fun([this](const std::function<void(const std::string &)> &t_handler) {
+        m_print_handler = t_handler;
+      }), "set_print_handler");
 
       m_engine.add(fun([this]() { m_engine.dump_system(); }), "dump_system");
       m_engine.add(fun([this](const Boxed_Value &t_bv) { m_engine.dump_object(t_bv); }), "dump_object");
@@ -268,16 +268,10 @@ namespace chaiscript {
 
   public:
 
-    /// \brief Set a custom handler for print_string (no newline), used by ChaiScript's puts()
+    /// \brief Set a custom handler for print output, used by both print_string and println_string
     /// \param[in] t_handler Function to call with the string to print
     void set_print_handler(std::function<void(const std::string &)> t_handler) {
       m_print_handler = std::move(t_handler);
-    }
-
-    /// \brief Set a custom handler for println_string (with newline), used by ChaiScript's print()
-    /// \param[in] t_handler Function to call with the string to print (handler should append newline if desired)
-    void set_println_handler(std::function<void(const std::string &)> t_handler) {
-      m_println_handler = std::move(t_handler);
     }
 
     /// \brief Virtual destructor for ChaiScript

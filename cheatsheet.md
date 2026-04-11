@@ -818,18 +818,14 @@ m.is_type("MyClass")   // true (checks the ChaiScript class name)
 ## IO Redirection
 
 By default, ChaiScript's `print()` and `puts()` functions write to stdout. You can redirect
-output on a per-instance basis using custom handlers. Each ChaiScript instance can have its
-own independent handlers.
+output on a per-instance basis by setting a single print handler. Both `println_string`
+(used by `print()`) and `print_string` (used by `puts()`) dispatch through the same handler —
+`println_string` simply appends a newline before calling it.
 
 ```cpp
 chaiscript::ChaiScript chai;
 
-// Redirect print() / println_string() output (includes newline)
-chai.set_println_handler([](const std::string &s) {
-  my_log_window.append(s + "\n");
-});
-
-// Redirect puts() / print_string() output (no newline)
+// Redirect all output (print_string and println_string both use this handler)
 chai.set_print_handler([](const std::string &s) {
   my_log_window.append(s);
 });
@@ -841,15 +837,19 @@ context where stdout is not the desired output destination.
 ```cpp
 // Example: capture all output to a string
 std::string captured;
-chai.set_println_handler([&captured](const std::string &s) {
-  captured += s + "\n";
-});
 chai.set_print_handler([&captured](const std::string &s) {
   captured += s;
 });
 
 chai.eval("print(42)");    // captured == "42\n"
 chai.eval("puts(\"hi\")"); // captured == "42\nhi"
+```
+
+The print handler can also be set from within ChaiScript itself via `set_print_handler`:
+
+```chaiscript
+// Redirect output from within a script
+set_print_handler(fun(s) { my_custom_log(s) })
 ```
 
 ## Extras

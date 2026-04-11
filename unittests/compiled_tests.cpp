@@ -1442,14 +1442,9 @@ TEST_CASE("IO redirection with set_print_handler") {
 
   std::string captured_output;
 
-  // Set custom print handler (for print_string, called by puts)
+  // Set custom print handler — both print_string and println_string dispatch through it
   chai.set_print_handler([&captured_output](const std::string &s) {
     captured_output += s;
-  });
-
-  // Set custom println handler (for println_string, called by print)
-  chai.set_println_handler([&captured_output](const std::string &s) {
-    captured_output += s + "\n";
   });
 
   // Test that puts() uses the custom handler
@@ -1457,7 +1452,7 @@ TEST_CASE("IO redirection with set_print_handler") {
   chai.eval("puts(\"hello\")");
   CHECK(captured_output == "hello");
 
-  // Test that print() uses the custom handler
+  // Test that print() uses the custom handler (println_string appends newline before calling handler)
   captured_output.clear();
   chai.eval("print(\"world\")");
   CHECK(captured_output == "world\n");
@@ -1467,7 +1462,7 @@ TEST_CASE("IO redirection with set_print_handler") {
   chai.eval("print_string(\"direct\")");
   CHECK(captured_output == "direct");
 
-  // Test that println_string() directly uses the custom handler
+  // Test that println_string() directly uses the custom handler with newline
   captured_output.clear();
   chai.eval("println_string(\"direct_ln\")");
   CHECK(captured_output == "direct_ln\n");
@@ -1477,8 +1472,8 @@ TEST_CASE("IO redirection captures numeric output") {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
 
   std::string captured_output;
-  chai.set_println_handler([&captured_output](const std::string &s) {
-    captured_output += s + "\n";
+  chai.set_print_handler([&captured_output](const std::string &s) {
+    captured_output += s;
   });
 
   chai.eval("print(42)");
@@ -1492,14 +1487,31 @@ TEST_CASE("IO redirection different instances are independent") {
   std::string output1;
   std::string output2;
 
-  chai1.set_println_handler([&output1](const std::string &s) { output1 += s; });
-  chai2.set_println_handler([&output2](const std::string &s) { output2 += s; });
+  chai1.set_print_handler([&output1](const std::string &s) { output1 += s; });
+  chai2.set_print_handler([&output2](const std::string &s) { output2 += s; });
 
   chai1.eval("print(\"from1\")");
   chai2.eval("print(\"from2\")");
 
-  CHECK(output1 == "from1");
-  CHECK(output2 == "from2");
+  CHECK(output1 == "from1\n");
+  CHECK(output2 == "from2\n");
+}
+
+TEST_CASE("set_print_handler accessible from ChaiScript") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  auto captured = std::make_shared<std::string>();
+  chai.add(chaiscript::fun([captured](const std::string &s) { *captured += s; }), "test_output_sink");
+
+  // Set the print handler from within ChaiScript
+  chai.eval("set_print_handler(fun(s) { test_output_sink(s) })");
+
+  chai.eval("print(\"from_script\")");
+  CHECK(*captured == "from_script\n");
+
+  captured->clear();
+  chai.eval("puts(\"no_newline\")");
+  CHECK(*captured == "no_newline");
 }
 
 // Regression test: push_back() on script-created vector has no effect when
