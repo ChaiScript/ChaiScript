@@ -1,0 +1,3 @@
+// Regression test for issue #660: now() requires <chrono> include
+var t = now()
+assert_true(t > 0)
