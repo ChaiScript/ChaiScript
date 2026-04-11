@@ -208,7 +208,10 @@ namespace chaiscript {
     No_Load_Modules,
     Load_Modules,
     No_External_Scripts,
-    External_Scripts,
+    External_Scripts
+  };
+
+  enum class Library_Options {
     No_Stdlib,
     No_IO,
     No_Prelude,
