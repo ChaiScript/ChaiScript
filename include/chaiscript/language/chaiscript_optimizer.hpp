@@ -397,11 +397,11 @@ namespace chaiscript {
                                         assert(children.size() == 1);
                                         chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
-                                        int i = start_int;
-                                        t_ss.add_object(id, var(&i));
+                                        auto i = std::make_shared<int>(start_int);
+                                        t_ss.add_object(id, var(i));
 
                                         try {
-                                          for (; i < end_int; ++i) {
+                                          for (; *i < end_int; ++(*i)) {
                                             try {
                                               // Body of Loop
                                               children[0]->eval(t_ss);

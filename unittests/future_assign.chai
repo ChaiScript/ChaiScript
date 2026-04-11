@@ -1,0 +1,21 @@
+// Regression test for #635: Segfault when using := in async function
+// with optimized for loop. The := operator copies raw pointers from the
+// loop variable, which is stack-allocated in the optimized for loop.
+// When the function returns, the stack is unwound and pointers dangle.
+
+var func = fun(){
+  var ret = 0;
+  for (var i = 0; i < 50000; ++i) {
+    ret := i;
+  }
+  return ret;
+}
+
+var fut1 = async(func);
+var fut2 = async(func);
+
+// This triggers Boxed_Number::get_as<int> on the future results
+// which would crash if the pointers are dangling
+// := creates an alias, so ret ends up as 50000 (loop exit value of i)
+assert_equal(50000, fut1.get())
+assert_equal(50000, fut2.get())
