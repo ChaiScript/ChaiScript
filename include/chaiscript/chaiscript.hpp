@@ -830,7 +830,8 @@ namespace chaiscript {
                            std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer_Default>>(),
                            std::move(t_modulepaths),
                            std::move(t_usepaths),
-                           std::move(t_opts)) {
+                           std::move(t_opts),
+                           std::find(t_lib_opts.begin(), t_lib_opts.end(), Library_Options::No_IO) != t_lib_opts.end()) {
     }
   };
 } // namespace chaiscript

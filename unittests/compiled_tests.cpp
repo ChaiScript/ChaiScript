@@ -1360,14 +1360,16 @@ TEST_CASE("ChaiScript_Basic No_Stdlib option disables all standard library funct
   CHECK_THROWS(chai.eval("from_json(\"[1,2,3]\")"));
 }
 
-TEST_CASE("ChaiScript_Basic No_IO option still allows print_handler registration") {
+TEST_CASE("ChaiScript_Basic No_IO option uses null handler by default") {
   chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Library_Options::No_IO}),
                                     create_chaiscript_parser(),
                                     {},
                                     {},
-                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts},
+                                    true);
 
   // print_string and println_string should still be available via the handler mechanism
+  // but the default handler is a no-op (no stdout output)
   CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
   CHECK_NOTHROW(chai.eval("println_string(\"hello\")"));
   CHECK(chai.eval<int>("5 + 3") == 8);
@@ -1439,10 +1441,17 @@ TEST_CASE("ChaiScript No_IO option via library options parameter") {
                               {chaiscript::Library_Options::No_IO});
 
   // print_string and println_string remain available via the handler mechanism
+  // but the default handler is a no-op (no stdout output)
   CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
   CHECK_NOTHROW(chai.eval("println_string(\"hello\")"));
   CHECK(chai.eval<int>("5 + 3") == 8);
   CHECK_NOTHROW(chai.eval("var v = Vector()"));
+
+  // Users can override the null handler with their own
+  std::string captured;
+  chai.set_print_handler([&captured](const std::string &s) { captured += s; });
+  chai.eval("print_string(\"redirected\")");
+  CHECK(captured == "redirected");
 }
 
 TEST_CASE("ChaiScript No_Prelude option via library options parameter") {

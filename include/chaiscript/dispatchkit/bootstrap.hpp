@@ -439,8 +439,8 @@ namespace chaiscript::bootstrap {
 
       // print_string and println_string are registered in ChaiScript_Basic::build_eval_system()
       // to support per-instance IO redirection via set_print_handler.
-      // When No_IO is set, the handler-based functions are still registered there,
-      // so users can provide their own print handlers even without built-in IO.
+      // When No_IO is set, the functions are still registered but the default handler
+      // is a no-op, so users can provide their own print handlers without any stdout output.
 
       m.add(dispatch::make_dynamic_proxy_function(&bind_function), "bind");
 
