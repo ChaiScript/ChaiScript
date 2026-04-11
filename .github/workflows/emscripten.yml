@@ -1,0 +1,42 @@
+name: Emscripten
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+jobs:
+  emscripten:
+    name: Emscripten WebAssembly Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+
+      - name: Configure
+        run: emcmake cmake -B build-em -S emscripten -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build-em -j
+
+      - name: Verify artifacts
+        run: |
+          test -f build-em/chaiscript.js
+          test -f build-em/chaiscript.wasm
+          test -f build-em/chaiscript.html
+          echo "All expected artifacts present"
+          ls -lh build-em/chaiscript.*
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: chaiscript-web
+          path: |
+            build-em/chaiscript.js
+            build-em/chaiscript.wasm
+            build-em/chaiscript.html
+          retention-days: 90

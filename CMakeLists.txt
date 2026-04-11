@@ -413,6 +413,10 @@ if(BUILD_TESTING)
     target_link_libraries(multifile_test ${LIBS})
     add_test(NAME MultiFile_Test COMMAND multifile_test)
 
+    add_executable(emscripten_eval_test unittests/emscripten_eval_test.cpp)
+    target_link_libraries(emscripten_eval_test ${LIBS})
+    add_test(NAME Emscripten_Eval_Test COMMAND emscripten_eval_test)
+
     install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/chaiscript")
   endif()
 endif()
