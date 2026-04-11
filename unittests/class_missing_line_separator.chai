@@ -1,0 +1,23 @@
+
+// Test that two var declarations on the same line in a class body
+// are rejected with a "missing line separator" error (issue #592)
+
+try {
+  eval("class Foo { var x var y }")
+  assert_true(false)
+} catch (eval_error) {
+}
+
+// Also verify that properly separated declarations still work
+class Bar {
+  var x
+  var y
+  def Bar() {
+    this.x = 1
+    this.y = 2
+  }
+}
+
+auto b = Bar()
+assert_equal(1, b.x)
+assert_equal(2, b.y)

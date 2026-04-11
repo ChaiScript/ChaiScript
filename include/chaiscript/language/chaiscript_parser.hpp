@@ -2736,7 +2736,7 @@ namespace chaiscript {
 
         while (has_more) {
           const auto start = m_position;
-          if (Def(true, t_class_name) || Var_Decl(true, t_class_name)) {
+          if (Def(true, t_class_name)) {
             if (!saw_eol) {
               throw exception::eval_error("Two function definitions missing line separator",
                                           File_Position(start.line, start.col),
@@ -2745,6 +2745,15 @@ namespace chaiscript {
             has_more = true;
             retval = true;
             saw_eol = true;
+          } else if (Var_Decl(true, t_class_name)) {
+            if (!saw_eol) {
+              throw exception::eval_error("Two expressions missing line separator",
+                                          File_Position(start.line, start.col),
+                                          *m_filename);
+            }
+            has_more = true;
+            retval = true;
+            saw_eol = false;
           } else if (Eol()) {
             has_more = true;
             retval = true;
