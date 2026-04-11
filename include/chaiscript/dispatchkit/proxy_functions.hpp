@@ -380,7 +380,15 @@ namespace chaiscript {
 
         for (const auto &t : t_types.types()) {
           if (t.second.is_undef()) {
-            types.push_back(chaiscript::detail::Get_Type_Info<Boxed_Value>::get());
+            if (!t.first.empty()) {
+              // Named type without C++ type_info — assumed to be a Dynamic_Object subtype.
+              // Using Dynamic_Object type_info ensures correct dispatch priority so that
+              // user-defined overrides on specific subtypes are tried before generic
+              // Dynamic_Object built-in functions.
+              types.push_back(user_type<Dynamic_Object>());
+            } else {
+              types.push_back(chaiscript::detail::Get_Type_Info<Boxed_Value>::get());
+            }
           } else {
             types.push_back(t.second);
           }
@@ -804,6 +812,30 @@ namespace chaiscript {
           // converted object are silently lost.
           if (plist.size() > 1 && !func->get_param_types()[1].bare_equal(plist[0].get_type_info())) {
             numdiffs = plist.size();
+          }
+
+          // Deprioritize C++ registered generic Dynamic_Object functions when the
+          // actual first argument is a specific Dynamic_Object subtype.  This allows
+          // user-defined operator overrides (e.g. `[]`) on a subtype to take precedence
+          // over the built-in Dynamic_Object operations such as get_attr.
+          // Only deprioritize non-dynamic (C++ registered) functions — ChaiScript-defined
+          // functions (Dynamic_Proxy_Function) have their own type matching via Param_Types.
+          if (!plist.empty()
+              && dynamic_cast<const Dynamic_Proxy_Function *>(func.get()) == nullptr) {
+            static const auto dynamic_object_ti = user_type<Dynamic_Object>();
+            if (func->get_param_types().size() > 1
+                && func->get_param_types()[1].bare_equal(dynamic_object_ti)
+                && plist[0].get_type_info().bare_equal(dynamic_object_ti)
+                && func->dynamic_object_type_name().empty()) {
+              try {
+                const auto &d = boxed_cast<const Dynamic_Object &>(plist[0], &t_conversions);
+                if (d.get_type_name() != "Dynamic_Object") {
+                  numdiffs = plist.size();
+                }
+              } catch (const std::bad_cast &) {
+                // not a Dynamic_Object, ignore
+              }
+            }
           }
 
           ordered_funcs.emplace_back(numdiffs, func.get());
