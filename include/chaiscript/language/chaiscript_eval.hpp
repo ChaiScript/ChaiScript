@@ -220,15 +220,16 @@ namespace chaiscript {
       Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
         auto lhs = this->children[0]->eval(t_ss);
         auto rhs = this->children[1]->eval(t_ss);
-        return do_oper(t_ss, m_oper, this->text, lhs, rhs);
+        return do_oper(t_ss, m_oper, this->text, lhs, rhs, m_loc);
       }
 
-    protected:
-      Boxed_Value do_oper(const chaiscript::detail::Dispatch_State &t_ss,
+      // static and public so we can use this to process Switch_AST_Node case equality
+      static Boxed_Value do_oper(const chaiscript::detail::Dispatch_State &t_ss,
                           Operators::Opers t_oper,
                           const std::string &t_oper_string,
                           const Boxed_Value &t_lhs,
-                          const Boxed_Value &t_rhs) const {
+                          const Boxed_Value &t_rhs,
+                          std::atomic_uint_fast32_t &t_loc) {
         try {
           if (t_oper != Operators::Opers::invalid && t_lhs.get_type_info().is_arithmetic() && t_rhs.get_type_info().is_arithmetic()) {
             // If it's an arithmetic operation we want to short circuit dispatch
@@ -243,7 +244,7 @@ namespace chaiscript {
             chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
             std::array<Boxed_Value, 2> params{t_lhs, t_rhs};
             fpp.save_params(Function_Params(params));
-            return t_ss->call_function(t_oper_string, m_loc, Function_Params(params), t_ss.conversions());
+            return t_ss->call_function(t_oper_string, t_loc, Function_Params(params), t_ss.conversions());
           }
         } catch (const exception::dispatch_error &e) {
           throw exception::eval_error("Can not find appropriate '" + t_oper_string + "' operator.", e.parameters, e.functions, false, *t_ss);
@@ -985,8 +986,7 @@ namespace chaiscript {
             if (this->children[currentCase]->identifier == AST_Node_Type::Case) {
               // This is a little odd, but because want to see both the switch and the case simultaneously, I do a downcast here.
               try {
-                std::array<Boxed_Value, 2> p{match_value, this->children[currentCase]->children[0]->eval(t_ss)};
-                if (hasMatched || boxed_cast<bool>(t_ss->call_function("==", m_loc, Function_Params{p}, t_ss.conversions()))) {
+                if (hasMatched || boxed_cast<bool>(Binary_Operator_AST_Node<T>::do_oper(t_ss, Operators::Opers::equals, "==", match_value, this->children[currentCase]->children[0]->eval(t_ss), m_loc))) {
                   this->children[currentCase]->eval(t_ss);
                   hasMatched = true;
                 }
