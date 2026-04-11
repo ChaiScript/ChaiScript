@@ -120,6 +120,7 @@ configure_file(Doxyfile.in ${CMAKE_BINARY_DIR}/Doxyfile)
 
 include(CTest)
 include(CPack)
+include(GNUInstallDirs)
 include(cmake/Catch.cmake)
 
 if(NOT MINGW)
@@ -448,4 +449,10 @@ configure_file(contrib/pkgconfig/chaiscript.pc.in lib/pkgconfig/chaiscript.pc @O
 install(FILES "${chaiscript_BINARY_DIR}/lib/pkgconfig/chaiscript.pc"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
 
-    
+add_test(NAME pkgconfig_prefix_test
+  COMMAND ${CMAKE_COMMAND}
+    -DPC_FILE=${chaiscript_BINARY_DIR}/lib/pkgconfig/chaiscript.pc
+    -DEXPECTED_PREFIX=${CMAKE_INSTALL_PREFIX}
+    -DEXPECTED_LIBDIR=${CMAKE_INSTALL_LIBDIR}
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/check_pkgconfig.cmake)
+
