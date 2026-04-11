@@ -1436,3 +1436,68 @@ TEST_CASE("Issue #421 - Switch with type_conversion does not compare destroyed o
     result
   })") == 0);
 }
+
+TEST_CASE("IO redirection with set_print_handler") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  std::string captured_output;
+
+  // Set custom print handler (for print_string, called by puts)
+  chai.set_print_handler([&captured_output](const std::string &s) {
+    captured_output += s;
+  });
+
+  // Set custom println handler (for println_string, called by print)
+  chai.set_println_handler([&captured_output](const std::string &s) {
+    captured_output += s + "\n";
+  });
+
+  // Test that puts() uses the custom handler
+  captured_output.clear();
+  chai.eval("puts(\"hello\")");
+  CHECK(captured_output == "hello");
+
+  // Test that print() uses the custom handler
+  captured_output.clear();
+  chai.eval("print(\"world\")");
+  CHECK(captured_output == "world\n");
+
+  // Test that print_string() directly uses the custom handler
+  captured_output.clear();
+  chai.eval("print_string(\"direct\")");
+  CHECK(captured_output == "direct");
+
+  // Test that println_string() directly uses the custom handler
+  captured_output.clear();
+  chai.eval("println_string(\"direct_ln\")");
+  CHECK(captured_output == "direct_ln\n");
+}
+
+TEST_CASE("IO redirection captures numeric output") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  std::string captured_output;
+  chai.set_println_handler([&captured_output](const std::string &s) {
+    captured_output += s + "\n";
+  });
+
+  chai.eval("print(42)");
+  CHECK(captured_output == "42\n");
+}
+
+TEST_CASE("IO redirection different instances are independent") {
+  chaiscript::ChaiScript_Basic chai1(create_chaiscript_stdlib(), create_chaiscript_parser());
+  chaiscript::ChaiScript_Basic chai2(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  std::string output1;
+  std::string output2;
+
+  chai1.set_println_handler([&output1](const std::string &s) { output1 += s; });
+  chai2.set_println_handler([&output2](const std::string &s) { output2 += s; });
+
+  chai1.eval("print(\"from1\")");
+  chai2.eval("print(\"from2\")");
+
+  CHECK(output1 == "from1");
+  CHECK(output2 == "from2");
+}

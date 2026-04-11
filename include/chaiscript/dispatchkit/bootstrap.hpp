@@ -435,8 +435,8 @@ namespace chaiscript::bootstrap {
       m.add(fun(&Build_Info::compiler_id), "compiler_id");
       m.add(fun(&Build_Info::debug_build), "debug_build");
 
-      m.add(fun(&print), "print_string");
-      m.add(fun(&println), "println_string");
+      // print_string and println_string are registered in ChaiScript_Basic::build_eval_system()
+      // to support per-instance IO redirection via set_print_handler/set_println_handler
 
       m.add(dispatch::make_dynamic_proxy_function(&bind_function), "bind");
 
