@@ -1437,6 +1437,25 @@ TEST_CASE("Issue #421 - Switch with type_conversion does not compare destroyed o
   })") == 0);
 }
 
+// Issue #625: function_less_than comparator must satisfy strict-weak ordering.
+// Registering overloaded functions with different arities triggered a
+// std::stable_sort assertion on macOS 15.2 (hardened libc++) because the
+// comparator violated transitivity of equivalence.
+TEST_CASE("Issue 625: function_less_than strict-weak ordering with different arities") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  // Register overloaded functions with varying arities under the same name.
+  // If the comparator doesn't order by arity when overlapping params match,
+  // std::stable_sort may exhibit undefined behavior.
+  CHECK_NOTHROW(chai.add(chaiscript::fun([](int x, const chaiscript::Boxed_Value &) { return x; }), "overloaded"));
+  CHECK_NOTHROW(chai.add(chaiscript::fun([](int x, double y) { return x + static_cast<int>(y); }), "overloaded"));
+  CHECK_NOTHROW(chai.add(chaiscript::fun([](int x) { return x; }), "overloaded"));
+
+  // Verify dispatch still works correctly
+  CHECK(chai.eval<int>("overloaded(5)") == 5);
+  CHECK(chai.eval<int>("overloaded(3, 2.0)") == 5);
+}
+
 // Regression test: push_back() on script-created vector has no effect when
 // vector_conversion is in effect. The bug occurs because dispatch selects
 // the C++ push_back for the converted type over the built-in one, operating
