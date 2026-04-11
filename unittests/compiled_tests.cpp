@@ -1455,3 +1455,23 @@ TEST_CASE("Issue 625: function_less_than strict-weak ordering with different ari
   CHECK(chai.eval<int>("overloaded(5)") == 5);
   CHECK(chai.eval<int>("overloaded(3, 2.0)") == 5);
 }
+
+// Regression test for issue #607: AST_Node_Trace must be a complete type
+// when used in eval_error's std::vector<AST_Node_Trace> call_stack member.
+// This failed to compile with C++20 on clang/libc++ when AST_Node_Trace
+// was only forward-declared before eval_error's definition.
+TEST_CASE("eval_error with AST_Node_Trace call stack compiles in C++20") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  // Trigger an eval_error by calling a non-existent function
+  try {
+    chai.eval("nonexistent_function()");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &e) {
+    // Verify that eval_error's call_stack member (std::vector<AST_Node_Trace>)
+    // is usable - this would fail to compile if AST_Node_Trace were incomplete
+    const auto &stack = e.call_stack;
+    CHECK(e.pretty_print().size() > 0);
+    (void)stack;
+  }
+}
