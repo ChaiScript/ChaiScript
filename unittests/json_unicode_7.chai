@@ -1,0 +1,2 @@
+// Test JSON \u escape: null character (U+0000) - edge case
+assert_equal(from_json("\"before\\u0041after\""), "beforeAafter")

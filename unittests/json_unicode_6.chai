@@ -1,0 +1,2 @@
+// Test JSON \u escape: uppercase hex digits
+assert_equal(from_json("\"\\u00C4\""), "\u00C4")

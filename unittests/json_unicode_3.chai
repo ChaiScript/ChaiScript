@@ -1,0 +1,2 @@
+// Test JSON \u escape: 3-byte UTF-8 (U+20AC = '€')
+assert_equal(from_json("\"\\u20AC\""), "\u20AC")
