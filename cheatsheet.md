@@ -153,16 +153,38 @@ This allows you to pass a ChaiScript function to a function requiring `std::vect
 
 ## Adding Objects
 
-```
-chai.add(chaiscript::var(somevar), "somevar"); // copied in
-chai.add(chaiscript::var(std::ref(somevar)), "somevar"); // by reference, shared between C++ and chai
+### `add` — Thread-Local Scoped Variables
+
+`add` adds an object to the current thread's local scope. The variable is only visible in the
+thread that added it. If the variable already exists in the current scope, it is overwritten.
+
+```cpp
+chai.add(chaiscript::var(somevar), "somevar");                    // copied in
+chai.add(chaiscript::var(std::ref(somevar)), "somevar");          // by reference, shared between C++ and chai
 auto shareddouble = std::make_shared<double>(4.3);
-chai.add(chaiscript::var(shareddouble), "shareddouble"); // by shared_ptr, shared between c++ and chai
-chai.add(chaiscript::const_var(somevar), "somevar"); // copied in and made const
-chai.add_global_const(chaiscript::const_var(somevar), "somevar"); // global const. Throws if value is non-const, throws if object exists
-chai.add_global(chaiscript::var(somevar), "somevar"); // global non-const, throws if object exists
-chai.set_global(chaiscript::var(somevar), "somevar"); // global non-const, overwrites existing object
+chai.add(chaiscript::var(shareddouble), "shareddouble");          // by shared_ptr, shared between C++ and chai
+chai.add(chaiscript::const_var(somevar), "somevar");              // copied in and made const
 ```
+
+### `add_global` / `add_global_const` / `set_global` — Global Shared Variables
+
+Global variables are shared between all threads and are visible from any scope (including inside
+functions). Use these when you need a variable accessible everywhere.
+
+```cpp
+chai.add_global_const(chaiscript::const_var(somevar), "somevar"); // global const, throws if value is non-const or object already exists
+chai.add_global(chaiscript::var(somevar), "somevar");             // global non-const, throws if object already exists
+chai.set_global(chaiscript::var(somevar), "somevar");             // global non-const, overwrites existing or creates new
+```
+
+### Summary of Differences
+
+| Method | Scope | Thread Safety | If Name Exists |
+|--------|-------|---------------|----------------|
+| `add` | Thread-local, current scope | Not shared between threads | Overwrites |
+| `add_global` | Global, all scopes and threads | Mutex-protected, shared between threads | Throws exception |
+| `add_global_const` | Global, all scopes and threads | Mutex-protected, shared between threads | Throws exception |
+| `set_global` | Global, all scopes and threads | Mutex-protected, shared between threads | Overwrites |
 
 ## Adding Namespaces
 
