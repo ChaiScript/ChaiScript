@@ -15,6 +15,7 @@
 #include <exception>
 #include <fstream>
 #include <functional>
+#include <future>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -179,6 +180,23 @@ namespace chaiscript {
                    }),
                    "namespace");
       m_engine.add(fun([this](const std::string &t_namespace_name) { import(t_namespace_name); }), "import");
+
+#ifndef CHAISCRIPT_NO_THREADS
+      m_engine.add(chaiscript::fun(
+                       [this](const std::function<chaiscript::Boxed_Value()> &t_func) {
+                         auto promise_ptr = std::make_shared<std::promise<chaiscript::Boxed_Value>>();
+                         auto future = promise_ptr->get_future();
+                         m_engine.track_async_thread(std::thread([promise_ptr, t_func]() {
+                           try {
+                             promise_ptr->set_value(t_func());
+                           } catch (...) {
+                             promise_ptr->set_exception(std::current_exception());
+                           }
+                         }));
+                         return future;
+                       }),
+                   "async");
+#endif
     }
 
     /// Skip BOM at the beginning of file

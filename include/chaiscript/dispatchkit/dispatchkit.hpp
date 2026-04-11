@@ -370,6 +370,21 @@ namespace chaiscript {
           , m_parser(parser) {
       }
 
+      ~Dispatch_Engine() {
+        join_async_threads();
+      }
+
+      Dispatch_Engine(const Dispatch_Engine &) = delete;
+      Dispatch_Engine &operator=(const Dispatch_Engine &) = delete;
+
+#ifndef CHAISCRIPT_NO_THREADS
+      /// Track a thread created by async so we can join it before destruction
+      void track_async_thread(std::thread &&t_thread) {
+        chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_async_mutex);
+        m_async_threads.push_back(std::move(t_thread));
+      }
+#endif
+
       /// \brief casts an object while applying any Dynamic_Conversion available
       template<typename Type>
       decltype(auto) boxed_cast(const Boxed_Value &bv) const {
@@ -1165,7 +1180,27 @@ namespace chaiscript {
         get_function_objects_int().insert_or_assign(t_name, std::move(new_func));
       }
 
+      void join_async_threads() {
+#ifndef CHAISCRIPT_NO_THREADS
+        std::vector<std::thread> threads;
+        {
+          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_async_mutex);
+          threads = std::move(m_async_threads);
+        }
+        for (auto &t : threads) {
+          if (t.joinable()) {
+            t.join();
+          }
+        }
+#endif
+      }
+
       mutable chaiscript::detail::threading::shared_mutex m_mutex;
+
+#ifndef CHAISCRIPT_NO_THREADS
+      mutable chaiscript::detail::threading::shared_mutex m_async_mutex;
+      std::vector<std::thread> m_async_threads;
+#endif
 
       Type_Conversions m_conversions;
       chaiscript::detail::threading::Thread_Storage<Stack_Holder> m_stack_holder;

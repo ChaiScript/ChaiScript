@@ -1,0 +1,18 @@
+// Regression test for #632: Heap-use-after-free in async threads
+// Async threads must complete before the engine is destroyed.
+// Without the fix, this crashes with ASAN (use-after-free).
+
+var func = fun(){
+  var ret = 0;
+  for (var i = 0; i < 1000; ++i) {
+    ret += i;
+  }
+  return ret;
+}
+
+var fut1 = async(func);
+var fut2 = async(func);
+
+// Wait for results to verify correctness
+assert_equal(fut1.get(), 499500);
+assert_equal(fut2.get(), 499500);
