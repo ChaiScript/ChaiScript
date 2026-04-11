@@ -102,3 +102,43 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build --output-on-failure -C ${{ matrix.build_type }}
+
+  windows-sanitizers:
+    name: Windows MSVC ASAN ${{ matrix.build_type }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -DENABLE_ADDRESS_SANITIZER=ON
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.build_type }} -j
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure -C ${{ matrix.build_type }}
+
+  windows-clangcl-sanitizers:
+    name: Windows ClangCL ASAN+UBSAN ${{ matrix.build_type }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        build_type: [Debug, Release]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure
+        run: cmake -B build -G Ninja -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_UNDEFINED_SANITIZER=ON
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure

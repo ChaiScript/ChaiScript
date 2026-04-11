@@ -34,7 +34,7 @@ if(CMAKE_COMPILER_IS_GNUCC)
   endif()
 endif()
 
-if(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
   option(ENABLE_THREAD_SANITIZER "Enable thread sanitizer testing in gcc/clang" FALSE)
   if(ENABLE_THREAD_SANITIZER)
     add_definitions(-fsanitize=thread -g)
@@ -86,6 +86,16 @@ if(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(LINKER_FLAGS "${LINKER_FLAGS} -fprofile-use")
   endif()
 
+
+elseif(MSVC)
+  option(ENABLE_ADDRESS_SANITIZER "Enable address sanitizer testing in MSVC" FALSE)
+  if(ENABLE_ADDRESS_SANITIZER)
+    add_compile_options(/fsanitize=address)
+    # ASAN is incompatible with /RTC (runtime error checks) and incremental linking
+    string(REGEX REPLACE "/RTC[^ ]*" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+    string(REGEX REPLACE "/RTC[^ ]*" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+    add_link_options(/INCREMENTAL:NO)
+  endif()
 
 endif()
 
