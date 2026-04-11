@@ -22,6 +22,11 @@
 #include <stdexcept>
 #include <vector>
 
+#ifndef CHAISCRIPT_NO_THREADS
+#include <future>
+#include <thread>
+#endif
+
 #include "../chaiscript_defines.hpp"
 #include "../chaiscript_threading.hpp"
 #include "../dispatchkit/boxed_cast_helper.hpp"
@@ -179,6 +184,25 @@ namespace chaiscript {
                    }),
                    "namespace");
       m_engine.add(fun([this](const std::string &t_namespace_name) { import(t_namespace_name); }), "import");
+
+#ifndef CHAISCRIPT_NO_THREADS
+      // Register async() with thread tracking so that Dispatch_Engine's destructor
+      // can join all async threads before destroying shared state (issue #636).
+      m_engine.add(chaiscript::fun(
+                       [this](const std::function<chaiscript::Boxed_Value()> &t_func) {
+                         auto promise_ptr = std::make_shared<std::promise<chaiscript::Boxed_Value>>();
+                         auto future = promise_ptr->get_future();
+                         m_engine.track_async_thread(std::thread([promise_ptr, t_func]() {
+                           try {
+                             promise_ptr->set_value(t_func());
+                           } catch (...) {
+                             promise_ptr->set_exception(std::current_exception());
+                           }
+                         }));
+                         return future;
+                       }),
+                   "async");
+#endif
     }
 
     /// Skip BOM at the beginning of file
