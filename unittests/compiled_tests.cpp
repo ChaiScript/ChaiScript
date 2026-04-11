@@ -1343,6 +1343,132 @@ TEST_CASE("Test if non copyable/movable types can be registered") {
   chai.add(chaiscript::constructor<Nothing()>(), "Nothing");
 }
 
+// Tests for issue #146: configuration to bypass registering built-in functions
+// Tests through ChaiScript_Basic (library options passed explicitly to Std_Lib::library)
+
+TEST_CASE("ChaiScript_Basic No_Stdlib option disables all standard library functions") {
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Library_Options::No_Stdlib}),
+                                    create_chaiscript_parser(),
+                                    {},
+                                    {},
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+
+  CHECK_NOTHROW(chai.eval("var x = 5"));
+  CHECK_THROWS(chai.eval("print(\"hello\")"));
+  CHECK_THROWS(chai.eval("var v = Vector()"));
+  CHECK_THROWS(chai.eval("\"hello\".trim()"));
+  CHECK_THROWS(chai.eval("from_json(\"[1,2,3]\")"));
+}
+
+TEST_CASE("ChaiScript_Basic No_IO option disables print functions") {
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Library_Options::No_IO}),
+                                    create_chaiscript_parser(),
+                                    {},
+                                    {},
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+
+  CHECK_THROWS(chai.eval("print_string(\"hello\")"));
+  CHECK_THROWS(chai.eval("println_string(\"hello\")"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+  CHECK_NOTHROW(chai.eval("var v = Vector()"));
+}
+
+TEST_CASE("ChaiScript_Basic No_Prelude option disables prelude functions") {
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Library_Options::No_Prelude}),
+                                    create_chaiscript_parser(),
+                                    {},
+                                    {},
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+
+  CHECK_THROWS(chai.eval("print(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
+  CHECK_THROWS(chai.eval("filter([1,2,3], fun(x) { x > 1 })"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+}
+
+TEST_CASE("ChaiScript_Basic No_JSON option disables JSON support") {
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Library_Options::No_JSON}),
+                                    create_chaiscript_parser(),
+                                    {},
+                                    {},
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+
+  CHECK_THROWS(chai.eval("from_json(\"[1,2,3]\")"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+  CHECK_NOTHROW(chai.eval("print(\"hello\")"));
+}
+
+TEST_CASE("ChaiScript_Basic default library has all functions") {
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library(),
+                                    create_chaiscript_parser(),
+                                    {},
+                                    {},
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+
+  CHECK_NOTHROW(chai.eval("print(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("var v = Vector()"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+}
+
+// Tests through ChaiScript (library options passed as constructor parameter)
+
+TEST_CASE("ChaiScript No_Stdlib option via library options parameter") {
+  chaiscript::ChaiScript chai({},
+                              {},
+                              {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts},
+                              {chaiscript::Library_Options::No_Stdlib});
+
+  CHECK_NOTHROW(chai.eval("var x = 5"));
+  CHECK_THROWS(chai.eval("print(\"hello\")"));
+  CHECK_THROWS(chai.eval("var v = Vector()"));
+  CHECK_THROWS(chai.eval("from_json(\"[1,2,3]\")"));
+}
+
+TEST_CASE("ChaiScript No_IO option via library options parameter") {
+  chaiscript::ChaiScript chai({},
+                              {},
+                              {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts},
+                              {chaiscript::Library_Options::No_IO});
+
+  CHECK_THROWS(chai.eval("print_string(\"hello\")"));
+  CHECK_THROWS(chai.eval("println_string(\"hello\")"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+  CHECK_NOTHROW(chai.eval("var v = Vector()"));
+}
+
+TEST_CASE("ChaiScript No_Prelude option via library options parameter") {
+  chaiscript::ChaiScript chai({},
+                              {},
+                              {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts},
+                              {chaiscript::Library_Options::No_Prelude});
+
+  CHECK_THROWS(chai.eval("print(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
+  CHECK_THROWS(chai.eval("filter([1,2,3], fun(x) { x > 1 })"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+}
+
+TEST_CASE("ChaiScript No_JSON option via library options parameter") {
+  chaiscript::ChaiScript chai({},
+                              {},
+                              {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts},
+                              {chaiscript::Library_Options::No_JSON});
+
+  CHECK_THROWS(chai.eval("from_json(\"[1,2,3]\")"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+  CHECK_NOTHROW(chai.eval("print(\"hello\")"));
+}
+
+TEST_CASE("ChaiScript default has all functions") {
+  chaiscript::ChaiScript chai;
+
+  CHECK_NOTHROW(chai.eval("print(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("var v = Vector()"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+}
+
 // Issue #421: Class with type_conversion from int and "==" operator
 // causes switch statement to compare destroyed objects.
 // The switch case comparison must use Function_Push_Pop to properly
