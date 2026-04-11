@@ -801,7 +801,7 @@ namespace chaiscript {
 
           // Deprioritize functions whose first parameter (object/receiver) requires
           // type conversion: conversions create temporaries, so mutations on the
-          // converted object are silently lost (issue #405).
+          // converted object are silently lost.
           if (plist.size() > 1 && !func->get_param_types()[1].bare_equal(plist[0].get_type_info())) {
             numdiffs = plist.size();
           }
