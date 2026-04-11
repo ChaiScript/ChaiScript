@@ -815,5 +815,42 @@ m.is_type("MyClass")   // true (checks the ChaiScript class name)
  * `from_json` converts a JSON string into its strongly typed (map, vector, int, double, string) representations
  * `to_json` converts a ChaiScript object (either a `Object` or one of map, vector, int, double, string) tree into its JSON string representation
  
+## IO Redirection
+
+By default, ChaiScript's `print()` and `puts()` functions write to stdout. You can redirect
+output on a per-instance basis using custom handlers. Each ChaiScript instance can have its
+own independent handlers.
+
+```cpp
+chaiscript::ChaiScript chai;
+
+// Redirect print() / println_string() output (includes newline)
+chai.set_println_handler([](const std::string &s) {
+  my_log_window.append(s + "\n");
+});
+
+// Redirect puts() / print_string() output (no newline)
+chai.set_print_handler([](const std::string &s) {
+  my_log_window.append(s);
+});
+```
+
+This is useful for embedding ChaiScript in GUI applications, logging frameworks, or any
+context where stdout is not the desired output destination.
+
+```cpp
+// Example: capture all output to a string
+std::string captured;
+chai.set_println_handler([&captured](const std::string &s) {
+  captured += s + "\n";
+});
+chai.set_print_handler([&captured](const std::string &s) {
+  captured += s;
+});
+
+chai.eval("print(42)");    // captured == "42\n"
+chai.eval("puts(\"hi\")"); // captured == "42\nhi"
+```
+
 ## Extras
 ChaiScript itself does not provide a link to the math functions defined in `<cmath>`. You can either add them yourself, or use the [ChaiScript_Extras](https://github.com/ChaiScript/ChaiScript_Extras) helper library. (Which also provides some additional string functions.)
