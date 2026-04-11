@@ -431,6 +431,25 @@ TEST_CASE("Get function objects from public API") {
   CHECK(chai.eval<int>("myfun()") == 2);
 }
 
+TEST_CASE("Get scripting objects from public API") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  // Define some variables in script
+  chai.eval("var x = 42");
+  chai.eval("var name = \"hello\"");
+
+  // get_scripting_objects should be accessible from the public API
+  auto objects = chai.get_scripting_objects();
+
+  // Our scripting variables should be in the map
+  CHECK(objects.count("x") == 1);
+  CHECK(objects.count("name") == 1);
+
+  // Verify the values are correct
+  CHECK(chaiscript::boxed_cast<int>(objects["x"]) == 42);
+  CHECK(chaiscript::boxed_cast<std::string>(objects["name"]) == "hello");
+}
+
 //// Short comparisons
 
 class Short_Comparison_Test {
