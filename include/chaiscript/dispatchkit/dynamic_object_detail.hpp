@@ -72,6 +72,8 @@ namespace chaiscript {
 
         bool is_attribute_function() const noexcept override { return m_is_attribute; }
 
+        const std::string &dynamic_object_type_name() const noexcept override { return m_type_name; }
+
         bool call_match(const chaiscript::Function_Params &vals, const Type_Conversions_State &t_conversions) const noexcept override {
           if (dynamic_object_typename_match(vals, m_type_name, m_ti, t_conversions)) {
             return m_func->call_match(vals, t_conversions);
@@ -112,7 +114,7 @@ namespace chaiscript {
           if (bv.get_type_info().bare_equal(m_doti)) {
             try {
               const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bv, &t_conversions);
-              return name == "Dynamic_Object" || d.get_type_name() == name;
+              return name == "Dynamic_Object" || Dynamic_Object::type_matches(d.get_type_name(), name);
             } catch (const std::bad_cast &) {
               return false;
             }

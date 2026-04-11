@@ -828,11 +828,23 @@ namespace chaiscript {
       Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
         chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
+        const auto &class_name = this->children[0]->text;
+
         /// \todo do this better
         // put class name in current scope so it can be looked up by the attrs and methods
-        t_ss.add_object("_current_class_name", const_var(this->children[0]->text));
+        t_ss.add_object("_current_class_name", const_var(class_name));
 
-        this->children[1]->eval(t_ss);
+        const bool has_base_class = (this->children.size() == 3);
+        const auto &block = has_base_class ? this->children[2] : this->children[1];
+
+        // Register inheritance before evaluating the class body so that
+        // function dispatch ordering can account for the relationship
+        if (has_base_class) {
+          const auto &base_name = this->children[1]->text;
+          dispatch::Dynamic_Object::register_inheritance(class_name, base_name);
+        }
+
+        block->eval(t_ss);
 
         return void_var();
       }
