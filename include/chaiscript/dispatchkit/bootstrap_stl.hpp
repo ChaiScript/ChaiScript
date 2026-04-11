@@ -18,6 +18,7 @@
 #include <functional>
 #include <memory>
 #include <stdexcept>
+#include <type_traits>
 #include <typeinfo>
 #include <vector>
 
@@ -170,18 +171,22 @@ namespace chaiscript::bootstrap::standard_library {
   /// http://www.sgi.com/tech/stl/Assignable.html
   template<typename ContainerType>
   void assignable_type(const std::string &type, Module &m) {
-    copy_constructor<ContainerType>(type, m);
-    operators::assign<ContainerType>(m);
+    if constexpr (std::is_copy_constructible_v<typename ContainerType::value_type>) {
+      copy_constructor<ContainerType>(type, m);
+      operators::assign<ContainerType>(m);
+    }
   }
 
   /// Add container resize concept to the given ContainerType
   /// http://www.cplusplus.com/reference/stl/
   template<typename ContainerType>
   void resizable_type(const std::string & /*type*/, Module &m) {
-    m.add(fun([](ContainerType *a, typename ContainerType::size_type n, const typename ContainerType::value_type &val) {
-            return a->resize(n, val);
-          }),
-          "resize");
+    if constexpr (std::is_copy_constructible_v<typename ContainerType::value_type>) {
+      m.add(fun([](ContainerType *a, typename ContainerType::size_type n, const typename ContainerType::value_type &val) {
+              return a->resize(n, val);
+            }),
+            "resize");
+    }
     m.add(fun([](ContainerType *a, typename ContainerType::size_type n) { return a->resize(n); }), "resize");
   }
 
@@ -213,13 +218,15 @@ namespace chaiscript::bootstrap::standard_library {
   /// http://www.sgi.com/tech/stl/Sequence.html
   template<typename ContainerType>
   void sequence_type(const std::string & /*type*/, Module &m) {
-    m.add(fun(&detail::insert_at<ContainerType>), []() -> std::string {
-      if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
-        return "insert_ref_at";
-      } else {
-        return "insert_at";
-      }
-    }());
+    if constexpr (std::is_copy_constructible_v<typename ContainerType::value_type>) {
+      m.add(fun(&detail::insert_at<ContainerType>), []() -> std::string {
+        if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
+          return "insert_ref_at";
+        } else {
+          return "insert_at";
+        }
+      }());
+    }
 
     m.add(fun(&detail::erase_at<ContainerType>), "erase_at");
   }
@@ -245,27 +252,29 @@ namespace chaiscript::bootstrap::standard_library {
           }),
           "back");
 
-    using push_back = void (ContainerType::*)(const typename ContainerType::value_type &);
-    m.add(fun(static_cast<push_back>(&ContainerType::push_back)), [&]() -> std::string {
-      if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
-        m.eval("# Pushes the second value onto the container while making a clone of the value\n"
-               "def push_back("
-               + type
-               + " container, x)\n"
-                 "{ \n"
-                 "  if (x.is_var_return_value()) {\n"
-                 "    x.reset_var_return_value() \n"
-                 "    container.push_back_ref(x) \n"
-                 "  } else { \n"
-                 "    container.push_back_ref(clone(x)); \n"
-                 "  }\n"
-                 "} \n");
+    if constexpr (std::is_copy_constructible_v<typename ContainerType::value_type>) {
+      using push_back = void (ContainerType::*)(const typename ContainerType::value_type &);
+      m.add(fun(static_cast<push_back>(&ContainerType::push_back)), [&]() -> std::string {
+        if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
+          m.eval("# Pushes the second value onto the container while making a clone of the value\n"
+                 "def push_back("
+                 + type
+                 + " container, x)\n"
+                   "{ \n"
+                   "  if (x.is_var_return_value()) {\n"
+                   "    x.reset_var_return_value() \n"
+                   "    container.push_back_ref(x) \n"
+                   "  } else { \n"
+                   "    container.push_back_ref(clone(x)); \n"
+                   "  }\n"
+                   "} \n");
 
-        return "push_back_ref";
-      } else {
-        return "push_back";
-      }
-    }());
+          return "push_back_ref";
+        } else {
+          return "push_back";
+        }
+      }());
+    }
 
     m.add(fun(&ContainerType::pop_back), "pop_back");
   }
@@ -295,25 +304,27 @@ namespace chaiscript::bootstrap::standard_library {
           }),
           "front");
 
-    m.add(fun(static_cast<push_ptr>(&ContainerType::push_front)), [&]() -> std::string {
-      if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
-        m.eval("# Pushes the second value onto the front of container while making a clone of the value\n"
-               "def push_front("
-               + type
-               + " container, x)\n"
-                 "{ \n"
-                 "  if (x.is_var_return_value()) {\n"
-                 "    x.reset_var_return_value() \n"
-                 "    container.push_front_ref(x) \n"
-                 "  } else { \n"
-                 "    container.push_front_ref(clone(x)); \n"
-                 "  }\n"
-                 "} \n");
-        return "push_front_ref";
-      } else {
-        return "push_front";
-      }
-    }());
+    if constexpr (std::is_copy_constructible_v<typename ContainerType::value_type>) {
+      m.add(fun(static_cast<push_ptr>(&ContainerType::push_front)), [&]() -> std::string {
+        if (typeid(typename ContainerType::value_type) == typeid(Boxed_Value)) {
+          m.eval("# Pushes the second value onto the front of container while making a clone of the value\n"
+                 "def push_front("
+                 + type
+                 + " container, x)\n"
+                   "{ \n"
+                   "  if (x.is_var_return_value()) {\n"
+                   "    x.reset_var_return_value() \n"
+                   "    container.push_front_ref(x) \n"
+                   "  } else { \n"
+                   "    container.push_front_ref(clone(x)); \n"
+                   "  }\n"
+                   "} \n");
+          return "push_front_ref";
+        } else {
+          return "push_front";
+        }
+      }());
+    }
 
     m.add(fun(static_cast<pop_ptr>(&ContainerType::pop_front)), "pop_front");
   }

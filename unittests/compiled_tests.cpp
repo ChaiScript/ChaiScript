@@ -1436,3 +1436,28 @@ TEST_CASE("Issue #421 - Switch with type_conversion does not compare destroyed o
     result
   })") == 0);
 }
+
+// Issue #524: A std::vector of std::unique_ptrs can't be added
+// vector_type should compile with non-copyable value types by
+// skipping copy-dependent operations via if constexpr.
+struct Issue524_Foo {
+  int value = 42;
+};
+
+TEST_CASE("Issue #524 - vector of unique_ptr can be registered") {
+  using VecType = std::vector<std::unique_ptr<Issue524_Foo>>;
+
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  // This should compile and not throw - previously failed to compile
+  // because vector_type tried to instantiate copy constructor, assignment,
+  // push_back(const T&), insert_at(const T&), and resize(n, const T&)
+  // for the non-copyable std::unique_ptr<Issue524_Foo>.
+  chaiscript::ModulePtr m = std::make_shared<chaiscript::Module>();
+  chaiscript::bootstrap::standard_library::vector_type<VecType>("UniqueVec", *m);
+  CHECK_NOTHROW(chai.add(m));
+
+  // Verify basic operations still work
+  CHECK(chai.eval<size_t>("var v = UniqueVec(); v.size()") == 0);
+  CHECK(chai.eval<bool>("var v2 = UniqueVec(); v2.empty()") == true);
+}
