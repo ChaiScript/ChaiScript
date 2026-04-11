@@ -58,3 +58,67 @@ class Derived2 : Base
 
 auto d2 = Derived2()
 assert_equal(500, d2.do_something())
+
+// Test passing a derived object to a free function that calls base methods
+def call_do_something(obj) {
+  return obj.do_something()
+}
+
+auto d3 = Derived()
+assert_equal(20, call_do_something(d3))
+
+// Base still works through the same free function
+auto b2 = Base()
+assert_equal(20, call_do_something(b2))
+
+// Test passing derived to a function that accesses base attributes
+def get_x(obj) {
+  return obj.x
+}
+
+assert_equal(10, get_x(d3))
+assert_equal(10, get_x(b2))
+
+// Test polymorphic behavior: override is called for Derived2
+auto d4 = Derived2()
+assert_equal(500, call_do_something(d4))
+
+// Test mixing base and derived in a container, calling base methods
+var objects = [Base(), Derived(), Derived2()]
+assert_equal(20, objects[0].do_something())
+assert_equal(20, objects[1].do_something())
+assert_equal(500, objects[2].do_something())
+
+// Test that derived objects still report correct type
+auto d5 = Derived()
+assert_true(d5.is_type("Derived"))
+
+// Test multi-level inheritance
+class GrandChild : Derived
+{
+  attr z
+
+  def GrandChild()
+  {
+    this.x = 1
+    this.y = 2
+    this.z = 3
+  }
+
+  def do_grandchild()
+  {
+    return this.z * 4
+  }
+}
+
+auto gc = GrandChild()
+assert_equal(1, gc.x)
+assert_equal(2, gc.y)
+assert_equal(3, gc.z)
+assert_equal(2, gc.do_something())   // Base method
+assert_equal(6, gc.do_other())       // Derived method
+assert_equal(12, gc.do_grandchild()) // Own method
+
+// Test passing grandchild to function that uses base methods
+assert_equal(2, call_do_something(gc))
+assert_equal(1, get_x(gc))
