@@ -2434,6 +2434,18 @@ namespace chaiscript {
             throw exception::eval_error("Incomplete variable declaration", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
+        } else if (Keyword("const")) {
+          retval = true;
+
+          // consume optional 'var' or 'auto' after 'const'
+          Keyword("var") || Keyword("auto");
+
+          if (Id(true)) {
+            build_match<eval::Const_Var_Decl_AST_Node<Tracer>>(prev_stack_top);
+          } else {
+            throw exception::eval_error("Incomplete const variable declaration", File_Position(m_position.line, m_position.col), *m_filename);
+          }
+
         } else if (Keyword("global")) {
           retval = true;
 

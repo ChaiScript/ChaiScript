@@ -1,0 +1,21 @@
+// Test const variable declarations
+const var x = 5
+assert_equal(5, x)
+
+// Test that const variables cannot be reassigned
+assert_throws("Error: \"Error, cannot assign to constant value.\"", fun() { const var y = 10; y = 20 })
+
+// Test const with auto keyword
+const auto z = "hello"
+assert_equal("hello", z)
+
+// Test that const auto variables cannot be reassigned
+assert_throws("Error: \"Error, cannot assign to constant value.\"", fun() { const auto w = 3; w = 4 })
+
+// Test is_var_const on const var
+const var c = 42
+assert_true(c.is_var_const())
+
+// Test that non-const var is not const
+var nc = 42
+assert_false(nc.is_var_const())

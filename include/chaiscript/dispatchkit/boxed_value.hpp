@@ -157,6 +157,12 @@ namespace chaiscript {
 
     bool is_const() const noexcept { return m_data->m_type_info.is_const(); }
 
+    /// Mark this Boxed_Value as const (used for script-level const declarations)
+    void make_const() noexcept {
+      m_data->m_type_info.make_const();
+      m_data->m_data_ptr = nullptr;
+    }
+
     bool is_type(const Type_Info &ti) const noexcept { return m_data->m_type_info.bare_equal(ti); }
 
     template<typename T>
