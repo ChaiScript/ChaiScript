@@ -16,6 +16,67 @@ chaiscript::ChaiScript chai; // initializes ChaiScript, adding the standard Chai
 
 Note that ChaiScript cannot be used as a global / static object unless it is being compiled with `CHAISCRIPT_NO_THREADS`.
 
+## Engine Options (`Options`)
+
+Engine-level options control which scripting capabilities are exposed. These are passed as a `std::vector<Options>` to the `ChaiScript` or `ChaiScript_Basic` constructor.
+
+| Option | Effect |
+|--------|--------|
+| `Options::Load_Modules` | Enables `load_module()` in scripts (default) |
+| `Options::No_Load_Modules` | Disables `load_module()` |
+| `Options::External_Scripts` | Enables `use()` and `eval_file()` in scripts (default) |
+| `Options::No_External_Scripts` | Disables `use()` and `eval_file()` |
+
+```cpp
+// Sandboxed engine: no dynamic module loading, no external script evaluation
+chaiscript::ChaiScript chai({}, {},
+    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+```
+
+## Library Options (`Library_Options`)
+
+Library-level options control which parts of the standard library are registered. These are passed as a `std::vector<Library_Options>`.
+
+| Option | Effect |
+|--------|--------|
+| `Library_Options::No_Stdlib` | Disables the entire standard library (types, I/O, prelude, JSON — everything) |
+| `Library_Options::No_IO` | Disables `print_string` and `println_string` (and the prelude's `print`/`puts` wrappers) |
+| `Library_Options::No_Prelude` | Disables the ChaiScript prelude (`print`, `puts`, `filter`, `map`, `foldl`, `join`, etc.) |
+| `Library_Options::No_JSON` | Disables `from_json` and `to_json` |
+
+With the `ChaiScript` convenience class, pass library options as the fourth constructor parameter:
+
+```cpp
+// No I/O functions
+chaiscript::ChaiScript chai({}, {}, chaiscript::default_options(),
+    {chaiscript::Library_Options::No_IO});
+
+// No JSON support
+chaiscript::ChaiScript chai({}, {}, chaiscript::default_options(),
+    {chaiscript::Library_Options::No_JSON});
+
+// Completely bare engine — no stdlib at all
+chaiscript::ChaiScript chai({}, {}, chaiscript::default_options(),
+    {chaiscript::Library_Options::No_Stdlib});
+
+// Combine both: no external scripts and no I/O
+chaiscript::ChaiScript chai({}, {},
+    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts},
+    {chaiscript::Library_Options::No_IO});
+```
+
+With `ChaiScript_Basic`, pass library options directly to `Std_Lib::library()`:
+
+```cpp
+chaiscript::ChaiScript_Basic chai(
+    chaiscript::Std_Lib::library({chaiscript::Library_Options::No_IO}),
+    create_chaiscript_parser(),
+    {}, {},
+    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+```
+
+Note: `No_Prelude` disables the prelude script which defines convenience functions like `print` (which wraps `print_string`). If you disable the prelude but not I/O, `print_string` and `println_string` are still available.
+
 # Adding Things To The Engine
 
 ## Adding a Function / Method / Member
