@@ -40,3 +40,32 @@ jobs:
             build-em/chaiscript.wasm
             build-em/chaiscript.html
           retention-days: 90
+
+  publish:
+    name: Publish WASM Release
+    needs: emscripten
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: chaiscript-web
+          path: artifacts
+
+      - name: Publish to wasm-latest release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Flatten: artifacts may contain build-em/ subdirectory
+          find artifacts -type f \( -name 'chaiscript.js' -o -name 'chaiscript.wasm' -o -name 'chaiscript.html' \) -exec cp {} . \;
+
+          # Delete existing release if present, then recreate
+          gh release delete wasm-latest --repo "$GITHUB_REPOSITORY" -y 2>/dev/null || true
+          gh release create wasm-latest \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "ChaiScript WASM Build (latest)" \
+            --notes "Auto-published from develop branch. Built with Emscripten for browser use." \
+            --prerelease \
+            chaiscript.js chaiscript.wasm chaiscript.html
