@@ -59,27 +59,32 @@ class Derived2 : Base
 auto d2 = Derived2()
 assert_equal(500, d2.do_something())
 
-// Test passing a derived object to a free function that calls base methods
-def call_do_something(obj) {
+// Test passing a derived object to an untyped free function
+def call_do_something_untyped(obj) {
   return obj.do_something()
 }
 
 auto d3 = Derived()
+assert_equal(20, call_do_something_untyped(d3))
+assert_equal(20, call_do_something_untyped(Base()))
+
+// Test typed functions: parameter declared as Base, accepts derived objects
+def call_do_something(Base obj) {
+  return obj.do_something()
+}
+
+assert_equal(20, call_do_something(Base()))
 assert_equal(20, call_do_something(d3))
 
-// Base still works through the same free function
-auto b2 = Base()
-assert_equal(20, call_do_something(b2))
-
-// Test passing derived to a function that accesses base attributes
-def get_x(obj) {
+// Test typed function accessing base attributes on a derived object
+def get_x(Base obj) {
   return obj.x
 }
 
 assert_equal(10, get_x(d3))
-assert_equal(10, get_x(b2))
+assert_equal(10, get_x(Base()))
 
-// Test polymorphic behavior: override is called for Derived2
+// Test polymorphic dispatch through typed function: derived override is called
 auto d4 = Derived2()
 assert_equal(500, call_do_something(d4))
 
@@ -119,6 +124,14 @@ assert_equal(2, gc.do_something())   // Base method
 assert_equal(6, gc.do_other())       // Derived method
 assert_equal(12, gc.do_grandchild()) // Own method
 
-// Test passing grandchild to function that uses base methods
+// Test passing grandchild to typed Base function (multi-level inheritance)
 assert_equal(2, call_do_something(gc))
 assert_equal(1, get_x(gc))
+
+// Test typed function expecting mid-level type
+def call_do_other(Derived obj) {
+  return obj.do_other()
+}
+
+assert_equal(6, call_do_other(gc))
+assert_equal(60, call_do_other(Derived()))
