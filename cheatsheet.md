@@ -477,34 +477,109 @@ n(2); // returns 20
 
 
 
-## ChaiScript Defined Types
+## ChaiScript Defined Types (Classes)
 
-Define a type called "MyType" with one member value "a" and a getter
+ChaiScript supports user-defined types using the `class` keyword. Classes can have attributes,
+constructors, methods, guards, and operator overloads. There is no inheritance between
+ChaiScript-defined types, but C++ class hierarchies can be exposed (see *Class Hierarchies* above).
 
-### Preferred
+### Class Definition (Block Syntax)
 
-```
-class MyType {
-  var value;
-  def MyType() { this.value = "a"; }
-  def get_value() { "Value Is: " + this.value; }
-};
-```
-
-### Alternative 
+Define a type with attributes, a constructor, and methods inside a `class` block.
+The keywords `var`, `attr`, and `auto` are interchangeable for declaring attributes.
 
 ```
-attr MyType::value;
-def MyType::MyType() { this.value = "a"; }
-def MyType::get_value() { "Value Is: " + this.value; }
+class Rectangle {
+  var width
+  var height
+  def Rectangle(w, h) { this.width = w; this.height = h; }
+  def Rectangle() { this.width = 0; this.height = 0; }
+  def area() { this.width * this.height; }
+}
+
+var r = Rectangle(3, 4)
+print(r.area()) // prints 12
+```
+
+### Class Definition (Open Syntax)
+
+Equivalently, attributes and methods can be defined outside a block using the `TypeName::` prefix.
+
+```
+attr Circle::radius
+def Circle::Circle(r) { this.radius = r; }
+def Circle::circumference() { 2.0 * 3.14159 * this.radius; }
+```
+
+Methods can also be added to an existing class after its initial definition:
+
+```
+def Rectangle::perimeter() { 2 * (this.width + this.height); }
 ```
 
 ### Using
 
 ```
-var m = MyType(); // calls constructor
-print(m.get_value()); // prints "Value Is: a"
-print(get_value(m)); // prints "Value Is: a"
+var m = Rectangle(5, 10)
+print(m.area())       // prints 50 — method call syntax
+print(area(m))        // prints 50 — function call syntax (equivalent)
+```
+
+### Constructor and Method Guards
+
+Constructors and methods can have guard expressions (after `:`) that control which
+overload is selected at call time.
+
+```
+class Clamped {
+  var value
+  def Clamped(x) : x >= 0 { this.value = x; }
+  def Clamped(x) { this.value = 0; }  // fallback when guard fails
+}
+
+Clamped(5).value   // 5
+Clamped(-3).value  // 0
+
+class Abs {
+  var x
+  def Abs(v) { this.x = v; }
+  def get() : this.x >= 0 { this.x; }
+  def get() { -this.x; }
+}
+```
+
+### Operator Overloading
+
+Operators can be overloaded on user-defined types using backtick-quoted operator names.
+
+```
+class Vec2 {
+  var x
+  var y
+  def Vec2(x, y) { this.x = x; this.y = y; }
+  def `+`(other) { Vec2(this.x + other.x, this.y + other.y); }
+}
+
+var v = Vec2(1, 2) + Vec2(3, 4)  // v.x == 4, v.y == 6
+```
+
+Operators can also be overloaded as free functions with guards:
+
+```
+def `-`(a, b) : is_type(a, "Vec2") && is_type(b, "Vec2") {
+  Vec2(a.x - b.x, a.y - b.y)
+}
+```
+
+### Cloning Objects
+
+Use `clone()` to create a deep copy of a ChaiScript-defined object.
+
+```
+var original = Rectangle(10, 20)
+var copy = clone(original)
+copy.width = 99
+print(original.width)  // still 10
 ```
 
 ## Dynamic Objects
@@ -592,6 +667,126 @@ use("filename") // evals file exactly once and returns value of last statement
 ```
 
 Both `use` and `eval_file` search the 'usepaths' passed to the ChaiScript constructor
+
+## Reflection and Introspection
+
+ChaiScript provides built-in reflection capabilities for inspecting types, functions, and objects at runtime.
+
+### Type Inspection
+
+```
+type_name(x)            // returns the type name of a value as a string
+is_type(x, "typename")  // returns true if x is of the named type
+type("typename")        // returns a Type_Info object for the named type
+
+// Examples
+type_name(1)            // "int"
+type_name("hello")      // "string"
+is_type(1, "int")       // true
+is_type(1, "string")    // false
+```
+
+### Object Inspection Methods
+
+Every object in ChaiScript supports these methods:
+
+```
+x.get_type_info()     // returns a Type_Info object for the value
+x.is_type("string")   // returns true if x is of the named type
+x.is_type(string_type) // returns true if x matches the Type_Info
+x.is_var_const()      // returns true if x is immutable
+x.is_var_null()       // returns true if x is a null pointer
+x.is_var_pointer()    // returns true if x is stored as a pointer
+x.is_var_reference()  // returns true if x is stored as a reference
+x.is_var_undef()      // returns true if x is undefined
+```
+
+### Type_Info
+
+`Type_Info` objects describe a type. You can get them via `type("typename")` or `x.get_type_info()`.
+
+```
+var ti = type("int")
+ti.name()              // ChaiScript registered name, e.g. "int"
+ti.cpp_name()          // mangled C++ type name
+ti.cpp_bare_name()     // C++ name without const/pointer/reference
+ti.bare_equal(other)   // true if types match ignoring const/ptr/ref
+ti.is_type_const()     // true if type is const
+ti.is_type_reference() // true if type is a reference
+ti.is_type_void()      // true if type is void
+ti.is_type_undef()     // true if type is undefined
+ti.is_type_pointer()   // true if type is a pointer
+ti.is_type_arithmetic() // true if type is arithmetic (int, double, etc.)
+```
+
+Built-in type constants are available: `int_type`, `double_type`, `string_type`, `bool_type`, `Object_type`, `Function_type`, `vector_type`, `map_type`.
+
+### Function Introspection
+
+Function objects support these introspection methods:
+
+```
+f.get_arity()                // number of parameters (-1 for variadic)
+f.get_param_types()          // Vector of Type_Info (first element is return type)
+f.get_contained_functions()  // Vector of overloaded functions (empty if not a conglomerate)
+f.has_guard()                // true if the function has a guard condition
+f.get_guard()                // returns the guard function (throws if none)
+f.get_annotation()           // returns the annotation description
+f.call([param1, param2])     // call the function with a vector of parameters
+
+// Examples
+def my_func(a, b) { return a + b; }
+my_func.get_arity()          // 2
+my_func.has_guard()          // false
+
+def guarded(x) : x > 0 { return x; }
+guarded.has_guard()          // true
+guarded.get_guard().get_arity() // 1
+
+// Calling functions dynamically
+`+`.call([1, 2])             // 3
+```
+
+### System Introspection
+
+```
+get_functions()        // returns a Map of all registered functions (name -> function)
+get_objects()          // returns a Map of all scripting objects (name -> value)
+function_exists("f")   // returns true if a function named "f" is registered
+call_exists(`f`, args) // returns true if f can be called with the given args
+dump_system()          // prints all registered functions to stdout
+dump_object(x)         // prints information about a value to stdout
+
+// Examples
+var funcs = get_functions()
+funcs["print"]                  // the print function object
+function_exists("print")        // true
+call_exists(`+`, 1, 2)          // true
+```
+
+### Dynamic_Object Reflection
+
+ChaiScript-defined classes are Dynamic_Objects internally. They support:
+
+```
+obj.get_type_name()    // returns the ChaiScript class name (e.g. "MyClass")
+obj.get_attrs()        // returns a Map of all attributes
+obj.has_attr("name")   // returns true if the attribute exists
+obj.get_attr("name")   // returns the value of the attribute
+obj.set_explicit(true) // disables dynamic attribute creation
+obj.is_explicit()      // returns true if explicit mode is enabled
+
+// Example
+class MyClass {
+  var x
+  def MyClass() { this.x = 10; }
+}
+var m = MyClass()
+m.get_type_name()      // "MyClass"
+m.get_attrs()          // map containing "x" -> 10
+type_name(m)           // "Dynamic_Object" (the underlying C++ type)
+m.is_type("MyClass")   // true (checks the ChaiScript class name)
+```
 
 ## JSON
 

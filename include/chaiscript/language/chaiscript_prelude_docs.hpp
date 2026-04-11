@@ -426,6 +426,9 @@ namespace ChaiScript_Language {
     /// \brief Returns true if the type is "void"
     bool is_type_void() const;
 
+    /// \brief Returns true if the type is an arithmetic type (int, double, etc.)
+    bool is_type_arithmetic() const;
+
     /// \brief Returns the ChaiScript registered name for the type if one exists.
     string name() const;
   };
@@ -763,6 +766,90 @@ namespace ChaiScript_Language {
   /// true
   /// \endcode
   bool call_exists(Function f, ...);
+
+  /// \brief Returns the type name of the given object as a string
+  ///
+  /// Example:
+  /// \code
+  /// eval> type_name(1)
+  /// int
+  /// eval> type_name("hello")
+  /// string
+  /// \endcode
+  ///
+  /// \sa Type_Info::name()
+  /// \sa Object::get_type_info()
+  string type_name(Object o);
+
+  /// \brief Returns true if the object is of the named type
+  ///
+  /// Example:
+  /// \code
+  /// eval> is_type(1, "int")
+  /// true
+  /// eval> is_type(1, "string")
+  /// false
+  /// \endcode
+  ///
+  /// \sa Object::is_type()
+  bool is_type(Object o, string type_name);
+
+  /// \brief Returns true if a function with the given name is registered
+  ///
+  /// Example:
+  /// \code
+  /// eval> function_exists("print")
+  /// true
+  /// eval> function_exists("nonexistent")
+  /// false
+  /// \endcode
+  bool function_exists(string name);
+
+  /// \brief Returns a Map of all registered functions, keyed by function name
+  ///
+  /// Example:
+  /// \code
+  /// eval> var funcs = get_functions()
+  /// eval> funcs["print"].get_arity()
+  /// 1
+  /// \endcode
+  ///
+  /// \sa Function
+  Map get_functions();
+
+  /// \brief Returns a Map of all scripting objects (variables), keyed by name
+  ///
+  /// Example:
+  /// \code
+  /// eval> var x = 42
+  /// eval> var objs = get_objects()
+  /// eval> objs.count("x")
+  /// 1
+  /// \endcode
+  Map get_objects();
+
+  /// \brief Returns a Type_Info for the named type
+  ///
+  /// Example:
+  /// \code
+  /// eval> type("int").name()
+  /// int
+  /// \endcode
+  ///
+  /// \param type_name The name of the type to look up
+  /// \param throw_on_fail If true (default), throws if the type is not found
+  /// \sa Type_Info
+  Type_Info type(string type_name, bool throw_on_fail = true);
+
+  /// \brief Prints all registered functions to stdout
+  ///
+  /// Useful for debugging. Outputs a list of all functions registered in the system.
+  void dump_system();
+
+  /// \brief Prints information about the given object to stdout
+  ///
+  /// Useful for debugging. Outputs the type and value of the object.
+  void dump_object(Object o);
 
   /// \brief Reverses a Range object so that the elements are accessed in reverse
   Range retro(Range);

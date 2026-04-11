@@ -120,7 +120,7 @@ namespace chaiscript {
             if (bv.get_type_info().bare_equal(dynamic_object_type_info)) {
               try {
                 const Dynamic_Object &d = boxed_cast<const Dynamic_Object &>(bv, &t_conversions);
-                if (!(name == "Dynamic_Object" || d.get_type_name() == name)) {
+                if (!(name == "Dynamic_Object" || Dynamic_Object::type_matches(d.get_type_name(), name))) {
                   return std::make_pair(false, false);
                 }
               } catch (const std::bad_cast &) {
@@ -231,6 +231,12 @@ namespace chaiscript {
         } else {
           return false;
         }
+      }
+
+      /// Returns the Dynamic_Object type name this function is bound to, or empty string if not a Dynamic_Object function
+      virtual const std::string &dynamic_object_type_name() const noexcept {
+        static const std::string empty;
+        return empty;
       }
 
       virtual bool compare_first_type(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const noexcept {

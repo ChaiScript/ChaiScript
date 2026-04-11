@@ -1,0 +1,137 @@
+
+class Base
+{
+  attr x
+
+  def Base()
+  {
+    this.x = 10
+  }
+
+  def do_something()
+  {
+    return this.x * 2
+  }
+}
+
+class Derived : Base
+{
+  attr y
+
+  def Derived()
+  {
+    this.x = 10
+    this.y = 20
+  }
+
+  def do_other()
+  {
+    return this.y * 3
+  }
+}
+
+// Test basic inheritance - derived can call base methods
+auto d = Derived()
+assert_equal(10, d.x)
+assert_equal(20, d.y)
+assert_equal(20, d.do_something())
+assert_equal(60, d.do_other())
+
+// Test base class still works independently
+auto b = Base()
+assert_equal(10, b.x)
+assert_equal(20, b.do_something())
+
+// Test method override
+class Derived2 : Base
+{
+  def Derived2()
+  {
+    this.x = 5
+  }
+
+  def do_something()
+  {
+    return this.x * 100
+  }
+}
+
+auto d2 = Derived2()
+assert_equal(500, d2.do_something())
+
+// Test passing a derived object to an untyped free function
+def call_do_something_untyped(obj) {
+  return obj.do_something()
+}
+
+auto d3 = Derived()
+assert_equal(20, call_do_something_untyped(d3))
+assert_equal(20, call_do_something_untyped(Base()))
+
+// Test typed functions: parameter declared as Base, accepts derived objects
+def call_do_something(Base obj) {
+  return obj.do_something()
+}
+
+assert_equal(20, call_do_something(Base()))
+assert_equal(20, call_do_something(d3))
+
+// Test typed function accessing base attributes on a derived object
+def get_x(Base obj) {
+  return obj.x
+}
+
+assert_equal(10, get_x(d3))
+assert_equal(10, get_x(Base()))
+
+// Test polymorphic dispatch through typed function: derived override is called
+auto d4 = Derived2()
+assert_equal(500, call_do_something(d4))
+
+// Test mixing base and derived in a container, calling base methods
+var objects = [Base(), Derived(), Derived2()]
+assert_equal(20, objects[0].do_something())
+assert_equal(20, objects[1].do_something())
+assert_equal(500, objects[2].do_something())
+
+// Test that derived objects still report correct type
+auto d5 = Derived()
+assert_true(d5.is_type("Derived"))
+
+// Test multi-level inheritance
+class GrandChild : Derived
+{
+  attr z
+
+  def GrandChild()
+  {
+    this.x = 1
+    this.y = 2
+    this.z = 3
+  }
+
+  def do_grandchild()
+  {
+    return this.z * 4
+  }
+}
+
+auto gc = GrandChild()
+assert_equal(1, gc.x)
+assert_equal(2, gc.y)
+assert_equal(3, gc.z)
+assert_equal(2, gc.do_something())   // Base method
+assert_equal(6, gc.do_other())       // Derived method
+assert_equal(12, gc.do_grandchild()) // Own method
+
+// Test passing grandchild to typed Base function (multi-level inheritance)
+assert_equal(2, call_do_something(gc))
+assert_equal(1, get_x(gc))
+
+// Test typed function expecting mid-level type
+def call_do_other(Derived obj) {
+  return obj.do_other()
+}
+
+assert_equal(6, call_do_other(gc))
+assert_equal(60, call_do_other(Derived()))
