@@ -1363,6 +1363,109 @@ namespace chaiscript {
         }
       }
 
+      /// Reads a raw string from input R"delimiter(content)delimiter", without skipping initial whitespace
+      bool Raw_String_() {
+        if (m_position.has_more() && (*m_position == 'R') && m_position.remaining() > 1 && *(m_position + 1) == '"') {
+          auto s = m_position + 2;
+
+          // Read the delimiter (may be empty)
+          std::string delimiter;
+          while (s.has_more() && *s != '(' && *s != '\n') {
+            delimiter.push_back(*s);
+            ++s;
+          }
+
+          if (!s.has_more() || *s != '(') {
+            return false;
+          }
+
+          // Skip the opening '('
+          ++s;
+
+          // Build the closing sequence: )delimiter"
+          std::string close_seq = ")";
+          close_seq += delimiter;
+          close_seq += '"';
+
+          // Search for the closing sequence
+          while (s.has_more()) {
+            if (*s == close_seq[0]) {
+              // Check if we match the full closing sequence
+              auto t = s;
+              std::size_t i = 0;
+              while (t.has_more() && i < close_seq.size() && *t == close_seq[i]) {
+                ++t;
+                ++i;
+              }
+              if (i == close_seq.size()) {
+                // Found the closing sequence
+                m_position = t;
+                return true;
+              }
+            }
+            if (*s == '\n') {
+              m_position.col = 1;
+            }
+            ++s;
+          }
+
+          throw exception::eval_error("Unclosed raw string", File_Position(m_position.line, m_position.col), *m_filename);
+        }
+        return false;
+      }
+
+      /// Reads and captures a raw string from input. No escape processing or interpolation.
+      bool Raw_String() {
+        Depth_Counter dc{this};
+        SkipWS();
+
+        const auto start = m_position;
+
+        if (Raw_String_()) {
+          // Extract content between R"delimiter( and )delimiter"
+          auto s = start + 2; // skip R"
+
+          // Skip delimiter
+          std::string delimiter;
+          while (*s != '(') {
+            delimiter.push_back(*s);
+            ++s;
+          }
+          ++s; // skip '('
+
+          // Build closing sequence
+          std::string close_seq = ")";
+          close_seq += delimiter;
+          close_seq += '"';
+
+          // Extract raw content up to closing sequence
+          std::string match;
+          auto end = m_position; // m_position is already past the closing sequence
+
+          // Content is from s up to (end - close_seq.size())
+          // We need to find the closing sequence from s
+          while (s.has_more()) {
+            if (*s == close_seq[0]) {
+              auto t = s;
+              std::size_t i = 0;
+              while (t.has_more() && i < close_seq.size() && *t == close_seq[i]) {
+                ++t;
+                ++i;
+              }
+              if (i == close_seq.size() && t == end) {
+                break;
+              }
+            }
+            match.push_back(*s);
+            ++s;
+          }
+
+          m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(match)));
+          return true;
+        }
+        return false;
+      }
+
       /// Reads a character group from input, without skipping initial whitespace
       bool Single_Quoted_String_() {
         bool retval = false;
@@ -2219,7 +2322,7 @@ namespace chaiscript {
         bool retval = false;
 
         const auto prev_stack_top = m_match_stack.size();
-        if (Lambda() || Num() || Quoted_String() || Single_Quoted_String() || Paren_Expression() || Inline_Container() || Id(false)) {
+        if (Lambda() || Num() || Raw_String() || Quoted_String() || Single_Quoted_String() || Paren_Expression() || Inline_Container() || Id(false)) {
           retval = true;
           bool has_more = true;
 
