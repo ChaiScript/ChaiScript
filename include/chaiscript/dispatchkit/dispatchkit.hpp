@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <typeinfo>
 #include <utility>
 #include <vector>
@@ -369,6 +370,28 @@ namespace chaiscript {
           : m_stack_holder()
           , m_parser(parser) {
       }
+
+      ~Dispatch_Engine() {
+        join_async_threads();
+      }
+
+      Dispatch_Engine(const Dispatch_Engine &) = delete;
+      Dispatch_Engine &operator=(const Dispatch_Engine &) = delete;
+      Dispatch_Engine(Dispatch_Engine &&) = default;
+      Dispatch_Engine &operator=(Dispatch_Engine &&) = default;
+
+#ifndef CHAISCRIPT_NO_THREADS
+      /// Track an async thread so it can be joined during destruction
+      void track_async_thread(std::thread t_thread) {
+        chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_async_mutex);
+        // Clean up already-finished threads to avoid unbounded growth
+        m_async_threads.erase(
+            std::remove_if(m_async_threads.begin(), m_async_threads.end(),
+                           [](std::thread &t) { return !t.joinable(); }),
+            m_async_threads.end());
+        m_async_threads.push_back(std::move(t_thread));
+      }
+#endif
 
       /// \brief casts an object while applying any Dynamic_Conversion available
       template<typename Type>
@@ -1064,13 +1087,21 @@ namespace chaiscript {
         // overridden methods in derived classes are tried first during dispatch
         const auto &lhs_dotn = lhs->dynamic_object_type_name();
         const auto &rhs_dotn = rhs->dynamic_object_type_name();
-        if (!lhs_dotn.empty() && !rhs_dotn.empty() && lhs_dotn != rhs_dotn) {
-          if (dispatch::Dynamic_Object::type_matches(lhs_dotn, rhs_dotn)) {
-            return true; // lhs is derived from rhs, so lhs is more specific
+        if (lhs_dotn != rhs_dotn) {
+          if (!lhs_dotn.empty() && !rhs_dotn.empty()) {
+            if (dispatch::Dynamic_Object::type_matches(lhs_dotn, rhs_dotn)) {
+              return true; // lhs is derived from rhs, so lhs is more specific
+            }
+            if (dispatch::Dynamic_Object::type_matches(rhs_dotn, lhs_dotn)) {
+              return false; // rhs is derived from lhs, so rhs is more specific
+            }
           }
-          if (dispatch::Dynamic_Object::type_matches(rhs_dotn, lhs_dotn)) {
-            return false; // rhs is derived from lhs, so rhs is more specific
+          // Impose a total order on type names to maintain strict-weak ordering:
+          // non-empty names sort before empty names, then lexicographically
+          if (lhs_dotn.empty() != rhs_dotn.empty()) {
+            return !lhs_dotn.empty();
           }
+          return lhs_dotn < rhs_dotn;
         }
 
         const auto &lhsparamtypes = lhs->get_param_types();
@@ -1120,7 +1151,9 @@ namespace chaiscript {
           return lt < rt;
         }
 
-        return false;
+        // When all overlapping parameters match, order by arity to maintain
+        // strict-weak ordering (transitivity of equivalence)
+        return lhssize < rhssize;
       }
 
       /// Implementation detail for adding a function.
@@ -1165,6 +1198,21 @@ namespace chaiscript {
         get_function_objects_int().insert_or_assign(t_name, std::move(new_func));
       }
 
+      void join_async_threads() {
+#ifndef CHAISCRIPT_NO_THREADS
+        std::vector<std::thread> threads;
+        {
+          chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::shared_mutex> l(m_async_mutex);
+          threads = std::move(m_async_threads);
+        }
+        for (auto &t : threads) {
+          if (t.joinable()) {
+            t.join();
+          }
+        }
+#endif
+      }
+
       mutable chaiscript::detail::threading::shared_mutex m_mutex;
 
       Type_Conversions m_conversions;
@@ -1174,6 +1222,11 @@ namespace chaiscript {
       mutable std::atomic_uint_fast32_t m_method_missing_loc = {0};
 
       State m_state;
+
+#ifndef CHAISCRIPT_NO_THREADS
+      mutable chaiscript::detail::threading::shared_mutex m_async_mutex;
+      std::vector<std::thread> m_async_threads;
+#endif
     };
 
     class Dispatch_State {

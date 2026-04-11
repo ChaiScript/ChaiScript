@@ -1,0 +1,237 @@
+<!doctype html>
+<!--
+  ChaiScript Emscripten Frontend
+  Based on work by Rob Loach: https://github.com/RobLoach/ChaiScript.js
+  Copyright 2019, Rob Loach
+  Copyright 2009-2018, Jason Turner
+  Licensed under the BSD License. See "license.txt" for details.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ChaiScript</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #16213e;
+      padding: 1rem 2rem;
+      border-bottom: 2px solid #0f3460;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    header h1 {
+      font-size: 1.5rem;
+      color: #e94560;
+      font-weight: 700;
+    }
+    header span {
+      font-size: 0.85rem;
+      color: #888;
+    }
+    #status {
+      margin-left: auto;
+      font-size: 0.85rem;
+      padding: 0.3rem 0.8rem;
+      border-radius: 4px;
+      background: #0f3460;
+    }
+    #status.ready { color: #4ecca3; }
+    #status.loading { color: #e9c46a; }
+    #status.error { color: #e94560; }
+    main {
+      flex: 1;
+      display: flex;
+      gap: 0;
+    }
+    .panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .panel-header {
+      background: #16213e;
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #888;
+      border-bottom: 1px solid #0f3460;
+    }
+    #input {
+      flex: 1;
+      background: #0d1117;
+      color: #c9d1d9;
+      border: none;
+      padding: 1rem;
+      font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      resize: none;
+      outline: none;
+      tab-size: 2;
+    }
+    .divider {
+      width: 2px;
+      background: #0f3460;
+    }
+    #output {
+      flex: 1;
+      background: #0d1117;
+      padding: 1rem;
+      font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .output-line { color: #c9d1d9; }
+    .output-error { color: #e94560; }
+    footer {
+      background: #16213e;
+      padding: 0.5rem 1rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      border-top: 2px solid #0f3460;
+    }
+    button {
+      background: #e94560;
+      color: #fff;
+      border: none;
+      padding: 0.4rem 1.2rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    button:hover { background: #c73652; }
+    button:disabled { background: #555; cursor: not-allowed; }
+    #btn-clear {
+      background: #0f3460;
+    }
+    #btn-clear:hover { background: #1a4a8a; }
+    .hint {
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ChaiScript</h1>
+    <span>Interactive Playground</span>
+    <div id="status" class="loading">Loading...</div>
+  </header>
+  <main>
+    <div class="panel">
+      <div class="panel-header">Input</div>
+      <textarea id="input" spellcheck="false">// Welcome to ChaiScript!
+// Write your code here and click Run (or press Ctrl+Enter).
+
+def greet(name) {
+  return "Hello, " + name + "!"
+}
+
+print(greet("World"))
+print(greet("ChaiScript"))
+
+// Math example
+def factorial(n) {
+  if (n <= 1) { return 1 }
+  return n * factorial(n - 1)
+}
+
+print("5! = " + to_string(factorial(5)))
+print("10! = " + to_string(factorial(10)))
+</textarea>
+    </div>
+    <div class="divider"></div>
+    <div class="panel">
+      <div class="panel-header">Output</div>
+      <div id="output"></div>
+    </div>
+  </main>
+  <footer>
+    <button id="btn-run" disabled>Run</button>
+    <button id="btn-clear">Clear</button>
+    <span class="hint">Ctrl+Enter to run</span>
+  </footer>
+
+  <script>
+    var outputEl = document.getElementById('output');
+    var inputEl = document.getElementById('input');
+    var btnRun = document.getElementById('btn-run');
+    var btnClear = document.getElementById('btn-clear');
+    var statusEl = document.getElementById('status');
+
+    function appendOutput(text, className) {
+      var line = document.createElement('div');
+      line.className = className || 'output-line';
+      line.textContent = text;
+      outputEl.appendChild(line);
+      outputEl.scrollTop = outputEl.scrollHeight;
+    }
+
+    var Module = {
+      print: function(text) {
+        appendOutput(text);
+      },
+      printErr: function(text) {
+        appendOutput(text, 'output-error');
+      },
+      onRuntimeInitialized: function() {
+        statusEl.textContent = 'Ready';
+        statusEl.className = 'ready';
+        btnRun.disabled = false;
+      }
+    };
+
+    function runCode() {
+      var code = inputEl.value;
+      if (!code.trim()) return;
+
+      appendOutput('> Running...', 'output-line');
+      try {
+        Module.eval(code);
+      } catch (e) {
+        appendOutput('Error: ' + e.message, 'output-error');
+      }
+      appendOutput('', 'output-line');
+    }
+
+    btnRun.addEventListener('click', runCode);
+    btnClear.addEventListener('click', function() {
+      outputEl.innerHTML = '';
+    });
+
+    inputEl.addEventListener('keydown', function(e) {
+      if (e.ctrlKey && e.key === 'Enter') {
+        e.preventDefault();
+        runCode();
+      }
+      // Tab key inserts spaces
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        var start = this.selectionStart;
+        var end = this.selectionEnd;
+        this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 2;
+      }
+    });
+  </script>
+  <script src="chaiscript.js"></script>
+</body>
+</html>

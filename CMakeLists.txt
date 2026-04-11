@@ -413,6 +413,9 @@ if(BUILD_TESTING)
         "CHAI_USE_PATH=${CMAKE_CURRENT_SOURCE_DIR}/unittests/"
         "CHAI_MODULE_PATH=${CMAKE_CURRENT_BINARY_DIR}/"
       )
+      add_executable(async_engine_lifetime_test unittests/async_engine_lifetime_test.cpp)
+      target_link_libraries(async_engine_lifetime_test ${LIBS})
+      add_test(NAME Async_Engine_Lifetime_Test COMMAND async_engine_lifetime_test)
     endif()
 
     add_executable(multifile_test
@@ -422,6 +425,10 @@ if(BUILD_TESTING)
     )
     target_link_libraries(multifile_test ${LIBS})
     add_test(NAME MultiFile_Test COMMAND multifile_test)
+
+    add_executable(emscripten_eval_test unittests/emscripten_eval_test.cpp)
+    target_link_libraries(emscripten_eval_test ${LIBS})
+    add_test(NAME Emscripten_Eval_Test COMMAND emscripten_eval_test)
 
     install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/chaiscript")
   endif()
