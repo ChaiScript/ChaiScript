@@ -1,0 +1,33 @@
+// Test that all conversion functions work across char, int, and string types
+
+// char() constructor
+assert_equal('A', char('A'))   // char from char (identity via Boxed_Number)
+assert_equal('A', char(65))    // char from int (via Boxed_Number)
+assert_equal('A', char("A"))   // char from string (new)
+
+// to_char() conversions
+assert_equal('A', to_char('A'))   // to_char from char (identity)
+assert_equal('A', to_char(65))    // to_char from int (new, via Boxed_Number)
+assert_equal('A', to_char("A"))   // to_char from string (existing)
+
+// int() constructor
+assert_equal(65, int('A'))   // int from char (via Boxed_Number)
+assert_equal(65, int(65))    // int from int (identity via Boxed_Number)
+assert_equal(65, int("65"))  // int from string (new)
+
+// to_int() conversions
+assert_equal(65, to_int('A'))    // to_int from char (new, via Boxed_Number)
+assert_equal(65, to_int(65))     // to_int from int (identity)
+assert_equal(65, to_int("65"))   // to_int from string (existing)
+
+// to_string() conversions
+assert_equal("A", to_string('A'))
+assert_equal("65", to_string(65))
+assert_equal("A", to_string("A"))
+
+// double conversions
+assert_equal(3.5, double("3.5"))       // double from string (new)
+assert_equal(3.5, to_double("3.5"))    // to_double from string (existing)
+assert_equal(65.0, to_double('A'))     // to_double from char (new, via Boxed_Number)
+assert_equal(65.0, to_double(65))      // to_double from int (new, via Boxed_Number)
+assert_equal("3.5", to_string(3.5))    // to_string from double (existing)
