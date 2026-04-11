@@ -85,6 +85,8 @@ namespace chaiscript {
 
     constexpr const std::type_info *bare_type_info() const noexcept { return m_bare_type_info; }
 
+    void make_const() noexcept { m_flags |= (1 << is_const_flag); }
+
   private:
     struct Unknown_Type {
     };

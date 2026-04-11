@@ -47,7 +47,6 @@ namespace chaiscript {
         m_data_ptr = rhs.m_data_ptr;
         m_const_data_ptr = rhs.m_const_data_ptr;
         m_return_value = rhs.m_return_value;
-        m_const_override = rhs.m_const_override;
 
         if (rhs.m_attrs) {
           m_attrs = std::make_unique<std::map<std::string, std::shared_ptr<Data>>>(*rhs.m_attrs);
@@ -68,7 +67,6 @@ namespace chaiscript {
       std::unique_ptr<std::map<std::string, std::shared_ptr<Data>>> m_attrs;
       bool m_is_ref;
       bool m_return_value;
-      bool m_const_override{false};
     };
 
     struct Object_Data {
@@ -157,10 +155,13 @@ namespace chaiscript {
     /// return true if the object is uninitialized
     bool is_undef() const noexcept { return m_data->m_type_info.is_undef(); }
 
-    bool is_const() const noexcept { return m_data->m_type_info.is_const() || m_data->m_const_override; }
+    bool is_const() const noexcept { return m_data->m_type_info.is_const(); }
 
     /// Mark this Boxed_Value as const (used for script-level const declarations)
-    void make_const() noexcept { m_data->m_const_override = true; }
+    void make_const() noexcept {
+      m_data->m_type_info.make_const();
+      m_data->m_data_ptr = nullptr;
+    }
 
     bool is_type(const Type_Info &ti) const noexcept { return m_data->m_type_info.bare_equal(ti); }
 
