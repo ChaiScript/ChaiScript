@@ -1437,6 +1437,43 @@ TEST_CASE("Issue #421 - Switch with type_conversion does not compare destroyed o
   })") == 0);
 }
 
+// Regression test for issue #405: push_back() on script-created vector has
+// no effect when vector_conversion is in effect. The bug occurs because
+// dispatch selects the C++ push_back for the converted type over the built-in
+// one, operating on a temporary copy of the vector.
+TEST_CASE("push_back on script vector with vector_conversion (#405)") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  // Register both vector_type and vector_conversion for std::vector<std::string>,
+  // which is the combination that triggers the bug
+  auto m = std::make_shared<chaiscript::Module>();
+  chaiscript::bootstrap::standard_library::vector_type<std::vector<std::string>>("VectorString", *m);
+  m->add(chaiscript::vector_conversion<std::vector<std::string>>());
+  chai.add(m);
+
+  // push_back on an empty script-created vector
+  CHECK(chai.eval<bool>(
+    "auto x = [];"
+    "x.push_back(\"Hello\");"
+    "x.size() == 1"
+  ));
+
+  // push_back on a script-created vector with initial elements
+  CHECK(chai.eval<bool>(
+    "auto y = [\"a\", \"b\"];"
+    "y.push_back(\"c\");"
+    "y.push_back(\"d\");"
+    "y.size() == 4"
+  ));
+
+  // Verify the actual content is preserved
+  CHECK(chai.eval<std::string>(
+    "auto z = [];"
+    "z.push_back(\"World\");"
+    "z[0]"
+  ) == "World");
+}
+
 // Regression test for issue #607: AST_Node_Trace must be a complete type
 // when used in eval_error's std::vector<AST_Node_Trace> call_stack member.
 // This failed to compile with C++20 on clang/libc++ when AST_Node_Trace

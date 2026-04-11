@@ -798,6 +798,14 @@ namespace chaiscript {
               ++numdiffs;
             }
           }
+
+          // Deprioritize functions whose first parameter (object/receiver) requires
+          // type conversion: conversions create temporaries, so mutations on the
+          // converted object are silently lost (issue #405).
+          if (plist.size() > 1 && !func->get_param_types()[1].bare_equal(plist[0].get_type_info())) {
+            numdiffs = plist.size();
+          }
+
           ordered_funcs.emplace_back(numdiffs, func.get());
         }
       }
