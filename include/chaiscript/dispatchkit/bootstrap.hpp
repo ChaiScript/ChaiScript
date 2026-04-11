@@ -115,6 +115,8 @@ namespace chaiscript::bootstrap {
 
     m.add(fun(&parse_string<T>), "to_" + name);
     m.add(fun([](const T t) { return t; }), "to_" + name);
+    m.add(fun([](const Boxed_Number &bn) { return bn.get_as<T>(); }), "to_" + name);
+    m.add(fun(&parse_string<T>), name);
   }
 
   /// "clone" function for a shared_ptr type. This is used in the case

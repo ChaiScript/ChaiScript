@@ -1456,6 +1456,68 @@ TEST_CASE("Issue 625: function_less_than strict-weak ordering with different ari
   CHECK(chai.eval<int>("overloaded(3, 2.0)") == 5);
 }
 
+// Regression test: push_back() on script-created vector has no effect when
+// vector_conversion is in effect. The bug occurs because dispatch selects
+// the C++ push_back for the converted type over the built-in one, operating
+// on a temporary copy of the vector.
+TEST_CASE("push_back on script vector with vector_conversion") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  auto m = std::make_shared<chaiscript::Module>();
+  chaiscript::bootstrap::standard_library::vector_type<std::vector<std::string>>("VectorString", *m);
+  m->add(chaiscript::vector_conversion<std::vector<std::string>>());
+  chai.add(m);
+
+  // Register a C++ function that accepts the converted type, so we can
+  // verify that vector_conversion actually works for passing vectors
+  chai.add(chaiscript::fun([](const std::vector<std::string> &v) -> std::string {
+    std::string result;
+    for (const auto &s : v) {
+      if (!result.empty()) { result += ","; }
+      result += s;
+    }
+    return result;
+  }), "join_strings");
+
+  // push_back on an empty script-created vector must be visible
+  CHECK(chai.eval<bool>(
+    "auto x = [];"
+    "x.push_back(\"Hello\");"
+    "x.size() == 1"
+  ));
+
+  // push_back on a vector with initial elements must grow correctly
+  CHECK(chai.eval<bool>(
+    "auto y = [\"a\", \"b\"];"
+    "y.push_back(\"c\");"
+    "y.push_back(\"d\");"
+    "y.size() == 4"
+  ));
+
+  // Verify the actual content is preserved after push_back
+  CHECK(chai.eval<std::string>(
+    "auto z = [];"
+    "z.push_back(\"World\");"
+    "z[0]"
+  ) == "World");
+
+  // Round-trip: build a vector in script, push_back elements, then pass it
+  // to a C++ function via vector_conversion and verify the contents
+  CHECK(chai.eval<std::string>(
+    "auto v = [\"one\", \"two\"];"
+    "v.push_back(\"three\");"
+    "join_strings(v)"
+  ) == "one,two,three");
+
+  // Verify conversion works on a freshly created vector too
+  CHECK(chai.eval<std::string>(
+    "auto w = [];"
+    "w.push_back(\"hello\");"
+    "w.push_back(\"world\");"
+    "join_strings(w)"
+  ) == "hello,world");
+}
+
 // Regression test for issue #607: AST_Node_Trace must be a complete type
 // when used in eval_error's std::vector<AST_Node_Trace> call_stack member.
 // This failed to compile with C++20 on clang/libc++ when AST_Node_Trace
