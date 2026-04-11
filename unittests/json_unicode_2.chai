@@ -1,0 +1,3 @@
+// Test JSON \u escape: 2-byte UTF-8 (U+00C4 = 'Ä')
+// This is the example from issue #477
+assert_equal(from_json("\"\\u00c4\""), "\u00C4")

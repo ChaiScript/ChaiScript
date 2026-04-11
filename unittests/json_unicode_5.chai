@@ -1,0 +1,2 @@
+// Test JSON \u escape: multiple unicode escapes in one string
+assert_equal(from_json("\"\\u0048\\u0065\\u006C\\u006C\\u006F\""), "Hello")

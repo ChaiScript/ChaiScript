@@ -1,0 +1,2 @@
+// Test JSON \u escape: ASCII range (U+0041 = 'A')
+assert_equal(from_json("\"\\u0041\""), "A")

@@ -1,0 +1,2 @@
+// Test JSON \u escape: mixed with regular text
+assert_equal(from_json("\"Hello \\u0057orld\""), "Hello World")
