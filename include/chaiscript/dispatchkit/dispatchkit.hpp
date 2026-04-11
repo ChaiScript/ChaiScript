@@ -1064,13 +1064,21 @@ namespace chaiscript {
         // overridden methods in derived classes are tried first during dispatch
         const auto &lhs_dotn = lhs->dynamic_object_type_name();
         const auto &rhs_dotn = rhs->dynamic_object_type_name();
-        if (!lhs_dotn.empty() && !rhs_dotn.empty() && lhs_dotn != rhs_dotn) {
-          if (dispatch::Dynamic_Object::type_matches(lhs_dotn, rhs_dotn)) {
-            return true; // lhs is derived from rhs, so lhs is more specific
+        if (lhs_dotn != rhs_dotn) {
+          if (!lhs_dotn.empty() && !rhs_dotn.empty()) {
+            if (dispatch::Dynamic_Object::type_matches(lhs_dotn, rhs_dotn)) {
+              return true; // lhs is derived from rhs, so lhs is more specific
+            }
+            if (dispatch::Dynamic_Object::type_matches(rhs_dotn, lhs_dotn)) {
+              return false; // rhs is derived from lhs, so rhs is more specific
+            }
           }
-          if (dispatch::Dynamic_Object::type_matches(rhs_dotn, lhs_dotn)) {
-            return false; // rhs is derived from lhs, so rhs is more specific
+          // Impose a total order on type names to maintain strict-weak ordering:
+          // non-empty names sort before empty names, then lexicographically
+          if (lhs_dotn.empty() != rhs_dotn.empty()) {
+            return !lhs_dotn.empty();
           }
+          return lhs_dotn < rhs_dotn;
         }
 
         const auto &lhsparamtypes = lhs->get_param_types();
@@ -1120,7 +1128,9 @@ namespace chaiscript {
           return lt < rt;
         }
 
-        return false;
+        // When all overlapping parameters match, order by arity to maintain
+        // strict-weak ordering (transitivity of equivalence)
+        return lhssize < rhssize;
       }
 
       /// Implementation detail for adding a function.
