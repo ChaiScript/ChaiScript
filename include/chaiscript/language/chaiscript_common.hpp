@@ -26,10 +26,6 @@
 
 namespace chaiscript {
   struct AST_Node;
-  struct AST_Node_Trace;
-  namespace exception {
-    struct eval_error;
-  }
 } // namespace chaiscript
 
 namespace chaiscript {
