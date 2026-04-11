@@ -1,0 +1,43 @@
+// Test demonstrating the difference between add (local scope) and add_global/set_global (global scope)
+// See issue #554
+
+// --- Local variables (var / add) are scoped ---
+// A local variable defined in a block is not visible outside that block
+var local_val = 10
+assert_equal(local_val, 10)
+
+// Local variables can be reassigned in scope
+local_val = 20
+assert_equal(local_val, 20)
+
+// Local variables inside a function are not visible outside
+def set_local() {
+  var func_local = 99
+  assert_equal(func_local, 99)
+}
+set_local()
+
+// --- Globals (add_global) are visible everywhere, including inside functions ---
+var g_val = 42
+add_global(g_val, "my_global")
+
+def check_global() {
+  assert_equal(my_global, 42)
+}
+check_global()
+
+// add_global throws if the global already exists
+assert_throws("Name already exists in current context my_global", fun() { add_global(1, "my_global") })
+
+// --- set_global overwrites an existing global ---
+set_global(100, "my_global")
+assert_equal(my_global, 100)
+
+def check_global_updated() {
+  assert_equal(my_global, 100)
+}
+check_global_updated()
+
+// set_global can also create a new global if it doesn't exist
+set_global(77, "new_global")
+assert_equal(new_global, 77)
