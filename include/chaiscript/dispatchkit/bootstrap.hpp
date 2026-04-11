@@ -268,8 +268,8 @@ namespace chaiscript::bootstrap {
   public:
     /// \brief perform all common bootstrap functions for std::string, void and POD types
     /// \param[in,out] m Module to add bootstrapped functions to
-    /// \returns passed in Module
-    static void bootstrap(Module &m) {
+    /// \param[in] t_no_io If true, skip registering print_string and println_string
+    static void bootstrap(Module &m, const bool t_no_io = false) {
       m.add(user_type<void>(), "void");
       m.add(user_type<bool>(), "bool");
       m.add(user_type<Boxed_Value>(), "Object");
@@ -438,7 +438,9 @@ namespace chaiscript::bootstrap {
       m.add(fun(&Build_Info::debug_build), "debug_build");
 
       // print_string and println_string are registered in ChaiScript_Basic::build_eval_system()
-      // to support per-instance IO redirection via set_print_handler
+      // to support per-instance IO redirection via set_print_handler.
+      // When No_IO is set, the handler-based functions are still registered there,
+      // so users can provide their own print handlers even without built-in IO.
 
       m.add(dispatch::make_dynamic_proxy_function(&bind_function), "bind");
 

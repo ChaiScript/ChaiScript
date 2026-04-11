@@ -211,6 +211,13 @@ namespace chaiscript {
     External_Scripts
   };
 
+  enum class Library_Options {
+    No_Stdlib,
+    No_IO,
+    No_Prelude,
+    No_JSON
+  };
+
   template<typename From, typename To>
   struct is_nothrow_forward_constructible : std::bool_constant<noexcept(To{std::declval<From>()})> {
   };

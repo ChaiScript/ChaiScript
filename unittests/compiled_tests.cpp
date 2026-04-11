@@ -1343,6 +1343,140 @@ TEST_CASE("Test if non copyable/movable types can be registered") {
   chai.add(chaiscript::constructor<Nothing()>(), "Nothing");
 }
 
+// Tests for issue #146: configuration to bypass registering built-in functions
+// Tests through ChaiScript_Basic (library options passed explicitly to Std_Lib::library)
+
+TEST_CASE("ChaiScript_Basic No_Stdlib option disables all standard library functions") {
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Library_Options::No_Stdlib}),
+                                    create_chaiscript_parser(),
+                                    {},
+                                    {},
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+
+  CHECK_NOTHROW(chai.eval("var x = 5"));
+  CHECK_THROWS(chai.eval("print(\"hello\")"));
+  CHECK_THROWS(chai.eval("var v = Vector()"));
+  CHECK_THROWS(chai.eval("\"hello\".trim()"));
+  CHECK_THROWS(chai.eval("from_json(\"[1,2,3]\")"));
+}
+
+TEST_CASE("ChaiScript_Basic No_IO option still allows print_handler registration") {
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Library_Options::No_IO}),
+                                    create_chaiscript_parser(),
+                                    {},
+                                    {},
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+
+  // print_string and println_string should still be available via the handler mechanism
+  CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("println_string(\"hello\")"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+  CHECK_NOTHROW(chai.eval("var v = Vector()"));
+
+  // Users can set their own print handler even with No_IO
+  std::string captured;
+  chai.set_print_handler([&captured](const std::string &s) { captured += s; });
+  chai.eval("print_string(\"redirected\")");
+  CHECK(captured == "redirected");
+}
+
+TEST_CASE("ChaiScript_Basic No_Prelude option disables prelude functions") {
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Library_Options::No_Prelude}),
+                                    create_chaiscript_parser(),
+                                    {},
+                                    {},
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+
+  CHECK_THROWS(chai.eval("print(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
+  CHECK_THROWS(chai.eval("filter([1,2,3], fun(x) { x > 1 })"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+}
+
+TEST_CASE("ChaiScript_Basic No_JSON option disables JSON support") {
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Library_Options::No_JSON}),
+                                    create_chaiscript_parser(),
+                                    {},
+                                    {},
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+
+  CHECK_THROWS(chai.eval("from_json(\"[1,2,3]\")"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+  CHECK_NOTHROW(chai.eval("print(\"hello\")"));
+}
+
+TEST_CASE("ChaiScript_Basic default library has all functions") {
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library(),
+                                    create_chaiscript_parser(),
+                                    {},
+                                    {},
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+
+  CHECK_NOTHROW(chai.eval("print(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("var v = Vector()"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+}
+
+// Tests through ChaiScript (library options passed as constructor parameter)
+
+TEST_CASE("ChaiScript No_Stdlib option via library options parameter") {
+  chaiscript::ChaiScript chai({},
+                              {},
+                              {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts},
+                              {chaiscript::Library_Options::No_Stdlib});
+
+  CHECK_NOTHROW(chai.eval("var x = 5"));
+  CHECK_THROWS(chai.eval("print(\"hello\")"));
+  CHECK_THROWS(chai.eval("var v = Vector()"));
+  CHECK_THROWS(chai.eval("from_json(\"[1,2,3]\")"));
+}
+
+TEST_CASE("ChaiScript No_IO option via library options parameter") {
+  chaiscript::ChaiScript chai({},
+                              {},
+                              {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts},
+                              {chaiscript::Library_Options::No_IO});
+
+  // print_string and println_string remain available via the handler mechanism
+  CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("println_string(\"hello\")"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+  CHECK_NOTHROW(chai.eval("var v = Vector()"));
+}
+
+TEST_CASE("ChaiScript No_Prelude option via library options parameter") {
+  chaiscript::ChaiScript chai({},
+                              {},
+                              {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts},
+                              {chaiscript::Library_Options::No_Prelude});
+
+  CHECK_THROWS(chai.eval("print(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
+  CHECK_THROWS(chai.eval("filter([1,2,3], fun(x) { x > 1 })"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+}
+
+TEST_CASE("ChaiScript No_JSON option via library options parameter") {
+  chaiscript::ChaiScript chai({},
+                              {},
+                              {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts},
+                              {chaiscript::Library_Options::No_JSON});
+
+  CHECK_THROWS(chai.eval("from_json(\"[1,2,3]\")"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+  CHECK_NOTHROW(chai.eval("print(\"hello\")"));
+}
+
+TEST_CASE("ChaiScript default has all functions") {
+  chaiscript::ChaiScript chai;
+
+  CHECK_NOTHROW(chai.eval("print(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("var v = Vector()"));
+  CHECK(chai.eval<int>("5 + 3") == 8);
+}
+
 // Issue #421: Class with type_conversion from int and "==" operator
 // causes switch statement to compare destroyed objects.
 // The switch case comparison must use Function_Push_Pop to properly
@@ -1435,6 +1569,50 @@ TEST_CASE("Issue #421 - Switch with type_conversion does not compare destroyed o
     }
     result
   })") == 0);
+}
+
+// Issue #524: A std::vector of std::unique_ptrs can't be added
+// vector_type should compile with non-copyable value types by
+// skipping copy-dependent operations via if constexpr.
+struct Issue524_Foo {
+  int value = 42;
+};
+
+TEST_CASE("Issue #524 - vector of unique_ptr can be registered") {
+  using VecType = std::vector<std::unique_ptr<Issue524_Foo>>;
+
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  // This should compile and not throw - previously failed to compile
+  // because vector_type tried to instantiate copy constructor, assignment,
+  // push_back(const T&), insert_at(const T&), and resize(n, const T&)
+  // for the non-copyable std::unique_ptr<Issue524_Foo>.
+  chaiscript::ModulePtr m = std::make_shared<chaiscript::Module>();
+  chaiscript::bootstrap::standard_library::vector_type<VecType>("UniqueVec", *m);
+  CHECK_NOTHROW(chai.add(m));
+
+  // Verify basic operations still work
+  CHECK(chai.eval<size_t>("var v = UniqueVec(); v.size()") == 0);
+  CHECK(chai.eval<bool>("var v2 = UniqueVec(); v2.empty()") == true);
+}
+
+// Issue #625: function_less_than comparator must satisfy strict-weak ordering.
+// Registering overloaded functions with different arities triggered a
+// std::stable_sort assertion on macOS 15.2 (hardened libc++) because the
+// comparator violated transitivity of equivalence.
+TEST_CASE("Issue 625: function_less_than strict-weak ordering with different arities") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  // Register overloaded functions with varying arities under the same name.
+  // If the comparator doesn't order by arity when overlapping params match,
+  // std::stable_sort may exhibit undefined behavior.
+  CHECK_NOTHROW(chai.add(chaiscript::fun([](int x, const chaiscript::Boxed_Value &) { return x; }), "overloaded"));
+  CHECK_NOTHROW(chai.add(chaiscript::fun([](int x, double y) { return x + static_cast<int>(y); }), "overloaded"));
+  CHECK_NOTHROW(chai.add(chaiscript::fun([](int x) { return x; }), "overloaded"));
+
+  // Verify dispatch still works correctly
+  CHECK(chai.eval<int>("overloaded(5)") == 5);
+  CHECK(chai.eval<int>("overloaded(3, 2.0)") == 5);
 }
 
 TEST_CASE("IO redirection with set_print_handler") {
