@@ -1,0 +1,29 @@
+// Regression test for issue #594
+// Map keys pushed into a vector via .first should remain valid
+// after the map goes out of scope.
+
+def keys(Map map)
+{
+  var v = Vector();
+  for( i : map )
+  {
+    v.push_back(i.first);
+  }
+  return v;
+}
+
+var k = Vector();
+if ( true )
+{
+  var m = ["a":"x", "b":"y", "c":"z"];
+  k = keys(m);
+}
+
+// After the map is out of scope, the keys should still be valid strings
+assert_equal(3, k.size())
+
+// Verify each element is a non-empty string
+for (elem : k)
+{
+  assert_true(elem.size() > 0)
+}

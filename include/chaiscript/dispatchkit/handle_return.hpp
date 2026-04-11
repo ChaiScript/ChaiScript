@@ -126,7 +126,7 @@ namespace chaiscript {
       struct Handle_Return_Ref {
         template<typename T>
         static Boxed_Value handle(T &&r) {
-          return Boxed_Value(std::cref(r), true);
+          return Boxed_Value(std::cref(r), false);
         }
       };
 
