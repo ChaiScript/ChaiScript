@@ -438,6 +438,8 @@ namespace chaiscript {
         if (m_oper != Operators::Opers::invalid && params[0].get_type_info().is_arithmetic() && params[1].get_type_info().is_arithmetic()) {
           try {
             return Boxed_Number::do_oper(m_oper, params[0], params[1]);
+          } catch (const chaiscript::exception::arithmetic_error &) {
+            throw;
           } catch (const std::exception &) {
             throw exception::eval_error("Error with unsupported arithmetic assignment operation.");
           }
