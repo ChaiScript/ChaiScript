@@ -220,7 +220,6 @@ namespace chaiscript {
         if constexpr (!std::is_floating_point<LHS>::value && !std::is_floating_point<RHS>::value) {
           switch (t_oper) {
             case Operators::Opers::assign_bitwise_and:
-              check_divide_by_zero(c_rhs);
               *t_lhs &= c_rhs;
               return t_bv;
             case Operators::Opers::assign_bitwise_or:
@@ -233,6 +232,7 @@ namespace chaiscript {
               *t_lhs >>= c_rhs;
               return t_bv;
             case Operators::Opers::assign_remainder:
+              check_divide_by_zero(c_rhs);
               *t_lhs %= c_rhs;
               return t_bv;
             case Operators::Opers::assign_bitwise_xor:

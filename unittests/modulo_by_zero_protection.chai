@@ -1,0 +1,16 @@
+// modulo by zero should throw, not crash
+try {
+  3 % 0
+  assert_true(false)
+} catch (e) {
+  assert_equal("Arithmetic error: divide by zero", e.what())
+}
+
+// assign-modulo by zero should also throw
+var x = 3;
+try {
+  x %= 0
+  assert_true(false)
+} catch (e) {
+  assert_equal("Arithmetic error: divide by zero", e.what())
+}
