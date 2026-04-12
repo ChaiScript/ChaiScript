@@ -11,6 +11,7 @@
 #define CHAISCRIPT_PARSER_HPP_
 
 #include <cctype>
+#include <charconv>
 #include <cstring>
 #include <exception>
 #include <iostream>
@@ -757,6 +758,9 @@ namespace chaiscript {
           t_val.remove_prefix(2);
         }
 
+        const auto *const first = t_val.data();
+        const auto *const last = first + i - (prefixed ? 2 : 0);
+
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
@@ -770,41 +774,40 @@ namespace chaiscript {
 
 #endif
 
-        try {
-          /// TODO fix this to use from_chars
-          auto u = std::stoll(std::string(t_val), nullptr, base);
+        {
+          long long u = 0;
+          auto [ptr, ec] = std::from_chars(first, last, u, base);
 
-          if (!unsigned_ && !long_ && u >= std::numeric_limits<int>::min() && u <= std::numeric_limits<int>::max()) {
-            return const_var(static_cast<int>(u));
-          } else if ((unsigned_ || base != 10) && !long_ && u >= std::numeric_limits<unsigned int>::min()
-                     && u <= std::numeric_limits<unsigned int>::max()) {
-            return const_var(static_cast<unsigned int>(u));
-          } else if (!unsigned_ && !longlong_ && u >= std::numeric_limits<long>::min() && u <= std::numeric_limits<long>::max()) {
-            return const_var(static_cast<long>(u));
-          } else if ((unsigned_ || base != 10) && !longlong_ && u >= std::numeric_limits<unsigned long>::min()
-                     && u <= std::numeric_limits<unsigned long>::max()) {
-            return const_var(static_cast<unsigned long>(u));
-          } else if (!unsigned_ && u >= std::numeric_limits<long long>::min() && u <= std::numeric_limits<long long>::max()) {
-            return const_var(static_cast<long long>(u));
-          } else {
-            return const_var(static_cast<unsigned long long>(u));
-          }
-
-        } catch (const std::out_of_range &) {
-          // too big to be signed
-          try {
-            /// TODO fix this to use from_chars
-            auto u = std::stoull(std::string(t_val), nullptr, base);
-
-            if (!longlong_ && u >= std::numeric_limits<unsigned long>::min() && u <= std::numeric_limits<unsigned long>::max()) {
+          if (ec == std::errc()) {
+            if (!unsigned_ && !long_ && u >= std::numeric_limits<int>::min() && u <= std::numeric_limits<int>::max()) {
+              return const_var(static_cast<int>(u));
+            } else if ((unsigned_ || base != 10) && !long_ && u >= std::numeric_limits<unsigned int>::min()
+                       && u <= std::numeric_limits<unsigned int>::max()) {
+              return const_var(static_cast<unsigned int>(u));
+            } else if (!unsigned_ && !longlong_ && u >= std::numeric_limits<long>::min() && u <= std::numeric_limits<long>::max()) {
+              return const_var(static_cast<long>(u));
+            } else if ((unsigned_ || base != 10) && !longlong_ && u >= std::numeric_limits<unsigned long>::min()
+                       && u <= std::numeric_limits<unsigned long>::max()) {
               return const_var(static_cast<unsigned long>(u));
+            } else if (!unsigned_ && u >= std::numeric_limits<long long>::min() && u <= std::numeric_limits<long long>::max()) {
+              return const_var(static_cast<long long>(u));
             } else {
               return const_var(static_cast<unsigned long long>(u));
             }
-          } catch (const std::out_of_range &) {
-            // it's just simply too big
-            return const_var(std::numeric_limits<long long>::max());
           }
+
+          unsigned long long uu = 0;
+          const auto result = std::from_chars(first, last, uu, base);
+
+          if (result.ec == std::errc()) {
+            if (!longlong_ && uu >= std::numeric_limits<unsigned long>::min() && uu <= std::numeric_limits<unsigned long>::max()) {
+              return const_var(static_cast<unsigned long>(uu));
+            } else {
+              return const_var(static_cast<unsigned long long>(uu));
+            }
+          }
+
+          return const_var(std::numeric_limits<long long>::max());
         }
 
 #ifdef __GNUC__

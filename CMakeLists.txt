@@ -404,6 +404,10 @@ if(BUILD_TESTING)
     target_link_libraries(integer_literal_test ${LIBS} ${CHAISCRIPT_LIBS})
     add_test(NAME Integer_Literal_Test COMMAND integer_literal_test)
 
+    add_executable(float_literal_test unittests/float_literal_test.cpp)
+    target_link_libraries(float_literal_test ${LIBS} ${CHAISCRIPT_LIBS})
+    add_test(NAME Float_Literal_Test COMMAND float_literal_test)
+
     if(MULTITHREAD_SUPPORT_ENABLED)
       add_executable(multithreaded_test unittests/multithreaded_test.cpp)
       target_link_libraries(multithreaded_test ${LIBS})

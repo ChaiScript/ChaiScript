@@ -10,6 +10,8 @@
 #ifndef CHAISCRIPT_BOOTSTRAP_HPP_
 #define CHAISCRIPT_BOOTSTRAP_HPP_
 
+#include <charconv>
+
 #include "../utility/utility.hpp"
 #include "register_function.hpp"
 
@@ -91,17 +93,19 @@ namespace chaiscript::bootstrap {
     m.add(fun([](const Boxed_Number &bn) { return bn.get_as<T>(); }), type);
   }
 
-  /// Internal function for converting from a string to a value
-  /// uses ostream operator >> to perform the conversion
   template<typename Input>
   Input parse_string(const std::string &i) {
-    if constexpr (!std::is_same<Input, wchar_t>::value && !std::is_same<Input, char16_t>::value && !std::is_same<Input, char32_t>::value) {
+    if constexpr (std::is_same_v<Input, wchar_t> || std::is_same_v<Input, char16_t> || std::is_same_v<Input, char32_t>) {
+      throw std::runtime_error("Parsing of wide characters is not yet supported");
+    } else if constexpr (std::is_arithmetic_v<Input> && !std::is_same_v<Input, char>) {
+      Input t{};
+      std::from_chars(i.data(), i.data() + i.size(), t);
+      return t;
+    } else {
       std::stringstream ss(i);
       Input t;
       ss >> t;
       return t;
-    } else {
-      throw std::runtime_error("Parsing of wide characters is not yet supported");
     }
   }
 

@@ -550,14 +550,18 @@ namespace chaiscript::json {
       }
       --offset;
 
-      if (isDouble) {
-        return JSON((isNegative ? -1 : 1) * chaiscript::parse_num<double>(val) * std::pow(10, exp));
-      } else {
+      if (isDouble || !exp_str.empty()) {
+        std::string full_num;
+        if (isNegative) { full_num += '-'; }
+        full_num += val;
         if (!exp_str.empty()) {
-          return JSON((isNegative ? -1 : 1) * static_cast<double>(chaiscript::parse_num<std::int64_t>(val)) * std::pow(10, exp));
-        } else {
-          return JSON((isNegative ? -1 : 1) * chaiscript::parse_num<std::int64_t>(val));
+          full_num += 'e';
+          if (isExpNegative) { full_num += '-'; }
+          full_num += exp_str;
         }
+        return JSON(chaiscript::parse_num<double>(full_num));
+      } else {
+        return JSON((isNegative ? -1 : 1) * chaiscript::parse_num<std::int64_t>(val));
       }
     }
 
