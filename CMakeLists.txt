@@ -295,6 +295,7 @@ list(SORT UNIT_TESTS)
 if(NOT MULTITHREAD_SUPPORT_ENABLED)
   list(REMOVE_ITEM UNIT_TESTS
     async_engine_lifetime.chai
+    async_return_value.chai
     future.chai
     list_push_front.chai
     move_async.chai
