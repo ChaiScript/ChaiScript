@@ -1,0 +1,13 @@
+var func = fun(){
+  var ret = 0;
+  for (var i = 0; i < 1000; ++i) {
+    ret := i;
+  }
+  return ret;
+}
+
+var&fut1 = async(func);
+var fut2 = async(func);
+
+assert_equal(999, fut1.get())
+assert_equal(999, fut2.get())

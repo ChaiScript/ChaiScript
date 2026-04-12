@@ -1,0 +1,7 @@
+// Verify that := performs a value copy, not an alias
+var a = 10
+var b = 20
+a := b
+++b
+assert_equal(20, a)
+assert_equal(21, b)

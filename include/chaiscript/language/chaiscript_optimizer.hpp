@@ -397,8 +397,9 @@ namespace chaiscript {
                                         assert(children.size() == 1);
                                         chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
-                                        int i = start_int;
-                                        t_ss.add_object(id, var(&i));
+                                        Boxed_Value bv_i(start_int);
+                                        auto &i = *static_cast<int *>(bv_i.get_ptr());
+                                        t_ss.add_object(id, bv_i);
 
                                         try {
                                           for (; i < end_int; ++i) {
