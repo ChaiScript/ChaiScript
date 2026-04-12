@@ -2,13 +2,17 @@
 #define CHAISCRIPT_SIMPLEJSON_WRAP_HPP
 
 #include "json.hpp"
+#include "../dispatchkit/dynamic_object.hpp"
 
 namespace chaiscript {
   class json_wrap {
   public:
     static Module &library(Module &m) {
       m.add(chaiscript::fun([](const std::string &t_str) { return from_json(t_str); }), "from_json");
+      m.add(chaiscript::fun([](const std::string &t_str) { return object_from_json(t_str); }), "object_from_json");
       m.add(chaiscript::fun(&json_wrap::to_json), "to_json");
+      m.add(chaiscript::fun(&json_wrap::map_to_object), "map_to_object");
+      m.add(chaiscript::fun(&json_wrap::object_to_map), "object_to_map");
 
       return m;
     }
@@ -55,6 +59,63 @@ namespace chaiscript {
       } catch (const std::out_of_range &) {
         throw std::runtime_error("Unparsed JSON input");
       }
+    }
+
+    static Boxed_Value object_from_json(const json::JSON &t_json) {
+      switch (t_json.JSONType()) {
+        case json::JSON::Class::Null:
+          return Boxed_Value();
+        case json::JSON::Class::Object: {
+          auto obj = dispatch::Dynamic_Object("JSON_Object");
+
+          for (const auto &p : t_json.object_range()) {
+            obj.get_attr(p.first) = object_from_json(p.second);
+          }
+
+          return Boxed_Value(std::move(obj));
+        }
+        case json::JSON::Class::Array: {
+          std::vector<Boxed_Value> vec;
+
+          for (const auto &p : t_json.array_range()) {
+            vec.emplace_back(object_from_json(p));
+          }
+
+          return Boxed_Value(vec);
+        }
+        case json::JSON::Class::String:
+          return Boxed_Value(t_json.to_string());
+        case json::JSON::Class::Floating:
+          return Boxed_Value(t_json.to_float());
+        case json::JSON::Class::Integral:
+          return Boxed_Value(t_json.to_int());
+        case json::JSON::Class::Boolean:
+          return Boxed_Value(t_json.to_bool());
+      }
+
+      throw std::runtime_error("Unknown JSON type");
+    }
+
+    static Boxed_Value object_from_json(const std::string &t_json) {
+      try {
+        return object_from_json(json::JSON::Load(t_json));
+      } catch (const std::out_of_range &) {
+        throw std::runtime_error("Unparsed JSON input");
+      }
+    }
+
+    static Boxed_Value map_to_object(const std::map<std::string, Boxed_Value> &t_map) {
+      auto obj = dispatch::Dynamic_Object("JSON_Object");
+
+      for (const auto &p : t_map) {
+        obj.get_attr(p.first) = p.second;
+      }
+
+      return Boxed_Value(std::move(obj));
+    }
+
+    static std::map<std::string, Boxed_Value> object_to_map(const dispatch::Dynamic_Object &t_obj) {
+      return t_obj.get_attrs();
     }
 
     static std::string to_json(const Boxed_Value &t_bv) { return to_json_object(t_bv).dump(); }

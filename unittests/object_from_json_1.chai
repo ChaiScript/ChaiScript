@@ -1,0 +1,6 @@
+// object_from_json: returns Dynamic_Object with dot-access on JSON fields
+var obj = object_from_json("{\"name\":\"ChaiScript\",\"version\":6,\"active\":true}")
+assert_equal(obj.name, "ChaiScript")
+assert_equal(obj.version, 6)
+assert_equal(obj.active, true)
+assert_equal(obj.get_type_name(), "JSON_Object")
