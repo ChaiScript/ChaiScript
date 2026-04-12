@@ -72,6 +72,16 @@ static_assert(_MSC_FULL_VER >= 190024210, "Visual C++ 2015 Update 3 or later req
 #include <charconv>
 #include <memory>
 #include <string>
+#include <type_traits>
+
+// libc++ (AppleClang, Emscripten) may not support floating-point std::from_chars
+#if !defined(CHAISCRIPT_LIBCPP)
+#define CHAISCRIPT_HAS_FLOAT_FROM_CHARS 1
+#endif
+
+#ifndef CHAISCRIPT_HAS_FLOAT_FROM_CHARS
+#include <cstdlib>
+#endif
 
 namespace chaiscript {
   constexpr static const int version_major = 7;
@@ -125,7 +135,22 @@ namespace chaiscript {
   template<typename T>
   [[nodiscard]] auto parse_num(const std::string_view t_str) {
     T t{};
-    std::from_chars(t_str.data(), t_str.data() + t_str.size(), t);
+    if constexpr (std::is_floating_point_v<T>) {
+#ifdef CHAISCRIPT_HAS_FLOAT_FROM_CHARS
+      std::from_chars(t_str.data(), t_str.data() + t_str.size(), t);
+#else
+      const std::string tmp(t_str);
+      if constexpr (std::is_same_v<T, float>) {
+        t = std::strtof(tmp.c_str(), nullptr);
+      } else if constexpr (std::is_same_v<T, long double>) {
+        t = std::strtold(tmp.c_str(), nullptr);
+      } else {
+        t = std::strtod(tmp.c_str(), nullptr);
+      }
+#endif
+    } else {
+      std::from_chars(t_str.data(), t_str.data() + t_str.size(), t);
+    }
     return t;
   }
 

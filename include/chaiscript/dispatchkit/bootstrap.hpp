@@ -10,8 +10,6 @@
 #ifndef CHAISCRIPT_BOOTSTRAP_HPP_
 #define CHAISCRIPT_BOOTSTRAP_HPP_
 
-#include <charconv>
-
 #include "../utility/utility.hpp"
 #include "register_function.hpp"
 
@@ -98,9 +96,7 @@ namespace chaiscript::bootstrap {
     if constexpr (std::is_same_v<Input, wchar_t> || std::is_same_v<Input, char16_t> || std::is_same_v<Input, char32_t>) {
       throw std::runtime_error("Parsing of wide characters is not yet supported");
     } else if constexpr (std::is_arithmetic_v<Input> && !std::is_same_v<Input, char>) {
-      Input t{};
-      std::from_chars(i.data(), i.data() + i.size(), t);
-      return t;
+      return parse_num<Input>(i);
     } else {
       std::stringstream ss(i);
       Input t;

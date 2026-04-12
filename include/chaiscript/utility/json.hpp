@@ -8,7 +8,6 @@
 #include "../chaiscript_defines.hpp"
 #include "quick_flat_map.hpp"
 #include <cctype>
-#include <charconv>
 #include <cstdint>
 #include <initializer_list>
 #include <iostream>
@@ -536,14 +535,11 @@ namespace chaiscript::json {
       const auto *const first = str.data() + start;
       const auto *const last = str.data() + offset;
 
+      const auto numstr = std::string_view(first, static_cast<std::string_view::size_type>(last - first));
       if (isDouble) {
-        double val = 0;
-        std::from_chars(first, last, val);
-        return JSON(val);
+        return JSON(chaiscript::parse_num<double>(numstr));
       } else {
-        std::int64_t val = 0;
-        std::from_chars(first, last, val);
-        return JSON(val);
+        return JSON(chaiscript::parse_num<std::int64_t>(numstr));
       }
     }
 
