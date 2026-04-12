@@ -1,7 +1,41 @@
-// Verify that := performs a value copy, not an alias
-var a = 10
-var b = 20
-a := b
-++b
-assert_equal(20, a)
-assert_equal(21, b)
+// Issue #635: optimized for loop with := must not produce dangling values
+// := is reference-assign, so ret aliases i and sees the loop exit value
+
+// Basic: capture loop variable via :=
+var ret = 0
+for (var i = 0; i < 100; ++i) {
+  ret := i
+}
+assert_equal(100, ret)
+
+// Return from function containing optimized for loop
+def loop_result() {
+  var ret = 0
+  for (var i = 0; i < 200; ++i) {
+    ret := i
+  }
+  return ret
+}
+assert_equal(200, loop_result())
+
+// Multiple calls return consistent results
+assert_equal(loop_result(), loop_result())
+
+// Nested optimized for loops
+var outer_val = 0
+var inner_val = 0
+for (var i = 0; i < 10; ++i) {
+  for (var j = 0; j < 10; ++j) {
+    inner_val := j
+  }
+  outer_val := i
+}
+assert_equal(10, outer_val)
+assert_equal(10, inner_val)
+
+// Value-assign (=) captures last body-iteration value, not exit value
+var ret2 = 0
+for (var i = 0; i < 100; ++i) {
+  ret2 = i
+}
+assert_equal(99, ret2)

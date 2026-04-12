@@ -473,11 +473,7 @@ namespace chaiscript {
           }
         } else if (this->text == ":=") {
           if (params[0].is_undef() || Boxed_Value::type_match(params[0], params[1])) {
-            if (params[1].get_type_info().is_arithmetic() && params[0].get_type_info().is_arithmetic()) {
-              params[0].assign(Boxed_Number::clone(params[1]));
-            } else {
-              params[0].assign(params[1]);
-            }
+            params[0].assign(params[1]);
             params[0].reset_return_value();
           } else {
             throw exception::eval_error("Mismatched types in equation");
