@@ -1,0 +1,25 @@
+// Issue #635: async + optimized for loop must not segfault from dangling pointer
+// := is reference-assign, so ret aliases i and sees the loop exit value
+
+var func = fun(){
+  var ret = 0;
+  for (var i = 0; i < 1000; ++i) {
+    ret := i;
+  }
+  return ret;
+}
+
+var&fut1 = async(func);
+var fut2 = async(func);
+
+assert_equal(1000, fut1.get())
+assert_equal(1000, fut2.get())
+
+// Multiple concurrent async calls to stress the scenario
+var results = []
+for (var n = 0; n < 5; ++n) {
+  results.push_back(async(func))
+}
+for (var n = 0; n < 5; ++n) {
+  assert_equal(1000, results[n].get())
+}
