@@ -1,0 +1,15 @@
+
+auto m = ["k":"v"]
+
+// find existing key returns the value
+assert_equal("v", m.find("k"))
+
+// find missing key returns undef
+assert_true(m.find("missing").is_var_undef())
+
+// find does not mutate the map
+m.find("other")
+assert_equal(1, m.size())
+
+// find works with in-place map
+assert_equal("v", ["k":"v"].find("k"))

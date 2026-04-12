@@ -86,6 +86,15 @@ namespace chaiscript::bootstrap::standard_library {
     }
 
     template<typename T>
+    Boxed_Value find(const T &t_target, const typename T::key_type &t_key) {
+      const auto itr = t_target.find(t_key);
+      if (itr != t_target.end()) {
+        return Boxed_Value(itr->second);
+      }
+      return Boxed_Value();
+    }
+
+    template<typename T>
     void insert(T &t_target, const T &t_other) {
       t_target.insert(t_other.begin(), t_other.end());
     }
@@ -355,6 +364,7 @@ namespace chaiscript::bootstrap::standard_library {
   template<typename ContainerType>
   void unique_associative_container_type(const std::string & /*type*/, Module &m) {
     m.add(fun(detail::count<ContainerType>), "count");
+    m.add(fun(detail::find<ContainerType>), "find");
 
     using erase_ptr = size_t (ContainerType::*)(const typename ContainerType::key_type &);
 
