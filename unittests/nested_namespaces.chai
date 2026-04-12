@@ -1,0 +1,25 @@
+// Test nested namespaces using dotted names
+namespace("constants.si")
+constants.si.mu_B = 1.0
+
+namespace("constants.mm")
+constants.mm.mu_B = 2.0
+
+assert_equal(1.0, constants.si.mu_B)
+assert_equal(2.0, constants.mm.mu_B)
+
+// Test deeper nesting
+namespace("a.b.c")
+a.b.c.val = 42
+
+assert_equal(42, a.b.c.val)
+
+// Test that existing namespace can gain nested children
+namespace("math")
+math.square = fun(x) { x * x }
+
+namespace("math.trig")
+math.trig.double_angle = fun(x) { 2.0 * x }
+
+assert_equal(16, math.square(4))
+assert_equal(6.0, math.trig.double_angle(3.0))
