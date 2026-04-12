@@ -556,6 +556,51 @@ TEST_CASE("Utility_Test utility class wrapper") {
   chai.eval("t = Utility_Test();");
 }
 
+class Utility_Test_Static {
+public:
+  Utility_Test_Static(int t_x, int t_y) : m_x(t_x), m_y(t_y) {}
+  Utility_Test_Static() : m_x(0), m_y(0) {}
+
+  int area() const { return m_x * m_y; }
+
+  static int static_area(int t_x, int t_y) { return t_x * t_y; }
+  static std::string name() { return "Utility_Test_Static"; }
+
+  int m_x;
+  int m_y;
+};
+
+TEST_CASE("Utility_Test add_class with static functions") {
+  auto m = std::make_shared<chaiscript::Module>();
+
+  using namespace chaiscript;
+
+  chaiscript::utility::add_class<Utility_Test_Static>(
+      *m,
+      "UTS",
+      {constructor<Utility_Test_Static()>(), constructor<Utility_Test_Static(int, int)>(),
+       constructor<Utility_Test_Static(const Utility_Test_Static &)>()},
+      {{fun(&Utility_Test_Static::area), "area"},
+       {fun(&Utility_Test_Static::m_x), "x"},
+       {fun(&Utility_Test_Static::m_y), "y"},
+       {fun(static_cast<Utility_Test_Static &(Utility_Test_Static::*)(const Utility_Test_Static &)>(&Utility_Test_Static::operator=)), "="}},
+      {{fun(&Utility_Test_Static::static_area), "area"},
+       {fun(&Utility_Test_Static::name), "name"}});
+
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+  chai.add(m);
+
+  // Instance methods still work
+  CHECK(chai.eval<int>("auto t = UTS(3, 4); t.area()") == 12);
+
+  // Static functions accessible via namespace dot syntax
+  CHECK(chai.eval<int>("UTS.area(5, 6)") == 30);
+  CHECK(chai.eval<std::string>("UTS.name()") == "Utility_Test_Static");
+
+  // Constructor still works alongside the namespace
+  CHECK(chai.eval<int>("auto t2 = UTS(7, 8); t2.x") == 7);
+}
+
 enum Utility_Test_Numbers {
   ONE,
   TWO,

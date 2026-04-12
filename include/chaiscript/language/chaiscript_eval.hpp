@@ -324,13 +324,17 @@ namespace chaiscript {
                                       false,
                                       *t_ss);
         } catch (const exception::bad_boxed_cast &) {
+          // Value is not directly callable. Fall back to calling by name through the
+          // dispatch engine, which handles the case where a global (e.g., class namespace)
+          // shadows a function (e.g., constructor) with the same name.
           try {
-            using ConstFunctionTypeRef = const Const_Proxy_Function &;
-            Const_Proxy_Function f = t_ss->boxed_cast<ConstFunctionTypeRef>(fn);
-            // handle the case where there is only 1 function to try to call and dispatch fails on it
-            throw exception::eval_error("Error calling function '" + this->children[0]->text + "'", params, make_vector(f), false, *t_ss);
-          } catch (const exception::bad_boxed_cast &) {
-            throw exception::eval_error("'" + this->children[0]->pretty_print() + "' does not evaluate to a function.");
+            return t_ss->call_function(this->children[0]->text, m_loc, Function_Params{params}, t_ss.conversions());
+          } catch (const exception::dispatch_error &e) {
+            throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'",
+                                        e.parameters,
+                                        e.functions,
+                                        false,
+                                        *t_ss);
           }
         } catch (const exception::arity_error &e) {
           throw exception::eval_error(std::string(e.what()) + " with function '" + this->children[0]->text + "'");
@@ -342,6 +346,9 @@ namespace chaiscript {
       }
 
       Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override { return do_eval_internal<true>(t_ss); }
+
+    private:
+      mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     template<typename T>
