@@ -915,3 +915,12 @@ set_print_handler(fun(s) { my_custom_log(s) })
 
 ## Extras
 ChaiScript itself does not provide a link to the math functions defined in `<cmath>`. You can either add them yourself, or use the [ChaiScript_Extras](https://github.com/ChaiScript/ChaiScript_Extras) helper library. (Which also provides some additional string functions.)
+
+## Grammar Railroad Diagrams
+
+A formal EBNF grammar for ChaiScript is available in [`grammar/chaiscript.ebnf`](grammar/chaiscript.ebnf). You can visualize it as navigable railroad diagrams by pasting its contents into one of these tools:
+
+  * [rr — Railroad Diagram Generator (IPv6)](https://www.bottlecaps.de/rr/ui)
+  * [rr — Railroad Diagram Generator (IPv4)](https://rr.red-dove.com/ui)
+
+Open either link, switch to the **Edit Grammar** tab, paste the file contents, then click **View Diagram**.
