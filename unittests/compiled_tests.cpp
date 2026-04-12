@@ -1360,17 +1360,26 @@ TEST_CASE("ChaiScript_Basic No_Stdlib option disables all standard library funct
   CHECK_THROWS(chai.eval("from_json(\"[1,2,3]\")"));
 }
 
-TEST_CASE("ChaiScript_Basic No_IO option disables print functions") {
+TEST_CASE("ChaiScript_Basic No_IO option uses null handler by default") {
   chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Library_Options::No_IO}),
                                     create_chaiscript_parser(),
                                     {},
                                     {},
-                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts});
+                                    {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts},
+                                    true);
 
-  CHECK_THROWS(chai.eval("print_string(\"hello\")"));
-  CHECK_THROWS(chai.eval("println_string(\"hello\")"));
+  // print_string and println_string should still be available via the handler mechanism
+  // but the default handler is a no-op (no stdout output)
+  CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("println_string(\"hello\")"));
   CHECK(chai.eval<int>("5 + 3") == 8);
   CHECK_NOTHROW(chai.eval("var v = Vector()"));
+
+  // Users can set their own print handler even with No_IO
+  std::string captured;
+  chai.set_print_handler([&captured](const std::string &s) { captured += s; });
+  chai.eval("print_string(\"redirected\")");
+  CHECK(captured == "redirected");
 }
 
 TEST_CASE("ChaiScript_Basic No_Prelude option disables prelude functions") {
@@ -1431,10 +1440,18 @@ TEST_CASE("ChaiScript No_IO option via library options parameter") {
                               {chaiscript::Options::No_Load_Modules, chaiscript::Options::No_External_Scripts},
                               {chaiscript::Library_Options::No_IO});
 
-  CHECK_THROWS(chai.eval("print_string(\"hello\")"));
-  CHECK_THROWS(chai.eval("println_string(\"hello\")"));
+  // print_string and println_string remain available via the handler mechanism
+  // but the default handler is a no-op (no stdout output)
+  CHECK_NOTHROW(chai.eval("print_string(\"hello\")"));
+  CHECK_NOTHROW(chai.eval("println_string(\"hello\")"));
   CHECK(chai.eval<int>("5 + 3") == 8);
   CHECK_NOTHROW(chai.eval("var v = Vector()"));
+
+  // Users can override the null handler with their own
+  std::string captured;
+  chai.set_print_handler([&captured](const std::string &s) { captured += s; });
+  chai.eval("print_string(\"redirected\")");
+  CHECK(captured == "redirected");
 }
 
 TEST_CASE("ChaiScript No_Prelude option via library options parameter") {
@@ -1605,6 +1622,83 @@ TEST_CASE("Issue 625: function_less_than strict-weak ordering with different ari
   // Verify dispatch still works correctly
   CHECK(chai.eval<int>("overloaded(5)") == 5);
   CHECK(chai.eval<int>("overloaded(3, 2.0)") == 5);
+}
+
+TEST_CASE("IO redirection with set_print_handler") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  std::string captured_output;
+
+  // Set custom print handler — both print_string and println_string dispatch through it
+  chai.set_print_handler([&captured_output](const std::string &s) {
+    captured_output += s;
+  });
+
+  // Test that puts() uses the custom handler
+  captured_output.clear();
+  chai.eval("puts(\"hello\")");
+  CHECK(captured_output == "hello");
+
+  // Test that print() uses the custom handler (println_string appends newline before calling handler)
+  captured_output.clear();
+  chai.eval("print(\"world\")");
+  CHECK(captured_output == "world\n");
+
+  // Test that print_string() directly uses the custom handler
+  captured_output.clear();
+  chai.eval("print_string(\"direct\")");
+  CHECK(captured_output == "direct");
+
+  // Test that println_string() directly uses the custom handler with newline
+  captured_output.clear();
+  chai.eval("println_string(\"direct_ln\")");
+  CHECK(captured_output == "direct_ln\n");
+}
+
+TEST_CASE("IO redirection captures numeric output") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  std::string captured_output;
+  chai.set_print_handler([&captured_output](const std::string &s) {
+    captured_output += s;
+  });
+
+  chai.eval("print(42)");
+  CHECK(captured_output == "42\n");
+}
+
+TEST_CASE("IO redirection different instances are independent") {
+  chaiscript::ChaiScript_Basic chai1(create_chaiscript_stdlib(), create_chaiscript_parser());
+  chaiscript::ChaiScript_Basic chai2(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  std::string output1;
+  std::string output2;
+
+  chai1.set_print_handler([&output1](const std::string &s) { output1 += s; });
+  chai2.set_print_handler([&output2](const std::string &s) { output2 += s; });
+
+  chai1.eval("print(\"from1\")");
+  chai2.eval("print(\"from2\")");
+
+  CHECK(output1 == "from1\n");
+  CHECK(output2 == "from2\n");
+}
+
+TEST_CASE("set_print_handler accessible from ChaiScript") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  auto captured = std::make_shared<std::string>();
+  chai.add(chaiscript::fun([captured](const std::string &s) { *captured += s; }), "test_output_sink");
+
+  // Set the print handler from within ChaiScript
+  chai.eval("set_print_handler(fun(s) { test_output_sink(s) })");
+
+  chai.eval("print(\"from_script\")");
+  CHECK(*captured == "from_script\n");
+
+  captured->clear();
+  chai.eval("puts(\"no_newline\")");
+  CHECK(*captured == "no_newline");
 }
 
 // Regression test: push_back() on script-created vector has no effect when

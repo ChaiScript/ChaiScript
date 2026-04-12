@@ -79,6 +79,8 @@ namespace chaiscript {
 
     std::map<std::string, std::function<Namespace &()>> m_namespace_generators;
 
+    std::function<void(const std::string &)> m_print_handler = [](const std::string &) noexcept {};
+
     /// Evaluates the given string in by parsing it and running the results through the evaluator
     Boxed_Value do_eval(const std::string &t_input, const std::string &t_filename = "__EVAL__", bool /* t_internal*/ = false) {
       try {
@@ -119,10 +121,23 @@ namespace chaiscript {
     chaiscript::detail::Dispatch_Engine &get_eval_engine() noexcept { return m_engine; }
 
     /// Builds all the requirements for ChaiScript, including its evaluator and a run of its prelude.
-    void build_eval_system(const ModulePtr &t_lib, const std::vector<Options> &t_opts) {
+    void build_eval_system(const ModulePtr &t_lib, const std::vector<Options> &t_opts, const bool t_no_io = false) {
       if (t_lib) {
         add(t_lib);
       }
+
+      if (!t_no_io) {
+        m_print_handler = [](const std::string &s) noexcept {
+          fwrite(s.c_str(), 1, s.size(), stdout);
+        };
+      }
+
+      m_engine.add(fun([this](const std::string &s) { m_print_handler(s); }), "print_string");
+      m_engine.add(fun([this](const std::string &s) { m_print_handler(s + "\n"); }), "println_string");
+
+      m_engine.add(fun([this](const std::function<void(const std::string &)> &t_handler) {
+        m_print_handler = t_handler;
+      }), "set_print_handler");
 
       m_engine.add(fun([this]() { m_engine.dump_system(); }), "dump_system");
       m_engine.add(fun([this](const Boxed_Value &t_bv) { m_engine.dump_object(t_bv); }), "dump_object");
@@ -256,7 +271,13 @@ namespace chaiscript {
     }
 
   public:
-     
+
+    /// \brief Set a custom handler for print output, used by both print_string and println_string
+    /// \param[in] t_handler Function to call with the string to print
+    void set_print_handler(std::function<void(const std::string &)> t_handler) {
+      m_print_handler = std::move(t_handler);
+    }
+
     /// \brief Virtual destructor for ChaiScript
     virtual ~ChaiScript_Basic() = default;
      
@@ -268,7 +289,8 @@ namespace chaiscript {
                      std::unique_ptr<parser::ChaiScript_Parser_Base> &&parser,
                      std::vector<std::string> t_module_paths = {},
                      std::vector<std::string> t_use_paths = {},
-                     const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options())
+                     const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options(),
+                     const bool t_no_io = false)
         : m_module_paths(ensure_minimum_path_vec(std::move(t_module_paths)))
         , m_use_paths(ensure_minimum_path_vec(std::move(t_use_paths)))
         , m_parser(std::move(parser))
@@ -303,7 +325,7 @@ namespace chaiscript {
         m_module_paths.insert(m_module_paths.begin(), dllpath + "/");
       }
 #endif
-      build_eval_system(t_lib, t_opts);
+      build_eval_system(t_lib, t_opts, t_no_io);
     }
 
 #ifndef CHAISCRIPT_NO_DYNLOAD
