@@ -8,7 +8,7 @@
 #include "../chaiscript_defines.hpp"
 #include "quick_flat_map.hpp"
 #include <cctype>
-#include <cmath>
+#include <charconv>
 #include <cstdint>
 #include <initializer_list>
 #include <iostream>
@@ -503,65 +503,47 @@ namespace chaiscript::json {
     }
 
     static JSON parse_number(const std::string &str, size_t &offset) {
-      std::string val, exp_str;
-      char c = '\0';
+      const auto start = offset;
       bool isDouble = false;
-      bool isNegative = false;
-      std::int64_t exp = 0;
-      bool isExpNegative = false;
-      if (offset < str.size() && str.at(offset) == '-') {
-        isNegative = true;
+
+      if (offset < str.size() && str[offset] == '-') { ++offset; }
+
+      while (offset < str.size() && str[offset] >= '0' && str[offset] <= '9') { ++offset; }
+
+      if (offset < str.size() && str[offset] == '.') {
+        isDouble = true;
         ++offset;
+        while (offset < str.size() && str[offset] >= '0' && str[offset] <= '9') { ++offset; }
       }
-      for (; offset < str.size();) {
-        c = str.at(offset++);
-        if (c >= '0' && c <= '9') {
-          val += c;
-        } else if (c == '.' && !isDouble) {
-          val += c;
-          isDouble = true;
-        } else {
-          break;
-        }
-      }
-      if (offset < str.size() && (c == 'E' || c == 'e')) {
-        c = str.at(offset++);
-        if (c == '-') {
-          isExpNegative = true;
-        } else if (c == '+') {
-          // do nothing
-        } else {
-          --offset;
-        }
 
-        for (; offset < str.size();) {
-          c = str.at(offset++);
-          if (c >= '0' && c <= '9') {
-            exp_str += c;
-          } else if (!isspace(c) && c != ',' && c != ']' && c != '}') {
-            throw std::runtime_error(std::string("JSON ERROR: Number: Expected a number for exponent, found '") + c + "'");
-          } else {
-            break;
-          }
+      if (offset < str.size() && (str[offset] == 'e' || str[offset] == 'E')) {
+        isDouble = true;
+        ++offset;
+        if (offset < str.size() && (str[offset] == '+' || str[offset] == '-')) { ++offset; }
+        if (offset >= str.size() || str[offset] < '0' || str[offset] > '9') {
+          throw std::runtime_error(std::string("JSON ERROR: Number: Expected a number for exponent, found '") + str[offset] + "'");
         }
-        exp = chaiscript::parse_num<std::int64_t>(exp_str) * (isExpNegative ? -1 : 1);
-      } else if (offset < str.size() && (!isspace(c) && c != ',' && c != ']' && c != '}')) {
-        throw std::runtime_error(std::string("JSON ERROR: Number: unexpected character '") + c + "'");
+        while (offset < str.size() && str[offset] >= '0' && str[offset] <= '9') { ++offset; }
       }
-      --offset;
 
-      if (isDouble || !exp_str.empty()) {
-        std::string full_num;
-        if (isNegative) { full_num += '-'; }
-        full_num += val;
-        if (!exp_str.empty()) {
-          full_num += 'e';
-          if (isExpNegative) { full_num += '-'; }
-          full_num += exp_str;
+      if (offset < str.size()) {
+        const char c = str[offset];
+        if (!isspace(c) && c != ',' && c != ']' && c != '}') {
+          throw std::runtime_error(std::string("JSON ERROR: Number: unexpected character '") + c + "'");
         }
-        return JSON(chaiscript::parse_num<double>(full_num));
+      }
+
+      const auto *const first = str.data() + start;
+      const auto *const last = str.data() + offset;
+
+      if (isDouble) {
+        double val = 0;
+        std::from_chars(first, last, val);
+        return JSON(val);
       } else {
-        return JSON((isNegative ? -1 : 1) * chaiscript::parse_num<std::int64_t>(val));
+        std::int64_t val = 0;
+        std::from_chars(first, last, val);
+        return JSON(val);
       }
     }
 

@@ -70,7 +70,6 @@ static_assert(_MSC_FULL_VER >= 190024210, "Visual C++ 2015 Update 3 or later req
 #endif
 
 #include <charconv>
-#include <cmath>
 #include <memory>
 #include <string>
 
@@ -124,21 +123,8 @@ namespace chaiscript {
   };
 
   template<typename T>
-  [[nodiscard]] constexpr auto parse_num(const std::string_view t_str) noexcept -> typename std::enable_if<std::is_integral<T>::value, T>::type {
-    T t = 0;
-    for (const auto c : t_str) {
-      if (c < '0' || c > '9') {
-        return t;
-      }
-      t *= 10;
-      t += c - '0';
-    }
-    return t;
-  }
-
-  template<typename T>
-  [[nodiscard]] auto parse_num(const std::string_view t_str) -> typename std::enable_if<!std::is_integral<T>::value, T>::type {
-    T t = 0;
+  [[nodiscard]] auto parse_num(const std::string_view t_str) {
+    T t{};
     std::from_chars(t_str.data(), t_str.data() + t_str.size(), t);
     return t;
   }

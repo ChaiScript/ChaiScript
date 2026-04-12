@@ -736,30 +736,29 @@ namespace chaiscript {
         bool long_ = false;
         bool longlong_ = false;
 
-        auto i = t_val.size();
-
-        for (; i > 0; --i) {
-          const char val = t_val[i - 1];
-
-          if (val == 'u' || val == 'U') {
+        while (!t_val.empty()) {
+          const char c = t_val.back();
+          if (c == 'u' || c == 'U') {
             unsigned_ = true;
-          } else if (val == 'l' || val == 'L') {
-            if (long_) {
-              longlong_ = true;
-            }
-
+          } else if (c == 'l' || c == 'L') {
+            if (long_) { longlong_ = true; }
             long_ = true;
           } else {
             break;
           }
+          t_val.remove_suffix(1);
         }
 
         if (prefixed) {
           t_val.remove_prefix(2);
         }
 
-        const auto *const first = t_val.data();
-        const auto *const last = first + i - (prefixed ? 2 : 0);
+        unsigned long long uu = 0;
+        const auto [ptr, ec] = std::from_chars(t_val.data(), t_val.data() + t_val.size(), uu, base);
+
+        if (ec != std::errc()) {
+          return const_var(std::numeric_limits<long long>::max());
+        }
 
 #ifdef __GNUC__
 #pragma GCC diagnostic push
@@ -767,47 +766,24 @@ namespace chaiscript {
 
 #ifdef CHAISCRIPT_CLANG
 #pragma GCC diagnostic ignored "-Wtautological-compare"
-#pragma GCC diagnostic ignored "-Wtautological-unsigned-zero-compare"
 #pragma GCC diagnostic ignored "-Wtautological-type-limit-compare"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 #endif
 
 #endif
 
-        {
-          long long u = 0;
-          auto [ptr, ec] = std::from_chars(first, last, u, base);
-
-          if (ec == std::errc()) {
-            if (!unsigned_ && !long_ && u >= std::numeric_limits<int>::min() && u <= std::numeric_limits<int>::max()) {
-              return const_var(static_cast<int>(u));
-            } else if ((unsigned_ || base != 10) && !long_ && u >= std::numeric_limits<unsigned int>::min()
-                       && u <= std::numeric_limits<unsigned int>::max()) {
-              return const_var(static_cast<unsigned int>(u));
-            } else if (!unsigned_ && !longlong_ && u >= std::numeric_limits<long>::min() && u <= std::numeric_limits<long>::max()) {
-              return const_var(static_cast<long>(u));
-            } else if ((unsigned_ || base != 10) && !longlong_ && u >= std::numeric_limits<unsigned long>::min()
-                       && u <= std::numeric_limits<unsigned long>::max()) {
-              return const_var(static_cast<unsigned long>(u));
-            } else if (!unsigned_ && u >= std::numeric_limits<long long>::min() && u <= std::numeric_limits<long long>::max()) {
-              return const_var(static_cast<long long>(u));
-            } else {
-              return const_var(static_cast<unsigned long long>(u));
-            }
-          }
-
-          unsigned long long uu = 0;
-          const auto result = std::from_chars(first, last, uu, base);
-
-          if (result.ec == std::errc()) {
-            if (!longlong_ && uu >= std::numeric_limits<unsigned long>::min() && uu <= std::numeric_limits<unsigned long>::max()) {
-              return const_var(static_cast<unsigned long>(uu));
-            } else {
-              return const_var(static_cast<unsigned long long>(uu));
-            }
-          }
-
-          return const_var(std::numeric_limits<long long>::max());
+        if (!unsigned_ && !long_ && uu <= static_cast<unsigned long long>(std::numeric_limits<int>::max())) {
+          return const_var(static_cast<int>(uu));
+        } else if ((unsigned_ || base != 10) && !long_ && uu <= std::numeric_limits<unsigned int>::max()) {
+          return const_var(static_cast<unsigned int>(uu));
+        } else if (!unsigned_ && !longlong_ && uu <= static_cast<unsigned long long>(std::numeric_limits<long>::max())) {
+          return const_var(static_cast<long>(uu));
+        } else if ((unsigned_ || base != 10) && !longlong_ && uu <= std::numeric_limits<unsigned long>::max()) {
+          return const_var(static_cast<unsigned long>(uu));
+        } else if (!unsigned_ && uu <= static_cast<unsigned long long>(std::numeric_limits<long long>::max())) {
+          return const_var(static_cast<long long>(uu));
+        } else {
+          return const_var(static_cast<unsigned long long>(uu));
         }
 
 #ifdef __GNUC__
