@@ -9,17 +9,18 @@ on:
 
 jobs:
   linux:
-    name: Linux GCC ${{ matrix.build_type }}
+    name: Linux GCC ${{ matrix.build_type }} threads=${{ matrix.multithread }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         build_type: [Debug, Release]
+        multithread: [ON, OFF]
     steps:
       - uses: actions/checkout@v4
 
       - name: Configure
-        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DMULTITHREAD_SUPPORT_ENABLED=${{ matrix.multithread }}
 
       - name: Build
         run: cmake --build build -j
@@ -28,17 +29,18 @@ jobs:
         run: ctest --test-dir build --output-on-failure
 
   macos:
-    name: macOS AppleClang ${{ matrix.build_type }}
+    name: macOS AppleClang ${{ matrix.build_type }} threads=${{ matrix.multithread }}
     runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
         build_type: [Debug, Release]
+        multithread: [ON, OFF]
     steps:
       - uses: actions/checkout@v4
 
       - name: Configure
-        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DMULTITHREAD_SUPPORT_ENABLED=${{ matrix.multithread }}
 
       - name: Build
         run: cmake --build build -j
@@ -85,17 +87,18 @@ jobs:
         run: ctest --test-dir build --output-on-failure
 
   windows:
-    name: Windows MSVC ${{ matrix.build_type }}
+    name: Windows MSVC ${{ matrix.build_type }} threads=${{ matrix.multithread }}
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         build_type: [Debug, Release]
+        multithread: [ON, OFF]
     steps:
       - uses: actions/checkout@v4
 
       - name: Configure
-        run: cmake -B build
+        run: cmake -B build -DMULTITHREAD_SUPPORT_ENABLED=${{ matrix.multithread }}
 
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }} -j
@@ -114,7 +117,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Configure
-        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DENABLE_THREAD_SANITIZER=ON
+        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DENABLE_THREAD_SANITIZER=ON -DMULTITHREAD_SUPPORT_ENABLED=ON
 
       - name: Build
         run: cmake --build build -j
@@ -133,7 +136,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Configure
-        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DENABLE_THREAD_SANITIZER=ON
+        run: cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DENABLE_THREAD_SANITIZER=ON -DMULTITHREAD_SUPPORT_ENABLED=ON
 
       - name: Build
         run: cmake --build build -j

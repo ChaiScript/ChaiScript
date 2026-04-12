@@ -292,6 +292,15 @@ endif()
 file(GLOB UNIT_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/unittests/ ${CMAKE_CURRENT_SOURCE_DIR}/unittests/*.chai ${CMAKE_CURRENT_SOURCE_DIR}/unittests/3.x/*.chai)
 list(SORT UNIT_TESTS)
 
+if(NOT MULTITHREAD_SUPPORT_ENABLED)
+  list(REMOVE_ITEM UNIT_TESTS
+    async_engine_lifetime.chai
+    future.chai
+    list_push_front.chai
+    move_async.chai
+  )
+endif()
+
 file(GLOB PERFORMANCE_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/performance_tests/ ${CMAKE_CURRENT_SOURCE_DIR}/performance_tests/*.chai)
 list(SORT PERFORMANCE_TESTS)
 
@@ -429,6 +438,10 @@ if(BUILD_TESTING)
     add_executable(emscripten_eval_test unittests/emscripten_eval_test.cpp)
     target_link_libraries(emscripten_eval_test ${LIBS})
     add_test(NAME Emscripten_Eval_Test COMMAND emscripten_eval_test)
+
+    add_executable(threading_config_test unittests/threading_config_test.cpp)
+    target_link_libraries(threading_config_test ${LIBS})
+    add_test(NAME Threading_Config_Test COMMAND threading_config_test)
 
     install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/chaiscript")
   endif()
