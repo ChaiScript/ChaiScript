@@ -103,7 +103,9 @@ namespace chaiscript {
 
           assert(types.size() > 1);
           // assert(types[1].bare_equal(user_type<Boxed_Value>()));
-          types[1] = t_objectti;
+          // When the object type_info is undefined (ChaiScript-defined class), use
+          // Dynamic_Object so that dispatch priority scoring works correctly.
+          types[1] = t_objectti.is_undef() ? user_type<Dynamic_Object>() : t_objectti;
           return types;
         }
 

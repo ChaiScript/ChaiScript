@@ -1,0 +1,45 @@
+
+// Test overriding [] operator with various index types (issue #398)
+
+class my_class
+{
+  def my_class()
+  {
+  }
+};
+
+def `[]`(my_class o, idx)
+{
+  return "Hello World!";
+}
+
+var o = my_class();
+
+// Integer index should work
+assert_equal("Hello World!", o[3]);
+
+// String index should work
+assert_equal("Hello World!", o["3"]);
+
+// String variable as index should work
+var s = "abc";
+assert_equal("Hello World!", o[s]);
+
+// Typed string parameter override
+class my_class2
+{
+  def my_class2()
+  {
+  }
+};
+
+def `[]`(my_class2 o, string key)
+{
+  return "key=" + key;
+}
+
+var o2 = my_class2();
+assert_equal("key=foo", o2["foo"]);
+
+var key = "bar";
+assert_equal("key=bar", o2[key]);
