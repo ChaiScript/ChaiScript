@@ -1802,6 +1802,10 @@ TEST_CASE("Nested namespaces via register_namespace with :: separator") {
 
   CHECK(chai.eval<double>("constants.si.mu_B") == Approx(9.274));
   CHECK(chai.eval<double>("constants.mm.mu_B") == Approx(0.05788));
+
+  // Scope resolution via :: works the same as . for access
+  CHECK(chai.eval<double>("constants::si::mu_B") == Approx(9.274));
+  CHECK(chai.eval<double>("constants::mm::mu_B") == Approx(0.05788));
 }
 
 TEST_CASE("Deeply nested namespaces via register_namespace") {
@@ -1816,4 +1820,60 @@ TEST_CASE("Deeply nested namespaces via register_namespace") {
   chai.import("a");
 
   CHECK(chai.eval<int>("a.b.c.val") == 42);
+  CHECK(chai.eval<int>("a::b::c::val") == 42);
+}
+
+TEST_CASE("Block namespace declaration with ::") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.eval(R"(
+    namespace math {
+      def square(x) { x * x }
+    }
+  )");
+
+  CHECK(chai.eval<int>("math::square(5)") == 25);
+  CHECK(chai.eval<int>("math.square(5)") == 25);
+}
+
+TEST_CASE("Nested block namespace declaration") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.eval(R"(
+    namespace physics::constants {
+      def speed_of_light() { return 299792458 }
+    }
+  )");
+
+  CHECK(chai.eval<int>("physics::constants::speed_of_light()") == 299792458);
+}
+
+TEST_CASE("Namespace block reopening") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.eval(R"(
+    namespace ns {
+      def foo() { return 1 }
+    }
+    namespace ns {
+      def bar() { return 2 }
+    }
+  )");
+
+  CHECK(chai.eval<int>("ns::foo()") == 1);
+  CHECK(chai.eval<int>("ns::bar()") == 2);
+}
+
+TEST_CASE("Namespace block with var declarations") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.eval(R"(
+    namespace config {
+      var pi = 3.14
+      var name = "hello"
+    }
+  )");
+
+  CHECK(chai.eval<double>("config::pi") == Approx(3.14));
+  CHECK(chai.eval<std::string>("config::name") == "hello");
 }

@@ -888,6 +888,118 @@ namespace chaiscript {
     };
 
     template<typename T>
+    struct Namespace_Block_AST_Node final : AST_Node_Impl<T> {
+      Namespace_Block_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children)
+          : AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Namespace_Block, std::move(t_loc), std::move(t_children)) {
+      }
+
+      Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
+        const auto &ns_name = this->children[0]->text;
+
+        auto ns_name_bv = const_var(ns_name);
+        t_ss->call_function("namespace", m_ns_loc, Function_Params{ns_name_bv}, t_ss.conversions());
+
+        std::vector<std::string> parts;
+        {
+          std::string::size_type start = 0;
+          std::string::size_type pos = 0;
+          while ((pos = ns_name.find("::", start)) != std::string::npos) {
+            parts.push_back(ns_name.substr(start, pos - start));
+            start = pos + 2;
+          }
+          parts.push_back(ns_name.substr(start));
+        }
+
+        Boxed_Value ns_bv = t_ss.get_object(parts[0], m_root_loc);
+
+        for (size_t i = 1; i < parts.size(); ++i) {
+          auto &parent_ns = boxed_cast<dispatch::Dynamic_Object &>(ns_bv);
+          ns_bv = parent_ns.get_attr(parts[i]);
+        }
+
+        auto &target_ns = boxed_cast<dispatch::Dynamic_Object &>(ns_bv);
+
+        const auto process_statement = [&](const AST_Node_Impl<T> &stmt) {
+          if (stmt.identifier == AST_Node_Type::Def) {
+            const auto *def_node = static_cast<const Def_AST_Node<T> *>(&stmt);
+
+            std::vector<std::string> param_names;
+            size_t numparams = 0;
+            dispatch::Param_Types param_types;
+
+            if ((def_node->children.size() > 1) && (def_node->children[1]->identifier == AST_Node_Type::Arg_List)) {
+              numparams = def_node->children[1]->children.size();
+              param_names = Arg_List_AST_Node<T>::get_arg_names(*def_node->children[1]);
+              param_types = Arg_List_AST_Node<T>::get_arg_types(*def_node->children[1], t_ss);
+            }
+
+            std::reference_wrapper<chaiscript::detail::Dispatch_Engine> engine(*t_ss);
+            std::shared_ptr<dispatch::Proxy_Function_Base> guard;
+            if (def_node->m_guard_node) {
+              guard = dispatch::make_dynamic_proxy_function(
+                  [engine, guardnode = def_node->m_guard_node, param_names](const Function_Params &t_params) {
+                    return detail::eval_function(engine, *guardnode, param_names, t_params);
+                  },
+                  static_cast<int>(numparams),
+                  def_node->m_guard_node);
+            }
+
+            const std::string &func_name = def_node->children[0]->text;
+            auto proxy_func = dispatch::make_dynamic_proxy_function(
+                [engine, func_node = def_node->m_body_node, param_names](const Function_Params &t_params) {
+                  return detail::eval_function(engine, *func_node, param_names, t_params);
+                },
+                static_cast<int>(numparams),
+                def_node->m_body_node,
+                param_types,
+                guard);
+
+            target_ns[func_name] = Boxed_Value(std::move(proxy_func));
+          } else if (stmt.identifier == AST_Node_Type::Assign_Decl
+                     || stmt.identifier == AST_Node_Type::Const_Assign_Decl) {
+            const auto &var_name = stmt.children[0]->text;
+            auto value = detail::clone_if_necessary(stmt.children[1]->eval(t_ss), m_clone_loc, t_ss);
+            value.reset_return_value();
+            if (stmt.identifier == AST_Node_Type::Const_Assign_Decl) {
+              value.make_const();
+            }
+            target_ns[var_name] = std::move(value);
+          } else if (stmt.identifier == AST_Node_Type::Equation
+                     && !stmt.children.empty()
+                     && (stmt.children[0]->identifier == AST_Node_Type::Var_Decl
+                         || stmt.children[0]->identifier == AST_Node_Type::Const_Var_Decl)) {
+            const auto &var_name = stmt.children[0]->children[0]->text;
+            auto value = detail::clone_if_necessary(stmt.children[1]->eval(t_ss), m_clone_loc, t_ss);
+            value.reset_return_value();
+            target_ns[var_name] = std::move(value);
+          } else if (stmt.identifier == AST_Node_Type::Var_Decl) {
+            const auto &var_name = stmt.children[0]->text;
+            target_ns[var_name] = Boxed_Value();
+          } else {
+            stmt.eval(t_ss);
+          }
+        };
+
+        const auto &body = this->children[1];
+        if (body->identifier == AST_Node_Type::Block
+            || body->identifier == AST_Node_Type::Scopeless_Block) {
+          for (const auto &child : body->children) {
+            process_statement(*child);
+          }
+        } else {
+          process_statement(*body);
+        }
+
+        return void_var();
+      }
+
+    private:
+      mutable std::atomic_uint_fast32_t m_ns_loc = {0};
+      mutable std::atomic_uint_fast32_t m_root_loc = {0};
+      mutable std::atomic_uint_fast32_t m_clone_loc = {0};
+    };
+
+    template<typename T>
     struct If_AST_Node final : AST_Node_Impl<T> {
       If_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children)
           : AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::If, std::move(t_loc), std::move(t_children)) {

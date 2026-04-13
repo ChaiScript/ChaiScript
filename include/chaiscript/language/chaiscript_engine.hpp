@@ -189,7 +189,9 @@ namespace chaiscript {
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name) { set_global(t_bv, t_name); }), "set_global");
 
       m_engine.add(fun([this](const std::string &t_namespace_name) {
-                     register_namespace([](Namespace & /*space*/) noexcept {}, t_namespace_name);
+                     if (!m_namespace_generators.count(t_namespace_name)) {
+                       register_namespace([](Namespace & /*space*/) noexcept {}, t_namespace_name);
+                     }
                      const auto sep_pos = t_namespace_name.find("::");
                      const std::string root_name = (sep_pos != std::string::npos) ? t_namespace_name.substr(0, sep_pos) : t_namespace_name;
                      if (!m_engine.get_scripting_objects().count(root_name)) {

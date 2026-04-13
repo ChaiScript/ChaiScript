@@ -1990,6 +1990,44 @@ namespace chaiscript {
       }
 
       /// Reads a class block from input
+      bool Namespace_Block() {
+        Depth_Counter dc{this};
+        const auto prev_stack_top = m_match_stack.size();
+        const auto prev_pos = m_position;
+
+        if (Keyword("namespace")) {
+          if (Id(true)) {
+            std::string ns_name = m_match_stack.back()->text;
+
+            while (Symbol("::")) {
+              if (!Id(true)) {
+                throw exception::eval_error("Incomplete namespace name after '::'",
+                                            File_Position(m_position.line, m_position.col),
+                                            *m_filename);
+              }
+              ns_name += "::" + m_match_stack.back()->text;
+              m_match_stack.pop_back();
+            }
+
+            m_match_stack.back() = make_node<eval::Id_AST_Node<Tracer>>(ns_name, prev_pos.line, prev_pos.col);
+
+            while (Eol()) {
+            }
+
+            if (Block()) {
+              build_match<eval::Namespace_Block_AST_Node<Tracer>>(prev_stack_top);
+              return true;
+            }
+          }
+
+          m_position = prev_pos;
+          while (prev_stack_top != m_match_stack.size()) {
+            m_match_stack.pop_back();
+          }
+        }
+        return false;
+      }
+
       bool Class(const bool t_class_allowed) {
         Depth_Counter dc{this};
         bool retval = false;
@@ -2379,7 +2417,7 @@ namespace chaiscript {
               }
 
               build_match<eval::Array_Call_AST_Node<Tracer>>(prev_stack_top);
-            } else if (Symbol(".")) {
+            } else if (Symbol(".") || Symbol("::")) {
               has_more = true;
               if (!(Id(true))) {
                 throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
@@ -2776,7 +2814,7 @@ namespace chaiscript {
 
         while (has_more) {
           const auto start = m_position;
-          if (Def() || Try() || If() || While() || Class(t_class_allowed) || For() || Switch()) {
+          if (Def() || Try() || If() || While() || Namespace_Block() || Class(t_class_allowed) || For() || Switch()) {
             if (!saw_eol) {
               throw exception::eval_error("Two function definitions missing line separator",
                                           File_Position(start.line, start.col),
