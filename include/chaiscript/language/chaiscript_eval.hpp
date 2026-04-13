@@ -788,40 +788,43 @@ namespace chaiscript {
         return false;
       }
 
-      Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
+      static std::shared_ptr<dispatch::Proxy_Function_Base> make_proxy_function(
+          const Def_AST_Node<T> &t_node, const chaiscript::detail::Dispatch_State &t_ss) {
         std::vector<std::string> t_param_names;
         size_t numparams = 0;
 
         dispatch::Param_Types param_types;
 
-        if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
-          numparams = this->children[1]->children.size();
-          t_param_names = Arg_List_AST_Node<T>::get_arg_names(*this->children[1]);
-          param_types = Arg_List_AST_Node<T>::get_arg_types(*this->children[1], t_ss);
+        if ((t_node.children.size() > 1) && (t_node.children[1]->identifier == AST_Node_Type::Arg_List)) {
+          numparams = t_node.children[1]->children.size();
+          t_param_names = Arg_List_AST_Node<T>::get_arg_names(*t_node.children[1]);
+          param_types = Arg_List_AST_Node<T>::get_arg_types(*t_node.children[1], t_ss);
         }
 
         std::reference_wrapper<chaiscript::detail::Dispatch_Engine> engine(*t_ss);
         std::shared_ptr<dispatch::Proxy_Function_Base> guard;
-        if (m_guard_node) {
+        if (t_node.m_guard_node) {
           guard = dispatch::make_dynamic_proxy_function(
-              [engine, guardnode = m_guard_node, t_param_names](const Function_Params &t_params) {
+              [engine, guardnode = t_node.m_guard_node, t_param_names](const Function_Params &t_params) {
                 return detail::eval_function(engine, *guardnode, t_param_names, t_params);
               },
               static_cast<int>(numparams),
-              m_guard_node);
+              t_node.m_guard_node);
         }
 
+        return dispatch::make_dynamic_proxy_function(
+            [engine, func_node = t_node.m_body_node, t_param_names](const Function_Params &t_params) {
+              return detail::eval_function(engine, *func_node, t_param_names, t_params);
+            },
+            static_cast<int>(numparams),
+            t_node.m_body_node,
+            param_types,
+            guard);
+      }
+
+      Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
         try {
-          const std::string &l_function_name = this->children[0]->text;
-          t_ss->add(dispatch::make_dynamic_proxy_function(
-                        [engine, func_node = m_body_node, t_param_names](const Function_Params &t_params) {
-                          return detail::eval_function(engine, *func_node, t_param_names, t_params);
-                        },
-                        static_cast<int>(numparams),
-                        m_body_node,
-                        param_types,
-                        guard),
-                    l_function_name);
+          t_ss->add(make_proxy_function(*this, t_ss), this->children[0]->text);
         } catch (const exception::name_conflict_error &e) {
           throw exception::eval_error("Function redefined '" + e.name() + "'");
         }
@@ -921,40 +924,9 @@ namespace chaiscript {
 
         const auto process_statement = [&](const AST_Node_Impl<T> &stmt) {
           if (stmt.identifier == AST_Node_Type::Def) {
-            const auto *def_node = static_cast<const Def_AST_Node<T> *>(&stmt);
-
-            std::vector<std::string> param_names;
-            size_t numparams = 0;
-            dispatch::Param_Types param_types;
-
-            if ((def_node->children.size() > 1) && (def_node->children[1]->identifier == AST_Node_Type::Arg_List)) {
-              numparams = def_node->children[1]->children.size();
-              param_names = Arg_List_AST_Node<T>::get_arg_names(*def_node->children[1]);
-              param_types = Arg_List_AST_Node<T>::get_arg_types(*def_node->children[1], t_ss);
-            }
-
-            std::reference_wrapper<chaiscript::detail::Dispatch_Engine> engine(*t_ss);
-            std::shared_ptr<dispatch::Proxy_Function_Base> guard;
-            if (def_node->m_guard_node) {
-              guard = dispatch::make_dynamic_proxy_function(
-                  [engine, guardnode = def_node->m_guard_node, param_names](const Function_Params &t_params) {
-                    return detail::eval_function(engine, *guardnode, param_names, t_params);
-                  },
-                  static_cast<int>(numparams),
-                  def_node->m_guard_node);
-            }
-
-            const std::string &func_name = def_node->children[0]->text;
-            auto proxy_func = dispatch::make_dynamic_proxy_function(
-                [engine, func_node = def_node->m_body_node, param_names](const Function_Params &t_params) {
-                  return detail::eval_function(engine, *func_node, param_names, t_params);
-                },
-                static_cast<int>(numparams),
-                def_node->m_body_node,
-                param_types,
-                guard);
-
-            target_ns[func_name] = Boxed_Value(std::move(proxy_func));
+            const auto &def_node = static_cast<const Def_AST_Node<T> &>(stmt);
+            target_ns[def_node.children[0]->text] =
+                Boxed_Value(Def_AST_Node<T>::make_proxy_function(def_node, t_ss));
           } else if (stmt.identifier == AST_Node_Type::Assign_Decl
                      || stmt.identifier == AST_Node_Type::Const_Assign_Decl) {
             const auto &var_name = stmt.children[0]->text;
