@@ -1,0 +1,6 @@
+// object_from_json roundtrip through to_json
+var json_str = "{\"key\":\"value\"}"
+var obj = object_from_json(json_str)
+var result = to_json(obj)
+var obj2 = object_from_json(result)
+assert_equal(obj2.key, "value")

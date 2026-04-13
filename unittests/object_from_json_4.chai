@@ -1,0 +1,9 @@
+// object_to_map and map_to_object conversions
+var m = ["a": 1, "b": "hello"]
+var obj = map_to_object(m)
+assert_equal(obj.a, 1)
+assert_equal(obj.b, "hello")
+
+var m2 = object_to_map(obj)
+assert_equal(m2["a"], 1)
+assert_equal(m2["b"], "hello")
