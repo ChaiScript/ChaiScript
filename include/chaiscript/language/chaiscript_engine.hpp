@@ -190,8 +190,8 @@ namespace chaiscript {
 
       m_engine.add(fun([this](const std::string &t_namespace_name) {
                      register_namespace([](Namespace & /*space*/) noexcept {}, t_namespace_name);
-                     const auto dot_pos = t_namespace_name.find('.');
-                     const std::string root_name = (dot_pos != std::string::npos) ? t_namespace_name.substr(0, dot_pos) : t_namespace_name;
+                     const auto sep_pos = t_namespace_name.find("::");
+                     const std::string root_name = (sep_pos != std::string::npos) ? t_namespace_name.substr(0, sep_pos) : t_namespace_name;
                      if (!m_engine.get_scripting_objects().count(root_name)) {
                        import(root_name);
                      } else if (m_namespace_generators.count(root_name)) {
@@ -744,9 +744,9 @@ namespace chaiscript {
     }
 
     /// \brief Registers a namespace generator, which delays generation of the namespace until it is imported, saving memory if it is never
-    /// used. Supports dotted names (e.g. "constants.si") for nested namespaces; parent namespaces are auto-registered if absent.
+    /// used. Supports C++-style nested names (e.g. "constants::si") for nested namespaces; parent namespaces are auto-registered if absent.
     /// \param[in] t_namespace_generator Namespace generator function.
-    /// \param[in] t_namespace_name Name of the Namespace function being registered (may contain dots for nesting).
+    /// \param[in] t_namespace_name Name of the Namespace function being registered (may contain :: for nesting).
     /// \throw std::runtime_error In the case that the namespace name was already registered.
     void register_namespace(const std::function<void(Namespace &)> &t_namespace_generator, const std::string &t_namespace_name) {
       chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
@@ -760,7 +760,7 @@ namespace chaiscript {
         return space;
       }));
 
-      auto pos = t_namespace_name.rfind('.');
+      auto pos = t_namespace_name.rfind("::");
       while (pos != std::string::npos) {
         const std::string parent = t_namespace_name.substr(0, pos);
         if (!m_namespace_generators.count(parent)) {
@@ -768,17 +768,17 @@ namespace chaiscript {
             return space;
           }));
         }
-        pos = parent.rfind('.');
+        pos = parent.rfind("::");
       }
     }
 
   private:
     void nest_children(const std::string &t_parent_name, Namespace &t_parent) {
-      const std::string prefix = t_parent_name + ".";
+      const std::string prefix = t_parent_name + "::";
       for (auto &[name, generator] : m_namespace_generators) {
         if (name.size() > prefix.size() && name.compare(0, prefix.size(), prefix) == 0) {
           const std::string remainder = name.substr(prefix.size());
-          if (remainder.find('.') == std::string::npos) {
+          if (remainder.find("::") == std::string::npos) {
             auto &child_ns = generator();
             nest_children(name, child_ns);
             t_parent[remainder] = var(std::ref(child_ns));

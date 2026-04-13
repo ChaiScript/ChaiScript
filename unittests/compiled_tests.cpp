@@ -1783,20 +1783,20 @@ TEST_CASE("eval_error with AST_Node_Trace call stack compiles in C++20") {
   }
 }
 
-TEST_CASE("Nested namespaces via register_namespace with dotted names") {
+TEST_CASE("Nested namespaces via register_namespace with :: separator") {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
 
   chai.register_namespace(
       [](chaiscript::Namespace &si) {
         si["mu_B"] = chaiscript::const_var(9.274);
       },
-      "constants.si");
+      "constants::si");
 
   chai.register_namespace(
       [](chaiscript::Namespace &mm) {
         mm["mu_B"] = chaiscript::const_var(0.05788);
       },
-      "constants.mm");
+      "constants::mm");
 
   chai.import("constants");
 
@@ -1811,7 +1811,7 @@ TEST_CASE("Deeply nested namespaces via register_namespace") {
       [](chaiscript::Namespace &leaf) {
         leaf["val"] = chaiscript::const_var(42);
       },
-      "a.b.c");
+      "a::b::c");
 
   chai.import("a");
 
