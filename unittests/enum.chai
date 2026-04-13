@@ -1,0 +1,59 @@
+// Basic enum definition
+enum Color { Red, Green, Blue }
+
+// Access via :: syntax
+auto r = Color::Red
+auto g = Color::Green
+auto b = Color::Blue
+
+// Equality and inequality
+assert_true(Color::Red == Color::Red)
+assert_false(Color::Red == Color::Green)
+assert_true(Color::Red != Color::Green)
+assert_false(Color::Red != Color::Red)
+
+// Construction from valid int
+auto c = Color(1)
+assert_true(c == Color::Green)
+
+// Construction from invalid int throws
+try {
+  Color(52)
+  assert_true(false)
+} catch(e) {
+  // expected
+}
+
+// Strong typing: function with typed parameter
+def takes_color(Color val) { val }
+takes_color(Color::Red)
+takes_color(Color::Green)
+takes_color(Color(2))
+
+// Cannot pass int where Color is expected
+try {
+  takes_color(52)
+  assert_true(false)
+} catch(e) {
+  // expected: dispatch error
+}
+
+// to_int accessor
+assert_equal(0, Color::Red.to_int())
+assert_equal(1, Color::Green.to_int())
+assert_equal(2, Color::Blue.to_int())
+
+// Enum with explicit values
+enum Priority { Low = 10, Medium = 20, High = 30 }
+assert_equal(10, Priority::Low.to_int())
+assert_equal(20, Priority::Medium.to_int())
+assert_equal(30, Priority::High.to_int())
+
+auto p = Priority(20)
+assert_true(p == Priority::Medium)
+
+// Mixed auto and explicit values
+enum Status { Pending, Active = 5, Done }
+assert_equal(0, Status::Pending.to_int())
+assert_equal(5, Status::Active.to_int())
+assert_equal(6, Status::Done.to_int())
