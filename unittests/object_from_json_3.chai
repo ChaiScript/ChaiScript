@@ -1,0 +1,3 @@
+// object_from_json: arrays remain as vectors
+var obj = object_from_json("{\"items\":[1,2,3]}")
+assert_equal(obj.items, [1,2,3])

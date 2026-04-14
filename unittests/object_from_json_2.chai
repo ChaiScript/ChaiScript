@@ -1,0 +1,3 @@
+// object_from_json: nested objects become nested Dynamic_Objects
+var obj = object_from_json("{\"outer\":{\"inner\":42}}")
+assert_equal(obj.outer.inner, 42)
