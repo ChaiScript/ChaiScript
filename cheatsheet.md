@@ -711,6 +711,94 @@ class My_Class {
 };
 ```
 
+## Strong Typedefs
+
+Strong typedefs create distinct types that are not interchangeable with their underlying type
+or with other typedefs of the same underlying type. They use `Dynamic_Object` internally and
+automatically expose operators that the underlying type supports.
+
+### Basic Usage
+
+```
+using Meters = int
+using Seconds = int
+
+var d = Meters(100)
+var t = Seconds(10)
+
+// d and t are distinct types — you cannot accidentally mix them
+// Meters + Seconds would require an explicit conversion
+```
+
+### Arithmetic and Comparison
+
+Operators from the underlying type are forwarded and remain strongly typed:
+
+```
+using Meters = int
+
+var a = Meters(10)
+var b = Meters(20)
+
+var c = a + b        // Meters(30) — result is still Meters
+var bigger = b > a   // true — comparisons return bool
+
+// Compound assignment operators work too
+a += b               // a is now Meters(30)
+```
+
+### String-Based Strong Typedefs
+
+Strong typedefs work with any type, not just numeric types:
+
+```
+using Name = string
+
+var n = Name("Alice")
+var greeting = Name("Hello, ") + Name("world")  // Name — string concatenation is forwarded
+```
+
+### Accessing the Underlying Value
+
+Use `to_underlying` to extract the wrapped value:
+
+```
+using Meters = int
+
+var d = Meters(42)
+var raw = to_underlying(d)  // 42, plain int
+```
+
+### Extending Strong Typedefs
+
+You can add custom operations to strong typedefs just like any other ChaiScript type:
+
+```
+using Meters = int
+using Seconds = int
+using MetersPerSecond = int
+
+def speed(Meters d, Seconds t) {
+  MetersPerSecond(to_underlying(d) / to_underlying(t))
+}
+
+var s = speed(Meters(100), Seconds(10))  // MetersPerSecond(10)
+```
+
+You can also overload operators between different strong typedefs:
+
+```
+using Meters = int
+using Feet = int
+
+def to_feet(Meters m) {
+  Feet((to_underlying(m) * 328) / 100)
+}
+
+var m = Meters(10)
+var f = to_feet(m)  // Feet(32)
+```
+
 ## method_missing
 
 A function of the signature `method_missing(object, name, param1, param2, param3)` will be called if an appropriate
@@ -915,3 +1003,12 @@ set_print_handler(fun(s) { my_custom_log(s) })
 
 ## Extras
 ChaiScript itself does not provide a link to the math functions defined in `<cmath>`. You can either add them yourself, or use the [ChaiScript_Extras](https://github.com/ChaiScript/ChaiScript_Extras) helper library. (Which also provides some additional string functions.)
+
+## Grammar Railroad Diagrams
+
+A formal EBNF grammar for ChaiScript is available in [`grammar/chaiscript.ebnf`](grammar/chaiscript.ebnf). You can visualize it as navigable railroad diagrams by pasting its contents into one of these tools:
+
+  * [rr — Railroad Diagram Generator (IPv6)](https://www.bottlecaps.de/rr/ui)
+  * [rr — Railroad Diagram Generator (IPv4)](https://rr.red-dove.com/ui)
+
+Open either link, switch to the **Edit Grammar** tab, paste the file contents, then click **View Diagram**.
