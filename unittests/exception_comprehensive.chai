@@ -1,0 +1,862 @@
+// Comprehensive exception throwing and catching tests
+// Tests throw/catch from various contexts: operators, functions, lambdas,
+// methods, [] operator, nested scopes, and with various value types.
+
+// ============================================================
+// Section 1: Throwing and catching different value types
+// ============================================================
+
+// Throw int
+try {
+  throw(42)
+}
+catch(e) {
+  assert_equal(42, e)
+}
+
+// Throw string
+try {
+  throw("error message")
+}
+catch(e) {
+  assert_equal("error message", e)
+}
+
+// Throw double
+try {
+  throw(3.14)
+}
+catch(e) {
+  assert_equal(3.14, e)
+}
+
+// Throw bool
+try {
+  throw(true)
+}
+catch(e) {
+  assert_equal(true, e)
+}
+
+// Throw a Vector (via named variable to preserve mutability)
+auto thrown_vec = [1, 2, 3]
+try {
+  throw(thrown_vec)
+}
+catch(e) {
+  assert_equal(3, e.size())
+  assert_equal(1, e[0])
+  assert_equal(2, e[1])
+  assert_equal(3, e[2])
+}
+
+// Throw a Map (via named variable to preserve mutability)
+auto thrown_map = ["key": 42]
+try {
+  throw(thrown_map)
+}
+catch(e) {
+  assert_equal(42, e["key"])
+}
+
+// ============================================================
+// Section 2: Typed catch blocks
+// ============================================================
+
+// Typed catch matching int
+auto typed_result = 0
+try {
+  throw(10)
+}
+catch(int e) {
+  typed_result = e + 1
+}
+assert_equal(11, typed_result)
+
+// Typed catch matching string
+typed_result = 0
+try {
+  throw("hello")
+}
+catch(string e) {
+  typed_result = 1
+}
+assert_equal(1, typed_result)
+
+// Typed catch mismatch falls through to untyped
+typed_result = 0
+try {
+  throw(42)
+}
+catch(string e) {
+  typed_result = 1
+}
+catch(e) {
+  typed_result = 2
+}
+assert_equal(2, typed_result)
+
+// Multiple typed catches - first match wins
+typed_result = 0
+try {
+  throw("test")
+}
+catch(int e) {
+  typed_result = 1
+}
+catch(string e) {
+  typed_result = 2
+}
+catch(e) {
+  typed_result = 3
+}
+assert_equal(2, typed_result)
+
+// Typed catch with int, multiple typed blocks, none match except untyped
+typed_result = 0
+try {
+  throw(3.14)
+}
+catch(int e) {
+  typed_result = 1
+}
+catch(string e) {
+  typed_result = 2
+}
+catch(e) {
+  typed_result = 3
+}
+assert_equal(3, typed_result)
+
+// ============================================================
+// Section 3: Catch-all (no variable) catch block
+// ============================================================
+
+auto catch_all_reached = false
+try {
+  throw(99)
+}
+catch {
+  catch_all_reached = true
+}
+assert_true(catch_all_reached)
+
+// ============================================================
+// Section 4: Finally block semantics
+// ============================================================
+
+// Finally runs after exception
+auto finally_ran = false
+try {
+  throw(1)
+}
+catch(e) {
+  // caught
+}
+finally {
+  finally_ran = true
+}
+assert_true(finally_ran)
+
+// Finally runs without exception
+finally_ran = false
+try {
+  auto x = 1
+}
+catch(e) {
+  // not reached
+}
+finally {
+  finally_ran = true
+}
+assert_true(finally_ran)
+
+// Finally runs even with typed catch that matches
+finally_ran = false
+try {
+  throw(42)
+}
+catch(int e) {
+  assert_equal(42, e)
+}
+finally {
+  finally_ran = true
+}
+assert_true(finally_ran)
+
+// Finally runs when typed catch does NOT match (exception not caught)
+finally_ran = false
+auto outer_caught = false
+try {
+  try {
+    throw(42)
+  }
+  catch(string e) {
+    // wrong type, won't match
+  }
+  finally {
+    finally_ran = true
+  }
+}
+catch(e) {
+  outer_caught = true
+}
+assert_true(finally_ran)
+assert_true(outer_caught)
+
+// ============================================================
+// Section 5: Throwing from functions
+// ============================================================
+
+def throwing_function() {
+  throw("from function")
+}
+
+try {
+  throwing_function()
+}
+catch(e) {
+  assert_equal("from function", e)
+}
+
+// Throwing from nested function calls
+def inner_throw() {
+  throw("inner")
+}
+
+def outer_call() {
+  inner_throw()
+}
+
+try {
+  outer_call()
+}
+catch(e) {
+  assert_equal("inner", e)
+}
+
+// Function that throws conditionally
+def conditional_throw(should_throw) {
+  if (should_throw) {
+    throw("conditional")
+  }
+  return "no throw"
+}
+
+assert_equal("no throw", conditional_throw(false))
+
+try {
+  conditional_throw(true)
+}
+catch(e) {
+  assert_equal("conditional", e)
+}
+
+// ============================================================
+// Section 6: Throwing from lambdas
+// ============================================================
+
+auto throwing_lambda = fun() { throw("from lambda") }
+
+try {
+  throwing_lambda()
+}
+catch(e) {
+  assert_equal("from lambda", e)
+}
+
+// Lambda that captures and throws
+auto captured_val = "captured"
+auto capture_lambda = fun[captured_val]() { throw(captured_val) }
+
+try {
+  capture_lambda()
+}
+catch(e) {
+  assert_equal("captured", e)
+}
+
+// ============================================================
+// Section 7: Throwing from binary operators
+// ============================================================
+
+// Define a type and an operator that throws
+attr ThrowOnAdd::val
+def ThrowOnAdd::ThrowOnAdd(v) { this.val = v }
+
+def `+`(ThrowOnAdd x, ThrowOnAdd y) {
+  throw("add not supported")
+}
+
+try {
+  auto a = ThrowOnAdd(1)
+  auto b = ThrowOnAdd(2)
+  auto c = a + b
+  assert_true(false) // should not reach here
+}
+catch(e) {
+  assert_equal("add not supported", e)
+}
+
+// Operator that throws for specific values
+def `-`(ThrowOnAdd x, ThrowOnAdd y) {
+  if (x.val == y.val) {
+    throw("cannot subtract equal values")
+  }
+  return ThrowOnAdd(x.val - y.val)
+}
+
+try {
+  auto a = ThrowOnAdd(5)
+  auto b = ThrowOnAdd(5)
+  auto c = a - b
+  assert_true(false)
+}
+catch(e) {
+  assert_equal("cannot subtract equal values", e)
+}
+
+// Multiplication operator that throws (not pre-defined for Dynamic_Object)
+def `*`(ThrowOnAdd x, ThrowOnAdd y) {
+  throw("multiply not supported")
+}
+
+try {
+  auto a = ThrowOnAdd(1)
+  auto b = ThrowOnAdd(2)
+  auto c = a * b
+  assert_true(false)
+}
+catch(e) {
+  assert_equal("multiply not supported", e)
+}
+
+// Subtraction works for non-equal values
+auto sub_result = ThrowOnAdd(10) - ThrowOnAdd(3)
+assert_equal(7, sub_result.val)
+
+// ============================================================
+// Section 8: Throwing from unary/prefix operators
+// ============================================================
+
+def `++`(ThrowOnAdd x) {
+  throw("increment not supported")
+}
+
+try {
+  auto a = ThrowOnAdd(1)
+  ++a
+  assert_true(false)
+}
+catch(e) {
+  assert_equal("increment not supported", e)
+}
+
+// ============================================================
+// Section 9: Throwing from [] operator
+// ============================================================
+
+attr ThrowOnIndex::data
+def ThrowOnIndex::ThrowOnIndex() { this.data = [1, 2, 3] }
+
+def `[]`(ThrowOnIndex obj, int idx) {
+  if (idx < 0) {
+    throw("negative index not allowed")
+  }
+  return obj.data[idx]
+}
+
+auto toi = ThrowOnIndex()
+assert_equal(1, toi[0])
+assert_equal(2, toi[1])
+
+try {
+  auto val = toi[-1]
+  assert_true(false)
+}
+catch(e) {
+  assert_equal("negative index not allowed", e)
+}
+
+// ============================================================
+// Section 10: Throwing from member functions
+// ============================================================
+
+attr Validatable::value
+def Validatable::Validatable(v) { this.value = v }
+
+def Validatable::validate() {
+  if (this.value < 0) {
+    throw("validation failed: negative value")
+  }
+  return true
+}
+
+auto valid_obj = Validatable(10)
+assert_true(valid_obj.validate())
+
+auto invalid_obj = Validatable(-1)
+try {
+  invalid_obj.validate()
+  assert_true(false)
+}
+catch(e) {
+  assert_equal("validation failed: negative value", e)
+}
+
+// ============================================================
+// Section 11: Nested try/catch
+// ============================================================
+
+auto inner_caught = false
+auto outer_caught_val = 0
+try {
+  try {
+    throw(1)
+  }
+  catch(e) {
+    inner_caught = true
+    throw(e + 10)
+  }
+}
+catch(e) {
+  outer_caught_val = e
+}
+assert_true(inner_caught)
+assert_equal(11, outer_caught_val)
+
+// Deeply nested try/catch
+auto depth = 0
+try {
+  try {
+    try {
+      throw("deep")
+    }
+    catch(e) {
+      depth = 1
+      throw(e + "er")
+    }
+  }
+  catch(e) {
+    depth = 2
+    throw(e + "est")
+  }
+}
+catch(e) {
+  depth = 3
+  assert_equal("deeperest", e)
+}
+assert_equal(3, depth)
+
+// ============================================================
+// Section 12: Rethrow from catch block
+// ============================================================
+
+auto rethrow_caught = false
+try {
+  try {
+    throw("rethrown")
+  }
+  catch(e) {
+    throw(e)
+  }
+}
+catch(e) {
+  rethrow_caught = true
+  assert_equal("rethrown", e)
+}
+assert_true(rethrow_caught)
+
+// ============================================================
+// Section 13: Exception in for loop
+// ============================================================
+
+auto loop_exception_val = 0
+try {
+  for (auto i = 0; i < 10; ++i) {
+    if (i == 5) {
+      throw(i)
+    }
+  }
+}
+catch(e) {
+  loop_exception_val = e
+}
+assert_equal(5, loop_exception_val)
+
+// ============================================================
+// Section 14: Exception in while loop
+// ============================================================
+
+auto while_exc_val = 0
+auto counter = 0
+try {
+  while (true) {
+    ++counter
+    if (counter == 3) {
+      throw(counter)
+    }
+  }
+}
+catch(e) {
+  while_exc_val = e
+}
+assert_equal(3, while_exc_val)
+
+// ============================================================
+// Section 15: Exception preserves value through nested calls
+// ============================================================
+
+def deep_throw(val) {
+  throw(val)
+}
+
+def middle_call(val) {
+  deep_throw(val)
+}
+
+def top_call(val) {
+  middle_call(val)
+}
+
+auto nested_map = ["key": "value"]
+try {
+  top_call(nested_map)
+}
+catch(e) {
+  assert_equal("value", e["key"])
+}
+
+auto nested_vec = [10, 20, 30]
+try {
+  top_call(nested_vec)
+}
+catch(e) {
+  assert_equal(3, e.size())
+  assert_equal(20, e[1])
+}
+
+// ============================================================
+// Section 16: Code after throw is not executed
+// ============================================================
+
+auto after_throw = false
+try {
+  throw(1)
+  after_throw = true
+}
+catch(e) {
+  // caught
+}
+assert_false(after_throw)
+
+// ============================================================
+// Section 17: Exception value is usable in catch block arithmetic
+// ============================================================
+
+auto catch_computed = 0
+try {
+  throw(1)
+}
+catch(e) {
+  catch_computed = e + 100
+}
+assert_equal(101, catch_computed)
+
+// ============================================================
+// Section 18: No exception means catch is skipped
+// ============================================================
+
+auto catch_skipped = true
+try {
+  auto x = 42
+}
+catch(e) {
+  catch_skipped = false
+}
+assert_true(catch_skipped)
+
+// ============================================================
+// Section 19: Exception from dynamic object method chaining
+// ============================================================
+
+attr Chain::val
+def Chain::Chain(v) { this.val = v }
+
+def Chain::add(n) {
+  if (this.val + n > 100) {
+    throw("overflow: " + to_string(this.val + n))
+  }
+  this.val = this.val + n
+  return this
+}
+
+auto chain = Chain(50)
+try {
+  chain.add(30).add(30)
+  assert_true(false)
+}
+catch(e) {
+  assert_equal("overflow: 110", e)
+}
+assert_equal(80, chain.val)
+
+// ============================================================
+// Section 20: Exception thrown during map construction
+// ============================================================
+
+def exploding_value() {
+  throw("boom during construction")
+}
+
+try {
+  auto m = ["ok": 1, "bad": exploding_value()]
+  assert_true(false)
+}
+catch(e) {
+  assert_equal("boom during construction", e)
+}
+
+// ============================================================
+// Section 21: Exception thrown during vector construction
+// ============================================================
+
+try {
+  auto v = [1, 2, exploding_value(), 4]
+  assert_true(false)
+}
+catch(e) {
+  assert_equal("boom during construction", e)
+}
+
+// ============================================================
+// Section 22: Exception in if-condition
+// ============================================================
+
+def exploding_condition() {
+  throw("condition exploded")
+}
+
+try {
+  if (exploding_condition()) {
+    assert_true(false)
+  }
+}
+catch(e) {
+  assert_equal("condition exploded", e)
+}
+
+// ============================================================
+// Section 23: Multiple catch blocks - only first matching runs
+// ============================================================
+
+auto catch_count = 0
+try {
+  throw(42)
+}
+catch(int e) {
+  ++catch_count
+}
+catch(e) {
+  ++catch_count
+}
+assert_equal(1, catch_count)
+
+// ============================================================
+// Section 24: Throwing from within catch, with finally
+// ============================================================
+
+auto s24_finally = false
+auto s24_outer = false
+try {
+  try {
+    throw("original")
+  }
+  catch(e) {
+    throw("replaced: " + e)
+  }
+  finally {
+    s24_finally = true
+  }
+}
+catch(e) {
+  s24_outer = true
+  assert_equal("replaced: original", e)
+}
+assert_true(s24_finally)
+assert_true(s24_outer)
+
+// ============================================================
+// Section 25: Unhandled typed catch propagates exception
+// ============================================================
+
+auto s25_caught = false
+try {
+  try {
+    throw(3.14)
+  }
+  catch(int e) {
+    assert_true(false) // should not match double
+  }
+  catch(string e) {
+    assert_true(false) // should not match double
+  }
+}
+catch(e) {
+  s25_caught = true
+  assert_equal(3.14, e)
+}
+assert_true(s25_caught)
+
+// ============================================================
+// Section 26: Throw from range-based for
+// ============================================================
+
+auto s26_val = 0
+try {
+  for (x : [10, 20, 30, 40]) {
+    if (x == 30) {
+      throw(x)
+    }
+  }
+}
+catch(e) {
+  s26_val = e
+}
+assert_equal(30, s26_val)
+
+// ============================================================
+// Section 27: Throw from eval
+// ============================================================
+
+try {
+  eval("throw(\"from eval\")")
+}
+catch(e) {
+  assert_equal("from eval", e)
+}
+
+// ============================================================
+// Section 28: Exception from built-in operations (out of range)
+// ============================================================
+
+auto s28_caught = false
+try {
+  auto v = [1, 2, 3]
+  auto x = v[10]
+}
+catch(e) {
+  s28_caught = true
+}
+assert_true(s28_caught)
+
+// ============================================================
+// Section 29: Throw zero and empty string (falsy values)
+// ============================================================
+
+try {
+  throw(0)
+}
+catch(e) {
+  assert_equal(0, e)
+}
+
+try {
+  throw("")
+}
+catch(e) {
+  assert_equal("", e)
+}
+
+// ============================================================
+// Section 30: Throw from ternary-style inline_if
+// ============================================================
+
+def maybe_throw(do_it) {
+  if (do_it) { throw("inline threw") } else { "ok" }
+}
+
+try {
+  maybe_throw(true)
+}
+catch(e) {
+  assert_equal("inline threw", e)
+}
+assert_equal("ok", maybe_throw(false))
+
+// ============================================================
+// Section 31: Verify catch variable scope isolation
+// ============================================================
+
+auto outer_e = "untouched"
+try {
+  throw("caught_value")
+}
+catch(e) {
+  assert_equal("caught_value", e)
+}
+assert_equal("untouched", outer_e)
+
+// ============================================================
+// Section 32: Exception from recursive function
+// ============================================================
+
+def recursive_throw(n) {
+  if (n == 0) {
+    throw("bottom")
+  }
+  recursive_throw(n - 1)
+}
+
+try {
+  recursive_throw(5)
+}
+catch(e) {
+  assert_equal("bottom", e)
+}
+
+// ============================================================
+// Section 33: Try/catch in a function body
+// ============================================================
+
+def safe_divide(a, b) {
+  try {
+    if (b == 0) {
+      throw("division by zero")
+    }
+    return a / b
+  }
+  catch(e) {
+    return e
+  }
+}
+
+assert_equal(5, safe_divide(10, 2))
+assert_equal("division by zero", safe_divide(10, 0))
+
+// ============================================================
+// Section 34: Throw from [] on a Map with missing key
+// ============================================================
+
+auto s34_caught = false
+try {
+  auto m = ["a": 1]
+  auto x = m["nonexistent"]
+}
+catch(e) {
+  s34_caught = true
+}
+assert_true(s34_caught)
+
+// ============================================================
+// Section 35: Arithmetic exception (divide by zero)
+// ============================================================
+
+auto s35_caught = false
+try {
+  auto x = 1 / 0
+}
+catch(e) {
+  s35_caught = true
+}
+assert_true(s35_caught)

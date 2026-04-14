@@ -1471,6 +1471,7 @@ namespace chaiscript {
 
       Boxed_Value handle_exception(const chaiscript::detail::Dispatch_State &t_ss, const Boxed_Value &t_except) const {
         Boxed_Value retval;
+        bool handled = false;
 
         size_t end_point = this->children.size();
         if (this->children.back()->identifier == AST_Node_Type::Finally) {
@@ -1484,6 +1485,7 @@ namespace chaiscript {
           if (catch_block.children.size() == 1) {
             // No variable capture
             retval = catch_block.children[0]->eval(t_ss);
+            handled = true;
             break;
           } else if (catch_block.children.size() == 2 || catch_block.children.size() == 3) {
             const auto name = Arg_List_AST_Node<T>::get_arg_name(*catch_block.children[0]);
@@ -1497,15 +1499,17 @@ namespace chaiscript {
               if (catch_block.children.size() == 2) {
                 // Variable capture
                 retval = catch_block.children[1]->eval(t_ss);
+                handled = true;
                 break;
               }
             }
           } else {
-            if (this->children.back()->identifier == AST_Node_Type::Finally) {
-              this->children.back()->children[0]->eval(t_ss);
-            }
             throw exception::eval_error("Internal error: catch block size unrecognized");
           }
+        }
+
+        if (!handled) {
+          throw;
         }
 
         return retval;
@@ -1517,17 +1521,19 @@ namespace chaiscript {
         chaiscript::eval::detail::Scope_Push_Pop spp(t_ss);
 
         try {
-          retval = this->children[0]->eval(t_ss);
-        } catch (const exception::eval_error &e) {
-          retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
-        } catch (const std::runtime_error &e) {
-          retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
-        } catch (const std::out_of_range &e) {
-          retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
-        } catch (const std::exception &e) {
-          retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
-        } catch (Boxed_Value &e) {
-          retval = handle_exception(t_ss, e);
+          try {
+            retval = this->children[0]->eval(t_ss);
+          } catch (const exception::eval_error &e) {
+            retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
+          } catch (const std::runtime_error &e) {
+            retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
+          } catch (const std::out_of_range &e) {
+            retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
+          } catch (const std::exception &e) {
+            retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
+          } catch (Boxed_Value &e) {
+            retval = handle_exception(t_ss, e);
+          }
         } catch (...) {
           if (this->children.back()->identifier == AST_Node_Type::Finally) {
             this->children.back()->children[0]->eval(t_ss);
