@@ -1,0 +1,55 @@
+// Test C++-style block namespace declarations
+namespace constants::si {
+  def mu_B() { return 1.0 }
+}
+
+namespace constants::mm {
+  def mu_B() { return 2.0 }
+}
+
+assert_equal(1.0, constants::si::mu_B())
+assert_equal(2.0, constants::mm::mu_B())
+
+// Test deeper nesting with block syntax
+namespace a::b::c {
+  def val() { return 42 }
+}
+
+assert_equal(42, a::b::c::val())
+
+// Test reopening a namespace to add more members
+namespace math {
+  def square(x) { x * x }
+}
+
+namespace math::trig {
+  def double_angle(x) { 2.0 * x }
+}
+
+assert_equal(16, math::square(4))
+assert_equal(6.0, math::trig::double_angle(3.0))
+
+// Test reopening a namespace (C++ allows this)
+namespace math {
+  def cube(x) { x * x * x }
+}
+
+assert_equal(27, math::cube(3))
+
+// Test that :: scope resolution works the same as . for access
+assert_equal(16, math.square(4))
+assert_equal(6.0, math.trig.double_angle(3.0))
+
+// Test namespace with var declarations
+namespace config {
+  var pi = 3.14159
+  var name = "test"
+}
+
+assert_equal(3.14159, config::pi)
+assert_equal("test", config::name)
+
+// Test function-call style still works
+namespace("compat")
+compat.legacy = 99
+assert_equal(99, compat::legacy)
