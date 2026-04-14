@@ -16,7 +16,7 @@
 #include <map>
 #include <memory>
 #include <ostream>
-#include <set>
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -897,12 +897,12 @@ namespace chaiscript {
       Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
         const auto &enum_name = this->children[0]->text;
 
-        std::set<int> valid_values;
+        std::vector<int> valid_values;
 
         for (size_t i = 1; i < this->children.size(); i += 2) {
           const auto &val_name = this->children[i]->text;
           const int val_int = Boxed_Number(this->children[i + 1]->eval(t_ss)).get_as<int>();
-          valid_values.insert(val_int);
+          valid_values.push_back(val_int);
 
           dispatch::Dynamic_Object dobj(enum_name);
           dobj.get_attr("value") = Boxed_Value(val_int);
@@ -910,13 +910,13 @@ namespace chaiscript {
           t_ss->add_global_const(const_var(dobj), enum_name + "::" + val_name);
         }
 
-        auto shared_valid = std::make_shared<const std::set<int>>(std::move(valid_values));
+        auto shared_valid = std::make_shared<const std::vector<int>>(std::move(valid_values));
 
         t_ss->add(
             std::make_shared<dispatch::detail::Dynamic_Object_Constructor>(
                 enum_name,
                 fun([shared_valid, enum_name](dispatch::Dynamic_Object &t_obj, int t_val) {
-                  if (shared_valid->count(t_val) == 0) {
+                  if (std::find(shared_valid->begin(), shared_valid->end(), t_val) == shared_valid->end()) {
                     throw exception::eval_error("Value " + std::to_string(t_val) + " is not valid for enum '" + enum_name + "'");
                   }
                   t_obj.get_attr("value") = Boxed_Value(t_val);
@@ -948,26 +948,6 @@ namespace chaiscript {
 
         return void_var();
       }
-    };
-
-    template<typename T>
-    struct Enum_Access_AST_Node final : AST_Node_Impl<T> {
-      Enum_Access_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children)
-          : AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Enum_Access, std::move(t_loc), std::move(t_children))
-          , m_key(this->children[0]->text + "::" + this->children[1]->text) {
-      }
-
-      Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
-        try {
-          return t_ss.get_object(m_key, m_loc);
-        } catch (std::exception &) {
-          throw exception::eval_error("Can not find enum value: " + m_key);
-        }
-      }
-
-    private:
-      const std::string m_key;
-      mutable std::atomic_uint_fast32_t m_loc = {0};
     };
 
     template<typename T>

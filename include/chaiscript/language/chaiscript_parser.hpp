@@ -2452,14 +2452,17 @@ namespace chaiscript {
               build_match<eval::Array_Call_AST_Node<Tracer>>(prev_stack_top);
             } else if (!m_match_stack.empty() && m_match_stack.back()->identifier == AST_Node_Type::Id && Symbol("::")) {
               has_more = true;
+              const auto enum_name = m_match_stack.back()->text;
+              const auto start_loc = m_match_stack.back()->location;
+              m_match_stack.pop_back();
+
               if (!Id(true)) {
                 throw exception::eval_error("Expected identifier after '::'", File_Position(m_position.line, m_position.col), *m_filename);
               }
 
-              if (std::distance(m_match_stack.begin() + static_cast<int>(prev_stack_top), m_match_stack.end()) != 2) {
-                throw exception::eval_error("Incomplete enum access", File_Position(m_position.line, m_position.col), *m_filename);
-              }
-              build_match<eval::Enum_Access_AST_Node<Tracer>>(prev_stack_top);
+              const auto val_name = m_match_stack.back()->text;
+              m_match_stack.pop_back();
+              m_match_stack.push_back(make_node<eval::Id_AST_Node<Tracer>>(enum_name + "::" + val_name, start_loc.start.line, start_loc.start.column));
             } else if (Symbol(".")) {
               has_more = true;
               if (!(Id(true))) {
