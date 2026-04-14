@@ -1,0 +1,177 @@
+/*
+ * ChaiScript Grammar — EBNF for Railroad Diagram Generation
+ *
+ * View as navigable railroad diagrams at:
+ *    https://www.bottlecaps.de/rr/ui  (IPv6)
+ *    https://rr.red-dove.com/ui       (IPv4)
+ *
+ * Copy and paste this file into the 'Edit Grammar' tab, then
+ * click 'View Diagram'.
+ *
+ * This grammar uses the notation accepted by
+ * https://github.com/GuntherRademacher/rr :
+ *   - "::=" as rule separator
+ *   - no semicolon at end of rule
+ *   - "?" "+" "*" for repetition
+ *   - C comments
+ */
+
+/* ---- Top-level ---- */
+
+statements           ::= ( def | try | if | while | class | for
+                           | switch | return | break | continue
+                           | equation | block | eol )+
+
+/* ---- Functions ---- */
+
+def                  ::= "def" id ( "::" id )? "(" decl_arg_list ")" eol*
+                           ( ":" guard )? eol* block
+
+lambda               ::= "fun" ( "[" id_arg_list "]" )? "(" decl_arg_list ")" eol* block
+
+guard                ::= operator
+
+/* ---- Exception handling ---- */
+
+try                  ::= "try" eol* block catch* finally?
+catch                ::= "catch" ( "(" arg ")" )? eol* block
+finally              ::= "finally" eol* block
+
+/* ---- Control flow ---- */
+
+if                   ::= "if" "(" equation ( eol equation )? ")" eol* block
+                           ( "else" ( if | eol* block ) )*
+
+while                ::= "while" "(" operator ")" eol* block
+
+for                  ::= "for" "(" ( for_guards | equation ":" equation ) ")" eol* block
+for_guards           ::= equation eol equation eol equation
+
+switch               ::= "switch" "(" operator ")" eol* "{" ( case | default )+ "}"
+case                 ::= "case" "(" operator ")" eol* block
+default              ::= "default" eol* block
+
+/* ---- Classes ---- */
+
+class                ::= "class" id ( ":" id )? eol* class_block
+class_block          ::= "{" class_statements* "}"
+class_statements     ::= def | var_decl | eol
+
+/* ---- Blocks & flow keywords ---- */
+
+block                ::= "{" statements* "}"
+return               ::= "return" operator?
+break                ::= "break"
+continue             ::= "continue"
+
+/* ---- Line termination ---- */
+
+eol                  ::= "\n" | "\r\n" | ";"
+
+/* ---- Equations & operators ---- */
+
+equation             ::= operator ( ( "=" | ":=" | "+=" | "-=" | "*=" | "/="
+                           | "%=" | "<<=" | ">>=" | "&=" | "^=" | "|=" )
+                           equation )?
+
+operator             ::= prefix
+                       | value
+                       | operator binary_operator operator
+                       | operator "?" operator ":" operator
+
+prefix               ::= ( "++" | "--" | "-" | "+" | "!" | "~" ) operator
+
+binary_operator      ::= "||" | "&&"
+                       | "|" | "^" | "&"
+                       | "==" | "!="
+                       | "<" | "<=" | ">" | ">="
+                       | "<<" | ">>"
+                       | "+" | "-"
+                       | "*" | "/" | "%"
+
+/* ---- Values & access ---- */
+
+value                ::= var_decl | dot_fun_array | prefix
+
+dot_fun_array        ::= ( lambda | num | quoted_string
+                           | single_quoted_string | raw_string
+                           | paren_expression | inline_container
+                           | id )
+                           ( fun_call | array_call | dot_access )*
+
+fun_call             ::= "(" arg_list ")"
+array_call           ::= "[" operator "]"
+dot_access           ::= "." id
+
+/* ---- Variable declarations ---- */
+
+var_decl             ::= ( "auto" | "var" | "const" ) ( reference | id )
+                       | "global" ( reference | id )
+                       | "attr" id ( "::" id )?
+
+reference            ::= "&" id
+
+/* ---- Parenthesised & inline containers ---- */
+
+paren_expression     ::= "(" operator ")"
+
+inline_container     ::= "[" container_arg_list "]"
+container_arg_list   ::= value_range
+                       | map_pair ( "," map_pair )*
+                       | operator ( "," operator )*
+
+value_range          ::= operator ".." operator
+map_pair             ::= operator ":" operator
+
+/* ---- String literals ---- */
+
+quoted_string        ::= '"' ( char | escape | interpolation )* '"'
+single_quoted_string ::= "'" ( char | escape ) "'"
+raw_string           ::= 'R"' delimiter? "(" char* ")" delimiter? '"'
+delimiter            ::= [a-zA-Z0-9_]+
+interpolation        ::= "${" equation "}"
+
+/* ---- Escape sequences ---- */
+
+escape               ::= "\" ( "'" | '"' | "?" | "\" | "a" | "b"
+                           | "f" | "n" | "r" | "t" | "v" | "$"
+                           | "0"
+                           | "x" hex_digit+
+                           | "u" hex_digit hex_digit hex_digit hex_digit
+                           | "U" hex_digit hex_digit hex_digit hex_digit
+                               hex_digit hex_digit hex_digit hex_digit
+                           | octal_digit+ )
+
+/* ---- Argument lists ---- */
+
+id_arg_list          ::= id ( "," id )*
+decl_arg_list        ::= ( arg ( "," arg )* )?
+arg_list             ::= ( equation ( "," equation )* )?
+arg                  ::= id id?
+
+/* ---- Identifiers ---- */
+
+id                   ::= ( [a-zA-Z_] [a-zA-Z0-9_]* )
+                       | ( "`" [^`]+ "`" )
+                       | "true" | "false"
+                       | "Infinity" | "NaN"
+                       | "_"
+                       | "__LINE__" | "__FILE__" | "__FUNC__" | "__CLASS__"
+
+/* ---- Numeric literals ---- */
+
+num                  ::= hex | binary | float | integer
+
+hex                  ::= "0" ( "x" | "X" ) [0-9a-fA-F]+ int_suffix*
+binary               ::= "0" ( "b" | "B" ) [01]+ int_suffix*
+float                ::= [0-9]+ "." [0-9]+ ( ( "e" | "E" ) ( "+" | "-" )? [0-9]+ )? float_suffix?
+integer              ::= [0-9]+ int_suffix*
+
+int_suffix           ::= "l" | "L" | "ll" | "LL" | "u" | "U"
+float_suffix         ::= "l" | "L" | "f" | "F"
+
+/* ---- Character classes ---- */
+
+octal_digit          ::= [0-7]
+hex_digit            ::= [0-9a-fA-F]
+char                 ::= [^"\]

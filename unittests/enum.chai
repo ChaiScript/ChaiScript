@@ -13,12 +13,12 @@ assert_true(Color::Red != Color::Green)
 assert_false(Color::Red != Color::Red)
 
 // Construction from valid int
-auto c = Color(1)
+auto c = Color::from_int(1)
 assert_true(c == Color::Green)
 
 // Construction from invalid int throws
 try {
-  Color(52)
+  Color::from_int(52)
   assert_true(false)
 } catch(e) {
   // expected
@@ -28,7 +28,7 @@ try {
 def takes_color(Color val) { val }
 takes_color(Color::Red)
 takes_color(Color::Green)
-takes_color(Color(2))
+takes_color(Color::from_int(2))
 
 // Cannot pass int where Color is expected
 try {
@@ -49,7 +49,7 @@ assert_equal(10, Priority::Low.to_underlying())
 assert_equal(20, Priority::Medium.to_underlying())
 assert_equal(30, Priority::High.to_underlying())
 
-auto p = Priority(20)
+auto p = Priority::from_int(20)
 assert_true(p == Priority::Medium)
 
 // Mixed auto and explicit values
