@@ -118,30 +118,30 @@ def takes_strong_string(StrongString ss) {
 }
 takes_strong_string(ss_cat)
 
-// Operators not supported by the underlying type are not registered
+// Operators not supported by the underlying type error at call time
 try {
   var bad = ss1 * ss2
   assert_equal(true, false)
 } catch(e) {
-  // Expected: no * operator for strings
+  // Expected: underlying string has no * operator
 }
 try {
   var bad = ss1 - ss2
   assert_equal(true, false)
 } catch(e) {
-  // Expected: no - operator for strings
+  // Expected: underlying string has no - operator
 }
 try {
   var bad = ss1 / ss2
   assert_equal(true, false)
 } catch(e) {
-  // Expected: no / operator for strings
+  // Expected: underlying string has no / operator
 }
 try {
   var bad = ss1 % ss2
   assert_equal(true, false)
 } catch(e) {
-  // Expected: no % operator for strings
+  // Expected: underlying string has no % operator
 }
 
 // Comparison on StrongString
@@ -168,3 +168,33 @@ def `[]`(StrongString ss, int offset) {
   return to_string(to_underlying(ss)[offset])
 }
 assert_equal(StrongString("hello")[1], "e")
+
+// --- Compound assignment operators ---
+var m3 = Meters(10)
+m3 += Meters(5)
+assert_equal(to_underlying(m3), 15)
+measure(m3)
+
+m3 -= Meters(3)
+assert_equal(to_underlying(m3), 12)
+
+m3 *= Meters(2)
+assert_equal(to_underlying(m3), 24)
+
+m3 /= Meters(4)
+assert_equal(to_underlying(m3), 6)
+
+m3 %= Meters(4)
+assert_equal(to_underlying(m3), 2)
+
+// Compound assignment result is still the strong typedef
+var m4 = Meters(10)
+m4 += Meters(5)
+assert_equal(to_underlying(m4), 15)
+measure(m4)
+
+// Compound assignment on StrongString
+var ss3 = StrongString("hello")
+ss3 += StrongString(" world")
+assert_equal(to_underlying(ss3), "hello world")
+takes_strong_string(ss3)
