@@ -1877,3 +1877,26 @@ TEST_CASE("Namespace block with var declarations") {
   CHECK(chai.eval<double>("config::pi") == Approx(3.14));
   CHECK(chai.eval<std::string>("config::name") == "hello");
 }
+
+TEST_CASE("Namespace block rejects non-declaration statements") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  CHECK_THROWS_AS(chai.eval(R"(
+    namespace bad {
+      1 + 2
+    }
+  )"), chaiscript::exception::eval_error);
+
+  CHECK_THROWS_AS(chai.eval(R"(
+    namespace bad {
+      print("hello")
+    }
+  )"), chaiscript::exception::eval_error);
+
+  CHECK_THROWS_AS(chai.eval(R"(
+    var x = 5
+    namespace bad {
+      x = 10
+    }
+  )"), chaiscript::exception::eval_error);
+}

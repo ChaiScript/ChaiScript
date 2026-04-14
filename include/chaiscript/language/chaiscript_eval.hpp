@@ -948,7 +948,7 @@ namespace chaiscript {
             const auto &var_name = stmt.children[0]->text;
             target_ns[var_name] = Boxed_Value();
           } else {
-            stmt.eval(t_ss);
+            throw exception::eval_error("Only declarations (def, var, auto, global) are allowed inside namespace blocks");
           }
         };
 
