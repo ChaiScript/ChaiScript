@@ -1034,6 +1034,11 @@ namespace chaiscript {
             {"*", Operators::Opers::product, true},
             {"/", Operators::Opers::quotient, true},
             {"%", Operators::Opers::remainder, true},
+            {"<<", Operators::Opers::shift_left, true},
+            {">>", Operators::Opers::shift_right, true},
+            {"&", Operators::Opers::bitwise_and, true},
+            {"|", Operators::Opers::bitwise_or, true},
+            {"^", Operators::Opers::bitwise_xor, true},
             {"<", Operators::Opers::less_than, false},
             {">", Operators::Opers::greater_than, false},
             {"<=", Operators::Opers::less_than_equal, false},
@@ -1042,11 +1047,40 @@ namespace chaiscript {
             {"!=", Operators::Opers::not_equal, false},
         };
 
+        const auto op_exists_for_base_type = [&t_ss, &base_type_name](const char *op_name) {
+          std::atomic_uint_fast32_t loc{0};
+          const auto [func_loc, funcs] = t_ss->get_function(op_name, loc);
+          if (!funcs || funcs->empty()) {
+            return false;
+          }
+
+          std::atomic_uint_fast32_t ctor_loc{0};
+          Boxed_Value test_val;
+          try {
+            const std::array<Boxed_Value, 0> empty_params{};
+            test_val = t_ss->call_function(base_type_name, ctor_loc,
+                                           Function_Params(empty_params), t_ss.conversions());
+          } catch (...) {
+            return false;
+          }
+
+          const std::array<Boxed_Value, 2> test_params{test_val, test_val};
+          const Function_Params fp(test_params);
+          for (const auto &func : *funcs) {
+            if (func->call_match(fp, t_ss.conversions())) {
+              return true;
+            }
+          }
+          return false;
+        };
+
         for (const auto &op : ops) {
-          t_ss->add(
-              chaiscript::make_shared<dispatch::Proxy_Function_Base, detail::Strong_Typedef_Binary_Op>(
-                  new_type_name, std::string(op.name), op.oper, op.rewrap, engine),
-              op.name);
+          if (op_exists_for_base_type(op.name)) {
+            t_ss->add(
+                chaiscript::make_shared<dispatch::Proxy_Function_Base, detail::Strong_Typedef_Binary_Op>(
+                    new_type_name, std::string(op.name), op.oper, op.rewrap, engine),
+                op.name);
+          }
         }
 
         return void_var();

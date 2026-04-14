@@ -89,6 +89,21 @@ assert_equal(Meters(5) <= Meters(5), true)
 assert_equal(Meters(3) >= Meters(3), true)
 assert_equal(Meters(3) >= Meters(5), false)
 
+// --- Bitwise and shift operators ---
+assert_equal(to_underlying(Meters(6) & Meters(3)), 2)
+assert_equal(to_underlying(Meters(6) | Meters(3)), 7)
+assert_equal(to_underlying(Meters(6) ^ Meters(3)), 5)
+assert_equal(to_underlying(Meters(5) << Meters(2)), 20)
+assert_equal(to_underlying(Meters(12) >> Meters(1)), 6)
+
+// Bitwise results are strongly typed
+try {
+  takes_int(Meters(6) & Meters(3))
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: result is Meters, not int
+}
+
 // --- Strong typedef over string ---
 using StrongString = string
 
@@ -103,12 +118,30 @@ def takes_strong_string(StrongString ss) {
 }
 takes_strong_string(ss_cat)
 
-// StrongString * StrongString -> error (no * for strings)
+// Operators not supported by the underlying type are not registered
 try {
   var bad = ss1 * ss2
   assert_equal(true, false)
 } catch(e) {
   // Expected: no * operator for strings
+}
+try {
+  var bad = ss1 - ss2
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: no - operator for strings
+}
+try {
+  var bad = ss1 / ss2
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: no / operator for strings
+}
+try {
+  var bad = ss1 % ss2
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: no % operator for strings
 }
 
 // Comparison on StrongString
