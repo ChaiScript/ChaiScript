@@ -944,7 +944,7 @@ namespace chaiscript {
             std::make_shared<dispatch::detail::Dynamic_Object_Function>(
                 enum_name,
                 fun([](const dispatch::Dynamic_Object &obj) { return Boxed_Number(obj.get_attr("value")).get_as<int>(); })),
-            "to_int");
+            "to_underlying");
 
         return void_var();
       }

@@ -38,22 +38,58 @@ try {
   // expected: dispatch error
 }
 
-// to_int accessor
-assert_equal(0, Color::Red.to_int())
-assert_equal(1, Color::Green.to_int())
-assert_equal(2, Color::Blue.to_int())
+// to_underlying accessor
+assert_equal(0, Color::Red.to_underlying())
+assert_equal(1, Color::Green.to_underlying())
+assert_equal(2, Color::Blue.to_underlying())
 
 // Enum with explicit values
 enum Priority { Low = 10, Medium = 20, High = 30 }
-assert_equal(10, Priority::Low.to_int())
-assert_equal(20, Priority::Medium.to_int())
-assert_equal(30, Priority::High.to_int())
+assert_equal(10, Priority::Low.to_underlying())
+assert_equal(20, Priority::Medium.to_underlying())
+assert_equal(30, Priority::High.to_underlying())
 
 auto p = Priority(20)
 assert_true(p == Priority::Medium)
 
 // Mixed auto and explicit values
 enum Status { Pending, Active = 5, Done }
-assert_equal(0, Status::Pending.to_int())
-assert_equal(5, Status::Active.to_int())
-assert_equal(6, Status::Done.to_int())
+assert_equal(0, Status::Pending.to_underlying())
+assert_equal(5, Status::Active.to_underlying())
+assert_equal(6, Status::Done.to_underlying())
+
+// Switch on enum values
+var result = ""
+switch(Color::Green) {
+  case (Color::Red) {
+    result = "red"
+    break
+  }
+  case (Color::Green) {
+    result = "green"
+    break
+  }
+  case (Color::Blue) {
+    result = "blue"
+    break
+  }
+}
+assert_equal("green", result)
+
+// Switch on enum with explicit values
+var prio_result = ""
+switch(Priority::High) {
+  case (Priority::Low) {
+    prio_result = "low"
+    break
+  }
+  case (Priority::Medium) {
+    prio_result = "medium"
+    break
+  }
+  case (Priority::High) {
+    prio_result = "high"
+    break
+  }
+}
+assert_equal("high", prio_result)
