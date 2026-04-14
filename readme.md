@@ -91,6 +91,16 @@ the doxygen documentation in the build folder or see the website
 http://www.chaiscript.com.
 
 
+Grammar
+=======
+
+A formal EBNF grammar for ChaiScript is available in
+[grammar/chaiscript.ebnf](grammar/chaiscript.ebnf). To view it as a railroad
+diagram, paste the grammar into
+[mingodad's railroad diagram generator](https://mingodad.github.io/plgh/json2ebnf.html)
+or [bottlecaps.de/rr](https://www.bottlecaps.de/rr/ui).
+
+
 The shortest complete example possible follows:
 
 ```C++
