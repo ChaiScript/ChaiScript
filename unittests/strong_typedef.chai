@@ -53,3 +53,85 @@ def takes_int(int i) {
   return i
 }
 assert_equal(takes_int(to_underlying(m)), 42)
+
+// --- Arithmetic operators: strongly typed ---
+var m2 = Meters(8)
+var m_sum = m + m2
+assert_equal(to_underlying(m_sum), 50)
+measure(m_sum)
+
+var m_diff = m - m2
+assert_equal(to_underlying(m_diff), 34)
+
+var m_prod = Meters(3) * Meters(4)
+assert_equal(to_underlying(m_prod), 12)
+
+var m_quot = Meters(20) / Meters(5)
+assert_equal(to_underlying(m_quot), 4)
+
+var m_rem = Meters(17) % Meters(5)
+assert_equal(to_underlying(m_rem), 2)
+
+// Arithmetic result is strongly typed, not plain int
+try {
+  takes_int(m_sum)
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: m_sum is Meters, not int
+}
+
+// --- Comparison operators ---
+assert_equal(Meters(5) == Meters(5), true)
+assert_equal(Meters(5) != Meters(3), true)
+assert_equal(Meters(3) < Meters(5), true)
+assert_equal(Meters(5) > Meters(3), true)
+assert_equal(Meters(5) <= Meters(5), true)
+assert_equal(Meters(3) >= Meters(3), true)
+assert_equal(Meters(3) >= Meters(5), false)
+
+// --- Strong typedef over string ---
+using StrongString = string
+
+var ss1 = StrongString("hello")
+var ss2 = StrongString(" world")
+var ss_cat = ss1 + ss2
+assert_equal(to_underlying(ss_cat), "hello world")
+
+// StrongString + StrongString -> StrongString (strongly typed)
+def takes_strong_string(StrongString ss) {
+  return ss
+}
+takes_strong_string(ss_cat)
+
+// StrongString * StrongString -> error (no * for strings)
+try {
+  var bad = ss1 * ss2
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: no * operator for strings
+}
+
+// Comparison on StrongString
+assert_equal(StrongString("abc") < StrongString("def"), true)
+assert_equal(StrongString("abc") == StrongString("abc"), true)
+assert_equal(StrongString("abc") != StrongString("def"), true)
+assert_equal(StrongString("def") > StrongString("abc"), true)
+assert_equal(StrongString("abc") <= StrongString("abc"), true)
+assert_equal(StrongString("def") >= StrongString("abc"), true)
+
+// --- User-defined extensions on strong typedefs ---
+def first_char(StrongString ss) {
+  return to_string(to_underlying(ss)[0])
+}
+assert_equal(first_char(StrongString("hello")), "h")
+
+def double_meters(Meters m) {
+  return Meters(to_underlying(m) * 2)
+}
+assert_equal(to_underlying(double_meters(Meters(21))), 42)
+
+// User-defined operator extension
+def `[]`(StrongString ss, int offset) {
+  return to_string(to_underlying(ss)[offset])
+}
+assert_equal(StrongString("hello")[1], "e")

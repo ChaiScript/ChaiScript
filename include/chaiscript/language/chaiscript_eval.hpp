@@ -108,6 +108,90 @@ namespace chaiscript {
           return incoming;
         }
       }
+      class Strong_Typedef_Binary_Op final : public dispatch::Proxy_Function_Base {
+      public:
+        Strong_Typedef_Binary_Op(
+            std::string t_type_name,
+            std::string t_op_name,
+            Operators::Opers t_oper,
+            bool t_rewrap,
+            chaiscript::detail::Dispatch_Engine &t_engine)
+            : Proxy_Function_Base(
+                  {chaiscript::detail::Get_Type_Info<Boxed_Value>::get(),
+                   user_type<dispatch::Dynamic_Object>(),
+                   user_type<dispatch::Dynamic_Object>()},
+                  2)
+            , m_type_name(std::move(t_type_name))
+            , m_op_name(std::move(t_op_name))
+            , m_oper(t_oper)
+            , m_rewrap(t_rewrap)
+            , m_engine(t_engine) {
+        }
+
+        bool operator==(const Proxy_Function_Base &f) const noexcept override {
+          if (const auto *other = dynamic_cast<const Strong_Typedef_Binary_Op *>(&f)) {
+            return m_type_name == other->m_type_name && m_op_name == other->m_op_name;
+          }
+          return false;
+        }
+
+        bool call_match(const Function_Params &vals, const Type_Conversions_State &t_conversions) const noexcept override {
+          return vals.size() == 2
+              && type_matches(vals[0], t_conversions)
+              && type_matches(vals[1], t_conversions);
+        }
+
+      protected:
+        Boxed_Value do_call(const Function_Params &params, const Type_Conversions_State &t_conversions) const override {
+          if (!call_match(params, t_conversions)) {
+            throw chaiscript::exception::guard_error();
+          }
+
+          const auto &lhs = boxed_cast<const dispatch::Dynamic_Object &>(params[0], &t_conversions);
+          const auto &rhs = boxed_cast<const dispatch::Dynamic_Object &>(params[1], &t_conversions);
+          const auto lhs_val = lhs.get_attr("__value");
+          const auto rhs_val = rhs.get_attr("__value");
+
+          Boxed_Value result;
+          if (m_oper != Operators::Opers::invalid
+              && lhs_val.get_type_info().is_arithmetic()
+              && rhs_val.get_type_info().is_arithmetic()) {
+            result = Boxed_Number::do_oper(m_oper, lhs_val, rhs_val);
+          } else {
+            std::array<Boxed_Value, 2> underlying_params{lhs_val, rhs_val};
+            result = m_engine.call_function(m_op_name, m_loc, Function_Params(underlying_params), t_conversions);
+          }
+
+          if (m_rewrap) {
+            auto bv = Boxed_Value(dispatch::Dynamic_Object(m_type_name), true);
+            auto *obj = static_cast<dispatch::Dynamic_Object *>(bv.get_ptr());
+            obj->get_attr("__value") = result;
+            return bv;
+          }
+          return result;
+        }
+
+      private:
+        bool type_matches(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const noexcept {
+          if (!bv.get_type_info().bare_equal(user_type<dispatch::Dynamic_Object>())) {
+            return false;
+          }
+          try {
+            const auto &d = boxed_cast<const dispatch::Dynamic_Object &>(bv, &t_conversions);
+            return d.get_type_name() == m_type_name;
+          } catch (...) {
+            return false;
+          }
+        }
+
+        std::string m_type_name;
+        std::string m_op_name;
+        Operators::Opers m_oper;
+        bool m_rewrap;
+        chaiscript::detail::Dispatch_Engine &m_engine;
+        mutable std::atomic_uint_fast32_t m_loc{0};
+      };
+
     } // namespace detail
 
     template<typename T>
@@ -935,6 +1019,35 @@ namespace chaiscript {
             to_underlying_param_types);
 
         t_ss->add(to_underlying_body, "to_underlying");
+
+        auto &engine = *t_ss;
+
+        struct Op_Entry {
+          const char *name;
+          Operators::Opers oper;
+          bool rewrap;
+        };
+
+        static constexpr Op_Entry ops[] = {
+            {"+", Operators::Opers::sum, true},
+            {"-", Operators::Opers::difference, true},
+            {"*", Operators::Opers::product, true},
+            {"/", Operators::Opers::quotient, true},
+            {"%", Operators::Opers::remainder, true},
+            {"<", Operators::Opers::less_than, false},
+            {">", Operators::Opers::greater_than, false},
+            {"<=", Operators::Opers::less_than_equal, false},
+            {">=", Operators::Opers::greater_than_equal, false},
+            {"==", Operators::Opers::equals, false},
+            {"!=", Operators::Opers::not_equal, false},
+        };
+
+        for (const auto &op : ops) {
+          t_ss->add(
+              chaiscript::make_shared<dispatch::Proxy_Function_Base, detail::Strong_Typedef_Binary_Op>(
+                  new_type_name, std::string(op.name), op.oper, op.rewrap, engine),
+              op.name);
+        }
 
         return void_var();
       }
