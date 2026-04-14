@@ -272,6 +272,8 @@ namespace chaiscript {
           return callable(*static_cast<const float *>(bv.get_const_ptr()));
         case Common_Types::t_long_double:
           return callable(*static_cast<const long double *>(bv.get_const_ptr()));
+        default:
+          throw chaiscript::detail::exception::bad_any_cast();
       }
       throw chaiscript::detail::exception::bad_any_cast();
     }
@@ -479,6 +481,8 @@ namespace chaiscript {
         case Common_Types::t_long_double:
           check_type<long double, Target>();
           return get_as_aux<Target, long double>(bv);
+        default:
+          throw chaiscript::detail::exception::bad_any_cast();
       }
 
       throw chaiscript::detail::exception::bad_any_cast();
@@ -509,6 +513,8 @@ namespace chaiscript {
           return get_as_aux<Target, float>(bv);
         case Common_Types::t_long_double:
           return get_as_aux<Target, long double>(bv);
+        default:
+          throw chaiscript::detail::exception::bad_any_cast();
       }
 
       throw chaiscript::detail::exception::bad_any_cast();
@@ -538,6 +544,8 @@ namespace chaiscript {
           return to_string_aux<float>(bv);
         case Common_Types::t_long_double:
           return to_string_aux<long double>(bv);
+        default:
+          throw chaiscript::detail::exception::bad_any_cast();
       }
 
       throw chaiscript::detail::exception::bad_any_cast();

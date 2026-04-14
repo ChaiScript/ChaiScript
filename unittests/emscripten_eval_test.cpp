@@ -16,36 +16,34 @@
 #include <string>
 
 int main() {
-  // Test eval (void return) - same as Emscripten eval()
   chaiscript_eval("var x = 42");
 
-  // Test evalString - same as Emscripten evalString()
-  std::string s = chaiscript_eval_string("to_string(x)");
+  const std::string s = chaiscript_eval_string("to_string(x)");
   assert(s == "42");
+  static_cast<void>(s);
 
-  // Test evalInt - same as Emscripten evalInt()
-  int i = chaiscript_eval_int("1 + 2");
+  const int i = chaiscript_eval_int("1 + 2");
   assert(i == 3);
+  static_cast<void>(i);
 
-  // Test evalBool - same as Emscripten evalBool()
   bool b = chaiscript_eval_bool("true");
   assert(b == true);
-
   b = chaiscript_eval_bool("false");
   assert(b == false);
+  static_cast<void>(b);
 
-  // Test evalFloat - same as Emscripten evalFloat()
-  float f = chaiscript_eval_float("1.5f");
+  const float f = chaiscript_eval_float("1.5f");
   assert(std::abs(f - 1.5f) < 0.001f);
+  static_cast<void>(f);
 
-  // Test evalDouble - same as Emscripten evalDouble()
-  double d = chaiscript_eval_double("3.14");
+  const double d = chaiscript_eval_double("3.14");
   assert(std::abs(d - 3.14) < 0.001);
+  static_cast<void>(d);
 
-  // Test a more complex expression
   chaiscript_eval("def square(n) { return n * n; }");
-  int sq = chaiscript_eval_int("square(7)");
+  const int sq = chaiscript_eval_int("square(7)");
   assert(sq == 49);
+  static_cast<void>(sq);
 
   return 0;
 }

@@ -2570,6 +2570,10 @@ namespace chaiscript {
         bool retval = false;
         const auto prev_stack_top = m_match_stack.size();
 
+        if (t_precedence >= m_operators.size()) {
+          return Value();
+        }
+
         if (m_operators[t_precedence] != Operator_Precedence::Prefix) {
           if (Operator(t_precedence + 1)) {
             retval = true;

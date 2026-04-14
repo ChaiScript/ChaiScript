@@ -180,11 +180,11 @@ else()
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
     add_definitions(-Weverything -Wno-c++98-compat-pedantic  -Wno-c++98-compat -Wno-documentation -Wno-switch-enum -Wno-weak-vtables -Wno-missing-prototypes -Wno-padded -Wno-missing-noreturn -Wno-exit-time-destructors -Wno-documentation-unknown-command -Wno-unused-template -Wno-undef -Wno-double-promotion)
   else()
-    add_definitions(-Wnoexcept)
+    add_definitions(-Wnoexcept -Wno-error=maybe-uninitialized)
   endif()
 
   if(APPLE)
-    add_definitions(-Wno-sign-compare)
+    add_definitions(-Wno-sign-compare -Wno-poison-system-directories)
   endif()
 endif()
 
