@@ -18,8 +18,8 @@
 
 /* ---- Top-level ---- */
 
-statements           ::= ( def | try | if | while | class | for
-                           | switch | return | break | continue
+statements           ::= ( def | try | if | while | class | enum
+                           | for | switch | return | break | continue
                            | equation | block | eol )+
 
 /* ---- Functions ---- */
@@ -56,6 +56,17 @@ default              ::= "default" eol* block
 class                ::= "class" id ( ":" id )? eol* class_block
 class_block          ::= "{" class_statements* "}"
 class_statements     ::= def | var_decl | eol
+
+/* ---- Enums ---- */
+
+enum                 ::= "enum" ( "class" | "struct" ) id ( ":" underlying_type )?
+                           "{" enum_entries? "}"
+
+enum_entries         ::= enum_entry ( "," enum_entry )*
+
+enum_entry           ::= id ( "=" integer )?
+
+underlying_type      ::= id
 
 /* ---- Blocks & flow keywords ---- */
 
