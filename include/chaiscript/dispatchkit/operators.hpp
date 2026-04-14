@@ -15,168 +15,168 @@
 #include "register_function.hpp"
 
 namespace chaiscript::bootstrap::operators {
-  template<typename T>
-  void assign(Module &m) {
+  template<typename T, typename ModuleType>
+  void assign(ModuleType &m) {
     m.add(chaiscript::fun([](T &lhs, const T &rhs) -> T & { return lhs = rhs; }), "=");
   }
 
-  template<typename T>
-  void assign_bitwise_and(Module &m) {
+  template<typename T, typename ModuleType>
+  void assign_bitwise_and(ModuleType &m) {
     m.add(chaiscript::fun([](T &lhs, const T &rhs) -> T & { return lhs &= rhs; }), "&=");
   }
 
-  template<typename T>
-  void assign_xor(Module &m) {
+  template<typename T, typename ModuleType>
+  void assign_xor(ModuleType &m) {
     m.add(chaiscript::fun([](T &lhs, const T &rhs) -> T & { return lhs ^= rhs; }), "^=");
   }
 
-  template<typename T>
-  void assign_bitwise_or(Module &m) {
+  template<typename T, typename ModuleType>
+  void assign_bitwise_or(ModuleType &m) {
     m.add(chaiscript::fun([](T &lhs, const T &rhs) -> T & { return lhs |= rhs; }), "|=");
   }
 
-  template<typename T>
-  void assign_difference(Module &m) {
+  template<typename T, typename ModuleType>
+  void assign_difference(ModuleType &m) {
     m.add(chaiscript::fun([](T &lhs, const T &rhs) -> T & { return lhs -= rhs; }), "-=");
   }
 
-  template<typename T>
-  void assign_left_shift(Module &m) {
+  template<typename T, typename ModuleType>
+  void assign_left_shift(ModuleType &m) {
     m.add(chaiscript::fun([](T &lhs, const T &rhs) -> T & { return lhs <<= rhs; }), "<<=");
   }
 
-  template<typename T>
-  void assign_product(Module &m) {
+  template<typename T, typename ModuleType>
+  void assign_product(ModuleType &m) {
     m.add(chaiscript::fun([](T &lhs, const T &rhs) -> T & { return lhs <<= rhs; }), "*=");
   }
 
-  template<typename T>
-  void assign_quotient(Module &m) {
+  template<typename T, typename ModuleType>
+  void assign_quotient(ModuleType &m) {
     m.add(chaiscript::fun([](T &lhs, const T &rhs) -> T & { return lhs /= rhs; }), "/=");
   }
 
-  template<typename T>
-  void assign_remainder(Module &m) {
+  template<typename T, typename ModuleType>
+  void assign_remainder(ModuleType &m) {
     m.add(chaiscript::fun([](T &lhs, const T &rhs) -> T & { return lhs %= rhs; }), "%=");
   }
 
-  template<typename T>
-  void assign_right_shift(Module &m) {
+  template<typename T, typename ModuleType>
+  void assign_right_shift(ModuleType &m) {
     m.add(chaiscript::fun([](T &lhs, const T &rhs) -> T & { return lhs >>= rhs; }), ">>=");
   }
 
-  template<typename T>
-  void assign_sum(Module &m) {
+  template<typename T, typename ModuleType>
+  void assign_sum(ModuleType &m) {
     m.add(chaiscript::fun([](T &lhs, const T &rhs) -> T & { return lhs += rhs; }), "+=");
   }
 
-  template<typename T>
-  void prefix_decrement(Module &m) {
+  template<typename T, typename ModuleType>
+  void prefix_decrement(ModuleType &m) {
     m.add(chaiscript::fun([](T &lhs) -> T & { return --lhs; }), "--");
   }
 
-  template<typename T>
-  void prefix_increment(Module &m) {
+  template<typename T, typename ModuleType>
+  void prefix_increment(ModuleType &m) {
     m.add(chaiscript::fun([](T &lhs) -> T & { return ++lhs; }), "++");
   }
 
-  template<typename T>
-  void equal(Module &m) {
+  template<typename T, typename ModuleType>
+  void equal(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs == rhs; }), "==");
   }
 
-  template<typename T>
-  void greater_than(Module &m) {
+  template<typename T, typename ModuleType>
+  void greater_than(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs > rhs; }), ">");
   }
 
-  template<typename T>
-  void greater_than_equal(Module &m) {
+  template<typename T, typename ModuleType>
+  void greater_than_equal(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs >= rhs; }), ">=");
   }
 
-  template<typename T>
-  void less_than(Module &m) {
+  template<typename T, typename ModuleType>
+  void less_than(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs < rhs; }), "<");
   }
 
-  template<typename T>
-  void less_than_equal(Module &m) {
+  template<typename T, typename ModuleType>
+  void less_than_equal(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs <= rhs; }), "<=");
   }
 
-  template<typename T>
-  void logical_compliment(Module &m) {
+  template<typename T, typename ModuleType>
+  void logical_compliment(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs) { return !lhs; }), "!");
   }
 
-  template<typename T>
-  void not_equal(Module &m) {
+  template<typename T, typename ModuleType>
+  void not_equal(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs != rhs; }), "!=");
   }
 
-  template<typename T>
-  void addition(Module &m) {
+  template<typename T, typename ModuleType>
+  void addition(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs + rhs; }), "+");
   }
 
-  template<typename T>
-  void unary_plus(Module &m) {
+  template<typename T, typename ModuleType>
+  void unary_plus(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs) { return +lhs; }), "+");
   }
 
-  template<typename T>
-  void subtraction(Module &m) {
+  template<typename T, typename ModuleType>
+  void subtraction(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs - rhs; }), "-");
   }
 
-  template<typename T>
-  void unary_minus(Module &m) {
+  template<typename T, typename ModuleType>
+  void unary_minus(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs) { return -lhs; }), "-");
   }
 
-  template<typename T>
-  void bitwise_and(Module &m) {
+  template<typename T, typename ModuleType>
+  void bitwise_and(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs & rhs; }), "&");
   }
 
-  template<typename T>
-  void bitwise_compliment(Module &m) {
+  template<typename T, typename ModuleType>
+  void bitwise_compliment(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs) { return ~lhs; }), "~");
   }
 
-  template<typename T>
-  void bitwise_xor(Module &m) {
+  template<typename T, typename ModuleType>
+  void bitwise_xor(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs ^ rhs; }), "^");
   }
 
-  template<typename T>
-  void bitwise_or(Module &m) {
+  template<typename T, typename ModuleType>
+  void bitwise_or(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs | rhs; }), "|");
   }
 
-  template<typename T>
-  void division(Module &m) {
+  template<typename T, typename ModuleType>
+  void division(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs / rhs; }), "/");
   }
 
-  template<typename T>
-  void left_shift(Module &m) {
+  template<typename T, typename ModuleType>
+  void left_shift(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs << rhs; }), "<<");
   }
 
-  template<typename T>
-  void multiplication(Module &m) {
+  template<typename T, typename ModuleType>
+  void multiplication(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs * rhs; }), "*");
   }
 
-  template<typename T>
-  void remainder(Module &m) {
+  template<typename T, typename ModuleType>
+  void remainder(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs % rhs; }), "%");
   }
 
-  template<typename T>
-  void right_shift(Module &m) {
+  template<typename T, typename ModuleType>
+  void right_shift(ModuleType &m) {
     m.add(chaiscript::fun([](const T &lhs, const T &rhs) { return lhs >> rhs; }), ">>");
   }
 } // namespace chaiscript::bootstrap::operators

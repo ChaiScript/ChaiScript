@@ -728,6 +728,45 @@ TEST_CASE("Utility_Test utility class wrapper for enum") {
   CHECK_NOTHROW(chai.eval("var o = ONE; o = TWO"));
 }
 
+// Issue #601: add_class for enums should work directly with ChaiScript reference
+enum class Issue601_EnumClass { Apple, Banana, Pear };
+
+TEST_CASE("Issue 601: add_class enum with ChaiScript reference directly") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  // This should compile and work — previously it failed because the operator
+  // functions in chaiscript::bootstrap::operators hardcoded Module& as their
+  // first parameter instead of using a template parameter.
+  chaiscript::utility::add_class<Issue601_EnumClass>(chai,
+                                                     "Issue601_EnumClass",
+                                                     {{Issue601_EnumClass::Apple, "Apple"},
+                                                      {Issue601_EnumClass::Banana, "Banana"},
+                                                      {Issue601_EnumClass::Pear, "Pear"}});
+
+  CHECK(chai.eval<bool>("Apple == Apple"));
+  CHECK(chai.eval<bool>("Apple != Banana"));
+  CHECK_NOTHROW(chai.eval("var e = Apple; e = Pear"));
+  CHECK(chai.eval<Issue601_EnumClass>("Banana") == Issue601_EnumClass::Banana);
+}
+
+// Also test non-scoped enum directly with ChaiScript reference
+enum Issue601_PlainEnum { Issue601_Red = 0, Issue601_Green = 1, Issue601_Blue = 2 };
+
+TEST_CASE("Issue 601: add_class plain enum with ChaiScript reference directly") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chaiscript::utility::add_class<Issue601_PlainEnum>(chai,
+                                                     "Issue601_PlainEnum",
+                                                     {{Issue601_Red, "Red"},
+                                                      {Issue601_Green, "Green"},
+                                                      {Issue601_Blue, "Blue"}});
+
+  CHECK(chai.eval<bool>("Red == Red"));
+  CHECK(chai.eval<bool>("Red == 0"));
+  CHECK(chai.eval<bool>("Red != Green"));
+  CHECK_NOTHROW(chai.eval("var c = Red; c = Blue"));
+}
+
 ////// Object copy count test
 
 class Object_Copy_Count_Test {
@@ -1985,31 +2024,31 @@ TEST_CASE("ChaiScript throw(string) propagates as Boxed_Value to C++") {
 TEST_CASE("Typed catch with no match propagates exception") {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
 
-  CHECK_NOTHROW(chai.eval(R"(
+  CHECK_THROWS_AS(chai.eval(R"(
     try {
       throw(42)
     }
     catch(string e) {
-      // ChaiScript catch blocks match all exceptions regardless of type annotation
+      // wrong type, should not match — exception propagates
     }
-  )"));
+  )"), chaiscript::exception::eval_error);
 }
 
 TEST_CASE("Typed catch with no match still runs finally block") {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
 
-  CHECK_NOTHROW(chai.eval(R"(
+  CHECK_THROWS_AS(chai.eval(R"(
     var finally_ran = false
     try {
       throw(42)
     }
     catch(string e) {
-      // ChaiScript catch blocks match all exceptions regardless of type annotation
+      // wrong type, should not match — exception propagates
     }
     finally {
       finally_ran = true
     }
-  )"));
+  )"), chaiscript::exception::eval_error);
 
   CHECK(chai.eval<bool>("finally_ran") == true);
 }
