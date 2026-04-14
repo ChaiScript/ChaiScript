@@ -820,7 +820,7 @@
 #include "language/chaiscript_parser.hpp"
 
 namespace chaiscript {
-  template<typename StringType = std::string>
+  template<typename StringType>
   class ChaiScript_Impl : public ChaiScript_Basic {
   public:
     ChaiScript_Impl(std::vector<std::string> t_modulepaths = {},

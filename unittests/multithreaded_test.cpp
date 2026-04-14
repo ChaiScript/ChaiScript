@@ -67,7 +67,7 @@ int main() {
   // For this test we are going to load the dynamic stdlib
   // to make sure it continues to work
   chaiscript::ChaiScript_Basic chai(
-      std::make_unique<chaiscript::parser::ChaiScript_Parser<chaiscript::eval::Noop_Tracer, chaiscript::optimizer::Optimizer_Default>>(),
+      std::make_unique<chaiscript::parser::ChaiScript_Parser<chaiscript::eval::Noop_Tracer, chaiscript::optimizer::Optimizer_Default, std::string>>(),
       modulepaths,
       usepaths);
 #endif

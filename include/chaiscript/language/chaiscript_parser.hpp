@@ -126,7 +126,7 @@ namespace chaiscript {
 
     } // namespace detail
 
-    template<typename Tracer, typename Optimizer, typename StringType = std::string, std::size_t Parse_Depth = 512>
+    template<typename Tracer, typename Optimizer, typename StringType, std::size_t Parse_Depth = 512>
     class ChaiScript_Parser final : public ChaiScript_Parser_Base {
       void *get_tracer_ptr() noexcept override { return &m_tracer; }
 

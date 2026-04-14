@@ -38,7 +38,7 @@
 namespace chaiscript {
   class Std_Lib {
   public:
-    template<typename StringType = std::string>
+    template<typename StringType>
     [[nodiscard]] static ModulePtr library(const std::vector<Library_Options> &t_opts = {}) {
       if (std::find(t_opts.begin(), t_opts.end(), Library_Options::No_Stdlib) != t_opts.end()) {
         return std::make_shared<Module>();
