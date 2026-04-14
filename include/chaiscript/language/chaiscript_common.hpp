@@ -340,7 +340,23 @@ namespace chaiscript {
           , reason(t_why) {
       }
 
+      eval_error(const std::string &t_why, Boxed_Value t_bv) noexcept
+          : std::runtime_error("Error: \"" + t_why + "\" ")
+          , reason(t_why)
+          , m_boxed_value(std::move(t_bv)) {
+      }
+
       eval_error(const eval_error &) = default;
+
+      bool has_boxed_value() const noexcept { return !m_boxed_value.is_undef(); }
+      const Boxed_Value &boxed_value() const noexcept { return m_boxed_value; }
+
+      template<typename... Types, typename Engine>
+      void rethrow_typed(const Engine &t_engine) const {
+        if (has_boxed_value()) {
+          (try_rethrow<Types>(t_engine), ...);
+        }
+      }
 
       std::string pretty_print() const {
         std::ostringstream ss;
@@ -365,6 +381,16 @@ namespace chaiscript {
       ~eval_error() noexcept override = default;
 
     private:
+      Boxed_Value m_boxed_value;
+
+      template<typename T, typename Engine>
+      void try_rethrow(const Engine &t_engine) const {
+        try {
+          throw t_engine.template boxed_cast<T>(m_boxed_value);
+        } catch (const chaiscript::exception::bad_boxed_cast &) {
+        }
+      }
+
       template<typename T>
       static AST_Node_Type id(const T &t) noexcept {
         return t.identifier;

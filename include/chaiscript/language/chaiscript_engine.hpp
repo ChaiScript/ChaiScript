@@ -695,7 +695,7 @@ namespace chaiscript {
         if (t_handler) {
           t_handler->handle(bv, m_engine);
         }
-        throw exception::eval_error("Exception thrown during evaluation");
+        throw exception::eval_error("Exception thrown during evaluation", bv);
       }
     }
 

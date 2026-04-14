@@ -256,6 +256,70 @@ TEST_CASE("eval_error includes nested exception for script-thrown exceptions") {
   }
 }
 
+TEST_CASE("eval_error stores boxed_value for script-thrown exceptions") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(42);");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.has_boxed_value());
+    CHECK(chai.boxed_cast<int>(ee.boxed_value()) == 42);
+  }
+}
+
+TEST_CASE("eval_error rethrow_typed auto-unboxes runtime_error") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(runtime_error(\"typed error\"));");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.has_boxed_value());
+    try {
+      ee.rethrow_typed<int, double, const std::runtime_error &>(chai);
+      REQUIRE(false);
+    } catch (const std::runtime_error &e) {
+      CHECK(e.what() == std::string("typed error"));
+    }
+  }
+}
+
+TEST_CASE("eval_error rethrow_typed auto-unboxes int") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(42);");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.has_boxed_value());
+    try {
+      ee.rethrow_typed<int, double>(chai);
+      REQUIRE(false);
+    } catch (const int e) {
+      CHECK(e == 42);
+    }
+  }
+}
+
+TEST_CASE("eval_error rethrow_typed with no match does not throw") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(\"a string\");");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.has_boxed_value());
+    ee.rethrow_typed<int, double>(chai);
+    CHECK(true);
+  }
+}
+
+TEST_CASE("eval_error without boxed_value has_boxed_value returns false") {
+  const chaiscript::exception::eval_error ee("plain error");
+  CHECK_FALSE(ee.has_boxed_value());
+}
+
 TEST_CASE("Deduction of pointer return types") {
   int val = 5;
   int *val_ptr = &val;
