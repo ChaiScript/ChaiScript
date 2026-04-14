@@ -788,40 +788,43 @@ namespace chaiscript {
         return false;
       }
 
-      Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
+      static std::shared_ptr<dispatch::Proxy_Function_Base> make_proxy_function(
+          const Def_AST_Node<T> &t_node, const chaiscript::detail::Dispatch_State &t_ss) {
         std::vector<std::string> t_param_names;
         size_t numparams = 0;
 
         dispatch::Param_Types param_types;
 
-        if ((this->children.size() > 1) && (this->children[1]->identifier == AST_Node_Type::Arg_List)) {
-          numparams = this->children[1]->children.size();
-          t_param_names = Arg_List_AST_Node<T>::get_arg_names(*this->children[1]);
-          param_types = Arg_List_AST_Node<T>::get_arg_types(*this->children[1], t_ss);
+        if ((t_node.children.size() > 1) && (t_node.children[1]->identifier == AST_Node_Type::Arg_List)) {
+          numparams = t_node.children[1]->children.size();
+          t_param_names = Arg_List_AST_Node<T>::get_arg_names(*t_node.children[1]);
+          param_types = Arg_List_AST_Node<T>::get_arg_types(*t_node.children[1], t_ss);
         }
 
         std::reference_wrapper<chaiscript::detail::Dispatch_Engine> engine(*t_ss);
         std::shared_ptr<dispatch::Proxy_Function_Base> guard;
-        if (m_guard_node) {
+        if (t_node.m_guard_node) {
           guard = dispatch::make_dynamic_proxy_function(
-              [engine, guardnode = m_guard_node, t_param_names](const Function_Params &t_params) {
+              [engine, guardnode = t_node.m_guard_node, t_param_names](const Function_Params &t_params) {
                 return detail::eval_function(engine, *guardnode, t_param_names, t_params);
               },
               static_cast<int>(numparams),
-              m_guard_node);
+              t_node.m_guard_node);
         }
 
+        return dispatch::make_dynamic_proxy_function(
+            [engine, func_node = t_node.m_body_node, t_param_names](const Function_Params &t_params) {
+              return detail::eval_function(engine, *func_node, t_param_names, t_params);
+            },
+            static_cast<int>(numparams),
+            t_node.m_body_node,
+            param_types,
+            guard);
+      }
+
+      Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
         try {
-          const std::string &l_function_name = this->children[0]->text;
-          t_ss->add(dispatch::make_dynamic_proxy_function(
-                        [engine, func_node = m_body_node, t_param_names](const Function_Params &t_params) {
-                          return detail::eval_function(engine, *func_node, t_param_names, t_params);
-                        },
-                        static_cast<int>(numparams),
-                        m_body_node,
-                        param_types,
-                        guard),
-                    l_function_name);
+          t_ss->add(make_proxy_function(*this, t_ss), this->children[0]->text);
         } catch (const exception::name_conflict_error &e) {
           throw exception::eval_error("Function redefined '" + e.name() + "'");
         }
@@ -885,6 +888,87 @@ namespace chaiscript {
 
         return void_var();
       }
+    };
+
+    template<typename T>
+    struct Namespace_Block_AST_Node final : AST_Node_Impl<T> {
+      Namespace_Block_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children)
+          : AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Namespace_Block, std::move(t_loc), std::move(t_children)) {
+      }
+
+      Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
+        const auto &ns_name = this->children[0]->text;
+
+        auto ns_name_bv = const_var(ns_name);
+        t_ss->call_function("namespace", m_ns_loc, Function_Params{ns_name_bv}, t_ss.conversions());
+
+        std::vector<std::string> parts;
+        {
+          std::string::size_type start = 0;
+          std::string::size_type pos = 0;
+          while ((pos = ns_name.find("::", start)) != std::string::npos) {
+            parts.push_back(ns_name.substr(start, pos - start));
+            start = pos + 2;
+          }
+          parts.push_back(ns_name.substr(start));
+        }
+
+        Boxed_Value ns_bv = t_ss.get_object(parts[0], m_root_loc);
+
+        for (size_t i = 1; i < parts.size(); ++i) {
+          auto &parent_ns = boxed_cast<dispatch::Dynamic_Object &>(ns_bv);
+          ns_bv = parent_ns.get_attr(parts[i]);
+        }
+
+        auto &target_ns = boxed_cast<dispatch::Dynamic_Object &>(ns_bv);
+
+        const auto process_statement = [&](const AST_Node_Impl<T> &stmt) {
+          if (stmt.identifier == AST_Node_Type::Def) {
+            const auto &def_node = static_cast<const Def_AST_Node<T> &>(stmt);
+            target_ns[def_node.children[0]->text] =
+                Boxed_Value(Def_AST_Node<T>::make_proxy_function(def_node, t_ss));
+          } else if (stmt.identifier == AST_Node_Type::Assign_Decl
+                     || stmt.identifier == AST_Node_Type::Const_Assign_Decl) {
+            const auto &var_name = stmt.children[0]->text;
+            auto value = detail::clone_if_necessary(stmt.children[1]->eval(t_ss), m_clone_loc, t_ss);
+            value.reset_return_value();
+            if (stmt.identifier == AST_Node_Type::Const_Assign_Decl) {
+              value.make_const();
+            }
+            target_ns[var_name] = std::move(value);
+          } else if (stmt.identifier == AST_Node_Type::Equation
+                     && !stmt.children.empty()
+                     && (stmt.children[0]->identifier == AST_Node_Type::Var_Decl
+                         || stmt.children[0]->identifier == AST_Node_Type::Const_Var_Decl)) {
+            const auto &var_name = stmt.children[0]->children[0]->text;
+            auto value = detail::clone_if_necessary(stmt.children[1]->eval(t_ss), m_clone_loc, t_ss);
+            value.reset_return_value();
+            target_ns[var_name] = std::move(value);
+          } else if (stmt.identifier == AST_Node_Type::Var_Decl) {
+            const auto &var_name = stmt.children[0]->text;
+            target_ns[var_name] = Boxed_Value();
+          } else {
+            throw exception::eval_error("Only declarations (def, var, auto, global) are allowed inside namespace blocks");
+          }
+        };
+
+        const auto &body = this->children[1];
+        if (body->identifier == AST_Node_Type::Block
+            || body->identifier == AST_Node_Type::Scopeless_Block) {
+          for (const auto &child : body->children) {
+            process_statement(*child);
+          }
+        } else {
+          process_statement(*body);
+        }
+
+        return void_var();
+      }
+
+    private:
+      mutable std::atomic_uint_fast32_t m_ns_loc = {0};
+      mutable std::atomic_uint_fast32_t m_root_loc = {0};
+      mutable std::atomic_uint_fast32_t m_clone_loc = {0};
     };
 
     template<typename T>
