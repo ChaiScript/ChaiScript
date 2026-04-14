@@ -1,0 +1,45 @@
+// Strong typedef: using Type = int creates a distinct type
+using Meters = int
+
+def measure(Meters m) {
+  return m
+}
+
+// Constructing a strong typedef value should work
+var m = Meters(42)
+
+// Calling with the typedef'd value should succeed
+measure(m)
+
+// Calling with a plain int should fail (strong typedef)
+try {
+  measure(42)
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: type mismatch because int is not Meters
+}
+
+// Multiple strong typedefs from the same base type should be distinct
+using Seconds = int
+
+def wait(Seconds s) {
+  return s
+}
+
+var s = Seconds(10)
+wait(s)
+
+// Meters and Seconds should not be interchangeable
+try {
+  wait(m)
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: Meters is not Seconds
+}
+
+try {
+  measure(s)
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: Seconds is not Meters
+}

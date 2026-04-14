@@ -888,6 +888,45 @@ namespace chaiscript {
     };
 
     template<typename T>
+    struct Using_AST_Node final : AST_Node_Impl<T> {
+      Using_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children)
+          : AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Using, std::move(t_loc), std::move(t_children)) {
+        assert(this->children.size() == 2);
+      }
+
+      Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
+        const auto &new_type_name = this->children[0]->text;
+        const auto &base_type_name = this->children[1]->text;
+
+        const auto base_type = t_ss->get_type(base_type_name, true);
+
+        t_ss->add(user_type<dispatch::Dynamic_Object>(), new_type_name);
+
+        dispatch::Param_Types param_types(std::vector<std::pair<std::string, Type_Info>>{
+            {new_type_name, Type_Info()},
+            {base_type_name, base_type}});
+
+        auto ctor_body = dispatch::make_dynamic_proxy_function(
+            [](const Function_Params &t_params) -> Boxed_Value {
+              auto *obj = static_cast<dispatch::Dynamic_Object *>(t_params[0].get_ptr());
+              obj->get_attr("__value") = t_params[1];
+              return void_var();
+            },
+            2,
+            std::shared_ptr<AST_Node>(),
+            param_types);
+
+        try {
+          t_ss->add(std::make_shared<dispatch::detail::Dynamic_Object_Constructor>(new_type_name, ctor_body), new_type_name);
+        } catch (const exception::name_conflict_error &e) {
+          throw exception::eval_error("Type alias redefined '" + e.name() + "'");
+        }
+
+        return void_var();
+      }
+    };
+
+    template<typename T>
     struct If_AST_Node final : AST_Node_Impl<T> {
       If_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children)
           : AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::If, std::move(t_loc), std::move(t_children)) {
