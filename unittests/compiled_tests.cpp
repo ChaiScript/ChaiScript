@@ -166,9 +166,15 @@ TEST_CASE("Generic exception handling with C++") {
   try {
     chai.eval("throw(runtime_error(\"error\"));");
     REQUIRE(false);
-  } catch (const chaiscript::Boxed_Value &bv) {
-    const std::exception &e = chai.boxed_cast<const std::exception &>(bv);
-    CHECK(e.what() == std::string("error"));
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.nested_ptr() != nullptr);
+    try {
+      ee.rethrow_nested();
+      REQUIRE(false);
+    } catch (const chaiscript::Boxed_Value &bv) {
+      const std::exception &e = chai.boxed_cast<const std::exception &>(bv);
+      CHECK(e.what() == std::string("error"));
+    }
   }
 }
 
@@ -191,6 +197,62 @@ TEST_CASE("Throw int or double") {
     REQUIRE(false);
   } catch (const double e) {
     CHECK(e == Approx(1.0));
+  }
+}
+
+TEST_CASE("eval_error derives from std::nested_exception") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  static_assert(std::is_base_of_v<std::nested_exception, chaiscript::exception::eval_error>,
+                "eval_error must derive from std::nested_exception");
+
+  try {
+    chai.eval("throw(runtime_error(\"inner error\"));");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    CHECK(ee.nested_ptr() != nullptr);
+    try {
+      ee.rethrow_nested();
+      REQUIRE(false);
+    } catch (const chaiscript::Boxed_Value &bv) {
+      const std::exception &nested = chai.boxed_cast<const std::exception &>(bv);
+      CHECK(nested.what() == std::string("inner error"));
+    }
+  }
+}
+
+TEST_CASE("eval_error wraps non-eval exceptions with nested exception") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(42);");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    CHECK(ee.nested_ptr() != nullptr);
+    try {
+      ee.rethrow_nested();
+      REQUIRE(false);
+    } catch (const chaiscript::Boxed_Value &) {
+      CHECK(true);
+    }
+  }
+}
+
+TEST_CASE("eval_error includes nested exception for script-thrown exceptions") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("def foo() { throw(runtime_error(\"from foo\")); } \n foo();");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    CHECK(ee.nested_ptr() != nullptr);
+    try {
+      ee.rethrow_nested();
+      REQUIRE(false);
+    } catch (const chaiscript::Boxed_Value &bv) {
+      const std::exception &nested = chai.boxed_cast<const std::exception &>(bv);
+      CHECK(nested.what() == std::string("from foo"));
+    }
   }
 }
 
@@ -259,10 +321,8 @@ TEST_CASE("Throw unhandled type") {
     REQUIRE(false);
   } catch (float) {
     REQUIRE(false);
-  } catch (const std::exception &) {
-    REQUIRE(false);
-  } catch (const chaiscript::Boxed_Value &) {
-    REQUIRE(true);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.nested_ptr() != nullptr);
   }
 }
 

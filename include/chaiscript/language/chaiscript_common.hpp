@@ -11,6 +11,7 @@
 #define CHAISCRIPT_COMMON_HPP_
 
 #include <algorithm>
+#include <exception>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
@@ -296,7 +297,7 @@ namespace chaiscript {
     };
 
     /// Errors generated during parsing or evaluation
-    struct eval_error : std::runtime_error {
+    struct eval_error : std::runtime_error, std::nested_exception {
       std::string reason;
       File_Position start_position;
       std::string filename;
