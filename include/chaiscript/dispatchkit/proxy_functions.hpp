@@ -733,20 +733,18 @@ namespace chaiscript {
         InItr matching_func(end);
 
         while (begin != end) {
-          if (types_match_except_for_arithmetic(begin->second, plist, t_conversions)) {
+          if (types_match_except_for_arithmetic(begin->func, plist, t_conversions)) {
             if (matching_func == end) {
               matching_func = begin;
             } else {
-              // handle const members vs non-const member, which is not really ambiguous
-              const auto &mat_fun_param_types = matching_func->second->get_param_types();
-              const auto &next_fun_param_types = begin->second->get_param_types();
+              const auto &mat_fun_param_types = matching_func->func->get_param_types();
+              const auto &next_fun_param_types = begin->func->get_param_types();
 
               if (plist[0].is_const() && !mat_fun_param_types[1].is_const() && next_fun_param_types[1].is_const()) {
-                matching_func = begin; // keep the new one, the const/non-const matchup is correct
+                matching_func = begin;
               } else if (!plist[0].is_const() && !mat_fun_param_types[1].is_const() && next_fun_param_types[1].is_const()) {
                 // keep the old one, it has a better const/non-const matchup
               } else {
-                // ambiguous function call
                 throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(t_funcs.begin(), t_funcs.end()));
               }
             }
@@ -756,14 +754,13 @@ namespace chaiscript {
         }
 
         if (matching_func == end) {
-          // no appropriate function to attempt arithmetic type conversion on
           throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(t_funcs.begin(), t_funcs.end()));
         }
 
         std::vector<Boxed_Value> newplist;
         newplist.reserve(plist.size());
 
-        const std::vector<Type_Info> &tis = matching_func->second->get_param_types();
+        const std::vector<Type_Info> &tis = matching_func->func->get_param_types();
         std::transform(tis.begin() + 1, tis.end(), plist.begin(), std::back_inserter(newplist), [](const Type_Info &ti, const Boxed_Value &param) -> Boxed_Value {
           if (ti.is_arithmetic() && param.get_type_info().is_arithmetic() && param.get_type_info() != ti) {
             return Boxed_Number(param).get_as(ti).bv;
@@ -773,13 +770,10 @@ namespace chaiscript {
         });
 
         try {
-          return (*(matching_func->second))(chaiscript::Function_Params{newplist}, t_conversions);
+          return (*(matching_func->func))(chaiscript::Function_Params{newplist}, t_conversions);
         } catch (const exception::bad_boxed_cast &) {
-          // parameter failed to cast
         } catch (const exception::arity_error &) {
-          // invalid num params
         } catch (const exception::guard_error &) {
-          // guard failed to allow the function to execute
         }
 
         throw exception::dispatch_error(plist, std::vector<Const_Proxy_Function>(t_funcs.begin(), t_funcs.end()));
@@ -791,21 +785,33 @@ namespace chaiscript {
     /// function is found or throw dispatch_error if no matching function is found
     template<typename Funcs>
     Boxed_Value dispatch(const Funcs &funcs, const Function_Params &plist, const Type_Conversions_State &t_conversions) {
-      std::vector<std::pair<size_t, const Proxy_Function_Base *>> ordered_funcs;
+      struct Dispatch_Candidate {
+        size_t priority;
+        const Proxy_Function_Base *func;
+        bool arithmetic_only_diffs;
+      };
+
+      std::vector<Dispatch_Candidate> ordered_funcs;
       ordered_funcs.reserve(funcs.size());
 
       for (const auto &func : funcs) {
         const auto arity = func->get_arity();
 
         if (arity == -1) {
-          ordered_funcs.emplace_back(plist.size(), func.get());
+          ordered_funcs.push_back({plist.size(), func.get(), false});
         } else if (arity == static_cast<int>(plist.size())) {
           size_t numdiffs = 0;
+          bool all_arithmetic = true;
           for (size_t i = 0; i < plist.size(); ++i) {
             if (!func->get_param_types()[i + 1].bare_equal(plist[i].get_type_info())) {
               ++numdiffs;
+              if (!func->get_param_types()[i + 1].is_arithmetic() || !plist[i].get_type_info().is_arithmetic()) {
+                all_arithmetic = false;
+              }
             }
           }
+
+          const bool needs_arithmetic_conversion = numdiffs > 0 && all_arithmetic;
 
           // Deprioritize functions whose first parameter (object/receiver) requires
           // type conversion: conversions create temporaries, so mutations on the
@@ -838,23 +844,38 @@ namespace chaiscript {
             }
           }
 
-          ordered_funcs.emplace_back(numdiffs, func.get());
+          ordered_funcs.push_back({numdiffs, func.get(), needs_arithmetic_conversion});
         }
       }
 
       for (size_t i = 0; i <= plist.size(); ++i) {
-        for (const auto &func : ordered_funcs) {
-          try {
-            if (func.first == i && (i == 0 || func.second->filter(plist, t_conversions))) {
-              return (*(func.second))(plist, t_conversions);
+        for (const auto &candidate : ordered_funcs) {
+          if (candidate.priority != i) {
+            continue;
+          }
+
+          if (i == 0 || candidate.func->filter(plist, t_conversions)) {
+            try {
+              if (candidate.arithmetic_only_diffs) {
+                const auto &tis = candidate.func->get_param_types();
+                std::vector<Boxed_Value> converted;
+                converted.reserve(plist.size());
+                for (size_t j = 0; j < plist.size(); ++j) {
+                  if (tis[j + 1].is_arithmetic() && plist[j].get_type_info().is_arithmetic()
+                      && plist[j].get_type_info() != tis[j + 1]) {
+                    converted.push_back(Boxed_Number(plist[j]).get_as(tis[j + 1]).bv);
+                  } else {
+                    converted.push_back(plist[j]);
+                  }
+                }
+                return (*(candidate.func))(Function_Params{converted}, t_conversions);
+              } else {
+                return (*(candidate.func))(plist, t_conversions);
+              }
+            } catch (const exception::bad_boxed_cast &) {
+            } catch (const exception::arity_error &) {
+            } catch (const exception::guard_error &) {
             }
-          } catch (const exception::bad_boxed_cast &) {
-            // parameter failed to cast, try again
-          } catch (const exception::arity_error &) {
-            // invalid num params, try again
-          } catch (const exception::guard_error &) {
-            // guard failed to allow the function to execute,
-            // try again
           }
         }
       }

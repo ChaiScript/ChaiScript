@@ -1970,3 +1970,50 @@ TEST_CASE("Exception from C++ [] operator is catchable in ChaiScript") {
     caught
   )") == true);
 }
+
+// Issue #514: overloaded function dispatch with arithmetic type mismatch
+// should not be drastically slower than exact-match dispatch
+TEST_CASE("Overloaded dispatch with arithmetic type mismatch is not drastically slow") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  int func1_called = 0;
+  int func2_called = 0;
+
+  chai.add(chaiscript::fun([&func1_called](const std::string &, float, float) { ++func1_called; }), "func");
+  chai.add(chaiscript::fun([&func2_called](float, float, float) { ++func2_called; }), "func");
+
+  // Mismatched type: last arg is int (0) instead of float (0.0f)
+  // This should still dispatch correctly via arithmetic conversion
+  CHECK_NOTHROW(chai.eval("func(0.0f, 0.0f, 0)"));
+  CHECK(func2_called == 1);
+  CHECK(func1_called == 0);
+
+  // Exact match: all args are float
+  CHECK_NOTHROW(chai.eval("func(0.0f, 0.0f, 0.0f)"));
+  CHECK(func2_called == 2);
+
+  // Performance: mismatched dispatch should complete in reasonable time
+  // relative to exact-match dispatch (not 50x slower)
+  const int iterations = 100;
+
+  const auto mismatch_start = std::chrono::steady_clock::now();
+  for (int i = 0; i < iterations; ++i) {
+    chai.eval("func(0.0f, 0.0f, 0)");
+  }
+  const auto mismatch_elapsed = std::chrono::steady_clock::now() - mismatch_start;
+
+  const auto exact_start = std::chrono::steady_clock::now();
+  for (int i = 0; i < iterations; ++i) {
+    chai.eval("func(0.0f, 0.0f, 0.0f)");
+  }
+  const auto exact_elapsed = std::chrono::steady_clock::now() - exact_start;
+
+  const auto mismatch_us = std::chrono::duration_cast<std::chrono::microseconds>(mismatch_elapsed).count();
+  const auto exact_us = std::chrono::duration_cast<std::chrono::microseconds>(exact_elapsed).count();
+
+  // Mismatched dispatch should be no more than 5x slower than exact match.
+  // Before the fix, it was 50-100x slower due to exception-based control flow.
+  if (exact_us > 0) {
+    CHECK(mismatch_us < exact_us * 5);
+  }
+}
