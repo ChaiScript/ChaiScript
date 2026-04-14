@@ -922,6 +922,20 @@ namespace chaiscript {
           throw exception::eval_error("Type alias redefined '" + e.name() + "'");
         }
 
+        dispatch::Param_Types to_underlying_param_types(std::vector<std::pair<std::string, Type_Info>>{
+            {new_type_name, user_type<dispatch::Dynamic_Object>()}});
+
+        auto to_underlying_body = dispatch::make_dynamic_proxy_function(
+            [](const Function_Params &t_params) -> Boxed_Value {
+              const auto *obj = static_cast<const dispatch::Dynamic_Object *>(t_params[0].get_const_ptr());
+              return obj->get_attr("__value");
+            },
+            1,
+            std::shared_ptr<AST_Node>(),
+            to_underlying_param_types);
+
+        t_ss->add(to_underlying_body, "to_underlying");
+
         return void_var();
       }
     };

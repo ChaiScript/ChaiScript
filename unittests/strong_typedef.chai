@@ -43,3 +43,13 @@ try {
 } catch(e) {
   // Expected: Seconds is not Meters
 }
+
+// to_underlying should return the base value
+assert_equal(to_underlying(m), 42)
+assert_equal(to_underlying(s), 10)
+
+// to_underlying result should be a plain value, not a strong typedef
+def takes_int(int i) {
+  return i
+}
+assert_equal(takes_int(to_underlying(m)), 42)
