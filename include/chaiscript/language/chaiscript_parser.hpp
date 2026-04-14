@@ -2076,6 +2076,12 @@ namespace chaiscript {
         const auto prev_stack_top = m_match_stack.size();
 
         if (Keyword("enum")) {
+          if (!Keyword("class")) {
+            throw exception::eval_error("Expected 'class' after 'enum' (only 'enum class' is supported)",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
+          }
+
           if (!t_allowed) {
             throw exception::eval_error("Enum definitions only allowed at top scope",
                                         File_Position(m_position.line, m_position.col),
@@ -2085,11 +2091,25 @@ namespace chaiscript {
           retval = true;
 
           if (!Id(true)) {
-            throw exception::eval_error("Missing enum name in definition", File_Position(m_position.line, m_position.col), *m_filename);
+            throw exception::eval_error("Missing enum class name in definition", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
+          std::string underlying_type = "int";
+          if (Char(':')) {
+            if (!Id(false)) {
+              throw exception::eval_error("Expected underlying type after ':'",
+                                          File_Position(m_position.line, m_position.col),
+                                          *m_filename);
+            }
+            underlying_type = m_match_stack.back()->text;
+            m_match_stack.pop_back();
+          }
+
+          m_match_stack.push_back(
+              make_node<eval::Constant_AST_Node<Tracer>>(underlying_type, m_position.line, m_position.col, const_var(underlying_type)));
+
           if (!Char('{')) {
-            throw exception::eval_error("Expected '{' after enum name", File_Position(m_position.line, m_position.col), *m_filename);
+            throw exception::eval_error("Expected '{' after enum class declaration", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
           int next_value = 0;
@@ -2128,7 +2148,7 @@ namespace chaiscript {
             }
 
             if (!Char('}')) {
-              throw exception::eval_error("Expected '}' to close enum definition",
+              throw exception::eval_error("Expected '}' to close enum class definition",
                                           File_Position(m_position.line, m_position.col),
                                           *m_filename);
             }

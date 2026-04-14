@@ -899,32 +899,37 @@ namespace chaiscript {
 
       Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
         const auto &enum_name = this->children[0]->text;
+        const auto &underlying_type_name = this->children[1]->text;
+        const auto underlying_ti = t_ss->get_type(underlying_type_name);
 
         dispatch::Dynamic_Object container(enum_name);
-        std::vector<int> valid_values;
+        std::vector<Boxed_Value> valid_values;
 
-        for (size_t i = 1; i < this->children.size(); i += 2) {
+        for (size_t i = 2; i < this->children.size(); i += 2) {
           const auto &val_name = this->children[i]->text;
-          const int val_int = Boxed_Number(this->children[i + 1]->eval(t_ss)).get_as<int>();
-          valid_values.push_back(val_int);
+          const auto val_bv = Boxed_Number(this->children[i + 1]->eval(t_ss)).get_as(underlying_ti).bv;
+          valid_values.push_back(val_bv);
 
           dispatch::Dynamic_Object dobj(enum_name);
-          dobj.get_attr("value") = Boxed_Value(val_int);
+          dobj.get_attr("value") = val_bv;
           dobj.set_explicit(true);
           container[val_name] = const_var(dobj);
         }
 
-        auto shared_valid = std::make_shared<const std::vector<int>>(std::move(valid_values));
+        auto shared_valid = std::make_shared<const std::vector<Boxed_Value>>(std::move(valid_values));
 
-        container["from_int"] = var(
-            fun([shared_valid, enum_name](int t_val) -> Boxed_Value {
-              if (std::find(shared_valid->begin(), shared_valid->end(), t_val) == shared_valid->end()) {
-                throw exception::eval_error("Value " + std::to_string(t_val) + " is not valid for enum '" + enum_name + "'");
+        container[enum_name] = var(
+            fun([shared_valid, enum_name, underlying_ti](const Boxed_Number &t_val) -> Boxed_Value {
+              const auto converted = t_val.get_as(underlying_ti);
+              for (const auto &v : *shared_valid) {
+                if (Boxed_Number::equals(Boxed_Number(v), converted)) {
+                  dispatch::Dynamic_Object dobj(enum_name);
+                  dobj.get_attr("value") = converted.bv;
+                  dobj.set_explicit(true);
+                  return const_var(dobj);
+                }
               }
-              dispatch::Dynamic_Object dobj(enum_name);
-              dobj.get_attr("value") = Boxed_Value(t_val);
-              dobj.set_explicit(true);
-              return const_var(dobj);
+              throw exception::eval_error("Value is not valid for enum '" + enum_name + "'");
             }));
 
         t_ss->add_global_const(const_var(container), enum_name);
@@ -933,7 +938,7 @@ namespace chaiscript {
             std::make_shared<dispatch::detail::Dynamic_Object_Function>(
                 enum_name,
                 fun([](const dispatch::Dynamic_Object &lhs, const dispatch::Dynamic_Object &rhs) {
-                  return Boxed_Number(lhs.get_attr("value")).get_as<int>() == Boxed_Number(rhs.get_attr("value")).get_as<int>();
+                  return Boxed_Number::equals(Boxed_Number(lhs.get_attr("value")), Boxed_Number(rhs.get_attr("value")));
                 })),
             "==");
 
@@ -941,14 +946,14 @@ namespace chaiscript {
             std::make_shared<dispatch::detail::Dynamic_Object_Function>(
                 enum_name,
                 fun([](const dispatch::Dynamic_Object &lhs, const dispatch::Dynamic_Object &rhs) {
-                  return Boxed_Number(lhs.get_attr("value")).get_as<int>() != Boxed_Number(rhs.get_attr("value")).get_as<int>();
+                  return !Boxed_Number::equals(Boxed_Number(lhs.get_attr("value")), Boxed_Number(rhs.get_attr("value")));
                 })),
             "!=");
 
         t_ss->add(
             std::make_shared<dispatch::detail::Dynamic_Object_Function>(
                 enum_name,
-                fun([](const dispatch::Dynamic_Object &obj) { return Boxed_Number(obj.get_attr("value")).get_as<int>(); })),
+                fun([](const dispatch::Dynamic_Object &obj) { return obj.get_attr("value"); })),
             "to_underlying");
 
         return void_var();
