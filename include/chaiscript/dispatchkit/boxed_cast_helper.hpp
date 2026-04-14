@@ -122,6 +122,9 @@ namespace chaiscript {
     template<typename Result>
     struct Cast_Helper_Inner<Result &&> {
       static Result &&cast(const Boxed_Value &ob, const Type_Conversions_State *) {
+        if (ob.is_ref()) {
+          throw chaiscript::detail::exception::bad_any_cast();
+        }
         return std::move(*static_cast<Result *>(verify_type(ob, typeid(Result), ob.get_ptr())));
       }
     };

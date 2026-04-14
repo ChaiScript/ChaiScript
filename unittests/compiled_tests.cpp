@@ -1970,3 +1970,79 @@ TEST_CASE("Exception from C++ [] operator is catchable in ChaiScript") {
     caught
   )") == true);
 }
+
+class Issue339_Object {
+public:
+  Issue339_Object() = default;
+  Issue339_Object(const Issue339_Object &) { ++copy_count(); }
+  Issue339_Object(Issue339_Object &&) { ++move_count(); }
+  Issue339_Object &operator=(const Issue339_Object &) {
+    ++copy_assign_count();
+    return *this;
+  }
+  Issue339_Object &operator=(Issue339_Object &&) {
+    ++move_assign_count();
+    return *this;
+  }
+
+  static int &copy_count() {
+    static int c = 0;
+    return c;
+  }
+  static int &move_count() {
+    static int c = 0;
+    return c;
+  }
+  static int &copy_assign_count() {
+    static int c = 0;
+    return c;
+  }
+  static int &move_assign_count() {
+    static int c = 0;
+    return c;
+  }
+  static void reset_counts() {
+    copy_count() = 0;
+    move_count() = 0;
+    copy_assign_count() = 0;
+    move_assign_count() = 0;
+  }
+};
+
+TEST_CASE("Issue #339 - lvalue reference should not implicitly move") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  auto m = std::make_shared<chaiscript::Module>();
+  m->add(chaiscript::user_type<Issue339_Object>(), "Obj");
+  m->add(chaiscript::constructor<Issue339_Object()>(), "Obj");
+  m->add(chaiscript::constructor<Issue339_Object(const Issue339_Object &)>(), "Obj");
+  m->add(chaiscript::constructor<Issue339_Object(Issue339_Object &&)>(), "Obj");
+  m->add(chaiscript::fun(static_cast<Issue339_Object &(Issue339_Object::*)(const Issue339_Object &)>(&Issue339_Object::operator=)), "=");
+  m->add(chaiscript::fun(static_cast<Issue339_Object &(Issue339_Object::*)(Issue339_Object &&)>(&Issue339_Object::operator=)), "=");
+  m->add(chaiscript::fun([]() -> Issue339_Object & {
+           static Issue339_Object persistent;
+           return persistent;
+         }),
+         "getObj");
+  m->add(chaiscript::fun([]() -> Issue339_Object { return Issue339_Object(); }), "makeObj");
+  chai.add(m);
+
+  SECTION("var from lvalue ref uses copy ctor, not move ctor on the source") {
+    Issue339_Object::reset_counts();
+    chai.eval("var o = getObj()");
+    CHECK(Issue339_Object::copy_count() >= 1);
+  }
+
+  SECTION("assignment from lvalue ref uses copy assign, not move assign") {
+    Issue339_Object::reset_counts();
+    chai.eval("var o2 = Obj(); o2 = getObj()");
+    CHECK(Issue339_Object::copy_assign_count() > 0);
+    CHECK(Issue339_Object::move_assign_count() == 0);
+  }
+
+  SECTION("return-by-value can still use move") {
+    Issue339_Object::reset_counts();
+    chai.eval("var o3 = makeObj()");
+    CHECK((Issue339_Object::copy_count() + Issue339_Object::move_count()) >= 1);
+  }
+}
