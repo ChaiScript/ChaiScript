@@ -1782,3 +1782,191 @@ TEST_CASE("eval_error with AST_Node_Trace call stack compiles in C++20") {
     (void)stack;
   }
 }
+
+TEST_CASE("C++ runtime_error thrown from registered function is catchable in ChaiScript") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.add(chaiscript::fun([]() -> int { throw std::runtime_error("cpp_runtime_error"); }), "cpp_throw_runtime");
+
+  CHECK(chai.eval<bool>(R"(
+    var caught = false
+    try {
+      cpp_throw_runtime()
+    }
+    catch(e) {
+      caught = true
+    }
+    caught
+  )") == true);
+}
+
+TEST_CASE("C++ out_of_range thrown from registered function is catchable in ChaiScript") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.add(chaiscript::fun([]() -> int { throw std::out_of_range("cpp_out_of_range"); }), "cpp_throw_oor");
+
+  CHECK(chai.eval<bool>(R"(
+    var caught = false
+    try {
+      cpp_throw_oor()
+    }
+    catch(e) {
+      caught = true
+    }
+    caught
+  )") == true);
+}
+
+TEST_CASE("C++ logic_error thrown from registered function is catchable in ChaiScript") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.add(chaiscript::fun([]() -> int { throw std::logic_error("cpp_logic_error"); }), "cpp_throw_logic");
+
+  CHECK(chai.eval<bool>(R"(
+    var caught = false
+    try {
+      cpp_throw_logic()
+    }
+    catch(e) {
+      caught = true
+    }
+    caught
+  )") == true);
+}
+
+TEST_CASE("ChaiScript throw(int) propagates as Boxed_Value to C++") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(42)");
+    REQUIRE(false);
+  } catch (chaiscript::Boxed_Value &bv) {
+    CHECK(chaiscript::boxed_cast<int>(bv) == 42);
+  }
+}
+
+TEST_CASE("ChaiScript throw(string) propagates as Boxed_Value to C++") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval(R"(throw("error msg"))");
+    REQUIRE(false);
+  } catch (chaiscript::Boxed_Value &bv) {
+    CHECK(chaiscript::boxed_cast<std::string>(bv) == "error msg");
+  }
+}
+
+TEST_CASE("Typed catch with no match propagates exception") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  CHECK_THROWS_AS(chai.eval(R"(
+    try {
+      throw(42)
+    }
+    catch(string e) {
+      // wrong type, should not match
+    }
+  )"), chaiscript::Boxed_Value);
+}
+
+TEST_CASE("Typed catch with no match still runs finally block") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  CHECK_THROWS_AS(chai.eval(R"(
+    var finally_ran = false
+    try {
+      throw(42)
+    }
+    catch(string e) {
+      // wrong type
+    }
+    finally {
+      finally_ran = true
+    }
+  )"), chaiscript::Boxed_Value);
+
+  CHECK(chai.eval<bool>("finally_ran") == true);
+}
+
+TEST_CASE("Multiple C++ exception types from registered functions") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.add(chaiscript::fun([](int which) -> int {
+    switch (which) {
+      case 0: throw std::runtime_error("runtime");
+      case 1: throw std::out_of_range("range");
+      case 2: throw std::logic_error("logic");
+      default: return which;
+    }
+  }), "cpp_multi_throw");
+
+  CHECK(chai.eval<int>(R"(
+    var catch_count = 0
+    for (var i = 0; i < 3; ++i) {
+      try {
+        cpp_multi_throw(i)
+      }
+      catch(e) {
+        catch_count = catch_count + 1
+      }
+    }
+    catch_count
+  )") == 3);
+
+  CHECK(chai.eval<int>("cpp_multi_throw(5)") == 5);
+}
+
+TEST_CASE("Exception from C++ binary operator is catchable in ChaiScript") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  struct ThrowingType {
+    int value;
+  };
+
+  chai.add(chaiscript::user_type<ThrowingType>(), "ThrowingType");
+  chai.add(chaiscript::constructor<ThrowingType(int)>(), "ThrowingType");
+  chai.add(chaiscript::fun([](const ThrowingType &, const ThrowingType &) -> ThrowingType {
+    throw std::runtime_error("cpp operator+ threw");
+  }), "+");
+
+  CHECK(chai.eval<bool>(R"(
+    var caught = false
+    try {
+      var a = ThrowingType(1)
+      var b = ThrowingType(2)
+      var c = a + b
+    }
+    catch(e) {
+      caught = true
+    }
+    caught
+  )") == true);
+}
+
+TEST_CASE("Exception from C++ [] operator is catchable in ChaiScript") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  struct IndexableType {
+    int value;
+  };
+
+  chai.add(chaiscript::user_type<IndexableType>(), "IndexableType");
+  chai.add(chaiscript::constructor<IndexableType(int)>(), "IndexableType");
+  chai.add(chaiscript::fun([](const IndexableType &, int idx) -> int {
+    if (idx < 0) { throw std::out_of_range("negative index"); }
+    return idx;
+  }), "[]");
+
+  CHECK(chai.eval<int>("var obj = IndexableType(0); obj[5]") == 5);
+
+  CHECK(chai.eval<bool>(R"(
+    var caught = false
+    try {
+      var x = obj[-1]
+    }
+    catch(e) {
+      caught = true
+    }
+    caught
+  )") == true);
+}
