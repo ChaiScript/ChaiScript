@@ -102,3 +102,9 @@ assert_equal(4, Flags::Execute.to_underlying())
 
 auto f = Flags::Flags(2)
 assert_true(f == Flags::Write)
+
+// enum struct syntax (equivalent to enum class, like C++)
+enum struct Direction { North, East, South, West }
+assert_equal(0, Direction::North.to_underlying())
+assert_equal(3, Direction::West.to_underlying())
+assert_true(Direction::East != Direction::South)

@@ -2076,8 +2076,8 @@ namespace chaiscript {
         const auto prev_stack_top = m_match_stack.size();
 
         if (Keyword("enum")) {
-          if (!Keyword("class")) {
-            throw exception::eval_error("Expected 'class' after 'enum' (only 'enum class' is supported)",
+          if (!Keyword("class") && !Keyword("struct")) {
+            throw exception::eval_error("Expected 'class' or 'struct' after 'enum' (only 'enum class'/'enum struct' is supported)",
                                         File_Position(m_position.line, m_position.col),
                                         *m_filename);
           }
