@@ -1782,3 +1782,42 @@ TEST_CASE("eval_error with AST_Node_Trace call stack compiles in C++20") {
     (void)stack;
   }
 }
+
+TEST_CASE("Test set_file_reader from C++ land") {
+  chaiscript::ChaiScript chai;
+  chai.set_file_reader([](const std::string &) {
+    return std::string("var file_reader_test_val = 42");
+  });
+  chai.eval_file("nonexistent_file.chai");
+  CHECK(chai.eval<int>("file_reader_test_val") == 42);
+}
+
+TEST_CASE("Test set_file_reader from ChaiScript land") {
+  chaiscript::ChaiScript chai;
+  chai.set_file_reader([](const std::string &) {
+    return std::string("var from_custom_reader = true");
+  });
+  chai.eval("set_file_reader(fun(filename) { return \"var from_chai_reader = true\"; })");
+  chai.eval_file("any_file.chai");
+  CHECK(chai.eval<bool>("from_chai_reader") == true);
+}
+
+TEST_CASE("Test set_file_reader receives correct filename") {
+  chaiscript::ChaiScript chai;
+  std::string captured_filename;
+  chai.set_file_reader([&captured_filename](const std::string &t_filename) {
+    captured_filename = t_filename;
+    return std::string("var dummy = 1");
+  });
+  chai.eval_file("my_special_file.chai");
+  CHECK(captured_filename == "my_special_file.chai");
+}
+
+TEST_CASE("Test use with set_file_reader") {
+  chaiscript::ChaiScript chai;
+  chai.set_file_reader([](const std::string &) {
+    return std::string("var use_reader_val = 99");
+  });
+  chai.use("virtual_file.chai");
+  CHECK(chai.eval<int>("use_reader_val") == 99);
+}
