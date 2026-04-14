@@ -820,20 +820,24 @@
 #include "language/chaiscript_parser.hpp"
 
 namespace chaiscript {
-  class ChaiScript : public ChaiScript_Basic {
+  template<typename StringType = std::string>
+  class ChaiScript_Impl : public ChaiScript_Basic {
   public:
-    ChaiScript(std::vector<std::string> t_modulepaths = {},
+    ChaiScript_Impl(std::vector<std::string> t_modulepaths = {},
                std::vector<std::string> t_usepaths = {},
                std::vector<Options> t_opts = chaiscript::default_options(),
                std::vector<Library_Options> t_lib_opts = {})
-        : ChaiScript_Basic(chaiscript::Std_Lib::library(t_lib_opts),
-                           std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer_Default>>(),
+        : ChaiScript_Basic(chaiscript::Std_Lib::library<StringType>(t_lib_opts),
+                           std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer_Default, StringType>>(),
                            std::move(t_modulepaths),
                            std::move(t_usepaths),
                            std::move(t_opts),
                            std::find(t_lib_opts.begin(), t_lib_opts.end(), Library_Options::No_IO) != t_lib_opts.end()) {
     }
   };
+
+  using ChaiScript = ChaiScript_Impl<std::string>;
+  using ChaiScript_WString = ChaiScript_Impl<std::wstring>;
 } // namespace chaiscript
 
 #endif /* CHAISCRIPT_HPP_ */

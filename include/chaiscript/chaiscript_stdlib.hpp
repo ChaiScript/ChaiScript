@@ -38,6 +38,7 @@
 namespace chaiscript {
   class Std_Lib {
   public:
+    template<typename StringType = std::string>
     [[nodiscard]] static ModulePtr library(const std::vector<Library_Options> &t_opts = {}) {
       if (std::find(t_opts.begin(), t_opts.end(), Library_Options::No_Stdlib) != t_opts.end()) {
         return std::make_shared<Module>();
@@ -49,10 +50,10 @@ namespace chaiscript {
       const bool no_prelude = std::find(t_opts.begin(), t_opts.end(), Library_Options::No_Prelude) != t_opts.end();
       const bool no_json = std::find(t_opts.begin(), t_opts.end(), Library_Options::No_JSON) != t_opts.end();
 
-      bootstrap::Bootstrap::bootstrap(*lib, no_io);
+      bootstrap::Bootstrap::bootstrap<StringType>(*lib, no_io);
 
       bootstrap::standard_library::vector_type<std::vector<Boxed_Value>>("Vector", *lib);
-      bootstrap::standard_library::string_type<std::string>("string", *lib);
+      bootstrap::standard_library::string_type<StringType>("string", *lib);
       bootstrap::standard_library::map_type<std::map<std::string, Boxed_Value>>("Map", *lib);
       bootstrap::standard_library::pair_type<std::pair<Boxed_Value, Boxed_Value>>("Pair", *lib);
 

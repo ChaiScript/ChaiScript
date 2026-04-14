@@ -10,6 +10,8 @@
 #ifndef CHAISCRIPT_BOOTSTRAP_HPP_
 #define CHAISCRIPT_BOOTSTRAP_HPP_
 
+#include <type_traits>
+
 #include "../utility/utility.hpp"
 #include "register_function.hpp"
 
@@ -269,6 +271,7 @@ namespace chaiscript::bootstrap {
     /// \brief perform all common bootstrap functions for std::string, void and POD types
     /// \param[in,out] m Module to add bootstrapped functions to
     /// \param[in] t_no_io If true, skip registering print_string and println_string
+    template<typename StringType = std::string>
     static void bootstrap(Module &m, const bool t_no_io = false) {
       m.add(user_type<void>(), "void");
       m.add(user_type<bool>(), "bool");
@@ -393,13 +396,27 @@ namespace chaiscript::bootstrap {
       operators::equal<bool>(m);
       operators::not_equal<bool>(m);
 
-      m.add(fun([](const std::string &s) { return s; }), "to_string");
-      m.add(fun([](const bool b) { return std::string(b ? "true" : "false"); }), "to_string");
+      m.add(fun([](const StringType &s) { return s; }), "to_string");
+      m.add(fun([](const bool b) -> StringType {
+        if constexpr (std::is_same_v<StringType, std::string>) {
+          return b ? "true" : "false";
+        } else {
+          const auto s = std::string(b ? "true" : "false");
+          return StringType(s.begin(), s.end());
+        }
+      }), "to_string");
       m.add(fun(&unknown_assign), "=");
       m.add(fun([](const Boxed_Value &bv) { throw bv; }), "throw");
 
-      m.add(fun([](const char c) { return std::string(1, c); }), "to_string");
-      m.add(fun(&Boxed_Number::to_string), "to_string");
+      m.add(fun([](const typename StringType::value_type c) -> StringType { return StringType(1, c); }), "to_string");
+      if constexpr (std::is_same_v<StringType, std::string>) {
+        m.add(fun(&Boxed_Number::to_string), "to_string");
+      } else {
+        m.add(fun([](const Boxed_Number &n) -> StringType {
+          const auto s = n.to_string();
+          return StringType(s.begin(), s.end());
+        }), "to_string");
+      }
 
       bootstrap_pod_type<double>("double", m);
       bootstrap_pod_type<long double>("long_double", m);
