@@ -26,11 +26,6 @@
 #include "chaiscript_optimizer.hpp"
 #include "chaiscript_tracer.hpp"
 
-#if defined(CHAISCRIPT_UTF16_UTF32)
-#include <codecvt>
-#include <locale>
-#endif
-
 #if defined(CHAISCRIPT_MSVC) && defined(max) && defined(min)
 #define CHAISCRIPT_PUSHED_MIN_MAX
 #pragma push_macro("max") // Why Microsoft? why? This is worse than bad
@@ -81,15 +76,7 @@ namespace chaiscript {
 
         static string_type str_from_ll(long long val) {
           using target_char_type = typename string_type::value_type;
-#if defined(CHAISCRIPT_UTF16_UTF32)
-          // prepare converter
-          std::wstring_convert<std::codecvt_utf8<target_char_type>, target_char_type> converter;
-          // convert
-          return converter.from_bytes(u8str_from_ll(val));
-#else
-          // no conversion available, just put value as character
-          return string_type(1, target_char_type(val)); // size, character
-#endif
+          return string_type(1, static_cast<target_char_type>(val));
         }
       };
 

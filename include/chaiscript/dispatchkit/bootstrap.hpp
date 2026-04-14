@@ -269,7 +269,7 @@ namespace chaiscript::bootstrap {
     /// \brief perform all common bootstrap functions for std::string, void and POD types
     /// \param[in,out] m Module to add bootstrapped functions to
     /// \param[in] t_no_io If true, skip registering print_string and println_string
-    static void bootstrap(Module &m, const bool t_no_io = false) {
+    static void bootstrap(Module &m, [[maybe_unused]] const bool t_no_io = false) {
       m.add(user_type<void>(), "void");
       m.add(user_type<bool>(), "bool");
       m.add(user_type<Boxed_Value>(), "Object");

@@ -47,7 +47,7 @@ namespace chaiscript::json {
       Internal(std::nullptr_t)
           : d(nullptr) {
       }
-      Internal()
+      Internal() noexcept
           : d(nullptr) {
       }
       Internal(Class c)
@@ -153,7 +153,7 @@ namespace chaiscript::json {
       typename Container::const_iterator end() const noexcept { return object ? object->end() : typename Container::const_iterator(); }
     };
 
-    JSON() = default;
+    JSON() noexcept = default;
     JSON(std::nullptr_t) {}
 
     explicit JSON(Class type)

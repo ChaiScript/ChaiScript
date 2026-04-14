@@ -1970,3 +1970,11 @@ TEST_CASE("Exception from C++ [] operator is catchable in ChaiScript") {
     caught
   )") == true);
 }
+
+TEST_CASE("Unicode escape sequences produce correct values") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  CHECK(chai.eval<std::string>(R"("\u0041")") == "A");
+  CHECK(chai.eval<std::string>(R"("\u004F")") == "O");
+  CHECK(chai.eval<std::string>(R"("\u0030")") == "0");
+}
