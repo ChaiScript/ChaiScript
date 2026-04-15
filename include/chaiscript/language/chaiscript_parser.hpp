@@ -1990,6 +1990,44 @@ namespace chaiscript {
       }
 
       /// Reads a class block from input
+      bool Namespace_Block() {
+        Depth_Counter dc{this};
+        const auto prev_stack_top = m_match_stack.size();
+        const auto prev_pos = m_position;
+
+        if (Keyword("namespace")) {
+          if (Id(true)) {
+            std::string ns_name = m_match_stack.back()->text;
+
+            while (Symbol("::")) {
+              if (!Id(true)) {
+                throw exception::eval_error("Incomplete namespace name after '::'",
+                                            File_Position(m_position.line, m_position.col),
+                                            *m_filename);
+              }
+              ns_name += "::" + m_match_stack.back()->text;
+              m_match_stack.pop_back();
+            }
+
+            m_match_stack.back() = make_node<eval::Id_AST_Node<Tracer>>(ns_name, prev_pos.line, prev_pos.col);
+
+            while (Eol()) {
+            }
+
+            if (Block()) {
+              build_match<eval::Namespace_Block_AST_Node<Tracer>>(prev_stack_top);
+              return true;
+            }
+          }
+
+          m_position = prev_pos;
+          while (prev_stack_top != m_match_stack.size()) {
+            m_match_stack.pop_back();
+          }
+        }
+        return false;
+      }
+
       bool Class(const bool t_class_allowed) {
         Depth_Counter dc{this};
         bool retval = false;
@@ -2026,6 +2064,134 @@ namespace chaiscript {
           }
 
           build_match<eval::Class_AST_Node<Tracer>>(prev_stack_top);
+        }
+
+        return retval;
+      }
+
+      bool Using(const bool t_class_allowed) {
+        Depth_Counter dc{this};
+
+        const auto prev_stack_top = m_match_stack.size();
+
+        if (Keyword("using")) {
+          if (!t_class_allowed) {
+            throw exception::eval_error("Type alias definitions only allowed at top scope",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
+          }
+
+          if (!Id(true)) {
+            throw exception::eval_error("Missing type name in 'using' declaration",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
+          }
+
+          if (!Symbol("=", true)) {
+            throw exception::eval_error("Missing '=' in 'using' declaration",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
+          }
+
+          if (!Id(true)) {
+            throw exception::eval_error("Missing base type name in 'using' declaration",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
+          }
+
+          build_match<eval::Using_AST_Node<Tracer>>(prev_stack_top);
+          return true;
+        }
+
+        return false;
+      }
+
+      bool Enum(const bool t_allowed) {
+        Depth_Counter dc{this};
+        bool retval = false;
+
+        const auto prev_stack_top = m_match_stack.size();
+
+        if (Keyword("enum")) {
+          if (!Keyword("class") && !Keyword("struct")) {
+            throw exception::eval_error("Expected 'class' or 'struct' after 'enum' (only 'enum class'/'enum struct' is supported)",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
+          }
+
+          if (!t_allowed) {
+            throw exception::eval_error("Enum definitions only allowed at top scope",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
+          }
+
+          retval = true;
+
+          if (!Id(true)) {
+            throw exception::eval_error("Missing enum class name in definition", File_Position(m_position.line, m_position.col), *m_filename);
+          }
+
+          std::string underlying_type = "int";
+          if (Char(':')) {
+            if (!Id(false)) {
+              throw exception::eval_error("Expected underlying type after ':'",
+                                          File_Position(m_position.line, m_position.col),
+                                          *m_filename);
+            }
+            underlying_type = m_match_stack.back()->text;
+            m_match_stack.pop_back();
+          }
+
+          m_match_stack.push_back(
+              make_node<eval::Constant_AST_Node<Tracer>>(underlying_type, m_position.line, m_position.col, const_var(underlying_type)));
+
+          if (!Char('{')) {
+            throw exception::eval_error("Expected '{' after enum class declaration", File_Position(m_position.line, m_position.col), *m_filename);
+          }
+
+          int next_value = 0;
+
+          while (Eol()) {
+          }
+
+          if (!Char('}')) {
+            do {
+              while (Eol()) {
+              }
+
+              if (!Id(true)) {
+                throw exception::eval_error("Expected enum value name", File_Position(m_position.line, m_position.col), *m_filename);
+              }
+
+              if (Symbol("=")) {
+                if (!Num()) {
+                  throw exception::eval_error("Expected integer after '=' in enum definition",
+                                              File_Position(m_position.line, m_position.col),
+                                              *m_filename);
+                }
+                next_value = static_cast<int>(std::stoi(m_match_stack.back()->text));
+                m_match_stack.pop_back();
+              }
+
+              m_match_stack.push_back(
+                  make_node<eval::Constant_AST_Node<Tracer>>(std::to_string(next_value), m_position.line, m_position.col, const_var(next_value)));
+              ++next_value;
+
+              while (Eol()) {
+              }
+            } while (Char(',') && !Char('}'));
+
+            while (Eol()) {
+            }
+
+            if (!Char('}')) {
+              throw exception::eval_error("Expected '}' to close enum class definition",
+                                          File_Position(m_position.line, m_position.col),
+                                          *m_filename);
+            }
+          }
+
+          build_match<eval::Enum_AST_Node<Tracer>>(prev_stack_top);
         }
 
         return retval;
@@ -2379,7 +2545,7 @@ namespace chaiscript {
               }
 
               build_match<eval::Array_Call_AST_Node<Tracer>>(prev_stack_top);
-            } else if (Symbol(".")) {
+            } else if (Symbol(".") || Symbol("::")) {
               has_more = true;
               if (!(Id(true))) {
                 throw exception::eval_error("Incomplete dot access fun call", File_Position(m_position.line, m_position.col), *m_filename);
@@ -2776,7 +2942,7 @@ namespace chaiscript {
 
         while (has_more) {
           const auto start = m_position;
-          if (Def() || Try() || If() || While() || Class(t_class_allowed) || For() || Switch()) {
+          if (Def() || Try() || If() || While() || Namespace_Block() || Class(t_class_allowed) || Using(t_class_allowed) || Enum(t_class_allowed) || For() || Switch()) {
             if (!saw_eol) {
               throw exception::eval_error("Two function definitions missing line separator",
                                           File_Position(start.line, start.col),

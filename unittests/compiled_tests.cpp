@@ -604,6 +604,45 @@ TEST_CASE("Utility_Test utility class wrapper for enum") {
   CHECK_NOTHROW(chai.eval("var o = ONE; o = TWO"));
 }
 
+// Issue #601: add_class for enums should work directly with ChaiScript reference
+enum class Issue601_EnumClass { Apple, Banana, Pear };
+
+TEST_CASE("Issue 601: add_class enum with ChaiScript reference directly") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  // This should compile and work — previously it failed because the operator
+  // functions in chaiscript::bootstrap::operators hardcoded Module& as their
+  // first parameter instead of using a template parameter.
+  chaiscript::utility::add_class<Issue601_EnumClass>(chai,
+                                                     "Issue601_EnumClass",
+                                                     {{Issue601_EnumClass::Apple, "Apple"},
+                                                      {Issue601_EnumClass::Banana, "Banana"},
+                                                      {Issue601_EnumClass::Pear, "Pear"}});
+
+  CHECK(chai.eval<bool>("Apple == Apple"));
+  CHECK(chai.eval<bool>("Apple != Banana"));
+  CHECK_NOTHROW(chai.eval("var e = Apple; e = Pear"));
+  CHECK(chai.eval<Issue601_EnumClass>("Banana") == Issue601_EnumClass::Banana);
+}
+
+// Also test non-scoped enum directly with ChaiScript reference
+enum Issue601_PlainEnum { Issue601_Red = 0, Issue601_Green = 1, Issue601_Blue = 2 };
+
+TEST_CASE("Issue 601: add_class plain enum with ChaiScript reference directly") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chaiscript::utility::add_class<Issue601_PlainEnum>(chai,
+                                                     "Issue601_PlainEnum",
+                                                     {{Issue601_Red, "Red"},
+                                                      {Issue601_Green, "Green"},
+                                                      {Issue601_Blue, "Blue"}});
+
+  CHECK(chai.eval<bool>("Red == Red"));
+  CHECK(chai.eval<bool>("Red == 0"));
+  CHECK(chai.eval<bool>("Red != Green"));
+  CHECK_NOTHROW(chai.eval("var c = Red; c = Blue"));
+}
+
 ////// Object copy count test
 
 class Object_Copy_Count_Test {
@@ -1820,4 +1859,309 @@ TEST_CASE("Test use with set_file_reader") {
   });
   chai.use("virtual_file.chai");
   CHECK(chai.eval<int>("use_reader_val") == 99);
+}
+TEST_CASE("Nested namespaces via register_namespace with :: separator") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.register_namespace(
+      [](chaiscript::Namespace &si) {
+        si["mu_B"] = chaiscript::const_var(9.274);
+      },
+      "constants::si");
+
+  chai.register_namespace(
+      [](chaiscript::Namespace &mm) {
+        mm["mu_B"] = chaiscript::const_var(0.05788);
+      },
+      "constants::mm");
+
+  chai.import("constants");
+
+  CHECK(chai.eval<double>("constants.si.mu_B") == Approx(9.274));
+  CHECK(chai.eval<double>("constants.mm.mu_B") == Approx(0.05788));
+
+  // Scope resolution via :: works the same as . for access
+  CHECK(chai.eval<double>("constants::si::mu_B") == Approx(9.274));
+  CHECK(chai.eval<double>("constants::mm::mu_B") == Approx(0.05788));
+}
+
+TEST_CASE("Deeply nested namespaces via register_namespace") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.register_namespace(
+      [](chaiscript::Namespace &leaf) {
+        leaf["val"] = chaiscript::const_var(42);
+      },
+      "a::b::c");
+
+  chai.import("a");
+
+  CHECK(chai.eval<int>("a.b.c.val") == 42);
+  CHECK(chai.eval<int>("a::b::c::val") == 42);
+}
+
+TEST_CASE("Block namespace declaration with ::") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.eval(R"(
+    namespace math {
+      def square(x) { x * x }
+    }
+  )");
+
+  CHECK(chai.eval<int>("math::square(5)") == 25);
+  CHECK(chai.eval<int>("math.square(5)") == 25);
+}
+
+TEST_CASE("Nested block namespace declaration") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.eval(R"(
+    namespace physics::constants {
+      def speed_of_light() { return 299792458 }
+    }
+  )");
+
+  CHECK(chai.eval<int>("physics::constants::speed_of_light()") == 299792458);
+}
+
+TEST_CASE("Namespace block reopening") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.eval(R"(
+    namespace ns {
+      def foo() { return 1 }
+    }
+    namespace ns {
+      def bar() { return 2 }
+    }
+  )");
+
+  CHECK(chai.eval<int>("ns::foo()") == 1);
+  CHECK(chai.eval<int>("ns::bar()") == 2);
+}
+
+TEST_CASE("Namespace block with var declarations") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.eval(R"(
+    namespace config {
+      var pi = 3.14
+      var name = "hello"
+    }
+  )");
+
+  CHECK(chai.eval<double>("config::pi") == Approx(3.14));
+  CHECK(chai.eval<std::string>("config::name") == "hello");
+}
+
+TEST_CASE("Namespace block rejects non-declaration statements") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  CHECK_THROWS_AS(chai.eval(R"(
+    namespace bad {
+      1 + 2
+    }
+  )"), chaiscript::exception::eval_error);
+
+  CHECK_THROWS_AS(chai.eval(R"(
+    namespace bad {
+      print("hello")
+    }
+  )"), chaiscript::exception::eval_error);
+
+  CHECK_THROWS_AS(chai.eval(R"(
+    var x = 5
+    namespace bad {
+      x = 10
+    }
+  )"), chaiscript::exception::eval_error);
+}
+
+TEST_CASE("C++ runtime_error thrown from registered function is catchable in ChaiScript") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.add(chaiscript::fun([]() -> int { throw std::runtime_error("cpp_runtime_error"); }), "cpp_throw_runtime");
+
+  CHECK(chai.eval<bool>(R"(
+    var caught = false
+    try {
+      cpp_throw_runtime()
+    }
+    catch(e) {
+      caught = true
+    }
+    caught
+  )") == true);
+}
+
+TEST_CASE("C++ out_of_range thrown from registered function is catchable in ChaiScript") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.add(chaiscript::fun([]() -> int { throw std::out_of_range("cpp_out_of_range"); }), "cpp_throw_oor");
+
+  CHECK(chai.eval<bool>(R"(
+    var caught = false
+    try {
+      cpp_throw_oor()
+    }
+    catch(e) {
+      caught = true
+    }
+    caught
+  )") == true);
+}
+
+TEST_CASE("C++ logic_error thrown from registered function is catchable in ChaiScript") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.add(chaiscript::fun([]() -> int { throw std::logic_error("cpp_logic_error"); }), "cpp_throw_logic");
+
+  CHECK(chai.eval<bool>(R"(
+    var caught = false
+    try {
+      cpp_throw_logic()
+    }
+    catch(e) {
+      caught = true
+    }
+    caught
+  )") == true);
+}
+
+TEST_CASE("ChaiScript throw(int) propagates as Boxed_Value to C++") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(42)");
+    REQUIRE(false);
+  } catch (chaiscript::Boxed_Value &bv) {
+    CHECK(chaiscript::boxed_cast<int>(bv) == 42);
+  }
+}
+
+TEST_CASE("ChaiScript throw(string) propagates as Boxed_Value to C++") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval(R"(throw("error msg"))");
+    REQUIRE(false);
+  } catch (chaiscript::Boxed_Value &bv) {
+    CHECK(chaiscript::boxed_cast<std::string>(bv) == "error msg");
+  }
+}
+
+TEST_CASE("Typed catch with no match propagates exception") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  CHECK_THROWS_AS(chai.eval(R"(
+    try {
+      throw(42)
+    }
+    catch(string e) {
+      // wrong type, should not match
+    }
+  )"), chaiscript::Boxed_Value);
+}
+
+TEST_CASE("Typed catch with no match still runs finally block") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  CHECK_THROWS_AS(chai.eval(R"(
+    var finally_ran = false
+    try {
+      throw(42)
+    }
+    catch(string e) {
+      // wrong type
+    }
+    finally {
+      finally_ran = true
+    }
+  )"), chaiscript::Boxed_Value);
+
+  CHECK(chai.eval<bool>("finally_ran") == true);
+}
+
+TEST_CASE("Multiple C++ exception types from registered functions") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.add(chaiscript::fun([](int which) -> int {
+    switch (which) {
+      case 0: throw std::runtime_error("runtime");
+      case 1: throw std::out_of_range("range");
+      case 2: throw std::logic_error("logic");
+      default: return which;
+    }
+  }), "cpp_multi_throw");
+
+  CHECK(chai.eval<int>(R"(
+    var catch_count = 0
+    for (var i = 0; i < 3; ++i) {
+      try {
+        cpp_multi_throw(i)
+      }
+      catch(e) {
+        catch_count = catch_count + 1
+      }
+    }
+    catch_count
+  )") == 3);
+
+  CHECK(chai.eval<int>("cpp_multi_throw(5)") == 5);
+}
+
+TEST_CASE("Exception from C++ binary operator is catchable in ChaiScript") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  struct ThrowingType {
+    int value;
+  };
+
+  chai.add(chaiscript::user_type<ThrowingType>(), "ThrowingType");
+  chai.add(chaiscript::constructor<ThrowingType(int)>(), "ThrowingType");
+  chai.add(chaiscript::fun([](const ThrowingType &, const ThrowingType &) -> ThrowingType {
+    throw std::runtime_error("cpp operator+ threw");
+  }), "+");
+
+  CHECK(chai.eval<bool>(R"(
+    var caught = false
+    try {
+      var a = ThrowingType(1)
+      var b = ThrowingType(2)
+      var c = a + b
+    }
+    catch(e) {
+      caught = true
+    }
+    caught
+  )") == true);
+}
+
+TEST_CASE("Exception from C++ [] operator is catchable in ChaiScript") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  struct IndexableType {
+    int value;
+  };
+
+  chai.add(chaiscript::user_type<IndexableType>(), "IndexableType");
+  chai.add(chaiscript::constructor<IndexableType(int)>(), "IndexableType");
+  chai.add(chaiscript::fun([](const IndexableType &, int idx) -> int {
+    if (idx < 0) { throw std::out_of_range("negative index"); }
+    return idx;
+  }), "[]");
+
+  CHECK(chai.eval<int>("var obj = IndexableType(0); obj[5]") == 5);
+
+  CHECK(chai.eval<bool>(R"(
+    var caught = false
+    try {
+      var x = obj[-1]
+    }
+    catch(e) {
+      caught = true
+    }
+    caught
+  )") == true);
 }
