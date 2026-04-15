@@ -109,6 +109,169 @@ namespace chaiscript {
           return incoming;
         }
       }
+      class Strong_Typedef_Binary_Op final : public dispatch::Proxy_Function_Base {
+      public:
+        Strong_Typedef_Binary_Op(
+            std::string t_type_name,
+            std::string t_op_name,
+            Operators::Opers t_oper,
+            bool t_rewrap,
+            chaiscript::detail::Dispatch_Engine &t_engine)
+            : Proxy_Function_Base(
+                  {chaiscript::detail::Get_Type_Info<Boxed_Value>::get(),
+                   user_type<dispatch::Dynamic_Object>(),
+                   user_type<dispatch::Dynamic_Object>()},
+                  2)
+            , m_type_name(std::move(t_type_name))
+            , m_op_name(std::move(t_op_name))
+            , m_oper(t_oper)
+            , m_rewrap(t_rewrap)
+            , m_engine(t_engine) {
+        }
+
+        bool operator==(const Proxy_Function_Base &f) const noexcept override {
+          if (const auto *other = dynamic_cast<const Strong_Typedef_Binary_Op *>(&f)) {
+            return m_type_name == other->m_type_name && m_op_name == other->m_op_name;
+          }
+          return false;
+        }
+
+        bool call_match(const Function_Params &vals, const Type_Conversions_State &t_conversions) const noexcept override {
+          return vals.size() == 2
+              && type_matches(vals[0], t_conversions)
+              && type_matches(vals[1], t_conversions);
+        }
+
+      protected:
+        Boxed_Value do_call(const Function_Params &params, const Type_Conversions_State &t_conversions) const override {
+          if (!call_match(params, t_conversions)) {
+            throw chaiscript::exception::guard_error();
+          }
+
+          const auto &lhs = boxed_cast<const dispatch::Dynamic_Object &>(params[0], &t_conversions);
+          const auto &rhs = boxed_cast<const dispatch::Dynamic_Object &>(params[1], &t_conversions);
+          const auto lhs_val = lhs.get_attr("__value");
+          const auto rhs_val = rhs.get_attr("__value");
+
+          Boxed_Value result;
+          if (m_oper != Operators::Opers::invalid
+              && lhs_val.get_type_info().is_arithmetic()
+              && rhs_val.get_type_info().is_arithmetic()) {
+            result = Boxed_Number::do_oper(m_oper, lhs_val, rhs_val);
+          } else {
+            std::array<Boxed_Value, 2> underlying_params{lhs_val, rhs_val};
+            result = m_engine.call_function(m_op_name, m_loc, Function_Params(underlying_params), t_conversions);
+          }
+
+          if (m_rewrap) {
+            auto bv = Boxed_Value(dispatch::Dynamic_Object(m_type_name), true);
+            auto *obj = static_cast<dispatch::Dynamic_Object *>(bv.get_ptr());
+            obj->get_attr("__value") = result;
+            return bv;
+          }
+          return result;
+        }
+
+      private:
+        bool type_matches(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const noexcept {
+          if (!bv.get_type_info().bare_equal(user_type<dispatch::Dynamic_Object>())) {
+            return false;
+          }
+          try {
+            const auto &d = boxed_cast<const dispatch::Dynamic_Object &>(bv, &t_conversions);
+            return d.get_type_name() == m_type_name;
+          } catch (...) {
+            return false;
+          }
+        }
+
+        std::string m_type_name;
+        std::string m_op_name;
+        Operators::Opers m_oper;
+        bool m_rewrap;
+        chaiscript::detail::Dispatch_Engine &m_engine;
+        mutable std::atomic_uint_fast32_t m_loc{0};
+      };
+
+      class Strong_Typedef_Compound_Assign_Op final : public dispatch::Proxy_Function_Base {
+      public:
+        Strong_Typedef_Compound_Assign_Op(
+            std::string t_type_name,
+            std::string t_op_name,
+            Operators::Opers t_base_oper,
+            std::string t_base_op_name,
+            chaiscript::detail::Dispatch_Engine &t_engine)
+            : Proxy_Function_Base(
+                  {user_type<dispatch::Dynamic_Object>(),
+                   user_type<dispatch::Dynamic_Object>(),
+                   user_type<dispatch::Dynamic_Object>()},
+                  2)
+            , m_type_name(std::move(t_type_name))
+            , m_op_name(std::move(t_op_name))
+            , m_base_oper(t_base_oper)
+            , m_base_op_name(std::move(t_base_op_name))
+            , m_engine(t_engine) {
+        }
+
+        bool operator==(const Proxy_Function_Base &f) const noexcept override {
+          if (const auto *other = dynamic_cast<const Strong_Typedef_Compound_Assign_Op *>(&f)) {
+            return m_type_name == other->m_type_name && m_op_name == other->m_op_name;
+          }
+          return false;
+        }
+
+        bool call_match(const Function_Params &vals, const Type_Conversions_State &t_conversions) const noexcept override {
+          return vals.size() == 2
+              && type_matches(vals[0], t_conversions)
+              && type_matches(vals[1], t_conversions);
+        }
+
+      protected:
+        Boxed_Value do_call(const Function_Params &params, const Type_Conversions_State &t_conversions) const override {
+          if (!call_match(params, t_conversions)) {
+            throw chaiscript::exception::guard_error();
+          }
+
+          auto &lhs = boxed_cast<dispatch::Dynamic_Object &>(params[0], &t_conversions);
+          const auto &rhs = boxed_cast<const dispatch::Dynamic_Object &>(params[1], &t_conversions);
+          const auto lhs_val = lhs.get_attr("__value");
+          const auto rhs_val = rhs.get_attr("__value");
+
+          Boxed_Value result;
+          if (m_base_oper != Operators::Opers::invalid
+              && lhs_val.get_type_info().is_arithmetic()
+              && rhs_val.get_type_info().is_arithmetic()) {
+            result = Boxed_Number::do_oper(m_base_oper, lhs_val, rhs_val);
+          } else {
+            std::array<Boxed_Value, 2> underlying_params{lhs_val, rhs_val};
+            result = m_engine.call_function(m_base_op_name, m_loc, Function_Params(underlying_params), t_conversions);
+          }
+
+          lhs.get_attr("__value") = result;
+          return params[0];
+        }
+
+      private:
+        bool type_matches(const Boxed_Value &bv, const Type_Conversions_State &t_conversions) const noexcept {
+          if (!bv.get_type_info().bare_equal(user_type<dispatch::Dynamic_Object>())) {
+            return false;
+          }
+          try {
+            const auto &d = boxed_cast<const dispatch::Dynamic_Object &>(bv, &t_conversions);
+            return d.get_type_name() == m_type_name;
+          } catch (...) {
+            return false;
+          }
+        }
+
+        std::string m_type_name;
+        std::string m_op_name;
+        Operators::Opers m_base_oper;
+        std::string m_base_op_name;
+        chaiscript::detail::Dispatch_Engine &m_engine;
+        mutable std::atomic_uint_fast32_t m_loc{0};
+      };
+
     } // namespace detail
 
     template<typename T>
@@ -886,6 +1049,119 @@ namespace chaiscript {
         }
 
         block->eval(t_ss);
+
+        return void_var();
+      }
+    };
+
+    template<typename T>
+    struct Using_AST_Node final : AST_Node_Impl<T> {
+      Using_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children)
+          : AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Using, std::move(t_loc), std::move(t_children)) {
+        assert(this->children.size() == 2);
+      }
+
+      Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
+        const auto &new_type_name = this->children[0]->text;
+        const auto &base_type_name = this->children[1]->text;
+
+        const auto base_type = t_ss->get_type(base_type_name, true);
+
+        t_ss->add(user_type<dispatch::Dynamic_Object>(), new_type_name);
+
+        dispatch::Param_Types param_types(std::vector<std::pair<std::string, Type_Info>>{
+            {new_type_name, Type_Info()},
+            {base_type_name, base_type}});
+
+        auto ctor_body = dispatch::make_dynamic_proxy_function(
+            [](const Function_Params &t_params) -> Boxed_Value {
+              auto *obj = static_cast<dispatch::Dynamic_Object *>(t_params[0].get_ptr());
+              obj->get_attr("__value") = t_params[1];
+              return void_var();
+            },
+            2,
+            std::shared_ptr<AST_Node>(),
+            param_types);
+
+        try {
+          t_ss->add(std::make_shared<dispatch::detail::Dynamic_Object_Constructor>(new_type_name, ctor_body), new_type_name);
+        } catch (const exception::name_conflict_error &e) {
+          throw exception::eval_error("Type alias redefined '" + e.name() + "'");
+        }
+
+        dispatch::Param_Types to_underlying_param_types(std::vector<std::pair<std::string, Type_Info>>{
+            {new_type_name, user_type<dispatch::Dynamic_Object>()}});
+
+        auto to_underlying_body = dispatch::make_dynamic_proxy_function(
+            [](const Function_Params &t_params) -> Boxed_Value {
+              const auto *obj = static_cast<const dispatch::Dynamic_Object *>(t_params[0].get_const_ptr());
+              return obj->get_attr("__value");
+            },
+            1,
+            std::shared_ptr<AST_Node>(),
+            to_underlying_param_types);
+
+        t_ss->add(to_underlying_body, "to_underlying");
+
+        auto &engine = *t_ss;
+
+        struct Op_Entry {
+          const char *name;
+          Operators::Opers oper;
+          bool rewrap;
+        };
+
+        static constexpr Op_Entry ops[] = {
+            {"+", Operators::Opers::sum, true},
+            {"-", Operators::Opers::difference, true},
+            {"*", Operators::Opers::product, true},
+            {"/", Operators::Opers::quotient, true},
+            {"%", Operators::Opers::remainder, true},
+            {"<<", Operators::Opers::shift_left, true},
+            {">>", Operators::Opers::shift_right, true},
+            {"&", Operators::Opers::bitwise_and, true},
+            {"|", Operators::Opers::bitwise_or, true},
+            {"^", Operators::Opers::bitwise_xor, true},
+            {"<", Operators::Opers::less_than, false},
+            {">", Operators::Opers::greater_than, false},
+            {"<=", Operators::Opers::less_than_equal, false},
+            {">=", Operators::Opers::greater_than_equal, false},
+            {"==", Operators::Opers::equals, false},
+            {"!=", Operators::Opers::not_equal, false},
+        };
+
+        for (const auto &op : ops) {
+          t_ss->add(
+              chaiscript::make_shared<dispatch::Proxy_Function_Base, detail::Strong_Typedef_Binary_Op>(
+                  new_type_name, std::string(op.name), op.oper, op.rewrap, engine),
+              op.name);
+        }
+
+        struct Compound_Op_Entry {
+          const char *name;
+          Operators::Opers base_oper;
+          const char *base_op_name;
+        };
+
+        static constexpr Compound_Op_Entry compound_ops[] = {
+            {"+=", Operators::Opers::sum, "+"},
+            {"-=", Operators::Opers::difference, "-"},
+            {"*=", Operators::Opers::product, "*"},
+            {"/=", Operators::Opers::quotient, "/"},
+            {"%=", Operators::Opers::remainder, "%"},
+            {"<<=", Operators::Opers::shift_left, "<<"},
+            {">>=", Operators::Opers::shift_right, ">>"},
+            {"&=", Operators::Opers::bitwise_and, "&"},
+            {"|=", Operators::Opers::bitwise_or, "|"},
+            {"^=", Operators::Opers::bitwise_xor, "^"},
+        };
+
+        for (const auto &op : compound_ops) {
+          t_ss->add(
+              chaiscript::make_shared<dispatch::Proxy_Function_Base, detail::Strong_Typedef_Compound_Assign_Op>(
+                  new_type_name, std::string(op.name), op.base_oper, std::string(op.base_op_name), engine),
+              op.name);
+        }
 
         return void_var();
       }

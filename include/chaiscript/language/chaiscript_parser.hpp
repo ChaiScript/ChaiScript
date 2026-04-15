@@ -2069,6 +2069,43 @@ namespace chaiscript {
         return retval;
       }
 
+      bool Using(const bool t_class_allowed) {
+        Depth_Counter dc{this};
+
+        const auto prev_stack_top = m_match_stack.size();
+
+        if (Keyword("using")) {
+          if (!t_class_allowed) {
+            throw exception::eval_error("Type alias definitions only allowed at top scope",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
+          }
+
+          if (!Id(true)) {
+            throw exception::eval_error("Missing type name in 'using' declaration",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
+          }
+
+          if (!Symbol("=", true)) {
+            throw exception::eval_error("Missing '=' in 'using' declaration",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
+          }
+
+          if (!Id(true)) {
+            throw exception::eval_error("Missing base type name in 'using' declaration",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
+          }
+
+          build_match<eval::Using_AST_Node<Tracer>>(prev_stack_top);
+          return true;
+        }
+
+        return false;
+      }
+
       bool Enum(const bool t_allowed) {
         Depth_Counter dc{this};
         bool retval = false;
@@ -2905,7 +2942,7 @@ namespace chaiscript {
 
         while (has_more) {
           const auto start = m_position;
-          if (Def() || Try() || If() || While() || Namespace_Block() || Class(t_class_allowed) || Enum(t_class_allowed) || For() || Switch()) {
+          if (Def() || Try() || If() || While() || Namespace_Block() || Class(t_class_allowed) || Using(t_class_allowed) || Enum(t_class_allowed) || For() || Switch()) {
             if (!saw_eol) {
               throw exception::eval_error("Two function definitions missing line separator",
                                           File_Position(start.line, start.col),

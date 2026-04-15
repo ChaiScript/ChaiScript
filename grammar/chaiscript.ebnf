@@ -68,6 +68,7 @@ enum_entry           ::= id ( "=" integer )?
 
 underlying_type      ::= id
 
+
 /* ---- Blocks & flow keywords ---- */
 
 block                ::= "{" statements* "}"

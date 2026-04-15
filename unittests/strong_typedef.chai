@@ -1,0 +1,200 @@
+// Strong typedef: using Type = int creates a distinct type
+using Meters = int
+
+def measure(Meters m) {
+  return m
+}
+
+// Constructing a strong typedef value should work
+var m = Meters(42)
+
+// Calling with the typedef'd value should succeed
+measure(m)
+
+// Calling with a plain int should fail (strong typedef)
+try {
+  measure(42)
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: type mismatch because int is not Meters
+}
+
+// Multiple strong typedefs from the same base type should be distinct
+using Seconds = int
+
+def wait(Seconds s) {
+  return s
+}
+
+var s = Seconds(10)
+wait(s)
+
+// Meters and Seconds should not be interchangeable
+try {
+  wait(m)
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: Meters is not Seconds
+}
+
+try {
+  measure(s)
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: Seconds is not Meters
+}
+
+// to_underlying should return the base value
+assert_equal(to_underlying(m), 42)
+assert_equal(to_underlying(s), 10)
+
+// to_underlying result should be a plain value, not a strong typedef
+def takes_int(int i) {
+  return i
+}
+assert_equal(takes_int(to_underlying(m)), 42)
+
+// --- Arithmetic operators: strongly typed ---
+var m2 = Meters(8)
+var m_sum = m + m2
+assert_equal(to_underlying(m_sum), 50)
+measure(m_sum)
+
+var m_diff = m - m2
+assert_equal(to_underlying(m_diff), 34)
+
+var m_prod = Meters(3) * Meters(4)
+assert_equal(to_underlying(m_prod), 12)
+
+var m_quot = Meters(20) / Meters(5)
+assert_equal(to_underlying(m_quot), 4)
+
+var m_rem = Meters(17) % Meters(5)
+assert_equal(to_underlying(m_rem), 2)
+
+// Arithmetic result is strongly typed, not plain int
+try {
+  takes_int(m_sum)
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: m_sum is Meters, not int
+}
+
+// --- Comparison operators ---
+assert_equal(Meters(5) == Meters(5), true)
+assert_equal(Meters(5) != Meters(3), true)
+assert_equal(Meters(3) < Meters(5), true)
+assert_equal(Meters(5) > Meters(3), true)
+assert_equal(Meters(5) <= Meters(5), true)
+assert_equal(Meters(3) >= Meters(3), true)
+assert_equal(Meters(3) >= Meters(5), false)
+
+// --- Bitwise and shift operators ---
+assert_equal(to_underlying(Meters(6) & Meters(3)), 2)
+assert_equal(to_underlying(Meters(6) | Meters(3)), 7)
+assert_equal(to_underlying(Meters(6) ^ Meters(3)), 5)
+assert_equal(to_underlying(Meters(5) << Meters(2)), 20)
+assert_equal(to_underlying(Meters(12) >> Meters(1)), 6)
+
+// Bitwise results are strongly typed
+try {
+  takes_int(Meters(6) & Meters(3))
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: result is Meters, not int
+}
+
+// --- Strong typedef over string ---
+using StrongString = string
+
+var ss1 = StrongString("hello")
+var ss2 = StrongString(" world")
+var ss_cat = ss1 + ss2
+assert_equal(to_underlying(ss_cat), "hello world")
+
+// StrongString + StrongString -> StrongString (strongly typed)
+def takes_strong_string(StrongString ss) {
+  return ss
+}
+takes_strong_string(ss_cat)
+
+// Operators not supported by the underlying type error at call time
+try {
+  var bad = ss1 * ss2
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: underlying string has no * operator
+}
+try {
+  var bad = ss1 - ss2
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: underlying string has no - operator
+}
+try {
+  var bad = ss1 / ss2
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: underlying string has no / operator
+}
+try {
+  var bad = ss1 % ss2
+  assert_equal(true, false)
+} catch(e) {
+  // Expected: underlying string has no % operator
+}
+
+// Comparison on StrongString
+assert_equal(StrongString("abc") < StrongString("def"), true)
+assert_equal(StrongString("abc") == StrongString("abc"), true)
+assert_equal(StrongString("abc") != StrongString("def"), true)
+assert_equal(StrongString("def") > StrongString("abc"), true)
+assert_equal(StrongString("abc") <= StrongString("abc"), true)
+assert_equal(StrongString("def") >= StrongString("abc"), true)
+
+// --- User-defined extensions on strong typedefs ---
+def first_char(StrongString ss) {
+  return to_string(to_underlying(ss)[0])
+}
+assert_equal(first_char(StrongString("hello")), "h")
+
+def double_meters(Meters m) {
+  return Meters(to_underlying(m) * 2)
+}
+assert_equal(to_underlying(double_meters(Meters(21))), 42)
+
+// User-defined operator extension
+def `[]`(StrongString ss, int offset) {
+  return to_string(to_underlying(ss)[offset])
+}
+assert_equal(StrongString("hello")[1], "e")
+
+// --- Compound assignment operators ---
+var m3 = Meters(10)
+m3 += Meters(5)
+assert_equal(to_underlying(m3), 15)
+measure(m3)
+
+m3 -= Meters(3)
+assert_equal(to_underlying(m3), 12)
+
+m3 *= Meters(2)
+assert_equal(to_underlying(m3), 24)
+
+m3 /= Meters(4)
+assert_equal(to_underlying(m3), 6)
+
+m3 %= Meters(4)
+assert_equal(to_underlying(m3), 2)
+
+// Compound assignment result is still the strong typedef
+var m4 = Meters(10)
+m4 += Meters(5)
+assert_equal(to_underlying(m4), 15)
+measure(m4)
+
+// Compound assignment on StrongString
+var ss3 = StrongString("hello")
+ss3 += StrongString(" world")
+assert_equal(to_underlying(ss3), "hello world")
+takes_strong_string(ss3)
