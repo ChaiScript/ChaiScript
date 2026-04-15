@@ -100,6 +100,9 @@ namespace chaiscript {
         } catch (const exception::file_not_found_error &) {
           // failed to load, try the next path
         } catch (const exception::eval_error &t_ee) {
+          if (t_ee.has_boxed_value()) {
+            throw Boxed_Value(t_ee.boxed_value());
+          }
           throw Boxed_Value(t_ee);
         }
       }
@@ -113,6 +116,9 @@ namespace chaiscript {
       try {
         return do_eval(t_e, "__EVAL__", true);
       } catch (const exception::eval_error &t_ee) {
+        if (t_ee.has_boxed_value()) {
+          throw Boxed_Value(t_ee.boxed_value());
+        }
         throw Boxed_Value(t_ee);
       }
     }
@@ -691,11 +697,21 @@ namespace chaiscript {
     eval(const std::string &t_input, const Exception_Handler &t_handler = Exception_Handler(), const std::string &t_filename = "__EVAL__") {
       try {
         return do_eval(t_input, t_filename);
+      } catch (exception::eval_error &ee) {
+        if (ee.has_boxed_value()) {
+          if (ee.filename.empty()) {
+            ee.filename = t_filename;
+          }
+          if (t_handler) {
+            t_handler->handle(ee.boxed_value(), m_engine);
+          }
+        }
+        throw;
       } catch (Boxed_Value &bv) {
         if (t_handler) {
           t_handler->handle(bv, m_engine);
         }
-        throw exception::eval_error("Exception thrown during evaluation", bv);
+        throw exception::eval_error("Exception thrown during evaluation", t_filename, bv);
       }
     }
 

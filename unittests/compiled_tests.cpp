@@ -320,6 +320,43 @@ TEST_CASE("eval_error without boxed_value has_boxed_value returns false") {
   CHECK_FALSE(ee.has_boxed_value());
 }
 
+TEST_CASE("eval_error wrapping script throw includes call stack") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("def foo() { throw(42); } \n foo();");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.has_boxed_value());
+    CHECK_FALSE(ee.call_stack.empty());
+    const auto pretty = ee.pretty_print();
+    CHECK(pretty.find("foo") != std::string::npos);
+  }
+}
+
+TEST_CASE("eval_error wrapping script throw includes filename") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(99);", chaiscript::Exception_Handler(), "test_script.chai");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.has_boxed_value());
+    CHECK(ee.filename == "test_script.chai");
+  }
+}
+
+TEST_CASE("exception_specification still auto-unboxes for backward compatibility") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(1)", chaiscript::exception_specification<int>());
+    REQUIRE(false);
+  } catch (const int e) {
+    CHECK(e == 1);
+  }
+}
+
 TEST_CASE("Deduction of pointer return types") {
   int val = 5;
   int *val_ptr = &val;

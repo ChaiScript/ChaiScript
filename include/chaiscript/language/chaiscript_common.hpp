@@ -341,8 +341,15 @@ namespace chaiscript {
       }
 
       eval_error(const std::string &t_why, Boxed_Value t_bv) noexcept
-          : std::runtime_error("Error: \"" + t_why + "\" ")
+          : std::runtime_error(format_why(t_why) + " " + format_filename("__EVAL__"))
           , reason(t_why)
+          , m_boxed_value(std::move(t_bv)) {
+      }
+
+      eval_error(const std::string &t_why, const std::string &t_fname, Boxed_Value t_bv) noexcept
+          : std::runtime_error(format_why(t_why) + " " + format_filename(t_fname))
+          , reason(t_why)
+          , filename(t_fname)
           , m_boxed_value(std::move(t_bv)) {
       }
 
