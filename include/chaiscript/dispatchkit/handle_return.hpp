@@ -170,8 +170,8 @@ namespace chaiscript {
       };
 
       /**
- * Used internally for handling a return value from a Proxy_Function call
- */
+       * Used internally for handling a return value from a Proxy_Function call
+       */
       template<>
       struct Handle_Return<Boxed_Number> {
         static Boxed_Value handle(const Boxed_Number &r) noexcept { return r.bv; }
@@ -182,8 +182,8 @@ namespace chaiscript {
       };
 
       /**
- * Used internally for handling a return value from a Proxy_Function call
- */
+       * Used internally for handling a return value from a Proxy_Function call
+       */
       template<>
       struct Handle_Return<void> {
         static Boxed_Value handle() { return void_var(); }

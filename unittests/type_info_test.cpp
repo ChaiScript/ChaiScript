@@ -31,14 +31,30 @@ TEST_CASE("Type_Info objects generate expected results") {
           CHECK(ti.is_arithmetic() == t_is_arithmetic);
         };
 
-  SECTION("void") { test_type(chaiscript::user_type<void>(), false, false, false, true, false, false); }
-  SECTION("const int") { test_type(chaiscript::user_type<const int>(), true, false, false, false, false, true); }
-  SECTION("const int &") { test_type(chaiscript::user_type<const int &>(), true, false, true, false, false, true); }
-  SECTION("int") { test_type(chaiscript::user_type<int>(), false, false, false, false, false, true); }
-  SECTION("int *") { test_type(chaiscript::user_type<int *>(), false, true, false, false, false, false); }
-  SECTION("const int *") { test_type(chaiscript::user_type<const int *>(), true, true, false, false, false, false); }
-  SECTION("const bool &") { test_type(chaiscript::user_type<const bool &>(), true, false, true, false, false, false); }
-  SECTION("default") { test_type(chaiscript::Type_Info(), false, false, false, false, true, false); }
+  SECTION("void") {
+    test_type(chaiscript::user_type<void>(), false, false, false, true, false, false);
+  }
+  SECTION("const int") {
+    test_type(chaiscript::user_type<const int>(), true, false, false, false, false, true);
+  }
+  SECTION("const int &") {
+    test_type(chaiscript::user_type<const int &>(), true, false, true, false, false, true);
+  }
+  SECTION("int") {
+    test_type(chaiscript::user_type<int>(), false, false, false, false, false, true);
+  }
+  SECTION("int *") {
+    test_type(chaiscript::user_type<int *>(), false, true, false, false, false, false);
+  }
+  SECTION("const int *") {
+    test_type(chaiscript::user_type<const int *>(), true, true, false, false, false, false);
+  }
+  SECTION("const bool &") {
+    test_type(chaiscript::user_type<const bool &>(), true, false, true, false, false, false);
+  }
+  SECTION("default") {
+    test_type(chaiscript::Type_Info(), false, false, false, false, true, false);
+  }
 
   std::cout << "Size of Type_Info " << sizeof(chaiscript::Type_Info) << '\n';
 }

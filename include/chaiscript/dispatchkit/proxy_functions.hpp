@@ -165,13 +165,13 @@ namespace chaiscript {
     };
 
     /**
- * Pure virtual base class for all Proxy_Function implementations
- * Proxy_Functions are a type erasure of type safe C++
- * function calls. At runtime parameter types are expected to be
- * tested against passed in types.
- * Dispatch_Engine only knows how to work with Proxy_Function, no other
- * function classes.
- */
+     * Pure virtual base class for all Proxy_Function implementations
+     * Proxy_Functions are a type erasure of type safe C++
+     * function calls. At runtime parameter types are expected to be
+     * tested against passed in types.
+     * Dispatch_Engine only knows how to work with Proxy_Function, no other
+     * function classes.
+     */
     class Proxy_Function_Base {
     public:
       virtual ~Proxy_Function_Base() = default;

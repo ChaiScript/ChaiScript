@@ -9,9 +9,9 @@
 #define CHAISCRIPT_NO_DYNLOAD
 #endif
 
-#include <chaiscript/chaiscript.hpp>
 #include "../emscripten/chaiscript_eval.hpp"
 #include <cassert>
+#include <chaiscript/chaiscript.hpp>
 #include <cmath>
 #include <string>
 

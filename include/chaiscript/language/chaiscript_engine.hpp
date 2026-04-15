@@ -136,8 +136,9 @@ namespace chaiscript {
       m_engine.add(fun([this](const std::string &s) { m_print_handler(s + "\n"); }), "println_string");
 
       m_engine.add(fun([this](const std::function<void(const std::string &)> &t_handler) {
-        m_print_handler = t_handler;
-      }), "set_print_handler");
+                     m_print_handler = t_handler;
+                   }),
+                   "set_print_handler");
 
       m_engine.add(fun([this]() { m_engine.dump_system(); }), "dump_system");
       m_engine.add(fun([this](const Boxed_Value &t_bv) { m_engine.dump_object(t_bv); }), "dump_object");
@@ -278,7 +279,6 @@ namespace chaiscript {
     }
 
   public:
-
     /// \brief Set a custom handler for print output, used by both print_string and println_string
     /// \param[in] t_handler Function to call with the string to print
     void set_print_handler(std::function<void(const std::string &)> t_handler) {
@@ -287,7 +287,7 @@ namespace chaiscript {
 
     /// \brief Virtual destructor for ChaiScript
     virtual ~ChaiScript_Basic() = default;
-     
+
     /// \brief Constructor for ChaiScript
     /// \param[in] t_lib Standard library to apply to this ChaiScript instance
     /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
