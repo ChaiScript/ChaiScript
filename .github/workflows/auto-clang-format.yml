@@ -1,5 +1,9 @@
 name: auto-clang-format
-on: [pull_request]
+on:
+  push:
+    branches:
+      - develop
+      - master
 
 jobs:
   build:
@@ -7,10 +11,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v6
-      with:
-        repository: ${{ github.event.pull_request.head.repo.full_name }}
-        ref: ${{ github.event.pull_request.head.ref }}
-        fetch-depth: 0
     - uses: DoozyX/clang-format-lint-action@v0.20
       with:
         source: '.'
