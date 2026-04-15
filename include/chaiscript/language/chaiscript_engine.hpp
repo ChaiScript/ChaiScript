@@ -80,6 +80,7 @@ namespace chaiscript {
     std::map<std::string, std::function<Namespace &()>> m_namespace_generators;
 
     std::function<void(const std::string &)> m_print_handler = [](const std::string &) noexcept {};
+    std::function<std::string(const std::string &)> m_file_reader;
 
     /// Evaluates the given string in by parsing it and running the results through the evaluator
     Boxed_Value do_eval(const std::string &t_input, const std::string &t_filename = "__EVAL__", bool /* t_internal*/ = false) {
@@ -138,6 +139,10 @@ namespace chaiscript {
       m_engine.add(fun([this](const std::function<void(const std::string &)> &t_handler) {
         m_print_handler = t_handler;
       }), "set_print_handler");
+
+      m_engine.add(fun([this](const std::function<std::string(const std::string &)> &t_reader) {
+        m_file_reader = t_reader;
+      }), "set_file_reader");
 
       m_engine.add(fun([this]() { m_engine.dump_system(); }), "dump_system");
       m_engine.add(fun([this](const Boxed_Value &t_bv) { m_engine.dump_object(t_bv); }), "dump_object");
@@ -243,7 +248,15 @@ namespace chaiscript {
     }
 
     /// Helper function for loading a file
-    static std::string load_file(const std::string &t_filename) {
+    std::string load_file(const std::string &t_filename) const {
+      if (m_file_reader) {
+        return m_file_reader(t_filename);
+      }
+
+      return load_file_default(t_filename);
+    }
+
+    static std::string load_file_default(const std::string &t_filename) {
       std::ifstream infile(t_filename.c_str(), std::ios::in | std::ios::ate | std::ios::binary);
 
       if (!infile.is_open()) {
@@ -283,6 +296,12 @@ namespace chaiscript {
     /// \param[in] t_handler Function to call with the string to print
     void set_print_handler(std::function<void(const std::string &)> t_handler) {
       m_print_handler = std::move(t_handler);
+    }
+
+    /// \brief Set a custom handler for reading files, used by eval_file, use, and internal_eval_file
+    /// \param[in] t_reader Function to call with the filename, returning the file contents as a string
+    void set_file_reader(std::function<std::string(const std::string &)> t_reader) {
+      m_file_reader = std::move(t_reader);
     }
 
     /// \brief Virtual destructor for ChaiScript

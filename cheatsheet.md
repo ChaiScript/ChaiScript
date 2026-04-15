@@ -1119,6 +1119,43 @@ The print handler can also be set from within ChaiScript itself via `set_print_h
 set_print_handler(fun(s) { my_custom_log(s) })
 ```
 
+## Custom File Loading
+
+By default, ChaiScript reads files from the filesystem when `eval_file()` or `use()` is called.
+You can override this behavior on a per-instance basis by setting a custom file reader callback.
+This follows the same pattern as `set_print_handler` and enables use cases such as encrypted
+script files, in-memory virtual filesystems, or platform-specific file access (e.g., Android assets).
+
+```cpp
+chaiscript::ChaiScript chai;
+
+// Provide scripts from an in-memory map instead of the filesystem
+std::map<std::string, std::string> virtual_fs = {
+  {"init.chai", "var x = 42"},
+  {"utils.chai", "def add(a, b) { a + b }"}
+};
+
+chai.set_file_reader([&virtual_fs](const std::string &filename) -> std::string {
+  const auto it = virtual_fs.find(filename);
+  if (it != virtual_fs.end()) {
+    return it->second;
+  }
+  throw chaiscript::exception::file_not_found_error(filename);
+});
+
+chai.eval_file("init.chai"); // evaluates "var x = 42"
+chai.use("utils.chai");      // evaluates "def add(a, b) { a + b }"
+```
+
+The file reader can also be set from within ChaiScript itself via `set_file_reader`:
+
+```chaiscript
+// Override file loading from within a script
+set_file_reader(fun(filename) { return my_custom_read(filename) })
+```
+
+When no custom file reader is set, ChaiScript uses its built-in filesystem reader.
+
 ## Extras
 ChaiScript itself does not provide a link to the math functions defined in `<cmath>`. You can either add them yourself, or use the [ChaiScript_Extras](https://github.com/ChaiScript/ChaiScript_Extras) helper library. (Which also provides some additional string functions.)
 

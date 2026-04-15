@@ -4,6 +4,7 @@ Current Version: 6.1.1
 
 ### Changes since 6.1.0
 
+ * Add `set_file_reader` callback for custom file loading #116 — allows overriding how `eval_file` and `use` read files
  * Handle the returning of `&` to `*` types. This specifically comes up with `std::vector<int *>` and similar containers
  * Update CMake to use `LIBDIR` instead of `lib` #502 by @guoyunhe
  * Add documentation for installing ChaiScript with vcpkg #500 by @grdowns
