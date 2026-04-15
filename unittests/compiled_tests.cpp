@@ -1762,9 +1762,7 @@ TEST_CASE("push_back on script vector with vector_conversion") {
   chai.add(chaiscript::fun([](const std::vector<std::string> &v) -> std::string {
              std::string result;
              for (const auto &s : v) {
-               if (!result.empty()) {
-                 result += ",";
-               }
+               if (!result.empty()) { result += ","; }
                result += s;
              }
              return result;
@@ -2061,14 +2059,10 @@ TEST_CASE("Multiple C++ exception types from registered functions") {
 
   chai.add(chaiscript::fun([](int which) -> int {
              switch (which) {
-               case 0:
-                 throw std::runtime_error("runtime");
-               case 1:
-                 throw std::out_of_range("range");
-               case 2:
-                 throw std::logic_error("logic");
-               default:
-                 return which;
+               case 0: throw std::runtime_error("runtime");
+               case 1: throw std::out_of_range("range");
+               case 2: throw std::logic_error("logic");
+               default: return which;
              }
            }),
            "cpp_multi_throw");
@@ -2127,9 +2121,7 @@ TEST_CASE("Exception from C++ [] operator is catchable in ChaiScript") {
   chai.add(chaiscript::user_type<IndexableType>(), "IndexableType");
   chai.add(chaiscript::constructor<IndexableType(int)>(), "IndexableType");
   chai.add(chaiscript::fun([](const IndexableType &, int idx) -> int {
-             if (idx < 0) {
-               throw std::out_of_range("negative index");
-             }
+             if (idx < 0) { throw std::out_of_range("negative index"); }
              return idx;
            }),
            "[]");

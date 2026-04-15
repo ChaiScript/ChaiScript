@@ -1,10 +1,14 @@
-# clang-format: 11
+# clang-format: 19
 AccessModifierOffset:                 -2
 AlignAfterOpenBracket:                Align
 AlignConsecutiveBitFields:            false
-AllowShortBlocksOnASingleLine:        false
+AllowShortBlocksOnASingleLine:        Always
+AllowShortCaseLabelsOnASingleLine:    true
+AllowShortEnumsOnASingleLine:         true
 AllowShortFunctionsOnASingleLine:     Inline
+AllowShortIfStatementsOnASingleLine:  AllIfsAndElse
 AllowShortLambdasOnASingleLine:       All
+AllowShortLoopsOnASingleLine:         true
 AlwaysBreakTemplateDeclarations:      true
 BasedOnStyle:                         WebKit
 BinPackArguments:                     true
@@ -13,12 +17,14 @@ BreakBeforeBraces:                    Attach
 ColumnLimit:                          0
 Cpp11BracedListStyle:                 true
 FixNamespaceComments:                 true
+IfMacros:                             ['SECTION']
 IncludeBlocks:                        Preserve
 IndentCaseLabels:                     true
 IndentPPDirectives:                   None
 IndentWidth:                          2
 KeepEmptyLinesAtTheStartOfBlocks:     false
 NamespaceIndentation:                 All
+PackConstructorInitializers:          CurrentLine
 PenaltyBreakBeforeFirstCallParameter: 200
 PenaltyBreakComment:                  5
 PenaltyBreakFirstLessLess:            50
@@ -27,6 +33,10 @@ PointerAlignment:                     Right
 SortIncludes:                         true
 SpaceAfterTemplateKeyword:            false
 SpaceBeforeCpp11BracedList:           false
+SpaceBeforeParens:                    Custom
+SpaceBeforeParensOptions:
+  AfterControlStatements:             true
+  AfterIfMacros:                      false
 SpaceInEmptyBlock:                    false
 Standard:                             Latest
 TabWidth:                             2
