@@ -16,6 +16,7 @@
 #include <map>
 #include <memory>
 #include <ostream>
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -1161,6 +1162,75 @@ namespace chaiscript {
                   new_type_name, std::string(op.name), op.base_oper, std::string(op.base_op_name), engine),
               op.name);
         }
+
+        return void_var();
+      }
+    };
+
+    template<typename T>
+    struct Enum_AST_Node final : AST_Node_Impl<T> {
+      Enum_AST_Node(std::string t_ast_node_text, Parse_Location t_loc, std::vector<AST_Node_Impl_Ptr<T>> t_children)
+          : AST_Node_Impl<T>(std::move(t_ast_node_text), AST_Node_Type::Enum, std::move(t_loc), std::move(t_children)) {
+      }
+
+      Boxed_Value eval_internal(const chaiscript::detail::Dispatch_State &t_ss) const override {
+        const auto &enum_name = this->children[0]->text;
+        const auto &underlying_type_name = this->children[1]->text;
+        const auto underlying_ti = t_ss->get_type(underlying_type_name);
+
+        dispatch::Dynamic_Object container(enum_name);
+        std::vector<Boxed_Value> valid_values;
+
+        for (size_t i = 2; i < this->children.size(); i += 2) {
+          const auto &val_name = this->children[i]->text;
+          const auto val_bv = Boxed_Number(this->children[i + 1]->eval(t_ss)).get_as(underlying_ti).bv;
+          valid_values.push_back(val_bv);
+
+          dispatch::Dynamic_Object dobj(enum_name);
+          dobj.get_attr("value") = val_bv;
+          dobj.set_explicit(true);
+          container[val_name] = const_var(dobj);
+        }
+
+        auto shared_valid = std::make_shared<const std::vector<Boxed_Value>>(std::move(valid_values));
+
+        container[enum_name] = var(
+            fun([shared_valid, enum_name, underlying_ti](const Boxed_Number &t_val) -> Boxed_Value {
+              const auto converted = t_val.get_as(underlying_ti);
+              for (const auto &v : *shared_valid) {
+                if (Boxed_Number::equals(Boxed_Number(v), converted)) {
+                  dispatch::Dynamic_Object dobj(enum_name);
+                  dobj.get_attr("value") = converted.bv;
+                  dobj.set_explicit(true);
+                  return const_var(dobj);
+                }
+              }
+              throw exception::eval_error("Value is not valid for enum '" + enum_name + "'");
+            }));
+
+        t_ss->add_global_const(const_var(container), enum_name);
+
+        t_ss->add(
+            std::make_shared<dispatch::detail::Dynamic_Object_Function>(
+                enum_name,
+                fun([](const dispatch::Dynamic_Object &lhs, const dispatch::Dynamic_Object &rhs) {
+                  return Boxed_Number::equals(Boxed_Number(lhs.get_attr("value")), Boxed_Number(rhs.get_attr("value")));
+                })),
+            "==");
+
+        t_ss->add(
+            std::make_shared<dispatch::detail::Dynamic_Object_Function>(
+                enum_name,
+                fun([](const dispatch::Dynamic_Object &lhs, const dispatch::Dynamic_Object &rhs) {
+                  return !Boxed_Number::equals(Boxed_Number(lhs.get_attr("value")), Boxed_Number(rhs.get_attr("value")));
+                })),
+            "!=");
+
+        t_ss->add(
+            std::make_shared<dispatch::detail::Dynamic_Object_Function>(
+                enum_name,
+                fun([](const dispatch::Dynamic_Object &obj) { return obj.get_attr("value"); })),
+            "to_underlying");
 
         return void_var();
       }

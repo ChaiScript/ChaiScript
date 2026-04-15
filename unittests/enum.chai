@@ -1,0 +1,110 @@
+// Basic enum class definition (default underlying type: int)
+enum class Color { Red, Green, Blue }
+
+// Access via :: syntax
+auto r = Color::Red
+auto g = Color::Green
+auto b = Color::Blue
+
+// Equality and inequality
+assert_true(Color::Red == Color::Red)
+assert_false(Color::Red == Color::Green)
+assert_true(Color::Red != Color::Green)
+assert_false(Color::Red != Color::Red)
+
+// Constructor from valid underlying value
+auto c = Color::Color(1)
+assert_true(c == Color::Green)
+
+// Constructor from invalid value throws
+try {
+  Color::Color(52)
+  assert_true(false)
+} catch(e) {
+  // expected
+}
+
+// Strong typing: function with typed parameter
+def takes_color(Color val) { val }
+takes_color(Color::Red)
+takes_color(Color::Green)
+takes_color(Color::Color(2))
+
+// Cannot pass int where Color is expected
+try {
+  takes_color(52)
+  assert_true(false)
+} catch(e) {
+  // expected: dispatch error
+}
+
+// to_underlying accessor
+assert_equal(0, Color::Red.to_underlying())
+assert_equal(1, Color::Green.to_underlying())
+assert_equal(2, Color::Blue.to_underlying())
+
+// Enum class with explicit values
+enum class Priority { Low = 10, Medium = 20, High = 30 }
+assert_equal(10, Priority::Low.to_underlying())
+assert_equal(20, Priority::Medium.to_underlying())
+assert_equal(30, Priority::High.to_underlying())
+
+auto p = Priority::Priority(20)
+assert_true(p == Priority::Medium)
+
+// Mixed auto and explicit values
+enum class Status { Pending, Active = 5, Done }
+assert_equal(0, Status::Pending.to_underlying())
+assert_equal(5, Status::Active.to_underlying())
+assert_equal(6, Status::Done.to_underlying())
+
+// Switch on enum values
+var result = ""
+switch(Color::Green) {
+  case (Color::Red) {
+    result = "red"
+    break
+  }
+  case (Color::Green) {
+    result = "green"
+    break
+  }
+  case (Color::Blue) {
+    result = "blue"
+    break
+  }
+}
+assert_equal("green", result)
+
+// Switch on enum with explicit values
+var prio_result = ""
+switch(Priority::High) {
+  case (Priority::Low) {
+    prio_result = "low"
+    break
+  }
+  case (Priority::Medium) {
+    prio_result = "medium"
+    break
+  }
+  case (Priority::High) {
+    prio_result = "high"
+    break
+  }
+}
+assert_equal("high", prio_result)
+
+// Enum class with explicit underlying type
+enum class Flags : char { Read = 1, Write = 2, Execute = 4 }
+assert_equal(1, Flags::Read.to_underlying())
+assert_equal(2, Flags::Write.to_underlying())
+assert_equal(4, Flags::Execute.to_underlying())
+
+auto f = Flags::Flags(2)
+assert_true(f == Flags::Write)
+
+// enum struct syntax (equivalent to enum class, like C++)
+enum struct Direction { North, East, South, West }
+assert_equal(0, Direction::North.to_underlying())
+assert_equal(3, Direction::West.to_underlying())
+assert_true(Direction::East != Direction::South)

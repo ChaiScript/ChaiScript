@@ -33,7 +33,7 @@ namespace chaiscript {
     template<typename T>
     static bool is_reserved_word(const T &s) noexcept {
       const static std::unordered_set<std::uint32_t>
-          words{utility::hash("def"), utility::hash("fun"), utility::hash("while"), utility::hash("for"), utility::hash("if"), utility::hash("else"), utility::hash("&&"), utility::hash("||"), utility::hash(","), utility::hash("auto"), utility::hash("return"), utility::hash("break"), utility::hash("true"), utility::hash("false"), utility::hash("class"), utility::hash("attr"), utility::hash("var"), utility::hash("global"), utility::hash("GLOBAL"), utility::hash("_"), utility::hash("__LINE__"), utility::hash("__FILE__"), utility::hash("__FUNC__"), utility::hash("__CLASS__"), utility::hash("const"), utility::hash("using")};
+          words{utility::hash("def"), utility::hash("fun"), utility::hash("while"), utility::hash("for"), utility::hash("if"), utility::hash("else"), utility::hash("&&"), utility::hash("||"), utility::hash(","), utility::hash("auto"), utility::hash("return"), utility::hash("break"), utility::hash("true"), utility::hash("false"), utility::hash("class"), utility::hash("attr"), utility::hash("var"), utility::hash("global"), utility::hash("GLOBAL"), utility::hash("_"), utility::hash("__LINE__"), utility::hash("__FILE__"), utility::hash("__FUNC__"), utility::hash("__CLASS__"), utility::hash("const"), utility::hash("using"), utility::hash("enum")};
 
       return words.count(utility::hash(s)) == 1;
     }
@@ -108,6 +108,7 @@ namespace chaiscript {
     Const_Var_Decl,
     Const_Assign_Decl,
     Using,
+    Enum,
     Namespace_Block
   };
 
@@ -129,7 +130,7 @@ namespace chaiscript {
   namespace {
     /// Helper lookup to get the name of each node type
     constexpr const char *ast_node_type_to_string(AST_Node_Type ast_node_type) noexcept {
-      constexpr const char *const ast_node_types[] = {"Id", "Fun_Call", "Unused_Return_Fun_Call", "Arg_List", "Equation", "Var_Decl", "Assign_Decl", "Array_Call", "Dot_Access", "Lambda", "Block", "Scopeless_Block", "Def", "While", "If", "For", "Ranged_For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range", "Inline_Range", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Noop", "Class", "Binary", "Arg", "Global_Decl", "Constant", "Compiled", "Const_Var_Decl", "Const_Assign_Decl", "Using", "Namespace_Block"};
+      constexpr const char *const ast_node_types[] = {"Id", "Fun_Call", "Unused_Return_Fun_Call", "Arg_List", "Equation", "Var_Decl", "Assign_Decl", "Array_Call", "Dot_Access", "Lambda", "Block", "Scopeless_Block", "Def", "While", "If", "For", "Ranged_For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range", "Inline_Range", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Noop", "Class", "Binary", "Arg", "Global_Decl", "Constant", "Compiled", "Const_Var_Decl", "Const_Assign_Decl", "Using", "Enum", "Namespace_Block"};
 
       return ast_node_types[static_cast<int>(ast_node_type)];
     }

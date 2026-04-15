@@ -2106,6 +2106,97 @@ namespace chaiscript {
         return false;
       }
 
+      bool Enum(const bool t_allowed) {
+        Depth_Counter dc{this};
+        bool retval = false;
+
+        const auto prev_stack_top = m_match_stack.size();
+
+        if (Keyword("enum")) {
+          if (!Keyword("class") && !Keyword("struct")) {
+            throw exception::eval_error("Expected 'class' or 'struct' after 'enum' (only 'enum class'/'enum struct' is supported)",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
+          }
+
+          if (!t_allowed) {
+            throw exception::eval_error("Enum definitions only allowed at top scope",
+                                        File_Position(m_position.line, m_position.col),
+                                        *m_filename);
+          }
+
+          retval = true;
+
+          if (!Id(true)) {
+            throw exception::eval_error("Missing enum class name in definition", File_Position(m_position.line, m_position.col), *m_filename);
+          }
+
+          std::string underlying_type = "int";
+          if (Char(':')) {
+            if (!Id(false)) {
+              throw exception::eval_error("Expected underlying type after ':'",
+                                          File_Position(m_position.line, m_position.col),
+                                          *m_filename);
+            }
+            underlying_type = m_match_stack.back()->text;
+            m_match_stack.pop_back();
+          }
+
+          m_match_stack.push_back(
+              make_node<eval::Constant_AST_Node<Tracer>>(underlying_type, m_position.line, m_position.col, const_var(underlying_type)));
+
+          if (!Char('{')) {
+            throw exception::eval_error("Expected '{' after enum class declaration", File_Position(m_position.line, m_position.col), *m_filename);
+          }
+
+          int next_value = 0;
+
+          while (Eol()) {
+          }
+
+          if (!Char('}')) {
+            do {
+              while (Eol()) {
+              }
+
+              if (!Id(true)) {
+                throw exception::eval_error("Expected enum value name", File_Position(m_position.line, m_position.col), *m_filename);
+              }
+
+              if (Symbol("=")) {
+                if (!Num()) {
+                  throw exception::eval_error("Expected integer after '=' in enum definition",
+                                              File_Position(m_position.line, m_position.col),
+                                              *m_filename);
+                }
+                next_value = static_cast<int>(std::stoi(m_match_stack.back()->text));
+                m_match_stack.pop_back();
+              }
+
+              m_match_stack.push_back(
+                  make_node<eval::Constant_AST_Node<Tracer>>(std::to_string(next_value), m_position.line, m_position.col, const_var(next_value)));
+              ++next_value;
+
+              while (Eol()) {
+              }
+            } while (Char(',') && !Char('}'));
+
+            while (Eol()) {
+            }
+
+            if (!Char('}')) {
+              throw exception::eval_error("Expected '}' to close enum class definition",
+                                          File_Position(m_position.line, m_position.col),
+                                          *m_filename);
+            }
+          }
+
+          build_match<eval::Enum_AST_Node<Tracer>>(prev_stack_top);
+        }
+
+        return retval;
+      }
+
       /// Reads a while block from input
       bool While() {
         Depth_Counter dc{this};
@@ -2851,7 +2942,7 @@ namespace chaiscript {
 
         while (has_more) {
           const auto start = m_position;
-          if (Def() || Try() || If() || While() || Namespace_Block() || Class(t_class_allowed) || Using(t_class_allowed) || For() || Switch()) {
+          if (Def() || Try() || If() || While() || Namespace_Block() || Class(t_class_allowed) || Using(t_class_allowed) || Enum(t_class_allowed) || For() || Switch()) {
             if (!saw_eol) {
               throw exception::eval_error("Two function definitions missing line separator",
                                           File_Position(start.line, start.col),

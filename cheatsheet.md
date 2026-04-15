@@ -665,6 +665,124 @@ copy.width = 99
 print(original.width)  // still 10
 ```
 
+## Enums
+
+ChaiScript supports strongly-typed enums using `enum class` (or equivalently `enum struct`),
+matching C++ scoped-enum semantics. Values are accessed via `::` syntax and are type-safe —
+a plain integer cannot be passed where an enum type is expected.
+
+### Basic Definition
+
+```
+enum class Color { Red, Green, Blue }
+```
+
+Values are auto-numbered starting from 0. Access them with `Color::Red`, `Color::Green`, etc.
+
+### Explicit Values
+
+```
+enum class Priority { Low = 10, Medium = 20, High = 30 }
+```
+
+Auto-numbering continues from the last explicit value:
+
+```
+enum class Status { Pending, Active = 5, Done }
+// Pending = 0, Active = 5, Done = 6
+```
+
+### Specifying an Underlying Type
+
+By default the underlying type is `int`. Use `: type` to choose a different numeric type:
+
+```
+enum class Flags : char { Read = 1, Write = 2, Execute = 4 }
+```
+
+The underlying type must be a numeric type registered in ChaiScript. `string` and other
+non-numeric types cannot be used. The available underlying types are:
+
+| Type | Description |
+|------|-------------|
+| `int` | (default) signed integer |
+| `unsigned_int` | unsigned integer |
+| `long` | signed long |
+| `unsigned_long` | unsigned long |
+| `long_long` | signed long long |
+| `unsigned_long_long` | unsigned long long |
+| `char` | character (8-bit) |
+| `wchar_t` | wide character |
+| `char16_t` | 16-bit character |
+| `char32_t` | 32-bit character |
+| `float` | single-precision float |
+| `double` | double-precision float |
+| `long_double` | extended-precision float |
+| `size_t` | unsigned size type |
+| `int8_t` | signed 8-bit |
+| `int16_t` | signed 16-bit |
+| `int32_t` | signed 32-bit |
+| `int64_t` | signed 64-bit |
+| `uint8_t` | unsigned 8-bit |
+| `uint16_t` | unsigned 16-bit |
+| `uint32_t` | unsigned 32-bit |
+
+### `enum struct` Syntax
+
+`enum struct` is accepted as a synonym for `enum class`, just like in C++:
+
+```
+enum struct Direction { North, East, South, West }
+```
+
+### Constructing from a Value
+
+Each enum type has a constructor that accepts the underlying type. It validates that the
+value matches one of the defined enumerators:
+
+```
+auto c = Color::Color(1)       // creates Color::Green
+Color::Color(52)               // throws: invalid value
+```
+
+### `to_underlying`
+
+Convert an enum value back to its underlying numeric type:
+
+```
+Color::Red.to_underlying()     // 0
+Priority::High.to_underlying() // 30
+```
+
+### Comparison
+
+`==` and `!=` are defined for values of the same enum type:
+
+```
+assert_true(Color::Red == Color::Red)
+assert_true(Color::Red != Color::Green)
+```
+
+### Type-Safe Dispatch
+
+Functions declared with an enum parameter type reject plain integers:
+
+```
+def handle(Color c) { /* ... */ }
+handle(Color::Red)    // ok
+handle(42)            // throws: dispatch error
+```
+
+### Using with `switch`
+
+```
+switch(Color::Green) {
+  case (Color::Red) { print("red"); break }
+  case (Color::Green) { print("green"); break }
+  case (Color::Blue) { print("blue"); break }
+}
+```
+
 ## Dynamic Objects
 
 All ChaiScript defined types and generic Dynamic_Object support dynamic parameters
