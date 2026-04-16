@@ -27,8 +27,8 @@
 #include "language/chaiscript_parser.hpp"
 
 ChaiScript_Basic chai(
-          chaiscript::Std_Lib::library(),
-          std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer_Default>>());
+          chaiscript::Std_Lib::library<std::string>(),
+          std::make_unique<parser::ChaiScript_Parser<eval::Noop_Tracer, optimizer::Optimizer_Default, std::string>>());
 
 */
 

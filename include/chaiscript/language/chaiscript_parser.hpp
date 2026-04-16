@@ -17,6 +17,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "../dispatchkit/boxed_value.hpp"
@@ -101,9 +102,31 @@ namespace chaiscript {
           return Char_Parser_Helper<std::true_type>::u8str_from_ll(val);
         }
       };
+      template<typename S>
+      int stoi_for_string(const S &s, std::size_t *pos, int base) {
+        if constexpr (std::is_same_v<S, std::string>) {
+          return std::stoi(s, pos, base);
+        } else if constexpr (std::is_same_v<S, std::wstring>) {
+          return std::stoi(std::wstring(s.begin(), s.end()), pos, base);
+        } else {
+          return std::stoi(std::string(s.begin(), s.end()), pos, base);
+        }
+      }
+
+      template<typename S>
+      long long stoll_for_string(const S &s, std::size_t *pos, int base) {
+        if constexpr (std::is_same_v<S, std::string>) {
+          return std::stoll(s, pos, base);
+        } else if constexpr (std::is_same_v<S, std::wstring>) {
+          return std::stoll(std::wstring(s.begin(), s.end()), pos, base);
+        } else {
+          return std::stoll(std::string(s.begin(), s.end()), pos, base);
+        }
+      }
+
     } // namespace detail
 
-    template<typename Tracer, typename Optimizer, std::size_t Parse_Depth = 512>
+    template<typename Tracer, typename Optimizer, typename StringType, std::size_t Parse_Depth = 512>
     class ChaiScript_Parser final : public ChaiScript_Parser_Base {
       void *get_tracer_ptr() noexcept override { return &m_tracer; }
 
@@ -812,6 +835,17 @@ namespace chaiscript {
 #endif
       }
 
+      template<typename S>
+      static std::string to_narrow(const S &s) {
+        if constexpr (std::is_same_v<S, std::string>) {
+          return s;
+        } else if constexpr (std::is_convertible_v<S, std::string_view>) {
+          return std::string(s);
+        } else {
+          return std::string(s.begin(), s.end());
+        }
+      }
+
       template<typename T, typename... Param>
       std::unique_ptr<eval::AST_Node_Impl<Tracer>>
       make_node(std::string_view t_match, const int t_prev_line, const int t_prev_col, Param &&...param) {
@@ -1100,8 +1134,8 @@ namespace chaiscript {
 
         void process_hex() {
           if (!hex_matches.empty()) {
-            auto val = stoll(hex_matches, nullptr, 16);
-            match.push_back(char_type(val));
+            const auto val = detail::stoll_for_string(hex_matches, nullptr, 16);
+            match.push_back(static_cast<char_type>(val));
           }
           hex_matches.clear();
           is_escaped = false;
@@ -1110,8 +1144,8 @@ namespace chaiscript {
 
         void process_octal() {
           if (!octal_matches.empty()) {
-            auto val = stoll(octal_matches, nullptr, 8);
-            match.push_back(char_type(val));
+            const auto val = detail::stoll_for_string(octal_matches, nullptr, 8);
+            match.push_back(static_cast<char_type>(val));
           }
           octal_matches.clear();
           is_escaped = false;
@@ -1119,14 +1153,13 @@ namespace chaiscript {
         }
 
         void process_unicode() {
-          const auto ch = static_cast<uint32_t>(std::stoi(hex_matches, nullptr, 16));
+          const auto ch = static_cast<uint32_t>(detail::stoi_for_string<string_type>(hex_matches, nullptr, 16));
           const auto match_size = hex_matches.size();
           hex_matches.clear();
           is_escaped = false;
           const auto u_size = unicode_size;
           unicode_size = 0;
 
-          char buf[4];
           if (u_size != match_size) {
             throw exception::eval_error("Incomplete unicode escape sequence");
           }
@@ -1134,26 +1167,44 @@ namespace chaiscript {
             throw exception::eval_error("Invalid 16 bit universal character");
           }
 
-          if (ch < 0x80) {
-            match += static_cast<char>(ch);
-          } else if (ch < 0x800) {
-            buf[0] = static_cast<char>(0xC0 | (ch >> 6));
-            buf[1] = static_cast<char>(0x80 | (ch & 0x3F));
-            match.append(buf, 2);
-          } else if (ch < 0x10000) {
-            buf[0] = static_cast<char>(0xE0 | (ch >> 12));
-            buf[1] = static_cast<char>(0x80 | ((ch >> 6) & 0x3F));
-            buf[2] = static_cast<char>(0x80 | (ch & 0x3F));
-            match.append(buf, 3);
-          } else if (ch < 0x200000) {
-            buf[0] = static_cast<char>(0xF0 | (ch >> 18));
-            buf[1] = static_cast<char>(0x80 | ((ch >> 12) & 0x3F));
-            buf[2] = static_cast<char>(0x80 | ((ch >> 6) & 0x3F));
-            buf[3] = static_cast<char>(0x80 | (ch & 0x3F));
-            match.append(buf, 4);
+          if constexpr (sizeof(char_type) >= 4) {
+            if (ch < 0x200000) {
+              match.push_back(static_cast<char_type>(ch));
+            } else {
+              throw exception::eval_error("Invalid 32 bit universal character");
+            }
+          } else if constexpr (sizeof(char_type) >= 2) {
+            if (ch < 0x10000) {
+              match.push_back(static_cast<char_type>(ch));
+            } else if (ch < 0x110000) {
+              const auto adjusted = ch - 0x10000;
+              match.push_back(static_cast<char_type>(0xD800 + (adjusted >> 10)));
+              match.push_back(static_cast<char_type>(0xDC00 + (adjusted & 0x3FF)));
+            } else {
+              throw exception::eval_error("Invalid 32 bit universal character");
+            }
           } else {
-            // this must be an invalid escape sequence?
-            throw exception::eval_error("Invalid 32 bit universal character");
+            char buf[4];
+            if (ch < 0x80) {
+              match += static_cast<char>(ch);
+            } else if (ch < 0x800) {
+              buf[0] = static_cast<char>(0xC0 | (ch >> 6));
+              buf[1] = static_cast<char>(0x80 | (ch & 0x3F));
+              match.append(buf, 2);
+            } else if (ch < 0x10000) {
+              buf[0] = static_cast<char>(0xE0 | (ch >> 12));
+              buf[1] = static_cast<char>(0x80 | ((ch >> 6) & 0x3F));
+              buf[2] = static_cast<char>(0x80 | (ch & 0x3F));
+              match.append(buf, 3);
+            } else if (ch < 0x200000) {
+              buf[0] = static_cast<char>(0xF0 | (ch >> 18));
+              buf[1] = static_cast<char>(0x80 | ((ch >> 12) & 0x3F));
+              buf[2] = static_cast<char>(0x80 | ((ch >> 6) & 0x3F));
+              buf[3] = static_cast<char>(0x80 | (ch & 0x3F));
+              match.append(buf, 4);
+            } else {
+              throw exception::eval_error("Invalid 32 bit universal character");
+            }
           }
         }
 
@@ -1280,11 +1331,11 @@ namespace chaiscript {
         const auto start = m_position;
 
         if (Quoted_String_()) {
-          std::string match;
+          StringType match;
           const auto prev_stack_top = m_match_stack.size();
 
           bool is_interpolated = [&]() -> bool {
-            Char_Parser<std::string> cparser(match, true);
+            Char_Parser<StringType> cparser(match, true);
 
             auto s = start + 1, end = m_position - 1;
 
@@ -1293,7 +1344,7 @@ namespace chaiscript {
                 if (*s == '{') {
                   // We've found an interpolation point
 
-                  m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(match)));
+                  m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(to_narrow(match), start.line, start.col, const_var(match)));
 
                   if (cparser.is_interpolated) {
                     // If we've seen previous interpolation, add on instead of making a new one
@@ -1351,7 +1402,7 @@ namespace chaiscript {
             return cparser.is_interpolated;
           }();
 
-          m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(match)));
+          m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(to_narrow(match), start.line, start.col, const_var(match)));
 
           if (is_interpolated) {
             build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, "+");
@@ -1439,7 +1490,7 @@ namespace chaiscript {
           close_seq += '"';
 
           // Extract raw content up to closing sequence
-          std::string match;
+          StringType match;
           auto end = m_position; // m_position is already past the closing sequence
 
           // Content is from s up to (end - close_seq.size())
@@ -1456,11 +1507,11 @@ namespace chaiscript {
                 break;
               }
             }
-            match.push_back(*s);
+            match.push_back(static_cast<typename StringType::value_type>(*s));
             ++s;
           }
 
-          m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(match)));
+          m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(to_narrow(match), start.line, start.col, const_var(match)));
           return true;
         }
         return false;
@@ -1501,11 +1552,11 @@ namespace chaiscript {
 
         const auto start = m_position;
         if (Single_Quoted_String_()) {
-          std::string match;
+          StringType match;
 
           {
             // scope for cparser destructor
-            Char_Parser<std::string> cparser(match, false);
+            Char_Parser<StringType> cparser(match, false);
 
             for (auto s = start + 1, end = m_position - 1; s != end; ++s) {
               cparser.parse(*s, start.line, start.col, *m_filename);
@@ -1518,7 +1569,8 @@ namespace chaiscript {
                                         *m_filename);
           }
 
-          m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(match, start.line, start.col, const_var(char(match.at(0)))));
+          m_match_stack.push_back(make_node<eval::Constant_AST_Node<Tracer>>(to_narrow(match), start.line, start.col,
+              const_var(static_cast<typename StringType::value_type>(match.at(0)))));
           return true;
         } else {
           return false;
@@ -2971,7 +3023,7 @@ namespace chaiscript {
       }
 
       AST_NodePtr parse(const std::string &t_input, const std::string &t_fname) override {
-        ChaiScript_Parser<Tracer, Optimizer> parser(m_tracer, m_optimizer);
+        ChaiScript_Parser<Tracer, Optimizer, StringType> parser(m_tracer, m_optimizer);
         return parser.parse_internal(t_input, t_fname);
       }
 

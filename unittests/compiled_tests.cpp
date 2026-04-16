@@ -1017,9 +1017,9 @@ struct Count_Tracer {
 };
 
 TEST_CASE("Test count tracer") {
-  using Parser_Type = chaiscript::parser::ChaiScript_Parser<chaiscript::eval::Tracer<Count_Tracer>, chaiscript::optimizer::Optimizer_Default>;
+  using Parser_Type = chaiscript::parser::ChaiScript_Parser<chaiscript::eval::Tracer<Count_Tracer>, chaiscript::optimizer::Optimizer_Default, std::string>;
 
-  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library(), std::make_unique<Parser_Type>());
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library<std::string>(), std::make_unique<Parser_Type>());
 
   Parser_Type &parser = dynamic_cast<Parser_Type &>(chai.get_parser());
 
@@ -1386,7 +1386,7 @@ TEST_CASE("Test if non copyable/movable types can be registered") {
 // Tests through ChaiScript_Basic (library options passed explicitly to Std_Lib::library)
 
 TEST_CASE("ChaiScript_Basic No_Stdlib option disables all standard library functions") {
-  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Library_Options::No_Stdlib}),
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library<std::string>({chaiscript::Library_Options::No_Stdlib}),
                                     create_chaiscript_parser(),
                                     {},
                                     {},
@@ -1400,7 +1400,7 @@ TEST_CASE("ChaiScript_Basic No_Stdlib option disables all standard library funct
 }
 
 TEST_CASE("ChaiScript_Basic No_IO option uses null handler by default") {
-  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Library_Options::No_IO}),
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library<std::string>({chaiscript::Library_Options::No_IO}),
                                     create_chaiscript_parser(),
                                     {},
                                     {},
@@ -1422,7 +1422,7 @@ TEST_CASE("ChaiScript_Basic No_IO option uses null handler by default") {
 }
 
 TEST_CASE("ChaiScript_Basic No_Prelude option disables prelude functions") {
-  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Library_Options::No_Prelude}),
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library<std::string>({chaiscript::Library_Options::No_Prelude}),
                                     create_chaiscript_parser(),
                                     {},
                                     {},
@@ -1435,7 +1435,7 @@ TEST_CASE("ChaiScript_Basic No_Prelude option disables prelude functions") {
 }
 
 TEST_CASE("ChaiScript_Basic No_JSON option disables JSON support") {
-  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library({chaiscript::Library_Options::No_JSON}),
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library<std::string>({chaiscript::Library_Options::No_JSON}),
                                     create_chaiscript_parser(),
                                     {},
                                     {},
@@ -1447,7 +1447,7 @@ TEST_CASE("ChaiScript_Basic No_JSON option disables JSON support") {
 }
 
 TEST_CASE("ChaiScript_Basic default library has all functions") {
-  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library(),
+  chaiscript::ChaiScript_Basic chai(chaiscript::Std_Lib::library<std::string>(),
                                     create_chaiscript_parser(),
                                     {},
                                     {},

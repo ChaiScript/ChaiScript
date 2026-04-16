@@ -448,6 +448,10 @@ if(BUILD_TESTING)
     target_link_libraries(threading_config_test ${LIBS})
     add_test(NAME Threading_Config_Test COMMAND threading_config_test)
 
+    add_executable(string_type_param_test unittests/string_type_param_test.cpp)
+    target_link_libraries(string_type_param_test ${LIBS})
+    add_test(NAME String_Type_Param_Test COMMAND string_type_param_test)
+
     install(TARGETS test_module RUNTIME DESTINATION bin LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}/chaiscript")
   endif()
 endif()
