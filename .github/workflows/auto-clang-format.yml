@@ -14,7 +14,7 @@ jobs:
     - uses: DoozyX/clang-format-lint-action@v0.20
       with:
         source: '.'
-        exclude: './third_party ./external'
+        exclude: './third_party ./external ./unittests/catch.hpp'
         extensions: 'h,cpp,hpp'
         clangFormatVersion: 19
         inplace: True
