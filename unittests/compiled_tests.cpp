@@ -1806,6 +1806,35 @@ TEST_CASE("push_back on script vector with vector_conversion") {
         == "hello,world");
 }
 
+TEST_CASE("vector of vectors conversion (issue #374)") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  auto m = std::make_shared<chaiscript::Module>();
+  chaiscript::bootstrap::standard_library::vector_type<std::vector<double>>("VectorDouble", *m);
+  chaiscript::bootstrap::standard_library::vector_type<std::vector<std::vector<double>>>("VectorVectorDouble", *m);
+  m->add(chaiscript::vector_conversion<std::vector<double>>());
+  m->add(chaiscript::vector_conversion<std::vector<std::vector<double>>>());
+  chai.add(m);
+
+  chai.add(chaiscript::fun([](const std::vector<std::vector<double>> &v) -> double {
+    double sum = 0;
+    for (const auto &inner : v) {
+      for (const auto d : inner) {
+        sum += d;
+      }
+    }
+    return sum;
+  }), "sum_nested");
+
+  CHECK(chai.eval<double>("sum_nested([[1.0, 2.0], [3.0, 4.0]])") == Approx(10.0));
+
+  CHECK(chai.eval<bool>(
+    "auto v = VectorVectorDouble();"
+    "v = [[1.0, 2.0], [3.0, 4.0]];"
+    "v.size() == 2"
+  ));
+}
+
 // Regression test for issue #607: AST_Node_Trace must be a complete type
 // when used in eval_error's std::vector<AST_Node_Trace> call_stack member.
 // This failed to compile with C++20 on clang/libc++ when AST_Node_Trace
