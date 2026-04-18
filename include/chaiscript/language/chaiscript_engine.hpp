@@ -142,8 +142,9 @@ namespace chaiscript {
                    "set_print_handler");
 
       m_engine.add(fun([this](const std::function<std::string(const std::string &)> &t_reader) {
-        m_file_reader = t_reader;
-      }), "set_file_reader");
+                     m_file_reader = t_reader;
+                   }),
+                   "set_file_reader");
 
       m_engine.add(fun([this]() { m_engine.dump_system(); }), "dump_system");
       m_engine.add(fun([this](const Boxed_Value &t_bv) { m_engine.dump_object(t_bv); }), "dump_object");
