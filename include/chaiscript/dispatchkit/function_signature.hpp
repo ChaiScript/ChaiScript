@@ -64,7 +64,7 @@ namespace chaiscript::dispatch::detail {
   Function_Signature(Ret (Class::*f)(Param...) volatile &) -> Function_Signature<Ret, Function_Params<volatile Class &, Param...>, false, true>;
 
   template<typename Ret, typename Class, typename... Param>
-  Function_Signature(Ret (Class::*f)(Param...) volatile &noexcept)
+  Function_Signature(Ret (Class::*f)(Param...) volatile & noexcept)
       -> Function_Signature<Ret, Function_Params<volatile Class &, Param...>, true, true>;
 
   template<typename Ret, typename Class, typename... Param>
@@ -72,20 +72,20 @@ namespace chaiscript::dispatch::detail {
       -> Function_Signature<Ret, Function_Params<volatile const Class &, Param...>, false, true>;
 
   template<typename Ret, typename Class, typename... Param>
-  Function_Signature(Ret (Class::*f)(Param...) volatile const &noexcept)
+  Function_Signature(Ret (Class::*f)(Param...) volatile const & noexcept)
       -> Function_Signature<Ret, Function_Params<volatile const Class &, Param...>, true, true>;
 
   template<typename Ret, typename Class, typename... Param>
   Function_Signature(Ret (Class::*f)(Param...) &) -> Function_Signature<Ret, Function_Params<Class &, Param...>, false, true>;
 
   template<typename Ret, typename Class, typename... Param>
-  Function_Signature(Ret (Class::*f)(Param...) &noexcept) -> Function_Signature<Ret, Function_Params<Class &, Param...>, true, true>;
+  Function_Signature(Ret (Class::*f)(Param...) & noexcept) -> Function_Signature<Ret, Function_Params<Class &, Param...>, true, true>;
 
   template<typename Ret, typename Class, typename... Param>
   Function_Signature(Ret (Class::*f)(Param...) const &) -> Function_Signature<Ret, Function_Params<const Class &, Param...>, false, true>;
 
   template<typename Ret, typename Class, typename... Param>
-  Function_Signature(Ret (Class::*f)(Param...) const &noexcept) -> Function_Signature<Ret, Function_Params<const Class &, Param...>, true, true>;
+  Function_Signature(Ret (Class::*f)(Param...) const & noexcept) -> Function_Signature<Ret, Function_Params<const Class &, Param...>, true, true>;
 
   // && reference specifier
 
@@ -93,7 +93,7 @@ namespace chaiscript::dispatch::detail {
   Function_Signature(Ret (Class::*f)(Param...) volatile &&) -> Function_Signature<Ret, Function_Params<volatile Class &&, Param...>, false, true>;
 
   template<typename Ret, typename Class, typename... Param>
-  Function_Signature(Ret (Class::*f)(Param...) volatile &&noexcept)
+  Function_Signature(Ret (Class::*f)(Param...) volatile && noexcept)
       -> Function_Signature<Ret, Function_Params<volatile Class &&, Param...>, true, true>;
 
   template<typename Ret, typename Class, typename... Param>
@@ -101,20 +101,20 @@ namespace chaiscript::dispatch::detail {
       -> Function_Signature<Ret, Function_Params<volatile const Class &&, Param...>, false, true>;
 
   template<typename Ret, typename Class, typename... Param>
-  Function_Signature(Ret (Class::*f)(Param...) volatile const &&noexcept)
+  Function_Signature(Ret (Class::*f)(Param...) volatile const && noexcept)
       -> Function_Signature<Ret, Function_Params<volatile const Class &&, Param...>, true, true>;
 
   template<typename Ret, typename Class, typename... Param>
   Function_Signature(Ret (Class::*f)(Param...) &&) -> Function_Signature<Ret, Function_Params<Class &&, Param...>, false, true>;
 
   template<typename Ret, typename Class, typename... Param>
-  Function_Signature(Ret (Class::*f)(Param...) &&noexcept) -> Function_Signature<Ret, Function_Params<Class &&, Param...>, true, true>;
+  Function_Signature(Ret (Class::*f)(Param...) && noexcept) -> Function_Signature<Ret, Function_Params<Class &&, Param...>, true, true>;
 
   template<typename Ret, typename Class, typename... Param>
   Function_Signature(Ret (Class::*f)(Param...) const &&) -> Function_Signature<Ret, Function_Params<const Class &&, Param...>, false, true>;
 
   template<typename Ret, typename Class, typename... Param>
-  Function_Signature(Ret (Class::*f)(Param...) const &&noexcept)
+  Function_Signature(Ret (Class::*f)(Param...) const && noexcept)
       -> Function_Signature<Ret, Function_Params<const Class &&, Param...>, true, true>;
 
   template<typename Ret, typename Class>

@@ -10,13 +10,13 @@
 #ifndef CHAISCRIPT_EVAL_HPP_
 #define CHAISCRIPT_EVAL_HPP_
 
+#include <algorithm>
 #include <exception>
 #include <functional>
 #include <limits>
 #include <map>
 #include <memory>
 #include <ostream>
-#include <algorithm>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -389,11 +389,11 @@ namespace chaiscript {
 
       // static and public so we can use this to process Switch_AST_Node case equality
       static Boxed_Value do_oper(const chaiscript::detail::Dispatch_State &t_ss,
-                          Operators::Opers t_oper,
-                          const std::string &t_oper_string,
-                          const Boxed_Value &t_lhs,
-                          const Boxed_Value &t_rhs,
-                          std::atomic_uint_fast32_t &t_loc) {
+                                 Operators::Opers t_oper,
+                                 const std::string &t_oper_string,
+                                 const Boxed_Value &t_lhs,
+                                 const Boxed_Value &t_rhs,
+                                 std::atomic_uint_fast32_t &t_loc) {
         try {
           if (t_oper != Operators::Opers::invalid && t_lhs.get_type_info().is_arithmetic() && t_rhs.get_type_info().is_arithmetic()) {
             // If it's an arithmetic operation we want to short circuit dispatch
@@ -1271,8 +1271,7 @@ namespace chaiscript {
         const auto process_statement = [&](const AST_Node_Impl<T> &stmt) {
           if (stmt.identifier == AST_Node_Type::Def) {
             const auto &def_node = static_cast<const Def_AST_Node<T> &>(stmt);
-            target_ns[def_node.children[0]->text] =
-                Boxed_Value(Def_AST_Node<T>::make_proxy_function(def_node, t_ss));
+            target_ns[def_node.children[0]->text] = Boxed_Value(Def_AST_Node<T>::make_proxy_function(def_node, t_ss));
           } else if (stmt.identifier == AST_Node_Type::Assign_Decl
                      || stmt.identifier == AST_Node_Type::Const_Assign_Decl) {
             const auto &var_name = stmt.children[0]->text;

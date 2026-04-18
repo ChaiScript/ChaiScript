@@ -11,14 +11,14 @@
 #ifndef CHAISCRIPT_EMSCRIPTEN_EVAL_HPP_
 #define CHAISCRIPT_EMSCRIPTEN_EVAL_HPP_
 
-#include <string>
 #include <chaiscript/chaiscript.hpp>
+#include <string>
 
 namespace detail {
-inline chaiscript::ChaiScript &get_chai_instance() {
-  static chaiscript::ChaiScript chai;
-  return chai;
-}
+  inline chaiscript::ChaiScript &get_chai_instance() {
+    static chaiscript::ChaiScript chai;
+    return chai;
+  }
 } // namespace detail
 
 inline void chaiscript_eval(const std::string &input) {

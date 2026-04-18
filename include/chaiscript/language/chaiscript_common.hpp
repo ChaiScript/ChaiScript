@@ -593,13 +593,13 @@ namespace chaiscript {
 
   } // namespace exception
 
-  //static
+  // static
   bool AST_Node::get_bool_condition(const Boxed_Value &t_bv, const chaiscript::detail::Dispatch_State &t_ss) {
-      try {
-        return t_ss->boxed_cast<bool>(t_bv);
-      } catch (const exception::bad_boxed_cast &) {
-        throw exception::eval_error("Condition not boolean");
-      }
+    try {
+      return t_ss->boxed_cast<bool>(t_bv);
+    } catch (const exception::bad_boxed_cast &) {
+      throw exception::eval_error("Condition not boolean");
+    }
   }
 
   namespace parser {

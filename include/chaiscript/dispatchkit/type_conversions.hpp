@@ -542,9 +542,8 @@ namespace chaiscript {
           = detail::Cast_Helper<const std::pair<Boxed_Value, Boxed_Value> &>::cast(t_bv, nullptr);
 
       auto pair = std::make_pair(
-        detail::Cast_Helper<Left>::cast(from_pair.first, nullptr),
-        detail::Cast_Helper<Right>::cast(from_pair.second, nullptr)
-      );
+          detail::Cast_Helper<Left>::cast(from_pair.first, nullptr),
+          detail::Cast_Helper<Right>::cast(from_pair.second, nullptr));
 
       return Boxed_Value(std::move(pair));
     };

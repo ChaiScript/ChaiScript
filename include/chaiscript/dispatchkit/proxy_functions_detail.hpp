@@ -32,9 +32,9 @@ namespace chaiscript {
 namespace chaiscript {
   namespace exception {
     /**
- * Exception thrown when there is a mismatch in number of
- * parameters during Proxy_Function execution
- */
+     * Exception thrown when there is a mismatch in number of
+     * parameters during Proxy_Function execution
+     */
     struct arity_error : std::range_error {
       arity_error(int t_got, int t_expected)
           : std::range_error("Function dispatch arity mismatch")
@@ -54,9 +54,9 @@ namespace chaiscript {
   namespace dispatch {
     namespace detail {
       /**
- * Used by Proxy_Function_Impl to return a list of all param types
- * it contains.
- */
+       * Used by Proxy_Function_Impl to return a list of all param types
+       * it contains.
+       */
       template<typename Ret, typename... Params>
       std::vector<Type_Info> build_param_type_list(Ret (*)(Params...)) {
         /// \note somehow this is responsible for a large part of the code generation
@@ -64,10 +64,10 @@ namespace chaiscript {
       }
 
       /**
- * Used by Proxy_Function_Impl to determine if it is equivalent to another
- * Proxy_Function_Impl object. This function is primarily used to prevent
- * registration of two functions with the exact same signatures
- */
+       * Used by Proxy_Function_Impl to determine if it is equivalent to another
+       * Proxy_Function_Impl object. This function is primarily used to prevent
+       * registration of two functions with the exact same signatures
+       */
       template<typename Ret, typename... Params>
       bool compare_types_cast(Ret (*)(Params...), const chaiscript::Function_Params &params, const Type_Conversions_State &t_conversions) noexcept {
         try {
