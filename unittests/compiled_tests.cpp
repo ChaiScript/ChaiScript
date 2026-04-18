@@ -1817,22 +1817,22 @@ TEST_CASE("vector of vectors conversion (issue #374)") {
   chai.add(m);
 
   chai.add(chaiscript::fun([](const std::vector<std::vector<double>> &v) -> double {
-    double sum = 0;
-    for (const auto &inner : v) {
-      for (const auto d : inner) {
-        sum += d;
-      }
-    }
-    return sum;
-  }), "sum_nested");
+             double sum = 0;
+             for (const auto &inner : v) {
+               for (const auto d : inner) {
+                 sum += d;
+               }
+             }
+             return sum;
+           }),
+           "sum_nested");
 
   CHECK(chai.eval<double>("sum_nested([[1.0, 2.0], [3.0, 4.0]])") == Approx(10.0));
 
   CHECK(chai.eval<bool>(
-    "auto v = VectorVectorDouble();"
-    "v = [[1.0, 2.0], [3.0, 4.0]];"
-    "v.size() == 2"
-  ));
+      "auto v = VectorVectorDouble();"
+      "v = [[1.0, 2.0], [3.0, 4.0]];"
+      "v.size() == 2"));
 }
 
 // Regression test for issue #607: AST_Node_Trace must be a complete type
