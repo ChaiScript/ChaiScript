@@ -440,6 +440,10 @@ if(BUILD_TESTING)
     target_link_libraries(emscripten_eval_test ${LIBS})
     add_test(NAME Emscripten_Eval_Test COMMAND emscripten_eval_test)
 
+    add_executable(emscripten_exception_test unittests/emscripten_exception_test.cpp)
+    target_link_libraries(emscripten_exception_test ${LIBS})
+    add_test(NAME Emscripten_Exception_Test COMMAND emscripten_exception_test)
+
     add_executable(threading_config_test unittests/threading_config_test.cpp)
     target_link_libraries(threading_config_test ${LIBS})
     add_test(NAME Threading_Config_Test COMMAND threading_config_test)

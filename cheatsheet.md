@@ -665,6 +665,124 @@ copy.width = 99
 print(original.width)  // still 10
 ```
 
+## Enums
+
+ChaiScript supports strongly-typed enums using `enum class` (or equivalently `enum struct`),
+matching C++ scoped-enum semantics. Values are accessed via `::` syntax and are type-safe —
+a plain integer cannot be passed where an enum type is expected.
+
+### Basic Definition
+
+```
+enum class Color { Red, Green, Blue }
+```
+
+Values are auto-numbered starting from 0. Access them with `Color::Red`, `Color::Green`, etc.
+
+### Explicit Values
+
+```
+enum class Priority { Low = 10, Medium = 20, High = 30 }
+```
+
+Auto-numbering continues from the last explicit value:
+
+```
+enum class Status { Pending, Active = 5, Done }
+// Pending = 0, Active = 5, Done = 6
+```
+
+### Specifying an Underlying Type
+
+By default the underlying type is `int`. Use `: type` to choose a different numeric type:
+
+```
+enum class Flags : char { Read = 1, Write = 2, Execute = 4 }
+```
+
+The underlying type must be a numeric type registered in ChaiScript. `string` and other
+non-numeric types cannot be used. The available underlying types are:
+
+| Type | Description |
+|------|-------------|
+| `int` | (default) signed integer |
+| `unsigned_int` | unsigned integer |
+| `long` | signed long |
+| `unsigned_long` | unsigned long |
+| `long_long` | signed long long |
+| `unsigned_long_long` | unsigned long long |
+| `char` | character (8-bit) |
+| `wchar_t` | wide character |
+| `char16_t` | 16-bit character |
+| `char32_t` | 32-bit character |
+| `float` | single-precision float |
+| `double` | double-precision float |
+| `long_double` | extended-precision float |
+| `size_t` | unsigned size type |
+| `int8_t` | signed 8-bit |
+| `int16_t` | signed 16-bit |
+| `int32_t` | signed 32-bit |
+| `int64_t` | signed 64-bit |
+| `uint8_t` | unsigned 8-bit |
+| `uint16_t` | unsigned 16-bit |
+| `uint32_t` | unsigned 32-bit |
+
+### `enum struct` Syntax
+
+`enum struct` is accepted as a synonym for `enum class`, just like in C++:
+
+```
+enum struct Direction { North, East, South, West }
+```
+
+### Constructing from a Value
+
+Each enum type has a constructor that accepts the underlying type. It validates that the
+value matches one of the defined enumerators:
+
+```
+auto c = Color::Color(1)       // creates Color::Green
+Color::Color(52)               // throws: invalid value
+```
+
+### `to_underlying`
+
+Convert an enum value back to its underlying numeric type:
+
+```
+Color::Red.to_underlying()     // 0
+Priority::High.to_underlying() // 30
+```
+
+### Comparison
+
+`==` and `!=` are defined for values of the same enum type:
+
+```
+assert_true(Color::Red == Color::Red)
+assert_true(Color::Red != Color::Green)
+```
+
+### Type-Safe Dispatch
+
+Functions declared with an enum parameter type reject plain integers:
+
+```
+def handle(Color c) { /* ... */ }
+handle(Color::Red)    // ok
+handle(42)            // throws: dispatch error
+```
+
+### Using with `switch`
+
+```
+switch(Color::Green) {
+  case (Color::Red) { print("red"); break }
+  case (Color::Green) { print("green"); break }
+  case (Color::Blue) { print("blue"); break }
+}
+```
+
 ## Dynamic Objects
 
 All ChaiScript defined types and generic Dynamic_Object support dynamic parameters
@@ -709,6 +827,94 @@ class My_Class {
     this.x = 2; // this would fail with explicit set to true
   }
 };
+```
+
+## Strong Typedefs
+
+Strong typedefs create distinct types that are not interchangeable with their underlying type
+or with other typedefs of the same underlying type. They use `Dynamic_Object` internally and
+automatically expose operators that the underlying type supports.
+
+### Basic Usage
+
+```
+using Meters = int
+using Seconds = int
+
+var d = Meters(100)
+var t = Seconds(10)
+
+// d and t are distinct types — you cannot accidentally mix them
+// Meters + Seconds would require an explicit conversion
+```
+
+### Arithmetic and Comparison
+
+Operators from the underlying type are forwarded and remain strongly typed:
+
+```
+using Meters = int
+
+var a = Meters(10)
+var b = Meters(20)
+
+var c = a + b        // Meters(30) — result is still Meters
+var bigger = b > a   // true — comparisons return bool
+
+// Compound assignment operators work too
+a += b               // a is now Meters(30)
+```
+
+### String-Based Strong Typedefs
+
+Strong typedefs work with any type, not just numeric types:
+
+```
+using Name = string
+
+var n = Name("Alice")
+var greeting = Name("Hello, ") + Name("world")  // Name — string concatenation is forwarded
+```
+
+### Accessing the Underlying Value
+
+Use `to_underlying` to extract the wrapped value:
+
+```
+using Meters = int
+
+var d = Meters(42)
+var raw = to_underlying(d)  // 42, plain int
+```
+
+### Extending Strong Typedefs
+
+You can add custom operations to strong typedefs just like any other ChaiScript type:
+
+```
+using Meters = int
+using Seconds = int
+using MetersPerSecond = int
+
+def speed(Meters d, Seconds t) {
+  MetersPerSecond(to_underlying(d) / to_underlying(t))
+}
+
+var s = speed(Meters(100), Seconds(10))  // MetersPerSecond(10)
+```
+
+You can also overload operators between different strong typedefs:
+
+```
+using Meters = int
+using Feet = int
+
+def to_feet(Meters m) {
+  Feet((to_underlying(m) * 328) / 100)
+}
+
+var m = Meters(10)
+var f = to_feet(m)  // Feet(32)
 ```
 
 ## method_missing
@@ -913,5 +1119,51 @@ The print handler can also be set from within ChaiScript itself via `set_print_h
 set_print_handler(fun(s) { my_custom_log(s) })
 ```
 
+## Custom File Loading
+
+By default, ChaiScript reads files from the filesystem when `eval_file()` or `use()` is called.
+You can override this behavior on a per-instance basis by setting a custom file reader callback.
+This follows the same pattern as `set_print_handler` and enables use cases such as encrypted
+script files, in-memory virtual filesystems, or platform-specific file access (e.g., Android assets).
+
+```cpp
+chaiscript::ChaiScript chai;
+
+// Provide scripts from an in-memory map instead of the filesystem
+std::map<std::string, std::string> virtual_fs = {
+  {"init.chai", "var x = 42"},
+  {"utils.chai", "def add(a, b) { a + b }"}
+};
+
+chai.set_file_reader([&virtual_fs](const std::string &filename) -> std::string {
+  const auto it = virtual_fs.find(filename);
+  if (it != virtual_fs.end()) {
+    return it->second;
+  }
+  throw chaiscript::exception::file_not_found_error(filename);
+});
+
+chai.eval_file("init.chai"); // evaluates "var x = 42"
+chai.use("utils.chai");      // evaluates "def add(a, b) { a + b }"
+```
+
+The file reader can also be set from within ChaiScript itself via `set_file_reader`:
+
+```chaiscript
+// Override file loading from within a script
+set_file_reader(fun(filename) { return my_custom_read(filename) })
+```
+
+When no custom file reader is set, ChaiScript uses its built-in filesystem reader.
+
 ## Extras
 ChaiScript itself does not provide a link to the math functions defined in `<cmath>`. You can either add them yourself, or use the [ChaiScript_Extras](https://github.com/ChaiScript/ChaiScript_Extras) helper library. (Which also provides some additional string functions.)
+
+## Grammar Railroad Diagrams
+
+A formal EBNF grammar for ChaiScript is available in [`grammar/chaiscript.ebnf`](grammar/chaiscript.ebnf). You can visualize it as navigable railroad diagrams by pasting its contents into one of these tools:
+
+  * [rr — Railroad Diagram Generator (IPv6)](https://www.bottlecaps.de/rr/ui)
+  * [rr — Railroad Diagram Generator (IPv4)](https://rr.red-dove.com/ui)
+
+Open either link, switch to the **Edit Grammar** tab, paste the file contents, then click **View Diagram**.

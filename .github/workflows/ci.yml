@@ -26,7 +26,7 @@ jobs:
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DMULTITHREAD_SUPPORT_ENABLED=${{ matrix.multithread }}
 
       - name: Build
-        run: cmake --build build -j
+        run: cmake --build build
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
@@ -49,7 +49,7 @@ jobs:
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DMULTITHREAD_SUPPORT_ENABLED=${{ matrix.multithread }}
 
       - name: Build
-        run: cmake --build build -j
+        run: cmake --build build
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
@@ -71,7 +71,7 @@ jobs:
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_UNDEFINED_SANITIZER=ON
 
       - name: Build
-        run: cmake --build build -j
+        run: cmake --build build
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
@@ -93,7 +93,7 @@ jobs:
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_UNDEFINED_SANITIZER=ON
 
       - name: Build
-        run: cmake --build build -j
+        run: cmake --build build
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
@@ -135,7 +135,7 @@ jobs:
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DENABLE_THREAD_SANITIZER=ON -DMULTITHREAD_SUPPORT_ENABLED=ON
 
       - name: Build
-        run: cmake --build build -j
+        run: cmake --build build
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
@@ -157,7 +157,7 @@ jobs:
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DENABLE_THREAD_SANITIZER=ON -DMULTITHREAD_SUPPORT_ENABLED=ON
 
       - name: Build
-        run: cmake --build build -j
+        run: cmake --build build
 
       - name: Test
         run: ctest --test-dir build --output-on-failure

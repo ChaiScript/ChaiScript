@@ -17,9 +17,14 @@ add_definitions(-DCHAISCRIPT_NO_THREADS -DCHAISCRIPT_NO_DYNLOAD)
 add_executable(chaiscript chaiscript_em.cpp)
 target_include_directories(chaiscript PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
+# Enable WASM exception handling — ChaiScript relies on C++ exceptions for
+# error propagation; without this flag exceptions cause an abort in WASM.
+target_compile_options(chaiscript PRIVATE -fwasm-exceptions)
+
 # Emscripten link flags: enable embind, allow memory growth, export as ES module-compatible
 target_link_options(chaiscript PRIVATE
   --bind
+  -fwasm-exceptions
   -sALLOW_MEMORY_GROWTH=1
   -sEXPORT_ES6=0
   -sMODULARIZE=0

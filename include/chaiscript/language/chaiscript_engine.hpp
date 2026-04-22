@@ -80,6 +80,7 @@ namespace chaiscript {
     std::map<std::string, std::function<Namespace &()>> m_namespace_generators;
 
     std::function<void(const std::string &)> m_print_handler = [](const std::string &) noexcept {};
+    std::function<std::string(const std::string &)> m_file_reader;
 
     /// Evaluates the given string in by parsing it and running the results through the evaluator
     Boxed_Value do_eval(const std::string &t_input, const std::string &t_filename = "__EVAL__", bool /* t_internal*/ = false) {
@@ -145,6 +146,10 @@ namespace chaiscript {
         m_print_handler = t_handler;
       }), "set_print_handler");
 
+      m_engine.add(fun([this](const std::function<std::string(const std::string &)> &t_reader) {
+        m_file_reader = t_reader;
+      }), "set_file_reader");
+
       m_engine.add(fun([this]() { m_engine.dump_system(); }), "dump_system");
       m_engine.add(fun([this](const Boxed_Value &t_bv) { m_engine.dump_object(t_bv); }), "dump_object");
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_type) { return m_engine.is_type(t_bv, t_type); }), "is_type");
@@ -194,10 +199,17 @@ namespace chaiscript {
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name) { add_global(t_bv, t_name); }), "add_global");
       m_engine.add(fun([this](const Boxed_Value &t_bv, const std::string &t_name) { set_global(t_bv, t_name); }), "set_global");
 
-      // why this unused parameter to Namespace?
       m_engine.add(fun([this](const std::string &t_namespace_name) {
-                     register_namespace([](Namespace & /*space*/) noexcept {}, t_namespace_name);
-                     import(t_namespace_name);
+                     if (!m_namespace_generators.count(t_namespace_name)) {
+                       register_namespace([](Namespace & /*space*/) noexcept {}, t_namespace_name);
+                     }
+                     const auto sep_pos = t_namespace_name.find("::");
+                     const std::string root_name = (sep_pos != std::string::npos) ? t_namespace_name.substr(0, sep_pos) : t_namespace_name;
+                     if (!m_engine.get_scripting_objects().count(root_name)) {
+                       import(root_name);
+                     } else if (m_namespace_generators.count(root_name)) {
+                       nest_children(root_name, m_namespace_generators[root_name]());
+                     }
                    }),
                    "namespace");
       m_engine.add(fun([this](const std::string &t_namespace_name) { import(t_namespace_name); }), "import");
@@ -242,7 +254,15 @@ namespace chaiscript {
     }
 
     /// Helper function for loading a file
-    static std::string load_file(const std::string &t_filename) {
+    std::string load_file(const std::string &t_filename) const {
+      if (m_file_reader) {
+        return m_file_reader(t_filename);
+      }
+
+      return load_file_default(t_filename);
+    }
+
+    static std::string load_file_default(const std::string &t_filename) {
       std::ifstream infile(t_filename.c_str(), std::ios::in | std::ios::ate | std::ios::binary);
 
       if (!infile.is_open()) {
@@ -282,6 +302,12 @@ namespace chaiscript {
     /// \param[in] t_handler Function to call with the string to print
     void set_print_handler(std::function<void(const std::string &)> t_handler) {
       m_print_handler = std::move(t_handler);
+    }
+
+    /// \brief Set a custom handler for reading files, used by eval_file, use, and internal_eval_file
+    /// \param[in] t_reader Function to call with the filename, returning the file contents as a string
+    void set_file_reader(std::function<std::string(const std::string &)> t_reader) {
+      m_file_reader = std::move(t_reader);
     }
 
     /// \brief Virtual destructor for ChaiScript
@@ -746,28 +772,59 @@ namespace chaiscript {
       if (m_engine.get_scripting_objects().count(t_namespace_name)) {
         throw std::runtime_error("Namespace: " + t_namespace_name + " was already defined");
       } else if (m_namespace_generators.count(t_namespace_name)) {
-        m_engine.add_global(var(std::ref(m_namespace_generators[t_namespace_name]())), t_namespace_name);
+        auto &ns = m_namespace_generators[t_namespace_name]();
+        nest_children(t_namespace_name, ns);
+        m_engine.add_global(var(std::ref(ns)), t_namespace_name);
       } else {
         throw std::runtime_error("No registered namespace: " + t_namespace_name);
       }
     }
 
     /// \brief Registers a namespace generator, which delays generation of the namespace until it is imported, saving memory if it is never
-    /// used. \param[in] t_namespace_generator Namespace generator function. \param[in] t_namespace_name Name of the Namespace function
-    /// being registered. \throw std::runtime_error In the case that the namespace name was already registered.
+    /// used. Supports C++-style nested names (e.g. "constants::si") for nested namespaces; parent namespaces are auto-registered if absent.
+    /// \param[in] t_namespace_generator Namespace generator function.
+    /// \param[in] t_namespace_name Name of the Namespace function being registered (may contain :: for nesting).
+    /// \throw std::runtime_error In the case that the namespace name was already registered.
     void register_namespace(const std::function<void(Namespace &)> &t_namespace_generator, const std::string &t_namespace_name) {
       chaiscript::detail::threading::unique_lock<chaiscript::detail::threading::recursive_mutex> l(m_use_mutex);
 
-      if (!m_namespace_generators.count(t_namespace_name)) {
-        // contain the namespace object memory within the m_namespace_generators map
-        m_namespace_generators.emplace(std::make_pair(t_namespace_name, [=, space = Namespace()]() mutable -> Namespace & {
-          t_namespace_generator(space);
-          return space;
-        }));
-      } else {
+      if (m_namespace_generators.count(t_namespace_name)) {
         throw std::runtime_error("Namespace: " + t_namespace_name + " was already registered.");
       }
+
+      m_namespace_generators.emplace(std::make_pair(t_namespace_name, [=, space = Namespace()]() mutable -> Namespace & {
+        t_namespace_generator(space);
+        return space;
+      }));
+
+      auto pos = t_namespace_name.rfind("::");
+      while (pos != std::string::npos) {
+        const std::string parent = t_namespace_name.substr(0, pos);
+        if (!m_namespace_generators.count(parent)) {
+          m_namespace_generators.emplace(std::make_pair(parent, [space = Namespace()]() mutable -> Namespace & {
+            return space;
+          }));
+        }
+        pos = parent.rfind("::");
+      }
     }
+
+  private:
+    void nest_children(const std::string &t_parent_name, Namespace &t_parent) {
+      const std::string prefix = t_parent_name + "::";
+      for (auto &[name, generator] : m_namespace_generators) {
+        if (name.size() > prefix.size() && name.compare(0, prefix.size(), prefix) == 0) {
+          const std::string remainder = name.substr(prefix.size());
+          if (remainder.find("::") == std::string::npos) {
+            auto &child_ns = generator();
+            nest_children(name, child_ns);
+            t_parent[remainder] = var(std::ref(child_ns));
+          }
+        }
+      }
+    }
+
+  public:
   };
 
 } // namespace chaiscript
