@@ -16,9 +16,7 @@
 #include <cstdlib>
 #include <iostream>
 
-#define CATCH_CONFIG_MAIN
-
-#include "catch.hpp"
+#include "catch_amalgamated.hpp"
 
 TEST_CASE("Type_Info objects generate expected results") {
   const auto test_type

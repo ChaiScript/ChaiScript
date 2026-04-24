@@ -80,7 +80,7 @@ namespace chaiscript {
         }
 
         static string_type str_from_ll(long long val) {
-          using target_char_type = typename string_type::value_type;
+          using target_char_type = string_type::value_type;
 #if defined(CHAISCRIPT_UTF16_UTF32)
           // prepare converter
           std::wstring_convert<std::codecvt_utf8<target_char_type>, target_char_type> converter;
@@ -377,7 +377,7 @@ namespace chaiscript {
         }
 
         constexpr Position &operator+=(size_t t_distance) noexcept {
-          *this = (*this) + t_distance;
+          *this = *this + t_distance;
           return *this;
         }
 
@@ -406,9 +406,9 @@ namespace chaiscript {
 
         constexpr bool operator!=(const Position &t_rhs) const noexcept { return m_pos != t_rhs.m_pos; }
 
-        constexpr bool has_more() const noexcept { return m_pos != m_end; }
+        [[nodiscard]] constexpr bool has_more() const noexcept { return m_pos != m_end; }
 
-        constexpr size_t remaining() const noexcept { return static_cast<size_t>(m_end - m_pos); }
+        [[nodiscard]] constexpr size_t remaining() const noexcept { return static_cast<size_t>(m_end - m_pos); }
 
         constexpr const char &operator*() const noexcept {
           if (m_pos == m_end) {
@@ -458,7 +458,7 @@ namespace chaiscript {
       constexpr static Operator_Matches m_operator_matches{};
 
       /// test a char in an m_alphabet
-      constexpr bool char_in_alphabet(char c, detail::Alphabet a) const noexcept { return m_alphabet[a][static_cast<uint8_t>(c)]; }
+      [[nodiscard]] constexpr bool char_in_alphabet(char c, detail::Alphabet a) const noexcept { return m_alphabet[a][static_cast<uint8_t>(c)]; }
 
       /// Prints the parsed ast_nodes as a tree
       void debug_print(const AST_Node &t, std::string prepend = "") const override {
@@ -530,20 +530,9 @@ namespace chaiscript {
             }
           }
           return true;
-        } else if (Symbol_(m_singleline_comment)) {
-          while (m_position.has_more()) {
-            if (Symbol_(m_cr_lf)) {
-              m_position -= 2;
-              break;
-            } else if (Char_('\n')) {
-              --m_position;
-              break;
-            } else {
-              ++m_position;
-            }
-          }
-          return true;
-        } else if (Symbol_(m_annotation)) {
+        }
+
+        if (Symbol_(m_singleline_comment) || Symbol_(m_annotation)) {
           while (m_position.has_more()) {
             if (Symbol_(m_cr_lf)) {
               m_position -= 2;
@@ -1060,7 +1049,7 @@ namespace chaiscript {
       template<typename string_type>
       struct Char_Parser {
         string_type &match;
-        using char_type = typename string_type::value_type;
+        using char_type = string_type::value_type;
         bool is_escaped = false;
         bool is_interpolated = false;
         bool saw_interpolation_marker = false;
@@ -1575,7 +1564,7 @@ namespace chaiscript {
         return retval;
       }
 
-      bool is_operator(std::string_view t_s) const noexcept { return m_operator_matches.is_match(t_s); }
+      [[nodiscard]] bool is_operator(std::string_view t_s) const noexcept { return m_operator_matches.is_match(t_s); }
 
       /// Reads (and potentially captures) a symbol group from input if it matches the parameter
       bool Symbol(const utility::Static_String &t_s, const bool t_disallow_prevention = false) {
@@ -2749,7 +2738,7 @@ namespace chaiscript {
         bool retval = false;
         const auto prev_stack_top = m_match_stack.size();
 
-        if (m_operators[t_precedence] != Operator_Precedence::Prefix) {
+        if (t_precedence < m_operators.size() && m_operators[t_precedence] < Operator_Precedence::Prefix) {
           if (Operator(t_precedence + 1)) {
             retval = true;
             std::string oper;
@@ -2763,7 +2752,7 @@ namespace chaiscript {
               }
 
               switch (m_operators[t_precedence]) {
-                case (Operator_Precedence::Ternary_Cond):
+                case Operator_Precedence::Ternary_Cond:
                   if (Symbol(":")) {
                     if (!Operator(t_precedence + 1)) {
                       throw exception::eval_error("Incomplete '" + oper + "' expression",
@@ -2778,24 +2767,24 @@ namespace chaiscript {
                   }
                   break;
 
-                case (Operator_Precedence::Addition):
-                case (Operator_Precedence::Multiplication):
-                case (Operator_Precedence::Shift):
-                case (Operator_Precedence::Equality):
-                case (Operator_Precedence::Bitwise_And):
-                case (Operator_Precedence::Bitwise_Xor):
-                case (Operator_Precedence::Bitwise_Or):
-                case (Operator_Precedence::Comparison):
+                case Operator_Precedence::Addition:
+                case Operator_Precedence::Multiplication:
+                case Operator_Precedence::Shift:
+                case Operator_Precedence::Equality:
+                case Operator_Precedence::Bitwise_And:
+                case Operator_Precedence::Bitwise_Xor:
+                case Operator_Precedence::Bitwise_Or:
+                case Operator_Precedence::Comparison:
                   build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, oper);
                   break;
 
-                case (Operator_Precedence::Logical_And):
+                case Operator_Precedence::Logical_And:
                   build_match<eval::Logical_And_AST_Node<Tracer>>(prev_stack_top, oper);
                   break;
-                case (Operator_Precedence::Logical_Or):
+                case Operator_Precedence::Logical_Or:
                   build_match<eval::Logical_Or_AST_Node<Tracer>>(prev_stack_top, oper);
                   break;
-                case (Operator_Precedence::Prefix):
+                case Operator_Precedence::Prefix:
                   assert(false); // cannot reach here because of if() statement at the top
                   break;
 

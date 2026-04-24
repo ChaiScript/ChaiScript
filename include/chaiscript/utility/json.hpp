@@ -44,21 +44,17 @@ namespace chaiscript::json {
         = std::variant<std::nullptr_t, chaiscript::utility::QuickFlatMap<std::string, JSON>, std::vector<JSON>, std::string, double, std::int64_t, bool>;
 
     struct Internal {
-      Internal(std::nullptr_t)
-          : d(nullptr) {
-      }
-      Internal()
-          : d(nullptr) {
-      }
-      Internal(Class c)
+      explicit Internal(std::nullptr_t) {}
+      Internal() = default;
+      Internal(const Class c)
           : d(make_type(c)) {
       }
       template<typename T>
-      Internal(T t)
+      explicit Internal(T t)
           : d(std::move(t)) {
       }
 
-      static Data make_type(Class c) {
+      static Data make_type(const Class c) {
         switch (c) {
           case Class::Null:
             return nullptr;
@@ -84,7 +80,7 @@ namespace chaiscript::json {
         }
       }
 
-      Class type() const noexcept { return Class(d.index()); }
+      [[nodiscard]] Class type() const noexcept { return Class(d.index()); }
 
       template<auto ClassValue, typename Visitor, typename Or>
       decltype(auto) visit_or(Visitor &&visitor, Or &&other) const {
@@ -108,14 +104,14 @@ namespace chaiscript::json {
       auto &Float() { return get_set_type<Class::Floating>(); }
       auto &Bool() { return get_set_type<Class::Boolean>(); }
 
-      auto Map() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Object)>(&d); }
-      auto Vector() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Array)>(&d); }
-      auto String() const noexcept { return std::get_if<static_cast<std::size_t>(Class::String)>(&d); }
-      auto Int() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Integral)>(&d); }
-      auto Float() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Floating)>(&d); }
-      auto Bool() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Boolean)>(&d); }
+      [[nodiscard]] auto Map() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Object)>(&d); }
+      [[nodiscard]] auto Vector() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Array)>(&d); }
+      [[nodiscard]] auto String() const noexcept { return std::get_if<static_cast<std::size_t>(Class::String)>(&d); }
+      [[nodiscard]] auto Int() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Integral)>(&d); }
+      [[nodiscard]] auto Float() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Floating)>(&d); }
+      [[nodiscard]] auto Bool() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Boolean)>(&d); }
 
-      Data d;
+      Data d{nullptr};
     };
 
     Internal internal;
@@ -129,12 +125,12 @@ namespace chaiscript::json {
       JSONWrapper(Container *val)
           : object(val) {
       }
-      JSONWrapper(std::nullptr_t) {}
+      JSONWrapper(std::nullptr_t) { }
 
-      typename Container::iterator begin() { return object ? object->begin() : typename Container::iterator(); }
-      typename Container::iterator end() { return object ? object->end() : typename Container::iterator(); }
-      typename Container::const_iterator begin() const { return object ? object->begin() : typename Container::iterator(); }
-      typename Container::const_iterator end() const { return object ? object->end() : typename Container::iterator(); }
+      Container::iterator begin() { return object ? object->begin() : typename Container::iterator(); }
+      Container::iterator end() { return object ? object->end() : typename Container::iterator(); }
+      [[nodiscard]] Container::const_iterator begin() const { return object ? object->begin() : typename Container::iterator(); }
+      [[nodiscard]] Container::const_iterator end() const { return object ? object->end() : typename Container::iterator(); }
     };
 
     template<typename Container>
@@ -147,10 +143,10 @@ namespace chaiscript::json {
       }
       JSONConstWrapper(std::nullptr_t) {}
 
-      typename Container::const_iterator begin() const noexcept {
+      [[nodiscard]] Container::const_iterator begin() const noexcept {
         return object ? object->begin() : typename Container::const_iterator();
       }
-      typename Container::const_iterator end() const noexcept { return object ? object->end() : typename Container::const_iterator(); }
+      [[nodiscard]] Container::const_iterator end() const noexcept { return object ? object->end() : typename Container::const_iterator(); }
     };
 
     JSON() = default;
