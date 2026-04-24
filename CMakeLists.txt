@@ -391,6 +391,9 @@ if(BUILD_TESTING)
 
   if(NOT UNIT_TEST_LIGHT)
     add_library(catch2 STATIC unittests/catch_amalgamated.cpp)
+    if(NOT MSVC)
+      target_compile_options(catch2 PRIVATE -Wno-conversion -Wno-noexcept -Wno-maybe-uninitialized)
+    endif()
 
     add_executable(compiled_tests unittests/compiled_tests.cpp)
     target_link_libraries(compiled_tests catch2 ${LIBS} ${CHAISCRIPT_LIBS})

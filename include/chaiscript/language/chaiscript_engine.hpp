@@ -611,7 +611,7 @@ namespace chaiscript {
     /// (the symbol mentioned above), an exception is thrown.
     ///
     /// \throw chaiscript::exception::load_module_error In the event that no matching module can be found.
-    std::string load_module(const std::string &t_module_name) {
+    std::string load_module([[maybe_unused]] const std::string &t_module_name) {
 #ifdef CHAISCRIPT_NO_DYNLOAD
       throw chaiscript::exception::load_module_error("Loadable module support was disabled (CHAISCRIPT_NO_DYNLOAD)");
 #else

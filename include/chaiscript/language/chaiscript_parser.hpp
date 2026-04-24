@@ -22,14 +22,10 @@
 #include "../dispatchkit/boxed_value.hpp"
 #include "../utility/hash.hpp"
 #include "../utility/static_string.hpp"
+#include "../utility/unicode.hpp"
 #include "chaiscript_common.hpp"
 #include "chaiscript_optimizer.hpp"
 #include "chaiscript_tracer.hpp"
-
-#if defined(CHAISCRIPT_UTF16_UTF32)
-#include <codecvt>
-#include <locale>
-#endif
 
 #if defined(CHAISCRIPT_MSVC) && defined(max) && defined(min)
 #define CHAISCRIPT_PUSHED_MIN_MAX
@@ -64,41 +60,26 @@ namespace chaiscript {
       // Generic for u16, u32 and wchar
       template<typename string_type>
       struct Char_Parser_Helper {
-        // common for all implementations
-        static std::string u8str_from_ll(long long val) {
-          using char_type = std::string::value_type;
-
-          char_type c[2];
-          c[1] = char_type(val);
-          c[0] = char_type(val >> 8);
-
-          if (c[0] == 0) {
-            return std::string(1, c[1]); // size, character
-          }
-
-          return std::string(c, 2); // char buffer, size
-        }
-
         static string_type str_from_ll(long long val) {
-          using target_char_type = string_type::value_type;
-#if defined(CHAISCRIPT_UTF16_UTF32)
-          // prepare converter
-          std::wstring_convert<std::codecvt_utf8<target_char_type>, target_char_type> converter;
-          // convert
-          return converter.from_bytes(u8str_from_ll(val));
-#else
-          // no conversion available, just put value as character
-          return string_type(1, target_char_type(val)); // size, character
-#endif
+          string_type out;
+          utility::unicode::append_codepoint(out, static_cast<std::uint32_t>(val));
+          return out;
         }
       };
 
-      // Specialization for char AKA UTF-8
+      // Specialization for char AKA UTF-8: preserve raw two-byte packing
+      // of multi-character literals.
       template<>
       struct Char_Parser_Helper<std::string> {
         static std::string str_from_ll(long long val) {
-          // little SFINAE trick to avoid base class
-          return Char_Parser_Helper<std::true_type>::u8str_from_ll(val);
+          using char_type = std::string::value_type;
+          char_type c[2];
+          c[1] = char_type(val);
+          c[0] = char_type(val >> 8);
+          if (c[0] == 0) {
+            return std::string(1, c[1]);
+          }
+          return std::string(c, 2);
         }
       };
     } // namespace detail
@@ -1108,40 +1089,20 @@ namespace chaiscript {
         }
 
         void process_unicode() {
-          const auto ch = static_cast<uint32_t>(std::stoi(hex_matches, nullptr, 16));
+          const auto ch = static_cast<std::uint32_t>(std::stoi(hex_matches, nullptr, 16));
           const auto match_size = hex_matches.size();
           hex_matches.clear();
           is_escaped = false;
           const auto u_size = unicode_size;
           unicode_size = 0;
 
-          char buf[4];
           if (u_size != match_size) {
             throw exception::eval_error("Incomplete unicode escape sequence");
           }
-          if (u_size == 4 && ch >= 0xD800 && ch <= 0xDFFF) {
+          if (u_size == 4 && utility::unicode::is_surrogate(ch)) {
             throw exception::eval_error("Invalid 16 bit universal character");
           }
-
-          if (ch < 0x80) {
-            match += static_cast<char>(ch);
-          } else if (ch < 0x800) {
-            buf[0] = static_cast<char>(0xC0 | (ch >> 6));
-            buf[1] = static_cast<char>(0x80 | (ch & 0x3F));
-            match.append(buf, 2);
-          } else if (ch < 0x10000) {
-            buf[0] = static_cast<char>(0xE0 | (ch >> 12));
-            buf[1] = static_cast<char>(0x80 | ((ch >> 6) & 0x3F));
-            buf[2] = static_cast<char>(0x80 | (ch & 0x3F));
-            match.append(buf, 3);
-          } else if (ch < 0x200000) {
-            buf[0] = static_cast<char>(0xF0 | (ch >> 18));
-            buf[1] = static_cast<char>(0x80 | ((ch >> 12) & 0x3F));
-            buf[2] = static_cast<char>(0x80 | ((ch >> 6) & 0x3F));
-            buf[3] = static_cast<char>(0x80 | (ch & 0x3F));
-            match.append(buf, 4);
-          } else {
-            // this must be an invalid escape sequence?
+          if (utility::unicode::append_utf8(match, ch) == 0) {
             throw exception::eval_error("Invalid 32 bit universal character");
           }
         }

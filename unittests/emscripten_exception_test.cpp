@@ -22,7 +22,7 @@ int main() {
   // through the eval wrapper functions. In WASM builds without exception
   // support, these would abort instead of throwing.
 
-  bool caught = false;
+  [[maybe_unused]] bool caught = false;
 
   // Test 1: eval with undefined variable should throw
   caught = false;
@@ -64,7 +64,8 @@ int main() {
 
   // Test 5: Verify normal operation still works after caught exceptions
   chaiscript_eval("var post_exception_test = 100");
-  const int result = chaiscript_eval_int("post_exception_test");
+
+  [[maybe_unused]] const int result = chaiscript_eval_int("post_exception_test");
   assert(result == 100 && "normal eval must work after caught exceptions");
 
   std::cout << "All emscripten exception tests passed.\n";

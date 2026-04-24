@@ -7,6 +7,7 @@
 
 #include "../chaiscript_defines.hpp"
 #include "quick_flat_map.hpp"
+#include "unicode.hpp"
 #include <cctype>
 #include <cmath>
 #include <cstdint>
@@ -467,22 +468,8 @@ namespace chaiscript::json {
                 }
               }
               offset += 4;
-              const auto ch = static_cast<uint32_t>(std::stoi(hex_matches, nullptr, 16));
-              if (ch < 0x80) {
-                val += static_cast<char>(ch);
-              } else if (ch < 0x800) {
-                val += static_cast<char>(0xC0 | (ch >> 6));
-                val += static_cast<char>(0x80 | (ch & 0x3F));
-              } else if (ch < 0x10000) {
-                val += static_cast<char>(0xE0 | (ch >> 12));
-                val += static_cast<char>(0x80 | ((ch >> 6) & 0x3F));
-                val += static_cast<char>(0x80 | (ch & 0x3F));
-              } else if (ch < 0x200000) {
-                val += static_cast<char>(0xF0 | (ch >> 18));
-                val += static_cast<char>(0x80 | ((ch >> 12) & 0x3F));
-                val += static_cast<char>(0x80 | ((ch >> 6) & 0x3F));
-                val += static_cast<char>(0x80 | (ch & 0x3F));
-              } else {
+              const auto ch = static_cast<std::uint32_t>(std::stoi(hex_matches, nullptr, 16));
+              if (chaiscript::utility::unicode::append_utf8(val, ch) == 0) {
                 throw std::runtime_error(std::string("JSON ERROR: String: Invalid 32 bit universal character"));
               }
             } break;
