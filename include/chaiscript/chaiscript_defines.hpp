@@ -7,6 +7,16 @@
 #ifndef CHAISCRIPT_DEFINES_HPP_
 #define CHAISCRIPT_DEFINES_HPP_
 
+// MacOSX Fix: std::get/std::get_if/std::visit for std::variant are annotated
+// __attribute__((availability(macos,strict,introduced=10.14))) in Apple libc++.
+// Defining this macro before any libc++ header strips those annotations so
+// ChaiScript can be built against older MacOSX deployment targets.
+#if defined(__APPLE__) && defined(__clang__)
+#ifndef _LIBCPP_DISABLE_AVAILABILITY
+#define _LIBCPP_DISABLE_AVAILABILITY
+#endif
+#endif
+
 #ifdef _MSC_VER
 #define CHAISCRIPT_STRINGIZE(x) "" #x
 #define CHAISCRIPT_STRINGIZE_EXPANDED(x) CHAISCRIPT_STRINGIZE(x)
