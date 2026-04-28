@@ -7,6 +7,8 @@
 #ifndef CHAISCRIPT_UTILITY_STATIC_STRING_HPP_
 #define CHAISCRIPT_UTILITY_STATIC_STRING_HPP_
 
+#include <iterator>
+
 namespace chaiscript::utility {
   struct Static_String {
     template<size_t N>
@@ -21,30 +23,17 @@ namespace chaiscript::utility {
 
     constexpr auto begin() const noexcept { return data; }
 
-    constexpr auto end() const noexcept { return data + m_size; }
+    constexpr auto end() const noexcept { return std::next(data, static_cast<std::ptrdiff_t>(m_size)); }
 
-    constexpr bool operator==(std::string_view other) const noexcept {
-      // return std::string_view(data, m_size) == other;
-      auto b1 = begin();
-      const auto e1 = end();
-      auto b2 = other.begin();
-      const auto e2 = other.end();
-
-      if (e1 - b1 != e2 - b2) {
-        return false;
-      }
-
-      while (b1 != e1) {
-        if (*b1 != *b2) {
-          return false;
-        }
-        ++b1;
-        ++b2;
-      }
-      return true;
+    constexpr auto operator[](const std::size_t idx) const noexcept {
+      return *std::next(data, static_cast<std::ptrdiff_t>(idx));
     }
 
-    bool operator==(const std::string &t_str) const noexcept { return std::equal(begin(), end(), std::cbegin(t_str), std::cend(t_str)); }
+    constexpr bool operator==(std::string_view other) const noexcept {
+      return std::string_view(data, m_size) == other;
+    }
+
+    constexpr bool operator==(const std::string &t_str) const noexcept { return std::equal(begin(), end(), std::cbegin(t_str), std::cend(t_str)); }
 
     const size_t m_size;
     const char *data = nullptr;

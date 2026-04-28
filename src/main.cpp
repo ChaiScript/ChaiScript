@@ -8,6 +8,7 @@
 // PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
 
 #include <chrono>
+#include <cstddef>
 #include <iostream>
 #include <list>
 #include <regex>
@@ -36,7 +37,7 @@ char *mystrdup(const char *s) {
 #else
   strncpy(d, s, len); // Copy the characters
 #endif
-  d[len] = '\0';
+  *std::next(d, static_cast<std::ptrdiff_t>(len)) = '\0';
   return d; // Return the new string
 }
 
@@ -283,7 +284,7 @@ int main(int argc, char *argv[]) {
       ++i;
     }
 
-    std::string arg(i != 0 ? argv[i] : "--interactive");
+    std::string arg(i != 0 ? *std::next(argv, i) : "--interactive");
 
     enum {
       eInteractive,
@@ -297,7 +298,7 @@ int main(int argc, char *argv[]) {
         std::cout << "insufficient input following " << arg << '\n';
         return EXIT_FAILURE;
       }
-      arg = argv[++i];
+      arg = *std::next(argv, ++i);
 
     } else if (arg == "-" || arg == "--stdin") {
       arg = "";

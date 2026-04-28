@@ -14,6 +14,7 @@
 #include <cstring>
 #include <exception>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -109,9 +110,7 @@ namespace chaiscript {
 
       template<typename Array2D, typename First, typename Second>
       constexpr static void set_alphabet(Array2D &array, const First first, const Second second) noexcept {
-        auto *first_ptr = &std::get<0>(array) + static_cast<std::size_t>(first);
-        auto *second_ptr = &std::get<0>(*first_ptr) + static_cast<std::size_t>(second);
-        *second_ptr = true;
+        array[static_cast<std::size_t>(first)][static_cast<std::size_t>(second)] = true;
       }
 
       constexpr static std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> build_alphabet() noexcept {
@@ -341,13 +340,13 @@ namespace chaiscript {
               ++col;
             }
 
-            ++m_pos;
+            std::advance(m_pos, 1);
           }
           return *this;
         }
 
         constexpr Position &operator--() noexcept {
-          --m_pos;
+          std::advance(m_pos, -1);
           if (*m_pos == '\n') {
             --line;
             col = m_last_col;
@@ -490,7 +489,7 @@ namespace chaiscript {
         if (m_position.remaining() >= len) {
           const char *file_pos = &(*m_position);
           for (size_t pos = 0; pos < len; ++pos) {
-            if (sym.c_str()[pos] != file_pos[pos]) {
+            if (sym[pos] != *std::next(file_pos, static_cast<ssize_t>(pos))) {
               return false;
             }
           }
@@ -1498,7 +1497,7 @@ namespace chaiscript {
         if (m_position.remaining() >= len) {
           auto tmp = m_position;
           for (size_t i = 0; tmp.has_more() && i < len; ++i) {
-            if (*tmp != t_s.c_str()[i]) {
+            if (*tmp != t_s[i]) {
               return false;
             }
             ++tmp;
@@ -2942,7 +2941,7 @@ namespace chaiscript {
       /// Parses the given input string, tagging parsed ast_nodes with the given m_filename.
       AST_NodePtr parse_internal(const std::string &t_input, std::string t_fname) {
         const auto begin = t_input.empty() ? nullptr : &t_input.front();
-        const auto end = begin == nullptr ? nullptr : begin + t_input.size();
+        const auto end = begin == nullptr ? nullptr : std::next(begin, std::ssize(t_input));
         m_position = Position(begin, end);
         m_filename = std::make_shared<std::string>(std::move(t_fname));
 

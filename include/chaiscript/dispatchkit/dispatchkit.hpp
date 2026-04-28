@@ -34,7 +34,6 @@
 #include "dynamic_object.hpp"
 #include "proxy_constructors.hpp"
 #include "proxy_functions.hpp"
-#include "short_alloc.hpp"
 #include "type_conversions.hpp"
 #include "type_info.hpp"
 
@@ -318,9 +317,6 @@ namespace chaiscript {
 
   namespace detail {
     struct Stack_Holder {
-      // template <class T, std::size_t BufSize = sizeof(T)*20000>
-      //  using SmallVector = std::vector<T, short_alloc<T, BufSize>>;
-
       template<class T>
       using SmallVector = std::vector<T>;
 
@@ -377,8 +373,8 @@ namespace chaiscript {
 
       Dispatch_Engine(const Dispatch_Engine &) = delete;
       Dispatch_Engine &operator=(const Dispatch_Engine &) = delete;
-      Dispatch_Engine(Dispatch_Engine &&) = default;
-      Dispatch_Engine &operator=(Dispatch_Engine &&) = default;
+      Dispatch_Engine(Dispatch_Engine &&) = delete;
+      Dispatch_Engine &operator=(Dispatch_Engine &&) = delete;
 
 #ifndef CHAISCRIPT_NO_THREADS
       /// Track an async thread so it can be joined during destruction
@@ -790,13 +786,13 @@ namespace chaiscript {
           t_loc = uint_fast32_t(funs.first);
         }
 
-        const auto do_attribute_call = [this](int l_num_params,
+        const auto do_attribute_call = [this](std::size_t l_num_params,
                                               Function_Params l_params,
                                               const std::vector<Proxy_Function> &l_funs,
                                               const Type_Conversions_State &l_conversions) -> Boxed_Value {
-          Function_Params attr_params(l_params.begin(), l_params.begin() + l_num_params);
+          Function_Params attr_params(l_params.first(l_num_params));
           Boxed_Value bv = dispatch::dispatch(l_funs, attr_params, l_conversions);
-          if (l_num_params < int(l_params.size()) || bv.get_type_info().bare_equal(user_type<dispatch::Proxy_Function_Base>())) {
+          if (l_num_params < l_params.size() || bv.get_type_info().bare_equal(user_type<dispatch::Proxy_Function_Base>())) {
             struct This_Foist {
               This_Foist(Dispatch_Engine &e, const Boxed_Value &t_bv)
                   : m_e(e) {
@@ -814,16 +810,16 @@ namespace chaiscript {
             try {
               auto func = boxed_cast<const dispatch::Proxy_Function_Base *>(bv);
               try {
-                return (*func)({l_params.begin() + l_num_params, l_params.end()}, l_conversions);
+                return (*func)(l_params.subspan(l_num_params), l_conversions);
               } catch (const chaiscript::exception::bad_boxed_cast &) {
               } catch (const chaiscript::exception::arity_error &) {
               } catch (const chaiscript::exception::guard_error &) {
               }
-              throw chaiscript::exception::dispatch_error({l_params.begin() + l_num_params, l_params.end()},
+              throw chaiscript::exception::dispatch_error(l_params.subspan(l_num_params),
                                                           std::vector<Const_Proxy_Function>{boxed_cast<Const_Proxy_Function>(bv)});
             } catch (const chaiscript::exception::bad_boxed_cast &) {
               // unable to convert bv into a Proxy_Function_Base
-              throw chaiscript::exception::dispatch_error({l_params.begin() + l_num_params, l_params.end()},
+              throw chaiscript::exception::dispatch_error(l_params.subspan(l_num_params),
                                                           std::vector<Const_Proxy_Function>(l_funs.begin(), l_funs.end()));
             }
           } else {
@@ -873,7 +869,7 @@ namespace chaiscript {
           if (!functions.empty()) {
             try {
               if (is_no_param) {
-                auto tmp_params = params.to_vector();
+                auto tmp_params = std::vector<Boxed_Value>(params.begin(), params.end());
                 tmp_params.insert(tmp_params.begin() + 1, var(t_name));
                 return do_attribute_call(2, Function_Params(tmp_params), functions, t_conversions);
               } else {
@@ -948,7 +944,7 @@ namespace chaiscript {
         const auto &f = this->boxed_cast<Const_Proxy_Function>(params[0]);
         const Type_Conversions_State convs(m_conversions, m_conversions.conversion_saves());
 
-        return const_var(f->call_match(Function_Params(params.begin() + 1, params.end()), convs));
+        return const_var(f->call_match(Function_Params(params.subspan(1)), convs));
       }
 
       /// Dump all system info to stdout

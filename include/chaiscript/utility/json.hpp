@@ -159,7 +159,9 @@ namespace chaiscript::json {
 
     JSON(initializer_list<JSON> list)
         : internal(Class::Object) {
-      for (auto i = list.begin(), e = list.end(); i != e; ++i, ++i) {
+      for (auto i = list.begin(), e = list.end();
+           i != e;
+           std::advance(i, 2)) {
         operator[](i->to_string()) = *std::next(i);
       }
     }

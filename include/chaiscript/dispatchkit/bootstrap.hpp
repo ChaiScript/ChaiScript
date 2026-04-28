@@ -26,7 +26,7 @@ namespace chaiscript::bootstrap {
               throw std::range_error("Array index out of range. Received: " + std::to_string(index) + " expected < "
                                      + std::to_string(extent));
             } else {
-              return t[index];
+              return *std::next(t, static_cast<std::ptrdiff_t>(index));
             }
           }),
           "[]");
@@ -37,7 +37,7 @@ namespace chaiscript::bootstrap {
               throw std::range_error("Array index out of range. Received: " + std::to_string(index) + " expected < "
                                      + std::to_string(extent));
             } else {
-              return t[index];
+              return *std::next(t, static_cast<std::ptrdiff_t>(index));
             }
           }),
           "[]");

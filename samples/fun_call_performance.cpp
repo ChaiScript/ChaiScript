@@ -32,7 +32,7 @@ char *mystrdup(const char *s) {
 #else
   strncpy(d, s, len); // Copy the characters
 #endif
-  d[len] = '\0';
+  *std::next(d, static_cast<std::ptrdiff_t>(len)) = '\0';
   return d; // Return the new string
 }
 
@@ -297,7 +297,7 @@ int main(int argc, char *argv[]) {
       ++i;
     }
 
-    std::string arg(i ? argv[i] : "--interactive");
+    std::string arg(i ? *std::next(argv, i) : "--interactive");
 
     enum {
       eInteractive,
@@ -311,7 +311,7 @@ int main(int argc, char *argv[]) {
         std::cout << "insufficient input following " << arg << std::endl;
         return EXIT_FAILURE;
       } else {
-        arg = argv[++i];
+        arg = *std::next(argv, ++i);
       }
     } else if (arg == "-" || arg == "--stdin") {
       arg = "";
