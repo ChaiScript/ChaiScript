@@ -35,9 +35,8 @@ char *mystrdup(const char *s) {
 #ifdef CHAISCRIPT_MSVC
   strcpy_s(d, len + 1, s); // Copy the characters
 #else
-  strncpy(d, s, len); // Copy the characters
+  strncpy(d, s, len + 1); // Copy the characters
 #endif
-  *std::next(d, static_cast<std::ptrdiff_t>(len)) = '\0';
   return d; // Return the new string
 }
 
