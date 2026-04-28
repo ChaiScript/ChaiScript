@@ -178,7 +178,7 @@ else()
   add_definitions(-Werror -Wall -Wextra -Wconversion -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wcast-qual -Wunused -Woverloaded-virtual -Wno-noexcept-type -Wpedantic -Werror=return-type)
 
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-    add_definitions(-Weverything -Wno-c++98-compat-pedantic  -Wno-c++98-compat -Wno-documentation -Wno-switch-enum -Wno-weak-vtables -Wno-missing-prototypes -Wno-padded -Wno-missing-noreturn -Wno-exit-time-destructors -Wno-documentation-unknown-command -Wno-unused-template -Wno-undef -Wno-double-promotion -Wno-switch-default -Wno-nrvo -Wno-shadow-uncaptured-local -Wno-unsafe-buffer-usage-in-libc-call -Wno-c++20-extensions -Wno-unknown-warning-option -Wno-posion-system-directories)
+    add_definitions(-Weverything -Wno-c++98-compat-pedantic  -Wno-c++98-compat -Wno-documentation -Wno-switch-enum -Wno-weak-vtables -Wno-missing-prototypes -Wno-padded -Wno-missing-noreturn -Wno-exit-time-destructors -Wno-documentation-unknown-command -Wno-unused-template -Wno-undef -Wno-double-promotion -Wno-switch-default -Wno-nrvo -Wno-shadow-uncaptured-local -Wno-unsafe-buffer-usage-in-libc-call -Wno-c++20-extensions -Wno-unknown-warning-option -Wno-poison-system-directories -Wno-c++20-compat -Wno-c++17-compat)
   else()
     add_definitions(-Wnoexcept)
   endif()
