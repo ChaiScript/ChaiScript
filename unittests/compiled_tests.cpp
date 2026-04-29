@@ -355,6 +355,29 @@ TEST_CASE("Functor cast") {
   CHECK(d == 3 * 6);
 }
 
+namespace {
+  int shared_ptr_callback_observed_value = 0;
+
+  void shared_ptr_callback_accept(const std::shared_ptr<int> &ptr) { shared_ptr_callback_observed_value = ptr ? *ptr : 0; }
+
+  void shared_ptr_callback_call(const std::function<void(const std::shared_ptr<int> &)> &func) { func(std::make_shared<int>(42)); }
+} // namespace
+
+// Regression for https://github.com/ChaiScript/ChaiScript/issues/493 - shared_ptr
+// arguments could not be round-tripped from C++ through a std::function-wrapped
+// ChaiScript callback back into a C++ function expecting a shared_ptr.
+TEST_CASE("shared_ptr passed through std::function callback") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  shared_ptr_callback_observed_value = 0;
+
+  chai.add(chaiscript::fun(&shared_ptr_callback_accept), "accept");
+  chai.add(chaiscript::fun(&shared_ptr_callback_call), "call");
+
+  CHECK_NOTHROW(chai.eval("call(accept)"));
+  CHECK(shared_ptr_callback_observed_value == 42);
+}
+
 TEST_CASE("Non-ASCII characters in the middle of string") {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
   CHECK_THROWS_AS(chai.eval<std::string>("prin\xeft \"Hello World\""), chaiscript::exception::eval_error);
