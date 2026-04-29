@@ -15,6 +15,7 @@
 #include <utility>
 #include <vector>
 
+#include "../dispatchkit/dynamic_object.hpp"
 #include "../dispatchkit/operators.hpp"
 #include "../dispatchkit/register_function.hpp"
 #include "../language/chaiscript_common.hpp"
@@ -56,6 +57,25 @@ namespace chaiscript::utility {
 
     for (const auto &fun : t_funcs) {
       t_module.add(fun.first, fun.second);
+    }
+  }
+
+  /// Overload of add_class that also registers static functions accessible via ClassName.func() syntax.
+  /// Static functions are exposed as attributes of a namespace object with the class name.
+  template<typename Class, typename ModuleType>
+  void add_class(ModuleType &t_module,
+                 const std::string &t_class_name,
+                 const std::vector<chaiscript::Proxy_Function> &t_constructors,
+                 const std::vector<std::pair<chaiscript::Proxy_Function, std::string>> &t_funcs,
+                 const std::vector<std::pair<chaiscript::Proxy_Function, std::string>> &t_static_funcs) {
+    add_class<Class>(t_module, t_class_name, t_constructors, t_funcs);
+
+    if (!t_static_funcs.empty()) {
+      dispatch::Dynamic_Object ns(t_class_name);
+      for (const auto &sf : t_static_funcs) {
+        ns.get_attr(sf.second) = chaiscript::Boxed_Value(sf.first);
+      }
+      t_module.add_global_const(chaiscript::const_var(ns), t_class_name);
     }
   }
 
