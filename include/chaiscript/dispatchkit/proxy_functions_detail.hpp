@@ -98,6 +98,7 @@ namespace chaiscript {
         return Handle_Return<Ret>::handle(call_func_impl(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions));
       }
 
+// MSVC has a broken warning for unreachable code in this block
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4702)
