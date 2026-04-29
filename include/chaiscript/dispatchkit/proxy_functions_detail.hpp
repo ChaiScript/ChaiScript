@@ -95,12 +95,14 @@ namespace chaiscript {
       template<typename Callable, typename Ret, typename... Params>
       Boxed_Value
       call_func(Ret (*sig)(Params...), const Callable &f, const chaiscript::Function_Params &params, const Type_Conversions_State &t_conversions) {
-        if constexpr (std::is_same_v<Ret, void>) {
-          call_func(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions);
-          return Handle_Return<void>::handle();
-        } else {
-          return Handle_Return<Ret>::handle(call_func(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions));
-        }
+        return Handle_Return<Ret>::handle(call_func(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions));
+      }
+
+      template<typename Callable, typename... Params>
+      Boxed_Value
+      call_func(void (*sig)(Params...), const Callable &f, const chaiscript::Function_Params &params, const Type_Conversions_State &t_conversions) {
+        call_func(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions);
+        return Handle_Return<void>::handle();
       }
 
     } // namespace detail
