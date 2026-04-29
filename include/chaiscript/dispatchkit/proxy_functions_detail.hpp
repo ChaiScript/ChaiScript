@@ -81,10 +81,10 @@ namespace chaiscript {
 
       template<typename Callable, typename Ret, typename... Params, size_t... I>
       Ret call_func_impl(Ret (*)(Params...),
-                    std::index_sequence<I...>,
-                    const Callable &f,
-                    [[maybe_unused]] const chaiscript::Function_Params &params,
-                    [[maybe_unused]] const Type_Conversions_State &t_conversions) {
+                         std::index_sequence<I...>,
+                         const Callable &f,
+                         [[maybe_unused]] const chaiscript::Function_Params &params,
+                         [[maybe_unused]] const Type_Conversions_State &t_conversions) {
         return f(boxed_cast<Params>(params[I], &t_conversions)...);
       }
 
@@ -101,7 +101,7 @@ namespace chaiscript {
 // MSVC has a broken warning for unreachable code in this block
 #ifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable: 4702)
+#pragma warning(disable : 4702)
 #endif
       template<typename Callable, typename... Params>
       Boxed_Value

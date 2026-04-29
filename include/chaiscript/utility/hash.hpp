@@ -9,8 +9,8 @@
 
 #include "../chaiscript_defines.hpp"
 
-#include <iterator>
 #include <cstdint>
+#include <iterator>
 
 namespace chaiscript {
   namespace utility {

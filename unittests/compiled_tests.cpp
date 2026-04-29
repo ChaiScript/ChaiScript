@@ -26,7 +26,6 @@
 
 #include <clocale>
 
-
 // lambda_tests
 TEST_CASE("C++11 Lambdas Can Be Registered") {
   // We cannot deduce the type of a lambda expression, you must either wrap it

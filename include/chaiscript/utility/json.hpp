@@ -126,7 +126,7 @@ namespace chaiscript::json {
       JSONWrapper(Container *val)
           : object(val) {
       }
-      JSONWrapper(std::nullptr_t) { }
+      JSONWrapper(std::nullptr_t) {}
 
       Container::iterator begin() { return object ? object->begin() : typename Container::iterator(); }
       Container::iterator end() { return object ? object->end() : typename Container::iterator(); }

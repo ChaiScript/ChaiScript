@@ -317,7 +317,7 @@ namespace chaiscript {
                      std::vector<std::string> t_module_paths = {},
                      std::vector<std::string> t_use_paths = {},
                      const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options(),
-                     const bool t_no_io=false)
+                     const bool t_no_io = false)
         : m_module_paths(ensure_minimum_path_vec(std::move(t_module_paths)))
         , m_use_paths(ensure_minimum_path_vec(std::move(t_use_paths)))
         , m_parser(std::move(parser))

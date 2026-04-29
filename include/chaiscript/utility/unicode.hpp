@@ -15,7 +15,9 @@ namespace chaiscript {
 
       inline constexpr std::uint32_t max_codepoint = 0x10FFFF;
 
-      constexpr bool is_surrogate(std::uint32_t cp) noexcept { return cp >= 0xD800 && cp <= 0xDFFF; }
+      constexpr bool is_surrogate(std::uint32_t cp) noexcept {
+        return cp >= 0xD800 && cp <= 0xDFFF;
+      }
 
       // Append cp to out as UTF-8. Returns bytes written, or 0 if cp >= 0x200000.
       // Surrogates are not rejected here; callers that care check is_surrogate() first.
