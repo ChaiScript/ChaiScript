@@ -98,12 +98,19 @@ namespace chaiscript {
         return Handle_Return<Ret>::handle(call_func_impl(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions));
       }
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4702)
+#endif
       template<typename Callable, typename... Params>
       Boxed_Value
       call_func(void (*sig)(Params...), const Callable &f, const chaiscript::Function_Params &params, const Type_Conversions_State &t_conversions) {
         call_func_impl(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions);
         return Handle_Return<void>::handle();
       }
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
     } // namespace detail
   } // namespace dispatch
