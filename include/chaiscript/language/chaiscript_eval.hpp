@@ -1246,7 +1246,7 @@ namespace chaiscript {
         const auto &ns_name = this->children[0]->text;
 
         auto ns_name_bv = const_var(ns_name);
-        t_ss->call_function("namespace", m_ns_loc, Function_Params{ns_name_bv}, t_ss.conversions());
+        t_ss->call_function("namespace", m_ns_loc, Function_Params{&ns_name_bv, 1}, t_ss.conversions());
 
         std::vector<std::string> parts;
         {
@@ -1350,7 +1350,7 @@ namespace chaiscript {
         };
 
         const auto call_function = [&t_ss](const auto &t_funcs, const Boxed_Value &t_param) {
-          return dispatch::dispatch(*t_funcs, Function_Params{t_param}, t_ss.conversions());
+          return dispatch::dispatch(*t_funcs, Function_Params{&t_param, 1}, t_ss.conversions());
         };
 
         const std::string &loop_var_name = this->children[0]->text;
@@ -1646,8 +1646,8 @@ namespace chaiscript {
             return Boxed_Number::do_oper(m_oper, bv);
           } else {
             chaiscript::eval::detail::Function_Push_Pop fpp(t_ss);
-            fpp.save_params(Function_Params{bv});
-            return t_ss->call_function(this->text, m_loc, Function_Params{bv}, t_ss.conversions());
+            fpp.save_params(Function_Params{&bv, 1});
+            return t_ss->call_function(this->text, m_loc, Function_Params{&bv, 1}, t_ss.conversions());
           }
         } catch (const exception::dispatch_error &e) {
           throw exception::eval_error("Error with prefix operator evaluation: '" + this->text + "'", e.parameters, e.functions, false, *t_ss);
@@ -1755,7 +1755,7 @@ namespace chaiscript {
 
             if (dispatch::Param_Types(
                     std::vector<std::pair<std::string, Type_Info>>{Arg_List_AST_Node<T>::get_arg_type(*catch_block.children[0], t_ss)})
-                    .match(Function_Params{t_except}, t_ss.conversions())
+                    .match(Function_Params{&t_except, 1}, t_ss.conversions())
                     .first) {
               t_ss.add_object(name, t_except);
 

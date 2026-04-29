@@ -65,7 +65,7 @@ namespace chaiscript {
       bool operator==(const Param_Types &t_rhs) const noexcept { return m_types == t_rhs.m_types; }
 
       std::vector<Boxed_Value> convert(Function_Params t_params, const Type_Conversions_State &t_conversions) const {
-        auto vals = t_params.to_vector();
+        auto vals = std::vector<Boxed_Value>{t_params.begin(), t_params.end()};
         const auto dynamic_object_type_info = user_type<Dynamic_Object>();
         for (size_t i = 0; i < vals.size(); ++i) {
           const auto &name = m_types[i].first;
@@ -682,13 +682,13 @@ namespace chaiscript {
     public:
       dispatch_error(const Function_Params &t_parameters, std::vector<Const_Proxy_Function> t_functions)
           : std::runtime_error("Error with function dispatch")
-          , parameters(t_parameters.to_vector())
+          , parameters(t_parameters.begin(), t_parameters.end())
           , functions(std::move(t_functions)) {
       }
 
       dispatch_error(const Function_Params &t_parameters, std::vector<Const_Proxy_Function> t_functions, const std::string &t_desc)
           : std::runtime_error(t_desc)
-          , parameters(t_parameters.to_vector())
+          , parameters(t_parameters.begin(), t_parameters.end())
           , functions(std::move(t_functions)) {
       }
 

@@ -22,11 +22,10 @@
 #include "../static_libs/chaiscript_parser.hpp"
 #include "../static_libs/chaiscript_stdlib.hpp"
 
-#define CATCH_CONFIG_MAIN
+#include "catch_amalgamated.hpp"
 
 #include <clocale>
 
-#include "catch.hpp"
 
 // lambda_tests
 TEST_CASE("C++11 Lambdas Can Be Registered") {
@@ -190,7 +189,7 @@ TEST_CASE("Throw int or double") {
     chai.eval("throw(1.0)", chaiscript::exception_specification<int, double>());
     REQUIRE(false);
   } catch (const double e) {
-    CHECK(e == Approx(1.0));
+    CHECK(e == Catch::Approx(1.0));
   }
 }
 
@@ -964,7 +963,7 @@ TEST_CASE("Pair conversions") {
         Pair(5, 3.14);
     )cs");
     CHECK(p.first == 5);
-    CHECK(p.second == Approx(3.14));
+    CHECK(p.second == Catch::Approx(3.14));
   }
 }
 
@@ -976,7 +975,7 @@ TEST_CASE("Parse floats with non-posix locale") {
 #endif
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
   const double parsed = chai.eval<double>("print(1.3); 1.3");
-  CHECK(parsed == Approx(1.3));
+  CHECK(parsed == Catch::Approx(1.3));
   const std::string str = chai.eval<std::string>("to_string(1.3)");
   CHECK(str == "1.3");
 }
@@ -1270,7 +1269,7 @@ TEST_CASE("Test reference member being registered") {
   double d;
   chai.add(chaiscript::var(Reference_MyClass(d)), "ref");
   chai.eval("ref.x = 2.3");
-  CHECK(d == Approx(2.3));
+  CHECK(d == Catch::Approx(2.3));
 }
 
 // starting with C++20 u8"" strings cannot be compared with std::string
@@ -1827,7 +1826,7 @@ TEST_CASE("vector of vectors conversion (issue #374)") {
            }),
            "sum_nested");
 
-  CHECK(chai.eval<double>("sum_nested([[1.0, 2.0], [3.0, 4.0]])") == Approx(10.0));
+  CHECK(chai.eval<double>("sum_nested([[1.0, 2.0], [3.0, 4.0]])") == Catch::Approx(10.0));
 
   CHECK(chai.eval<bool>(
       "auto v = VectorVectorDouble();"
@@ -1910,12 +1909,12 @@ TEST_CASE("Nested namespaces via register_namespace with :: separator") {
 
   chai.import("constants");
 
-  CHECK(chai.eval<double>("constants.si.mu_B") == Approx(9.274));
-  CHECK(chai.eval<double>("constants.mm.mu_B") == Approx(0.05788));
+  CHECK(chai.eval<double>("constants.si.mu_B") == Catch::Approx(9.274));
+  CHECK(chai.eval<double>("constants.mm.mu_B") == Catch::Approx(0.05788));
 
   // Scope resolution via :: works the same as . for access
-  CHECK(chai.eval<double>("constants::si::mu_B") == Approx(9.274));
-  CHECK(chai.eval<double>("constants::mm::mu_B") == Approx(0.05788));
+  CHECK(chai.eval<double>("constants::si::mu_B") == Catch::Approx(9.274));
+  CHECK(chai.eval<double>("constants::mm::mu_B") == Catch::Approx(0.05788));
 }
 
 TEST_CASE("Deeply nested namespaces via register_namespace") {
@@ -1984,7 +1983,7 @@ TEST_CASE("Namespace block with var declarations") {
     }
   )");
 
-  CHECK(chai.eval<double>("config::pi") == Approx(3.14));
+  CHECK(chai.eval<double>("config::pi") == Catch::Approx(3.14));
   CHECK(chai.eval<std::string>("config::name") == "hello");
 }
 

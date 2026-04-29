@@ -155,7 +155,7 @@ else()
 endif()
 
 if(MSVC)
-  add_definitions(/W4 /w14545 /w34242 /w34254 /w34287 /w44263 /w44265 /w44296 /w44311 /w44826 /we4289 /w14546 /w14547 /w14549 /w14555 /w14619 /w14905 /w14906 /w14928)
+  add_definitions(/WX /W4 /w14545 /w34242 /w34254 /w34287 /w44263 /w44265 /w44296 /w44311 /w44826 /we4289 /w14546 /w14547 /w14549 /w14555 /w14619 /w14905 /w14906 /w14928)
 
   if(MSVC_VERSION STREQUAL "1800")
     # VS2013 doesn't have magic statics
@@ -175,10 +175,10 @@ if(MSVC)
   # how to workaround or fix the error. So I'm disabling it globally.
   add_definitions(/wd4503)
 else()
-  add_definitions(-Wall -Wextra -Wconversion -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wcast-qual -Wunused -Woverloaded-virtual -Wno-noexcept-type -Wpedantic -Werror=return-type)
+  add_definitions(-Werror -Wall -Wextra -Wconversion -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Wcast-align -Wcast-qual -Wunused -Woverloaded-virtual -Wno-noexcept-type -Wpedantic -Werror=return-type)
 
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-    add_definitions(-Weverything -Wno-c++98-compat-pedantic  -Wno-c++98-compat -Wno-documentation -Wno-switch-enum -Wno-weak-vtables -Wno-missing-prototypes -Wno-padded -Wno-missing-noreturn -Wno-exit-time-destructors -Wno-documentation-unknown-command -Wno-unused-template -Wno-undef -Wno-double-promotion)
+    add_definitions(-Weverything -Wno-c++98-compat-pedantic  -Wno-c++98-compat -Wno-documentation -Wno-switch-enum -Wno-weak-vtables -Wno-missing-prototypes -Wno-padded -Wno-missing-noreturn -Wno-exit-time-destructors -Wno-documentation-unknown-command -Wno-unused-template -Wno-undef -Wno-double-promotion -Wno-switch-default -Wno-nrvo -Wno-shadow-uncaptured-local -Wno-unsafe-buffer-usage-in-libc-call -Wno-c++20-extensions -Wno-unknown-warning-option -Wno-poison-system-directories -Wno-c++20-compat -Wno-c++17-compat)
   else()
     add_definitions(-Wnoexcept)
   endif()
@@ -390,8 +390,16 @@ if(BUILD_TESTING)
   )
 
   if(NOT UNIT_TEST_LIGHT)
+    add_library(catch2 STATIC unittests/catch_amalgamated.cpp)
+    if(NOT MSVC)
+      target_compile_options(catch2 PRIVATE -Wno-conversion -Wno-noexcept -Wno-maybe-uninitialized)
+    endif()
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+      target_compile_options(catch2 PUBLIC -Wno-unknown-warning-option -Wno-covered-switch-default -Wno-disabled-macro-expansion -Wno-unsafe-buffer-usage -Wno-unused-macros)
+    endif()
+
     add_executable(compiled_tests unittests/compiled_tests.cpp)
-    target_link_libraries(compiled_tests ${LIBS} ${CHAISCRIPT_LIBS})
+    target_link_libraries(compiled_tests catch2 ${LIBS} ${CHAISCRIPT_LIBS})
     catch_discover_tests(compiled_tests TEST_PREFIX "compiled.")
 
     add_executable(static_chaiscript_test unittests/static_chaiscript.cpp)
@@ -403,7 +411,7 @@ if(BUILD_TESTING)
     add_test(NAME Boxed_Cast_Test COMMAND boxed_cast_test)
 
     add_executable(type_info_test unittests/type_info_test.cpp)
-    target_link_libraries(type_info_test ${LIBS})
+    target_link_libraries(type_info_test catch2 ${LIBS})
     add_test(NAME Type_Info_Test COMMAND type_info_test)
 
     add_executable(c_linkage_test unittests/c_linkage_test.cpp)

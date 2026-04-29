@@ -7,6 +7,7 @@
 
 #include "../chaiscript_defines.hpp"
 #include "quick_flat_map.hpp"
+#include "unicode.hpp"
 #include <cctype>
 #include <cmath>
 #include <cstdint>
@@ -44,21 +45,17 @@ namespace chaiscript::json {
         = std::variant<std::nullptr_t, chaiscript::utility::QuickFlatMap<std::string, JSON>, std::vector<JSON>, std::string, double, std::int64_t, bool>;
 
     struct Internal {
-      Internal(std::nullptr_t)
-          : d(nullptr) {
-      }
-      Internal()
-          : d(nullptr) {
-      }
-      Internal(Class c)
+      explicit Internal(std::nullptr_t) {}
+      Internal() = default;
+      Internal(const Class c)
           : d(make_type(c)) {
       }
       template<typename T>
-      Internal(T t)
+      explicit Internal(T t)
           : d(std::move(t)) {
       }
 
-      static Data make_type(Class c) {
+      static Data make_type(const Class c) {
         switch (c) {
           case Class::Null:
             return nullptr;
@@ -84,7 +81,7 @@ namespace chaiscript::json {
         }
       }
 
-      Class type() const noexcept { return Class(d.index()); }
+      [[nodiscard]] Class type() const noexcept { return Class(d.index()); }
 
       template<auto ClassValue, typename Visitor, typename Or>
       decltype(auto) visit_or(Visitor &&visitor, Or &&other) const {
@@ -108,14 +105,14 @@ namespace chaiscript::json {
       auto &Float() { return get_set_type<Class::Floating>(); }
       auto &Bool() { return get_set_type<Class::Boolean>(); }
 
-      auto Map() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Object)>(&d); }
-      auto Vector() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Array)>(&d); }
-      auto String() const noexcept { return std::get_if<static_cast<std::size_t>(Class::String)>(&d); }
-      auto Int() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Integral)>(&d); }
-      auto Float() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Floating)>(&d); }
-      auto Bool() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Boolean)>(&d); }
+      [[nodiscard]] auto Map() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Object)>(&d); }
+      [[nodiscard]] auto Vector() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Array)>(&d); }
+      [[nodiscard]] auto String() const noexcept { return std::get_if<static_cast<std::size_t>(Class::String)>(&d); }
+      [[nodiscard]] auto Int() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Integral)>(&d); }
+      [[nodiscard]] auto Float() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Floating)>(&d); }
+      [[nodiscard]] auto Bool() const noexcept { return std::get_if<static_cast<std::size_t>(Class::Boolean)>(&d); }
 
-      Data d;
+      Data d{nullptr};
     };
 
     Internal internal;
@@ -129,12 +126,12 @@ namespace chaiscript::json {
       JSONWrapper(Container *val)
           : object(val) {
       }
-      JSONWrapper(std::nullptr_t) {}
+      JSONWrapper(std::nullptr_t) { }
 
-      typename Container::iterator begin() { return object ? object->begin() : typename Container::iterator(); }
-      typename Container::iterator end() { return object ? object->end() : typename Container::iterator(); }
-      typename Container::const_iterator begin() const { return object ? object->begin() : typename Container::iterator(); }
-      typename Container::const_iterator end() const { return object ? object->end() : typename Container::iterator(); }
+      Container::iterator begin() { return object ? object->begin() : typename Container::iterator(); }
+      Container::iterator end() { return object ? object->end() : typename Container::iterator(); }
+      [[nodiscard]] Container::const_iterator begin() const { return object ? object->begin() : typename Container::iterator(); }
+      [[nodiscard]] Container::const_iterator end() const { return object ? object->end() : typename Container::iterator(); }
     };
 
     template<typename Container>
@@ -147,10 +144,10 @@ namespace chaiscript::json {
       }
       JSONConstWrapper(std::nullptr_t) {}
 
-      typename Container::const_iterator begin() const noexcept {
+      [[nodiscard]] Container::const_iterator begin() const noexcept {
         return object ? object->begin() : typename Container::const_iterator();
       }
-      typename Container::const_iterator end() const noexcept { return object ? object->end() : typename Container::const_iterator(); }
+      [[nodiscard]] Container::const_iterator end() const noexcept { return object ? object->end() : typename Container::const_iterator(); }
     };
 
     JSON() = default;
@@ -162,7 +159,9 @@ namespace chaiscript::json {
 
     JSON(initializer_list<JSON> list)
         : internal(Class::Object) {
-      for (auto i = list.begin(), e = list.end(); i != e; ++i, ++i) {
+      for (auto i = list.begin(), e = list.end();
+           i != e;
+           std::advance(i, 2)) {
         operator[](i->to_string()) = *std::next(i);
       }
     }
@@ -471,22 +470,8 @@ namespace chaiscript::json {
                 }
               }
               offset += 4;
-              const auto ch = static_cast<uint32_t>(std::stoi(hex_matches, nullptr, 16));
-              if (ch < 0x80) {
-                val += static_cast<char>(ch);
-              } else if (ch < 0x800) {
-                val += static_cast<char>(0xC0 | (ch >> 6));
-                val += static_cast<char>(0x80 | (ch & 0x3F));
-              } else if (ch < 0x10000) {
-                val += static_cast<char>(0xE0 | (ch >> 12));
-                val += static_cast<char>(0x80 | ((ch >> 6) & 0x3F));
-                val += static_cast<char>(0x80 | (ch & 0x3F));
-              } else if (ch < 0x200000) {
-                val += static_cast<char>(0xF0 | (ch >> 18));
-                val += static_cast<char>(0x80 | ((ch >> 12) & 0x3F));
-                val += static_cast<char>(0x80 | ((ch >> 6) & 0x3F));
-                val += static_cast<char>(0x80 | (ch & 0x3F));
-              } else {
+              const auto ch = static_cast<std::uint32_t>(std::stoi(hex_matches, nullptr, 16));
+              if (chaiscript::utility::unicode::append_utf8(val, ch) == 0) {
                 throw std::runtime_error(std::string("JSON ERROR: String: Invalid 32 bit universal character"));
               }
             } break;

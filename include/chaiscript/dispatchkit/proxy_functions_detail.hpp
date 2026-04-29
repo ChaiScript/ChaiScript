@@ -80,7 +80,7 @@ namespace chaiscript {
       }
 
       template<typename Callable, typename Ret, typename... Params, size_t... I>
-      Ret call_func(Ret (*)(Params...),
+      Ret call_func_impl(Ret (*)(Params...),
                     std::index_sequence<I...>,
                     const Callable &f,
                     [[maybe_unused]] const chaiscript::Function_Params &params,
@@ -95,13 +95,23 @@ namespace chaiscript {
       template<typename Callable, typename Ret, typename... Params>
       Boxed_Value
       call_func(Ret (*sig)(Params...), const Callable &f, const chaiscript::Function_Params &params, const Type_Conversions_State &t_conversions) {
-        if constexpr (std::is_same_v<Ret, void>) {
-          call_func(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions);
-          return Handle_Return<void>::handle();
-        } else {
-          return Handle_Return<Ret>::handle(call_func(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions));
-        }
+        return Handle_Return<Ret>::handle(call_func_impl(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions));
       }
+
+// MSVC has a broken warning for unreachable code in this block
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4702)
+#endif
+      template<typename Callable, typename... Params>
+      Boxed_Value
+      call_func(void (*sig)(Params...), const Callable &f, const chaiscript::Function_Params &params, const Type_Conversions_State &t_conversions) {
+        call_func_impl(sig, std::index_sequence_for<Params...>{}, f, params, t_conversions);
+        return Handle_Return<void>::handle();
+      }
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
     } // namespace detail
   } // namespace dispatch
