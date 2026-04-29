@@ -12,6 +12,13 @@
 //  This file is an amalgamation of multiple different files.
 //  You probably shouldn't edit it directly.
 //  ----------------------------------------------------------
+
+#if defined(min) && defined(max)
+#undef min
+#undef max
+#endif
+
+
 #ifndef CATCH_AMALGAMATED_HPP_INCLUDED
 #define CATCH_AMALGAMATED_HPP_INCLUDED
 
