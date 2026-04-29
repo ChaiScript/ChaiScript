@@ -539,6 +539,40 @@ namespace chaiscript::bootstrap::standard_library {
     m.add(fun([](const String *s, size_t pos, size_t len) { return s->substr(pos, len); }), "substr");
   }
 
+  /// Add a String_View type (e.g. std::string_view), with conversions to and from
+  /// the matching owning String type (e.g. std::string).
+  ///
+  /// Only registers operations that don't share names with the owning String type's
+  /// methods that take arithmetic arguments (e.g. substr/find). Those would create
+  /// dispatch ambiguity once the implicit String -> StringView conversion is in
+  /// play, because neither overload would exactly match a (String, int, int) call.
+  ///
+  /// \note A String_View is a non-owning reference. Constructing one from a
+  /// temporary owning String yields a dangling reference once that temporary
+  /// is destroyed; the same lifetime caveats as in C++ apply here.
+  template<typename StringView, typename String>
+  void string_view_type(const std::string &type, Module &m) {
+    m.add(user_type<StringView>(), type);
+    m.add(constructor<StringView()>(), type);
+    m.add(constructor<StringView(const StringView &)>(), type);
+    m.add(fun([](const String &s) { return StringView{s}; }), type);
+
+    opers_comparison<StringView>(m);
+
+    m.add(fun([](const StringView *s) { return s->size(); }), "size");
+    m.add(fun([](const StringView *s) { return s->length(); }), "length");
+    m.add(fun([](const StringView *s) { return s->empty(); }), "empty");
+    m.add(fun([](const StringView *s) { return s->data(); }), "data");
+
+    // Built-in implicit conversion from owning String to non-owning StringView.
+    m.add(type_conversion<const String &, StringView>());
+
+    // Explicit conversion from StringView back to owning String, registered as
+    // to_string(sv); the call site can also register it under the owning type's
+    // name (e.g. string(sv)) when desired.
+    m.add(fun([](const StringView sv) { return String{sv}; }), "to_string");
+  }
+
   /// Add a MapType container
   /// http://www.sgi.com/tech/stl/Map.html
   template<typename FutureType>

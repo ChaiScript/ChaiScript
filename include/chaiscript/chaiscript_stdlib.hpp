@@ -10,6 +10,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -52,8 +53,13 @@ namespace chaiscript {
 
       bootstrap::standard_library::vector_type<std::vector<Boxed_Value>>("Vector", *lib);
       bootstrap::standard_library::string_type<std::string>("string", *lib);
+      bootstrap::standard_library::string_view_type<std::string_view, std::string>("string_view", *lib);
       bootstrap::standard_library::map_type<std::map<std::string, Boxed_Value>>("Map", *lib);
       bootstrap::standard_library::pair_type<std::pair<Boxed_Value, Boxed_Value>>("Pair", *lib);
+
+      // Allow explicit conversion from std::string_view back to std::string,
+      // e.g. `string(sv)` in ChaiScript.
+      lib->add(fun([](const std::string_view sv) { return std::string{sv}; }), "string");
 
 #ifndef CHAISCRIPT_NO_THREADS
       bootstrap::standard_library::future_type<std::future<chaiscript::Boxed_Value>>("future", *lib);

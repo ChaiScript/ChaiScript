@@ -2204,3 +2204,19 @@ TEST_CASE("Exception from C++ [] operator is catchable in ChaiScript") {
     caught
   )") == true);
 }
+
+// Issue #458: ChaiScript strings should be passable to C++ functions that
+// take std::string_view, std::string_view should be a known type, and
+// explicit conversion from std::string_view to std::string should work.
+TEST_CASE("Issue #458: std::string_view interop with ChaiScript strings") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.add(chaiscript::fun([](const std::string_view sv) { return std::string(sv); }), "consume_string_view");
+
+  CHECK(chai.eval<std::string>(R"(consume_string_view("Hi there"))") == "Hi there");
+  CHECK(chai.eval<std::string>(R"(var s = "from variable"; consume_string_view(s))") == "from variable");
+
+  CHECK(chai.eval<bool>(R"(type_name(string_view("hello")) == "string_view")"));
+
+  CHECK(chai.eval<std::string>(R"(string(string_view("round trip")))") == "round trip");
+}

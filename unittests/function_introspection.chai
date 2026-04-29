@@ -39,14 +39,15 @@ assert_equal(true, test_fun_types[1].bare_equal(int_type));
 
 assert_equal(2, `==`.get_arity());
 
-// < should be the merging of two functions bool <(PODObject, PODObject) and bool <(string, string)
+// < should be the merging of three functions bool <(PODObject, PODObject),
+// bool <(string, string), and bool <(string_view, string_view)
 // we want to peel it apart and make sure that's true
 auto types = `<`.get_param_types();
 assert_equal(3, types.size());
 assert_equal(true, types[0].bare_equal(bool_type));
 assert_equal(true, types[1].bare_equal(Object_type));
 assert_equal(true, types[2].bare_equal(Object_type));
-assert_equal(2, `<`.get_contained_functions().size());
+assert_equal(3, `<`.get_contained_functions().size());
 
 
 // guard existence tests
