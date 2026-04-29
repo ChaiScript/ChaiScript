@@ -489,7 +489,7 @@ namespace chaiscript {
         if (m_position.remaining() >= len) {
           const char *file_pos = &(*m_position);
           for (size_t pos = 0; pos < len; ++pos) {
-            if (sym[pos] != *std::next(file_pos, static_cast<ssize_t>(pos))) {
+            if (sym[pos] != *std::next(file_pos, static_cast<std::ptrdiff_t>(pos))) {
               return false;
             }
           }
