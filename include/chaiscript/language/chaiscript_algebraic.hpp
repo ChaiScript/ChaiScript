@@ -12,6 +12,7 @@
 
 #include "../utility/hash.hpp"
 
+#include <array>
 #include <string>
 
 namespace chaiscript {
@@ -52,10 +53,10 @@ namespace chaiscript {
       invalid
     };
 
-    constexpr static const char *to_string(Opers t_oper) noexcept {
-      constexpr const char *opers[]
+    constexpr static std::string_view to_string(Opers t_oper) noexcept {
+      constexpr const std::array opers
           = {"", "==", "<", ">", "<=", ">=", "!=", "", "=", "++", "--", "*=", "+=", "/=", "-=", "", "&=", "|=", "<<=", ">>=", "%=", "^=", "", "<<", ">>", "%", "&", "|", "^", "~", "", "+", "/", "*", "-", "+", "-", ""};
-      return opers[static_cast<int>(t_oper)];
+      return opers[static_cast<std::size_t>(t_oper)];
     }
 
     constexpr static Opers to_operator(std::string_view t_str, bool t_is_unary = false) noexcept {

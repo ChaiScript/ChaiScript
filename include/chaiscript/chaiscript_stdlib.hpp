@@ -18,11 +18,11 @@
 
 #include "dispatchkit/function_call.hpp"
 
-//#include "dispatchkit/dispatchkit.hpp"
+// #include "dispatchkit/dispatchkit.hpp"
 #include "dispatchkit/bootstrap.hpp"
 #include "dispatchkit/bootstrap_stl.hpp"
 #include "dispatchkit/operators.hpp"
-//#include "dispatchkit/boxed_value.hpp"
+// #include "dispatchkit/boxed_value.hpp"
 #include "dispatchkit/register_function.hpp"
 #include "language/chaiscript_prelude.hpp"
 #include "utility/json_wrap.hpp"
@@ -45,11 +45,10 @@ namespace chaiscript {
 
       auto lib = std::make_shared<Module>();
 
-      const bool no_io = std::find(t_opts.begin(), t_opts.end(), Library_Options::No_IO) != t_opts.end();
       const bool no_prelude = std::find(t_opts.begin(), t_opts.end(), Library_Options::No_Prelude) != t_opts.end();
       const bool no_json = std::find(t_opts.begin(), t_opts.end(), Library_Options::No_JSON) != t_opts.end();
 
-      bootstrap::Bootstrap::bootstrap(*lib, no_io);
+      bootstrap::Bootstrap::bootstrap(*lib);
 
       bootstrap::standard_library::vector_type<std::vector<Boxed_Value>>("Vector", *lib);
       bootstrap::standard_library::string_type<std::string>("string", *lib);

@@ -131,9 +131,9 @@ namespace chaiscript {
   namespace {
     /// Helper lookup to get the name of each node type
     constexpr const char *ast_node_type_to_string(AST_Node_Type ast_node_type) noexcept {
-      constexpr const char *const ast_node_types[] = {"Id", "Fun_Call", "Unused_Return_Fun_Call", "Arg_List", "Equation", "Var_Decl", "Assign_Decl", "Array_Call", "Dot_Access", "Lambda", "Block", "Scopeless_Block", "Def", "While", "If", "For", "Ranged_For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range", "Inline_Range", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Noop", "Class", "Binary", "Arg", "Global_Decl", "Constant", "Compiled", "Const_Var_Decl", "Const_Assign_Decl", "Using", "Enum", "Namespace_Block"};
+      constexpr std::array ast_node_types = {"Id", "Fun_Call", "Unused_Return_Fun_Call", "Arg_List", "Equation", "Var_Decl", "Assign_Decl", "Array_Call", "Dot_Access", "Lambda", "Block", "Scopeless_Block", "Def", "While", "If", "For", "Ranged_For", "Inline_Array", "Inline_Map", "Return", "File", "Prefix", "Break", "Continue", "Map_Pair", "Value_Range", "Inline_Range", "Try", "Catch", "Finally", "Method", "Attr_Decl", "Logical_And", "Logical_Or", "Reference", "Switch", "Case", "Default", "Noop", "Class", "Binary", "Arg", "Global_Decl", "Constant", "Compiled", "Const_Var_Decl", "Const_Assign_Decl", "Using", "Enum", "Namespace_Block"};
 
-      return ast_node_types[static_cast<int>(ast_node_type)];
+      return ast_node_types[static_cast<std::size_t>(ast_node_type)];
     }
   } // namespace
 
@@ -627,13 +627,13 @@ namespace chaiscript {
 
   } // namespace exception
 
-  //static
+  // static
   bool AST_Node::get_bool_condition(const Boxed_Value &t_bv, const chaiscript::detail::Dispatch_State &t_ss) {
-      try {
-        return t_ss->boxed_cast<bool>(t_bv);
-      } catch (const exception::bad_boxed_cast &) {
-        throw exception::eval_error("Condition not boolean");
-      }
+    try {
+      return t_ss->boxed_cast<bool>(t_bv);
+    } catch (const exception::bad_boxed_cast &) {
+      throw exception::eval_error("Condition not boolean");
+    }
   }
 
   namespace parser {

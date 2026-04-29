@@ -22,11 +22,10 @@
 #include "../static_libs/chaiscript_parser.hpp"
 #include "../static_libs/chaiscript_stdlib.hpp"
 
-#define CATCH_CONFIG_MAIN
+#include "catch_amalgamated.hpp"
 
 #include <clocale>
 
-#include "catch.hpp"
 
 // lambda_tests
 TEST_CASE("C++11 Lambdas Can Be Registered") {
@@ -196,7 +195,7 @@ TEST_CASE("Throw int or double") {
     chai.eval("throw(1.0)", chaiscript::exception_specification<int, double>());
     REQUIRE(false);
   } catch (const double e) {
-    CHECK(e == Approx(1.0));
+    CHECK(e == Catch::Approx(1.0));
   }
 }
 
@@ -766,7 +765,9 @@ TEST_CASE("Utility_Test utility class wrapper for enum") {
 }
 
 // Issue #601: add_class for enums should work directly with ChaiScript reference
-enum class Issue601_EnumClass { Apple, Banana, Pear };
+enum class Issue601_EnumClass { Apple,
+                                Banana,
+                                Pear };
 
 TEST_CASE("Issue 601: add_class enum with ChaiScript reference directly") {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
@@ -787,7 +788,9 @@ TEST_CASE("Issue 601: add_class enum with ChaiScript reference directly") {
 }
 
 // Also test non-scoped enum directly with ChaiScript reference
-enum Issue601_PlainEnum { Issue601_Red = 0, Issue601_Green = 1, Issue601_Blue = 2 };
+enum Issue601_PlainEnum { Issue601_Red = 0,
+                          Issue601_Green = 1,
+                          Issue601_Blue = 2 };
 
 TEST_CASE("Issue 601: add_class plain enum with ChaiScript reference directly") {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
@@ -1113,7 +1116,7 @@ TEST_CASE("Pair conversions") {
     const auto p = chai.eval<std::pair<std::string, std::string>>(R"cs(
         Pair("chai", "script");
     )cs");
-    CHECK(p.first == std::string{ "chai" });
+    CHECK(p.first == std::string{"chai"});
     CHECK(p.second == "script");
   }
   {
@@ -1121,7 +1124,7 @@ TEST_CASE("Pair conversions") {
         Pair(5, 3.14);
     )cs");
     CHECK(p.first == 5);
-    CHECK(p.second == Approx(3.14));
+    CHECK(p.second == Catch::Approx(3.14));
   }
 }
 
@@ -1133,7 +1136,7 @@ TEST_CASE("Parse floats with non-posix locale") {
 #endif
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
   const double parsed = chai.eval<double>("print(1.3); 1.3");
-  CHECK(parsed == Approx(1.3));
+  CHECK(parsed == Catch::Approx(1.3));
   const std::string str = chai.eval<std::string>("to_string(1.3)");
   CHECK(str == "1.3");
 }
@@ -1427,7 +1430,7 @@ TEST_CASE("Test reference member being registered") {
   double d;
   chai.add(chaiscript::var(Reference_MyClass(d)), "ref");
   chai.eval("ref.x = 2.3");
-  CHECK(d == Approx(2.3));
+  CHECK(d == Catch::Approx(2.3));
 }
 
 // starting with C++20 u8"" strings cannot be compared with std::string
@@ -1693,7 +1696,8 @@ TEST_CASE("ChaiScript default has all functions") {
 TEST_CASE("Issue #421 - Switch with type_conversion does not compare destroyed objects") {
   struct MyType {
     int value;
-    explicit MyType(int v) : value(v) {}
+    explicit MyType(int v)
+        : value(v) {}
   };
 
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
@@ -1916,51 +1920,79 @@ TEST_CASE("push_back on script vector with vector_conversion") {
   // Register a C++ function that accepts the converted type, so we can
   // verify that vector_conversion actually works for passing vectors
   chai.add(chaiscript::fun([](const std::vector<std::string> &v) -> std::string {
-    std::string result;
-    for (const auto &s : v) {
-      if (!result.empty()) { result += ","; }
-      result += s;
-    }
-    return result;
-  }), "join_strings");
+             std::string result;
+             for (const auto &s : v) {
+               if (!result.empty()) { result += ","; }
+               result += s;
+             }
+             return result;
+           }),
+           "join_strings");
 
   // push_back on an empty script-created vector must be visible
   CHECK(chai.eval<bool>(
-    "auto x = [];"
-    "x.push_back(\"Hello\");"
-    "x.size() == 1"
-  ));
+      "auto x = [];"
+      "x.push_back(\"Hello\");"
+      "x.size() == 1"));
 
   // push_back on a vector with initial elements must grow correctly
   CHECK(chai.eval<bool>(
-    "auto y = [\"a\", \"b\"];"
-    "y.push_back(\"c\");"
-    "y.push_back(\"d\");"
-    "y.size() == 4"
-  ));
+      "auto y = [\"a\", \"b\"];"
+      "y.push_back(\"c\");"
+      "y.push_back(\"d\");"
+      "y.size() == 4"));
 
   // Verify the actual content is preserved after push_back
   CHECK(chai.eval<std::string>(
-    "auto z = [];"
-    "z.push_back(\"World\");"
-    "z[0]"
-  ) == "World");
+            "auto z = [];"
+            "z.push_back(\"World\");"
+            "z[0]")
+        == "World");
 
   // Round-trip: build a vector in script, push_back elements, then pass it
   // to a C++ function via vector_conversion and verify the contents
   CHECK(chai.eval<std::string>(
-    "auto v = [\"one\", \"two\"];"
-    "v.push_back(\"three\");"
-    "join_strings(v)"
-  ) == "one,two,three");
+            "auto v = [\"one\", \"two\"];"
+            "v.push_back(\"three\");"
+            "join_strings(v)")
+        == "one,two,three");
 
   // Verify conversion works on a freshly created vector too
   CHECK(chai.eval<std::string>(
-    "auto w = [];"
-    "w.push_back(\"hello\");"
-    "w.push_back(\"world\");"
-    "join_strings(w)"
-  ) == "hello,world");
+            "auto w = [];"
+            "w.push_back(\"hello\");"
+            "w.push_back(\"world\");"
+            "join_strings(w)")
+        == "hello,world");
+}
+
+TEST_CASE("vector of vectors conversion (issue #374)") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  auto m = std::make_shared<chaiscript::Module>();
+  chaiscript::bootstrap::standard_library::vector_type<std::vector<double>>("VectorDouble", *m);
+  chaiscript::bootstrap::standard_library::vector_type<std::vector<std::vector<double>>>("VectorVectorDouble", *m);
+  m->add(chaiscript::vector_conversion<std::vector<double>>());
+  m->add(chaiscript::vector_conversion<std::vector<std::vector<double>>>());
+  chai.add(m);
+
+  chai.add(chaiscript::fun([](const std::vector<std::vector<double>> &v) -> double {
+             double sum = 0;
+             for (const auto &inner : v) {
+               for (const auto d : inner) {
+                 sum += d;
+               }
+             }
+             return sum;
+           }),
+           "sum_nested");
+
+  CHECK(chai.eval<double>("sum_nested([[1.0, 2.0], [3.0, 4.0]])") == Catch::Approx(10.0));
+
+  CHECK(chai.eval<bool>(
+      "auto v = VectorVectorDouble();"
+      "v = [[1.0, 2.0], [3.0, 4.0]];"
+      "v.size() == 2"));
 }
 
 // Regression test for issue #607: AST_Node_Trace must be a complete type
@@ -2038,12 +2070,12 @@ TEST_CASE("Nested namespaces via register_namespace with :: separator") {
 
   chai.import("constants");
 
-  CHECK(chai.eval<double>("constants.si.mu_B") == Approx(9.274));
-  CHECK(chai.eval<double>("constants.mm.mu_B") == Approx(0.05788));
+  CHECK(chai.eval<double>("constants.si.mu_B") == Catch::Approx(9.274));
+  CHECK(chai.eval<double>("constants.mm.mu_B") == Catch::Approx(0.05788));
 
   // Scope resolution via :: works the same as . for access
-  CHECK(chai.eval<double>("constants::si::mu_B") == Approx(9.274));
-  CHECK(chai.eval<double>("constants::mm::mu_B") == Approx(0.05788));
+  CHECK(chai.eval<double>("constants::si::mu_B") == Catch::Approx(9.274));
+  CHECK(chai.eval<double>("constants::mm::mu_B") == Catch::Approx(0.05788));
 }
 
 TEST_CASE("Deeply nested namespaces via register_namespace") {
@@ -2112,7 +2144,7 @@ TEST_CASE("Namespace block with var declarations") {
     }
   )");
 
-  CHECK(chai.eval<double>("config::pi") == Approx(3.14));
+  CHECK(chai.eval<double>("config::pi") == Catch::Approx(3.14));
   CHECK(chai.eval<std::string>("config::name") == "hello");
 }
 
@@ -2123,20 +2155,23 @@ TEST_CASE("Namespace block rejects non-declaration statements") {
     namespace bad {
       1 + 2
     }
-  )"), chaiscript::exception::eval_error);
+  )"),
+                  chaiscript::exception::eval_error);
 
   CHECK_THROWS_AS(chai.eval(R"(
     namespace bad {
       print("hello")
     }
-  )"), chaiscript::exception::eval_error);
+  )"),
+                  chaiscript::exception::eval_error);
 
   CHECK_THROWS_AS(chai.eval(R"(
     var x = 5
     namespace bad {
       x = 10
     }
-  )"), chaiscript::exception::eval_error);
+  )"),
+                  chaiscript::exception::eval_error);
 }
 
 TEST_CASE("C++ runtime_error thrown from registered function is catchable in ChaiScript") {
@@ -2224,7 +2259,8 @@ TEST_CASE("Typed catch with no match propagates exception") {
     catch(string e) {
       // wrong type, should not match — exception propagates
     }
-  )"), chaiscript::exception::eval_error);
+  )"),
+                  chaiscript::exception::eval_error);
 }
 
 TEST_CASE("Typed catch with no match still runs finally block") {
@@ -2241,7 +2277,8 @@ TEST_CASE("Typed catch with no match still runs finally block") {
     finally {
       finally_ran = true
     }
-  )"), chaiscript::exception::eval_error);
+  )"),
+                  chaiscript::exception::eval_error);
 
   CHECK(chai.eval<bool>("finally_ran") == true);
 }
@@ -2250,13 +2287,14 @@ TEST_CASE("Multiple C++ exception types from registered functions") {
   chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
 
   chai.add(chaiscript::fun([](int which) -> int {
-    switch (which) {
-      case 0: throw std::runtime_error("runtime");
-      case 1: throw std::out_of_range("range");
-      case 2: throw std::logic_error("logic");
-      default: return which;
-    }
-  }), "cpp_multi_throw");
+             switch (which) {
+               case 0: throw std::runtime_error("runtime");
+               case 1: throw std::out_of_range("range");
+               case 2: throw std::logic_error("logic");
+               default: return which;
+             }
+           }),
+           "cpp_multi_throw");
 
   CHECK(chai.eval<int>(R"(
     var catch_count = 0
@@ -2284,8 +2322,9 @@ TEST_CASE("Exception from C++ binary operator is catchable in ChaiScript") {
   chai.add(chaiscript::user_type<ThrowingType>(), "ThrowingType");
   chai.add(chaiscript::constructor<ThrowingType(int)>(), "ThrowingType");
   chai.add(chaiscript::fun([](const ThrowingType &, const ThrowingType &) -> ThrowingType {
-    throw std::runtime_error("cpp operator+ threw");
-  }), "+");
+             throw std::runtime_error("cpp operator+ threw");
+           }),
+           "+");
 
   CHECK(chai.eval<bool>(R"(
     var caught = false
@@ -2311,9 +2350,10 @@ TEST_CASE("Exception from C++ [] operator is catchable in ChaiScript") {
   chai.add(chaiscript::user_type<IndexableType>(), "IndexableType");
   chai.add(chaiscript::constructor<IndexableType(int)>(), "IndexableType");
   chai.add(chaiscript::fun([](const IndexableType &, int idx) -> int {
-    if (idx < 0) { throw std::out_of_range("negative index"); }
-    return idx;
-  }), "[]");
+             if (idx < 0) { throw std::out_of_range("negative index"); }
+             return idx;
+           }),
+           "[]");
 
   CHECK(chai.eval<int>("var obj = IndexableType(0); obj[5]") == 5);
 

@@ -8,6 +8,8 @@
 #define CHAISCRIPT_UTILITY_FNV1A_HPP_
 
 #include "../chaiscript_defines.hpp"
+
+#include <iterator>
 #include <cstdint>
 
 namespace chaiscript {
@@ -28,7 +30,7 @@ namespace chaiscript {
 
         while (begin != end) {
           h = (h ^ (*begin)) * 0x01000193;
-          ++begin;
+          std::advance(begin, 1);
         }
         return h;
 
@@ -43,7 +45,7 @@ namespace chaiscript {
 
       template<size_t N>
       static constexpr std::uint32_t hash(const char (&str)[N]) noexcept {
-        return hash(std::begin(str), std::end(str) - 1);
+        return hash(std::begin(str), std::prev(std::end(str)));
       }
 
       static constexpr std::uint32_t hash(std::string_view sv) noexcept {
@@ -64,7 +66,7 @@ namespace chaiscript {
           hash += std::uint32_t(*begin);
           hash += hash << 10;
           hash ^= hash >> 6;
-          ++begin;
+          std::advance(begin, 1);
         }
 
         hash += hash << 3;

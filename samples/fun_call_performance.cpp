@@ -30,9 +30,8 @@ char *mystrdup(const char *s) {
 #ifdef CHAISCRIPT_MSVC
   strcpy_s(d, len + 1, s); // Copy the characters
 #else
-  strncpy(d, s, len); // Copy the characters
+  strncpy(d, s, len + 1); // Copy the characters
 #endif
-  d[len] = '\0';
   return d; // Return the new string
 }
 
@@ -297,7 +296,7 @@ int main(int argc, char *argv[]) {
       ++i;
     }
 
-    std::string arg(i ? argv[i] : "--interactive");
+    std::string arg(i ? *std::next(argv, i) : "--interactive");
 
     enum {
       eInteractive,
@@ -311,7 +310,7 @@ int main(int argc, char *argv[]) {
         std::cout << "insufficient input following " << arg << std::endl;
         return EXIT_FAILURE;
       } else {
-        arg = argv[++i];
+        arg = *std::next(argv, ++i);
       }
     } else if (arg == "-" || arg == "--stdin") {
       arg = "";

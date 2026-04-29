@@ -128,7 +128,7 @@ namespace chaiscript {
     chaiscript::detail::Dispatch_Engine &get_eval_engine() noexcept { return m_engine; }
 
     /// Builds all the requirements for ChaiScript, including its evaluator and a run of its prelude.
-    void build_eval_system(const ModulePtr &t_lib, const std::vector<Options> &t_opts, const bool t_no_io = false) {
+    void build_eval_system(const ModulePtr &t_lib, const std::vector<Options> &t_opts, const bool t_no_io) {
       if (t_lib) {
         add(t_lib);
       }
@@ -143,12 +143,14 @@ namespace chaiscript {
       m_engine.add(fun([this](const std::string &s) { m_print_handler(s + "\n"); }), "println_string");
 
       m_engine.add(fun([this](const std::function<void(const std::string &)> &t_handler) {
-        m_print_handler = t_handler;
-      }), "set_print_handler");
+                     m_print_handler = t_handler;
+                   }),
+                   "set_print_handler");
 
       m_engine.add(fun([this](const std::function<std::string(const std::string &)> &t_reader) {
-        m_file_reader = t_reader;
-      }), "set_file_reader");
+                     m_file_reader = t_reader;
+                   }),
+                   "set_file_reader");
 
       m_engine.add(fun([this]() { m_engine.dump_system(); }), "dump_system");
       m_engine.add(fun([this](const Boxed_Value &t_bv) { m_engine.dump_object(t_bv); }), "dump_object");
@@ -297,7 +299,6 @@ namespace chaiscript {
     }
 
   public:
-
     /// \brief Set a custom handler for print output, used by both print_string and println_string
     /// \param[in] t_handler Function to call with the string to print
     void set_print_handler(std::function<void(const std::string &)> t_handler) {
@@ -312,7 +313,7 @@ namespace chaiscript {
 
     /// \brief Virtual destructor for ChaiScript
     virtual ~ChaiScript_Basic() = default;
-     
+
     /// \brief Constructor for ChaiScript
     /// \param[in] t_lib Standard library to apply to this ChaiScript instance
     /// \param[in] t_modulepaths Vector of paths to search when attempting to load a binary module
@@ -322,7 +323,7 @@ namespace chaiscript {
                      std::vector<std::string> t_module_paths = {},
                      std::vector<std::string> t_use_paths = {},
                      const std::vector<chaiscript::Options> &t_opts = chaiscript::default_options(),
-                     const bool t_no_io = false)
+                     const bool t_no_io=false)
         : m_module_paths(ensure_minimum_path_vec(std::move(t_module_paths)))
         , m_use_paths(ensure_minimum_path_vec(std::move(t_use_paths)))
         , m_parser(std::move(parser))
@@ -616,7 +617,7 @@ namespace chaiscript {
     /// (the symbol mentioned above), an exception is thrown.
     ///
     /// \throw chaiscript::exception::load_module_error In the event that no matching module can be found.
-    std::string load_module(const std::string &t_module_name) {
+    std::string load_module([[maybe_unused]] const std::string &t_module_name) {
 #ifdef CHAISCRIPT_NO_DYNLOAD
       throw chaiscript::exception::load_module_error("Loadable module support was disabled (CHAISCRIPT_NO_DYNLOAD)");
 #else
@@ -792,7 +793,7 @@ namespace chaiscript {
         throw std::runtime_error("Namespace: " + t_namespace_name + " was already registered.");
       }
 
-      m_namespace_generators.emplace(std::make_pair(t_namespace_name, [=, space = Namespace()]() mutable -> Namespace & {
+      m_namespace_generators.emplace(std::make_pair(t_namespace_name, [=, space = Namespace()]() mutable noexcept -> Namespace & {
         t_namespace_generator(space);
         return space;
       }));
@@ -801,7 +802,7 @@ namespace chaiscript {
       while (pos != std::string::npos) {
         const std::string parent = t_namespace_name.substr(0, pos);
         if (!m_namespace_generators.count(parent)) {
-          m_namespace_generators.emplace(std::make_pair(parent, [space = Namespace()]() mutable -> Namespace & {
+          m_namespace_generators.emplace(std::make_pair(parent, [space = Namespace()]() mutable noexcept -> Namespace & {
             return space;
           }));
         }

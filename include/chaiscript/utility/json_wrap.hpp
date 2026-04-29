@@ -1,8 +1,8 @@
 #ifndef CHAISCRIPT_SIMPLEJSON_WRAP_HPP
 #define CHAISCRIPT_SIMPLEJSON_WRAP_HPP
 
-#include "json.hpp"
 #include "../dispatchkit/dynamic_object.hpp"
+#include "json.hpp"
 
 namespace chaiscript {
   class json_wrap {

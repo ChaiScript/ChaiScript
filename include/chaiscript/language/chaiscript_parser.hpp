@@ -14,6 +14,7 @@
 #include <cstring>
 #include <exception>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -22,14 +23,10 @@
 #include "../dispatchkit/boxed_value.hpp"
 #include "../utility/hash.hpp"
 #include "../utility/static_string.hpp"
+#include "../utility/unicode.hpp"
 #include "chaiscript_common.hpp"
 #include "chaiscript_optimizer.hpp"
 #include "chaiscript_tracer.hpp"
-
-#if defined(CHAISCRIPT_UTF16_UTF32)
-#include <codecvt>
-#include <locale>
-#endif
 
 #if defined(CHAISCRIPT_MSVC) && defined(max) && defined(min)
 #define CHAISCRIPT_PUSHED_MIN_MAX
@@ -64,41 +61,26 @@ namespace chaiscript {
       // Generic for u16, u32 and wchar
       template<typename string_type>
       struct Char_Parser_Helper {
-        // common for all implementations
-        static std::string u8str_from_ll(long long val) {
-          using char_type = std::string::value_type;
-
-          char_type c[2];
-          c[1] = char_type(val);
-          c[0] = char_type(val >> 8);
-
-          if (c[0] == 0) {
-            return std::string(1, c[1]); // size, character
-          }
-
-          return std::string(c, 2); // char buffer, size
-        }
-
         static string_type str_from_ll(long long val) {
-          using target_char_type = typename string_type::value_type;
-#if defined(CHAISCRIPT_UTF16_UTF32)
-          // prepare converter
-          std::wstring_convert<std::codecvt_utf8<target_char_type>, target_char_type> converter;
-          // convert
-          return converter.from_bytes(u8str_from_ll(val));
-#else
-          // no conversion available, just put value as character
-          return string_type(1, target_char_type(val)); // size, character
-#endif
+          string_type out;
+          utility::unicode::append_codepoint(out, static_cast<std::uint32_t>(val));
+          return out;
         }
       };
 
-      // Specialization for char AKA UTF-8
+      // Specialization for char AKA UTF-8: preserve raw two-byte packing
+      // of multi-character literals.
       template<>
       struct Char_Parser_Helper<std::string> {
         static std::string str_from_ll(long long val) {
-          // little SFINAE trick to avoid base class
-          return Char_Parser_Helper<std::true_type>::u8str_from_ll(val);
+          using char_type = std::string::value_type;
+          char_type c[2];
+          c[1] = char_type(val);
+          c[0] = char_type(val >> 8);
+          if (c[0] == 0) {
+            return std::string(1, c[1]);
+          }
+          return std::string(c, 2);
         }
       };
     } // namespace detail
@@ -128,9 +110,7 @@ namespace chaiscript {
 
       template<typename Array2D, typename First, typename Second>
       constexpr static void set_alphabet(Array2D &array, const First first, const Second second) noexcept {
-        auto *first_ptr = &std::get<0>(array) + static_cast<std::size_t>(first);
-        auto *second_ptr = &std::get<0>(*first_ptr) + static_cast<std::size_t>(second);
-        *second_ptr = true;
+        array[static_cast<std::size_t>(first)][static_cast<std::size_t>(second)] = true;
       }
 
       constexpr static std::array<std::array<bool, detail::lengthof_alphabet>, detail::max_alphabet> build_alphabet() noexcept {
@@ -360,13 +340,13 @@ namespace chaiscript {
               ++col;
             }
 
-            ++m_pos;
+            std::advance(m_pos, 1);
           }
           return *this;
         }
 
         constexpr Position &operator--() noexcept {
-          --m_pos;
+          std::advance(m_pos, -1);
           if (*m_pos == '\n') {
             --line;
             col = m_last_col;
@@ -377,7 +357,7 @@ namespace chaiscript {
         }
 
         constexpr Position &operator+=(size_t t_distance) noexcept {
-          *this = (*this) + t_distance;
+          *this = *this + t_distance;
           return *this;
         }
 
@@ -406,9 +386,9 @@ namespace chaiscript {
 
         constexpr bool operator!=(const Position &t_rhs) const noexcept { return m_pos != t_rhs.m_pos; }
 
-        constexpr bool has_more() const noexcept { return m_pos != m_end; }
+        [[nodiscard]] constexpr bool has_more() const noexcept { return m_pos != m_end; }
 
-        constexpr size_t remaining() const noexcept { return static_cast<size_t>(m_end - m_pos); }
+        [[nodiscard]] constexpr size_t remaining() const noexcept { return static_cast<size_t>(m_end - m_pos); }
 
         constexpr const char &operator*() const noexcept {
           if (m_pos == m_end) {
@@ -458,7 +438,7 @@ namespace chaiscript {
       constexpr static Operator_Matches m_operator_matches{};
 
       /// test a char in an m_alphabet
-      constexpr bool char_in_alphabet(char c, detail::Alphabet a) const noexcept { return m_alphabet[a][static_cast<uint8_t>(c)]; }
+      [[nodiscard]] constexpr bool char_in_alphabet(char c, detail::Alphabet a) const noexcept { return m_alphabet[a][static_cast<uint8_t>(c)]; }
 
       /// Prints the parsed ast_nodes as a tree
       void debug_print(const AST_Node &t, std::string prepend = "") const override {
@@ -509,7 +489,7 @@ namespace chaiscript {
         if (m_position.remaining() >= len) {
           const char *file_pos = &(*m_position);
           for (size_t pos = 0; pos < len; ++pos) {
-            if (sym.c_str()[pos] != file_pos[pos]) {
+            if (sym[pos] != *std::next(file_pos, static_cast<std::ptrdiff_t>(pos))) {
               return false;
             }
           }
@@ -530,20 +510,9 @@ namespace chaiscript {
             }
           }
           return true;
-        } else if (Symbol_(m_singleline_comment)) {
-          while (m_position.has_more()) {
-            if (Symbol_(m_cr_lf)) {
-              m_position -= 2;
-              break;
-            } else if (Char_('\n')) {
-              --m_position;
-              break;
-            } else {
-              ++m_position;
-            }
-          }
-          return true;
-        } else if (Symbol_(m_annotation)) {
+        }
+
+        if (Symbol_(m_singleline_comment) || Symbol_(m_annotation)) {
           while (m_position.has_more()) {
             if (Symbol_(m_cr_lf)) {
               m_position -= 2;
@@ -1060,7 +1029,7 @@ namespace chaiscript {
       template<typename string_type>
       struct Char_Parser {
         string_type &match;
-        using char_type = typename string_type::value_type;
+        using char_type = string_type::value_type;
         bool is_escaped = false;
         bool is_interpolated = false;
         bool saw_interpolation_marker = false;
@@ -1119,40 +1088,20 @@ namespace chaiscript {
         }
 
         void process_unicode() {
-          const auto ch = static_cast<uint32_t>(std::stoi(hex_matches, nullptr, 16));
+          const auto ch = static_cast<std::uint32_t>(std::stoi(hex_matches, nullptr, 16));
           const auto match_size = hex_matches.size();
           hex_matches.clear();
           is_escaped = false;
           const auto u_size = unicode_size;
           unicode_size = 0;
 
-          char buf[4];
           if (u_size != match_size) {
             throw exception::eval_error("Incomplete unicode escape sequence");
           }
-          if (u_size == 4 && ch >= 0xD800 && ch <= 0xDFFF) {
+          if (u_size == 4 && utility::unicode::is_surrogate(ch)) {
             throw exception::eval_error("Invalid 16 bit universal character");
           }
-
-          if (ch < 0x80) {
-            match += static_cast<char>(ch);
-          } else if (ch < 0x800) {
-            buf[0] = static_cast<char>(0xC0 | (ch >> 6));
-            buf[1] = static_cast<char>(0x80 | (ch & 0x3F));
-            match.append(buf, 2);
-          } else if (ch < 0x10000) {
-            buf[0] = static_cast<char>(0xE0 | (ch >> 12));
-            buf[1] = static_cast<char>(0x80 | ((ch >> 6) & 0x3F));
-            buf[2] = static_cast<char>(0x80 | (ch & 0x3F));
-            match.append(buf, 3);
-          } else if (ch < 0x200000) {
-            buf[0] = static_cast<char>(0xF0 | (ch >> 18));
-            buf[1] = static_cast<char>(0x80 | ((ch >> 12) & 0x3F));
-            buf[2] = static_cast<char>(0x80 | ((ch >> 6) & 0x3F));
-            buf[3] = static_cast<char>(0x80 | (ch & 0x3F));
-            match.append(buf, 4);
-          } else {
-            // this must be an invalid escape sequence?
+          if (utility::unicode::append_utf8(match, ch) == 0) {
             throw exception::eval_error("Invalid 32 bit universal character");
           }
         }
@@ -1548,7 +1497,7 @@ namespace chaiscript {
         if (m_position.remaining() >= len) {
           auto tmp = m_position;
           for (size_t i = 0; tmp.has_more() && i < len; ++i) {
-            if (*tmp != t_s.c_str()[i]) {
+            if (*tmp != t_s[i]) {
               return false;
             }
             ++tmp;
@@ -1575,7 +1524,7 @@ namespace chaiscript {
         return retval;
       }
 
-      bool is_operator(std::string_view t_s) const noexcept { return m_operator_matches.is_match(t_s); }
+      [[nodiscard]] bool is_operator(std::string_view t_s) const noexcept { return m_operator_matches.is_match(t_s); }
 
       /// Reads (and potentially captures) a symbol group from input if it matches the parameter
       bool Symbol(const utility::Static_String &t_s, const bool t_disallow_prevention = false) {
@@ -2749,7 +2698,7 @@ namespace chaiscript {
         bool retval = false;
         const auto prev_stack_top = m_match_stack.size();
 
-        if (m_operators[t_precedence] != Operator_Precedence::Prefix) {
+        if (t_precedence < m_operators.size() && m_operators[t_precedence] < Operator_Precedence::Prefix) {
           if (Operator(t_precedence + 1)) {
             retval = true;
             std::string oper;
@@ -2763,7 +2712,7 @@ namespace chaiscript {
               }
 
               switch (m_operators[t_precedence]) {
-                case (Operator_Precedence::Ternary_Cond):
+                case Operator_Precedence::Ternary_Cond:
                   if (Symbol(":")) {
                     if (!Operator(t_precedence + 1)) {
                       throw exception::eval_error("Incomplete '" + oper + "' expression",
@@ -2778,24 +2727,24 @@ namespace chaiscript {
                   }
                   break;
 
-                case (Operator_Precedence::Addition):
-                case (Operator_Precedence::Multiplication):
-                case (Operator_Precedence::Shift):
-                case (Operator_Precedence::Equality):
-                case (Operator_Precedence::Bitwise_And):
-                case (Operator_Precedence::Bitwise_Xor):
-                case (Operator_Precedence::Bitwise_Or):
-                case (Operator_Precedence::Comparison):
+                case Operator_Precedence::Addition:
+                case Operator_Precedence::Multiplication:
+                case Operator_Precedence::Shift:
+                case Operator_Precedence::Equality:
+                case Operator_Precedence::Bitwise_And:
+                case Operator_Precedence::Bitwise_Xor:
+                case Operator_Precedence::Bitwise_Or:
+                case Operator_Precedence::Comparison:
                   build_match<eval::Binary_Operator_AST_Node<Tracer>>(prev_stack_top, oper);
                   break;
 
-                case (Operator_Precedence::Logical_And):
+                case Operator_Precedence::Logical_And:
                   build_match<eval::Logical_And_AST_Node<Tracer>>(prev_stack_top, oper);
                   break;
-                case (Operator_Precedence::Logical_Or):
+                case Operator_Precedence::Logical_Or:
                   build_match<eval::Logical_Or_AST_Node<Tracer>>(prev_stack_top, oper);
                   break;
-                case (Operator_Precedence::Prefix):
+                case Operator_Precedence::Prefix:
                   assert(false); // cannot reach here because of if() statement at the top
                   break;
 
@@ -2992,7 +2941,7 @@ namespace chaiscript {
       /// Parses the given input string, tagging parsed ast_nodes with the given m_filename.
       AST_NodePtr parse_internal(const std::string &t_input, std::string t_fname) {
         const auto begin = t_input.empty() ? nullptr : &t_input.front();
-        const auto end = begin == nullptr ? nullptr : begin + t_input.size();
+        const auto end = begin == nullptr ? nullptr : std::next(begin, std::ssize(t_input));
         m_position = Position(begin, end);
         m_filename = std::make_shared<std::string>(std::move(t_fname));
 

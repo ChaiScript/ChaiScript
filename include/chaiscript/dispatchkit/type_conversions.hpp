@@ -498,6 +498,29 @@ namespace chaiscript {
                                                                                                                func);
   }
 
+  namespace detail {
+    template<typename T>
+    struct is_std_vector : std::false_type {};
+
+    template<typename T, typename A>
+    struct is_std_vector<std::vector<T, A>> : std::true_type {};
+
+    template<typename T>
+    T convert_vector_element(const Boxed_Value &bv) {
+      if constexpr (is_std_vector<T>::value) {
+        const auto &inner = Cast_Helper<const std::vector<Boxed_Value> &>::cast(bv, nullptr);
+        T result;
+        result.reserve(inner.size());
+        for (const Boxed_Value &elem : inner) {
+          result.push_back(convert_vector_element<typename T::value_type>(elem));
+        }
+        return result;
+      } else {
+        return Cast_Helper<T>::cast(bv, nullptr);
+      }
+    }
+  } // namespace detail
+
   template<typename To>
   Type_Conversion vector_conversion() {
     auto func = [](const Boxed_Value &t_bv) -> Boxed_Value {
@@ -506,7 +529,7 @@ namespace chaiscript {
       To vec;
       vec.reserve(from_vec.size());
       for (const Boxed_Value &bv : from_vec) {
-        vec.push_back(detail::Cast_Helper<typename To::value_type>::cast(bv, nullptr));
+        vec.push_back(detail::convert_vector_element<typename To::value_type>(bv));
       }
 
       return Boxed_Value(std::move(vec));
@@ -542,9 +565,8 @@ namespace chaiscript {
           = detail::Cast_Helper<const std::pair<Boxed_Value, Boxed_Value> &>::cast(t_bv, nullptr);
 
       auto pair = std::make_pair(
-        detail::Cast_Helper<Left>::cast(from_pair.first, nullptr),
-        detail::Cast_Helper<Right>::cast(from_pair.second, nullptr)
-      );
+          detail::Cast_Helper<Left>::cast(from_pair.first, nullptr),
+          detail::Cast_Helper<Right>::cast(from_pair.second, nullptr));
 
       return Boxed_Value(std::move(pair));
     };

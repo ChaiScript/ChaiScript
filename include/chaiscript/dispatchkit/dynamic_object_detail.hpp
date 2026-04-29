@@ -148,11 +148,11 @@ namespace chaiscript {
       };
 
       /**
- * A Proxy_Function implementation designed for creating a new
- * Dynamic_Object
- * that is automatically guarded based on the first param based on the
- * param's type name
- */
+       * A Proxy_Function implementation designed for creating a new
+       * Dynamic_Object
+       * that is automatically guarded based on the first param based on the
+       * param's type name
+       */
       class Dynamic_Object_Constructor final : public Proxy_Function_Base {
       public:
         Dynamic_Object_Constructor(std::string t_type_name, const Proxy_Function &t_func)
