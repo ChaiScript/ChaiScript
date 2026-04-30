@@ -19,5 +19,8 @@ EMSCRIPTEN_BINDINGS(chaiscript) {
   emscripten::function("evalInt", &chaiscript_eval_int);
   emscripten::function("evalFloat", &chaiscript_eval_float);
   emscripten::function("evalDouble", &chaiscript_eval_double);
+  emscripten::function("saveState", &chaiscript_save_state);
+  emscripten::function("restoreState", &chaiscript_restore_state);
+  emscripten::function("releaseState", &chaiscript_release_state);
 }
 #endif
