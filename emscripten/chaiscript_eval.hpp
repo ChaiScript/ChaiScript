@@ -12,6 +12,7 @@
 #define CHAISCRIPT_EMSCRIPTEN_EVAL_HPP_
 
 #include <chaiscript/chaiscript.hpp>
+#include <map>
 #include <string>
 #include <unordered_map>
 
@@ -21,8 +22,17 @@ namespace detail {
     return chai;
   }
 
-  inline std::unordered_map<int, chaiscript::ChaiScript::State> &state_registry() {
-    static std::unordered_map<int, chaiscript::ChaiScript::State> registry;
+  // ChaiScript::State captures globals/functions/types but not the top-level
+  // scripting locals (variables created by `var x = ...` at the script's
+  // outermost scope). The playground's reset-between-runs use case needs both,
+  // so the snapshot pairs the engine state with the locals map.
+  struct Snapshot {
+    chaiscript::ChaiScript::State engine_state;
+    std::map<std::string, chaiscript::Boxed_Value> locals;
+  };
+
+  inline std::unordered_map<int, Snapshot> &state_registry() {
+    static std::unordered_map<int, Snapshot> registry;
     return registry;
   }
 
@@ -61,7 +71,8 @@ inline double chaiscript_eval_double(const std::string &input) {
 // no longer needed.
 inline int chaiscript_save_state() {
   const int handle = detail::next_state_handle();
-  detail::state_registry().emplace(handle, detail::get_chai_instance().get_state());
+  auto &chai = detail::get_chai_instance();
+  detail::state_registry().emplace(handle, detail::Snapshot{chai.get_state(), chai.get_locals()});
   return handle;
 }
 
@@ -70,7 +81,9 @@ inline int chaiscript_save_state() {
 inline void chaiscript_restore_state(const int handle) {
   const auto it = detail::state_registry().find(handle);
   if (it != detail::state_registry().end()) {
-    detail::get_chai_instance().set_state(it->second);
+    auto &chai = detail::get_chai_instance();
+    chai.set_state(it->second.engine_state);
+    chai.set_locals(it->second.locals);
   }
 }
 
