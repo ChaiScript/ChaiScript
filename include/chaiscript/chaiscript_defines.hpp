@@ -79,8 +79,18 @@ static_assert(_MSC_FULL_VER >= 190024210, "Visual C++ 2015 Update 3 or later req
 // causes the dispatcher to throw chaiscript::exception::stack_overflow_error
 // instead of letting the native call stack overflow. Defining the macro on
 // the command line overrides the default.
+//
+// MSVC Debug builds emit very large per-frame native stack usage (no inlining,
+// /RTC, buffer security checks) and Windows defaults to a 1 MiB thread stack,
+// so the same ChaiScript depth that fits comfortably on Linux/macOS or in an
+// MSVC Release build overflows the native stack before the depth check fires.
+// We pick a tighter default in that configuration to keep the throw reachable.
 #ifndef CHAISCRIPT_MAX_CALL_DEPTH
+#if defined(CHAISCRIPT_MSVC) && defined(_DEBUG)
+#define CHAISCRIPT_MAX_CALL_DEPTH 32
+#else
 #define CHAISCRIPT_MAX_CALL_DEPTH 256
+#endif
 #endif
 
 #include <cmath>
