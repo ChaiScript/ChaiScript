@@ -1,0 +1,39 @@
+// Regression test for issue #633: Stack-overflow due to infinite recursion
+// in user-defined operator (string interpolation).
+//
+// Before the fix the recursive `/=` invocation triggered unbounded native
+// recursion in the evaluator and crashed the host process with a SIGSEGV.
+// The engine now bounds call_depth and throws a catchable exception
+// instead of letting the native stack overflow.
+
+def string::`/=`(double d) {
+  this = "${this/= 2}/=${d}";
+  return this;
+}
+
+var s = "o World"
+var caught = false
+var message = ""
+
+try {
+  s /= 2
+  // unreachable: the recursive operator must abort with an exception
+  assert_true(false)
+} catch (e) {
+  caught = true
+  message = e.what()
+}
+
+assert_true(caught)
+
+// The reported error must mention the call-stack overflow so users can
+// distinguish it from an arbitrary script-level error.
+assert_true(find(message, "call stack") != -1)
+
+// A bounded recursion that stays below the limit must keep working.
+def count_down(n) {
+  if (n <= 0) { return 0 }
+  return count_down(n - 1) + 1
+}
+
+assert_equal(50, count_down(50))

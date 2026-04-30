@@ -75,6 +75,14 @@ static_assert(_MSC_FULL_VER >= 190024210, "Visual C++ 2015 Update 3 or later req
 #define CHAISCRIPT_DEBUG false
 #endif
 
+// Upper bound on the depth of nested ChaiScript function calls. Hitting it
+// causes the dispatcher to throw chaiscript::exception::stack_overflow_error
+// instead of letting the native call stack overflow. Defining the macro on
+// the command line overrides the default.
+#ifndef CHAISCRIPT_MAX_CALL_DEPTH
+#define CHAISCRIPT_MAX_CALL_DEPTH 256
+#endif
+
 #include <cmath>
 #include <memory>
 #include <string>
@@ -87,6 +95,9 @@ namespace chaiscript {
   constexpr static const char *compiler_version = CHAISCRIPT_COMPILER_VERSION;
   constexpr static const char *compiler_name = CHAISCRIPT_COMPILER_NAME;
   constexpr static const bool debug_build = CHAISCRIPT_DEBUG;
+
+  constexpr static const int max_call_depth = CHAISCRIPT_MAX_CALL_DEPTH;
+  static_assert(max_call_depth > 0, "CHAISCRIPT_MAX_CALL_DEPTH must be a positive integer");
 
   template<typename B, typename D, typename... Arg>
   inline std::shared_ptr<B> make_shared(Arg &&...arg) {

@@ -121,6 +121,19 @@ namespace chaiscript {
       global_non_const(const global_non_const &) = default;
       ~global_non_const() noexcept override = default;
     };
+
+    /// Exception thrown when the ChaiScript call stack exceeds
+    /// chaiscript::max_call_depth, signalling runaway recursion before the
+    /// native stack can overflow.
+    class stack_overflow_error : public std::runtime_error {
+    public:
+      stack_overflow_error() noexcept
+          : std::runtime_error("Maximum call stack depth exceeded") {
+      }
+
+      stack_overflow_error(const stack_overflow_error &) = default;
+      ~stack_overflow_error() noexcept override = default;
+    };
   } // namespace exception
 
   /// \brief Holds a collection of ChaiScript settings which can be applied to the ChaiScript runtime.
@@ -1010,6 +1023,10 @@ namespace chaiscript {
       void save_function_params(const Function_Params &t_params) { save_function_params(*m_stack_holder, t_params); }
 
       void new_function_call(Stack_Holder &t_s, Type_Conversions::Conversion_Saves &t_saves) {
+        if (t_s.call_depth >= max_call_depth) {
+          throw chaiscript::exception::stack_overflow_error{};
+        }
+
         if (t_s.call_depth == 0) {
           m_conversions.enable_conversion_saves(t_saves, true);
         }
