@@ -75,6 +75,24 @@ static_assert(_MSC_FULL_VER >= 190024210, "Visual C++ 2015 Update 3 or later req
 #define CHAISCRIPT_DEBUG false
 #endif
 
+// Upper bound on the depth of nested ChaiScript function calls. Hitting it
+// causes the dispatcher to throw chaiscript::exception::stack_overflow_error
+// instead of letting the native call stack overflow. Defining the macro on
+// the command line overrides the default.
+//
+// MSVC Debug builds emit very large per-frame native stack usage (no inlining,
+// /RTC, buffer security checks) and Windows defaults to a 1 MiB thread stack,
+// so the same ChaiScript depth that fits comfortably on Linux/macOS or in an
+// MSVC Release build overflows the native stack before the depth check fires.
+// We pick a tighter default in that configuration to keep the throw reachable.
+#ifndef CHAISCRIPT_MAX_CALL_DEPTH
+#if defined(CHAISCRIPT_MSVC) && CHAISCRIPT_DEBUG
+#define CHAISCRIPT_MAX_CALL_DEPTH 32
+#else
+#define CHAISCRIPT_MAX_CALL_DEPTH 256
+#endif
+#endif
+
 #include <cmath>
 #include <memory>
 #include <string>
@@ -87,6 +105,9 @@ namespace chaiscript {
   constexpr static const char *compiler_version = CHAISCRIPT_COMPILER_VERSION;
   constexpr static const char *compiler_name = CHAISCRIPT_COMPILER_NAME;
   constexpr static const bool debug_build = CHAISCRIPT_DEBUG;
+
+  constexpr static const int max_call_depth = CHAISCRIPT_MAX_CALL_DEPTH;
+  static_assert(max_call_depth > 0, "CHAISCRIPT_MAX_CALL_DEPTH must be a positive integer");
 
   template<typename B, typename D, typename... Arg>
   inline std::shared_ptr<B> make_shared(Arg &&...arg) {
