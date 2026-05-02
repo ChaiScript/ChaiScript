@@ -185,6 +185,8 @@ print("10! = " + to_string(factorial(10)))
       outputEl.scrollTop = outputEl.scrollHeight;
     }
 
+    var chaiHandle = 0;
+
     var Module = {
       print: function(text) {
         appendOutput(text);
@@ -193,6 +195,7 @@ print("10! = " + to_string(factorial(10)))
         appendOutput(text, 'output-error');
       },
       onRuntimeInitialized: function() {
+        chaiHandle = Module.create();
         statusEl.textContent = 'Ready';
         statusEl.className = 'ready';
         btnRun.disabled = false;
@@ -205,7 +208,7 @@ print("10! = " + to_string(factorial(10)))
 
       appendOutput('> Running...', 'output-line');
       try {
-        Module.eval(code);
+        Module.eval(chaiHandle, code);
       } catch (e) {
         appendOutput('Error: ' + e.message, 'output-error');
       }

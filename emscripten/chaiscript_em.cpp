@@ -13,11 +13,16 @@
 #include <emscripten/bind.h>
 
 EMSCRIPTEN_BINDINGS(chaiscript) {
+  emscripten::function("create", &chaiscript_create);
+  emscripten::function("destroy", &chaiscript_destroy);
   emscripten::function("eval", &chaiscript_eval);
   emscripten::function("evalString", &chaiscript_eval_string);
   emscripten::function("evalBool", &chaiscript_eval_bool);
   emscripten::function("evalInt", &chaiscript_eval_int);
   emscripten::function("evalFloat", &chaiscript_eval_float);
   emscripten::function("evalDouble", &chaiscript_eval_double);
+  emscripten::function("saveState", &chaiscript_save_state);
+  emscripten::function("restoreState", &chaiscript_restore_state);
+  emscripten::function("releaseState", &chaiscript_release_state);
 }
 #endif
