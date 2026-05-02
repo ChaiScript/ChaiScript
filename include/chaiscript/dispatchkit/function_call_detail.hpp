@@ -55,10 +55,23 @@ namespace chaiscript::dispatch::detail {
       }
     }
 
+    template<typename T>
+    struct is_shared_ptr : std::false_type {};
+
+    template<typename T>
+    struct is_shared_ptr<std::shared_ptr<T>> : std::true_type {};
+
     template<typename P, typename Q>
     static Boxed_Value box(Q &&q) {
+      using bare_p = std::remove_cv_t<std::remove_reference_t<P>>;
       if constexpr (std::is_same_v<chaiscript::Boxed_Value, std::decay_t<Q>>) {
         return std::forward<Q>(q);
+      } else if constexpr (is_shared_ptr<bare_p>::value) {
+        // Pass shared_ptr arguments through by value rather than wrapping a
+        // reference. Boxed_Value's shared_ptr-aware overloads then record the
+        // bare type as the pointee, allowing dispatch to a C++ function that
+        // takes the same shared_ptr<T> on the other side.
+        return Boxed_Value(bare_p(std::forward<Q>(q)));
       } else if constexpr (std::is_reference_v<P>) {
         return Boxed_Value(std::ref(std::forward<Q>(q)));
       } else {
