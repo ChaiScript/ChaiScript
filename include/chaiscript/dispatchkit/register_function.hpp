@@ -82,6 +82,43 @@ namespace chaiscript {
     return dispatch::detail::make_callable(std::forward<T>(t), dispatch::detail::function_signature(t));
   }
 
+  /// \brief Creates a new Proxy_Function object from an overloaded free function, with the
+  ///        signature specified explicitly to disambiguate the overload.
+  ///
+  /// \b Example:
+  /// \code
+  /// int overloaded(int);
+  /// double overloaded(double);
+  ///
+  /// chai.add(chaiscript::fun<int(int)>(&overloaded), "overloaded");
+  /// chai.add(chaiscript::fun<double(double)>(&overloaded), "overloaded");
+  /// \endcode
+  template<typename Sig, std::enable_if_t<std::is_function_v<Sig>, int> = 0>
+  Proxy_Function fun(std::type_identity_t<Sig> *f) {
+    return dispatch::detail::make_callable(f, dispatch::detail::function_signature(f));
+  }
+
+  /// \brief Creates a new Proxy_Function object from an overloaded member function, with the
+  ///        signature specified explicitly to disambiguate the overload.
+  ///
+  /// \b Example:
+  /// \code
+  /// class MyClass {
+  ///   public:
+  ///     int overloaded(int);
+  ///     double overloaded(double);
+  ///     int const_overloaded() const;
+  /// };
+  ///
+  /// chai.add(chaiscript::fun<int(int)>(&MyClass::overloaded), "overloaded");
+  /// chai.add(chaiscript::fun<double(double)>(&MyClass::overloaded), "overloaded");
+  /// chai.add(chaiscript::fun<int() const>(&MyClass::const_overloaded), "const_overloaded");
+  /// \endcode
+  template<typename Sig, typename Class, std::enable_if_t<std::is_function_v<Sig>, int> = 0>
+  Proxy_Function fun(std::type_identity_t<Sig> Class::*f) {
+    return dispatch::detail::make_callable(f, dispatch::detail::function_signature(f));
+  }
+
   /// \brief Creates a new Proxy_Function object from a free function, member function or data member and binds the first parameter of it
   /// \param[in] t Function / member to expose
   /// \param[in] q Value to bind to first parameter
