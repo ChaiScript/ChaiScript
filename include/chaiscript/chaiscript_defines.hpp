@@ -70,9 +70,9 @@ static_assert(_MSC_FULL_VER >= 190024210, "Visual C++ 2015 Update 3 or later req
 #endif
 
 #ifdef _DEBUG
-#define CHAISCRIPT_DEBUG true
+#define CHAISCRIPT_DEBUG 1
 #else
-#define CHAISCRIPT_DEBUG false
+#define CHAISCRIPT_DEBUG 0
 #endif
 
 // Upper bound on the depth of nested ChaiScript function calls. Hitting it
@@ -86,7 +86,7 @@ static_assert(_MSC_FULL_VER >= 190024210, "Visual C++ 2015 Update 3 or later req
 // MSVC Release build overflows the native stack before the depth check fires.
 // We pick a tighter default in that configuration to keep the throw reachable.
 #ifndef CHAISCRIPT_MAX_CALL_DEPTH
-#if defined(CHAISCRIPT_MSVC) && defined(_DEBUG)
+#if defined(CHAISCRIPT_MSVC) && CHAISCRIPT_DEBUG
 #define CHAISCRIPT_MAX_CALL_DEPTH 32
 #else
 #define CHAISCRIPT_MAX_CALL_DEPTH 256
