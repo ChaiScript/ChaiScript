@@ -584,9 +584,15 @@ TEST_CASE("Utility_Test utility class wrapper") {
 ///// Issue 612: fun<Sig>(&overloaded) should work for free and member function overloads
 
 namespace issue_612 {
-  std::string free_overload(int) { return "int"; }
-  std::string free_overload(double) { return "double"; }
-  std::string free_overload(const std::string &, bool) { return "string,bool"; }
+  std::string free_overload(int) {
+    return "int";
+  }
+  std::string free_overload(double) {
+    return "double";
+  }
+  std::string free_overload(const std::string &, bool) {
+    return "string,bool";
+  }
 
   class Issue_612_Class {
   public:
