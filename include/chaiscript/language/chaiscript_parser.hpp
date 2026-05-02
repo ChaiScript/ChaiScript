@@ -2941,7 +2941,11 @@ namespace chaiscript {
       /// Parses the given input string, tagging parsed ast_nodes with the given m_filename.
       AST_NodePtr parse_internal(const std::string &t_input, std::string t_fname) {
         const auto begin = t_input.empty() ? nullptr : &t_input.front();
-        const auto end = begin == nullptr ? nullptr : std::next(begin, (int)std::size(t_input)); // std::ssize() isn't available in C++17
+        #if __cplusplus >= 202002L
+        const auto end = begin == nullptr ? nullptr : std::next(begin, std::ssize(t_input));
+        #else
+        const auto end = begin == nullptr ? nullptr : std::next(begin, (int)std::size(t_input));
+        #endif
         m_position = Position(begin, end);
         m_filename = std::make_shared<std::string>(std::move(t_fname));
 
