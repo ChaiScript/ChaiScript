@@ -581,6 +581,74 @@ TEST_CASE("Utility_Test utility class wrapper") {
   chai.eval("t = Utility_Test();");
 }
 
+///// Issue 612: fun<Sig>(&overloaded) should work for free and member function overloads
+
+namespace issue_612 {
+  std::string free_overload(int) { return "int"; }
+  std::string free_overload(double) { return "double"; }
+  std::string free_overload(const std::string &, bool) { return "string,bool"; }
+
+  class Issue_612_Class {
+  public:
+    std::string member_overload(int) { return "int"; }
+    std::string member_overload(double) { return "double"; }
+    std::string const_member_overload(int) const { return "const_int"; }
+    std::string const_member_overload(double) const { return "const_double"; }
+  };
+} // namespace issue_612
+
+TEST_CASE("Issue 612: fun<Signature> for overloaded free functions") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.add(chaiscript::fun<std::string(int)>(&issue_612::free_overload), "free_overload");
+  chai.add(chaiscript::fun<std::string(double)>(&issue_612::free_overload), "free_overload");
+  chai.add(chaiscript::fun<std::string(const std::string &, bool)>(&issue_612::free_overload), "free_overload");
+
+  CHECK(chai.eval<std::string>("free_overload(1)") == "int");
+  CHECK(chai.eval<std::string>("free_overload(1.5)") == "double");
+  CHECK(chai.eval<std::string>("free_overload(\"hi\", true)") == "string,bool");
+}
+
+TEST_CASE("Issue 612: fun<Signature> for overloaded member functions (pointer-to-member form)") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.add(chaiscript::user_type<issue_612::Issue_612_Class>(), "Issue_612_Class");
+  chai.add(chaiscript::constructor<issue_612::Issue_612_Class()>(), "Issue_612_Class");
+
+  chai.add(chaiscript::fun<std::string (issue_612::Issue_612_Class::*)(int)>(&issue_612::Issue_612_Class::member_overload),
+           "member_overload");
+  chai.add(chaiscript::fun<std::string (issue_612::Issue_612_Class::*)(double)>(&issue_612::Issue_612_Class::member_overload),
+           "member_overload");
+  chai.add(chaiscript::fun<std::string (issue_612::Issue_612_Class::*)(int) const>(&issue_612::Issue_612_Class::const_member_overload),
+           "const_member_overload");
+  chai.add(chaiscript::fun<std::string (issue_612::Issue_612_Class::*)(double) const>(&issue_612::Issue_612_Class::const_member_overload),
+           "const_member_overload");
+
+  chai.eval("var t = Issue_612_Class();");
+  CHECK(chai.eval<std::string>("t.member_overload(1)") == "int");
+  CHECK(chai.eval<std::string>("t.member_overload(1.5)") == "double");
+  CHECK(chai.eval<std::string>("t.const_member_overload(1)") == "const_int");
+  CHECK(chai.eval<std::string>("t.const_member_overload(1.5)") == "const_double");
+}
+
+TEST_CASE("Issue 612: fun<Signature> for overloaded member functions (function-type form)") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  chai.add(chaiscript::user_type<issue_612::Issue_612_Class>(), "Issue_612_Class");
+  chai.add(chaiscript::constructor<issue_612::Issue_612_Class()>(), "Issue_612_Class");
+
+  chai.add(chaiscript::fun<std::string(int)>(&issue_612::Issue_612_Class::member_overload), "member_overload");
+  chai.add(chaiscript::fun<std::string(double)>(&issue_612::Issue_612_Class::member_overload), "member_overload");
+  chai.add(chaiscript::fun<std::string(int) const>(&issue_612::Issue_612_Class::const_member_overload), "const_member_overload");
+  chai.add(chaiscript::fun<std::string(double) const>(&issue_612::Issue_612_Class::const_member_overload), "const_member_overload");
+
+  chai.eval("var t = Issue_612_Class();");
+  CHECK(chai.eval<std::string>("t.member_overload(1)") == "int");
+  CHECK(chai.eval<std::string>("t.member_overload(1.5)") == "double");
+  CHECK(chai.eval<std::string>("t.const_member_overload(1)") == "const_int");
+  CHECK(chai.eval<std::string>("t.const_member_overload(1.5)") == "const_double");
+}
+
 enum Utility_Test_Numbers {
   ONE,
   TWO,
