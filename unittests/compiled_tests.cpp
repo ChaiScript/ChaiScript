@@ -357,9 +357,13 @@ TEST_CASE("Functor cast") {
 namespace {
   int shared_ptr_callback_observed_value = 0;
 
-  void shared_ptr_callback_accept(const std::shared_ptr<int> &ptr) { shared_ptr_callback_observed_value = ptr ? *ptr : 0; }
+  void shared_ptr_callback_accept(const std::shared_ptr<int> &ptr) {
+    shared_ptr_callback_observed_value = ptr ? *ptr : 0;
+  }
 
-  void shared_ptr_callback_call(const std::function<void(const std::shared_ptr<int> &)> &func) { func(std::make_shared<int>(42)); }
+  void shared_ptr_callback_call(const std::function<void(const std::shared_ptr<int> &)> &func) {
+    func(std::make_shared<int>(42));
+  }
 } // namespace
 
 // Regression for https://github.com/ChaiScript/ChaiScript/issues/493 - shared_ptr
