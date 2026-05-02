@@ -70,9 +70,9 @@ static_assert(_MSC_FULL_VER >= 190024210, "Visual C++ 2015 Update 3 or later req
 #endif
 
 #ifdef _DEBUG
-#define CHAISCRIPT_DEBUG 1
+#define CHAISCRIPT_DEBUG true
 #else
-#define CHAISCRIPT_DEBUG 0
+#define CHAISCRIPT_DEBUG false
 #endif
 
 // Upper bound on the depth of nested ChaiScript function calls. Hitting it
