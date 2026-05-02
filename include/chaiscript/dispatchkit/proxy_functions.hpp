@@ -737,11 +737,24 @@ namespace chaiscript {
             if (matching_func == end) {
               matching_func = begin;
             } else {
-              // handle const members vs non-const member, which is not really ambiguous
               const auto &mat_fun_param_types = matching_func->second->get_param_types();
               const auto &next_fun_param_types = begin->second->get_param_types();
 
-              if (plist[0].is_const() && !mat_fun_param_types[1].is_const() && next_fun_param_types[1].is_const()) {
+              // Prefer the candidate whose first parameter (receiver) matches the
+              // actual receiver type exactly over one that needs a type conversion.
+              // Conversions on the receiver create temporaries, so any mutation
+              // would be silently lost; this mirrors the deprioritization in
+              // dispatch() and resolves cases like myString.substr(int, int) when
+              // both string::substr and string_view::substr are registered.
+              const bool plist_empty = plist.empty();
+              const bool mat_receiver_exact = !plist_empty && mat_fun_param_types[1].bare_equal(plist[0].get_type_info());
+              const bool next_receiver_exact = !plist_empty && next_fun_param_types[1].bare_equal(plist[0].get_type_info());
+
+              if (mat_receiver_exact && !next_receiver_exact) {
+                // keep the old one, it has the better receiver match
+              } else if (!mat_receiver_exact && next_receiver_exact) {
+                matching_func = begin; // keep the new one, it has the better receiver match
+              } else if (plist[0].is_const() && !mat_fun_param_types[1].is_const() && next_fun_param_types[1].is_const()) {
                 matching_func = begin; // keep the new one, the const/non-const matchup is correct
               } else if (!plist[0].is_const() && !mat_fun_param_types[1].is_const() && next_fun_param_types[1].is_const()) {
                 // keep the old one, it has a better const/non-const matchup

@@ -2220,3 +2220,57 @@ TEST_CASE("Issue #458: std::string_view interop with ChaiScript strings") {
 
   CHECK(chai.eval<std::string>(R"(string(string_view("round trip")))") == "round trip");
 }
+
+// Issue #458 follow-up: string_view should expose the same search/substring
+// surface as string, and overload dispatch must keep myString.substr(...) on
+// String::substr while mySV.substr(...) goes to StringView::substr.
+TEST_CASE("Issue #458: string_view supports string-like search and substring") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  // Receiver-type wins: string keeps String::substr, string_view picks StringView::substr.
+  CHECK(chai.eval<bool>(R"(
+    fun(){
+      var s = "hello world";
+      var sv = string_view(s);
+      type_name(sv.substr(6, 5)) == "string_view" && type_name(s.substr(6, 5)) == "string"
+    }()
+  )"));
+
+  // Round-trip: substr through string_view yields the expected substring.
+  CHECK(chai.eval<std::string>(R"(
+    fun(){
+      var s = "hello world";
+      var sv = string_view(s);
+      to_string(sv.substr(6, 5))
+    }()
+  )") == "world");
+
+  // starts_with / ends_with on string_view.
+  CHECK(chai.eval<bool>(R"(
+    fun(){
+      var s = "hello world";
+      var sv = string_view(s);
+      sv.starts_with(string_view("hello")) && sv.ends_with(string_view("world"))
+    }()
+  )"));
+
+  // find / rfind / find_first_of return the expected positions.
+  CHECK(chai.eval<bool>(R"(
+    fun(){
+      var s = "hello world";
+      var sv = string_view(s);
+      sv.find(string_view("world"), 0) == 6 &&
+      sv.rfind(string_view("o"), sv.size()) == 7 &&
+      sv.find_first_of(string_view("aeiou"), 0) == 1
+    }()
+  )"));
+
+  // [] indexed access reads the character at the given position.
+  CHECK(chai.eval<bool>(R"(
+    fun(){
+      var s = "hello";
+      var sv = string_view(s);
+      sv[1] == 'e'
+    }()
+  )"));
+}
