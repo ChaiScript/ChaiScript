@@ -16,36 +16,57 @@
 #include <string>
 
 int main() {
+  const int chai = chaiscript_create();
+  assert(chai > 0 && "create must return a positive handle");
+
   // Test eval (void return) - same as Emscripten eval()
-  chaiscript_eval("var x = 42");
+  chaiscript_eval(chai, "var x = 42");
 
   // Test evalString - same as Emscripten evalString()
-  [[maybe_unused]] std::string s = chaiscript_eval_string("to_string(x)");
+  [[maybe_unused]] const std::string s = chaiscript_eval_string(chai, "to_string(x)");
   assert(s == "42");
 
   // Test evalInt - same as Emscripten evalInt()
-  [[maybe_unused]] int i = chaiscript_eval_int("1 + 2");
+  [[maybe_unused]] const int i = chaiscript_eval_int(chai, "1 + 2");
   assert(i == 3);
 
   // Test evalBool - same as Emscripten evalBool()
-  [[maybe_unused]] bool b = chaiscript_eval_bool("true");
+  [[maybe_unused]] bool b = chaiscript_eval_bool(chai, "true");
   assert(b == true);
 
-  b = chaiscript_eval_bool("false");
+  b = chaiscript_eval_bool(chai, "false");
   assert(b == false);
 
   // Test evalFloat - same as Emscripten evalFloat()
-  [[maybe_unused]] float f = chaiscript_eval_float("1.5f");
+  [[maybe_unused]] const float f = chaiscript_eval_float(chai, "1.5f");
   assert(std::abs(f - 1.5f) < 0.001f);
 
   // Test evalDouble - same as Emscripten evalDouble()
-  [[maybe_unused]] double d = chaiscript_eval_double("3.14");
+  [[maybe_unused]] const double d = chaiscript_eval_double(chai, "3.14");
   assert(std::abs(d - 3.14) < 0.001);
 
   // Test a more complex expression
-  chaiscript_eval("def square(n) { return n * n; }");
-  [[maybe_unused]] int sq = chaiscript_eval_int("square(7)");
+  chaiscript_eval(chai, "def square(n) { return n * n; }");
+  [[maybe_unused]] const int sq = chaiscript_eval_int(chai, "square(7)");
   assert(sq == 49);
+
+  // A second engine is fully independent of the first.
+  const int chai2 = chaiscript_create();
+  assert(chai2 != chai && "create must mint a fresh handle each call");
+  [[maybe_unused]] bool caught = false;
+  try {
+    chaiscript_eval(chai2, "x");
+  } catch (const chaiscript::exception::eval_error &) {
+    caught = true;
+  }
+  assert(caught && "engines must not share globals");
+
+  chaiscript_destroy(chai2);
+  chaiscript_destroy(chai);
+
+  // Destroying an unknown handle is a no-op.
+  chaiscript_destroy(chai);
+  chaiscript_destroy(99999);
 
   return 0;
 }

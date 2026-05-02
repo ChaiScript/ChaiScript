@@ -22,12 +22,14 @@ int main() {
   // through the eval wrapper functions. In WASM builds without exception
   // support, these would abort instead of throwing.
 
+  const int chai = chaiscript_create();
+
   [[maybe_unused]] bool caught = false;
 
   // Test 1: eval with undefined variable should throw
   caught = false;
   try {
-    chaiscript_eval("this_variable_does_not_exist");
+    chaiscript_eval(chai, "this_variable_does_not_exist");
   } catch (const chaiscript::exception::eval_error &) {
     caught = true;
   }
@@ -36,7 +38,7 @@ int main() {
   // Test 2: evalString with a type mismatch should throw
   caught = false;
   try {
-    chaiscript_eval_string("1 + 2");
+    chaiscript_eval_string(chai, "1 + 2");
   } catch (const chaiscript::exception::bad_boxed_cast &) {
     caught = true;
   }
@@ -45,7 +47,7 @@ int main() {
   // Test 3: evalInt with invalid syntax should throw
   caught = false;
   try {
-    chaiscript_eval_int("def {}");
+    chaiscript_eval_int(chai, "def {}");
   } catch (const chaiscript::exception::eval_error &) {
     caught = true;
   }
@@ -54,7 +56,7 @@ int main() {
   // Test 4: eval with throw statement should propagate exception
   caught = false;
   try {
-    chaiscript_eval("throw(\"user exception\")");
+    chaiscript_eval(chai, "throw(\"user exception\")");
   } catch (const chaiscript::Boxed_Value &) {
     caught = true;
   } catch (...) {
@@ -63,10 +65,12 @@ int main() {
   assert(caught && "ChaiScript throw must propagate as an exception");
 
   // Test 5: Verify normal operation still works after caught exceptions
-  chaiscript_eval("var post_exception_test = 100");
+  chaiscript_eval(chai, "var post_exception_test = 100");
 
-  [[maybe_unused]] const int result = chaiscript_eval_int("post_exception_test");
+  [[maybe_unused]] const int result = chaiscript_eval_int(chai, "post_exception_test");
   assert(result == 100 && "normal eval must work after caught exceptions");
+
+  chaiscript_destroy(chai);
 
   std::cout << "All emscripten exception tests passed.\n";
   return 0;
