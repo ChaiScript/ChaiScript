@@ -12,6 +12,9 @@
 
 #include "boxed_value.hpp"
 
+// std::span was introduced in >= C++20, so we implement a small
+// wrapper around it if it's not available.
+#if __cplusplus >= 202002L
 #include <span>
 
 namespace chaiscript {
@@ -19,5 +22,71 @@ namespace chaiscript {
   using Function_Params = std::span<const Boxed_Value>;
 
 } // namespace chaiscript
+
+#else
+
+namespace chaiscript {
+  class Function_Params {
+  public:
+    constexpr Function_Params(const Boxed_Value *const t_begin, const Boxed_Value *const t_end)
+        : m_begin(t_begin)
+        , m_end(t_end) {
+    }
+
+    explicit Function_Params(const Boxed_Value &bv)
+        : m_begin(&bv)
+        , m_end(m_begin + 1) {
+    }
+
+    explicit Function_Params(const std::vector<Boxed_Value> &vec)
+        : m_begin(vec.empty() ? nullptr : vec.data())
+        , m_end(vec.empty() ? nullptr : vec.data() + vec.size()) {
+    }
+
+    template<size_t Size>
+    constexpr explicit Function_Params(const std::array<Boxed_Value, Size> &a)
+        : m_begin(a.data())
+        , m_end(a.data() + Size) {
+    }
+
+    [[nodiscard]] constexpr const Boxed_Value &operator[](const std::size_t t_i) const noexcept { return m_begin[t_i]; }
+
+    [[nodiscard]] constexpr const Boxed_Value *begin() const noexcept { return m_begin; }
+
+    [[nodiscard]] constexpr const Boxed_Value &front() const noexcept { return *m_begin; }
+
+    [[nodiscard]] constexpr const Boxed_Value &first() const noexcept { return *m_begin; }
+
+    [[nodiscard]] constexpr Function_Params first(std::size_t t_count) const noexcept { return Function_Params(m_begin, m_begin + t_count); }
+
+    [[nodiscard]] constexpr Function_Params subspan(std::size_t t_offset, std::size_t t_count = std::size_t(-1)) const noexcept {
+      const auto *begin = m_begin + t_offset;
+      const auto *end = (t_count == std::size_t(-1)) ? m_end : begin + t_count;
+      return Function_Params(begin, end);
+    }
+
+    [[nodiscard]] constexpr const Boxed_Value *end() const noexcept { return m_end; }
+
+    [[nodiscard]] constexpr std::size_t size() const noexcept { return static_cast<std::size_t>(m_end - m_begin); }
+
+    [[nodiscard]] std::vector<Boxed_Value> to_vector() const { return std::vector<Boxed_Value>{m_begin, m_end}; }
+
+    [[nodiscard]] constexpr bool empty() const noexcept { return m_begin == m_end; }
+
+  private:
+    const Boxed_Value *m_begin = nullptr;
+    const Boxed_Value *m_end = nullptr;
+  };
+
+  // Constructor specialization for array of size 0
+  template<>
+  constexpr Function_Params::Function_Params(const std::array<Boxed_Value, size_t{0}> & /* a */)
+      : m_begin(nullptr)
+      , m_end(nullptr) {
+  }
+
+} // namespace chaiscript
+
+#endif
 
 #endif

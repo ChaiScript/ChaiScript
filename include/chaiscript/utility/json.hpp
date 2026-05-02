@@ -128,10 +128,10 @@ namespace chaiscript::json {
       }
       JSONWrapper(std::nullptr_t) {}
 
-      Container::iterator begin() { return object ? object->begin() : typename Container::iterator(); }
-      Container::iterator end() { return object ? object->end() : typename Container::iterator(); }
-      [[nodiscard]] Container::const_iterator begin() const { return object ? object->begin() : typename Container::iterator(); }
-      [[nodiscard]] Container::const_iterator end() const { return object ? object->end() : typename Container::iterator(); }
+      typename Container::iterator begin() { return object ? object->begin() : typename Container::iterator(); }
+      typename Container::iterator end() { return object ? object->end() : typename Container::iterator(); }
+      [[nodiscard]] typename Container::const_iterator begin() const { return object ? object->begin() : typename Container::const_iterator(); }
+      [[nodiscard]] typename Container::const_iterator end() const { return object ? object->end() : typename Container::const_iterator(); }
     };
 
     template<typename Container>
@@ -144,10 +144,10 @@ namespace chaiscript::json {
       }
       JSONConstWrapper(std::nullptr_t) {}
 
-      [[nodiscard]] Container::const_iterator begin() const noexcept {
+      [[nodiscard]] typename Container::const_iterator begin() const noexcept {
         return object ? object->begin() : typename Container::const_iterator();
       }
-      [[nodiscard]] Container::const_iterator end() const noexcept { return object ? object->end() : typename Container::const_iterator(); }
+      [[nodiscard]] typename Container::const_iterator end() const noexcept { return object ? object->end() : typename Container::const_iterator(); }
     };
 
     JSON() = default;
