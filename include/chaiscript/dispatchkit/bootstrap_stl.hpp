@@ -539,6 +539,61 @@ namespace chaiscript::bootstrap::standard_library {
     m.add(fun([](const String *s, size_t pos, size_t len) { return s->substr(pos, len); }), "substr");
   }
 
+  /// Add a String_View type (e.g. std::string_view), with conversions to and from
+  /// the matching owning String type (e.g. std::string).
+  ///
+  /// Mirrors the search/substring surface of string_type so that scripts can
+  /// traverse a buffer through StringView without allocating. Sharing method
+  /// names with the owning String type is safe: dispatch deprioritizes any
+  /// candidate whose first/receiver argument requires a type conversion (see
+  /// dispatch() in proxy_functions.hpp), so myString.substr(1, 2) still
+  /// resolves to String::substr while mySV.substr(1, 2) resolves to
+  /// StringView::substr (returning a StringView).
+  ///
+  /// \note A String_View is a non-owning reference. Constructing one from a
+  /// temporary owning String yields a dangling reference once that temporary
+  /// is destroyed; the same lifetime caveats as in C++ apply here.
+  template<typename StringView, typename String>
+  void string_view_type(const std::string &type, Module &m) {
+    m.add(user_type<StringView>(), type);
+    m.add(constructor<StringView()>(), type);
+    m.add(constructor<StringView(const StringView &)>(), type);
+    m.add(fun([](const String &s) { return StringView{s}; }), type);
+
+    opers_comparison<StringView>(m);
+
+    m.add(fun([](const StringView *s) { return s->size(); }), "size");
+    m.add(fun([](const StringView *s) { return s->length(); }), "length");
+    m.add(fun([](const StringView *s) { return s->empty(); }), "empty");
+    m.add(fun([](const StringView *s) { return s->data(); }), "data");
+
+    // Random-access via [] / at, returning const_reference; StringView is read-only.
+    m.add(fun([](const StringView &sv, int index) -> typename StringView::const_reference {
+            return sv.at(static_cast<typename StringView::size_type>(index));
+          }),
+          "[]");
+
+    m.add(fun([](const StringView *s, const StringView &f, size_t pos) { return s->find(f, pos); }), "find");
+    m.add(fun([](const StringView *s, const StringView &f, size_t pos) { return s->rfind(f, pos); }), "rfind");
+    m.add(fun([](const StringView *s, const StringView &f, size_t pos) { return s->find_first_of(f, pos); }), "find_first_of");
+    m.add(fun([](const StringView *s, const StringView &f, size_t pos) { return s->find_last_of(f, pos); }), "find_last_of");
+    m.add(fun([](const StringView *s, const StringView &f, size_t pos) { return s->find_last_not_of(f, pos); }), "find_last_not_of");
+    m.add(fun([](const StringView *s, const StringView &f, size_t pos) { return s->find_first_not_of(f, pos); }), "find_first_not_of");
+
+    m.add(fun([](const StringView *s, const StringView &f) { return s->starts_with(f); }), "starts_with");
+    m.add(fun([](const StringView *s, const StringView &f) { return s->ends_with(f); }), "ends_with");
+
+    m.add(fun([](const StringView *s, size_t pos, size_t len) { return s->substr(pos, len); }), "substr");
+
+    // Built-in implicit conversion from owning String to non-owning StringView.
+    m.add(type_conversion<const String &, StringView>());
+
+    // Explicit conversion from StringView back to owning String, registered as
+    // to_string(sv); the call site can also register it under the owning type's
+    // name (e.g. string(sv)) when desired.
+    m.add(fun([](const StringView sv) { return String{sv}; }), "to_string");
+  }
+
   /// Add a MapType container
   /// http://www.sgi.com/tech/stl/Map.html
   template<typename FutureType>
