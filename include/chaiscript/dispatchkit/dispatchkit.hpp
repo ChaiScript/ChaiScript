@@ -620,7 +620,7 @@ namespace chaiscript {
           }
         }
 
-        return ti.bare_name();
+        return ti.demangled_name();
       }
 
       /// Return all registered types
@@ -964,7 +964,7 @@ namespace chaiscript {
       void dump_system() const {
         std::cout << "Registered Types: \n";
         for (const auto &[type_name, type] : get_types()) {
-          std::cout << type_name << ": " << type.bare_name() << '\n';
+          std::cout << type_name << ": " << type.demangled_name() << '\n';
         }
 
         std::cout << '\n';

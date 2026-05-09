@@ -15,6 +15,10 @@
 #include <type_traits>
 #include <typeinfo>
 
+#if __has_include(<cxxabi.h>)
+#include <cxxabi.h>
+#endif
+
 namespace chaiscript {
   namespace detail {
     template<typename T>
@@ -81,6 +85,24 @@ namespace chaiscript {
       } else {
         return "";
       }
+    }
+
+    std::string demangled_name() const noexcept {
+#if __has_include(<cxxabi.h>)
+      if (is_undef())
+        return "";
+
+      int status{};
+      char *ret = abi::__cxa_demangle(m_bare_type_info->name(), nullptr, nullptr, &status);
+      if (ret) {
+        std::string value{ret};
+        free(ret);
+        return value;
+      }
+      return m_bare_type_info->name();
+#else
+      return bare_name();
+#endif
     }
 
     constexpr const std::type_info *bare_type_info() const noexcept { return m_bare_type_info; }
