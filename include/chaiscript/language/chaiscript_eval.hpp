@@ -306,6 +306,10 @@ namespace chaiscript {
         } catch (exception::eval_error &ee) {
           ee.call_stack.push_back(*this);
           throw;
+        } catch (const Boxed_Value &bv) {
+          exception::eval_error ee("Exception thrown during evaluation", bv);
+          ee.call_stack.push_back(*this);
+          throw ee;
         }
       }
 
@@ -1787,7 +1791,11 @@ namespace chaiscript {
           try {
             retval = this->children[0]->eval(t_ss);
           } catch (const exception::eval_error &e) {
-            retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
+            if (e.has_boxed_value()) {
+              retval = handle_exception(t_ss, e.boxed_value());
+            } else {
+              retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
+            }
           } catch (const std::runtime_error &e) {
             retval = handle_exception(t_ss, Boxed_Value(std::ref(e)));
           } catch (const std::out_of_range &e) {

@@ -164,9 +164,15 @@ TEST_CASE("Generic exception handling with C++") {
   try {
     chai.eval("throw(runtime_error(\"error\"));");
     REQUIRE(false);
-  } catch (const chaiscript::Boxed_Value &bv) {
-    const std::exception &e = chai.boxed_cast<const std::exception &>(bv);
-    CHECK(e.what() == std::string("error"));
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.nested_ptr() != nullptr);
+    try {
+      ee.rethrow_nested();
+      REQUIRE(false);
+    } catch (const chaiscript::Boxed_Value &bv) {
+      const std::exception &e = chai.boxed_cast<const std::exception &>(bv);
+      CHECK(e.what() == std::string("error"));
+    }
   }
 }
 
@@ -189,6 +195,163 @@ TEST_CASE("Throw int or double") {
     REQUIRE(false);
   } catch (const double e) {
     CHECK(e == Catch::Approx(1.0));
+  }
+}
+
+TEST_CASE("eval_error derives from std::nested_exception") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  static_assert(std::is_base_of_v<std::nested_exception, chaiscript::exception::eval_error>,
+                "eval_error must derive from std::nested_exception");
+
+  try {
+    chai.eval("throw(runtime_error(\"inner error\"));");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    CHECK(ee.nested_ptr() != nullptr);
+    try {
+      ee.rethrow_nested();
+      REQUIRE(false);
+    } catch (const chaiscript::Boxed_Value &bv) {
+      const std::exception &nested = chai.boxed_cast<const std::exception &>(bv);
+      CHECK(nested.what() == std::string("inner error"));
+    }
+  }
+}
+
+TEST_CASE("eval_error wraps non-eval exceptions with nested exception") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(42);");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    CHECK(ee.nested_ptr() != nullptr);
+    try {
+      ee.rethrow_nested();
+      REQUIRE(false);
+    } catch (const chaiscript::Boxed_Value &) {
+      CHECK(true);
+    }
+  }
+}
+
+TEST_CASE("eval_error includes nested exception for script-thrown exceptions") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("def foo() { throw(runtime_error(\"from foo\")); } \n foo();");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    CHECK(ee.nested_ptr() != nullptr);
+    try {
+      ee.rethrow_nested();
+      REQUIRE(false);
+    } catch (const chaiscript::Boxed_Value &bv) {
+      const std::exception &nested = chai.boxed_cast<const std::exception &>(bv);
+      CHECK(nested.what() == std::string("from foo"));
+    }
+  }
+}
+
+TEST_CASE("eval_error stores boxed_value for script-thrown exceptions") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(42);");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.has_boxed_value());
+    CHECK(chai.boxed_cast<int>(ee.boxed_value()) == 42);
+  }
+}
+
+TEST_CASE("eval_error rethrow_typed auto-unboxes runtime_error") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(runtime_error(\"typed error\"));");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.has_boxed_value());
+    try {
+      ee.rethrow_typed<int, double, const std::runtime_error &>(chai);
+      REQUIRE(false);
+    } catch (const std::runtime_error &e) {
+      CHECK(e.what() == std::string("typed error"));
+    }
+  }
+}
+
+TEST_CASE("eval_error rethrow_typed auto-unboxes int") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(42);");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.has_boxed_value());
+    try {
+      ee.rethrow_typed<int, double>(chai);
+      REQUIRE(false);
+    } catch (const int e) {
+      CHECK(e == 42);
+    }
+  }
+}
+
+TEST_CASE("eval_error rethrow_typed with no match does not throw") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(\"a string\");");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.has_boxed_value());
+    ee.rethrow_typed<int, double>(chai);
+    CHECK(true);
+  }
+}
+
+TEST_CASE("eval_error without boxed_value has_boxed_value returns false") {
+  const chaiscript::exception::eval_error ee("plain error");
+  CHECK_FALSE(ee.has_boxed_value());
+}
+
+TEST_CASE("eval_error wrapping script throw includes call stack") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("def foo() { throw(42); } \n foo();");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.has_boxed_value());
+    CHECK_FALSE(ee.call_stack.empty());
+    const auto pretty = ee.pretty_print();
+    CHECK(pretty.find("foo") != std::string::npos);
+  }
+}
+
+TEST_CASE("eval_error wrapping script throw includes filename") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(99);", chaiscript::Exception_Handler(), "test_script.chai");
+    REQUIRE(false);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.has_boxed_value());
+    CHECK(ee.filename == "test_script.chai");
+  }
+}
+
+TEST_CASE("exception_specification still auto-unboxes for backward compatibility") {
+  chaiscript::ChaiScript_Basic chai(create_chaiscript_stdlib(), create_chaiscript_parser());
+
+  try {
+    chai.eval("throw(1)", chaiscript::exception_specification<int>());
+    REQUIRE(false);
+  } catch (const int e) {
+    CHECK(e == 1);
   }
 }
 
@@ -257,10 +420,8 @@ TEST_CASE("Throw unhandled type") {
     REQUIRE(false);
   } catch (float) {
     REQUIRE(false);
-  } catch (const std::exception &) {
-    REQUIRE(false);
-  } catch (const chaiscript::Boxed_Value &) {
-    REQUIRE(true);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.nested_ptr() != nullptr);
   }
 }
 
@@ -2170,8 +2331,9 @@ TEST_CASE("ChaiScript throw(int) propagates as Boxed_Value to C++") {
   try {
     chai.eval("throw(42)");
     REQUIRE(false);
-  } catch (chaiscript::Boxed_Value &bv) {
-    CHECK(chaiscript::boxed_cast<int>(bv) == 42);
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.has_boxed_value());
+    CHECK(chai.boxed_cast<int>(ee.boxed_value()) == 42);
   }
 }
 
@@ -2181,8 +2343,9 @@ TEST_CASE("ChaiScript throw(string) propagates as Boxed_Value to C++") {
   try {
     chai.eval(R"(throw("error msg"))");
     REQUIRE(false);
-  } catch (chaiscript::Boxed_Value &bv) {
-    CHECK(chaiscript::boxed_cast<std::string>(bv) == "error msg");
+  } catch (const chaiscript::exception::eval_error &ee) {
+    REQUIRE(ee.has_boxed_value());
+    CHECK(chai.boxed_cast<std::string>(ee.boxed_value()) == "error msg");
   }
 }
 
@@ -2194,10 +2357,10 @@ TEST_CASE("Typed catch with no match propagates exception") {
       throw(42)
     }
     catch(string e) {
-      // wrong type, should not match
+      // wrong type, should not match — exception propagates
     }
   )"),
-                  chaiscript::Boxed_Value);
+                  chaiscript::exception::eval_error);
 }
 
 TEST_CASE("Typed catch with no match still runs finally block") {
@@ -2209,13 +2372,13 @@ TEST_CASE("Typed catch with no match still runs finally block") {
       throw(42)
     }
     catch(string e) {
-      // wrong type
+      // wrong type, should not match — exception propagates
     }
     finally {
       finally_ran = true
     }
   )"),
-                  chaiscript::Boxed_Value);
+                  chaiscript::exception::eval_error);
 
   CHECK(chai.eval<bool>("finally_ran") == true);
 }
