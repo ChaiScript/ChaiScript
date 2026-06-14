@@ -16,7 +16,7 @@
  * std::type_identity was introduced in >= C++20 so we put
  * together a small shim for it if it doesn't exist.
  */
-#if __cplusplus < 202002L
+#if !defined(__cpp_lib_type_identity)
 namespace std {
   template<typename T>
   struct type_identity { using type = T; };
