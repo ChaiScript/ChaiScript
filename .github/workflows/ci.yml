@@ -57,6 +57,7 @@ jobs:
   linux-sanitizers:
     name: Linux GCC ASAN+UBSAN ${{ matrix.build_type }}
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -70,8 +71,10 @@ jobs:
       - name: Configure
         run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_UNDEFINED_SANITIZER=ON
 
+      # Sanitized Release builds need several GB of RAM per translation unit,
+      # which OOMs the runner at full parallelism.
       - name: Build
-        run: cmake --build build
+        run: cmake --build build -j 2
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
