@@ -580,8 +580,37 @@ namespace chaiscript::bootstrap::standard_library {
     m.add(fun([](const StringView *s, const StringView &f, size_t pos) { return s->find_last_not_of(f, pos); }), "find_last_not_of");
     m.add(fun([](const StringView *s, const StringView &f, size_t pos) { return s->find_first_not_of(f, pos); }), "find_first_not_of");
 
-    m.add(fun([](const StringView *s, const StringView &f) { return s->starts_with(f); }), "starts_with");
-    m.add(fun([](const StringView *s, const StringView &f) { return s->ends_with(f); }), "ends_with");
+    #if __cplusplus >= 202002L
+        m.add(fun([](const StringView *s, const StringView &f) { return s->starts_with(f); }), "starts_with");
+        m.add(fun([](const StringView *s, const StringView &f) { return s->ends_with(f); }), "ends_with");
+    #else
+        m.add(fun([](const StringView *s, const StringView &f) -> bool {
+                using size_type = typename StringView::size_type;
+                const size_type fsz = f.size();
+                if (fsz == 0) {
+                  return true;
+                }
+                if (fsz > s->size()) {
+                  return false;
+                }
+                return s->compare(size_type{0}, fsz, f) == 0;
+              }),
+              "starts_with");
+
+        m.add(fun([](const StringView *s, const StringView &f) -> bool {
+                using size_type = typename StringView::size_type;
+                const size_type fsz = f.size();
+                if (fsz == 0) {
+                  return true;
+                }
+                const size_type ssz = s->size();
+                if (fsz > ssz) {
+                  return false;
+                }
+                return s->compare(ssz - fsz, fsz, f) == 0;
+              }),
+              "ends_with");
+    #endif
 
     m.add(fun([](const StringView *s, size_t pos, size_t len) { return s->substr(pos, len); }), "substr");
 

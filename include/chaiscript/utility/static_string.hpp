@@ -33,7 +33,7 @@ namespace chaiscript::utility {
       return std::string_view(data, m_size) == other;
     }
 
-    constexpr bool operator==(const std::string &t_str) const noexcept { return std::equal(begin(), end(), std::cbegin(t_str), std::cend(t_str)); }
+    constexpr bool operator==(const std::string &t_str) const noexcept { return std::string_view(data, m_size) == std::string_view(t_str); }
 
     const size_t m_size;
     const char *data = nullptr;
