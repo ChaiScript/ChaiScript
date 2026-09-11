@@ -32,12 +32,12 @@ namespace chaiscript {
       /// Used internally for handling a return value from a Proxy_Function call
       template<typename Ret>
       struct Handle_Return {
-        template<typename T, typename = typename std::enable_if_t<std::is_trivial_v<typename std::decay_t<T>>>>
+        template<typename T, typename = typename std::enable_if_t<std::is_trivially_copyable_v<typename std::decay_t<T>> && std::is_trivially_default_constructible_v<typename std::decay_t<T>>>>
         static Boxed_Value handle(T r) {
           return Boxed_Value(std::move(r), true);
         }
 
-        template<typename T, typename = typename std::enable_if_t<!(std::is_trivial_v<typename std::decay_t<T>>)>>
+        template<typename T, typename = typename std::enable_if_t<!(std::is_trivially_copyable_v<typename std::decay_t<T>> && std::is_trivially_default_constructible_v<typename std::decay_t<T>>)>>
         static Boxed_Value handle(T &&r) {
           return Boxed_Value(std::make_shared<T>(std::forward<T>(r)), true);
         }
