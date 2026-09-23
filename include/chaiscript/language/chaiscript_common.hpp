@@ -349,14 +349,14 @@ namespace chaiscript {
 
         ss << what();
         if (!call_stack.empty()) {
-          ss << "during evaluation at (" << fname(call_stack[0]) << " " << startpos(call_stack[0]) << ")\n";
+          ss << "during evaluation at (" << fname(call_stack.at(0)) << " " << startpos(call_stack.at(0)) << ")\n";
           ss << '\n'
              << detail << '\n';
-          ss << "  " << fname(call_stack[0]) << " (" << startpos(call_stack[0]) << ") '" << pretty(call_stack[0]) << "'";
+          ss << "  " << fname(call_stack.at(0)) << " (" << startpos(call_stack.at(0)) << ") '" << pretty(call_stack.at(0)) << "'";
           for (size_t j = 1; j < call_stack.size(); ++j) {
-            if (id(call_stack[j]) != chaiscript::AST_Node_Type::Block && id(call_stack[j]) != chaiscript::AST_Node_Type::File) {
+            if (id(call_stack.at(j)) != chaiscript::AST_Node_Type::Block && id(call_stack.at(j)) != chaiscript::AST_Node_Type::File) {
               ss << '\n';
-              ss << "  from " << fname(call_stack[j]) << " (" << startpos(call_stack[j]) << ") '" << pretty(call_stack[j]) << "'";
+              ss << "  from " << fname(call_stack.at(j)) << " (" << startpos(call_stack.at(j)) << ") '" << pretty(call_stack.at(j)) << "'";
             }
           }
         }

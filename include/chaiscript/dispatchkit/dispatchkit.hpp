@@ -17,6 +17,7 @@
 #include <memory>
 #include <set>
 #include <stdexcept>
+#include <exception>
 #include <string>
 #include <string_view>
 #include <thread>
